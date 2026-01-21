@@ -14,5 +14,18 @@
     "autoReviewArchitecture": true,
     "autoGenerateTests": true,
     "autoCheckQuality": true
+  },
+  "sessionManagement": {
+    "stateFile": "CLAUDE.md",
+    "updateAfter": [
+      "module-completed",
+      "significant-commit",
+      "user-says-stop"
+    ],
+    "readOnStart": [
+      "CLAUDE.md",
+      "CONTEXT.md",
+      ".claude/agents.md"
+    ]
   }
 }
