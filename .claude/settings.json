@@ -1,0 +1,18 @@
+{
+  "projectContext": "Hub Chantier - Application de gestion de chantiers BTP suivant Clean Architecture",
+  "codeStyle": {
+    "language": "python",
+    "docstrings": "google",
+    "typeHints": true
+  },
+  "architecture": {
+    "pattern": "clean-architecture",
+    "layers": ["domain", "application", "adapters", "infrastructure"],
+    "dependencyRule": "inward-only"
+  },
+  "agents": {
+    "autoReviewArchitecture": true,
+    "autoGenerateTests": true,
+    "autoCheckQuality": true
+  }
+}
