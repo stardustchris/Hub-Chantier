@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, isToday } from 'date-fns'
+import { useMemo, useState, useCallback } from 'react'
+import { format, eachDayOfInterval, startOfWeek, endOfWeek, isToday, isWeekend } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { ChevronDown, ChevronRight, Copy, Phone } from 'lucide-react'
 import type { Affectation, User, Metier } from '../../types'
@@ -16,6 +16,8 @@ interface PlanningGridProps {
   onDuplicate: (userId: string) => void
   expandedMetiers: string[]
   onToggleMetier: (metier: string) => void
+  showWeekend?: boolean // PLN-06
+  onAffectationMove?: (affectationId: string, newDate: string, newUserId?: string) => void // PLN-27
 }
 
 // Grouper les utilisateurs par métier
@@ -43,13 +45,56 @@ export default function PlanningGrid({
   onDuplicate,
   expandedMetiers,
   onToggleMetier,
+  showWeekend = true,
+  onAffectationMove,
 }: PlanningGridProps) {
-  // Jours de la semaine
+  // PLN-27: Drag state
+  const [draggedAffectation, setDraggedAffectation] = useState<Affectation | null>(null)
+  const [dragOverCell, setDragOverCell] = useState<string | null>(null)
+
+  // PLN-06: Jours de la semaine (filtrer weekend si nécessaire)
   const days = useMemo(() => {
     const start = startOfWeek(currentDate, { weekStartsOn: 1 })
     const end = endOfWeek(currentDate, { weekStartsOn: 1 })
-    return eachDayOfInterval({ start, end })
-  }, [currentDate])
+    const allDays = eachDayOfInterval({ start, end })
+    return showWeekend ? allDays : allDays.filter(day => !isWeekend(day))
+  }, [currentDate, showWeekend])
+
+  // PLN-27: Drag handlers
+  const handleDragStart = useCallback((e: React.DragEvent, affectation: Affectation) => {
+    setDraggedAffectation(affectation)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', affectation.id)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent, cellKey: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverCell(cellKey)
+  }, [])
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverCell(null)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent, userId: string, date: Date) => {
+    e.preventDefault()
+    setDragOverCell(null)
+
+    if (draggedAffectation && onAffectationMove) {
+      const newDate = format(date, 'yyyy-MM-dd')
+      // Only move if date or user changed
+      if (draggedAffectation.date !== newDate || String(draggedAffectation.utilisateur_id) !== userId) {
+        onAffectationMove(draggedAffectation.id, newDate, userId)
+      }
+    }
+    setDraggedAffectation(null)
+  }, [draggedAffectation, onAffectationMove])
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedAffectation(null)
+    setDragOverCell(null)
+  }, [])
 
   // Grouper les utilisateurs par métier
   const groupedUsers = useMemo(() => groupByMetier(utilisateurs), [utilisateurs])
@@ -77,10 +122,13 @@ export default function PlanningGrid({
     return affectationsByUserAndDate[userId]?.[dateKey] || []
   }
 
+  // PLN-06: Dynamic grid columns based on weekend visibility
+  const gridCols = showWeekend ? 'grid-cols-[250px_repeat(7,1fr)]' : 'grid-cols-[250px_repeat(5,1fr)]'
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {/* Header - Jours */}
-      <div className="grid grid-cols-[250px_repeat(7,1fr)] border-b bg-gray-50">
+      <div className={`grid ${gridCols} border-b bg-gray-50`}>
         <div className="px-4 py-3 font-medium text-gray-700 border-r">
           Utilisateurs
         </div>
@@ -112,7 +160,7 @@ export default function PlanningGrid({
               {/* Header du groupe (métier) */}
               <button
                 onClick={() => onToggleMetier(metier)}
-                className="w-full grid grid-cols-[250px_repeat(7,1fr)] bg-gray-50 hover:bg-gray-100 transition-colors"
+                className={`w-full grid ${gridCols} bg-gray-50 hover:bg-gray-100 transition-colors`}
               >
                 <div className="px-4 py-2 flex items-center gap-2 border-r">
                   {isExpanded ? (
@@ -138,7 +186,7 @@ export default function PlanningGrid({
               {isExpanded && users.map(user => (
                 <div
                   key={user.id}
-                  className="group grid grid-cols-[250px_repeat(7,1fr)] hover:bg-gray-50 transition-colors"
+                  className={`group grid ${gridCols} hover:bg-gray-50 transition-colors`}
                 >
                   {/* Colonne utilisateur */}
                   <div className="px-4 py-3 flex items-center gap-3 border-r">
@@ -186,14 +234,30 @@ export default function PlanningGrid({
                   {days.map(day => {
                     const cellAffectations = getAffectationsForCell(user.id, day)
                     const hasAffectations = cellAffectations.length > 0
+                    const cellKey = `${user.id}-${format(day, 'yyyy-MM-dd')}`
+                    const isDragOver = dragOverCell === cellKey
 
                     return (
                       <div
                         key={day.toISOString()}
+                        tabIndex={0}
+                        role="gridcell"
+                        aria-label={`${user.prenom} ${user.nom}, ${format(day, 'EEEE d MMMM', { locale: fr })}`}
                         onClick={() => !hasAffectations && onCellClick(user.id, day)}
                         onDoubleClick={() => onCellClick(user.id, day)}
-                        className={`p-1 border-r last:border-r-0 min-h-[60px] ${
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            onCellClick(user.id, day)
+                          }
+                        }}
+                        onDragOver={(e) => handleDragOver(e, cellKey)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, user.id, day)}
+                        className={`p-1 border-r last:border-r-0 min-h-[60px] transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
                           isToday(day) ? 'bg-primary-50/50' : ''
+                        } ${
+                          isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
                         } ${
                           !hasAffectations ? 'cursor-pointer hover:bg-gray-100' : ''
                         }`}
@@ -206,6 +270,9 @@ export default function PlanningGrid({
                               onClick={() => onAffectationClick(aff)}
                               onDelete={() => onAffectationDelete(aff)}
                               compact={cellAffectations.length > 1}
+                              draggable={!!onAffectationMove}
+                              onDragStart={(e) => handleDragStart(e, aff)}
+                              onDragEnd={handleDragEnd}
                             />
                           ))}
                         </div>
