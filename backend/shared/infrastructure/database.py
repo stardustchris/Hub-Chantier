@@ -48,7 +48,7 @@ def get_db() -> Session:
         db.close()
 
 
-def init_db():
+def init_db() -> None:
     """
     Initialise la base de données (crée les tables).
 
