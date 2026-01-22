@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Optional, Callable
 
-from modules.auth.domain.value_objects import Couleur
+from shared.domain.value_objects import Couleur
 
 from ...domain.entities import Chantier
 from ...domain.repositories import ChantierRepository

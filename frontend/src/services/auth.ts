@@ -1,13 +1,8 @@
 import api from './api'
+import type { User } from '../types'
 
-export interface User {
-  id: number
-  email: string
-  nom: string
-  prenom: string
-  role: string
-  is_active: boolean
-}
+// Re-export User for backwards compatibility
+export type { User }
 
 export interface AuthResponse {
   user: User

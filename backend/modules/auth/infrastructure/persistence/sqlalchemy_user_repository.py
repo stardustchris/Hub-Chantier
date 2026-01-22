@@ -261,6 +261,67 @@ class SQLAlchemyUserRepository(UserRepository):
             is not None
         )
 
+    def search(
+        self,
+        query: Optional[str] = None,
+        role: Optional[Role] = None,
+        type_utilisateur: Optional[TypeUtilisateur] = None,
+        active_only: bool = False,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> tuple[List[User], int]:
+        """
+        Recherche des utilisateurs avec filtres multiples.
+
+        Args:
+            query: Texte à rechercher dans nom, prénom, email.
+            role: Filtrer par rôle (optionnel).
+            type_utilisateur: Filtrer par type (optionnel).
+            active_only: Filtrer les actifs uniquement.
+            skip: Nombre d'éléments à sauter.
+            limit: Nombre maximum à retourner.
+
+        Returns:
+            Tuple (liste des utilisateurs, total count).
+        """
+        from sqlalchemy import or_
+
+        base_query = self.session.query(UserModel)
+
+        # Appliquer les filtres
+        if query:
+            search_term = f"%{query}%"
+            base_query = base_query.filter(
+                or_(
+                    UserModel.nom.ilike(search_term),
+                    UserModel.prenom.ilike(search_term),
+                    UserModel.email.ilike(search_term),
+                )
+            )
+
+        if role:
+            base_query = base_query.filter(UserModel.role == role.value)
+
+        if type_utilisateur:
+            base_query = base_query.filter(UserModel.type_utilisateur == type_utilisateur.value)
+
+        if active_only:
+            base_query = base_query.filter(UserModel.is_active == True)
+
+        # Compter le total avant pagination
+        total = base_query.count()
+
+        # Appliquer pagination et tri
+        models = (
+            base_query
+            .order_by(UserModel.nom, UserModel.prenom)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+        return [self._to_entity(m) for m in models], total
+
     def _to_entity(self, model: UserModel) -> User:
         """
         Convertit un modèle SQLAlchemy en entité Domain.

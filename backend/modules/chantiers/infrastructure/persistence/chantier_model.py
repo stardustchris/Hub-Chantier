@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON
 from sqlalchemy.orm import declarative_base
 
-from modules.auth.domain.value_objects import Couleur
+from shared.domain.value_objects import Couleur
 
 from ...domain.value_objects import StatutChantierEnum
 

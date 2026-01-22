@@ -57,12 +57,12 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 ## Prochaines taches prioritaires
 
-1. [x] **Module dashboard** (CDC Section 2) - Backend complet, en attente frontend
-2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
-3. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
-4. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
-5. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
-6. [ ] Connecter le frontend au backend
+1. [x] **Module dashboard** (CDC Section 2) - Backend complet + Frontend
+2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS + Frontend
+3. [x] **Frontend React** - Dashboard, Chantiers, Utilisateurs
+4. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
+5. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
+6. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
 
 ## Workflow de developpement
 
@@ -82,6 +82,15 @@ Quand une fonctionnalite est demandee (ex: "Implemente CHT-03"):
 
 > **SPECIFICATIONS.md = source de verite vivante** - elle reflète toujours l'implementation reelle
 
+
+### Apres validation complete
+
+Quand tous les agents ont valide et les tests passent :
+1. Committer et pousser sur la branche de travail
+2. **Proposer automatiquement** de merger sur main (PR ou merge direct)
+3. Ne pas attendre que l'utilisateur le demande
+
+---
 ## Commandes utiles
 
 ```bash

@@ -34,6 +34,7 @@ class ListUsersUseCase:
         role: Optional[str] = None,
         type_utilisateur: Optional[str] = None,
         active_only: bool = False,
+        search: Optional[str] = None,
     ) -> UserListDTO:
         """
         Récupère une liste paginée d'utilisateurs.
@@ -44,26 +45,24 @@ class ListUsersUseCase:
             role: Filtrer par rôle (optionnel).
             type_utilisateur: Filtrer par type (optionnel).
             active_only: Ne retourner que les utilisateurs actifs.
+            search: Recherche textuelle (optionnel).
 
         Returns:
             UserListDTO contenant la liste et les infos de pagination.
         """
-        # Déterminer quelle méthode de repository utiliser selon les filtres
-        if role:
-            role_enum = Role.from_string(role)
-            users = self.user_repo.find_by_role(role_enum, skip=skip, limit=limit)
-            # Note: le count devrait être filtré aussi, mais on simplifie ici
-            total = self.user_repo.count()
-        elif type_utilisateur:
-            type_enum = TypeUtilisateur.from_string(type_utilisateur)
-            users = self.user_repo.find_by_type(type_enum, skip=skip, limit=limit)
-            total = self.user_repo.count()
-        elif active_only:
-            users = self.user_repo.find_active(skip=skip, limit=limit)
-            total = self.user_repo.count()
-        else:
-            users = self.user_repo.find_all(skip=skip, limit=limit)
-            total = self.user_repo.count()
+        # Convertir les filtres en enums si nécessaire
+        role_enum = Role.from_string(role) if role else None
+        type_enum = TypeUtilisateur.from_string(type_utilisateur) if type_utilisateur else None
+
+        # Utiliser la méthode search avec tous les filtres
+        users, total = self.user_repo.search(
+            query=search,
+            role=role_enum,
+            type_utilisateur=type_enum,
+            active_only=active_only,
+            skip=skip,
+            limit=limit,
+        )
 
         # Convertir en DTOs
         user_dtos = [UserDTO.from_entity(u) for u in users]

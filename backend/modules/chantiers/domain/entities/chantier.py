@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional
 
-from modules.auth.domain.value_objects import Couleur
+from shared.domain.value_objects import Couleur
 
 from ..value_objects import (
     StatutChantier,
