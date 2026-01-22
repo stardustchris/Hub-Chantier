@@ -1,0 +1,45 @@
+# Hub Chantier - Development Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Ce fichier active le hot-reload pour le developpement local
+
+services:
+  # ===========================================
+  # Backend avec hot-reload
+  # ===========================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Monte le code source pour hot-reload
+      - ./backend:/app
+      # Evite d'ecraser les dependances installees
+      - /app/__pycache__
+    environment:
+      - DEBUG=true
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+  # ===========================================
+  # Frontend avec Vite dev server (hot-reload)
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Monte le code source pour hot-reload
+      - ./frontend:/app
+      # Preserve node_modules du container
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host 0.0.0.0
+
+  # ===========================================
+  # Adminer toujours actif en dev
+  # ===========================================
+  adminer:
+    profiles: []  # Toujours actif en dev
