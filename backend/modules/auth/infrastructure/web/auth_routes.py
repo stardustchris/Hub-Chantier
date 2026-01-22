@@ -55,7 +55,7 @@ class UpdateUserRequest(BaseModel):
     couleur: Optional[str] = None
     photo_profil: Optional[str] = None
     contact_urgence_nom: Optional[str] = None
-    contact_urgence_tel: Optional[str] = None
+    contact_urgence_telephone: Optional[str] = None  # Renommé pour frontend
     role: Optional[str] = None
     type_utilisateur: Optional[str] = None
     code_utilisateur: Optional[str] = None
@@ -64,34 +64,34 @@ class UpdateUserRequest(BaseModel):
 class UserResponse(BaseModel):
     """Réponse utilisateur complète selon CDC."""
 
-    id: int
+    id: str  # Retourné comme string pour compatibilité frontend
     email: str
     nom: str
     prenom: str
-    nom_complet: str
-    initiales: str
+    nom_complet: Optional[str] = None
+    initiales: Optional[str] = None
     role: str
     type_utilisateur: str
     is_active: bool
-    couleur: str
-    photo_profil: Optional[str]
-    code_utilisateur: Optional[str]
-    telephone: Optional[str]
-    metier: Optional[str]
-    contact_urgence_nom: Optional[str]
-    contact_urgence_tel: Optional[str]
+    couleur: Optional[str] = None
+    photo_profil: Optional[str] = None
+    code_utilisateur: Optional[str] = None
+    telephone: Optional[str] = None
+    metier: Optional[str] = None
+    contact_urgence_nom: Optional[str] = None
+    contact_urgence_telephone: Optional[str] = None  # Renommé pour frontend
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 class UserListResponse(BaseModel):
     """Réponse liste utilisateurs paginée (USR-09)."""
 
-    users: List[UserResponse]
+    items: List[UserResponse]
     total: int
-    skip: int
-    limit: int
-    has_next: bool
-    has_previous: bool
+    page: int
+    size: int
+    pages: int
 
 
 class AuthResponse(BaseModel):
@@ -231,11 +231,12 @@ def get_current_user(
 
 @users_router.get("", response_model=UserListResponse)
 def list_users(
-    skip: int = Query(0, ge=0, description="Nombre d'éléments à sauter"),
-    limit: int = Query(20, ge=1, le=100, description="Nombre d'éléments par page"),
+    page: int = Query(1, ge=1, description="Numéro de page"),
+    size: int = Query(20, ge=1, le=100, description="Nombre d'éléments par page"),
+    search: Optional[str] = Query(None, description="Recherche par nom, prénom ou email"),
     role: Optional[str] = Query(None, description="Filtrer par rôle"),
     type_utilisateur: Optional[str] = Query(None, description="Filtrer par type"),
-    active_only: bool = Query(False, description="Uniquement les utilisateurs actifs"),
+    is_active: Optional[bool] = Query(None, description="Filtrer par statut actif"),
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
 ):
@@ -243,25 +244,45 @@ def list_users(
     Liste les utilisateurs avec pagination (USR-09).
 
     Args:
-        skip: Offset pour la pagination.
-        limit: Limite d'éléments retournés.
+        page: Numéro de page (commence à 1).
+        size: Nombre d'éléments par page.
+        search: Recherche textuelle (optionnel).
         role: Filtrer par rôle (optionnel).
         type_utilisateur: Filtrer par type (optionnel).
-        active_only: Filtrer sur les actifs uniquement.
+        is_active: Filtrer par statut actif (optionnel).
         controller: Controller d'authentification.
         current_user_id: ID de l'utilisateur connecté (pour vérifier les permissions).
 
     Returns:
         Liste paginée des utilisateurs.
     """
+    # Convertir page/size en skip/limit pour le controller
+    skip = (page - 1) * size
+
     result = controller.list_users(
         skip=skip,
-        limit=limit,
+        limit=size,
         role=role,
         type_utilisateur=type_utilisateur,
-        active_only=active_only,
+        active_only=is_active if is_active is not None else False,
+        search=search,
     )
-    return result
+
+    # Convertir la réponse au format frontend
+    total = result.get("total", 0)
+    pages = (total + size - 1) // size if size > 0 else 0
+
+    # Transformer les users pour le format frontend
+    users_data = result.get("users", [])
+    items = [_transform_user_response(u) for u in users_data]
+
+    return UserListResponse(
+        items=items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
+    )
 
 
 @users_router.get("/{user_id}", response_model=UserResponse)
@@ -326,7 +347,7 @@ def update_user(
             couleur=request.couleur,
             photo_profil=request.photo_profil,
             contact_urgence_nom=request.contact_urgence_nom,
-            contact_urgence_tel=request.contact_urgence_tel,
+            contact_urgence_tel=request.contact_urgence_telephone,  # Mapping frontend -> backend
             role=request.role,
             type_utilisateur=request.type_utilisateur,
             code_utilisateur=request.code_utilisateur,
@@ -406,3 +427,37 @@ def activate_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=e.message,
         )
+
+
+# =============================================================================
+# Helpers
+# =============================================================================
+
+
+def _transform_user_response(user_dict: dict) -> UserResponse:
+    """
+    Transforme un dictionnaire utilisateur du controller en UserResponse.
+
+    Le controller retourne déjà des données formatées pour le frontend,
+    cette fonction assure la validation Pydantic.
+    """
+    return UserResponse(
+        id=str(user_dict.get("id", "")),
+        email=user_dict.get("email", ""),
+        nom=user_dict.get("nom", ""),
+        prenom=user_dict.get("prenom", ""),
+        nom_complet=user_dict.get("nom_complet"),
+        initiales=user_dict.get("initiales"),
+        role=user_dict.get("role", "compagnon"),
+        type_utilisateur=user_dict.get("type_utilisateur", "employe"),
+        is_active=user_dict.get("is_active", True),
+        couleur=user_dict.get("couleur"),
+        photo_profil=user_dict.get("photo_profil"),
+        code_utilisateur=user_dict.get("code_utilisateur"),
+        telephone=user_dict.get("telephone"),
+        metier=user_dict.get("metier"),
+        contact_urgence_nom=user_dict.get("contact_urgence_nom"),
+        contact_urgence_telephone=user_dict.get("contact_urgence_telephone"),
+        created_at=user_dict.get("created_at"),
+        updated_at=user_dict.get("updated_at"),
+    )
