@@ -92,20 +92,27 @@ Hub-Chantier/
 │       └── ADR/           # Architecture Decision Records
 ├── scripts/               # Scripts utilitaires
 ├── README.md              # Ce fichier
-└── CONTEXT.md             # Contexte pour Claude
+├── CLAUDE.md              # Etat du projet pour Claude
+└── CONTRIBUTING.md        # Guide de contribution
 ```
 
 ## Modules
 
 | Module | Status | Description |
 |--------|--------|-------------|
-| auth | Complet | Authentification JWT, gestion des rôles |
-| employes | Complet | CRUD employés, corps de métier |
-| pointages | Complet | Entrée/sortie chantier, validation |
-| chantiers | Complet | Gestion des chantiers |
-| planning | Partiel | Planning des équipes |
-| documents | TODO | Gestion documentaire |
-| formulaires | TODO | Formulaires terrain |
+| auth | **Complet** | Authentification JWT, gestion des roles |
+| chantiers | Structure | Gestion des chantiers |
+| planning | Structure | Planning des equipes |
+| planning_charge | Structure | Vision capacitaire |
+| feuilles_heures | Structure | Saisie temps de travail |
+| formulaires | Structure | Formulaires terrain |
+| documents | Structure | Gestion documentaire |
+| memos | Structure | Communication urgence |
+| logistique | Structure | Reservation materiel |
+| interventions | Structure | SAV et maintenance |
+| taches | Structure | Gestion des travaux |
+
+> Voir `CLAUDE.md` pour l'etat detaille et les prochaines taches.
 
 ## Démarrage rapide
 
@@ -173,28 +180,13 @@ pytest --cov=backend --cov-report=html
 
 ## Documentation
 
-- [CONTEXT.md](./CONTEXT.md) - Contexte pour les assistants IA
-- [Clean Architecture](./docs/architecture/CLEAN_ARCHITECTURE.md) - Guide d'architecture
-- [ADRs](./docs/architecture/ADR/) - Décisions d'architecture
-
-## Conventions
-
-### Commits
-Format conventionnel : `type(scope): description`
-
-```bash
-feat(auth): add JWT refresh token support
-fix(pointages): correct timezone handling
-docs(readme): update installation steps
-test(employes): add unit tests for CreateEmployeUseCase
-refactor(chantiers): extract address validation to value object
-```
-
-### Code
-- Docstrings Google style
-- Type hints partout
-- 1 classe = 1 fichier
-- Tests unitaires obligatoires pour les use cases
+| Fichier | Description |
+|---------|-------------|
+| [CLAUDE.md](./CLAUDE.md) | Etat du projet, prochaines taches |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Guide de contribution, conventions |
+| [SPECIFICATIONS.md](./docs/SPECIFICATIONS.md) | Cahier des charges fonctionnel |
+| [Clean Architecture](./docs/architecture/CLEAN_ARCHITECTURE.md) | Guide d'architecture |
+| [ADRs](./docs/architecture/ADR/) | Decisions d'architecture |
 
 ## Licence
 
