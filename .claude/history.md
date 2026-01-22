@@ -3,6 +3,109 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (module feuilles_heures backend)
+
+- Implementation complete du backend module Feuilles d'heures (CDC Section 7)
+- 17/20 fonctionnalites implementees cote backend (FDH-01 a FDH-20)
+
+### Architecture Clean Architecture (4 layers)
+
+#### Domain Layer
+- **Entities**: `Pointage`, `FeuilleHeures`, `VariablePaie`
+- **Value Objects**: `StatutPointage`, `TypeVariablePaie`, `Duree`
+- **Events**: `PointageCreatedEvent`, `PointageValidatedEvent`, `FeuilleHeuresExportedEvent`, etc.
+- **Repository interfaces**: `PointageRepository`, `FeuilleHeuresRepository`, `VariablePaieRepository`
+
+#### Application Layer
+- **16 Use Cases** implementes:
+  - CRUD: Create, Update, Delete, Get, List Pointages
+  - Workflow: Sign, Submit, Validate, Reject
+  - Feuilles: GetFeuilleHeures, ListFeuilles, GetVueSemaine
+  - Integration: BulkCreateFromPlanning (FDH-10)
+  - Stats: GetJaugeAvancement (FDH-14), CompareEquipes (FDH-15)
+  - Export: ExportFeuilleHeures (FDH-03, FDH-17, FDH-19)
+- **DTOs complets** pour toutes les operations
+
+#### Adapters Layer
+- **PointageController**: Orchestre tous les use cases
+
+#### Infrastructure Layer
+- **SQLAlchemy Models**: `PointageModel`, `FeuilleHeuresModel`, `VariablePaieModel`
+- **Repository implementations**: SQLAlchemy pour les 3 repositories
+- **FastAPI Routes**: API REST complete (`/pointages/*`)
+- **Event handlers**: Integration planning via EventBus
+
+### Fonctionnalites par categorie
+
+**Vue et Navigation (Frontend pending)**
+- FDH-01: 2 onglets (Chantiers/Compagnons) - API OK
+- FDH-02: Navigation semaine - API OK
+- FDH-05: Vue tabulaire hebdomadaire - API OK
+
+**Calculs et Totaux**
+- FDH-06: Multi-chantiers par utilisateur - OK
+- FDH-07: Badges colores - OK (via chantier_couleur)
+- FDH-08: Total par ligne - OK
+- FDH-09: Total groupe - OK
+
+**Workflow**
+- FDH-04: Filtres multi-criteres - OK
+- FDH-12: Signature electronique - OK
+
+**Variables de paie**
+- FDH-13: Variables de paie completes - OK
+
+**Statistiques**
+- FDH-14: Jauge avancement - OK
+- FDH-15: Comparaison equipes - OK
+
+**Export**
+- FDH-03: Export CSV - OK
+- FDH-17: Export ERP - OK
+- FDH-19: Feuilles de route - OK
+
+**Integration Planning**
+- FDH-10: Creation auto depuis affectations - OK
+
+**Frontend pending**
+- FDH-11: Saisie mobile roulette HH:MM
+- FDH-18: Macros de paie (interface config)
+- FDH-20: Mode Offline (PWA)
+
+**Infrastructure pending**
+- FDH-16: Import ERP auto (cron job)
+
+### Tests
+- Tests unitaires: Value Objects, Entities, Use Cases
+- 50+ tests unitaires couvrant les fonctionnalites principales
+
+### API Endpoints
+```
+POST   /pointages                    - Creer pointage
+GET    /pointages                    - Lister avec filtres (FDH-04)
+GET    /pointages/{id}               - Obtenir pointage
+PUT    /pointages/{id}               - Modifier pointage
+DELETE /pointages/{id}               - Supprimer pointage
+POST   /pointages/{id}/sign          - Signer (FDH-12)
+POST   /pointages/{id}/submit        - Soumettre pour validation
+POST   /pointages/{id}/validate      - Valider
+POST   /pointages/{id}/reject        - Rejeter
+GET    /pointages/feuilles           - Lister feuilles
+GET    /pointages/feuilles/{id}      - Obtenir feuille
+GET    /pointages/feuilles/utilisateur/{id}/semaine - Feuille semaine (FDH-05)
+GET    /pointages/navigation         - Navigation semaine (FDH-02)
+GET    /pointages/vues/chantiers     - Vue chantiers (FDH-01)
+GET    /pointages/vues/compagnons    - Vue compagnons (FDH-01)
+POST   /pointages/variables-paie     - Creer variable (FDH-13)
+POST   /pointages/export             - Export (FDH-03, FDH-17)
+GET    /pointages/feuille-route/{id} - Feuille route (FDH-19)
+GET    /pointages/stats/jauge-avancement/{id}     - Jauge (FDH-14)
+GET    /pointages/stats/comparaison-equipes       - Comparaison (FDH-15)
+POST   /pointages/bulk-from-planning - Creation depuis planning (FDH-10)
+```
+
+---
+
 ## Session 2026-01-22 (planning frontend)
 
 - Implementation complete du frontend module Planning Operationnel

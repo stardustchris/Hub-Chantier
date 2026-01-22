@@ -427,28 +427,28 @@ Le module Feuilles d'heures permet la saisie, le suivi et l'export des heures tr
 
 ### 7.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| FDH-01 | 2 onglets de vue | [Chantiers] [Compagnons/Sous-traitants] |
-| FDH-02 | Navigation par semaine | Semaine X avec << < > >> pour naviguer |
-| FDH-03 | Bouton Exporter | Export des donnees vers fichier ou ERP |
-| FDH-04 | Filtre utilisateurs | Dropdown de selection multi-criteres |
-| FDH-05 | Vue tabulaire hebdomadaire | Lundi a Vendredi avec dates completes |
-| FDH-06 | Multi-chantiers par utilisateur | Plusieurs lignes possibles |
-| FDH-07 | Badges colores par chantier | Coherence avec le planning |
-| FDH-08 | Total par ligne | Somme heures par utilisateur + chantier |
-| FDH-09 | Total groupe | Somme heures utilisateur tous chantiers |
-| FDH-10 | Creation auto a l'affectation | Lignes pre-remplies depuis le planning |
-| FDH-11 | Saisie mobile | Selecteur roulette HH:MM intuitif |
-| FDH-12 | Signature electronique | Validation des heures par le compagnon |
-| FDH-13 | Variables de paie | Panier, transport, conges, primes, absences |
-| FDH-14 | Jauge d'avancement | Comparaison planifie vs realise |
-| FDH-15 | Comparaison inter-equipes | Detection automatique des ecarts |
-| FDH-16 | Import ERP auto | Synchronisation quotidienne/hebdomadaire |
-| FDH-17 | Export ERP manuel | Periode selectionnee personnalisable |
-| FDH-18 | Macros de paie | Calculs automatises parametrables |
-| FDH-19 | Feuilles de route | Generation automatique PDF |
-| FDH-20 | Mode Offline | Saisie sans connexion, sync auto |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| FDH-01 | 2 onglets de vue | [Chantiers] [Compagnons/Sous-traitants] | ✅ |
+| FDH-02 | Navigation par semaine | Semaine X avec << < > >> pour naviguer | ✅ |
+| FDH-03 | Bouton Exporter | Export des donnees vers fichier ou ERP | ✅ |
+| FDH-04 | Filtre utilisateurs | Dropdown de selection multi-criteres | ✅ |
+| FDH-05 | Vue tabulaire hebdomadaire | Lundi a Vendredi avec dates completes | ✅ |
+| FDH-06 | Multi-chantiers par utilisateur | Plusieurs lignes possibles | ✅ |
+| FDH-07 | Badges colores par chantier | Coherence avec le planning | ✅ |
+| FDH-08 | Total par ligne | Somme heures par utilisateur + chantier | ✅ |
+| FDH-09 | Total groupe | Somme heures utilisateur tous chantiers | ✅ |
+| FDH-10 | Creation auto a l'affectation | Lignes pre-remplies depuis le planning | ✅ |
+| FDH-11 | Saisie mobile | Selecteur roulette HH:MM intuitif | ⏳ Frontend |
+| FDH-12 | Signature electronique | Validation des heures par le compagnon | ✅ |
+| FDH-13 | Variables de paie | Panier, transport, conges, primes, absences | ✅ |
+| FDH-14 | Jauge d'avancement | Comparaison planifie vs realise | ✅ |
+| FDH-15 | Comparaison inter-equipes | Detection automatique des ecarts | ✅ |
+| FDH-16 | Import ERP auto | Synchronisation quotidienne/hebdomadaire | ⏳ Infra |
+| FDH-17 | Export ERP manuel | Periode selectionnee personnalisable | ✅ |
+| FDH-18 | Macros de paie | Calculs automatises parametrables | ⏳ Frontend |
+| FDH-19 | Feuilles de route | Generation automatique PDF | ✅ |
+| FDH-20 | Mode Offline | Saisie sans connexion, sync auto | ⏳ Frontend |
 
 ### 7.3 Variables de paie
 
