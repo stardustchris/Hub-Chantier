@@ -2,10 +2,10 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import declarative_base
 
-from ...domain.value_objects import Role
+from ...domain.value_objects import Role, TypeUtilisateur, Couleur
 
 Base = declarative_base()
 
@@ -14,6 +14,8 @@ class UserModel(Base):
     """
     Modèle SQLAlchemy représentant un utilisateur en base.
 
+    Selon CDC Section 3 - Gestion des Utilisateurs (USR-01 à USR-13).
+
     Note:
         Ce modèle est dans Infrastructure car il dépend de SQLAlchemy.
         Il est mappé vers/depuis l'entité User du Domain.
@@ -21,15 +23,44 @@ class UserModel(Base):
 
     __tablename__ = "users"
 
+    # Identifiant
     id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Authentification
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+
+    # Informations personnelles
     nom = Column(String(100), nullable=False)
     prenom = Column(String(100), nullable=False)
-    role = Column(String(50), nullable=False, default=Role.EMPLOYE.value)
-    is_active = Column(Boolean, nullable=False, default=True)
+    telephone = Column(String(20), nullable=True)  # USR-08
+
+    # Rôle et type
+    role = Column(String(50), nullable=False, default=Role.COMPAGNON.value)  # USR-06
+    type_utilisateur = Column(
+        String(50), nullable=False, default=TypeUtilisateur.EMPLOYE.value
+    )  # USR-05
+
+    # Statut
+    is_active = Column(Boolean, nullable=False, default=True)  # USR-04, USR-10
+
+    # Identification visuelle
+    couleur = Column(String(7), nullable=False, default=Couleur.DEFAULT)  # USR-03
+    photo_profil = Column(String(500), nullable=True)  # USR-02
+
+    # Informations professionnelles
+    code_utilisateur = Column(String(50), nullable=True, index=True)  # USR-07 (matricule)
+    metier = Column(String(100), nullable=True)  # USR-11
+
+    # Contact d'urgence (USR-13)
+    contact_urgence_nom = Column(String(200), nullable=True)
+    contact_urgence_tel = Column(String(20), nullable=True)
+
+    # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.now)
-    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+    updated_at = Column(
+        DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+    )
 
     def __repr__(self) -> str:
         return f"<UserModel(id={self.id}, email={self.email}, role={self.role})>"

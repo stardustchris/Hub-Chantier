@@ -10,6 +10,11 @@ from ...application.use_cases import (
     LoginUseCase,
     RegisterUseCase,
     GetCurrentUserUseCase,
+    UpdateUserUseCase,
+    DeactivateUserUseCase,
+    ActivateUserUseCase,
+    ListUsersUseCase,
+    GetUserByIdUseCase,
 )
 from ..persistence import SQLAlchemyUserRepository
 from shared.infrastructure.database import get_db
@@ -73,16 +78,61 @@ def get_current_user_use_case(
     )
 
 
+def get_update_user_use_case(
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+) -> UpdateUserUseCase:
+    """Retourne le use case de mise à jour utilisateur."""
+    return UpdateUserUseCase(user_repo=user_repo)
+
+
+def get_deactivate_user_use_case(
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+) -> DeactivateUserUseCase:
+    """Retourne le use case de désactivation utilisateur."""
+    return DeactivateUserUseCase(user_repo=user_repo)
+
+
+def get_activate_user_use_case(
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+) -> ActivateUserUseCase:
+    """Retourne le use case d'activation utilisateur."""
+    return ActivateUserUseCase(user_repo=user_repo)
+
+
+def get_list_users_use_case(
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+) -> ListUsersUseCase:
+    """Retourne le use case de liste des utilisateurs."""
+    return ListUsersUseCase(user_repo=user_repo)
+
+
+def get_user_by_id_use_case(
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+) -> GetUserByIdUseCase:
+    """Retourne le use case de récupération par ID."""
+    return GetUserByIdUseCase(user_repo=user_repo)
+
+
 def get_auth_controller(
     login_use_case: LoginUseCase = Depends(get_login_use_case),
     register_use_case: RegisterUseCase = Depends(get_register_use_case),
     get_current_user_use_case: GetCurrentUserUseCase = Depends(get_current_user_use_case),
+    update_user_use_case: UpdateUserUseCase = Depends(get_update_user_use_case),
+    deactivate_user_use_case: DeactivateUserUseCase = Depends(get_deactivate_user_use_case),
+    activate_user_use_case: ActivateUserUseCase = Depends(get_activate_user_use_case),
+    list_users_use_case: ListUsersUseCase = Depends(get_list_users_use_case),
+    get_user_by_id_use_case: GetUserByIdUseCase = Depends(get_user_by_id_use_case),
 ) -> AuthController:
-    """Retourne le controller d'authentification."""
+    """Retourne le controller d'authentification et gestion utilisateurs."""
     return AuthController(
         login_use_case=login_use_case,
         register_use_case=register_use_case,
         get_current_user_use_case=get_current_user_use_case,
+        update_user_use_case=update_user_use_case,
+        deactivate_user_use_case=deactivate_user_use_case,
+        activate_user_use_case=activate_user_use_case,
+        list_users_use_case=list_users_use_case,
+        get_user_by_id_use_case=get_user_by_id_use_case,
     )
 
 

@@ -3,7 +3,7 @@
 from ...domain.entities import User
 from ...domain.repositories import UserRepository
 from ...domain.services import PasswordService
-from ...domain.value_objects import Email, Role
+from ...domain.value_objects import Email, Role, TypeUtilisateur, Couleur
 from ...domain.events import UserCreatedEvent
 from ..ports import TokenService
 from ..dtos import RegisterDTO, AuthResponseDTO, UserDTO, TokenDTO
@@ -15,6 +15,15 @@ class EmailAlreadyExistsError(Exception):
     def __init__(self, email: str):
         self.email = email
         self.message = f"L'email {email} est déjà utilisé"
+        super().__init__(self.message)
+
+
+class CodeAlreadyExistsError(Exception):
+    """Exception levée quand le code utilisateur est déjà utilisé."""
+
+    def __init__(self, code: str):
+        self.code = code
+        self.message = f"Le code utilisateur {code} est déjà utilisé"
         super().__init__(self.message)
 
 
@@ -35,6 +44,7 @@ class RegisterUseCase:
     Cas d'utilisation : Inscription d'un nouvel utilisateur.
 
     Crée un compte utilisateur et retourne un token JWT.
+    Selon CDC Section 3 - Gestion des Utilisateurs (USR-01 à USR-13).
 
     Attributes:
         user_repo: Repository pour accéder aux utilisateurs.
@@ -76,6 +86,7 @@ class RegisterUseCase:
 
         Raises:
             EmailAlreadyExistsError: Si l'email est déjà utilisé.
+            CodeAlreadyExistsError: Si le code utilisateur est déjà utilisé.
             WeakPasswordError: Si le mot de passe est trop faible.
             ValueError: Si les données sont invalides.
         """
@@ -86,6 +97,10 @@ class RegisterUseCase:
         if self.user_repo.exists_by_email(email):
             raise EmailAlreadyExistsError(dto.email)
 
+        # Vérifier que le code utilisateur n'existe pas (si fourni)
+        if dto.code_utilisateur and self.user_repo.exists_by_code(dto.code_utilisateur):
+            raise CodeAlreadyExistsError(dto.code_utilisateur)
+
         # Valider la force du mot de passe
         if not self.password_service.validate_strength(dto.password):
             raise WeakPasswordError()
@@ -93,18 +108,33 @@ class RegisterUseCase:
         # Hasher le mot de passe
         password_hash = self.password_service.hash(dto.password)
 
-        # Déterminer le rôle
-        role = Role.EMPLOYE
+        # Déterminer le rôle (défaut: COMPAGNON)
+        role = Role.COMPAGNON
         if dto.role:
             role = Role.from_string(dto.role)
 
-        # Créer l'utilisateur
+        # Déterminer le type utilisateur (défaut: EMPLOYE)
+        type_utilisateur = TypeUtilisateur.EMPLOYE
+        if dto.type_utilisateur:
+            type_utilisateur = TypeUtilisateur.from_string(dto.type_utilisateur)
+
+        # Déterminer la couleur (défaut: bleu clair)
+        couleur = Couleur.default()
+        if dto.couleur:
+            couleur = Couleur(dto.couleur)
+
+        # Créer l'utilisateur avec tous les champs CDC
         user = User(
             email=email,
             password_hash=password_hash,
             nom=dto.nom,
             prenom=dto.prenom,
             role=role,
+            type_utilisateur=type_utilisateur,
+            couleur=couleur,
+            telephone=dto.telephone,
+            metier=dto.metier,
+            code_utilisateur=dto.code_utilisateur,
         )
 
         # Sauvegarder

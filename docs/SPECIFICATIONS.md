@@ -182,19 +182,18 @@ Le module Utilisateurs permet de gerer l'ensemble des collaborateurs (employes e
 | ID | Fonctionnalite | Description |
 |----|----------------|-------------|
 | USR-01 | Ajout illimite | Nombre d'utilisateurs non plafonne |
-| USR-02 | Invitation SMS | Envoi automatique du lien d'installation de l'app |
-| USR-03 | Photo de profil | Upload d'une photo personnelle |
-| USR-04 | Couleur utilisateur | Palette 16 couleurs pour identification visuelle |
-| USR-05 | Statut Active/Desactive | Toggle pour activer/desactiver l'acces |
-| USR-06 | Type utilisateur | Employe ou Sous-traitant |
-| USR-07 | Role | Administrateur / Conducteur / Chef de Chantier / Compagnon |
-| USR-08 | Code utilisateur | Matricule optionnel pour export paie |
-| USR-09 | Numero mobile | Format international avec selecteur pays |
-| USR-10 | Navigation precedent/suivant | Parcourir les fiches utilisateurs |
-| USR-11 | Revocation instantanee | Desactivation sans suppression des donnees historiques |
-| USR-12 | Metier/Specialite | Classification par corps de metier |
-| USR-13 | Email professionnel | Adresse email optionnelle |
-| USR-14 | Coordonnees d'urgence | Contact en cas d'accident |
+| USR-02 | Photo de profil | Upload d'une photo personnelle |
+| USR-03 | Couleur utilisateur | Palette 16 couleurs pour identification visuelle |
+| USR-04 | Statut Active/Desactive | Toggle pour activer/desactiver l'acces |
+| USR-05 | Type utilisateur | Employe ou Sous-traitant |
+| USR-06 | Role | Administrateur / Conducteur / Chef de Chantier / Compagnon |
+| USR-07 | Code utilisateur | Matricule optionnel pour export paie |
+| USR-08 | Numero mobile | Format international avec selecteur pays |
+| USR-09 | Navigation precedent/suivant | Parcourir les fiches utilisateurs |
+| USR-10 | Revocation instantanee | Desactivation sans suppression des donnees historiques |
+| USR-11 | Metier/Specialite | Classification par corps de metier |
+| USR-12 | Email professionnel | Adresse email optionnelle |
+| USR-13 | Coordonnees d'urgence | Contact en cas d'accident |
 
 ### 3.3 Matrice des roles et permissions
 
