@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { MapPin } from 'lucide-react'
 
 interface MiniMapProps {
@@ -22,7 +21,6 @@ export default function MiniMap({
   latitude,
   longitude,
   height = 'h-40',
-  zoom = 15,
   locationName = 'Localisation',
 }: MiniMapProps) {
   // URL pour une carte statique OpenStreetMap via un service comme staticmap.io ou similaire

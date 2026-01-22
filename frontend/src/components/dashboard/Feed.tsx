@@ -100,7 +100,6 @@ const MOCK_POSTS: Post[] = [
 
 export default function Feed({
   currentUserId,
-  currentUserRole,
   isCompagnon = false,
   mockPosts = MOCK_POSTS,
   mockAuthors = MOCK_AUTHORS,

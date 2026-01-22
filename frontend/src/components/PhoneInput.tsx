@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Phone, AlertCircle, Check } from 'lucide-react'
+import { AlertCircle, Check } from 'lucide-react'
 import {
   COUNTRY_CODES,
   isValidPhone,
@@ -38,7 +38,7 @@ export default function PhoneInput({
   required = false,
   disabled = false,
 }: PhoneInputProps) {
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0])
+  const [selectedCountry, setSelectedCountry] = useState<typeof COUNTRY_CODES[number]>(COUNTRY_CODES[0])
   const [showDropdown, setShowDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isTouched, setIsTouched] = useState(false)
