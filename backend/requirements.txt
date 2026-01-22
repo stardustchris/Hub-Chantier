@@ -22,6 +22,9 @@ email-validator>=2.1.0
 # HTTP Client (pour tests et intégrations futures)
 httpx>=0.26.0
 
+# Image processing
+Pillow>=10.0.0
+
 # Development
 python-dotenv>=1.0.0
 
