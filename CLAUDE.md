@@ -82,6 +82,15 @@ Quand une fonctionnalite est demandee (ex: "Implemente CHT-03"):
 
 > **SPECIFICATIONS.md = source de verite vivante** - elle reflète toujours l'implementation reelle
 
+
+### Apres validation complete
+
+Quand tous les agents ont valide et les tests passent :
+1. Committer et pousser sur la branche de travail
+2. **Proposer automatiquement** de merger sur main (PR ou merge direct)
+3. Ne pas attendre que l'utilisateur le demande
+
+---
 ## Commandes utiles
 
 ```bash
