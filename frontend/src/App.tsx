@@ -6,6 +6,7 @@ import ChantiersListPage from './pages/ChantiersListPage'
 import ChantierDetailPage from './pages/ChantierDetailPage'
 import UsersListPage from './pages/UsersListPage'
 import UserDetailPage from './pages/UserDetailPage'
+import PlanningPage from './pages/PlanningPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -54,6 +55,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/planning"
+            element={
+              <ProtectedRoute>
+                <PlanningPage />
               </ProtectedRoute>
             }
           />

@@ -215,3 +215,73 @@ export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: st
   receptionne: { label: 'Receptionne', color: '#F1C40F', icon: 'check' },
   ferme: { label: 'Ferme', color: '#E74C3C', icon: 'lock' },
 }
+
+// ===== PLANNING / AFFECTATIONS =====
+export type TypeAffectation = 'unique' | 'recurrente'
+export type JourSemaine = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+export interface Affectation {
+  id: string
+  utilisateur_id: string
+  chantier_id: string
+  date: string
+  heure_debut?: string
+  heure_fin?: string
+  note?: string
+  type_affectation: TypeAffectation
+  jours_recurrence?: JourSemaine[]
+  created_at: string
+  updated_at: string
+  created_by: string
+  // Enrichissement (depuis l'API)
+  utilisateur_nom?: string
+  utilisateur_couleur?: string
+  utilisateur_metier?: string
+  chantier_nom?: string
+  chantier_couleur?: string
+}
+
+export interface AffectationCreate {
+  utilisateur_id: string
+  chantier_id: string
+  date: string
+  heure_debut?: string
+  heure_fin?: string
+  note?: string
+  type_affectation?: TypeAffectation
+  jours_recurrence?: JourSemaine[]
+  date_fin_recurrence?: string
+}
+
+export interface AffectationUpdate {
+  heure_debut?: string
+  heure_fin?: string
+  note?: string
+  chantier_id?: string
+}
+
+export interface PlanningFilters {
+  date_debut: string
+  date_fin: string
+  utilisateur_ids?: string[]
+  chantier_ids?: string[]
+  metiers?: string[]
+}
+
+export interface DuplicateAffectationsRequest {
+  utilisateur_id: string
+  source_date_debut: string
+  source_date_fin: string
+  target_date_debut: string
+}
+
+// Jours de la semaine
+export const JOURS_SEMAINE: Record<JourSemaine, { label: string; short: string }> = {
+  0: { label: 'Lundi', short: 'Lun' },
+  1: { label: 'Mardi', short: 'Mar' },
+  2: { label: 'Mercredi', short: 'Mer' },
+  3: { label: 'Jeudi', short: 'Jeu' },
+  4: { label: 'Vendredi', short: 'Ven' },
+  5: { label: 'Samedi', short: 'Sam' },
+  6: { label: 'Dimanche', short: 'Dim' },
+}

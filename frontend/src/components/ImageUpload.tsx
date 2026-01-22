@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Camera, X, Loader2, AlertCircle } from 'lucide-react'
+import { Camera, Loader2, AlertCircle } from 'lucide-react'
 import { uploadService } from '../services/upload'
 
 interface ImageUploadProps {
@@ -171,7 +171,6 @@ export function MultiImageUpload({
   disabled = false,
 }: MultiImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const [selectedCount, setSelectedCount] = useState(0)
 
   const handleClick = () => {
     inputRef.current?.click()
@@ -183,7 +182,6 @@ export function MultiImageUpload({
 
     // Limiter le nombre de fichiers
     const validFiles = files.slice(0, maxFiles).filter((f) => f.type.startsWith('image/'))
-    setSelectedCount(validFiles.length)
 
     // Compresser toutes les images
     const compressedFiles = await Promise.all(

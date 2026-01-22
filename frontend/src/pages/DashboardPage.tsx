@@ -22,15 +22,13 @@ import {
   Phone,
   Navigation,
   Sun,
-  Cloud,
-  Bell,
   Plus,
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Post, Chantier, TargetType } from '../types'
-import { ROLES, METIERS } from '../types'
-import type { UserRole, Metier } from '../types'
+import { ROLES } from '../types'
+import type { UserRole } from '../types'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -148,8 +146,6 @@ export default function DashboardPage() {
     if (!a.is_pinned && b.is_pinned) return 1
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
-
-  const metierInfo = user?.metier ? METIERS[user.metier as Metier] : null
 
   return (
     <Layout>
@@ -574,7 +570,6 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
   const canPin = isAdmin
 
   const roleInfo = post.auteur?.role ? ROLES[post.auteur.role as UserRole] : null
-  const metierInfo = post.auteur?.metier ? METIERS[post.auteur.metier as Metier] : null
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return

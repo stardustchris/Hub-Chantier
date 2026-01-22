@@ -1,0 +1,391 @@
+"""Schemas Pydantic pour le module Planning.
+
+Ce module definit les schemas de validation des requetes/reponses API
+pour le module Planning Operationnel.
+
+Selon CDC Section 5 - Planning Operationnel (PLN-01 a PLN-28).
+"""
+
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List
+from datetime import date
+
+
+class CreateAffectationRequest(BaseModel):
+    """
+    Schema de requete pour creer une affectation.
+
+    Attributes:
+        utilisateur_id: ID de l'utilisateur a affecter.
+        chantier_id: ID du chantier cible.
+        date: Date de l'affectation (YYYY-MM-DD).
+        heure_debut: Heure de debut au format "HH:MM" (optionnel).
+        heure_fin: Heure de fin au format "HH:MM" (optionnel).
+        note: Commentaire prive pour l'affectation (optionnel, max 500 chars).
+        type_affectation: Type "unique" ou "recurrente" (defaut: unique).
+        jours_recurrence: Jours de recurrence [0-6] pour Lun-Dim (optionnel).
+        date_fin_recurrence: Date de fin de la recurrence (optionnel).
+
+    Example:
+        >>> request = CreateAffectationRequest(
+        ...     utilisateur_id=1,
+        ...     chantier_id=2,
+        ...     date=date(2026, 1, 22),
+        ...     heure_debut="08:00",
+        ...     heure_fin="17:00",
+        ... )
+    """
+
+    utilisateur_id: int = Field(..., gt=0, description="ID de l'utilisateur a affecter")
+    chantier_id: int = Field(..., gt=0, description="ID du chantier cible")
+    date: date = Field(..., description="Date de l'affectation")
+    heure_debut: Optional[str] = Field(
+        None,
+        pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+        description="Heure de debut (format HH:MM, ex: 08:00)",
+    )
+    heure_fin: Optional[str] = Field(
+        None,
+        pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+        description="Heure de fin (format HH:MM, ex: 17:00)",
+    )
+    note: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Commentaire prive (max 500 caracteres)",
+    )
+    type_affectation: str = Field(
+        "unique",
+        pattern=r"^(unique|recurrente)$",
+        description="Type d'affectation (unique ou recurrente)",
+    )
+    jours_recurrence: Optional[List[int]] = Field(
+        None,
+        description="Jours de recurrence (0=Lundi, 6=Dimanche)",
+    )
+    date_fin_recurrence: Optional[date] = Field(
+        None,
+        description="Date de fin de la recurrence",
+    )
+
+    @field_validator("jours_recurrence")
+    @classmethod
+    def validate_jours_recurrence(cls, v: Optional[List[int]]) -> Optional[List[int]]:
+        """Valide que les jours de recurrence sont entre 0 et 6."""
+        if v is not None:
+            for jour in v:
+                if not isinstance(jour, int) or jour < 0 or jour > 6:
+                    raise ValueError(
+                        f"Jour de recurrence invalide: {jour}. "
+                        "Valeurs valides: 0 (Lundi) a 6 (Dimanche)"
+                    )
+        return v
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "utilisateur_id": 1,
+                "chantier_id": 2,
+                "date": "2026-01-22",
+                "heure_debut": "08:00",
+                "heure_fin": "17:00",
+                "note": "Travaux de fondation",
+                "type_affectation": "unique",
+            }
+        }
+    }
+
+
+class UpdateAffectationRequest(BaseModel):
+    """
+    Schema de requete pour mettre a jour une affectation.
+
+    Tous les champs sont optionnels - seuls ceux fournis seront mis a jour.
+
+    Attributes:
+        heure_debut: Nouvelle heure de debut au format "HH:MM".
+        heure_fin: Nouvelle heure de fin au format "HH:MM".
+        note: Nouveau commentaire prive.
+        chantier_id: Nouvel ID de chantier.
+
+    Example:
+        >>> request = UpdateAffectationRequest(
+        ...     heure_debut="09:00",
+        ...     heure_fin="18:00",
+        ... )
+    """
+
+    heure_debut: Optional[str] = Field(
+        None,
+        pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+        description="Nouvelle heure de debut (format HH:MM, ex: 09:00)",
+    )
+    heure_fin: Optional[str] = Field(
+        None,
+        pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+        description="Nouvelle heure de fin (format HH:MM, ex: 18:00)",
+    )
+    note: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Nouveau commentaire prive",
+    )
+    chantier_id: Optional[int] = Field(
+        None,
+        gt=0,
+        description="Nouvel ID de chantier",
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "heure_debut": "09:00",
+                "heure_fin": "18:00",
+                "note": "Modification des horaires",
+            }
+        }
+    }
+
+
+class AffectationResponse(BaseModel):
+    """
+    Schema de reponse pour une affectation.
+
+    Inclut les champs d'enrichissement pour l'affichage UI.
+
+    Attributes:
+        id: Identifiant unique de l'affectation.
+        utilisateur_id: ID de l'utilisateur affecte.
+        chantier_id: ID du chantier.
+        date: Date de l'affectation (ISO format).
+        heure_debut: Heure de debut (format HH:MM).
+        heure_fin: Heure de fin (format HH:MM).
+        note: Commentaire prive.
+        type_affectation: Type unique ou recurrente.
+        jours_recurrence: Jours de recurrence [0-6].
+        created_at: Date de creation (ISO format).
+        updated_at: Date de modification (ISO format).
+        created_by: ID du createur.
+        utilisateur_nom: Nom complet de l'utilisateur (enrichissement).
+        utilisateur_couleur: Couleur de l'utilisateur (enrichissement).
+        utilisateur_metier: Metier de l'utilisateur (enrichissement).
+        chantier_nom: Nom du chantier (enrichissement).
+        chantier_couleur: Couleur du chantier (enrichissement).
+    """
+
+    id: int
+    utilisateur_id: int
+    chantier_id: int
+    date: str
+    heure_debut: Optional[str] = None
+    heure_fin: Optional[str] = None
+    note: Optional[str] = None
+    type_affectation: str
+    jours_recurrence: Optional[List[int]] = None
+    created_at: str
+    updated_at: str
+    created_by: int
+    # Enrichissement pour l'UI
+    utilisateur_nom: Optional[str] = None
+    utilisateur_couleur: Optional[str] = None
+    utilisateur_metier: Optional[str] = None
+    chantier_nom: Optional[str] = None
+    chantier_couleur: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": 1,
+                "utilisateur_id": 1,
+                "chantier_id": 2,
+                "date": "2026-01-22",
+                "heure_debut": "08:00",
+                "heure_fin": "17:00",
+                "note": "Travaux de fondation",
+                "type_affectation": "unique",
+                "jours_recurrence": None,
+                "created_at": "2026-01-21T10:00:00",
+                "updated_at": "2026-01-21T10:00:00",
+                "created_by": 1,
+                "utilisateur_nom": "Jean Dupont",
+                "utilisateur_couleur": "#FF5733",
+                "utilisateur_metier": "Macon",
+                "chantier_nom": "Chantier A",
+                "chantier_couleur": "#33FF57",
+            }
+        }
+    }
+
+
+class PlanningFiltersRequest(BaseModel):
+    """
+    Schema pour les filtres de recherche du planning.
+
+    Attributes:
+        date_debut: Date de debut de la periode (incluse).
+        date_fin: Date de fin de la periode (incluse).
+        utilisateur_ids: Liste d'IDs utilisateurs a filtrer.
+        chantier_ids: Liste d'IDs chantiers a filtrer.
+        metiers: Liste de metiers a filtrer.
+        planifies_only: True pour afficher seulement les planifies.
+        non_planifies_only: True pour afficher seulement les non planifies.
+
+    Example:
+        >>> filters = PlanningFiltersRequest(
+        ...     date_debut=date(2026, 1, 20),
+        ...     date_fin=date(2026, 1, 26),
+        ...     utilisateur_ids=[1, 2, 3],
+        ... )
+    """
+
+    date_debut: date = Field(..., description="Date de debut de la periode")
+    date_fin: date = Field(..., description="Date de fin de la periode")
+    utilisateur_ids: Optional[List[int]] = Field(
+        None,
+        description="Liste d'IDs utilisateurs a filtrer",
+    )
+    chantier_ids: Optional[List[int]] = Field(
+        None,
+        description="Liste d'IDs chantiers a filtrer",
+    )
+    metiers: Optional[List[str]] = Field(
+        None,
+        description="Liste de metiers a filtrer",
+    )
+    planifies_only: bool = Field(
+        False,
+        description="True pour afficher seulement les planifies",
+    )
+    non_planifies_only: bool = Field(
+        False,
+        description="True pour afficher seulement les non planifies",
+    )
+
+    @field_validator("date_fin")
+    @classmethod
+    def validate_date_fin(cls, v: date, info) -> date:
+        """Valide que la date de fin est >= date de debut."""
+        if "date_debut" in info.data and v < info.data["date_debut"]:
+            raise ValueError(
+                "La date de fin doit etre posterieure ou egale a la date de debut"
+            )
+        return v
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "date_debut": "2026-01-20",
+                "date_fin": "2026-01-26",
+                "utilisateur_ids": [1, 2, 3],
+                "chantier_ids": None,
+                "metiers": ["Macon", "Electricien"],
+                "planifies_only": False,
+                "non_planifies_only": False,
+            }
+        }
+    }
+
+
+class DuplicateAffectationsRequest(BaseModel):
+    """
+    Schema de requete pour dupliquer des affectations.
+
+    Attributes:
+        utilisateur_id: ID de l'utilisateur dont dupliquer les affectations.
+        source_date_debut: Date de debut de la periode source.
+        source_date_fin: Date de fin de la periode source.
+        target_date_debut: Date de debut de la periode cible.
+
+    Example:
+        >>> request = DuplicateAffectationsRequest(
+        ...     utilisateur_id=1,
+        ...     source_date_debut=date(2026, 1, 13),
+        ...     source_date_fin=date(2026, 1, 17),
+        ...     target_date_debut=date(2026, 1, 20),
+        ... )
+    """
+
+    utilisateur_id: int = Field(
+        ...,
+        gt=0,
+        description="ID de l'utilisateur dont dupliquer les affectations",
+    )
+    source_date_debut: date = Field(
+        ...,
+        description="Date de debut de la periode source",
+    )
+    source_date_fin: date = Field(
+        ...,
+        description="Date de fin de la periode source",
+    )
+    target_date_debut: date = Field(
+        ...,
+        description="Date de debut de la periode cible",
+    )
+
+    @field_validator("source_date_fin")
+    @classmethod
+    def validate_source_date_fin(cls, v: date, info) -> date:
+        """Valide que la date de fin source est >= date de debut source."""
+        if "source_date_debut" in info.data and v < info.data["source_date_debut"]:
+            raise ValueError(
+                "La date de fin source doit etre posterieure ou egale a la date de debut"
+            )
+        return v
+
+    @field_validator("target_date_debut")
+    @classmethod
+    def validate_target_date_debut(cls, v: date, info) -> date:
+        """Valide que la date cible est posterieure a la date de fin source."""
+        if "source_date_fin" in info.data and v <= info.data["source_date_fin"]:
+            raise ValueError(
+                "La date cible doit etre posterieure a la date de fin source"
+            )
+        return v
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "utilisateur_id": 1,
+                "source_date_debut": "2026-01-13",
+                "source_date_fin": "2026-01-17",
+                "target_date_debut": "2026-01-20",
+            }
+        }
+    }
+
+
+class DeleteResponse(BaseModel):
+    """Schema de reponse pour une suppression."""
+
+    deleted: bool
+    id: int
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "deleted": True,
+                "id": 1,
+            }
+        }
+    }
+
+
+class NonPlanifiesResponse(BaseModel):
+    """Schema de reponse pour la liste des utilisateurs non planifies."""
+
+    utilisateur_ids: List[int]
+    date_debut: str
+    date_fin: str
+    count: int
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "utilisateur_ids": [3, 5, 7],
+                "date_debut": "2026-01-20",
+                "date_fin": "2026-01-24",
+                "count": 3,
+            }
+        }
+    }
