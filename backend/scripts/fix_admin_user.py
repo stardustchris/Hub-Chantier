@@ -38,12 +38,12 @@ def main():
             password_hash=password_hash,
             nom="Admin",
             prenom="Greg",
-            role="admin",  # RÔLE CORRECT
-            type_utilisateur="interne",
+            role="admin",  # RÔLE CORRECT: admin, conducteur, chef_chantier, compagnon
+            type_utilisateur="employe",  # TYPE CORRECT: employe, sous_traitant
             is_active=True,
             couleur="#3498DB",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(),
+            updated_at=datetime.now()
         )
 
         db.add(user)
