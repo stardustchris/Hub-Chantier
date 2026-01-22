@@ -233,7 +233,7 @@ def get_current_user(
 def list_users(
     page: int = Query(1, ge=1, description="Numéro de page"),
     size: int = Query(20, ge=1, le=100, description="Nombre d'éléments par page"),
-    search: Optional[str] = Query(None, description="Recherche par nom, prénom ou email"),
+    search: Optional[str] = Query(None, max_length=100, description="Recherche par nom, prénom ou email"),
     role: Optional[str] = Query(None, description="Filtrer par rôle"),
     type_utilisateur: Optional[str] = Query(None, description="Filtrer par type"),
     is_active: Optional[bool] = Query(None, description="Filtrer par statut actif"),

@@ -209,7 +209,7 @@ def list_chantiers(
     page: int = Query(1, ge=1, description="Numéro de page"),
     size: int = Query(100, ge=1, le=500, description="Nombre d'éléments par page"),
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
-    search: Optional[str] = Query(None, description="Recherche par nom ou code"),
+    search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
     controller: ChantierController = Depends(get_chantier_controller),
     current_user_id: int = Depends(get_current_user_id),
 ):

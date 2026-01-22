@@ -32,7 +32,7 @@ from .dependencies import (
     get_add_like_use_case,
     get_remove_like_use_case,
 )
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from modules.auth.infrastructure.web.dependencies import get_current_user_id, get_is_moderator
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -192,9 +192,15 @@ def create_post(
         target_type_map = {"tous": "everyone", "chantiers": "specific_chantiers", "utilisateurs": "specific_people"}
         backend_target_type = target_type_map.get(request.target_type, "everyone")
 
-        # Convertir les IDs string en int
-        chantier_ids = [int(id) for id in request.target_chantier_ids] if request.target_chantier_ids else None
-        user_ids = [int(id) for id in request.target_utilisateur_ids] if request.target_utilisateur_ids else None
+        # Convertir les IDs string en int avec validation
+        try:
+            chantier_ids = [int(id) for id in request.target_chantier_ids] if request.target_chantier_ids else None
+            user_ids = [int(id) for id in request.target_utilisateur_ids] if request.target_utilisateur_ids else None
+        except (ValueError, TypeError) as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Les IDs doivent être des nombres valides",
+            )
 
         dto = CreatePostDTO(
             content=request.contenu,  # Mapping frontend -> backend
@@ -240,6 +246,7 @@ def get_post(
 def delete_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    is_moderator: bool = Depends(get_is_moderator),
     use_case: DeletePostUseCase = Depends(get_delete_post_use_case),
 ):
     """
@@ -248,8 +255,6 @@ def delete_post(
     Seul l'auteur ou un modérateur peut supprimer un post.
     """
     try:
-        # TODO: Vérifier si l'utilisateur est modérateur (Admin/Conducteur)
-        is_moderator = False  # À implémenter avec le service auth
         use_case.execute(
             post_id=post_id,
             user_id=current_user_id,
@@ -273,6 +278,7 @@ def pin_post(
     post_id: int,
     duration_hours: int = Query(default=48, ge=1, le=48),
     current_user_id: int = Depends(get_current_user_id),
+    is_moderator: bool = Depends(get_is_moderator),
     use_case: PinPostUseCase = Depends(get_pin_post_use_case),
     get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
@@ -282,7 +288,6 @@ def pin_post(
     Durée max: 48 heures.
     """
     try:
-        is_moderator = False  # À implémenter avec le service auth
         use_case.execute(
             post_id=post_id,
             user_id=current_user_id,
@@ -309,12 +314,12 @@ def pin_post(
 def unpin_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    is_moderator: bool = Depends(get_is_moderator),
     use_case: PinPostUseCase = Depends(get_pin_post_use_case),
     get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
     """Retire l'épinglage d'un post."""
     try:
-        is_moderator = False
         use_case.unpin(
             post_id=post_id,
             user_id=current_user_id,
