@@ -57,12 +57,12 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 ## Prochaines taches prioritaires
 
-1. [x] **Module dashboard** (CDC Section 2) - Backend complet, en attente frontend
-2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
-3. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
-4. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
-5. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
-6. [ ] Connecter le frontend au backend
+1. [x] **Module dashboard** (CDC Section 2) - Backend complet + Frontend
+2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS + Frontend
+3. [x] **Frontend React** - Dashboard, Chantiers, Utilisateurs
+4. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
+5. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
+6. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
 
 ## Workflow de developpement
 
