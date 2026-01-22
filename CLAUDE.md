@@ -13,7 +13,7 @@
 
 | Fichier | Description |
 |---------|-------------|
-| `docs/SPECIFICATIONS.md` | Cahier des charges fonctionnel (178 fonctionnalites) |
+| `docs/SPECIFICATIONS.md` | Cahier des charges fonctionnel (177 fonctionnalites) |
 | `docs/CDC Greg Constructions v2.1.docx` | CDC original client |
 | `CONTRIBUTING.md` | Conventions, workflow, checklist |
 | `docs/architecture/CLEAN_ARCHITECTURE.md` | Architecture detaillee |
@@ -38,7 +38,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 | Module | CDC Section | Fonctionnalites | Status |
 |--------|-------------|-----------------|--------|
-| auth (utilisateurs) | 3 | USR-01 a USR-14 | **COMPLET** |
+| auth (utilisateurs) | 3 | USR-01 a USR-13 | **COMPLET** |
 | dashboard | 2 | FEED-01 a FEED-20 | Structure only |
 | chantiers | 4 | CHT-01 a CHT-20 | Structure only |
 | planning | 5 | PLN-01 a PLN-28 | Structure only |
@@ -51,6 +51,19 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | Structure only |
 
+### Detail module auth (USR-01 a USR-13)
+
+Le module auth est maintenant complet selon le CDC Section 3 :
+
+- **4 roles** : Admin, Conducteur, Chef de Chantier, Compagnon
+- **2 types** : Employe, Sous-traitant
+- **16 couleurs** : Palette complete pour identification visuelle
+- **Champs complets** : photo, couleur, telephone, metier, code, contact urgence
+- **Use cases** : Login, Register, UpdateUser, DeactivateUser, ActivateUser, ListUsers
+- **Tests unitaires** : test_login.py, test_register.py
+
+Note : USR-02 (Invitation SMS) retire du scope.
+
 ## Prochaines taches prioritaires
 
 1. [ ] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
@@ -61,9 +74,20 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 ## Historique des sessions
 
+### Session 2026-01-22 (suite)
+- Completion du module auth selon CDC Section 3 (USR-01 a USR-13)
+- Retrait USR-02 (Invitation SMS) du scope
+- Ajout 4 roles : Admin, Conducteur, Chef de Chantier, Compagnon
+- Ajout TypeUtilisateur : Employe, Sous-traitant
+- Ajout Couleur (16 couleurs palette CDC)
+- Ajout champs User : photo, couleur, telephone, metier, code, contact urgence
+- Nouveaux use cases : UpdateUser, DeactivateUser, ActivateUser, ListUsers
+- Nouveaux endpoints : /users (CRUD complet)
+- Tests unitaires : test_register.py
+
 ### Session 2026-01-22
 - Import du CDC Greg Constructions v2.1
-- Creation de `docs/SPECIFICATIONS.md` (178 fonctionnalites)
+- Creation de `docs/SPECIFICATIONS.md` (177 fonctionnalites)
 - Reorganisation : Tableau de Bord en section 2
 - Fusion CONTEXT.md dans CLAUDE.md
 - Creation CONTRIBUTING.md

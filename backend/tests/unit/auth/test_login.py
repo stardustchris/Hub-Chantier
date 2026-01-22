@@ -41,7 +41,7 @@ class TestLoginUseCase:
             password_hash=PasswordHash("hashed_password"),
             nom="DUPONT",
             prenom="Jean",
-            role=Role.EMPLOYE,
+            role=Role.COMPAGNON,
             is_active=True,
             created_at=datetime.now(),
             updated_at=datetime.now(),
@@ -101,7 +101,7 @@ class TestLoginUseCase:
             password_hash=PasswordHash("hashed"),
             nom="MARTIN",
             prenom="Marie",
-            role=Role.EMPLOYE,
+            role=Role.COMPAGNON,
             is_active=False,  # Compte désactivé
         )
         self.mock_user_repo.find_by_email.return_value = inactive_user
