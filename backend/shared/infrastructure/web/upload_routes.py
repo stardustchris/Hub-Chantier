@@ -1,0 +1,231 @@
+"""Routes FastAPI pour l'upload de fichiers."""
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from typing import Optional, List
+from pathlib import Path
+import os
+
+from ..files import FileService, FileUploadError
+from .dependencies import get_current_user_id
+
+
+router = APIRouter(prefix="/uploads", tags=["uploads"])
+
+# Configuration
+UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "uploads")
+MAX_PHOTOS_PER_POST = 5
+
+
+def get_file_service() -> FileService:
+    """Dependency injection pour FileService."""
+    return FileService(upload_dir=UPLOAD_DIR)
+
+
+# =============================================================================
+# Pydantic models
+# =============================================================================
+
+
+class UploadResponse(BaseModel):
+    """Réponse d'upload de fichier."""
+
+    url: str
+    thumbnail_url: Optional[str] = None
+
+
+class MultiUploadResponse(BaseModel):
+    """Réponse d'upload de plusieurs fichiers."""
+
+    files: List[UploadResponse]
+
+
+# =============================================================================
+# Routes d'upload
+# =============================================================================
+
+
+@router.post("/profile", response_model=UploadResponse)
+async def upload_profile_photo(
+    file: UploadFile = File(...),
+    current_user_id: int = Depends(get_current_user_id),
+    file_service: FileService = Depends(get_file_service),
+):
+    """
+    Upload une photo de profil utilisateur (USR-02).
+
+    Args:
+        file: Fichier image à uploader.
+        current_user_id: ID de l'utilisateur connecté.
+        file_service: Service de gestion des fichiers.
+
+    Returns:
+        URL du fichier uploadé.
+    """
+    try:
+        content = await file.read()
+        url = file_service.upload_profile_photo(
+            file_content=content,
+            filename=file.filename or "photo.jpg",
+            user_id=current_user_id,
+        )
+        return UploadResponse(url=url)
+    except FileUploadError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+
+
+@router.post("/posts/{post_id}", response_model=MultiUploadResponse)
+async def upload_post_media(
+    post_id: int,
+    files: List[UploadFile] = File(...),
+    current_user_id: int = Depends(get_current_user_id),
+    file_service: FileService = Depends(get_file_service),
+):
+    """
+    Upload des médias pour un post (FEED-02, FEED-19).
+
+    Maximum 5 photos par post.
+
+    Args:
+        post_id: ID du post.
+        files: Fichiers images à uploader.
+        current_user_id: ID de l'utilisateur connecté.
+        file_service: Service de gestion des fichiers.
+
+    Returns:
+        Liste des URLs des fichiers uploadés.
+    """
+    if len(files) > MAX_PHOTOS_PER_POST:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Maximum {MAX_PHOTOS_PER_POST} photos par post",
+        )
+
+    results = []
+    for file in files:
+        try:
+            content = await file.read()
+            url, thumbnail_url = file_service.upload_post_media(
+                file_content=content,
+                filename=file.filename or "photo.jpg",
+                post_id=post_id,
+            )
+            results.append(UploadResponse(url=url, thumbnail_url=thumbnail_url))
+        except FileUploadError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Erreur avec {file.filename}: {e.message}",
+            )
+
+    return MultiUploadResponse(files=results)
+
+
+@router.post("/chantiers/{chantier_id}", response_model=UploadResponse)
+async def upload_chantier_photo(
+    chantier_id: int,
+    file: UploadFile = File(...),
+    current_user_id: int = Depends(get_current_user_id),
+    file_service: FileService = Depends(get_file_service),
+):
+    """
+    Upload une photo de couverture de chantier (CHT-01).
+
+    Args:
+        chantier_id: ID du chantier.
+        file: Fichier image à uploader.
+        current_user_id: ID de l'utilisateur connecté.
+        file_service: Service de gestion des fichiers.
+
+    Returns:
+        URL du fichier uploadé.
+    """
+    try:
+        content = await file.read()
+        url = file_service.upload_chantier_photo(
+            file_content=content,
+            filename=file.filename or "photo.jpg",
+            chantier_id=chantier_id,
+        )
+        return UploadResponse(url=url)
+    except FileUploadError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+
+
+# =============================================================================
+# Route pour servir les fichiers statiques
+# =============================================================================
+
+
+@router.get("/{category}/{filename}")
+async def get_uploaded_file(category: str, filename: str):
+    """
+    Sert un fichier uploadé.
+
+    Args:
+        category: Catégorie (profiles, posts, chantiers, thumbnails).
+        filename: Nom du fichier.
+
+    Returns:
+        Le fichier.
+    """
+    allowed_categories = {"profiles", "posts", "chantiers", "thumbnails"}
+    if category not in allowed_categories:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Fichier non trouvé",
+        )
+
+    # SÉCURITÉ: Validation contre path traversal
+    # Vérifie que le filename ne contient pas de caractères malveillants
+    if os.path.basename(filename) != filename or ".." in filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nom de fichier invalide",
+        )
+
+    file_path = Path(UPLOAD_DIR) / category / filename
+
+    # SÉCURITÉ: Vérifie que le chemin résolu est bien dans UPLOAD_DIR
+    try:
+        resolved_path = file_path.resolve()
+        upload_dir_resolved = Path(UPLOAD_DIR).resolve()
+        if not str(resolved_path).startswith(str(upload_dir_resolved)):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Chemin de fichier invalide",
+            )
+    except (ValueError, OSError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Chemin de fichier invalide",
+        )
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Fichier non trouvé",
+        )
+
+    # Déterminer le MIME type réel
+    ext = file_path.suffix.lower()
+    mime_types = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+    }
+    media_type = mime_types.get(ext, "application/octet-stream")
+
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_type,
+        filename=filename,
+    )

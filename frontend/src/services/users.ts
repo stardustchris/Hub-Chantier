@@ -9,6 +9,11 @@ export interface UsersListParams {
   is_active?: boolean
 }
 
+export interface NavigationIds {
+  prevId: string | null
+  nextId: string | null
+}
+
 export const usersService = {
   async list(params: UsersListParams = {}): Promise<PaginatedResponse<User>> {
     const response = await api.get<PaginatedResponse<User>>('/api/users', { params })
@@ -18,6 +23,27 @@ export const usersService = {
   async getById(id: string): Promise<User> {
     const response = await api.get<User>(`/api/users/${id}`)
     return response.data
+  },
+
+  /**
+   * Récupère les IDs précédent/suivant pour navigation (USR-09).
+   */
+  async getNavigationIds(currentId: string): Promise<NavigationIds> {
+    try {
+      // Récupérer la liste complète des IDs triés
+      const response = await api.get<PaginatedResponse<User>>('/api/users', {
+        params: { size: 500 },
+      })
+      const ids = response.data.items.map((u) => u.id)
+      const currentIndex = ids.indexOf(currentId)
+
+      return {
+        prevId: currentIndex > 0 ? ids[currentIndex - 1] : null,
+        nextId: currentIndex < ids.length - 1 ? ids[currentIndex + 1] : null,
+      }
+    } catch {
+      return { prevId: null, nextId: null }
+    }
   },
 
   async create(data: UserCreate): Promise<User> {

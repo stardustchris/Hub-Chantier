@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { usersService } from '../services/users'
+import { usersService, NavigationIds } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
 import Layout from '../components/Layout'
+import NavigationPrevNext from '../components/NavigationPrevNext'
+import ImageUpload from '../components/ImageUpload'
 import {
   ArrowLeft,
   Phone,
@@ -16,6 +18,7 @@ import {
   Calendar,
   Briefcase,
   Hash,
+  Camera,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -29,6 +32,7 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
 
   const isAdmin = currentUser?.role === 'administrateur'
   const isSelf = currentUser?.id === id
@@ -36,6 +40,7 @@ export default function UserDetailPage() {
   useEffect(() => {
     if (id) {
       loadUser()
+      loadNavigation()
     }
   }, [id])
 
@@ -49,6 +54,20 @@ export default function UserDetailPage() {
       navigate('/utilisateurs')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadNavigation = async () => {
+    const ids = await usersService.getNavigationIds(id!)
+    setNavIds(ids)
+  }
+
+  const handlePhotoUpload = async (url: string) => {
+    try {
+      const updated = await usersService.update(id!, { photo_profil: url } as UserUpdate)
+      setUser(updated)
+    } catch (error) {
+      console.error('Error updating photo:', error)
     }
   }
 
@@ -94,26 +113,59 @@ export default function UserDetailPage() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
-        {/* Back button */}
-        <Link
-          to="/utilisateurs"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Retour aux utilisateurs
-        </Link>
+        {/* Back button + Navigation (USR-09) */}
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            to="/utilisateurs"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour aux utilisateurs
+          </Link>
+          <NavigationPrevNext
+            prevId={navIds.prevId}
+            nextId={navIds.nextId}
+            baseUrl="/utilisateurs"
+            entityLabel="utilisateur"
+          />
+        </div>
 
         {/* Header card */}
         <div className="card mb-6">
           <div className="flex flex-col md:flex-row md:items-start gap-6">
-            {/* Avatar */}
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center text-white font-bold text-3xl shrink-0"
-              style={{ backgroundColor: user.couleur || '#3498DB' }}
-            >
-              {user.prenom?.[0]}
-              {user.nom?.[0]}
-            </div>
+            {/* Avatar with upload (USR-02) */}
+            {(isAdmin || isSelf) ? (
+              <ImageUpload
+                currentImage={user.photo_profil}
+                onUpload={handlePhotoUpload}
+                type="profile"
+                entityId={id!}
+                size="large"
+                placeholder={
+                  <div
+                    className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-3xl"
+                    style={{ backgroundColor: user.couleur || '#3498DB' }}
+                  >
+                    {user.prenom?.[0]}
+                    {user.nom?.[0]}
+                  </div>
+                }
+              />
+            ) : (
+              <div
+                className="w-24 h-24 rounded-full flex items-center justify-center text-white font-bold text-3xl shrink-0 overflow-hidden"
+                style={{ backgroundColor: user.couleur || '#3498DB' }}
+              >
+                {user.photo_profil ? (
+                  <img src={user.photo_profil} alt={`${user.prenom} ${user.nom}`} className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    {user.prenom?.[0]}
+                    {user.nom?.[0]}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Info */}
             <div className="flex-1">
