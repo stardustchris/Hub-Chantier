@@ -254,10 +254,12 @@ export interface AffectationCreate {
 }
 
 export interface AffectationUpdate {
+  date?: string
+  utilisateur_id?: string
+  chantier_id?: string
   heure_debut?: string
   heure_fin?: string
   note?: string
-  chantier_id?: string
 }
 
 export interface PlanningFilters {
