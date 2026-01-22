@@ -186,6 +186,13 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
 - Lecture/exploration du code sans modification
 - Commandes git simples (status, log, etc.)
 
+### Apres validation complete
+
+Quand tous les agents ont valide et les tests passent :
+1. Committer et pousser sur la branche de travail
+2. **Proposer automatiquement** de merger sur main (PR ou merge direct)
+3. Ne pas attendre que l'utilisateur le demande
+
 ---
 
 ## Correspondance Modules ↔ CDC
