@@ -53,52 +53,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | Structure only |
 
-### Detail module auth (USR-01 a USR-13)
-
-Le module auth est maintenant complet selon le CDC Section 3 :
-
-- **4 roles** : Admin, Conducteur, Chef de Chantier, Compagnon
-- **2 types** : Employe, Sous-traitant
-- **16 couleurs** : Palette complete pour identification visuelle
-- **Champs complets** : photo, couleur, telephone, metier, code, contact urgence
-- **Use cases** : Login, Register, UpdateUser, DeactivateUser, ActivateUser, ListUsers
-- **Tests unitaires** : test_login.py, test_register.py
-
-Note : USR-02 (Invitation SMS) retire du scope.
-
-### Detail module chantiers (CHT-01 a CHT-20)
-
-Le module chantiers est maintenant complet selon le CDC Section 4 :
-
-- **Statuts** : Ouvert, En cours, Receptionne, Ferme (CHT-03)
-- **Coordonnees GPS** : Latitude/Longitude avec URLs navigation Google/Waze (CHT-04)
-- **Multi-responsables** : Conducteurs et Chefs de chantier multiples (CHT-05, CHT-06)
-- **Contact chantier** : Nom et telephone du contact sur place (CHT-07)
-- **Code chantier** : Format lettre + 3 chiffres, auto-generation (CHT-19)
-- **Dates previsionnelles** : Date debut et fin (CHT-20)
-- **Heures estimees** : Budget temps previsionnel (CHT-18)
-- **Couleur** : Identification visuelle (CHT-02)
-- **Photo couverture** : URL image (CHT-01)
-- **Use cases** : CreateChantier, GetChantier, ListChantiers, UpdateChantier, DeleteChantier, ChangeStatut, AssignResponsable
-- **Tests unitaires** : test_create_chantier.py, test_change_statut.py
-
-### Detail module dashboard (FEED-01 a FEED-20)
-
-Le module dashboard (fil d'actualites social interne) est complet cote backend selon CDC Section 2 :
-
-- **Entites** : Post, Comment, Like, PostMedia
-- **Value Objects** : PostStatus (PUBLISHED/PINNED/ARCHIVED/DELETED), PostTargeting (EVERYONE/SPECIFIC_CHANTIERS/SPECIFIC_PEOPLE)
-- **Ciblage** : Posts cibles vers tout le monde, chantiers specifiques ou personnes (FEED-03, FEED-09)
-- **Epinglage** : Posts urgents epingles 48h max en haut du feed (FEED-08)
-- **Archivage** : Auto-archivage apres 7 jours, toujours consultables (FEED-20)
-- **Medias** : Jusqu'a 5 photos par post, max 2Mo par image (FEED-02, FEED-19)
-- **Reactions** : Likes et commentaires (FEED-04, FEED-05)
-- **Moderation** : Suppression par auteur ou moderateur (FEED-16)
-- **Pagination** : Scroll infini avec 20 posts par page (FEED-18)
-- **Use cases** : PublishPost, GetFeed, GetPost, DeletePost, PinPost, AddComment, AddLike, RemoveLike
-- **Tests unitaires** : test_publish_post.py (9 tests), test_get_feed.py (6 tests), test_add_like.py (4 tests), test_add_comment.py (6 tests)
-
-Note : FEED-06 (Badges), FEED-11 (Mise en forme), FEED-17 (Notifications push) necessitent le frontend ou une infrastructure supplementaire.
+> Details des modules : voir `.claude/history.md`
 
 ## Prochaines taches prioritaires
 
