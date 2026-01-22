@@ -3,7 +3,20 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
-## Session 2026-01-22 (dashboard)
+## Session 2026-01-22 (dashboard frontend)
+
+- Implementation des composants React pour le dashboard
+- PostComposer : zone de publication avec ciblage et urgence
+- PostCard : affichage des posts avec likes, commentaires, epinglage
+- Feed : liste des posts avec scroll infini et tri (epingles en premier)
+- DashboardPage : integration API complète avec dashboardService
+- Quick Stats : chantiers actifs, heures semaine, taches, publications
+- Types TypeScript : Post, Comment, Like, Author, CreatePostData, TargetType
+- Service dashboard.ts : getFeed, createPost, likePost, addComment, pinPost, deletePost
+- Validation par architect-reviewer et code-reviewer
+- Tests generes par test-automator (103 tests)
+
+## Session 2026-01-22 (dashboard backend)
 
 - Revue et validation du module dashboard selon CDC Section 2 (FEED-01 a FEED-20)
 - Architecture confirmee conforme Clean Architecture par architect-reviewer
