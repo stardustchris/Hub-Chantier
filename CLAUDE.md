@@ -84,8 +84,13 @@ Quand une fonctionnalite est demandee (ex: "Implemente CHT-03"):
 3. `architect-reviewer` verifie la conformite
 4. `test-automator` genere les tests pytest
 5. `code-reviewer` verifie qualite et securite
-6. Mettre a jour SPECIFICATIONS.md (statut)
+6. Mettre a jour SPECIFICATIONS.md:
+   - Modifier le contenu si l'implementation differe de la spec initiale
+   - Ajouter la feature si nouvelle (hors CDC)
+   - Passer le statut a ✅
 7. Mettre a jour ce fichier (CLAUDE.md)
+
+> **SPECIFICATIONS.md = source de verite vivante** - elle reflète toujours l'implementation reelle
 
 ## Historique des sessions
 

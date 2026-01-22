@@ -30,7 +30,26 @@ Utilisateur demande: "Implemente CHT-03" ou "Cree le module chantiers"
 3. [architect-reviewer] Verifier la conformite architecture
 4. [test-automator] Generer les tests unitaires
 5. [code-reviewer] Verifier qualite et securite
-6. [SPECS] Mettre a jour le status dans SPECIFICATIONS.md (⏳ → ✅)
+6. [SPECS] Mettre a jour SPECIFICATIONS.md:
+   - Modifier le contenu si l'implementation differe de la spec initiale
+   - Passer le statut a ✅
+7. [CLAUDE.md] Mettre a jour l'etat du projet
+```
+
+### Quand ajouter une nouvelle fonctionnalite (hors CDC initial)
+
+```
+Utilisateur demande: "Ajoute la fonctionnalite X"
+
+1. [SPECS] Ajouter la fonctionnalite dans SPECIFICATIONS.md:
+   - Generer un nouvel ID (ex: CHT-21 si c'est pour chantiers)
+   - Documenter la spec complete (description, regles metier, criteres)
+   - Status initial: ⏳
+2. [python-pro] Implementer selon Clean Architecture
+3. [architect-reviewer] Verifier la conformite architecture
+4. [test-automator] Generer les tests unitaires
+5. [code-reviewer] Verifier qualite et securite
+6. [SPECS] Passer le statut a ✅
 7. [CLAUDE.md] Mettre a jour l'etat du projet
 ```
 
@@ -120,7 +139,10 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  5. MISE A JOUR DOCUMENTATION                                   │
-│     - SPECIFICATIONS.md: Marquer fonctionnalite ✅              │
+│     - SPECIFICATIONS.md:                                        │
+│       • Modifier le contenu si implementation differe           │
+│       • Ajouter la feature si nouvelle (hors CDC)               │
+│       • Passer le statut a ✅                                   │
 │     - CLAUDE.md: Mettre a jour etat du module                   │
 └─────────────────────────────────────────────────────────────────┘
                             │
