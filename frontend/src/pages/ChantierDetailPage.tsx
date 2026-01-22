@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { chantiersService } from '../services/chantiers'
+import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
 import Layout from '../components/Layout'
+import NavigationPrevNext from '../components/NavigationPrevNext'
+import MiniMap from '../components/MiniMap'
 import {
   ArrowLeft,
   MapPin,
@@ -19,6 +21,7 @@ import {
   Plus,
   X,
   Navigation,
+  ExternalLink,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -35,6 +38,7 @@ export default function ChantierDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
 
   const isAdmin = currentUser?.role === 'administrateur'
   const isConducteur = currentUser?.role === 'conducteur'
@@ -43,8 +47,14 @@ export default function ChantierDetailPage() {
   useEffect(() => {
     if (id) {
       loadChantier()
+      loadNavigation()
     }
   }, [id])
+
+  const loadNavigation = async () => {
+    const ids = await chantiersService.getNavigationIds(id!)
+    setNavIds(ids)
+  }
 
   const loadChantier = async () => {
     try {
@@ -164,14 +174,22 @@ export default function ChantierDetailPage() {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto">
-        {/* Back button */}
-        <Link
-          to="/chantiers"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Retour aux chantiers
-        </Link>
+        {/* Back button + Navigation (CHT-14) */}
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            to="/chantiers"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour aux chantiers
+          </Link>
+          <NavigationPrevNext
+            prevId={navIds.prevId}
+            nextId={navIds.nextId}
+            baseUrl="/chantiers"
+            entityLabel="chantier"
+          />
+        </div>
 
         {/* Header */}
         <div className="card mb-6">
@@ -405,22 +423,38 @@ export default function ChantierDetailPage() {
               </div>
             )}
 
-            {/* Map / Navigation */}
+            {/* Map / Navigation (CHT-08, CHT-09) */}
             {chantier.latitude && chantier.longitude && (
               <div className="card">
                 <h2 className="font-semibold text-gray-900 mb-4">Localisation</h2>
-                <div className="aspect-video bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-gray-400" />
+                {/* Mini carte interactive (CHT-09) */}
+                <MiniMap
+                  latitude={chantier.latitude}
+                  longitude={chantier.longitude}
+                  height="h-40"
+                  locationName={chantier.nom}
+                />
+                {/* Boutons navigation GPS (CHT-08) */}
+                <div className="flex gap-2 mt-3">
+                  <a
+                    href={chantiersService.getGoogleMapsUrl(chantier.latitude, chantier.longitude)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 btn btn-primary flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Navigation className="w-4 h-4" />
+                    Google Maps
+                  </a>
+                  <a
+                    href={chantiersService.getWazeUrl(chantier.latitude, chantier.longitude)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 btn btn-outline flex items-center justify-center gap-2 text-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Waze
+                  </a>
                 </div>
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${chantier.latitude},${chantier.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <Navigation className="w-4 h-4" />
-                  Itineraire Google Maps
-                </a>
               </div>
             )}
           </div>

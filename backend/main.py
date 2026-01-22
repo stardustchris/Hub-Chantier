@@ -7,6 +7,7 @@ from shared.infrastructure import settings, init_db
 from modules.auth.infrastructure.web import router as auth_router, users_router
 from modules.chantiers.infrastructure.web import router as chantiers_router
 from modules.dashboard.infrastructure.web import dashboard_router
+from shared.infrastructure.web.upload_routes import router as upload_router
 
 # Créer l'application
 app = FastAPI(
@@ -68,6 +69,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
 app.include_router(chantiers_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(upload_router, prefix="/api")
 
 # Futurs modules à ajouter:
 # app.include_router(employes_router, prefix="/api")

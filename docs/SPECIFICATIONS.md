@@ -143,12 +143,12 @@ Affichage timeline visuel :
 | FEED-03 | Ciblage destinataires | Tout le monde / Chantiers / Personnes | ✅ |
 | FEED-04 | Likes | Reagir aux publications | ✅ |
 | FEED-05 | Commentaires | Repondre aux publications | ✅ |
-| FEED-06 | Badges utilisateurs | Affichage role et metier | ⏳ Frontend |
+| FEED-06 | Badges utilisateurs | Affichage role et metier | ✅ |
 | FEED-07 | Indicateur ciblage | Afficher la cible du post | ✅ |
 | FEED-08 | Posts urgents | Epingler en haut du feed (48h max) | ✅ |
 | FEED-09 | Filtrage automatique | Compagnons voient uniquement leurs chantiers | ✅ |
 | FEED-10 | Emojis | Support des emojis dans les posts | ✅ |
-| FEED-11 | Mise en forme | Texte enrichi basique | ⏳ Frontend |
+| FEED-11 | Mise en forme | Texte enrichi basique (retours a la ligne) | ✅ |
 | FEED-12 | Horodatage | Date et heure de publication | ✅ |
 | FEED-13 | Photos placeholder | Chargement progressif des images | ✅ |
 | FEED-14 | Mentions @ | Mentionner des utilisateurs (future) | 🔮 Future |
@@ -159,7 +159,7 @@ Affichage timeline visuel :
 | FEED-19 | Compression photos | Automatique (max 2 Mo) | ✅ |
 | FEED-20 | Archivage | Posts +7 jours archives mais consultables | ✅ |
 
-**Legende**: ✅ Backend complet | ⏳ En attente (Frontend/Infra) | 🔮 Future version
+**Legende**: ✅ Complet | ⏳ En attente (Infra) | 🔮 Future version
 
 ### 2.5 Regles metier
 
@@ -181,21 +181,21 @@ Le module Utilisateurs permet de gerer l'ensemble des collaborateurs (employes e
 
 ### 3.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| USR-01 | Ajout illimite | Nombre d'utilisateurs non plafonne |
-| USR-02 | Photo de profil | Upload d'une photo personnelle |
-| USR-03 | Couleur utilisateur | Palette 16 couleurs pour identification visuelle |
-| USR-04 | Statut Active/Desactive | Toggle pour activer/desactiver l'acces |
-| USR-05 | Type utilisateur | Employe ou Sous-traitant |
-| USR-06 | Role | Administrateur / Conducteur / Chef de Chantier / Compagnon |
-| USR-07 | Code utilisateur | Matricule optionnel pour export paie |
-| USR-08 | Numero mobile | Format international avec selecteur pays |
-| USR-09 | Navigation precedent/suivant | Parcourir les fiches utilisateurs |
-| USR-10 | Revocation instantanee | Desactivation sans suppression des donnees historiques |
-| USR-11 | Metier/Specialite | Classification par corps de metier |
-| USR-12 | Email professionnel | Adresse email optionnelle |
-| USR-13 | Coordonnees d'urgence | Contact en cas d'accident |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| USR-01 | Ajout illimite | Nombre d'utilisateurs non plafonne | ✅ |
+| USR-02 | Photo de profil | Upload d'une photo personnelle | ✅ |
+| USR-03 | Couleur utilisateur | Palette 16 couleurs pour identification visuelle | ✅ |
+| USR-04 | Statut Active/Desactive | Toggle pour activer/desactiver l'acces | ✅ |
+| USR-05 | Type utilisateur | Employe ou Sous-traitant | ✅ |
+| USR-06 | Role | Administrateur / Conducteur / Chef de Chantier / Compagnon | ✅ |
+| USR-07 | Code utilisateur | Matricule optionnel pour export paie | ✅ |
+| USR-08 | Numero mobile | Format international avec selecteur pays | ✅ |
+| USR-09 | Navigation precedent/suivant | Parcourir les fiches utilisateurs | ✅ |
+| USR-10 | Revocation instantanee | Desactivation sans suppression des donnees historiques | ✅ |
+| USR-11 | Metier/Specialite | Classification par corps de metier | ✅ |
+| USR-12 | Email professionnel | Adresse email (requis pour l'authentification) | ✅ |
+| USR-13 | Coordonnees d'urgence | Contact en cas d'accident | ✅ |
 
 ### 3.3 Matrice des roles et permissions
 
@@ -231,28 +231,30 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 
 ### 4.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| CHT-01 | Photo de couverture | Image representative du chantier |
-| CHT-02 | Couleur chantier | Palette 16 couleurs pour coherence visuelle globale |
-| CHT-03 | Statut chantier | Ouvert / En cours / Receptionne / Ferme |
-| CHT-04 | Coordonnees GPS | Latitude + Longitude pour geolocalisation |
-| CHT-05 | Multi-conducteurs | Affectation de plusieurs conducteurs de travaux |
-| CHT-06 | Multi-chefs de chantier | Affectation de plusieurs chefs |
-| CHT-07 | Contact chantier | Nom et telephone du contact sur place |
-| CHT-08 | Navigation GPS | Bouton direct vers Google Maps / Waze |
-| CHT-09 | Mini carte | Apercu cartographique avec marqueur de localisation |
-| CHT-10 | Fil d'actualite | Timeline des publications et evenements |
-| CHT-11 | Publications photos/videos | Jusqu'a 10 photos simultanees par publication |
-| CHT-12 | Commentaires | Systeme de discussion sur chaque publication |
-| CHT-13 | Signature dans publication | Option de signature electronique |
-| CHT-14 | Navigation precedent/suivant | Parcourir les fiches chantiers |
-| CHT-15 | Stockage illimite | Aucune limite sur les documents et medias |
-| CHT-16 | Liste equipe affectee | Visualisation des collaborateurs assignes |
-| CHT-17 | Alertes memo | Indicateur visuel si memo actif |
-| CHT-18 | Heures estimees | Budget temps previsionnel du chantier |
-| CHT-19 | Code chantier | Identifiant unique (ex: A001, B023) |
-| CHT-20 | Dates debut/fin previsionnelles | Planning macro du projet |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| CHT-01 | Photo de couverture | Image representative du chantier | ✅ |
+| CHT-02 | Couleur chantier | Palette 16 couleurs pour coherence visuelle globale | ✅ |
+| CHT-03 | Statut chantier | Ouvert / En cours / Receptionne / Ferme | ✅ |
+| CHT-04 | Coordonnees GPS | Latitude + Longitude pour geolocalisation | ✅ |
+| CHT-05 | Multi-conducteurs | Affectation de plusieurs conducteurs de travaux | ✅ |
+| CHT-06 | Multi-chefs de chantier | Affectation de plusieurs chefs | ✅ |
+| CHT-07 | Contact chantier | Nom et telephone du contact sur place | ✅ |
+| CHT-08 | Navigation GPS | Bouton direct vers Google Maps / Waze | ✅ |
+| CHT-09 | Mini carte | Apercu cartographique avec marqueur de localisation | ✅ |
+| CHT-10 | Fil d'actualite | Via module Dashboard avec ciblage chantier (FEED-03) | ✅ |
+| CHT-11 | Publications photos/videos | Via module Dashboard (FEED-02) - max 5 photos | ✅ |
+| CHT-12 | Commentaires | Via module Dashboard (FEED-05) | ✅ |
+| CHT-13 | Signature dans publication | Option de signature electronique | 🔮 Future |
+| CHT-14 | Navigation precedent/suivant | Parcourir les fiches chantiers | ✅ |
+| CHT-15 | Stockage illimite | Aucune limite sur les documents et medias | ✅ |
+| CHT-16 | Liste equipe affectee | Visualisation des collaborateurs assignes | ✅ |
+| CHT-17 | Alertes memo | Indicateur visuel si memo actif | ⏳ Module memos |
+| CHT-18 | Heures estimees | Budget temps previsionnel du chantier | ✅ |
+| CHT-19 | Code chantier | Identifiant unique (ex: A001, B023) | ✅ |
+| CHT-20 | Dates debut/fin previsionnelles | Planning macro du projet | ✅ |
+
+**Note**: CHT-10 a CHT-12 sont implementes via le module Dashboard avec ciblage par chantier. Les posts cibles sur un chantier specifique apparaissent dans le fil d'actualite de ce chantier.
 
 ### 4.3 Onglets de la fiche chantier
 

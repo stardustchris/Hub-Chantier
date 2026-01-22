@@ -3,6 +3,41 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (verification specs alignment)
+
+- Analyse complete de l'alignement entre specs, backend et frontend
+- Identification des ecarts sur les 3 modules complets (auth, dashboard, chantiers)
+
+### Backend cree
+- `shared/infrastructure/files/file_service.py` : Service d'upload avec compression (USR-02, FEED-02, FEED-19, CHT-01)
+- `shared/infrastructure/web/upload_routes.py` : Routes d'upload avec protection path traversal
+
+### Frontend cree
+- `services/upload.ts` : Service d'upload avec validation client
+- `components/ImageUpload.tsx` : Composant upload photo (USR-02, CHT-01)
+- `components/MiniMap.tsx` : Composant carte GPS OpenStreetMap (CHT-09)
+- `components/NavigationPrevNext.tsx` : Navigation precedent/suivant (USR-09, CHT-14)
+- `components/PhoneInput.tsx` : Input telephone international (USR-08)
+- `utils/phone.ts` : Utilitaires validation telephone
+
+### Pages modifiees
+- `UserDetailPage.tsx` : Ajout navigation prev/next + upload photo profil
+- `ChantierDetailPage.tsx` : Ajout navigation prev/next + carte GPS + liens Waze/Google Maps
+
+### Services modifies
+- `users.ts` : Ajout getNavigationIds()
+- `chantiers.ts` : Ajout getNavigationIds(), getWazeUrl(), getGoogleMapsUrl()
+
+### Specifications mises a jour
+- FEED-06, FEED-11 : Passes de "En attente" a "Complet"
+- CHT-01 a CHT-20 : Ajout colonne Status avec verifications
+- USR-01 a USR-13 : Ajout colonne Status avec verifications
+- CHT-10 a CHT-12 : Clarification que ces features sont via module Dashboard avec ciblage
+
+### Validation agents
+- architect-reviewer : PASS (9/10)
+- code-reviewer : PASS apres correction vulnerabilite path traversal
+
 ## Session 2026-01-22 (dashboard frontend)
 
 - Implementation des composants React pour le dashboard

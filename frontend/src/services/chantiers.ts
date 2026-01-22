@@ -8,6 +8,11 @@ export interface ChantiersListParams {
   statut?: ChantierStatut
 }
 
+export interface NavigationIds {
+  prevId: string | null
+  nextId: string | null
+}
+
 export const chantiersService = {
   async list(params: ChantiersListParams = {}): Promise<PaginatedResponse<Chantier>> {
     const response = await api.get<PaginatedResponse<Chantier>>('/api/chantiers', { params })
@@ -17,6 +22,40 @@ export const chantiersService = {
   async getById(id: string): Promise<Chantier> {
     const response = await api.get<Chantier>(`/api/chantiers/${id}`)
     return response.data
+  },
+
+  /**
+   * Récupère les IDs précédent/suivant pour navigation (CHT-14).
+   */
+  async getNavigationIds(currentId: string): Promise<NavigationIds> {
+    try {
+      const response = await api.get<PaginatedResponse<Chantier>>('/api/chantiers', {
+        params: { size: 500 },
+      })
+      const ids = response.data.items.map((c) => c.id)
+      const currentIndex = ids.indexOf(currentId)
+
+      return {
+        prevId: currentIndex > 0 ? ids[currentIndex - 1] : null,
+        nextId: currentIndex < ids.length - 1 ? ids[currentIndex + 1] : null,
+      }
+    } catch {
+      return { prevId: null, nextId: null }
+    }
+  },
+
+  /**
+   * Génère l'URL Waze pour navigation GPS (CHT-08).
+   */
+  getWazeUrl(latitude: number, longitude: number): string {
+    return `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`
+  },
+
+  /**
+   * Génère l'URL Google Maps pour navigation GPS (CHT-08).
+   */
+  getGoogleMapsUrl(latitude: number, longitude: number): string {
+    return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
   },
 
   async getByCode(code: string): Promise<Chantier> {
