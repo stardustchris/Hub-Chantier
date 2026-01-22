@@ -21,7 +21,7 @@ from ...application.use_cases import (
 )
 from ...application.use_cases.add_comment import CommentContentEmptyError
 from ...application.use_cases.remove_like import LikeNotFoundError
-from ...application.dtos import CreatePostDTO, CreateCommentDTO
+from ...application.dtos import CreatePostDTO, CreateCommentDTO, PostDTO
 from .dependencies import (
     get_publish_post_use_case,
     get_feed_use_case,
@@ -453,7 +453,7 @@ def unlike_post(
 # =============================================================================
 
 
-def _post_dto_to_response(dto) -> PostResponse:
+def _post_dto_to_response(dto: PostDTO) -> PostResponse:
     """Convertit un PostDTO en PostResponse."""
     return PostResponse(
         id=dto.id,

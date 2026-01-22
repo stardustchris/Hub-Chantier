@@ -136,28 +136,30 @@ Affichage timeline visuel :
 
 ### 2.4 Fonctionnalites du feed
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| FEED-01 | Publication posts | Creer et publier des messages texte |
-| FEED-02 | Ajout photos | Joindre jusqu'a 5 photos par post |
-| FEED-03 | Ciblage destinataires | Tout le monde / Chantiers / Personnes |
-| FEED-04 | Likes | Reagir aux publications |
-| FEED-05 | Commentaires | Repondre aux publications |
-| FEED-06 | Badges utilisateurs | Affichage role et metier |
-| FEED-07 | Indicateur ciblage | Afficher la cible du post |
-| FEED-08 | Posts urgents | Epingler en haut du feed (48h max) |
-| FEED-09 | Filtrage automatique | Compagnons voient uniquement leurs chantiers |
-| FEED-10 | Emojis | Support des emojis dans les posts |
-| FEED-11 | Mise en forme | Texte enrichi basique |
-| FEED-12 | Horodatage | Date et heure de publication |
-| FEED-13 | Photos placeholder | Chargement progressif des images |
-| FEED-14 | Mentions @ | Mentionner des utilisateurs (future) |
-| FEED-15 | Hashtags | Categoriser les posts (future) |
-| FEED-16 | Moderation Direction | Supprimer posts d'autrui |
-| FEED-17 | Notifications push | Alerte nouvelles publications |
-| FEED-18 | Historique | Scroll infini pour charger plus |
-| FEED-19 | Compression photos | Automatique (max 2 Mo) |
-| FEED-20 | Archivage | Posts +7 jours archives mais consultables |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| FEED-01 | Publication posts | Creer et publier des messages texte | ✅ |
+| FEED-02 | Ajout photos | Joindre jusqu'a 5 photos par post | ✅ |
+| FEED-03 | Ciblage destinataires | Tout le monde / Chantiers / Personnes | ✅ |
+| FEED-04 | Likes | Reagir aux publications | ✅ |
+| FEED-05 | Commentaires | Repondre aux publications | ✅ |
+| FEED-06 | Badges utilisateurs | Affichage role et metier | ⏳ Frontend |
+| FEED-07 | Indicateur ciblage | Afficher la cible du post | ✅ |
+| FEED-08 | Posts urgents | Epingler en haut du feed (48h max) | ✅ |
+| FEED-09 | Filtrage automatique | Compagnons voient uniquement leurs chantiers | ✅ |
+| FEED-10 | Emojis | Support des emojis dans les posts | ✅ |
+| FEED-11 | Mise en forme | Texte enrichi basique | ⏳ Frontend |
+| FEED-12 | Horodatage | Date et heure de publication | ✅ |
+| FEED-13 | Photos placeholder | Chargement progressif des images | ✅ |
+| FEED-14 | Mentions @ | Mentionner des utilisateurs (future) | 🔮 Future |
+| FEED-15 | Hashtags | Categoriser les posts (future) | 🔮 Future |
+| FEED-16 | Moderation Direction | Supprimer posts d'autrui | ✅ |
+| FEED-17 | Notifications push | Alerte nouvelles publications | ⏳ Infra |
+| FEED-18 | Historique | Scroll infini pour charger plus | ✅ |
+| FEED-19 | Compression photos | Automatique (max 2 Mo) | ✅ |
+| FEED-20 | Archivage | Posts +7 jours archives mais consultables | ✅ |
+
+**Legende**: ✅ Backend complet | ⏳ En attente (Frontend/Infra) | 🔮 Future version
 
 ### 2.5 Regles metier
 

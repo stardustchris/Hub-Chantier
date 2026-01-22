@@ -41,7 +41,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | Module | CDC Section | Fonctionnalites | Status |
 |--------|-------------|-----------------|--------|
 | auth (utilisateurs) | 3 | USR-01 a USR-13 | **COMPLET** |
-| dashboard | 2 | FEED-01 a FEED-20 | Structure only |
+| dashboard | 2 | FEED-01 a FEED-20 | **COMPLET** (backend) |
 | chantiers | 4 | CHT-01 a CHT-20 | **COMPLET** |
 | planning | 5 | PLN-01 a PLN-28 | Structure only |
 | planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
@@ -82,9 +82,27 @@ Le module chantiers est maintenant complet selon le CDC Section 4 :
 - **Use cases** : CreateChantier, GetChantier, ListChantiers, UpdateChantier, DeleteChantier, ChangeStatut, AssignResponsable
 - **Tests unitaires** : test_create_chantier.py, test_change_statut.py
 
+### Detail module dashboard (FEED-01 a FEED-20)
+
+Le module dashboard (fil d'actualites social interne) est complet cote backend selon CDC Section 2 :
+
+- **Entites** : Post, Comment, Like, PostMedia
+- **Value Objects** : PostStatus (PUBLISHED/PINNED/ARCHIVED/DELETED), PostTargeting (EVERYONE/SPECIFIC_CHANTIERS/SPECIFIC_PEOPLE)
+- **Ciblage** : Posts cibles vers tout le monde, chantiers specifiques ou personnes (FEED-03, FEED-09)
+- **Epinglage** : Posts urgents epingles 48h max en haut du feed (FEED-08)
+- **Archivage** : Auto-archivage apres 7 jours, toujours consultables (FEED-20)
+- **Medias** : Jusqu'a 5 photos par post, max 2Mo par image (FEED-02, FEED-19)
+- **Reactions** : Likes et commentaires (FEED-04, FEED-05)
+- **Moderation** : Suppression par auteur ou moderateur (FEED-16)
+- **Pagination** : Scroll infini avec 20 posts par page (FEED-18)
+- **Use cases** : PublishPost, GetFeed, GetPost, DeletePost, PinPost, AddComment, AddLike, RemoveLike
+- **Tests unitaires** : test_publish_post.py (9 tests), test_get_feed.py (6 tests), test_add_like.py (4 tests), test_add_comment.py (6 tests)
+
+Note : FEED-06 (Badges), FEED-11 (Mise en forme), FEED-17 (Notifications push) necessitent le frontend ou une infrastructure supplementaire.
+
 ## Prochaines taches prioritaires
 
-1. [ ] **Module dashboard** (CDC Section 2) - Tableau de bord avec feed d'activite et widgets
+1. [x] **Module dashboard** (CDC Section 2) - Backend complet, en attente frontend
 2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
 3. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
 4. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures

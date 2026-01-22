@@ -3,6 +3,23 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (dashboard)
+
+- Revue et validation du module dashboard selon CDC Section 2 (FEED-01 a FEED-20)
+- Architecture confirmee conforme Clean Architecture par architect-reviewer
+- Code valide par code-reviewer avec corrections mineures appliquees
+- Domain layer : Entites Post, Comment, Like, PostMedia
+- Value Objects : PostStatus (4 statuts), PostTargeting (3 types de ciblage)
+- Domain Events : PostPublished, PostPinned, PostArchived, PostDeleted, CommentAdded, LikeAdded
+- Application layer : 8 use cases (PublishPost, GetFeed, GetPost, DeletePost, PinPost, AddComment, AddLike, RemoveLike)
+- DTOs : PostDTO, PostListDTO, PostDetailDTO, CommentDTO, LikeDTO, MediaDTO
+- Infrastructure layer : 4 modeles SQLAlchemy, 4 repositories complets, routes FastAPI
+- Fonctionnalites backend : Ciblage multi-types, epinglage 48h, archivage auto 7j, pagination scroll infini
+- Tests unitaires : 25 tests (publish_post, get_feed, add_like, add_comment)
+- Corrections code-review : type hints Optional[List] dans PostDetailDTO, type hint sur helper function
+- Mise a jour SPECIFICATIONS.md avec statuts FEED-01 a FEED-20
+- Note : FEED-06, FEED-11, FEED-17 en attente frontend/infrastructure
+
 ## Session 2026-01-22 (chantiers)
 
 - Implementation complete du module chantiers selon CDC Section 4 (CHT-01 a CHT-20)

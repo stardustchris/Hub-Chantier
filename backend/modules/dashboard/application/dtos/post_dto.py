@@ -122,9 +122,9 @@ class PostDetailDTO:
     """
 
     post: PostDTO
-    medias: List["MediaDTO"] = None
-    comments: List["CommentDTO"] = None
-    liked_by_user_ids: List[int] = None
+    medias: Optional[List["MediaDTO"]] = None
+    comments: Optional[List["CommentDTO"]] = None
+    liked_by_user_ids: Optional[List[int]] = None
 
     def __post_init__(self):
         # Workaround pour les listes mutables dans frozen dataclass
