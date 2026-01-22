@@ -55,7 +55,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 Le module auth est maintenant complet selon le CDC Section 3 :
 
-- **4 roles** : Admin, Conducteur, Chef de Chantier, Compagnon
+- **4 roles** : Admin, Conducteur de travaux, Chef de Chantier, Compagnon
 - **2 types** : Employe, Sous-traitant
 - **16 couleurs** : Palette complete pour identification visuelle
 - **Champs complets** : photo, couleur, telephone, metier, code, contact urgence
