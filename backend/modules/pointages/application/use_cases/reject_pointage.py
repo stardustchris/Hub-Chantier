@@ -1,0 +1,96 @@
+"""Use Case: Rejeter un pointage."""
+
+from typing import Optional
+
+from ...domain.entities import Pointage
+from ...domain.repositories import PointageRepository
+from ...domain.events import PointageRejectedEvent
+from ..dtos import RejectPointageDTO, PointageDTO
+from ..ports import EventBus, NullEventBus
+
+
+class RejectPointageUseCase:
+    """
+    Rejette un pointage soumis.
+
+    Le pointage passe du statut SOUMIS à REJETE.
+    """
+
+    def __init__(
+        self,
+        pointage_repo: PointageRepository,
+        event_bus: Optional[EventBus] = None,
+    ):
+        """
+        Initialise le use case.
+
+        Args:
+            pointage_repo: Repository des pointages.
+            event_bus: Bus d'événements (optionnel).
+        """
+        self.pointage_repo = pointage_repo
+        self.event_bus = event_bus or NullEventBus()
+
+    def execute(self, dto: RejectPointageDTO) -> PointageDTO:
+        """
+        Exécute le rejet d'un pointage.
+
+        Args:
+            dto: Les données de rejet.
+
+        Returns:
+            Le DTO du pointage rejeté.
+
+        Raises:
+            ValueError: Si le pointage n'existe pas ou ne peut pas être rejeté.
+        """
+        # Récupère le pointage
+        pointage = self.pointage_repo.find_by_id(dto.pointage_id)
+        if not pointage:
+            raise ValueError(f"Pointage {dto.pointage_id} non trouvé")
+
+        # Rejette le pointage
+        pointage.rejeter(dto.validateur_id, dto.motif)
+
+        # Persiste
+        pointage = self.pointage_repo.save(pointage)
+
+        # Publie l'événement
+        event = PointageRejectedEvent(
+            pointage_id=pointage.id,
+            utilisateur_id=pointage.utilisateur_id,
+            chantier_id=pointage.chantier_id,
+            date_pointage=pointage.date_pointage,
+            validateur_id=dto.validateur_id,
+            motif=dto.motif,
+        )
+        self.event_bus.publish(event)
+
+        return self._to_dto(pointage)
+
+    def _to_dto(self, pointage: Pointage) -> PointageDTO:
+        """Convertit l'entité en DTO."""
+        return PointageDTO(
+            id=pointage.id,
+            utilisateur_id=pointage.utilisateur_id,
+            chantier_id=pointage.chantier_id,
+            date_pointage=pointage.date_pointage,
+            heures_normales=str(pointage.heures_normales),
+            heures_supplementaires=str(pointage.heures_supplementaires),
+            total_heures=str(pointage.total_heures),
+            total_heures_decimal=pointage.total_heures_decimal,
+            statut=pointage.statut.value,
+            commentaire=pointage.commentaire,
+            signature_utilisateur=pointage.signature_utilisateur,
+            signature_date=pointage.signature_date,
+            validateur_id=pointage.validateur_id,
+            validation_date=pointage.validation_date,
+            motif_rejet=pointage.motif_rejet,
+            affectation_id=pointage.affectation_id,
+            created_by=pointage.created_by,
+            created_at=pointage.created_at,
+            updated_at=pointage.updated_at,
+            utilisateur_nom=pointage.utilisateur_nom,
+            chantier_nom=pointage.chantier_nom,
+            chantier_couleur=pointage.chantier_couleur,
+        )
