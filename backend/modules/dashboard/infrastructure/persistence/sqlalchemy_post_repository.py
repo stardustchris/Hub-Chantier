@@ -100,21 +100,22 @@ class SQLAlchemyPostRepository(PostRepository):
             PostModel.author_id == user_id,
         ]
 
-        # Ciblage par utilisateur
+        # Ciblage par utilisateur - SÉCURISÉ contre SQL injection
+        # On vérifie que l'ID est bien un élément complet, pas une sous-chaîne
         targeting_conditions.append(
             and_(
                 PostModel.target_type == TargetType.SPECIFIC_PEOPLE.value,
-                PostModel.target_user_ids.contains(str(user_id)),
+                self._id_in_csv_column(PostModel.target_user_ids, user_id),
             )
         )
 
-        # Ciblage par chantier
+        # Ciblage par chantier - SÉCURISÉ contre SQL injection
         if user_chantier_ids:
             for chantier_id in user_chantier_ids:
                 targeting_conditions.append(
                     and_(
                         PostModel.target_type == TargetType.SPECIFIC_CHANTIERS.value,
-                        PostModel.target_chantier_ids.contains(str(chantier_id)),
+                        self._id_in_csv_column(PostModel.target_chantier_ids, chantier_id),
                     )
                 )
 
@@ -267,7 +268,31 @@ class SQLAlchemyPostRepository(PostRepository):
         return ",".join(str(i) for i in ids)
 
     def _string_to_ids(self, ids_str: Optional[str]) -> List[int]:
-        """Convertit une string d'IDs en liste."""
+        """Convertit une string d'IDs en liste avec gestion d'erreur."""
         if not ids_str:
             return []
-        return [int(i) for i in ids_str.split(",") if i]
+        result = []
+        for i in ids_str.split(","):
+            if i.strip():
+                try:
+                    result.append(int(i.strip()))
+                except ValueError:
+                    # Ignorer les valeurs corrompues
+                    continue
+        return result
+
+    def _id_in_csv_column(self, column, target_id: int):
+        """
+        Vérifie qu'un ID est présent dans une colonne CSV de manière sécurisée.
+
+        Évite les faux positifs comme id=1 correspondant à "10,11,12".
+        Vérifie: exactement la valeur, ou ,valeur, ou valeur, au début, ou ,valeur à la fin.
+        """
+        from sqlalchemy import or_
+        str_id = str(target_id)
+        return or_(
+            column == str_id,                           # Exactement la valeur
+            column.like(f"{str_id},%"),                 # Au début: "1,..."
+            column.like(f"%,{str_id}"),                 # À la fin: "...,1"
+            column.like(f"%,{str_id},%"),               # Au milieu: "...,1,..."
+        )

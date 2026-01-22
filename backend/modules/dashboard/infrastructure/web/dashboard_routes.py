@@ -152,10 +152,16 @@ def get_feed(
     Les posts sont filtrés selon le ciblage et triés par date décroissante.
     Les posts épinglés apparaissent en premier.
     """
-    # Parser les IDs de chantiers
+    # Parser les IDs de chantiers avec validation
     user_chantier_ids = None
     if chantier_ids:
-        user_chantier_ids = [int(id.strip()) for id in chantier_ids.split(",") if id.strip()]
+        try:
+            user_chantier_ids = [int(id.strip()) for id in chantier_ids.split(",") if id.strip()]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Format invalide pour chantier_ids. Attendu: liste d'entiers séparés par virgule.",
+            )
 
     result = use_case.execute(
         user_id=current_user_id,

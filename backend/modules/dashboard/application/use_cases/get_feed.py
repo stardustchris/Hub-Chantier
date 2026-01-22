@@ -66,14 +66,19 @@ class GetFeedUseCase:
         Returns:
             PostListDTO avec la liste paginée.
         """
-        # Récupérer les posts filtrés
+        # Récupérer limit+1 posts pour détecter s'il y en a plus
         posts = self.post_repo.find_feed(
             user_id=user_id,
             user_chantier_ids=user_chantier_ids,
-            limit=limit,
+            limit=limit + 1,  # +1 pour détecter has_next
             offset=offset,
             include_archived=include_archived,
         )
+
+        # Détecter s'il y a plus de posts (pour infinite scroll)
+        has_next = len(posts) > limit
+        if has_next:
+            posts = posts[:limit]  # Ne retourner que limit posts
 
         # Convertir en DTOs avec compteurs
         post_dtos = []
@@ -94,10 +99,8 @@ class GetFeedUseCase:
                 )
             )
 
-        # Calculer le total (approximatif pour la pagination)
-        total = len(posts) + offset
-        if len(posts) == limit:
-            total += 1  # Indique qu'il y a potentiellement plus
+        # Total approximatif (has_next est plus fiable pour infinite scroll)
+        total = offset + len(posts) + (1 if has_next else 0)
 
         return PostListDTO(
             posts=post_dtos,
