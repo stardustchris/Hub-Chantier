@@ -55,7 +55,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 Le module auth est maintenant complet selon le CDC Section 3 :
 
-- **4 roles** : Admin, Conducteur de travaux, Chef de Chantier, Compagnon
+- **4 roles** : Admin, Conducteur, Chef de Chantier, Compagnon
 - **2 types** : Employe, Sous-traitant
 - **16 couleurs** : Palette complete pour identification visuelle
 - **Champs complets** : photo, couleur, telephone, metier, code, contact urgence
@@ -66,11 +66,12 @@ Note : USR-02 (Invitation SMS) retire du scope.
 
 ## Prochaines taches prioritaires
 
-1. [ ] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
-2. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
-3. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
-4. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
-5. [ ] Connecter le frontend au backend
+1. [ ] **Module dashboard** (CDC Section 2) - Tableau de bord avec feed d'activite et widgets
+2. [ ] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
+3. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
+4. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
+5. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
+6. [ ] Connecter le frontend au backend
 
 ## Historique des sessions
 
