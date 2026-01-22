@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hub Chantier - Dashboard Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            secondary: {
+              50: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .card { @apply bg-white rounded-lg shadow p-4; }
+    .btn { @apply px-4 py-2 rounded-lg font-medium transition-colors; }
+    .btn-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="bg-white shadow sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-primary-600">Hub Chantier</h1>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-600">Jean Martin</span>
+        <span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">Direction</span>
+        <button class="btn btn-outline text-sm">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation tabs -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex gap-8">
+        <button class="py-4 border-b-2 border-primary-500 text-primary-600 font-medium text-sm">
+          Fil d'actualités
+        </button>
+        <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">
+          Tableau de bord
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+
+      <!-- Zone de publication (FEED-01, FEED-03) -->
+      <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex gap-3">
+          <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold">JM</div>
+          <div class="flex-1">
+            <textarea
+              placeholder="Quoi de neuf ? Partagez une info avec l'équipe..."
+              class="w-full resize-none border-0 focus:ring-0 text-gray-800 placeholder-gray-400 text-base"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-3 pt-3 border-t">
+          <div class="flex items-center gap-2">
+            <button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Photo
+            </button>
+            <button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+              📢 Tout le monde
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Urgent
+            </button>
+          </div>
+          <button class="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700">
+            Publier
+          </button>
+        </div>
+      </div>
+
+      <!-- Post épinglé (FEED-08) -->
+      <article class="bg-white rounded-lg shadow p-4 mb-4 border-l-4 border-orange-500">
+        <div class="flex items-center gap-1 text-orange-600 text-sm mb-2">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a.75.75 0 01.75.75v.5h2.5a.75.75 0 010 1.5h-.75v2.604c0 .995.403 1.948 1.116 2.64l.54.524a.75.75 0 01-.54 1.282H6.384a.75.75 0 01-.54-1.282l.54-.524c.713-.692 1.116-1.645 1.116-2.64V4.75h-.75a.75.75 0 010-1.5h2.5v-.5A.75.75 0 0110 2z"/>
+            <path d="M9.25 14.75v2.5a.75.75 0 001.5 0v-2.5h-1.5z"/>
+          </svg>
+          <span class="font-medium">Post épinglé</span>
+        </div>
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: #9B59B6;">JM</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">Jean Martin</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Direction</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>Il y a 2h</span>
+                <span>•</span>
+                <span>📢 Tout le monde</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-gray-800 mb-4 whitespace-pre-wrap">📢 Rappel important : réunion de chantier demain à 8h30 sur le site Villa Lyon. Présence obligatoire pour tous les chefs de chantier.
+
+Ordre du jour :
+- Point d'avancement
+- Planning semaine 5
+- Questions logistique</div>
+        <div class="flex items-center gap-4 text-sm text-gray-500 mb-3 pb-3 border-b">
+          <span>12 j'aime</span>
+          <span>3 commentaires</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span>J'aime</span>
+          </button>
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>Commenter</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post avec photo (FEED-02) -->
+      <article class="bg-white rounded-lg shadow p-4 mb-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: #27AE60;">MB</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">Marc Bernard</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Chef de chantier</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>Il y a 5h</span>
+                <span>•</span>
+                <span>🏗️ Villa Lyon 3ème</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-gray-800 mb-4">Coulage du plancher R+2 terminé avec succès ! 💪 Beau travail de l'équipe. On enchaîne demain avec le ferraillage des voiles.</div>
+        <div class="mb-4 rounded-lg overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop" alt="Chantier" class="w-full h-64 object-cover">
+        </div>
+        <div class="flex items-center gap-4 text-sm text-gray-500 mb-3 pb-3 border-b">
+          <span>8 j'aime</span>
+          <span>5 commentaires</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span>J'aime</span>
+          </button>
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>Commenter</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post logistique -->
+      <article class="bg-white rounded-lg shadow p-4 mb-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: #3498DB;">PD</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">Pierre Dupont</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Conducteur</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>Il y a 8h</span>
+                <span>•</span>
+                <span>🏗️ Résidence Les Pins</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-gray-800 mb-4">Livraison de ferraille prévue demain matin entre 7h et 8h. Merci de prévoir la zone de déchargement. @Marc tu peux coordonner avec le grutier ?</div>
+        <div class="flex items-center gap-4 text-sm text-gray-500 mb-3 pb-3 border-b">
+          <span>3 j'aime</span>
+          <span>2 commentaires</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span>J'aime</span>
+          </button>
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>Commenter</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post alerte sécurité -->
+      <article class="bg-white rounded-lg shadow p-4 mb-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: #E67E22;">LM</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">Luc Moreau</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Compagnon</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>Il y a 1j</span>
+                <span>•</span>
+                <span>🏗️ Villa Lyon 3ème</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-gray-800 mb-4">⚠️ Attention : problème détecté sur l'échafaudage zone B. J'ai sécurisé la zone en attendant vérification. Photos jointes.</div>
+        <div class="mb-4 bg-gray-100 rounded-lg p-4 text-center text-gray-500">
+          📷 2 photos
+        </div>
+        <div class="flex items-center gap-4 text-sm text-gray-500 mb-3 pb-3 border-b">
+          <span>15 j'aime</span>
+          <span>8 commentaires</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span>J'aime</span>
+          </button>
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>Commenter</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post félicitations -->
+      <article class="bg-white rounded-lg shadow p-4 mb-4">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: #9B59B6;">JM</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">Jean Martin</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Direction</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>Il y a 2j</span>
+                <span>•</span>
+                <span>📢 Tout le monde</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-gray-800 mb-4">🎉 Félicitations à toute l'équipe ! Le chantier Résidence Bellevue a été réceptionné avec 0 réserve. C'est le résultat d'un excellent travail collectif. Bravo !</div>
+        <div class="flex items-center gap-4 text-sm text-gray-500 mb-3 pb-3 border-b">
+          <span>28 j'aime</span>
+          <span>12 commentaires</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span>J'aime</span>
+          </button>
+          <button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>Commenter</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Fin du feed -->
+      <div class="text-center py-8 text-gray-500">
+        Vous avez atteint la fin du fil d'actualités
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Interactivité basique pour la démo
+    document.querySelectorAll('button').forEach(btn => {
+      if (btn.textContent.includes("J'aime")) {
+        btn.addEventListener('click', function() {
+          const svg = this.querySelector('svg');
+          const isLiked = svg.getAttribute('fill') === 'currentColor';
+          if (isLiked) {
+            svg.setAttribute('fill', 'none');
+            this.classList.remove('text-red-500', 'bg-red-50');
+            this.classList.add('text-gray-600');
+          } else {
+            svg.setAttribute('fill', 'currentColor');
+            this.classList.add('text-red-500', 'bg-red-50');
+            this.classList.remove('text-gray-600');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

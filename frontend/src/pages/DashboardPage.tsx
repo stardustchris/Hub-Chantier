@@ -151,6 +151,7 @@ export default function DashboardPage() {
             Bienvenue, {user?.prenom} ! Voici les dernieres actualites.
           </p>
         </div>
+      </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
