@@ -40,8 +40,8 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | Module | CDC Section | Fonctionnalites | Status |
 |--------|-------------|-----------------|--------|
 | auth (utilisateurs) | 3 | USR-01 a USR-13 | **COMPLET** |
-| dashboard | 2 | FEED-01 a FEED-20 | **COMPLET** |
-| chantiers | 4 | CHT-01 a CHT-20 | Structure only |
+| dashboard | 2 | FEED-01 a FEED-20 | Structure only |
+| chantiers | 4 | CHT-01 a CHT-20 | **COMPLET** |
 | planning | 5 | PLN-01 a PLN-28 | Structure only |
 | planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | Structure only |
@@ -65,33 +65,26 @@ Le module auth est maintenant complet selon le CDC Section 3 :
 
 Note : USR-02 (Invitation SMS) retire du scope.
 
-### Detail module dashboard (FEED-01 a FEED-20)
+### Detail module chantiers (CHT-01 a CHT-20)
 
-Le module dashboard est maintenant complet selon le CDC Section 2 :
+Le module chantiers est maintenant complet selon le CDC Section 4 :
 
-- **Entites** : Post, Comment, Like, PostMedia
-- **Value Objects** : PostTargeting (everyone, specific_chantiers, specific_people), PostStatus
-- **Use cases** : PublishPost, GetFeed, GetPost, DeletePost, PinPost, AddComment, AddLike, RemoveLike
-- **Fonctionnalites implementees** :
-  - FEED-01: Publication de messages texte
-  - FEED-02: Ajout de photos (max 5 par post)
-  - FEED-03: Ciblage des destinataires (Tous, Chantiers, Personnes)
-  - FEED-04: Reactions likes
-  - FEED-05: Commentaires sur posts
-  - FEED-08: Messages urgents epingles (48h max)
-  - FEED-09: Filtrage automatique par chantier
-  - FEED-16: Moderation (suppression posts)
-  - FEED-18: Pagination infinite scroll
-  - FEED-20: Archivage apres 7 jours
-- **Endpoints** : GET /feed, POST /posts, GET /posts/{id}, DELETE /posts/{id}, POST /posts/{id}/pin, POST /posts/{id}/comments, POST /posts/{id}/like
-- **Tests unitaires** : test_publish_post.py, test_get_feed.py, test_add_like.py, test_add_comment.py
-
-Note : FEED-14 (Mentions @) et FEED-15 (Hashtags) marques "future" dans CDC.
+- **Statuts** : Ouvert, En cours, Receptionne, Ferme (CHT-03)
+- **Coordonnees GPS** : Latitude/Longitude avec URLs navigation Google/Waze (CHT-04)
+- **Multi-responsables** : Conducteurs et Chefs de chantier multiples (CHT-05, CHT-06)
+- **Contact chantier** : Nom et telephone du contact sur place (CHT-07)
+- **Code chantier** : Format lettre + 3 chiffres, auto-generation (CHT-19)
+- **Dates previsionnelles** : Date debut et fin (CHT-20)
+- **Heures estimees** : Budget temps previsionnel (CHT-18)
+- **Couleur** : Identification visuelle (CHT-02)
+- **Photo couverture** : URL image (CHT-01)
+- **Use cases** : CreateChantier, GetChantier, ListChantiers, UpdateChantier, DeleteChantier, ChangeStatut, AssignResponsable
+- **Tests unitaires** : test_create_chantier.py, test_change_statut.py
 
 ## Prochaines taches prioritaires
 
 1. [ ] **Module dashboard** (CDC Section 2) - Tableau de bord avec feed d'activite et widgets
-2. [ ] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
+2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
 3. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
 4. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
 5. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
@@ -117,14 +110,16 @@ Quand une fonctionnalite est demandee (ex: "Implemente CHT-03"):
 
 ## Historique des sessions
 
-### Session 2026-01-22 (dashboard)
-- Implementation complete du module dashboard selon CDC Section 2 (FEED-01 a FEED-20)
-- Couche Domain : entites Post, Comment, Like, PostMedia + value objects PostTargeting, PostStatus
-- Couche Application : 8 use cases (PublishPost, GetFeed, GetPost, DeletePost, PinPost, AddComment, AddLike, RemoveLike)
-- Couche Infrastructure : models SQLAlchemy, 4 repositories
-- Routes FastAPI : /api/dashboard/* (feed, posts, comments, likes)
-- Tests unitaires : 4 fichiers de tests
-- Integration dans main.py et database.py
+### Session 2026-01-22 (chantiers)
+- Implementation complete du module chantiers selon CDC Section 4 (CHT-01 a CHT-20)
+- Domain layer : Entite Chantier, Value Objects (StatutChantier, CoordonneesGPS, CodeChantier, ContactChantier)
+- Application layer : 7 use cases (Create, Get, List, Update, Delete, ChangeStatut, AssignResponsable)
+- Adapters layer : ChantierController
+- Infrastructure layer : ChantierModel, SQLAlchemyChantierRepository, Routes FastAPI
+- Transitions de statut : Ouvert → En cours → Receptionne → Ferme
+- Navigation GPS : URLs Google Maps, Waze, Apple Maps
+- Tests unitaires : test_create_chantier.py, test_change_statut.py
+- Integration dans main.py avec prefix /api/chantiers
 
 ### Session 2026-01-22 (suite)
 - Completion du module auth selon CDC Section 3 (USR-01 a USR-13)
