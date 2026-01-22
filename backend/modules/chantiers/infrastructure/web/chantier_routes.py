@@ -15,8 +15,9 @@ from ...application.use_cases import (
     TransitionNonAutoriseeError,
     InvalidRoleTypeError,
 )
-from .dependencies import get_chantier_controller
+from .dependencies import get_chantier_controller, get_user_repository
 from shared.infrastructure.web import get_current_user_id
+from modules.auth.infrastructure.persistence import SQLAlchemyUserRepository
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 
@@ -152,6 +153,7 @@ class DeleteResponse(BaseModel):
 def create_chantier(
     request: CreateChantierRequest,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -162,6 +164,7 @@ def create_chantier(
     Args:
         request: Données de création.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -186,7 +189,7 @@ def create_chantier(
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
         )
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except CodeChantierAlreadyExistsError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -211,6 +214,7 @@ def list_chantiers(
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
     search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -222,6 +226,7 @@ def list_chantiers(
         statut: Filtrer par statut (optionnel).
         search: Recherche textuelle par nom ou code.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -243,7 +248,7 @@ def list_chantiers(
     chantiers_data = result.get("chantiers", [])
 
     return ChantierListResponse(
-        items=[_transform_chantier_response(c, controller) for c in chantiers_data],
+        items=[_transform_chantier_response(c, controller, user_repo) for c in chantiers_data],
         total=total,
         page=page,
         size=size,
@@ -255,6 +260,7 @@ def list_chantiers(
 def get_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -263,6 +269,7 @@ def get_chantier(
     Args:
         chantier_id: ID du chantier.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -273,7 +280,7 @@ def get_chantier(
     """
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -285,6 +292,7 @@ def get_chantier(
 def get_chantier_by_code(
     code: str,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -293,6 +301,7 @@ def get_chantier_by_code(
     Args:
         code: Code du chantier (ex: A001).
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -303,7 +312,7 @@ def get_chantier_by_code(
     """
     try:
         result = controller.get_by_code(code)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -316,6 +325,7 @@ def update_chantier(
     chantier_id: int,
     request: UpdateChantierRequest,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -325,6 +335,7 @@ def update_chantier(
         chantier_id: ID du chantier à mettre à jour.
         request: Données de mise à jour.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -350,7 +361,7 @@ def update_chantier(
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
         )
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -417,6 +428,7 @@ def change_statut(
     chantier_id: int,
     request: ChangeStatutRequest,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -432,6 +444,7 @@ def change_statut(
         chantier_id: ID du chantier.
         request: Nouveau statut.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -443,7 +456,7 @@ def change_statut(
     """
     try:
         result = controller.change_statut(chantier_id, request.statut)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -465,12 +478,13 @@ def change_statut(
 def demarrer_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Passe le chantier en statut 'En cours'."""
     try:
         result = controller.demarrer(chantier_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -487,12 +501,13 @@ def demarrer_chantier(
 def receptionner_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Passe le chantier en statut 'Réceptionné'."""
     try:
         result = controller.receptionner(chantier_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -509,12 +524,13 @@ def receptionner_chantier(
 def fermer_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Passe le chantier en statut 'Fermé'."""
     try:
         result = controller.fermer(chantier_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -537,6 +553,7 @@ def assigner_conducteur(
     chantier_id: int,
     request: AssignResponsableRequest,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -546,6 +563,7 @@ def assigner_conducteur(
         chantier_id: ID du chantier.
         request: ID du conducteur à assigner.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -553,7 +571,7 @@ def assigner_conducteur(
     """
     try:
         result = controller.assigner_conducteur(chantier_id, request.user_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -566,12 +584,13 @@ def retirer_conducteur(
     chantier_id: int,
     user_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Retire un conducteur du chantier."""
     try:
         result = controller.retirer_conducteur(chantier_id, user_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -584,6 +603,7 @@ def assigner_chef_chantier(
     chantier_id: int,
     request: AssignResponsableRequest,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -593,6 +613,7 @@ def assigner_chef_chantier(
         chantier_id: ID du chantier.
         request: ID du chef à assigner.
         controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
 
     Returns:
@@ -600,7 +621,7 @@ def assigner_chef_chantier(
     """
     try:
         result = controller.assigner_chef_chantier(chantier_id, request.user_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -613,12 +634,13 @@ def retirer_chef_chantier(
     chantier_id: int,
     user_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Retire un chef de chantier."""
     try:
         result = controller.retirer_chef_chantier(chantier_id, user_id)
-        return _transform_chantier_response(result, controller)
+        return _transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -631,18 +653,33 @@ def retirer_chef_chantier(
 # =============================================================================
 
 
-def _get_user_summary(user_id: int, controller: ChantierController) -> Optional[UserSummary]:
+def _get_user_summary(user_id: int, user_repo: SQLAlchemyUserRepository) -> Optional[UserSummary]:
     """Récupère les infos d'un utilisateur pour l'inclusion dans un chantier."""
     try:
-        # Le controller a accès au user_repo via dependency injection
-        # Pour l'instant, on retourne un objet minimal
-        # TODO: Implémenter une vraie récupération des utilisateurs
+        user = user_repo.find_by_id(user_id)
+        if user:
+            return UserSummary(
+                id=str(user.id),
+                email=str(user.email),
+                nom=user.nom,
+                prenom=user.prenom,
+                role=user.role.value,
+                type_utilisateur=user.type_utilisateur.value,
+                telephone=user.telephone,
+                metier=user.metier,
+                couleur=str(user.couleur) if user.couleur else None,
+                is_active=user.is_active,
+            )
         return None
     except Exception:
         return None
 
 
-def _transform_chantier_response(chantier_dict: dict, controller: ChantierController) -> ChantierResponse:
+def _transform_chantier_response(
+    chantier_dict: dict,
+    controller: ChantierController,
+    user_repo: Optional[SQLAlchemyUserRepository] = None,
+) -> ChantierResponse:
     """
     Transforme un dictionnaire chantier du controller en ChantierResponse.
 
@@ -658,38 +695,24 @@ def _transform_chantier_response(chantier_dict: dict, controller: ChantierContro
     contact_nom = contact.get("nom") if contact else None
     contact_telephone = contact.get("telephone") if contact else None
 
-    # Pour les conducteurs et chefs, on garde les IDs pour l'instant
-    # car la récupération des objets User complets nécessiterait une dépendance vers le module auth
-    # TODO: Implémenter la récupération des objets User complets via un service partagé
+    # Récupérer les IDs des conducteurs et chefs
     conducteur_ids = chantier_dict.get("conducteur_ids", [])
     chef_chantier_ids = chantier_dict.get("chef_chantier_ids", [])
 
-    # Créer des objets UserSummary minimaux avec juste les IDs
-    conducteurs = [
-        UserSummary(
-            id=str(uid),
-            email="",
-            nom="",
-            prenom="",
-            role="conducteur",
-            type_utilisateur="employe",
-            is_active=True,
-        )
-        for uid in conducteur_ids
-    ]
+    # Récupérer les objets User complets si le repo est disponible
+    conducteurs = []
+    chefs = []
 
-    chefs = [
-        UserSummary(
-            id=str(uid),
-            email="",
-            nom="",
-            prenom="",
-            role="chef_chantier",
-            type_utilisateur="employe",
-            is_active=True,
-        )
-        for uid in chef_chantier_ids
-    ]
+    if user_repo:
+        for uid in conducteur_ids:
+            user_summary = _get_user_summary(uid, user_repo)
+            if user_summary:
+                conducteurs.append(user_summary)
+
+        for uid in chef_chantier_ids:
+            user_summary = _get_user_summary(uid, user_repo)
+            if user_summary:
+                chefs.append(user_summary)
 
     return ChantierResponse(
         id=str(chantier_dict.get("id", "")),
