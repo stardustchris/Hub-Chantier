@@ -3,6 +3,35 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (planning module backend)
+
+- Implementation complete du module planning selon CDC Section 5 (PLN-01 a PLN-28)
+- Domain layer : Entite Affectation avec logique metier (creer, modifier, deplacer, dupliquer)
+- Value Objects : CreneauHoraire (creneaux horaires), TypeRecurrence (unique, quotidien, hebdomadaire)
+- AffectationRepository interface (Clean Architecture)
+- Domain Events : AffectationCreated, AffectationUpdated, AffectationDeleted, AffectationsDupliquees
+- Application layer : 7 use cases complets
+  - CreateAffectationUseCase : Creation avec validation duplicata
+  - GetAffectationUseCase : Recuperation par ID
+  - ListAffectationsUseCase : Liste avec filtres (utilisateur, chantier, periode) et pagination
+  - UpdateAffectationUseCase : Mise a jour partielle
+  - DeleteAffectationUseCase : Suppression avec events
+  - DeplacerAffectationUseCase (PLN-27) : Drag & Drop, reset recurrence
+  - DupliquerAffectationsUseCase (PLN-16) : Copier semaine vers autre semaine
+- DTOs : Create, Update, Deplacer, Dupliquer, List, AffectationDTO, AffectationListDTO
+- Infrastructure layer :
+  - AffectationModel SQLAlchemy avec relations
+  - SQLAlchemyAffectationRepository implementation complete
+  - Routes FastAPI : CRUD + /deplacer + /dupliquer + /date/{date}
+  - Dependency injection avec interfaces (Clean Architecture compliant)
+- Integration : Router dans main.py, table dans init_db()
+- Corrections post-review :
+  - Type hints Optional[datetime] dans events
+  - Parsing securise des heures (validation format HH:MM)
+  - Return type List[int] dans get_utilisateurs_non_planifies
+  - Dependencies utilisant interfaces au lieu d'implementations concretes
+- Validation agents : architect-reviewer, test-automator, code-reviewer
+
 ## Session 2026-01-22 (verification specs alignment)
 
 - Analyse complete de l'alignement entre specs, backend et frontend
