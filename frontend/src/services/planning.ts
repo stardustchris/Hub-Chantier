@@ -69,6 +69,18 @@ export const planningService = {
   },
 
   /**
+   * PLN-27: Déplace une affectation vers une nouvelle date/utilisateur
+   */
+  async move(id: string, newDate: string, newUserId?: string): Promise<Affectation> {
+    const data: AffectationUpdate = { date: newDate }
+    if (newUserId) {
+      data.utilisateur_id = newUserId
+    }
+    const response = await api.put<Affectation>(`/api/planning/affectations/${id}`, data)
+    return response.data
+  },
+
+  /**
    * Duplique les affectations d'une période vers une autre
    */
   async duplicate(data: DuplicateAffectationsRequest): Promise<Affectation[]> {

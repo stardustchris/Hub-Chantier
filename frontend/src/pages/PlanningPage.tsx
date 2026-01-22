@@ -41,7 +41,13 @@ export default function PlanningPage() {
   // Filtres
   const [showFilters, setShowFilters] = useState(false)
   const [filterMetiers, setFilterMetiers] = useState<string[]>([])
+  const [filterChantier, setFilterChantier] = useState<string>('') // PLN-05
   const [showNonPlanifiesOnly, setShowNonPlanifiesOnly] = useState(false)
+  const [showWeekend, setShowWeekend] = useState(() => {
+    // PLN-06: Persist in localStorage
+    const saved = localStorage.getItem('planning-show-weekend')
+    return saved !== null ? saved === 'true' : true
+  })
 
   // Calculer les dates de début et fin de la période
   const getDateRange = useCallback(() => {
@@ -85,11 +91,30 @@ export default function PlanningPage() {
     loadData()
   }, [loadData])
 
+  // PLN-06: Persist weekend toggle
+  useEffect(() => {
+    localStorage.setItem('planning-show-weekend', String(showWeekend))
+  }, [showWeekend])
+
+  // PLN-05: Filter affectations by chantier
+  const filteredAffectations = useMemo(() => {
+    if (!filterChantier) return affectations
+    return affectations.filter(a => String(a.chantier_id) === filterChantier)
+  }, [affectations, filterChantier])
+
   // Filtrer les utilisateurs (memoized pour performance)
   const filteredUtilisateurs = useMemo(() => utilisateurs.filter(user => {
     // Filtre par métier
     if (filterMetiers.length > 0 && !filterMetiers.includes(user.metier || 'autre')) {
       return false
+    }
+
+    // PLN-05: Filtre par chantier - montrer seulement les utilisateurs affectés à ce chantier
+    if (filterChantier) {
+      const hasAffectationForChantier = affectations.some(
+        a => String(a.chantier_id) === filterChantier && a.utilisateur_id === user.id
+      )
+      if (!hasAffectationForChantier) return false
     }
 
     // Filtre non planifiés uniquement
@@ -99,7 +124,7 @@ export default function PlanningPage() {
     }
 
     return true
-  }), [utilisateurs, filterMetiers, showNonPlanifiesOnly, affectations])
+  }), [utilisateurs, filterMetiers, filterChantier, showNonPlanifiesOnly, affectations])
 
   // Handlers
   const handleCellClick = (userId: string, date: Date) => {
@@ -169,6 +194,19 @@ export default function PlanningPage() {
         ? prev.filter(m => m !== metier)
         : [...prev, metier]
     )
+  }
+
+  // PLN-27: Drag & drop - déplacer une affectation
+  const handleAffectationMove = async (affectationId: string, newDate: string, newUserId?: string) => {
+    if (!canEdit) return
+
+    try {
+      await planningService.move(affectationId, newDate, newUserId)
+      await loadData()
+    } catch (err) {
+      console.error('Erreur déplacement:', err)
+      setError('Erreur lors du déplacement de l\'affectation')
+    }
   }
 
   return (
@@ -241,6 +279,20 @@ export default function PlanningPage() {
             </button>
           )}
 
+          {/* PLN-05: Filtre par chantier */}
+          <select
+            value={filterChantier}
+            onChange={(e) => setFilterChantier(e.target.value)}
+            className="px-3 py-2 rounded-lg text-sm border border-gray-200 bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Tous les chantiers</option>
+            {chantiers.map((chantier) => (
+              <option key={chantier.id} value={chantier.id}>
+                {chantier.nom}
+              </option>
+            ))}
+          </select>
+
           {/* Bouton filtres */}
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -258,6 +310,17 @@ export default function PlanningPage() {
               </span>
             )}
           </button>
+
+          {/* PLN-06: Toggle weekend */}
+          <label className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors">
+            <input
+              type="checkbox"
+              checked={showWeekend}
+              onChange={(e) => setShowWeekend(e.target.checked)}
+              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            />
+            <span className="text-gray-700">Weekend</span>
+          </label>
         </div>
 
         {/* Filtres (dépliable) */}
@@ -321,7 +384,7 @@ export default function PlanningPage() {
         ) : viewTab === 'utilisateurs' ? (
           <PlanningGrid
             currentDate={currentDate}
-            affectations={affectations}
+            affectations={filteredAffectations}
             utilisateurs={filteredUtilisateurs}
             onAffectationClick={handleAffectationClick}
             onAffectationDelete={handleAffectationDelete}
@@ -329,6 +392,8 @@ export default function PlanningPage() {
             onDuplicate={handleDuplicate}
             expandedMetiers={expandedMetiers}
             onToggleMetier={handleToggleMetier}
+            showWeekend={showWeekend}
+            onAffectationMove={canEdit ? handleAffectationMove : undefined}
           />
         ) : (
           <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">

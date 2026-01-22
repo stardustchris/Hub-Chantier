@@ -6,6 +6,10 @@ interface AffectationBlockProps {
   onClick?: () => void
   onDelete?: () => void
   compact?: boolean
+  // PLN-27: Drag & drop support
+  draggable?: boolean
+  onDragStart?: (e: React.DragEvent) => void
+  onDragEnd?: () => void
 }
 
 export default function AffectationBlock({
@@ -13,6 +17,9 @@ export default function AffectationBlock({
   onClick,
   onDelete,
   compact = false,
+  draggable = false,
+  onDragStart,
+  onDragEnd,
 }: AffectationBlockProps) {
   const backgroundColor = affectation.chantier_couleur || '#3498DB'
   const hasNote = !!affectation.note
@@ -25,10 +32,13 @@ export default function AffectationBlock({
   if (compact) {
     return (
       <div
-        className="rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate"
+        className={`rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
         style={{ backgroundColor }}
         onClick={onClick}
         title={`${affectation.chantier_nom || 'Chantier'} ${affectation.heure_debut ? `${affectation.heure_debut} - ${affectation.heure_fin}` : ''}`}
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
       >
         {affectation.chantier_nom || 'Chantier'}
       </div>
@@ -37,9 +47,12 @@ export default function AffectationBlock({
 
   return (
     <div
-      className="rounded-lg px-3 py-2 text-white cursor-pointer hover:opacity-90 transition-opacity relative group"
+      className={`rounded-lg px-3 py-2 text-white cursor-pointer hover:opacity-90 transition-opacity relative group ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
       style={{ backgroundColor }}
       onClick={onClick}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
       {/* Bouton supprimer */}
       {onDelete && (
