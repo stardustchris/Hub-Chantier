@@ -18,6 +18,7 @@
 | `CONTRIBUTING.md` | Conventions, workflow, checklist |
 | `docs/architecture/CLEAN_ARCHITECTURE.md` | Architecture detaillee |
 | `docs/architecture/ADR/` | Decisions d'architecture |
+| `.claude/agents.md` | Regles d'utilisation des sous-agents |
 
 ## Architecture (resume)
 
@@ -73,6 +74,19 @@ Note : USR-02 (Invitation SMS) retire du scope.
 5. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
 6. [ ] Connecter le frontend au backend
 
+## Workflow de developpement
+
+**Regles d'utilisation des sous-agents** : `.claude/agents.md`
+
+Quand une fonctionnalite est demandee (ex: "Implemente CHT-03"):
+1. Lire `docs/SPECIFICATIONS.md` pour les details
+2. `python-pro` implemente selon Clean Architecture
+3. `architect-reviewer` verifie la conformite
+4. `test-automator` genere les tests pytest
+5. `code-reviewer` verifie qualite et securite
+6. Mettre a jour SPECIFICATIONS.md (statut)
+7. Mettre a jour ce fichier (CLAUDE.md)
+
 ## Historique des sessions
 
 ### Session 2026-01-22 (suite)
@@ -85,6 +99,8 @@ Note : USR-02 (Invitation SMS) retire du scope.
 - Nouveaux use cases : UpdateUser, DeactivateUser, ActivateUser, ListUsers
 - Nouveaux endpoints : /users (CRUD complet)
 - Tests unitaires : test_register.py
+- Mise a jour .claude/agents.md avec workflow detaille et triggers automatiques
+- Liaison SPECIFICATIONS.md, agents.md, CLAUDE.md
 
 ### Session 2026-01-22
 - Import du CDC Greg Constructions v2.1
@@ -123,7 +139,8 @@ pytest --cov=backend --cov-report=html
 1. Consulter `modules/auth/` comme module de reference
 2. Lire `docs/SPECIFICATIONS.md` pour les specs fonctionnelles
 3. Lire `CONTRIBUTING.md` pour les conventions
-4. Lancer `./scripts/check-architecture.sh`
+4. Lire `.claude/agents.md` pour le workflow agents
+5. Lancer `./scripts/check-architecture.sh`
 
 ## Blocages / Questions en suspens
 
