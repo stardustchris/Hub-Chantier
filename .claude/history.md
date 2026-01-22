@@ -3,6 +3,51 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (planning frontend)
+
+- Implementation complete du frontend module Planning Operationnel
+- Integration avec backend PLN-01 a PLN-28
+
+### Composants React crees
+- `components/planning/PlanningGrid.tsx` : Grille utilisateurs x jours, groupes par metier
+- `components/planning/AffectationBlock.tsx` : Bloc colore representant une affectation
+- `components/planning/AffectationModal.tsx` : Modal creation/edition avec recurrence
+- `components/planning/WeekNavigation.tsx` : Navigation semaine avec date-fns
+- `components/planning/index.ts` : Exports du module
+
+### Page et Service
+- `pages/PlanningPage.tsx` : Page principale avec filtres, onglets, navigation semaine
+- `services/planning.ts` : Service API (getAffectations, create, update, delete, duplicate, getNonPlanifies)
+
+### Types TypeScript
+- `types/index.ts` : Affectation, AffectationCreate, AffectationUpdate, JourSemaine, JOURS_SEMAINE
+
+### Fonctionnalites implementees
+- Vue hebdomadaire avec navigation
+- Utilisateurs groupes par metier (extensible/collapsible)
+- Creation/modification affectations via modal
+- Support affectations recurrentes (jours + date fin)
+- Filtrage par metiers
+- Indicateur utilisateurs non planifies
+- Duplication semaine vers suivante
+- Onglets Utilisateurs/Chantiers (vue chantiers placeholder)
+
+### Integration
+- Route `/planning` ajoutee dans App.tsx
+- Menu Planning active dans Layout.tsx
+
+### Corrections TypeScript
+- Suppression imports non utilises dans ImageUpload, MiniMap, PhoneInput, Feed, DashboardPage, UserDetailPage
+
+### Validation agents
+- code-reviewer : APPROVED
+  - 0 issues critiques/majeurs
+  - 3 issues mineurs corriges (group class, memoization)
+  - TypeScript 100% (aucun any)
+  - Securite XSS validee
+
+---
+
 ## Session 2026-01-22 (planning backend)
 
 - Implementation complete du backend module Planning Operationnel (CDC Section 5)
