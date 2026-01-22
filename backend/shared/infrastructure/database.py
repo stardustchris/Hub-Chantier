@@ -54,6 +54,8 @@ def init_db():
 
     À appeler au démarrage de l'application.
     """
-    from modules.auth.infrastructure.persistence import Base
+    from modules.auth.infrastructure.persistence import Base as AuthBase
+    from modules.dashboard.infrastructure.persistence import Base as DashboardBase
 
-    Base.metadata.create_all(bind=engine)
+    AuthBase.metadata.create_all(bind=engine)
+    DashboardBase.metadata.create_all(bind=engine)
