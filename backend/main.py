@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from shared.infrastructure import settings, init_db
 from modules.auth.infrastructure.web import router as auth_router, users_router
+from modules.chantiers.infrastructure.web import router as chantiers_router
 
 # Créer l'application
 app = FastAPI(
@@ -64,11 +65,11 @@ async def health_check():
 # Inclure les routers des modules
 app.include_router(auth_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
+app.include_router(chantiers_router, prefix="/api")
 
 # Futurs modules à ajouter:
 # app.include_router(employes_router, prefix="/api")
 # app.include_router(pointages_router, prefix="/api")
-# app.include_router(chantiers_router, prefix="/api")
 # app.include_router(planning_router, prefix="/api")
 # app.include_router(documents_router, prefix="/api")
 # app.include_router(formulaires_router, prefix="/api")

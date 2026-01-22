@@ -40,7 +40,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 |--------|-------------|-----------------|--------|
 | auth (utilisateurs) | 3 | USR-01 a USR-13 | **COMPLET** |
 | dashboard | 2 | FEED-01 a FEED-20 | Structure only |
-| chantiers | 4 | CHT-01 a CHT-20 | Structure only |
+| chantiers | 4 | CHT-01 a CHT-20 | **COMPLET** |
 | planning | 5 | PLN-01 a PLN-28 | Structure only |
 | planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | Structure only |
@@ -64,16 +64,43 @@ Le module auth est maintenant complet selon le CDC Section 3 :
 
 Note : USR-02 (Invitation SMS) retire du scope.
 
+### Detail module chantiers (CHT-01 a CHT-20)
+
+Le module chantiers est maintenant complet selon le CDC Section 4 :
+
+- **Statuts** : Ouvert, En cours, Receptionne, Ferme (CHT-03)
+- **Coordonnees GPS** : Latitude/Longitude avec URLs navigation Google/Waze (CHT-04)
+- **Multi-responsables** : Conducteurs et Chefs de chantier multiples (CHT-05, CHT-06)
+- **Contact chantier** : Nom et telephone du contact sur place (CHT-07)
+- **Code chantier** : Format lettre + 3 chiffres, auto-generation (CHT-19)
+- **Dates previsionnelles** : Date debut et fin (CHT-20)
+- **Heures estimees** : Budget temps previsionnel (CHT-18)
+- **Couleur** : Identification visuelle (CHT-02)
+- **Photo couverture** : URL image (CHT-01)
+- **Use cases** : CreateChantier, GetChantier, ListChantiers, UpdateChantier, DeleteChantier, ChangeStatut, AssignResponsable
+- **Tests unitaires** : test_create_chantier.py, test_change_statut.py
+
 ## Prochaines taches prioritaires
 
 1. [ ] **Module dashboard** (CDC Section 2) - Tableau de bord avec feed d'activite et widgets
-2. [ ] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
+2. [x] **Module chantiers** (CDC Section 4) - CRUD chantiers avec statuts et GPS
 3. [ ] **Module planning** (CDC Section 5) - Affectations utilisateurs aux chantiers
 4. [ ] **Module feuilles_heures** (CDC Section 7) - Saisie et validation des heures
 5. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
 6. [ ] Connecter le frontend au backend
 
 ## Historique des sessions
+
+### Session 2026-01-22 (chantiers)
+- Implementation complete du module chantiers selon CDC Section 4 (CHT-01 a CHT-20)
+- Domain layer : Entite Chantier, Value Objects (StatutChantier, CoordonneesGPS, CodeChantier, ContactChantier)
+- Application layer : 7 use cases (Create, Get, List, Update, Delete, ChangeStatut, AssignResponsable)
+- Adapters layer : ChantierController
+- Infrastructure layer : ChantierModel, SQLAlchemyChantierRepository, Routes FastAPI
+- Transitions de statut : Ouvert → En cours → Receptionne → Ferme
+- Navigation GPS : URLs Google Maps, Waze, Apple Maps
+- Tests unitaires : test_create_chantier.py, test_change_statut.py
+- Integration dans main.py avec prefix /api/chantiers
 
 ### Session 2026-01-22 (suite)
 - Completion du module auth selon CDC Section 3 (USR-01 a USR-13)
