@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { format, startOfWeek, endOfWeek, addWeeks } from 'date-fns'
 import { Plus, Filter, Users, Building2, AlertCircle } from 'lucide-react'
 import Layout from '../components/Layout'
@@ -85,8 +85,8 @@ export default function PlanningPage() {
     loadData()
   }, [loadData])
 
-  // Filtrer les utilisateurs
-  const filteredUtilisateurs = utilisateurs.filter(user => {
+  // Filtrer les utilisateurs (memoized pour performance)
+  const filteredUtilisateurs = useMemo(() => utilisateurs.filter(user => {
     // Filtre par métier
     if (filterMetiers.length > 0 && !filterMetiers.includes(user.metier || 'autre')) {
       return false
@@ -99,7 +99,7 @@ export default function PlanningPage() {
     }
 
     return true
-  })
+  }), [utilisateurs, filterMetiers, showNonPlanifiesOnly, affectations])
 
   // Handlers
   const handleCellClick = (userId: string, date: Date) => {

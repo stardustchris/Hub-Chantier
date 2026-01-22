@@ -138,7 +138,7 @@ export default function PlanningGrid({
               {isExpanded && users.map(user => (
                 <div
                   key={user.id}
-                  className="grid grid-cols-[250px_repeat(7,1fr)] hover:bg-gray-50 transition-colors"
+                  className="group grid grid-cols-[250px_repeat(7,1fr)] hover:bg-gray-50 transition-colors"
                 >
                   {/* Colonne utilisateur */}
                   <div className="px-4 py-3 flex items-center gap-3 border-r">
