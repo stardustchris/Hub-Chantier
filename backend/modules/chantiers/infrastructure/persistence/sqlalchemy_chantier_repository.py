@@ -5,7 +5,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from modules.auth.domain.value_objects import Couleur
+from shared.domain.value_objects import Couleur
 
 from ...domain.entities import Chantier
 from ...domain.repositories import ChantierRepository

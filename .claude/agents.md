@@ -168,12 +168,23 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
 2. **Signaler les problemes majeurs** - Informer si un probleme critique est detecte
 3. **Resume concis** - Liste des fichiers crees/modifies + tests generes
 
+### Regle obligatoire AVANT tout commit
+
+**Lancer les agents SI** le commit contient :
+- `*.py` (code Python)
+- `*.ts` / `*.tsx` (code TypeScript/React)
+- `*.sql` (migrations, schemas)
+
+**NE PAS lancer les agents pour** :
+- `*.md` (documentation : CLAUDE.md, history.md, README, etc.)
+- `.claude/*` (configuration Claude)
+- `*.json` / `*.yaml` / `*.toml` (configuration)
+- `scripts/*` (scripts utilitaires simples)
+
 ### Quand NE PAS utiliser les agents
 - Questions simples ou informations
-- Modifications mineures (< 20 lignes)
-- Documentation seule
-- Configuration/scripts basiques
-- Commandes git simples
+- Lecture/exploration du code sans modification
+- Commandes git simples (status, log, etc.)
 
 ---
 

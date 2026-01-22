@@ -32,7 +32,7 @@ from .dependencies import (
     get_add_like_use_case,
     get_remove_like_use_case,
 )
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from shared.infrastructure.web import get_current_user_id, get_is_moderator
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -45,91 +45,89 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 class CreatePostRequest(BaseModel):
-    """Requête de création de post (FEED-01, FEED-03)."""
+    """Requête de création de post (FEED-01, FEED-03) - format frontend."""
 
-    content: str
-    target_type: str = "everyone"  # everyone, specific_chantiers, specific_people
-    chantier_ids: Optional[List[int]] = None
-    user_ids: Optional[List[int]] = None
-    is_urgent: bool = False
+    contenu: str  # Renommé pour frontend
+    type: Optional[str] = "message"  # message, photo, urgent
+    target_type: Optional[str] = "tous"  # tous, chantiers, utilisateurs
+    target_chantier_ids: Optional[List[str]] = None  # IDs en string pour frontend
+    target_utilisateur_ids: Optional[List[str]] = None  # IDs en string pour frontend
+    is_urgent: Optional[bool] = False
+
+
+class UserSummary(BaseModel):
+    """Résumé d'un utilisateur pour l'inclusion dans Post."""
+
+    id: str
+    email: str
+    nom: str
+    prenom: str
+    role: str
+    type_utilisateur: str
+    is_active: bool
+
+
+class PostMediaResponse(BaseModel):
+    """Réponse média pour frontend."""
+
+    id: str
+    url: str
+    type: str  # image, video
+    thumbnail_url: Optional[str] = None
+
+
+class PostCommentResponse(BaseModel):
+    """Réponse commentaire pour frontend."""
+
+    id: str
+    contenu: str
+    auteur: UserSummary
+    created_at: str
+
+
+class PostLikeResponse(BaseModel):
+    """Réponse like pour frontend."""
+
+    user_id: str
+    user: UserSummary
 
 
 class PostResponse(BaseModel):
-    """Réponse post."""
+    """Réponse post - format frontend."""
 
-    id: int
-    author_id: int
-    content: str
-    status: str
-    is_urgent: bool
-    is_pinned: bool
-    target_type: str
-    target_display: str
-    chantier_ids: Optional[List[int]]
-    user_ids: Optional[List[int]]
-    created_at: datetime
+    id: str  # String pour frontend
+    contenu: str  # Renommé pour frontend
+    type: str  # message, photo, urgent
+    auteur: UserSummary
+    target_type: str  # tous, chantiers, utilisateurs
+    target_chantiers: Optional[List[dict]] = None  # Objets Chantier simplifiés
+    target_utilisateurs: Optional[List[UserSummary]] = None
+    medias: List[PostMediaResponse] = []
+    commentaires: List[PostCommentResponse] = []
+    likes: List[PostLikeResponse] = []
     likes_count: int
-    comments_count: int
-    medias_count: int
+    commentaires_count: int
+    is_pinned: bool
+    pinned_until: Optional[str] = None
+    is_urgent: bool
+    created_at: str
+    updated_at: Optional[str] = None
 
 
 class PostListResponse(BaseModel):
-    """Réponse liste de posts paginée (FEED-18)."""
+    """Réponse liste de posts paginée (FEED-18) - format frontend."""
 
-    posts: List[PostResponse]
+    items: List[PostResponse]
     total: int
-    offset: int
-    limit: int
-    has_next: bool
-    has_previous: bool
-
-
-class MediaResponse(BaseModel):
-    """Réponse média."""
-
-    id: int
-    post_id: int
-    media_type: str
-    file_url: str
-    thumbnail_url: Optional[str]
-    original_filename: Optional[str]
-    width: Optional[int]
-    height: Optional[int]
-    position: int
-
-
-class CommentResponse(BaseModel):
-    """Réponse commentaire (FEED-05)."""
-
-    id: int
-    post_id: int
-    author_id: int
-    content: str
-    created_at: datetime
+    page: int
+    size: int
+    pages: int
 
 
 class CreateCommentRequest(BaseModel):
-    """Requête de création de commentaire."""
+    """Requête de création de commentaire - format frontend."""
 
-    content: str
-
-
-class PostDetailResponse(BaseModel):
-    """Réponse détail post avec médias, commentaires, likes."""
-
-    post: PostResponse
-    medias: List[MediaResponse]
-    comments: List[CommentResponse]
-    liked_by_user_ids: List[int]
-
-
-class LikeResponse(BaseModel):
-    """Réponse like (FEED-04)."""
-
-    id: int
-    post_id: int
-    user_id: int
-    created_at: datetime
+    contenu: str  # Renommé pour frontend
 
 
 # =============================================================================
@@ -139,10 +137,8 @@ class LikeResponse(BaseModel):
 
 @router.get("/feed", response_model=PostListResponse)
 def get_feed(
-    limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
-    include_archived: bool = Query(default=False),
-    chantier_ids: Optional[str] = Query(default=None, description="IDs chantiers séparés par virgule"),
+    page: int = Query(default=1, ge=1, description="Numéro de page"),
+    size: int = Query(default=20, ge=1, le=100, description="Nombre d'éléments par page"),
     current_user_id: int = Depends(get_current_user_id),
     use_case: GetFeedUseCase = Depends(get_feed_use_case),
 ):
@@ -152,32 +148,27 @@ def get_feed(
     Les posts sont filtrés selon le ciblage et triés par date décroissante.
     Les posts épinglés apparaissent en premier.
     """
-    # Parser les IDs de chantiers avec validation
-    user_chantier_ids = None
-    if chantier_ids:
-        try:
-            user_chantier_ids = [int(id.strip()) for id in chantier_ids.split(",") if id.strip()]
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Format invalide pour chantier_ids. Attendu: liste d'entiers séparés par virgule.",
-            )
+    # Convertir page/size en offset/limit
+    offset = (page - 1) * size
 
     result = use_case.execute(
         user_id=current_user_id,
-        user_chantier_ids=user_chantier_ids,
-        limit=limit,
+        user_chantier_ids=None,
+        limit=size,
         offset=offset,
-        include_archived=include_archived,
+        include_archived=False,
     )
 
+    # Convertir au format frontend
+    total = result.total
+    pages = (total + size - 1) // size if size > 0 else 0
+
     return PostListResponse(
-        posts=[_post_dto_to_response(p) for p in result.posts],
-        total=result.total,
-        offset=result.offset,
-        limit=result.limit,
-        has_next=result.has_next,
-        has_previous=result.has_previous,
+        items=[_post_dto_to_frontend_response(p) for p in result.posts],
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
     )
 
 
@@ -197,15 +188,29 @@ def create_post(
         Le post créé.
     """
     try:
+        # Mapper les noms frontend vers backend
+        target_type_map = {"tous": "everyone", "chantiers": "specific_chantiers", "utilisateurs": "specific_people"}
+        backend_target_type = target_type_map.get(request.target_type, "everyone")
+
+        # Convertir les IDs string en int avec validation
+        try:
+            chantier_ids = [int(id) for id in request.target_chantier_ids] if request.target_chantier_ids else None
+            user_ids = [int(id) for id in request.target_utilisateur_ids] if request.target_utilisateur_ids else None
+        except (ValueError, TypeError) as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Les IDs doivent être des nombres valides",
+            )
+
         dto = CreatePostDTO(
-            content=request.content,
-            target_type=request.target_type,
-            chantier_ids=request.chantier_ids,
-            user_ids=request.user_ids,
-            is_urgent=request.is_urgent,
+            content=request.contenu,  # Mapping frontend -> backend
+            target_type=backend_target_type,
+            chantier_ids=chantier_ids,
+            user_ids=user_ids,
+            is_urgent=request.is_urgent or request.type == "urgent",
         )
         result = use_case.execute(dto, author_id=current_user_id)
-        return _post_dto_to_response(result)
+        return _post_dto_to_frontend_response(result)
 
     except PostContentEmptyError as e:
         raise HTTPException(
@@ -219,7 +224,7 @@ def create_post(
         )
 
 
-@router.get("/posts/{post_id}", response_model=PostDetailResponse)
+@router.get("/posts/{post_id}", response_model=PostResponse)
 def get_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
@@ -228,35 +233,7 @@ def get_post(
     """Récupère un post avec ses détails."""
     try:
         result = use_case.execute(post_id=post_id, user_id=current_user_id)
-
-        return PostDetailResponse(
-            post=_post_dto_to_response(result.post),
-            medias=[
-                MediaResponse(
-                    id=m.id,
-                    post_id=m.post_id,
-                    media_type=m.media_type,
-                    file_url=m.file_url,
-                    thumbnail_url=m.thumbnail_url,
-                    original_filename=m.original_filename,
-                    width=m.width,
-                    height=m.height,
-                    position=m.position,
-                )
-                for m in result.medias
-            ],
-            comments=[
-                CommentResponse(
-                    id=c.id,
-                    post_id=c.post_id,
-                    author_id=c.author_id,
-                    content=c.content,
-                    created_at=c.created_at,
-                )
-                for c in result.comments
-            ],
-            liked_by_user_ids=result.liked_by_user_ids,
-        )
+        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids)
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -269,6 +246,7 @@ def get_post(
 def delete_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    is_moderator: bool = Depends(get_is_moderator),
     use_case: DeletePostUseCase = Depends(get_delete_post_use_case),
 ):
     """
@@ -277,8 +255,6 @@ def delete_post(
     Seul l'auteur ou un modérateur peut supprimer un post.
     """
     try:
-        # TODO: Vérifier si l'utilisateur est modérateur (Admin/Conducteur)
-        is_moderator = False  # À implémenter avec le service auth
         use_case.execute(
             post_id=post_id,
             user_id=current_user_id,
@@ -297,12 +273,14 @@ def delete_post(
         )
 
 
-@router.post("/posts/{post_id}/pin", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/posts/{post_id}/pin", response_model=PostResponse)
 def pin_post(
     post_id: int,
     duration_hours: int = Query(default=48, ge=1, le=48),
     current_user_id: int = Depends(get_current_user_id),
+    is_moderator: bool = Depends(get_is_moderator),
     use_case: PinPostUseCase = Depends(get_pin_post_use_case),
+    get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
     """
     Épingle un post en haut du fil (FEED-08).
@@ -310,13 +288,15 @@ def pin_post(
     Durée max: 48 heures.
     """
     try:
-        is_moderator = False  # À implémenter avec le service auth
         use_case.execute(
             post_id=post_id,
             user_id=current_user_id,
             duration_hours=duration_hours,
             is_moderator=is_moderator,
         )
+        # Retourner le post mis à jour
+        result = get_post_use_case.execute(post_id=post_id, user_id=current_user_id)
+        return _post_dto_to_frontend_response(result.post)
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -330,20 +310,24 @@ def pin_post(
         )
 
 
-@router.delete("/posts/{post_id}/pin", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/posts/{post_id}/pin", response_model=PostResponse)
 def unpin_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    is_moderator: bool = Depends(get_is_moderator),
     use_case: PinPostUseCase = Depends(get_pin_post_use_case),
+    get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
     """Retire l'épinglage d'un post."""
     try:
-        is_moderator = False
         use_case.unpin(
             post_id=post_id,
             user_id=current_user_id,
             is_moderator=is_moderator,
         )
+        # Retourner le post mis à jour
+        result = get_post_use_case.execute(post_id=post_id, user_id=current_user_id)
+        return _post_dto_to_frontend_response(result.post)
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -362,28 +346,25 @@ def unpin_post(
 # =============================================================================
 
 
-@router.post("/posts/{post_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/posts/{post_id}/comments", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 def create_comment(
     post_id: int,
     request: CreateCommentRequest,
     current_user_id: int = Depends(get_current_user_id),
     use_case: AddCommentUseCase = Depends(get_add_comment_use_case),
+    get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
     """Ajoute un commentaire sur un post (FEED-05)."""
     try:
         dto = CreateCommentDTO(
             post_id=post_id,
-            content=request.content,
+            content=request.contenu,  # Mapping frontend -> backend
         )
-        result = use_case.execute(dto, author_id=current_user_id)
+        use_case.execute(dto, author_id=current_user_id)
 
-        return CommentResponse(
-            id=result.id,
-            post_id=result.post_id,
-            author_id=result.author_id,
-            content=result.content,
-            created_at=result.created_at,
-        )
+        # Retourner le post mis à jour avec tous les commentaires
+        result = get_post_use_case.execute(post_id=post_id, user_id=current_user_id)
+        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids)
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -402,22 +383,20 @@ def create_comment(
 # =============================================================================
 
 
-@router.post("/posts/{post_id}/like", response_model=LikeResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/posts/{post_id}/like", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 def like_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
     use_case: AddLikeUseCase = Depends(get_add_like_use_case),
+    get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
     """Ajoute un like sur un post (FEED-04)."""
     try:
-        result = use_case.execute(post_id=post_id, user_id=current_user_id)
+        use_case.execute(post_id=post_id, user_id=current_user_id)
 
-        return LikeResponse(
-            id=result.id,
-            post_id=result.post_id,
-            user_id=result.user_id,
-            created_at=result.created_at,
-        )
+        # Retourner le post mis à jour
+        result = get_post_use_case.execute(post_id=post_id, user_id=current_user_id)
+        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids)
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -431,15 +410,20 @@ def like_post(
         )
 
 
-@router.delete("/posts/{post_id}/like", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/posts/{post_id}/like", response_model=PostResponse)
 def unlike_post(
     post_id: int,
     current_user_id: int = Depends(get_current_user_id),
     use_case: RemoveLikeUseCase = Depends(get_remove_like_use_case),
+    get_post_use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
     """Retire un like d'un post."""
     try:
         use_case.execute(post_id=post_id, user_id=current_user_id)
+
+        # Retourner le post mis à jour
+        result = get_post_use_case.execute(post_id=post_id, user_id=current_user_id)
+        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids)
 
     except LikeNotFoundError as e:
         raise HTTPException(
@@ -453,21 +437,94 @@ def unlike_post(
 # =============================================================================
 
 
-def _post_dto_to_response(dto: PostDTO) -> PostResponse:
-    """Convertit un PostDTO en PostResponse."""
+def _post_dto_to_frontend_response(
+    dto: PostDTO,
+    medias: list = None,
+    comments: list = None,
+    liked_by_user_ids: list = None,
+) -> PostResponse:
+    """Convertit un PostDTO en PostResponse format frontend."""
+    # Mapper le type de ciblage backend -> frontend
+    target_type_map = {"everyone": "tous", "specific_chantiers": "chantiers", "specific_people": "utilisateurs"}
+    frontend_target_type = target_type_map.get(dto.target_type, "tous")
+
+    # Déterminer le type de post
+    post_type = "urgent" if dto.is_urgent else "message"
+
+    # Créer un auteur minimal (à enrichir avec les vraies données utilisateur)
+    auteur = UserSummary(
+        id=str(dto.author_id),
+        email="",
+        nom="",
+        prenom="",
+        role="compagnon",
+        type_utilisateur="employe",
+        is_active=True,
+    )
+
+    # Convertir les médias
+    medias_response = []
+    if medias:
+        for m in medias:
+            medias_response.append(PostMediaResponse(
+                id=str(m.id),
+                url=m.file_url,
+                type="image" if m.media_type == "image" else "video",
+                thumbnail_url=m.thumbnail_url,
+            ))
+
+    # Convertir les commentaires
+    comments_response = []
+    if comments:
+        for c in comments:
+            comments_response.append(PostCommentResponse(
+                id=str(c.id),
+                contenu=c.content,
+                auteur=UserSummary(
+                    id=str(c.author_id),
+                    email="",
+                    nom="",
+                    prenom="",
+                    role="compagnon",
+                    type_utilisateur="employe",
+                    is_active=True,
+                ),
+                created_at=c.created_at.isoformat() if hasattr(c.created_at, 'isoformat') else str(c.created_at),
+            ))
+
+    # Convertir les likes
+    likes_response = []
+    if liked_by_user_ids:
+        for user_id in liked_by_user_ids:
+            likes_response.append(PostLikeResponse(
+                user_id=str(user_id),
+                user=UserSummary(
+                    id=str(user_id),
+                    email="",
+                    nom="",
+                    prenom="",
+                    role="compagnon",
+                    type_utilisateur="employe",
+                    is_active=True,
+                ),
+            ))
+
     return PostResponse(
-        id=dto.id,
-        author_id=dto.author_id,
-        content=dto.content,
-        status=dto.status,
-        is_urgent=dto.is_urgent,
-        is_pinned=dto.is_pinned,
-        target_type=dto.target_type,
-        target_display=dto.target_display,
-        chantier_ids=list(dto.chantier_ids) if dto.chantier_ids else None,
-        user_ids=list(dto.user_ids) if dto.user_ids else None,
-        created_at=dto.created_at,
+        id=str(dto.id),
+        contenu=dto.content,
+        type=post_type,
+        auteur=auteur,
+        target_type=frontend_target_type,
+        target_chantiers=None,  # TODO: Enrichir avec les vraies données
+        target_utilisateurs=None,  # TODO: Enrichir avec les vraies données
+        medias=medias_response,
+        commentaires=comments_response,
+        likes=likes_response,
         likes_count=dto.likes_count,
-        comments_count=dto.comments_count,
-        medias_count=dto.medias_count,
+        commentaires_count=dto.comments_count,
+        is_pinned=dto.is_pinned,
+        pinned_until=None,  # TODO: Ajouter au DTO si disponible
+        is_urgent=dto.is_urgent,
+        created_at=dto.created_at.isoformat() if hasattr(dto.created_at, 'isoformat') else str(dto.created_at),
+        updated_at=None,
     )

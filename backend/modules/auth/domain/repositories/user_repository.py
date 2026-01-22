@@ -178,3 +178,29 @@ class UserRepository(ABC):
             True si le code existe déjà.
         """
         pass
+
+    @abstractmethod
+    def search(
+        self,
+        query: Optional[str] = None,
+        role: Optional[Role] = None,
+        type_utilisateur: Optional[TypeUtilisateur] = None,
+        active_only: bool = False,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> tuple[List[User], int]:
+        """
+        Recherche des utilisateurs avec filtres multiples.
+
+        Args:
+            query: Texte à rechercher dans nom, prénom, email.
+            role: Filtrer par rôle (optionnel).
+            type_utilisateur: Filtrer par type (optionnel).
+            active_only: Filtrer les actifs uniquement.
+            skip: Nombre d'éléments à sauter.
+            limit: Nombre maximum à retourner.
+
+        Returns:
+            Tuple (liste des utilisateurs, total count).
+        """
+        pass

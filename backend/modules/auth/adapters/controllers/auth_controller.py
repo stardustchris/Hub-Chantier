@@ -58,9 +58,9 @@ class AuthController:
         self.get_user_by_id_use_case = get_user_by_id_use_case
 
     def _user_dto_to_dict(self, user_dto) -> Dict[str, Any]:
-        """Convertit un UserDTO en dictionnaire."""
+        """Convertit un UserDTO en dictionnaire compatible frontend."""
         return {
-            "id": user_dto.id,
+            "id": str(user_dto.id),  # Converti en string pour frontend
             "email": user_dto.email,
             "nom": user_dto.nom,
             "prenom": user_dto.prenom,
@@ -75,8 +75,9 @@ class AuthController:
             "telephone": user_dto.telephone,
             "metier": user_dto.metier,
             "contact_urgence_nom": user_dto.contact_urgence_nom,
-            "contact_urgence_tel": user_dto.contact_urgence_tel,
+            "contact_urgence_telephone": user_dto.contact_urgence_tel,  # Renommé pour frontend
             "created_at": user_dto.created_at,
+            "updated_at": getattr(user_dto, 'updated_at', None),  # Ajouté pour frontend
         }
 
     def login(self, email: str, password: str) -> Dict[str, Any]:
@@ -291,6 +292,7 @@ class AuthController:
         role: Optional[str] = None,
         type_utilisateur: Optional[str] = None,
         active_only: bool = False,
+        search: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Liste les utilisateurs avec pagination (USR-09).
@@ -301,6 +303,7 @@ class AuthController:
             role: Filtrer par rôle.
             type_utilisateur: Filtrer par type.
             active_only: Filtrer les actifs.
+            search: Recherche textuelle.
 
         Returns:
             Dictionnaire avec la liste paginée.
@@ -311,6 +314,7 @@ class AuthController:
             role=role,
             type_utilisateur=type_utilisateur,
             active_only=active_only,
+            search=search,
         )
         return {
             "users": [self._user_dto_to_dict(u) for u in result.users],

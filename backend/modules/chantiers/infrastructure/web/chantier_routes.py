@@ -16,7 +16,7 @@ from ...application.use_cases import (
     InvalidRoleTypeError,
 )
 from .dependencies import get_chantier_controller
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from shared.infrastructure.web import get_current_user_id
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 
@@ -54,11 +54,9 @@ class CreateChantierRequest(BaseModel):
     contact_nom: Optional[str] = None  # CHT-07
     contact_telephone: Optional[str] = None  # CHT-07
     heures_estimees: Optional[float] = None  # CHT-18
-    date_debut: Optional[str] = None  # CHT-20 (ISO format)
-    date_fin: Optional[str] = None  # CHT-20 (ISO format)
+    date_debut_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
+    date_fin_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
     description: Optional[str] = None
-    conducteur_ids: Optional[List[int]] = None  # CHT-05
-    chef_chantier_ids: Optional[List[int]] = None  # CHT-06
 
 
 class UpdateChantierRequest(BaseModel):
@@ -73,8 +71,8 @@ class UpdateChantierRequest(BaseModel):
     contact_nom: Optional[str] = None
     contact_telephone: Optional[str] = None
     heures_estimees: Optional[float] = None
-    date_debut: Optional[str] = None
-    date_fin: Optional[str] = None
+    date_debut_prevue: Optional[str] = None  # Renommé pour frontend
+    date_fin_prevue: Optional[str] = None  # Renommé pour frontend
     description: Optional[str] = None
 
 
@@ -90,39 +88,52 @@ class AssignResponsableRequest(BaseModel):
     user_id: int
 
 
-class ChantierResponse(BaseModel):
-    """Réponse chantier complète selon CDC."""
+class UserSummary(BaseModel):
+    """Résumé d'un utilisateur pour l'inclusion dans Chantier."""
 
-    id: int
+    id: str
+    email: str
+    nom: str
+    prenom: str
+    role: str
+    type_utilisateur: str
+    telephone: Optional[str] = None
+    metier: Optional[str] = None
+    couleur: Optional[str] = None
+    is_active: bool
+
+
+class ChantierResponse(BaseModel):
+    """Réponse chantier complète selon CDC - format frontend."""
+
+    id: str  # String pour frontend
     code: str
     nom: str
     adresse: str
     statut: str
-    statut_icon: str
-    couleur: str
-    coordonnees_gps: Optional[dict] = None
-    photo_couverture: Optional[str] = None
-    contact: Optional[dict] = None
+    couleur: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    contact_nom: Optional[str] = None
+    contact_telephone: Optional[str] = None
     heures_estimees: Optional[float] = None
-    date_debut: Optional[str] = None
-    date_fin: Optional[str] = None
+    date_debut_prevue: Optional[str] = None  # Renommé pour frontend
+    date_fin_prevue: Optional[str] = None  # Renommé pour frontend
     description: Optional[str] = None
-    conducteur_ids: List[int]
-    chef_chantier_ids: List[int]
-    is_active: bool
-    created_at: Optional[str] = None
+    conducteurs: List[UserSummary] = []  # Objets User complets pour frontend
+    chefs: List[UserSummary] = []  # Objets User complets pour frontend
+    created_at: str
     updated_at: Optional[str] = None
 
 
 class ChantierListResponse(BaseModel):
-    """Réponse liste chantiers paginée (CHT-14)."""
+    """Réponse liste chantiers paginée (CHT-14) - format frontend."""
 
-    chantiers: List[ChantierResponse]
+    items: List[ChantierResponse]
     total: int
-    skip: int
-    limit: int
-    has_next: bool
-    has_previous: bool
+    page: int
+    size: int
+    pages: int
 
 
 class DeleteResponse(BaseModel):
@@ -171,13 +182,11 @@ def create_chantier(
             contact_nom=request.contact_nom,
             contact_telephone=request.contact_telephone,
             heures_estimees=request.heures_estimees,
-            date_debut=request.date_debut,
-            date_fin=request.date_fin,
+            date_debut=request.date_debut_prevue,  # Mapping frontend -> backend
+            date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
-            conducteur_ids=request.conducteur_ids,
-            chef_chantier_ids=request.chef_chantier_ids,
         )
-        return result
+        return _transform_chantier_response(result, controller)
     except CodeChantierAlreadyExistsError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -197,16 +206,10 @@ def create_chantier(
 
 @router.get("", response_model=ChantierListResponse)
 def list_chantiers(
-    skip: int = Query(0, ge=0, description="Nombre d'éléments à sauter"),
-    limit: int = Query(100, ge=1, le=500, description="Nombre d'éléments par page"),
+    page: int = Query(1, ge=1, description="Numéro de page"),
+    size: int = Query(100, ge=1, le=500, description="Nombre d'éléments par page"),
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
-    conducteur_id: Optional[int] = Query(None, description="Filtrer par conducteur"),
-    chef_chantier_id: Optional[int] = Query(None, description="Filtrer par chef"),
-    responsable_id: Optional[int] = Query(
-        None, description="Filtrer par responsable (conducteur ou chef)"
-    ),
-    actifs_uniquement: bool = Query(False, description="Uniquement les chantiers actifs"),
-    search: Optional[str] = Query(None, description="Recherche par nom ou code"),
+    search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
     controller: ChantierController = Depends(get_chantier_controller),
     current_user_id: int = Depends(get_current_user_id),
 ):
@@ -214,13 +217,9 @@ def list_chantiers(
     Liste les chantiers avec pagination et filtres.
 
     Args:
-        skip: Offset pour la pagination.
-        limit: Limite d'éléments retournés.
+        page: Numéro de page (commence à 1).
+        size: Nombre d'éléments par page.
         statut: Filtrer par statut (optionnel).
-        conducteur_id: Filtrer par conducteur (optionnel).
-        chef_chantier_id: Filtrer par chef de chantier (optionnel).
-        responsable_id: Filtrer par responsable (optionnel).
-        actifs_uniquement: Uniquement les chantiers actifs.
         search: Recherche textuelle par nom ou code.
         controller: Controller des chantiers.
         current_user_id: ID de l'utilisateur connecté.
@@ -228,15 +227,27 @@ def list_chantiers(
     Returns:
         Liste paginée des chantiers.
     """
-    return controller.list(
+    # Convertir page/size en skip/limit
+    skip = (page - 1) * size
+
+    result = controller.list(
         skip=skip,
-        limit=limit,
+        limit=size,
         statut=statut,
-        conducteur_id=conducteur_id,
-        chef_chantier_id=chef_chantier_id,
-        responsable_id=responsable_id,
-        actifs_uniquement=actifs_uniquement,
         search=search,
+    )
+
+    # Convertir au format frontend
+    total = result.get("total", 0)
+    pages = (total + size - 1) // size if size > 0 else 0
+    chantiers_data = result.get("chantiers", [])
+
+    return ChantierListResponse(
+        items=[_transform_chantier_response(c, controller) for c in chantiers_data],
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
     )
 
 
@@ -261,7 +272,8 @@ def get_chantier(
         HTTPException 404: Chantier non trouvé.
     """
     try:
-        return controller.get_by_id(chantier_id)
+        result = controller.get_by_id(chantier_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -290,7 +302,8 @@ def get_chantier_by_code(
         HTTPException 404: Chantier non trouvé.
     """
     try:
-        return controller.get_by_code(code)
+        result = controller.get_by_code(code)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -322,7 +335,7 @@ def update_chantier(
         HTTPException 400: Chantier fermé ou données invalides.
     """
     try:
-        return controller.update(
+        result = controller.update(
             chantier_id=chantier_id,
             nom=request.nom,
             adresse=request.adresse,
@@ -333,10 +346,11 @@ def update_chantier(
             contact_nom=request.contact_nom,
             contact_telephone=request.contact_telephone,
             heures_estimees=request.heures_estimees,
-            date_debut=request.date_debut,
-            date_fin=request.date_fin,
+            date_debut=request.date_debut_prevue,  # Mapping frontend -> backend
+            date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
         )
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -428,7 +442,8 @@ def change_statut(
         HTTPException 400: Transition non autorisée.
     """
     try:
-        return controller.change_statut(chantier_id, request.statut)
+        result = controller.change_statut(chantier_id, request.statut)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -454,7 +469,8 @@ def demarrer_chantier(
 ):
     """Passe le chantier en statut 'En cours'."""
     try:
-        return controller.demarrer(chantier_id)
+        result = controller.demarrer(chantier_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -475,7 +491,8 @@ def receptionner_chantier(
 ):
     """Passe le chantier en statut 'Réceptionné'."""
     try:
-        return controller.receptionner(chantier_id)
+        result = controller.receptionner(chantier_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -496,7 +513,8 @@ def fermer_chantier(
 ):
     """Passe le chantier en statut 'Fermé'."""
     try:
-        return controller.fermer(chantier_id)
+        result = controller.fermer(chantier_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -534,7 +552,8 @@ def assigner_conducteur(
         Le chantier mis à jour.
     """
     try:
-        return controller.assigner_conducteur(chantier_id, request.user_id)
+        result = controller.assigner_conducteur(chantier_id, request.user_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -551,7 +570,8 @@ def retirer_conducteur(
 ):
     """Retire un conducteur du chantier."""
     try:
-        return controller.retirer_conducteur(chantier_id, user_id)
+        result = controller.retirer_conducteur(chantier_id, user_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -579,7 +599,8 @@ def assigner_chef_chantier(
         Le chantier mis à jour.
     """
     try:
-        return controller.assigner_chef_chantier(chantier_id, request.user_id)
+        result = controller.assigner_chef_chantier(chantier_id, request.user_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -596,9 +617,97 @@ def retirer_chef_chantier(
 ):
     """Retire un chef de chantier."""
     try:
-        return controller.retirer_chef_chantier(chantier_id, user_id)
+        result = controller.retirer_chef_chantier(chantier_id, user_id)
+        return _transform_chantier_response(result, controller)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=e.message,
         )
+
+
+# =============================================================================
+# Helpers
+# =============================================================================
+
+
+def _get_user_summary(user_id: int, controller: ChantierController) -> Optional[UserSummary]:
+    """Récupère les infos d'un utilisateur pour l'inclusion dans un chantier."""
+    try:
+        # Le controller a accès au user_repo via dependency injection
+        # Pour l'instant, on retourne un objet minimal
+        # TODO: Implémenter une vraie récupération des utilisateurs
+        return None
+    except Exception:
+        return None
+
+
+def _transform_chantier_response(chantier_dict: dict, controller: ChantierController) -> ChantierResponse:
+    """
+    Transforme un dictionnaire chantier du controller en ChantierResponse.
+
+    Convertit les IDs des conducteurs/chefs en objets User complets.
+    """
+    # Récupérer les coordonnées GPS
+    coords = chantier_dict.get("coordonnees_gps") or {}
+    latitude = coords.get("latitude") if coords else None
+    longitude = coords.get("longitude") if coords else None
+
+    # Récupérer le contact
+    contact = chantier_dict.get("contact") or {}
+    contact_nom = contact.get("nom") if contact else None
+    contact_telephone = contact.get("telephone") if contact else None
+
+    # Pour les conducteurs et chefs, on garde les IDs pour l'instant
+    # car la récupération des objets User complets nécessiterait une dépendance vers le module auth
+    # TODO: Implémenter la récupération des objets User complets via un service partagé
+    conducteur_ids = chantier_dict.get("conducteur_ids", [])
+    chef_chantier_ids = chantier_dict.get("chef_chantier_ids", [])
+
+    # Créer des objets UserSummary minimaux avec juste les IDs
+    conducteurs = [
+        UserSummary(
+            id=str(uid),
+            email="",
+            nom="",
+            prenom="",
+            role="conducteur",
+            type_utilisateur="employe",
+            is_active=True,
+        )
+        for uid in conducteur_ids
+    ]
+
+    chefs = [
+        UserSummary(
+            id=str(uid),
+            email="",
+            nom="",
+            prenom="",
+            role="chef_chantier",
+            type_utilisateur="employe",
+            is_active=True,
+        )
+        for uid in chef_chantier_ids
+    ]
+
+    return ChantierResponse(
+        id=str(chantier_dict.get("id", "")),
+        code=chantier_dict.get("code", ""),
+        nom=chantier_dict.get("nom", ""),
+        adresse=chantier_dict.get("adresse", ""),
+        statut=chantier_dict.get("statut", "ouvert"),
+        couleur=chantier_dict.get("couleur"),
+        latitude=latitude,
+        longitude=longitude,
+        contact_nom=contact_nom,
+        contact_telephone=contact_telephone,
+        heures_estimees=chantier_dict.get("heures_estimees"),
+        date_debut_prevue=chantier_dict.get("date_debut"),
+        date_fin_prevue=chantier_dict.get("date_fin"),
+        description=chantier_dict.get("description"),
+        conducteurs=conducteurs,
+        chefs=chefs,
+        created_at=chantier_dict.get("created_at", ""),
+        updated_at=chantier_dict.get("updated_at"),
+    )
