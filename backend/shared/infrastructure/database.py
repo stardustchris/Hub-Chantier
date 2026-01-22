@@ -57,7 +57,9 @@ def init_db() -> None:
     from modules.auth.infrastructure.persistence import Base as AuthBase
     from modules.dashboard.infrastructure.persistence import Base as DashboardBase
     from modules.chantiers.infrastructure.persistence import Base as ChantiersBase
+    from modules.planning.infrastructure.persistence import Base as PlanningBase
 
     AuthBase.metadata.create_all(bind=engine)
     DashboardBase.metadata.create_all(bind=engine)
     ChantiersBase.metadata.create_all(bind=engine)
+    PlanningBase.metadata.create_all(bind=engine)
