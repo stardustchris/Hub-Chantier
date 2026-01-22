@@ -6,7 +6,7 @@ from typing import Optional, List
 from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from backend.shared.infrastructure.database import Base
+from shared.infrastructure.database import Base
 
 
 class TemplateModeleModel(Base):

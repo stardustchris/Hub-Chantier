@@ -3,7 +3,7 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from backend.shared.infrastructure.database import get_db
+from shared.infrastructure.database import get_db
 from ...adapters.controllers import TacheController
 from ..persistence import (
     SQLAlchemyTacheRepository,
