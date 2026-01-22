@@ -41,7 +41,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | Module | CDC Section | Fonctionnalites | Status |
 |--------|-------------|-----------------|--------|
 | auth (utilisateurs) | 3 | USR-01 a USR-13 | **COMPLET** |
-| dashboard | 2 | FEED-01 a FEED-20 | **COMPLET** (backend) |
+| dashboard | 2 | FEED-01 a FEED-20 | **COMPLET** |
 | chantiers | 4 | CHT-01 a CHT-20 | **COMPLET** |
 | planning | 5 | PLN-01 a PLN-28 | Structure only |
 | planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
