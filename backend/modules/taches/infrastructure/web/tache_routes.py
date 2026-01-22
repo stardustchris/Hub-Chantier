@@ -16,7 +16,7 @@ from ...application import (
 from .dependencies import get_tache_controller
 
 # Routes pour auth dependency
-from backend.modules.auth.infrastructure.web.dependencies import get_current_user_id
+from modules.auth.infrastructure.web.dependencies import get_current_user_id
 
 router = APIRouter(prefix="/taches", tags=["taches"])
 templates_router = APIRouter(prefix="/templates-taches", tags=["templates-taches"])

@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from backend.shared.infrastructure.database import Base
+from shared.infrastructure.database import Base
 from ...domain.value_objects import StatutTache, UniteMesure
 
 
