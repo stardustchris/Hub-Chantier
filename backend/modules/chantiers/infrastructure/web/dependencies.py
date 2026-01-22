@@ -15,6 +15,7 @@ from ...application.use_cases import (
 )
 from ..persistence import SQLAlchemyChantierRepository
 from shared.infrastructure.database import get_db
+from modules.auth.infrastructure.persistence import SQLAlchemyUserRepository
 
 
 def get_chantier_repository(
@@ -22,6 +23,13 @@ def get_chantier_repository(
 ) -> SQLAlchemyChantierRepository:
     """Retourne le repository chantiers."""
     return SQLAlchemyChantierRepository(db)
+
+
+def get_user_repository(
+    db: Session = Depends(get_db),
+) -> SQLAlchemyUserRepository:
+    """Retourne le repository utilisateurs pour récupérer les infos des conducteurs/chefs."""
+    return SQLAlchemyUserRepository(db)
 
 
 def get_create_chantier_use_case(
