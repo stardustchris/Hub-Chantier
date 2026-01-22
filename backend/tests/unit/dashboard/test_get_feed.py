@@ -86,11 +86,11 @@ class TestGetFeedUseCase:
             user_chantier_ids=[1, 2],
         )
 
-        # Assert
+        # Assert - Le use case demande limit+1 pour détecter has_next
         self.mock_post_repo.find_feed.assert_called_once_with(
             user_id=1,
             user_chantier_ids=[1, 2],
-            limit=20,
+            limit=21,  # 20 + 1 pour has_next
             offset=0,
             include_archived=False,
         )
@@ -107,11 +107,11 @@ class TestGetFeedUseCase:
             offset=20,
         )
 
-        # Assert
+        # Assert - Le use case demande limit+1 pour détecter has_next
         self.mock_post_repo.find_feed.assert_called_once_with(
             user_id=1,
             user_chantier_ids=None,
-            limit=10,
+            limit=11,  # 10 + 1 pour has_next
             offset=20,
             include_archived=False,
         )
@@ -129,18 +129,19 @@ class TestGetFeedUseCase:
             include_archived=True,
         )
 
-        # Assert
+        # Assert - Le use case demande limit+1 pour détecter has_next
         self.mock_post_repo.find_feed.assert_called_once_with(
             user_id=1,
             user_chantier_ids=None,
-            limit=20,
+            limit=21,  # 20 + 1 pour has_next
             offset=0,
             include_archived=True,
         )
 
     def test_get_feed_has_next(self):
         """Test: indication qu'il y a une page suivante."""
-        # Arrange - Retourne exactement 'limit' posts
+        # Arrange - Retourne 'limit+1' posts pour déclencher has_next=True
+        # Le use case demande limit+1 et si on reçoit limit+1, has_next=True
         posts_full_page = [
             Post(
                 id=i,
@@ -148,7 +149,7 @@ class TestGetFeedUseCase:
                 content=f"Post {i}",
                 targeting=PostTargeting.everyone(),
             )
-            for i in range(20)
+            for i in range(21)  # 21 posts = limit(20) + 1
         ]
         self.mock_post_repo.find_feed.return_value = posts_full_page
 
@@ -157,6 +158,7 @@ class TestGetFeedUseCase:
 
         # Assert
         assert result.has_next is True
+        assert len(result.posts) == 20  # Seulement 20 retournés
 
     def test_get_feed_no_next(self):
         """Test: pas de page suivante."""
