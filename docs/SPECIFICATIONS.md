@@ -1,748 +1,832 @@
-# GREG CONSTRUCTIONS - Cahier des Charges Fonctionnel
+# GREG CONSTRUCTIONS
 
-> **Application SaaS de Gestion de Chantiers**
-> Version 2.1 - Janvier 2026
-> Document confidentiel
+**Gros Oeuvre - Batiment**
+
+## CAHIER DES CHARGES FONCTIONNEL
+
+Application SaaS de Gestion de Chantiers
+
+**Version 2.1 - Janvier 2026**
 
 ---
 
-## Table des matières
+## TABLE DES MATIERES
 
 1. [Introduction](#1-introduction)
-2. [Gestion des Utilisateurs](#2-gestion-des-utilisateurs)
-3. [Gestion des Chantiers](#3-gestion-des-chantiers)
-4. [Planning Opérationnel](#4-planning-opérationnel)
-5. [Planning de Charge](#5-planning-de-charge)
-6. [Feuilles d'Heures](#6-feuilles-dheures)
-7. [Formulaires Chantier](#7-formulaires-chantier)
-8. [Gestion Documentaire (GED)](#8-gestion-documentaire-ged)
-9. [Mémos](#9-mémos)
-10. [Logistique - Gestion du Matériel](#10-logistique---gestion-du-matériel)
-11. [Gestion des Interventions](#11-gestion-des-interventions)
-12. [Gestion des Tâches](#12-gestion-des-tâches)
-13. [Intégrations](#13-intégrations)
-14. [Sécurité et Conformité](#14-sécurité-et-conformité)
-15. [Tableau de Bord & Feed d'Actualités](#15-tableau-de-bord--feed-dactualités)
+2. [Tableau de Bord & Feed d'Actualites](#2-tableau-de-bord--feed-dactualites)
+3. [Gestion des Utilisateurs](#3-gestion-des-utilisateurs)
+4. [Gestion des Chantiers](#4-gestion-des-chantiers)
+5. [Planning Operationnel](#5-planning-operationnel)
+6. [Planning de Charge](#6-planning-de-charge)
+7. [Feuilles d'Heures](#7-feuilles-dheures)
+8. [Formulaires Chantier](#8-formulaires-chantier)
+9. [Gestion Documentaire (GED)](#9-gestion-documentaire-ged)
+10. [Memos](#10-memos)
+11. [Logistique - Gestion du Materiel](#11-logistique---gestion-du-materiel)
+12. [Gestion des Interventions](#12-gestion-des-interventions)
+13. [Gestion des Taches](#13-gestion-des-taches)
+14. [Integrations](#14-integrations)
+15. [Securite et Conformite](#15-securite-et-conformite)
 16. [Glossaire](#16-glossaire)
 
 ---
 
-## 1. Introduction
+## 1. INTRODUCTION
 
 ### 1.1 Contexte du projet
 
-Greg Constructions est une entreprise spécialisée dans le gros œuvre et la construction de bâtiments. Ce cahier des charges définit les spécifications fonctionnelles d'une application SaaS permettant de gérer l'ensemble des opérations de chantier, depuis la planification des équipes jusqu'au suivi documentaire.
+Greg Constructions est une entreprise specialisee dans le gros oeuvre et la construction de batiments. Ce cahier des charges definit les specifications fonctionnelles d'une application SaaS permettant de gerer l'ensemble des operations de chantier, depuis la planification des equipes jusqu'au suivi documentaire.
 
 ### 1.2 Objectifs
 
-L'application vise à :
-- Centraliser la gestion des chantiers et des équipes
-- Optimiser la planification des ressources humaines et matérielles
-- Faciliter la communication terrain/bureau en temps réel
-- Automatiser la gestion des heures et la préparation de la paie
-- Assurer la traçabilité documentaire et le suivi qualité
+L'application vise a :
+- Centraliser la gestion des chantiers et des equipes
+- Optimiser la planification des ressources humaines et materielles
+- Faciliter la communication terrain/bureau en temps reel
+- Automatiser la gestion des heures et la preparation de la paie
+- Assurer la tracabilite documentaire et le suivi qualite
 
-### 1.3 Périmètre fonctionnel
+### 1.3 Perimetre fonctionnel
 
-| Module | Description | Status |
-|--------|-------------|--------|
-| Utilisateurs | Gestion des comptes, rôles et permissions | ⏳ TODO |
-| Chantiers | Création et suivi des projets de construction | ⏳ TODO |
-| Planning Opérationnel | Affectation des équipes aux chantiers | ⏳ TODO |
-| Planning de Charge | Vision capacitaire et besoins par métier | ⏳ TODO |
-| Feuilles d'heures | Saisie et validation du temps de travail | ⏳ TODO |
-| Tâches | Gestion des travaux et avancement | ⏳ TODO |
-| Formulaires | Templates personnalisables (rapports, PV...) | ⏳ TODO |
-| Documents | GED avec gestion des droits d'accès | ⏳ TODO |
-| Mémos | Communication d'urgence et suivi problèmes | ⏳ TODO |
-| Interventions | Gestion SAV et maintenance ponctuelle | ⏳ TODO |
-| Logistique | Réservation engins et gros matériel | ⏳ TODO |
+| Module | Description |
+|--------|-------------|
+| Utilisateurs | Gestion des comptes, roles et permissions |
+| Chantiers | Creation et suivi des projets de construction |
+| Planning Operationnel | Affectation des equipes aux chantiers |
+| Planning de Charge | Vision capacitaire et besoins par metier |
+| Feuilles d'heures | Saisie et validation du temps de travail |
+| Taches | Gestion des travaux et avancement |
+| Formulaires | Templates personnalisables (rapports, PV...) |
+| Documents | GED avec gestion des droits d'acces |
+| Memos | Communication d'urgence et suivi problemes |
+| Interventions | Gestion SAV et maintenance ponctuelle |
+| Logistique | Reservation engins et gros materiel |
 
-### 1.4 Références
+### 1.4 References
 
-Ce cahier des charges s'inspire des meilleures pratiques de l'application Alobees, solution de référence dans le secteur du BTP, tout en étant adapté aux besoins spécifiques du gros œuvre et de la construction.
+Ce cahier des charges s'inspire des meilleures pratiques de l'application Alobees, solution de reference dans le secteur du BTP, tout en etant adapte aux besoins specifiques du gros oeuvre et de la construction.
 
 ---
 
-## 2. Gestion des Utilisateurs
+## 2. TABLEAU DE BORD & FEED D'ACTUALITES
+
+Le tableau de bord est la page d'accueil de l'application apres connexion. Il s'adapte au role de l'utilisateur (Direction, Chef de chantier, Compagnon) et integre un feed d'actualites type reseau social interne.
 
 ### 2.1 Vue d'ensemble
 
-Le module Utilisateurs permet de gérer l'ensemble des collaborateurs (employés et sous-traitants) avec un système de rôles et permissions granulaires. Chaque utilisateur dispose d'une fiche complète avec photo, couleur d'identification et informations de contact.
+Le tableau de bord combine :
+- Statistiques et KPI adaptes au role
+- Planning personnel de la journee
+- Feed d'actualites social avec publication et interactions
+- Alertes et notifications importantes
+- Actions rapides contextuelles
 
-### 2.2 Fonctionnalités
+### 2.2 Tableau de bord Direction / Chef de chantier
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| USR-01 | Ajout illimité | Nombre d'utilisateurs non plafonné | ⏳ |
-| USR-02 | Invitation SMS | Envoi automatique du lien d'installation de l'app | ⏳ |
-| USR-03 | Photo de profil | Upload d'une photo personnelle | ⏳ |
-| USR-04 | Couleur utilisateur | Palette 16 couleurs pour identification visuelle | ⏳ |
-| USR-05 | Statut Activé/Désactivé | Toggle pour activer/désactiver l'accès | ⏳ |
-| USR-06 | Type utilisateur | Employé ou Sous-traitant | ⏳ |
-| USR-07 | Rôle | Administrateur / Conducteur / Chef de Chantier / Compagnon | ⏳ |
-| USR-08 | Code utilisateur | Matricule optionnel pour export paie | ⏳ |
-| USR-09 | Numéro mobile | Format international avec sélecteur pays | ⏳ |
-| USR-10 | Navigation précédent/suivant | Parcourir les fiches utilisateurs | ⏳ |
-| USR-11 | Révocation instantanée | Désactivation sans suppression des données historiques | ⏳ |
-| USR-12 | Métier/Spécialité | Classification par corps de métier | ⏳ |
-| USR-13 | Email professionnel | Adresse email optionnelle | ⏳ |
-| USR-14 | Coordonnées d'urgence | Contact en cas d'accident | ⏳ |
+#### 2.2.1 Zone de publication avec ciblage
 
-### 2.3 Matrice des rôles et permissions
+Zone de publication permettant de :
+- Saisir un message texte
+- Ajouter des photos (bouton dedie)
+- Cibler les destinataires (IMPORTANT) :
+  - 📢 Tout le monde (tous les utilisateurs)
+  - 🏗️ Chantiers specifiques (selection multiple)
+  - 👥 Personnes/Equipes (selection multiple avec recherche)
 
-| Rôle | Web | Mobile | Périmètre | Droits principaux |
+#### 2.2.2 Types de posts affiches
+
+**1. MESSAGE DIRECTION :**
+- Badge violet "Direction" + badge verifie
+- Indicateur de ciblage visible : "→ Tout le monde" ou "→ Equipe Villa Lyon"
+- Compteurs de likes et commentaires
+
+**2. POST AVEC PHOTO :**
+- Avatar et badge metier de l'auteur
+- Indicateur du chantier : "→ Villa Lyon 3eme"
+- Photo integree avec interactions (Like, Commenter)
+
+### 2.3 Tableau de bord Compagnon
+
+Version simplifiee et orientee terrain pour les employes.
+
+#### 2.3.1 Cartes prioritaires
+
+**1. CARTE POINTAGE (verte) :**
+- Horloge en temps reel + Date du jour
+- Bouton "Pointer l'arrivee" bien visible
+- Affichage de la derniere pointee
+
+**2. CARTE METEO (bleue) :**
+- Temperature actuelle + Icone meteo
+- Vent, probabilite de pluie, Min/Max (essentiel pour travaux exterieurs)
+
+#### 2.3.2 Planning de la journee
+
+Affichage timeline visuel :
+- Horaires : 08:00 - 12:00 (Matin) / 13:30 - 17:00 (Apres-midi)
+- Nom et adresse du chantier + Taches assignees avec priorite
+- Boutons : "Itineraire" (GPS) et "Appeler le chef"
+- Pause dejeuner (grisee) + Apercu planning lendemain
+
+#### 2.3.3 Zone de publication compagnon
+
+- Champ : "Partager une photo, signaler un probleme..."
+- Bouton "Prendre une photo" (orange, mis en evidence)
+- Pas de ciblage (publication automatique pour leur chantier)
+
+### 2.4 Fonctionnalites du feed
+
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| FEED-01 | Publication posts | Creer et publier des messages texte |
+| FEED-02 | Ajout photos | Joindre jusqu'a 5 photos par post |
+| FEED-03 | Ciblage destinataires | Tout le monde / Chantiers / Personnes |
+| FEED-04 | Likes | Reagir aux publications |
+| FEED-05 | Commentaires | Repondre aux publications |
+| FEED-06 | Badges utilisateurs | Affichage role et metier |
+| FEED-07 | Indicateur ciblage | Afficher la cible du post |
+| FEED-08 | Posts urgents | Epingler en haut du feed (48h max) |
+| FEED-09 | Filtrage automatique | Compagnons voient uniquement leurs chantiers |
+| FEED-10 | Emojis | Support des emojis dans les posts |
+| FEED-11 | Mise en forme | Texte enrichi basique |
+| FEED-12 | Horodatage | Date et heure de publication |
+| FEED-13 | Photos placeholder | Chargement progressif des images |
+| FEED-14 | Mentions @ | Mentionner des utilisateurs (future) |
+| FEED-15 | Hashtags | Categoriser les posts (future) |
+| FEED-16 | Moderation Direction | Supprimer posts d'autrui |
+| FEED-17 | Notifications push | Alerte nouvelles publications |
+| FEED-18 | Historique | Scroll infini pour charger plus |
+| FEED-19 | Compression photos | Automatique (max 2 Mo) |
+| FEED-20 | Archivage | Posts +7 jours archives mais consultables |
+
+### 2.5 Regles metier
+
+- Compagnons ne voient que posts cibles sur leur(s) chantier(s)
+- Posts Direction "Tout le monde" visibles par tous
+- Photos compressees automatiquement (max 2 Mo), Maximum 5 photos par post
+- Posts +7 jours archives mais consultables
+- Posts urgents epingles 48h maximum
+- Seule Direction peut supprimer posts d'autrui
+- Feed affiche 20 posts par defaut avec scroll infini
+
+---
+
+## 3. GESTION DES UTILISATEURS
+
+### 3.1 Vue d'ensemble
+
+Le module Utilisateurs permet de gerer l'ensemble des collaborateurs (employes et sous-traitants) avec un systeme de roles et permissions granulaires. Chaque utilisateur dispose d'une fiche complete avec photo, couleur d'identification et informations de contact.
+
+### 3.2 Fonctionnalites
+
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| USR-01 | Ajout illimite | Nombre d'utilisateurs non plafonne |
+| USR-02 | Invitation SMS | Envoi automatique du lien d'installation de l'app |
+| USR-03 | Photo de profil | Upload d'une photo personnelle |
+| USR-04 | Couleur utilisateur | Palette 16 couleurs pour identification visuelle |
+| USR-05 | Statut Active/Desactive | Toggle pour activer/desactiver l'acces |
+| USR-06 | Type utilisateur | Employe ou Sous-traitant |
+| USR-07 | Role | Administrateur / Conducteur / Chef de Chantier / Compagnon |
+| USR-08 | Code utilisateur | Matricule optionnel pour export paie |
+| USR-09 | Numero mobile | Format international avec selecteur pays |
+| USR-10 | Navigation precedent/suivant | Parcourir les fiches utilisateurs |
+| USR-11 | Revocation instantanee | Desactivation sans suppression des donnees historiques |
+| USR-12 | Metier/Specialite | Classification par corps de metier |
+| USR-13 | Email professionnel | Adresse email optionnelle |
+| USR-14 | Coordonnees d'urgence | Contact en cas d'accident |
+
+### 3.3 Matrice des roles et permissions
+
+| Role | Web | Mobile | Perimetre | Droits principaux |
 |------|-----|--------|-----------|-------------------|
-| Administrateur | ✅ | ✅ | Global | Tous droits, configuration système |
+| Administrateur | ✅ | ✅ | Global | Tous droits, configuration systeme |
 | Conducteur | ✅ | ✅ | Ses chantiers | Planification, validation, export |
-| Chef de Chantier | ❌ | ✅ | Ses chantiers assignés | Saisie, consultation, publication |
+| Chef de Chantier | ❌ | ✅ | Ses chantiers assignes | Saisie, consultation, publication |
 | Compagnon | ❌ | ✅ | Planning perso | Consultation, saisie heures |
 
-### 2.4 Palette de couleurs utilisateurs
+### 3.4 Palette de couleurs utilisateurs
 
-16 couleurs disponibles pour l'identification visuelle des utilisateurs.
+16 couleurs disponibles pour l'identification visuelle des utilisateurs. Ces couleurs sont utilisees de maniere coherente dans tout l'ecosysteme : planning, feuilles d'heures, fil d'actualite, affectations.
 
 | Couleur | Code | Couleur | Code |
 |---------|------|---------|------|
-| Rouge | `#E74C3C` | Bleu foncé | `#2C3E50` |
+| Rouge | `#E74C3C` | Bleu fonce | `#2C3E50` |
 | Orange | `#E67E22` | Bleu clair | `#3498DB` |
 | Jaune | `#F1C40F` | Cyan | `#1ABC9C` |
 | Vert clair | `#2ECC71` | Violet | `#9B59B6` |
-| Vert foncé | `#27AE60` | Rose | `#E91E63` |
+| Vert fonce | `#27AE60` | Rose | `#E91E63` |
 | Marron | `#795548` | Gris | `#607D8B` |
 | Corail | `#FF7043` | Indigo | `#3F51B5` |
 | Magenta | `#EC407A` | Lime | `#CDDC39` |
 
 ---
 
-## 3. Gestion des Chantiers
-
-### 3.1 Vue d'ensemble
-
-Le module Chantiers centralise toutes les informations d'un projet de construction avec un fil d'actualité temps réel, une gestion documentaire intégrée et un suivi des équipes affectées. Chaque chantier dispose d'onglets dédiés pour une navigation fluide.
-
-### 3.2 Fonctionnalités
-
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| CHT-01 | Photo de couverture | Image représentative du chantier | ⏳ |
-| CHT-02 | Couleur chantier | Palette 16 couleurs pour cohérence visuelle globale | ⏳ |
-| CHT-03 | Statut chantier | Ouvert / En cours / Réceptionné / Fermé | ⏳ |
-| CHT-04 | Coordonnées GPS | Latitude + Longitude pour géolocalisation | ⏳ |
-| CHT-05 | Multi-conducteurs | Affectation de plusieurs conducteurs de travaux | ⏳ |
-| CHT-06 | Multi-chefs de chantier | Affectation de plusieurs chefs | ⏳ |
-| CHT-07 | Contact chantier | Nom et téléphone du contact sur place | ⏳ |
-| CHT-08 | Navigation GPS | Bouton direct vers Google Maps / Waze | ⏳ |
-| CHT-09 | Mini carte | Aperçu cartographique avec marqueur de localisation | ⏳ |
-| CHT-10 | Fil d'actualité | Timeline des publications et événements | ⏳ |
-| CHT-11 | Publications photos/vidéos | Jusqu'à 10 photos simultanées par publication | ⏳ |
-| CHT-12 | Commentaires | Système de discussion sur chaque publication | ⏳ |
-| CHT-13 | Signature dans publication | Option de signature électronique | ⏳ |
-| CHT-14 | Navigation précédent/suivant | Parcourir les fiches chantiers | ⏳ |
-| CHT-15 | Stockage illimité | Aucune limite sur les documents et médias | ⏳ |
-| CHT-16 | Liste équipe affectée | Visualisation des collaborateurs assignés | ⏳ |
-| CHT-17 | Alertes mémo | Indicateur visuel si mémo actif | ⏳ |
-| CHT-18 | Heures estimées | Budget temps prévisionnel du chantier | ⏳ |
-| CHT-19 | Code chantier | Identifiant unique (ex: A001, B023) | ⏳ |
-| CHT-20 | Dates début/fin prévisionnelles | Planning macro du projet | ⏳ |
-
-### 3.3 Onglets de la fiche chantier
-
-| N° | Onglet | Description | Accès |
-|----|--------|-------------|-------|
-| 1 | Résumé | Informations générales + fil d'actualité temps réel | Tous |
-| 2 | Documents | GED - Gestion documentaire avec droits d'accès | Selon droits |
-| 3 | Formulaires | Templates à remplir (rapports, PV...) | Tous |
-| 4 | Planning | Affectations équipe semaine par semaine | Chef+ |
-| 5 | Tâches | Liste des travaux hiérarchiques avec avancement | Tous |
-| 6 | Feuilles de tâches | Déclarations quotidiennes par compagnon | Conducteur+ |
-| 7 | Feuilles d'heures | Saisie et validation du temps de travail | Tous |
-| 8 | Arrivées/Départs | Pointage et géolocalisation | Conducteur+ |
-
-### 3.4 Statuts de chantier
-
-| Statut | Icône | Description | Actions possibles |
-|--------|-------|-------------|-------------------|
-| Ouvert | 🔵 | Chantier créé, en préparation | Planification, affectation équipe |
-| En cours | 🟢 | Travaux en cours d'exécution | Toutes actions opérationnelles |
-| Réceptionné | 🟡 | Travaux terminés, en attente clôture | SAV, levée réserves |
-| Fermé | 🔴 | Chantier clôturé définitivement | Consultation uniquement |
-
----
-
-## 4. Planning Opérationnel
+## 4. GESTION DES CHANTIERS
 
 ### 4.1 Vue d'ensemble
 
-Le Planning Opérationnel permet d'affecter les collaborateurs aux chantiers avec une vue multi-perspective (Chantiers, Utilisateurs, Interventions), un groupement par métier avec badges colorés, et une synchronisation temps réel mobile.
+Le module Chantiers centralise toutes les informations d'un projet de construction avec un fil d'actualite temps reel, une gestion documentaire integree et un suivi des equipes affectees. Chaque chantier dispose d'onglets dedies pour une navigation fluide.
 
-### 4.2 Fonctionnalités
+### 4.2 Fonctionnalites
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| PLN-01 | 3 onglets de vue | [Chantiers] [Utilisateurs] [Gestion des interventions] | ⏳ |
-| PLN-02 | Onglet Utilisateurs par défaut | Vue ressource comme vue principale | ⏳ |
-| PLN-03 | Bouton + Créer | Création rapide d'affectation en haut à droite | ⏳ |
-| PLN-04 | Dropdown filtre utilisateurs | Utilisateurs planifiés / Non planifiés / Tous | ⏳ |
-| PLN-05 | Icône entonnoir | Accès aux filtres avancés | ⏳ |
-| PLN-06 | Icône engrenage | Paramètres d'affichage | ⏳ |
-| PLN-07 | Bouton Filtrer | Filtrage textuel rapide | ⏳ |
-| PLN-08 | Sélecteur période | [Semaine] [Mois] [Trimestre] | ⏳ |
-| PLN-09 | Navigation temporelle | 21 - 27 juillet 2025 < [Aujourd'hui] > | ⏳ |
-| PLN-10 | Indicateur semaine | Semaine 30 affiché au-dessus du tableau | ⏳ |
-| PLN-11 | Section À Planifier | Badge compteur des ressources non affectées | ⏳ |
-| PLN-12 | Groupement par métier | Arborescence repliable par type d'utilisateur | ⏳ |
-| PLN-13 | Badges métier colorés | Employé, Charpentier, Couvreur, Électricien, Sous-traitant... | ⏳ |
-| PLN-14 | Chevrons repliables | ▼ / > pour afficher/masquer les groupes | ⏳ |
-| PLN-15 | Avatar utilisateur | Cercle avec initiales + code couleur personnel | ⏳ |
-| PLN-16 | Icône duplication | 📋 pour dupliquer les affectations de la semaine | ⏳ |
-| PLN-17 | Blocs affectation colorés | Couleur = chantier (cohérence visuelle globale) | ⏳ |
-| PLN-18 | Format bloc | HH:MM - HH:MM + icône note + Nom chantier | ⏳ |
-| PLN-19 | Icône note dans bloc | 📝 Indicateur de commentaire sur l'affectation | ⏳ |
-| PLN-20 | Multi-affectations/jour | Plusieurs blocs possibles par utilisateur par jour | ⏳ |
-| PLN-21 | Colonnes jours | Lundi 21 juil. / Mardi 22 juil. etc. | ⏳ |
-| PLN-22 | Barre de recherche | Champ Rechercher dans la colonne utilisateurs | ⏳ |
-| PLN-23 | Notification push | Alerte à chaque nouvelle affectation | ⏳ |
-| PLN-24 | Mode Offline | Consultation planning sans connexion | ⏳ |
-| PLN-25 | Notes privées | Commentaires visibles uniquement par l'affecté | ⏳ |
-| PLN-26 | Accès profil utilisateur | Clic sur avatar → fiche profil + bouton appel | ⏳ |
-| PLN-27 | Drag & Drop | Déplacer les blocs pour modifier les affectations | ⏳ |
-| PLN-28 | Double-clic création | Double-clic cellule vide → création affectation | ⏳ |
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| CHT-01 | Photo de couverture | Image representative du chantier |
+| CHT-02 | Couleur chantier | Palette 16 couleurs pour coherence visuelle globale |
+| CHT-03 | Statut chantier | Ouvert / En cours / Receptionne / Ferme |
+| CHT-04 | Coordonnees GPS | Latitude + Longitude pour geolocalisation |
+| CHT-05 | Multi-conducteurs | Affectation de plusieurs conducteurs de travaux |
+| CHT-06 | Multi-chefs de chantier | Affectation de plusieurs chefs |
+| CHT-07 | Contact chantier | Nom et telephone du contact sur place |
+| CHT-08 | Navigation GPS | Bouton direct vers Google Maps / Waze |
+| CHT-09 | Mini carte | Apercu cartographique avec marqueur de localisation |
+| CHT-10 | Fil d'actualite | Timeline des publications et evenements |
+| CHT-11 | Publications photos/videos | Jusqu'a 10 photos simultanees par publication |
+| CHT-12 | Commentaires | Systeme de discussion sur chaque publication |
+| CHT-13 | Signature dans publication | Option de signature electronique |
+| CHT-14 | Navigation precedent/suivant | Parcourir les fiches chantiers |
+| CHT-15 | Stockage illimite | Aucune limite sur les documents et medias |
+| CHT-16 | Liste equipe affectee | Visualisation des collaborateurs assignes |
+| CHT-17 | Alertes memo | Indicateur visuel si memo actif |
+| CHT-18 | Heures estimees | Budget temps previsionnel du chantier |
+| CHT-19 | Code chantier | Identifiant unique (ex: A001, B023) |
+| CHT-20 | Dates debut/fin previsionnelles | Planning macro du projet |
 
-### 4.3 Badges métiers (Groupement)
+### 4.3 Onglets de la fiche chantier
+
+| N° | Onglet | Description | Acces |
+|----|--------|-------------|-------|
+| 1 | Resume | Informations generales + fil d'actualite temps reel | Tous |
+| 2 | Documents | GED - Gestion documentaire avec droits d'acces | Selon droits |
+| 3 | Formulaires | Templates a remplir (rapports, PV...) | Tous |
+| 4 | Planning | Affectations equipe semaine par semaine | Chef+ |
+| 5 | Taches | Liste des travaux hierarchiques avec avancement | Tous |
+| 6 | Feuilles de taches | Declarations quotidiennes par compagnon | Conducteur+ |
+| 7 | Feuilles d'heures | Saisie et validation du temps de travail | Tous |
+| 8 | Arrivees/Departs | Pointage et geolocalisation | Conducteur+ |
+
+### 4.4 Statuts de chantier
+
+| Statut | Icone | Description | Actions possibles |
+|--------|-------|-------------|-------------------|
+| Ouvert | 🔵 | Chantier cree, en preparation | Planification, affectation equipe |
+| En cours | 🟢 | Travaux en cours d'execution | Toutes actions operationnelles |
+| Receptionne | 🟡 | Travaux termines, en attente cloture | SAV, levee reserves |
+| Ferme | 🔴 | Chantier cloture definitivement | Consultation uniquement |
+
+---
+
+## 5. PLANNING OPERATIONNEL
+
+### 5.1 Vue d'ensemble
+
+Le Planning Operationnel permet d'affecter les collaborateurs aux chantiers avec une vue multi-perspective (Chantiers, Utilisateurs, Interventions), un groupement par metier avec badges colores, et une synchronisation temps reel mobile. Les affectations sont visualisees sous forme de blocs colores indiquant les horaires et le chantier.
+
+### 5.2 Fonctionnalites
+
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| PLN-01 | 3 onglets de vue | [Chantiers] [Utilisateurs] [Gestion des interventions] |
+| PLN-02 | Onglet Utilisateurs par defaut | Vue ressource comme vue principale |
+| PLN-03 | Bouton + Creer | Creation rapide d'affectation en haut a droite |
+| PLN-04 | Dropdown filtre utilisateurs | Utilisateurs planifies / Non planifies / Tous |
+| PLN-05 | Icone entonnoir | Acces aux filtres avances |
+| PLN-06 | Icone engrenage | Parametres d'affichage |
+| PLN-07 | Bouton Filtrer | Filtrage textuel rapide |
+| PLN-08 | Selecteur periode | [Semaine] [Mois] [Trimestre] |
+| PLN-09 | Navigation temporelle | 21 - 27 juillet 2025 < [Aujourd'hui] > |
+| PLN-10 | Indicateur semaine | Semaine 30 affiche au-dessus du tableau |
+| PLN-11 | Section A Planifier | Badge compteur des ressources non affectees |
+| PLN-12 | Groupement par metier | Arborescence repliable par type d'utilisateur |
+| PLN-13 | Badges metier colores | Employe, Charpentier, Couvreur, Electricien, Sous-traitant... |
+| PLN-14 | Chevrons repliables | ▼ / > pour afficher/masquer les groupes |
+| PLN-15 | Avatar utilisateur | Cercle avec initiales + code couleur personnel |
+| PLN-16 | Icone duplication | 📋 pour dupliquer les affectations de la semaine |
+| PLN-17 | Blocs affectation colores | Couleur = chantier (coherence visuelle globale) |
+| PLN-18 | Format bloc | HH:MM - HH:MM + icone note + Nom chantier |
+| PLN-19 | Icone note dans bloc | 📝 Indicateur de commentaire sur l'affectation |
+| PLN-20 | Multi-affectations/jour | Plusieurs blocs possibles par utilisateur par jour |
+| PLN-21 | Colonnes jours | Lundi 21 juil. / Mardi 22 juil. etc. |
+| PLN-22 | Barre de recherche | Champ Rechercher dans la colonne utilisateurs |
+| PLN-23 | Notification push | Alerte a chaque nouvelle affectation |
+| PLN-24 | Mode Offline | Consultation planning sans connexion |
+| PLN-25 | Notes privees | Commentaires visibles uniquement par l'affecte |
+| PLN-26 | Acces profil utilisateur | Clic sur avatar → fiche profil + bouton appel |
+| PLN-27 | Drag & Drop | Deplacer les blocs pour modifier les affectations |
+| PLN-28 | Double-clic creation | Double-clic cellule vide → creation affectation |
+
+### 5.3 Badges metiers (Groupement)
 
 | Badge | Couleur | Description |
 |-------|---------|-------------|
-| Employé | 🔵 Bleu foncé | Compagnons internes polyvalents |
-| Charpentier | 🟢 Vert | Spécialistes bois et charpente |
-| Couvreur | 🟠 Orange | Spécialistes toiture |
-| Électricien | 🟣 Magenta/Rose | Spécialistes électricité |
+| Employe | 🔵 Bleu fonce | Compagnons internes polyvalents |
+| Charpentier | 🟢 Vert | Specialistes bois et charpente |
+| Couvreur | 🟠 Orange | Specialistes toiture |
+| Electricien | 🟣 Magenta/Rose | Specialistes electricite |
 | Sous-traitant | 🔴 Rouge/Corail | Prestataires externes |
-| Maçon | 🟤 Marron | Spécialistes maçonnerie (Greg) |
-| Coffreur | 🟡 Jaune | Spécialistes coffrage (Greg) |
-| Ferrailleur | ⚫ Gris foncé | Spécialistes ferraillage (Greg) |
+| Macon | 🟤 Marron | Specialistes maconnerie (Greg) |
+| Coffreur | 🟡 Jaune | Specialistes coffrage (Greg) |
+| Ferrailleur | ⚫ Gris fonce | Specialistes ferraillage (Greg) |
 | Grutier | 🩵 Cyan | Conducteurs d'engins (Greg) |
 
-### 4.4 Structure d'une affectation
+### 5.4 Structure d'une affectation
 
 | Champ | Type | Obligatoire | Description |
 |-------|------|-------------|-------------|
-| Utilisateur | Référence | Oui | Compagnon ou sous-traitant affecté |
-| Chantier | Référence | Oui | Chantier d'affectation |
+| Utilisateur | Reference | Oui | Compagnon ou sous-traitant affecte |
+| Chantier | Reference | Oui | Chantier d'affectation |
 | Date | Date | Oui | Jour de l'affectation |
-| Heure début | HH:MM | Non | Heure de prise de poste |
-| Heure fin | HH:MM | Non | Heure de fin de journée |
-| Note | Texte | Non | Commentaire privé pour l'affecté |
-| Récurrence | Option | Non | Unique / Répéter (jours sélectionnés) |
+| Heure debut | HH:MM | Non | Heure de prise de poste |
+| Heure fin | HH:MM | Non | Heure de fin de journee |
+| Note | Texte | Non | Commentaire prive pour l'affecte |
+| Recurrence | Option | Non | Unique / Repeter (jours selectionnes) |
 
-### 4.5 Matrice des droits - Planning
+### 5.5 Matrice des droits - Planning
 
 | Action | Admin | Conducteur | Chef | Compagnon |
 |--------|-------|------------|------|-----------|
 | Voir planning global | ✅ | ✅ | ❌ | ❌ |
 | Voir planning ses chantiers | ✅ | ✅ | ✅ | ❌ |
 | Voir son planning personnel | ✅ | ✅ | ✅ | ✅ |
-| Créer affectation | ✅ | ✅ | ❌ | ❌ |
+| Creer affectation | ✅ | ✅ | ❌ | ❌ |
 | Modifier affectation | ✅ | ✅ | ❌ | ❌ |
 | Supprimer affectation | ✅ | ✅ | ❌ | ❌ |
 | Ajouter note | ✅ | ✅ | ✅ | ❌ |
 | Dupliquer affectations | ✅ | ✅ | ❌ | ❌ |
 
-### 4.6 Vue Mobile
+### 5.6 Vue Mobile
 
-Sur mobile, le planning s'affiche avec :
-- Navigation par jour (L M M J V S D)
-- Deux onglets [Chantiers] et [Utilisateurs]
-- Vue Chantiers : liste les chantiers avec leurs collaborateurs affectés
-- Vue Utilisateurs : liste les collaborateurs avec leurs affectations
-- Chaque affectation peut être supprimée via le bouton ✕
-- FAB (+) pour créer une nouvelle affectation
+Sur mobile, le planning s'affiche avec une navigation par jour (L M M J V S D) et deux onglets [Chantiers] et [Utilisateurs]. La vue Chantiers liste les chantiers avec leurs collaborateurs affectes. La vue Utilisateurs liste les collaborateurs avec leurs affectations. Chaque affectation peut etre supprimee via le bouton ✕. Le FAB (+) permet de creer une nouvelle affectation.
 
 ---
 
-## 5. Planning de Charge
-
-### 5.1 Vue d'ensemble
-
-Le Planning de Charge est un tableau de bord stratégique permettant de visualiser la charge de travail par chantier et par semaine, avec gestion des besoins par type/métier et indicateurs de taux d'occupation.
-
-### 5.2 Fonctionnalités
-
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| PDC-01 | Vue tabulaire | Chantiers en lignes, semaines en colonnes | ⏳ |
-| PDC-02 | Compteur chantiers | Badge indiquant le nombre total (ex: 107 Chantiers) | ⏳ |
-| PDC-03 | Barre de recherche | Filtrage dynamique par nom de chantier | ⏳ |
-| PDC-04 | Toggle mode Avancé | Affichage des options avancées | ⏳ |
-| PDC-05 | Toggle Hrs / J/H | Basculer entre Heures et Jours/Homme | ⏳ |
-| PDC-06 | Navigation temporelle | < Aujourd'hui > pour défiler les semaines | ⏳ |
-| PDC-07 | Colonnes semaines | Format SXX - YYYY (ex: S30 - 2025) | ⏳ |
-| PDC-08 | Colonne Chargé | Budget total d'heures prévu par chantier | ⏳ |
-| PDC-09 | Double colonne par semaine | Planifié (affecté) + Besoin (à couvrir) | ⏳ |
-| PDC-10 | Cellules Besoin colorées | Violet pour les besoins non couverts | ⏳ |
-| PDC-11 | Footer repliable | Indicateurs agrégés en bas du tableau | ⏳ |
-| PDC-12 | Taux d'occupation | Pourcentage par semaine avec code couleur | ⏳ |
-| PDC-13 | Alerte surcharge | ⚠️ si taux ≥ 100% | ⏳ |
-| PDC-14 | À recruter | Nombre de personnes à embaucher par semaine | ⏳ |
-| PDC-15 | À placer | Personnes disponibles à affecter | ⏳ |
-| PDC-16 | Modal Planification besoins | Saisie détaillée par type/métier | ⏳ |
-| PDC-17 | Modal Détails occupation | Taux par type avec code couleur | ⏳ |
-
-### 5.3 Codes couleur - Taux d'occupation
-
-| Seuil | Couleur | Signification |
-|-------|---------|---------------|
-| < 70% | 🟢 Vert | Sous-charge, capacité disponible |
-| 70% - 90% | 🔵 Bleu clair | Charge normale, équilibrée |
-| 90% - 100% | 🟡 Jaune/Orange | Charge haute, vigilance requise |
-| ≥ 100% | 🔴 Rouge + ⚠️ | Surcharge, alerte critique |
-| > 100% | 🔴 Rouge foncé | Dépassement critique, action urgente |
-
----
-
-## 6. Feuilles d'Heures
+## 6. PLANNING DE CHARGE
 
 ### 6.1 Vue d'ensemble
 
-Le module Feuilles d'heures permet la saisie, le suivi et l'export des heures travaillées avec deux vues complémentaires (Chantiers et Compagnons) et des variables de paie intégrées.
+Le Planning de Charge est un tableau de bord strategique permettant de visualiser la charge de travail par chantier et par semaine, avec gestion des besoins par type/metier et indicateurs de taux d'occupation. Il permet d'anticiper les recrutements et d'optimiser l'affectation des ressources.
 
-### 6.2 Fonctionnalités
+### 6.2 Fonctionnalites
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| FDH-01 | 2 onglets de vue | [Chantiers] [Compagnons/Sous-traitants] | ⏳ |
-| FDH-02 | Navigation par semaine | Semaine X avec << < > >> pour naviguer | ⏳ |
-| FDH-03 | Bouton Exporter | Export des données vers fichier ou ERP | ⏳ |
-| FDH-04 | Filtre utilisateurs | Dropdown de sélection multi-critères | ⏳ |
-| FDH-05 | Vue tabulaire hebdomadaire | Lundi à Vendredi avec dates complètes | ⏳ |
-| FDH-06 | Multi-chantiers par utilisateur | Plusieurs lignes possibles | ⏳ |
-| FDH-07 | Badges colorés par chantier | Cohérence avec le planning | ⏳ |
-| FDH-08 | Total par ligne | Somme heures par utilisateur + chantier | ⏳ |
-| FDH-09 | Total groupé | Somme heures utilisateur tous chantiers | ⏳ |
-| FDH-10 | Création auto à l'affectation | Lignes pré-remplies depuis le planning | ⏳ |
-| FDH-11 | Saisie mobile | Sélecteur roulette HH:MM intuitif | ⏳ |
-| FDH-12 | Signature électronique | Validation des heures par le compagnon | ⏳ |
-| FDH-13 | Variables de paie | Panier, transport, congés, primes, absences | ⏳ |
-| FDH-14 | Jauge d'avancement | Comparaison planifié vs réalisé | ⏳ |
-| FDH-15 | Comparaison inter-équipes | Détection automatique des écarts | ⏳ |
-| FDH-16 | Import ERP auto | Synchronisation quotidienne/hebdomadaire | ⏳ |
-| FDH-17 | Export ERP manuel | Période sélectionnée personnalisable | ⏳ |
-| FDH-18 | Macros de paie | Calculs automatisés paramétrables | ⏳ |
-| FDH-19 | Feuilles de route | Génération automatique PDF | ⏳ |
-| FDH-20 | Mode Offline | Saisie sans connexion, sync auto | ⏳ |
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| PDC-01 | Vue tabulaire | Chantiers en lignes, semaines en colonnes |
+| PDC-02 | Compteur chantiers | Badge indiquant le nombre total (ex: 107 Chantiers) |
+| PDC-03 | Barre de recherche | Filtrage dynamique par nom de chantier |
+| PDC-04 | Toggle mode Avance | Affichage des options avancees |
+| PDC-05 | Toggle Hrs / J/H | Basculer entre Heures et Jours/Homme |
+| PDC-06 | Navigation temporelle | < Aujourd'hui > pour defiler les semaines |
+| PDC-07 | Colonnes semaines | Format SXX - YYYY (ex: S30 - 2025) |
+| PDC-08 | Colonne Charge | Budget total d'heures prevu par chantier |
+| PDC-09 | Double colonne par semaine | Planifie (affecte) + Besoin (a couvrir) |
+| PDC-10 | Cellules Besoin colorees | Violet pour les besoins non couverts |
+| PDC-11 | Footer repliable | Indicateurs agreges en bas du tableau |
+| PDC-12 | Taux d'occupation | Pourcentage par semaine avec code couleur |
+| PDC-13 | Alerte surcharge | ⚠️ si taux >= 100% |
+| PDC-14 | A recruter | Nombre de personnes a embaucher par semaine |
+| PDC-15 | A placer | Personnes disponibles a affecter |
+| PDC-16 | Modal Planification besoins | Saisie detaillee par type/metier |
+| PDC-17 | Modal Details occupation | Taux par type avec code couleur |
 
-### 6.3 Variables de paie
+### 6.3 Modal - Planification des besoins
+
+Cette modal s'ouvre en cliquant sur une cellule Besoin. Elle permet de saisir les besoins en main d'oeuvre par type/metier pour un chantier et une semaine donnes.
+
+| Element | Description |
+|---------|-------------|
+| Dropdown chantier | Selection du chantier concerne |
+| Selecteur semaine | Calendrier pour choisir la semaine |
+| Zone note | Commentaire optionnel sur les besoins |
+| Tableau par type | Badge colore \| Planifie (lecture) \| Besoin (saisie) \| Unite |
+| Bouton Ajouter | + Ajouter une ligne de type |
+| Bouton Supprimer | 🗑️ pour retirer une ligne |
+
+### 6.4 Codes couleur - Taux d'occupation
+
+| Seuil | Couleur | Signification |
+|-------|---------|---------------|
+| < 70% | 🟢 Vert | Sous-charge, capacite disponible |
+| 70% - 90% | 🔵 Bleu clair | Charge normale, equilibree |
+| 90% - 100% | 🟡 Jaune/Orange | Charge haute, vigilance requise |
+| >= 100% | 🔴 Rouge + ⚠️ | Surcharge, alerte critique |
+| > 100% | 🔴 Rouge fonce | Depassement critique, action urgente |
+
+---
+
+## 7. FEUILLES D'HEURES
+
+### 7.1 Vue d'ensemble
+
+Le module Feuilles d'heures permet la saisie, le suivi et l'export des heures travaillees avec deux vues complementaires (Chantiers et Compagnons) et des variables de paie integrees. Il s'interface avec les ERP pour l'export automatise.
+
+### 7.2 Fonctionnalites
+
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| FDH-01 | 2 onglets de vue | [Chantiers] [Compagnons/Sous-traitants] |
+| FDH-02 | Navigation par semaine | Semaine X avec << < > >> pour naviguer |
+| FDH-03 | Bouton Exporter | Export des donnees vers fichier ou ERP |
+| FDH-04 | Filtre utilisateurs | Dropdown de selection multi-criteres |
+| FDH-05 | Vue tabulaire hebdomadaire | Lundi a Vendredi avec dates completes |
+| FDH-06 | Multi-chantiers par utilisateur | Plusieurs lignes possibles |
+| FDH-07 | Badges colores par chantier | Coherence avec le planning |
+| FDH-08 | Total par ligne | Somme heures par utilisateur + chantier |
+| FDH-09 | Total groupe | Somme heures utilisateur tous chantiers |
+| FDH-10 | Creation auto a l'affectation | Lignes pre-remplies depuis le planning |
+| FDH-11 | Saisie mobile | Selecteur roulette HH:MM intuitif |
+| FDH-12 | Signature electronique | Validation des heures par le compagnon |
+| FDH-13 | Variables de paie | Panier, transport, conges, primes, absences |
+| FDH-14 | Jauge d'avancement | Comparaison planifie vs realise |
+| FDH-15 | Comparaison inter-equipes | Detection automatique des ecarts |
+| FDH-16 | Import ERP auto | Synchronisation quotidienne/hebdomadaire |
+| FDH-17 | Export ERP manuel | Periode selectionnee personnalisable |
+| FDH-18 | Macros de paie | Calculs automatises parametrables |
+| FDH-19 | Feuilles de route | Generation automatique PDF |
+| FDH-20 | Mode Offline | Saisie sans connexion, sync auto |
+
+### 7.3 Variables de paie
 
 | Variable | Type | Description |
 |----------|------|-------------|
 | Heures normales | Nombre | Heures de travail standard |
-| Heures supplémentaires | Nombre | Heures au-delà du contrat |
-| Panier repas | Montant | Indemnité de repas |
-| Indemnité transport | Montant | Frais de déplacement |
-| Prime intempéries | Montant | Compensation météo |
-| Congés payés | Jours | Absences congés |
+| Heures supplementaires | Nombre | Heures au-dela du contrat |
+| Panier repas | Montant | Indemnite de repas |
+| Indemnite transport | Montant | Frais de deplacement |
+| Prime intemperies | Montant | Compensation meteo |
+| Conges payes | Jours | Absences conges |
 | Maladie | Jours | Absences maladie |
-| Absence injustifiée | Jours | Absences non justifiées |
+| Absence injustifiee | Jours | Absences non justifiees |
 
 ---
 
-## 7. Formulaires Chantier
-
-### 7.1 Vue d'ensemble
-
-Le module Formulaires permet de créer des templates personnalisés pour tous les documents terrain : rapports d'intervention, PV de réception, bons de livraison, formulaires de sécurité, etc.
-
-### 7.2 Fonctionnalités
-
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| FOR-01 | Templates personnalisés | Création accompagnée par l'équipe Alobees | ⏳ |
-| FOR-02 | Remplissage mobile | Saisie sur smartphone même hors ligne | ⏳ |
-| FOR-03 | Champs auto-remplis | Date, heure, localisation, intervenant | ⏳ |
-| FOR-04 | Ajout photos horodatées | Preuve visuelle avec timestamp GPS | ⏳ |
-| FOR-05 | Signature électronique | Chef de chantier + client si nécessaire | ⏳ |
-| FOR-06 | Centralisation automatique | Rattachement au chantier concerné | ⏳ |
-| FOR-07 | Horodatage automatique | Date et heure de soumission enregistrées | ⏳ |
-| FOR-08 | Historique complet | Toutes les versions conservées | ⏳ |
-| FOR-09 | Export PDF | Génération du document final formaté | ⏳ |
-| FOR-10 | Liste par chantier | Onglet dédié dans fiche chantier | ⏳ |
-| FOR-11 | Lien direct | Bouton Remplir le formulaire → | ⏳ |
-
-### 7.3 Types de formulaires
-
-| Catégorie | Exemples de formulaires |
-|-----------|------------------------|
-| Interventions | Rapport d'intervention, Bon de SAV, Fiche dépannage |
-| Réception | PV de réception, Constat de réserves, Attestation fin travaux |
-| Sécurité | Formulaire sécurité, Visite PPSPS, Auto-contrôle, Quart d'heure sécurité |
-| Incidents | Déclaration sinistre, Fiche non-conformité, Rapport accident |
-| Approvisionnement | Commande matériel, Bon de livraison, Réception matériaux |
-| Administratif | Demande de congés, CERFA, Attestation diverse |
-| Gros Œuvre (Greg) | Rapport journalier, Bon de bétonnage, Contrôle ferraillage |
-
----
-
-## 8. Gestion Documentaire (GED)
+## 8. FORMULAIRES CHANTIER
 
 ### 8.1 Vue d'ensemble
 
-Le module Documents offre une gestion documentaire complète avec arborescence par dossiers numérotés, contrôle d'accès granulaire par rôle et nominatif, et synchronisation offline automatique.
+Le module Formulaires permet de creer des templates personnalises pour tous les documents terrain : rapports d'intervention, PV de reception, bons de livraison, formulaires de securite, etc. Les formulaires sont remplis sur mobile et centralises automatiquement.
 
-### 8.2 Fonctionnalités
+### 8.2 Fonctionnalites
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| GED-01 | Onglet Documents intégré | Dans chaque fiche chantier | ⏳ |
-| GED-02 | Arborescence par dossiers | Organisation hiérarchique numérotée | ⏳ |
-| GED-03 | Tableau de gestion | Vue liste avec métadonnées (taille, date, auteur) | ⏳ |
-| GED-04 | Rôle minimum par dossier | Compagnon / Chef / Conducteur / Admin | ⏳ |
-| GED-05 | Autorisations spécifiques | Permissions nominatives additionnelles | ⏳ |
-| GED-06 | Upload multiple | Jusqu'à 10 fichiers simultanés | ⏳ |
-| GED-07 | Taille max 10 Go | Par fichier individuel | ⏳ |
-| GED-08 | Zone Drag & Drop | Glisser-déposer intuitif | ⏳ |
-| GED-09 | Barre de progression | Affichage % upload en temps réel | ⏳ |
-| GED-10 | Sélection droits à l'upload | Rôles + Utilisateurs nominatifs | ⏳ |
-| GED-11 | Transfert auto depuis ERP | Synchronisation Costructor/Graneet | ⏳ |
-| GED-12 | Formats supportés | PDF, Images (PNG/JPG), XLS/XLSX, DOC/DOCX, Vidéos | ⏳ |
-| GED-13 | Actions Éditer/Supprimer | Gestion complète des fichiers | ⏳ |
-| GED-14 | Consultation mobile | Visualisation sur application | ⏳ |
-| GED-15 | Synchronisation Offline | Plans téléchargés automatiquement | ⏳ |
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| FOR-01 | Templates personnalises | Creation accompagnee par l'equipe Alobees |
+| FOR-02 | Remplissage mobile | Saisie sur smartphone meme hors ligne |
+| FOR-03 | Champs auto-remplis | Date, heure, localisation, intervenant |
+| FOR-04 | Ajout photos horodatees | Preuve visuelle avec timestamp GPS |
+| FOR-05 | Signature electronique | Chef de chantier + client si necessaire |
+| FOR-06 | Centralisation automatique | Rattachement au chantier concerne |
+| FOR-07 | Horodatage automatique | Date et heure de soumission enregistrees |
+| FOR-08 | Historique complet | Toutes les versions conservees |
+| FOR-09 | Export PDF | Generation du document final formate |
+| FOR-10 | Liste par chantier | Onglet dedie dans fiche chantier |
+| FOR-11 | Lien direct | Bouton Remplir le formulaire → |
 
-### 8.3 Niveaux d'accès
+### 8.3 Types de formulaires
 
-| Rôle minimum | Qui peut voir | Cas d'usage |
+| Categorie | Exemples de formulaires |
+|-----------|-------------------------|
+| Interventions | Rapport d'intervention, Bon de SAV, Fiche depannage |
+| Reception | PV de reception, Constat de reserves, Attestation fin travaux |
+| Securite | Formulaire securite, Visite PPSPS, Auto-controle, Quart d'heure securite |
+| Incidents | Declaration sinistre, Fiche non-conformite, Rapport accident |
+| Approvisionnement | Commande materiel, Bon de livraison, Reception materiaux |
+| Administratif | Demande de conges, CERFA, Attestation diverse |
+| Gros Oeuvre (Greg) | Rapport journalier, Bon de betonnage, Controle ferraillage |
+
+---
+
+## 9. GESTION DOCUMENTAIRE (GED)
+
+### 9.1 Vue d'ensemble
+
+Le module Documents offre une gestion documentaire complete avec arborescence par dossiers numerotes, controle d'acces granulaire par role et nominatif, et synchronisation offline automatique des plans pour consultation terrain.
+
+### 9.2 Fonctionnalites
+
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| GED-01 | Onglet Documents integre | Dans chaque fiche chantier |
+| GED-02 | Arborescence par dossiers | Organisation hierarchique numerotee |
+| GED-03 | Tableau de gestion | Vue liste avec metadonnees (taille, date, auteur) |
+| GED-04 | Role minimum par dossier | Compagnon / Chef / Conducteur / Admin |
+| GED-05 | Autorisations specifiques | Permissions nominatives additionnelles |
+| GED-06 | Upload multiple | Jusqu'a 10 fichiers simultanes |
+| GED-07 | Taille max 10 Go | Par fichier individuel |
+| GED-08 | Zone Drag & Drop | Glisser-deposer intuitif |
+| GED-09 | Barre de progression | Affichage % upload en temps reel |
+| GED-10 | Selection droits a l'upload | Roles + Utilisateurs nominatifs |
+| GED-11 | Transfert auto depuis ERP | Synchronisation Costructor/Graneet |
+| GED-12 | Formats supportes | PDF, Images (PNG/JPG), XLS/XLSX, DOC/DOCX, Videos |
+| GED-13 | Actions Editer/Supprimer | Gestion complete des fichiers |
+| GED-14 | Consultation mobile | Visualisation sur application |
+| GED-15 | Synchronisation Offline | Plans telecharges automatiquement |
+
+### 9.3 Niveaux d'acces
+
+| Role minimum | Qui peut voir | Cas d'usage |
 |--------------|---------------|-------------|
-| Compagnon/Sous-Traitant | Tous utilisateurs du chantier | Plans d'exécution, consignes sécurité |
+| Compagnon/Sous-Traitant | Tous utilisateurs du chantier | Plans d'execution, consignes securite |
 | Chef de Chantier | Chefs + Conducteurs + Admin | Documents techniques sensibles |
 | Conducteur | Conducteurs + Admin uniquement | Contrats, budgets, planning macro |
 | Administrateur | Admin uniquement | Documents confidentiels, RH |
 
-### 8.4 Arborescence type
+### 9.4 Arborescence type
 
 | N° | Dossier | Contenu type |
 |----|---------|--------------|
-| 01 | Plans | Plans d'exécution, plans béton, réservations |
-| 02 | Documents administratifs | Marchés, avenants, OS, situations |
-| 03 | Sécurité | PPSPS, plan de prévention, consignes |
-| 04 | Qualité | Fiches techniques, PV essais, autocontrôles |
+| 01 | Plans | Plans d'execution, plans beton, reservations |
+| 02 | Documents administratifs | Marches, avenants, OS, situations |
+| 03 | Securite | PPSPS, plan de prevention, consignes |
+| 04 | Qualite | Fiches techniques, PV essais, autocontroles |
 | 05 | Photos | Photos chantier par date/zone |
-| 06 | Comptes-rendus | CR réunions, CR chantier |
+| 06 | Comptes-rendus | CR reunions, CR chantier |
 | 07 | Livraisons | Bons de livraison, bordereaux |
 
 ---
 
-## 9. Mémos
-
-### 9.1 Vue d'ensemble
-
-Le module Mémos permet de signaler des urgences, problèmes ou informations importantes avec un système de fil de conversation type chat et de statuts ouvert/fermé.
-
-### 9.2 Fonctionnalités
-
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| MEM-01 | Rattachement chantier | Mémo obligatoirement lié à un projet | ⏳ |
-| MEM-02 | Liste chronologique | Affichage par date de création | ⏳ |
-| MEM-03 | Indicateur statut | 🟢 Ouvert / 🔴 Fermé | ⏳ |
-| MEM-04 | Photo chantier | Vignette d'identification visuelle | ⏳ |
-| MEM-05 | Horodatage | Date + heure de création | ⏳ |
-| MEM-06 | Fil de conversation | Mode chat pour échanges multiples | ⏳ |
-| MEM-07 | Statut fermé avec badge | Ce mémo a été fermé le [date] | ⏳ |
-| MEM-08 | Ajout photo/vidéo | Dans les réponses du fil | ⏳ |
-| MEM-09 | Signature dans réponses | Validation des actions correctives | ⏳ |
-| MEM-10 | Bouton Publier | Envoyer une réponse dans le fil | ⏳ |
-| MEM-11 | Historique | X a ajouté un mémo sur Y le [date] | ⏳ |
-| MEM-12 | Bouton + (FAB) | Création rapide sur mobile | ⏳ |
-| MEM-13 | Notifications push | Alerte temps réel à la création | ⏳ |
-
-### 9.3 Cas d'usage
-
-| Type | Exemple | Priorité |
-|------|---------|----------|
-| Urgence sécurité | Échafaudage instable zone B | Critique |
-| Problème technique | Fuite réseau eau potable | Haute |
-| Approvisionnement | Rupture stock ferraille HA12 | Moyenne |
-| Information | Visite client prévue demain 10h | Basse |
-| Incident | Bris de matériel sur grue | Haute |
-| Qualité | Non-conformité béton livré | Haute |
-
----
-
-## 10. Logistique - Gestion du Matériel
+## 10. MEMOS
 
 ### 10.1 Vue d'ensemble
 
-Le module Logistique permet de gérer les engins et gros matériel de l'entreprise avec un système de réservation par chantier, validation hiérarchique optionnelle et visualisation calendrier.
+Le module Memos permet de signaler des urgences, problemes ou informations importantes avec un systeme de fil de conversation type chat et de statuts ouvert/ferme. Les memos sont rattaches a un chantier et generent des notifications push.
 
-### 10.2 Fonctionnalités
+### 10.2 Fonctionnalites
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| LOG-01 | Référentiel matériel | Liste des engins disponibles (Admin uniquement) | ⏳ |
-| LOG-02 | Fiche ressource | Nom, code, photo, couleur, plage horaire par défaut | ⏳ |
-| LOG-03 | Planning par ressource | Vue calendrier hebdomadaire 7 jours | ⏳ |
-| LOG-04 | Navigation semaine | < [Semaine X] > avec 3 semaines visibles | ⏳ |
-| LOG-05 | Axe horaire vertical | 08:00 → 18:00 (configurable) | ⏳ |
-| LOG-06 | Blocs réservation colorés | Par demandeur avec nom + bouton ✕ | ⏳ |
-| LOG-07 | Demande de réservation | Depuis mobile ou web | ⏳ |
-| LOG-08 | Sélection chantier | Association obligatoire au projet | ⏳ |
-| LOG-09 | Sélection créneau | Date + heure début / heure fin | ⏳ |
-| LOG-10 | Option validation N+1 | Activation/désactivation par ressource | ⏳ |
-| LOG-11 | Workflow validation | Demande 🟡 → Chef valide → Confirmé 🟢 | ⏳ |
-| LOG-12 | Statuts réservation | En attente 🟡 / Validée 🟢 / Refusée 🔴 | ⏳ |
-| LOG-13 | Notification demande | Push au valideur (chef/conducteur) | ⏳ |
-| LOG-14 | Notification décision | Push au demandeur | ⏳ |
-| LOG-15 | Rappel J-1 | Notification veille de réservation | ⏳ |
-| LOG-16 | Motif de refus | Champ texte optionnel | ⏳ |
-| LOG-17 | Conflit de réservation | Alerte si créneau déjà occupé | ⏳ |
-| LOG-18 | Historique par ressource | Journal complet des réservations | ⏳ |
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| MEM-01 | Rattachement chantier | Memo obligatoirement lie a un projet |
+| MEM-02 | Liste chronologique | Affichage par date de creation |
+| MEM-03 | Indicateur statut | 🟢 Ouvert / 🔴 Ferme |
+| MEM-04 | Photo chantier | Vignette d'identification visuelle |
+| MEM-05 | Horodatage | Date + heure de creation |
+| MEM-06 | Fil de conversation | Mode chat pour echanges multiples |
+| MEM-07 | Statut ferme avec badge | Ce memo a ete ferme le [date] |
+| MEM-08 | Ajout photo/video | Dans les reponses du fil |
+| MEM-09 | Signature dans reponses | Validation des actions correctives |
+| MEM-10 | Bouton Publier | Envoyer une reponse dans le fil |
+| MEM-11 | Historique | X a ajoute un memo sur Y le [date] |
+| MEM-12 | Bouton + (FAB) | Creation rapide sur mobile |
+| MEM-13 | Notifications push | Alerte temps reel a la creation |
 
-### 10.3 Types de ressources (Greg Constructions)
+### 10.3 Cas d'usage
 
-| Catégorie | Exemples | Validation |
+| Type | Exemple | Priorite |
+|------|---------|----------|
+| Urgence securite | Echafaudage instable zone B | Critique |
+| Probleme technique | Fuite reseau eau potable | Haute |
+| Approvisionnement | Rupture stock ferraille HA12 | Moyenne |
+| Information | Visite client prevue demain 10h | Basse |
+| Incident | Bris de materiel sur grue | Haute |
+| Qualite | Non-conformite beton livre | Haute |
+
+---
+
+## 11. LOGISTIQUE - GESTION DU MATERIEL
+
+### 11.1 Vue d'ensemble
+
+Le module Logistique permet de gerer les engins et gros materiel de l'entreprise avec un systeme de reservation par chantier, validation hierarchique optionnelle et visualisation calendrier. Chaque ressource dispose de son planning propre.
+
+### 11.2 Fonctionnalites
+
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| LOG-01 | Referentiel materiel | Liste des engins disponibles (Admin uniquement) |
+| LOG-02 | Fiche ressource | Nom, code, photo, couleur, plage horaire par defaut |
+| LOG-03 | Planning par ressource | Vue calendrier hebdomadaire 7 jours |
+| LOG-04 | Navigation semaine | < [Semaine X] > avec 3 semaines visibles |
+| LOG-05 | Axe horaire vertical | 08:00 → 18:00 (configurable) |
+| LOG-06 | Blocs reservation colores | Par demandeur avec nom + bouton ✕ |
+| LOG-07 | Demande de reservation | Depuis mobile ou web |
+| LOG-08 | Selection chantier | Association obligatoire au projet |
+| LOG-09 | Selection creneau | Date + heure debut / heure fin |
+| LOG-10 | Option validation N+1 | Activation/desactivation par ressource |
+| LOG-11 | Workflow validation | Demande 🟡 → Chef valide → Confirme 🟢 |
+| LOG-12 | Statuts reservation | En attente 🟡 / Validee 🟢 / Refusee 🔴 |
+| LOG-13 | Notification demande | Push au valideur (chef/conducteur) |
+| LOG-14 | Notification decision | Push au demandeur |
+| LOG-15 | Rappel J-1 | Notification veille de reservation |
+| LOG-16 | Motif de refus | Champ texte optionnel |
+| LOG-17 | Conflit de reservation | Alerte si creneau deja occupe |
+| LOG-18 | Historique par ressource | Journal complet des reservations |
+
+### 11.3 Types de ressources (Greg Constructions)
+
+| Categorie | Exemples | Validation |
 |-----------|----------|------------|
-| Engins de levage | Grue mobile, Manitou, Nacelle, Chariot élévateur | N+1 requis |
+| Engins de levage | Grue mobile, Manitou, Nacelle, Chariot elevateur | N+1 requis |
 | Engins de terrassement | Mini-pelle, Pelleteuse, Compacteur, Dumper | N+1 requis |
-| Véhicules | Camion benne, Fourgon, Véhicule utilitaire | Optionnel |
-| Gros outillage | Bétonnière, Vibrateur, Pompe à béton | Optionnel |
-| Équipements | Échafaudage, Étais, Banches, Coffrages | N+1 requis |
+| Vehicules | Camion benne, Fourgon, Vehicule utilitaire | Optionnel |
+| Gros outillage | Betonniere, Vibrateur, Pompe a beton | Optionnel |
+| Equipements | Echafaudage, Etais, Banches, Coffrages | N+1 requis |
 
-### 10.4 Matrice des droits - Logistique
+### 11.4 Matrice des droits - Logistique
 
 | Action | Admin | Conducteur | Chef | Compagnon |
 |--------|-------|------------|------|-----------|
-| Créer ressource | ✅ | ❌ | ❌ | ❌ |
+| Creer ressource | ✅ | ❌ | ❌ | ❌ |
 | Modifier ressource | ✅ | ❌ | ❌ | ❌ |
 | Supprimer ressource | ✅ | ❌ | ❌ | ❌ |
 | Voir planning ressource | ✅ | ✅ | ✅ | ✅ |
-| Demander réservation | ✅ | ✅ | ✅ | ✅ |
+| Demander reservation | ✅ | ✅ | ✅ | ✅ |
 | Valider/Refuser | ✅ | ✅ | ✅ | ❌ |
 
 ---
 
-## 11. Gestion des Interventions
+## 12. GESTION DES INTERVENTIONS
 
-### 11.1 Vue d'ensemble
+### 12.1 Vue d'ensemble
 
-Le module Interventions est dédié à la gestion des interventions ponctuelles (SAV, maintenance, dépannages, levée de réserves) distinctes des chantiers de longue durée.
+Le module Interventions est dedie a la gestion des interventions ponctuelles (SAV, maintenance, depannages, levee de reserves) distinctes des chantiers de longue duree. Il dispose d'un planning specifique et permet la generation de rapports d'intervention signes.
 
-### 11.2 Différence Chantier vs Intervention
+### 12.2 Difference Chantier vs Intervention
 
-| Critère | Chantier | Intervention |
+| Critere | Chantier | Intervention |
 |---------|----------|--------------|
-| Durée | Longue (semaines/mois) | Courte (heures/jours) |
-| Équipe | Multiple collaborateurs | 1-2 techniciens |
-| Récurrence | Continue | Ponctuelle |
-| Usage | Gros œuvre, construction | SAV, maintenance, dépannage |
-| Livrable | Suivi global projet | Rapport d'intervention signé |
+| Duree | Longue (semaines/mois) | Courte (heures/jours) |
+| Equipe | Multiple collaborateurs | 1-2 techniciens |
+| Recurrence | Continue | Ponctuelle |
+| Usage | Gros oeuvre, construction | SAV, maintenance, depannage |
+| Livrable | Suivi global projet | Rapport d'intervention signe |
 
-### 11.3 Fonctionnalités
+### 12.3 Fonctionnalites
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| INT-01 | Onglet dédié Planning | 3ème onglet Gestion des interventions | ⏳ |
-| INT-02 | Liste des interventions | Tableau Chantier/Client/Adresse/Statut | ⏳ |
-| INT-03 | Création intervention | Bouton + pour nouvelle intervention | ⏳ |
-| INT-04 | Fiche intervention | Client, adresse, contact, description, priorité | ⏳ |
-| INT-05 | Statuts intervention | À planifier / Planifiée / En cours / Terminée / Annulée | ⏳ |
-| INT-06 | Planning hebdomadaire | Utilisateurs en lignes, jours en colonnes | ⏳ |
-| INT-07 | Blocs intervention colorés | Format HH:MM - HH:MM - Code - Nom client | ⏳ |
-| INT-08 | Multi-interventions/jour | Plusieurs par utilisateur | ⏳ |
-| INT-09 | Toggle Afficher les tâches | Activer/désactiver l'affichage | ⏳ |
-| INT-10 | Affectation technicien | Drag & drop ou via modal | ⏳ |
-| INT-11 | Fil d'actualité | Timeline actions, photos, commentaires | ⏳ |
-| INT-12 | Chat intervention | Discussion instantanée équipe | ⏳ |
-| INT-13 | Signature client | Sur mobile avec stylet/doigt | ⏳ |
-| INT-14 | Rapport PDF | Génération automatique avec tous les détails | ⏳ |
-| INT-15 | Sélection posts pour rapport | Choisir les éléments à inclure | ⏳ |
-| INT-16 | Génération mobile | Créer le PDF depuis l'application | ⏳ |
-| INT-17 | Affectation sous-traitants | Prestataires externes (PLB, CFA...) | ⏳ |
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| INT-01 | Onglet dedie Planning | 3eme onglet Gestion des interventions |
+| INT-02 | Liste des interventions | Tableau Chantier/Client/Adresse/Statut |
+| INT-03 | Creation intervention | Bouton + pour nouvelle intervention |
+| INT-04 | Fiche intervention | Client, adresse, contact, description, priorite |
+| INT-05 | Statuts intervention | A planifier / Planifiee / En cours / Terminee / Annulee |
+| INT-06 | Planning hebdomadaire | Utilisateurs en lignes, jours en colonnes |
+| INT-07 | Blocs intervention colores | Format HH:MM - HH:MM - Code - Nom client |
+| INT-08 | Multi-interventions/jour | Plusieurs par utilisateur |
+| INT-09 | Toggle Afficher les taches | Activer/desactiver l'affichage |
+| INT-10 | Affectation technicien | Drag & drop ou via modal |
+| INT-11 | Fil d'actualite | Timeline actions, photos, commentaires |
+| INT-12 | Chat intervention | Discussion instantanee equipe |
+| INT-13 | Signature client | Sur mobile avec stylet/doigt |
+| INT-14 | Rapport PDF | Generation automatique avec tous les details |
+| INT-15 | Selection posts pour rapport | Choisir les elements a inclure |
+| INT-16 | Generation mobile | Creer le PDF depuis l'application |
+| INT-17 | Affectation sous-traitants | Prestataires externes (PLB, CFA...) |
 
-### 11.4 Contenu du rapport PDF
+### 12.4 Contenu du rapport PDF
 
 | Section | Contenu |
 |---------|---------|
-| En-tête | Logo entreprise, N° intervention, Date génération |
-| Client | Nom, Adresse complète, Contact, Téléphone |
-| Intervenant(s) | Nom(s) du/des technicien(s) affectés |
-| Horaires | Heure début, heure fin, durée totale |
+| En-tete | Logo entreprise, N° intervention, Date generation |
+| Client | Nom, Adresse complete, Contact, Telephone |
+| Intervenant(s) | Nom(s) du/des technicien(s) affectes |
+| Horaires | Heure debut, heure fin, duree totale |
 | Description | Motif de l'intervention |
-| Travaux réalisés | Détail des actions effectuées |
-| Photos | Avant / Pendant / Après (sélectionnées) |
-| Anomalies | Problèmes constatés non résolus |
+| Travaux realises | Detail des actions effectuees |
+| Photos | Avant / Pendant / Apres (selectionnees) |
+| Anomalies | Problemes constates non resolus |
 | Signatures | Client + Technicien avec horodatage |
 
 ---
 
-## 12. Gestion des Tâches
+## 13. GESTION DES TACHES
 
-### 12.1 Vue d'ensemble
+### 13.1 Vue d'ensemble
 
-Le module Tâches permet de créer des listes de travaux structurées par chantier avec un système de tâches/sous-tâches hiérarchiques, une bibliothèque de modèles réutilisables, et un suivi d'avancement.
+Le module Taches permet de creer des listes de travaux structurees par chantier avec un systeme de taches/sous-taches hierarchiques, une bibliotheque de modeles reutilisables, et un suivi d'avancement en temps reel avec code couleur.
 
-### 12.2 Fonctionnalités
+### 13.2 Fonctionnalites
 
-| ID | Fonctionnalité | Description | Status |
-|----|----------------|-------------|--------|
-| TAC-01 | Onglet Tâches par chantier | Accessible depuis la fiche chantier | ⏳ |
-| TAC-02 | Structure hiérarchique | Tâches parentes + sous-tâches imbriquées | ⏳ |
-| TAC-03 | Chevrons repliables | ▼ / > pour afficher/masquer | ⏳ |
-| TAC-04 | Bibliothèque de modèles | Templates réutilisables avec sous-tâches | ⏳ |
-| TAC-05 | Création depuis modèle | Importer un modèle dans un chantier | ⏳ |
-| TAC-06 | Création manuelle | Tâche personnalisée libre | ⏳ |
-| TAC-07 | Bouton + Ajouter | Création rapide de tâche | ⏳ |
-| TAC-08 | Date d'échéance | Deadline pour la tâche | ⏳ |
-| TAC-09 | Unité de mesure | m², litre, unité, ml, kg, m³... | ⏳ |
-| TAC-10 | Quantité estimée | Volume/quantité prévu | ⏳ |
-| TAC-11 | Heures estimées | Temps prévu pour réalisation | ⏳ |
-| TAC-12 | Heures réalisées | Temps effectivement passé | ⏳ |
-| TAC-13 | Statuts tâche | À faire ☐ / Terminé ✅ | ⏳ |
-| TAC-14 | Barre de recherche | Filtrer par mot-clé | ⏳ |
-| TAC-15 | Réorganiser les tâches | Drag & drop pour réordonner | ⏳ |
-| TAC-16 | Export rapport PDF | Récapitulatif des tâches | ⏳ |
-| TAC-17 | Vue mobile | Consultation et mise à jour | ⏳ |
-| TAC-18 | Feuilles de tâches | Déclaration quotidienne travail réalisé | ⏳ |
-| TAC-19 | Validation conducteur | Valide le travail déclaré | ⏳ |
-| TAC-20 | Code couleur avancement | Vert/Jaune/Rouge selon progression | ⏳ |
+| ID | Fonctionnalite | Description |
+|----|----------------|-------------|
+| TAC-01 | Onglet Taches par chantier | Accessible depuis la fiche chantier |
+| TAC-02 | Structure hierarchique | Taches parentes + sous-taches imbriquees |
+| TAC-03 | Chevrons repliables | ▼ / > pour afficher/masquer |
+| TAC-04 | Bibliotheque de modeles | Templates reutilisables avec sous-taches |
+| TAC-05 | Creation depuis modele | Importer un modele dans un chantier |
+| TAC-06 | Creation manuelle | Tache personnalisee libre |
+| TAC-07 | Bouton + Ajouter | Creation rapide de tache |
+| TAC-08 | Date d'echeance | Deadline pour la tache |
+| TAC-09 | Unite de mesure | m², litre, unite, ml, kg, m³... |
+| TAC-10 | Quantite estimee | Volume/quantite prevu |
+| TAC-11 | Heures estimees | Temps prevu pour realisation |
+| TAC-12 | Heures realisees | Temps effectivement passe |
+| TAC-13 | Statuts tache | A faire ☐ / Termine ✅ |
+| TAC-14 | Barre de recherche | Filtrer par mot-cle |
+| TAC-15 | Reorganiser les taches | Drag & drop pour reordonner |
+| TAC-16 | Export rapport PDF | Recapitulatif des taches |
+| TAC-17 | Vue mobile | Consultation et mise a jour |
+| TAC-18 | Feuilles de taches | Declaration quotidienne travail realise |
+| TAC-19 | Validation conducteur | Valide le travail declare |
+| TAC-20 | Code couleur avancement | Vert/Jaune/Rouge selon progression |
 
-### 12.3 Modèles de tâches - Gros Œuvre
+### 13.3 Modeles de taches - Gros Oeuvre
 
-| Nom | Description | Unité |
+| Nom | Description | Unite |
 |-----|-------------|-------|
-| Coffrage voiles | Mise en place des banches, réglage d'aplomb, serrage | m² |
-| Ferraillage plancher | Pose des armatures, ligatures, vérification enrobage | kg |
-| Coulage béton | Préparation, vibration, talochage, cure | m³ |
-| Décoffrage | Retrait des banches, nettoyage, stockage | m² |
-| Pose prédalles | Manutention, calage, étaiement provisoire | m² |
-| Réservations | Mise en place des réservations techniques | unité |
-| Traitement reprise | Préparation surfaces, application produit adhérence | ml |
+| Coffrage voiles | Mise en place des banches, reglage d'aplomb, serrage | m² |
+| Ferraillage plancher | Pose des armatures, ligatures, verification enrobages | kg |
+| Coulage beton | Preparation, vibration, talochage, cure | m³ |
+| Decoffrage | Retrait des banches, nettoyage, stockage | m² |
+| Pose predalles | Manutention, calage, etaiement provisoire | m² |
+| Reservations | Mise en place des reservations techniques | unite |
+| Traitement reprise | Preparation surfaces, application produit adherence | ml |
 
-### 12.4 Codes couleur - Avancement
+### 13.4 Codes couleur - Avancement
 
 | Couleur | Condition | Signification |
 |---------|-----------|---------------|
-| 🟢 Vert | Heures réalisées ≤ 80% estimées | Dans les temps |
-| 🟡 Jaune | Heures réalisées entre 80% et 100% | Attention, limite proche |
-| 🔴 Rouge | Heures réalisées > estimées | Dépassement, retard |
-| ⚪ Gris | Heures réalisées = 0 | Non commencé |
+| 🟢 Vert | Heures realisees <= 80% estimees | Dans les temps |
+| 🟡 Jaune | Heures realisees entre 80% et 100% | Attention, limite proche |
+| 🔴 Rouge | Heures realisees > estimees | Depassement, retard |
+| ⚪ Gris | Heures realisees = 0 | Non commence |
 
 ---
 
-## 13. Intégrations
+## 14. INTEGRATIONS
 
-### 13.1 ERP compatibles
+### 14.1 ERP compatibles
 
-| ERP | Import | Export | Données synchronisées |
+| ERP | Import | Export | Donnees synchronisees |
 |-----|--------|--------|----------------------|
-| Costructor | ✅ | ✅ | Chantiers, heures, documents, tâches |
+| Costructor | ✅ | ✅ | Chantiers, heures, documents, taches |
 | Graneet | ✅ | ✅ | Chantiers, heures, documents |
 
-### 13.2 Flux de données
+### 14.2 Flux de donnees
 
-| Données | Direction | Fréquence | Mode |
+| Donnees | Direction | Frequence | Mode |
 |---------|-----------|-----------|------|
-| Chantiers | ERP → App | Temps réel ou quotidien | Automatique |
+| Chantiers | ERP → App | Temps reel ou quotidien | Automatique |
 | Feuilles d'heures | App → ERP | Quotidien/Hebdo/Mensuel | Automatique |
-| Documents | ERP ↔ App | À la demande | Automatique |
-| Tâches | ERP → App | Import initial | Manuel |
+| Documents | ERP ↔ App | A la demande | Automatique |
+| Taches | ERP → App | Import initial | Manuel |
 | Variables paie | App → ERP | Hebdomadaire | Automatique |
 
-### 13.3 Canaux de notification
+### 14.3 Canaux de notification
 
-| Canal | Utilisation | Délai |
+| Canal | Utilisation | Delai |
 |-------|-------------|-------|
-| Push mobile | Affectations, validations, alertes, mémos | Temps réel |
-| SMS | Invitations, urgences critiques | Temps réel |
-| Email | Rapports, exports, récapitulatifs hebdo | Différé |
+| Push mobile | Affectations, validations, alertes, memos | Temps reel |
+| SMS | Invitations, urgences critiques | Temps reel |
+| Email | Rapports, exports, recapitulatifs hebdo | Differe |
 
 ---
 
-## 14. Sécurité et Conformité
+## 15. SECURITE ET CONFORMITE
 
-### 14.1 Authentification
+### 15.1 Authentification
 
-La connexion s'effectue de manière sécurisée par :
-- SMS (code OTP)
-- Identifiants classiques (email + mot de passe)
+La connexion s'effectue de maniere securisee par SMS (code OTP) ou par identifiants classiques (email + mot de passe). La revocation des acces est instantanee et n'affecte pas les donnees historiques.
 
-La révocation des accès est instantanée et n'affecte pas les données historiques.
-
-### 14.2 Protection des données
+### 15.2 Protection des donnees
 
 | Mesure | Description |
 |--------|-------------|
 | Chiffrement en transit | HTTPS/TLS 1.3 pour toutes les communications |
-| Chiffrement au repos | Données chiffrées AES-256 sur les serveurs |
-| Sauvegarde | Backup quotidien avec rétention 30 jours minimum |
-| RGPD | Conformité totale, droit d'accès et droit à l'oubli |
-| Hébergement | Serveurs en Europe (France) |
+| Chiffrement au repos | Donnees chiffrees AES-256 sur les serveurs |
+| Sauvegarde | Backup quotidien avec retention 30 jours minimum |
+| RGPD | Conformite totale, droit d'acces et droit a l'oubli |
+| Hebergement | Serveurs en Europe (France) certifies ISO 27001 |
+| Journalisation | Logs d'audit de toutes les actions sensibles |
 
-### 14.3 Mode Offline
+### 15.3 Mode Offline
 
-L'application permet :
-- Consultation du planning sans connexion
-- Saisie des heures hors ligne
-- Synchronisation automatique au retour de la connexion
-- Téléchargement automatique des plans
+L'application mobile permet de consulter le planning, saisir les heures, remplir les formulaires et consulter les plans meme sans connexion internet. La synchronisation s'effectue automatiquement au retour de la connectivite, avec gestion des conflits.
 
-### 14.4 Niveaux de confidentialité
+### 15.4 Niveaux de confidentialite
 
-| Niveau | Description | Exemples |
-|--------|-------------|----------|
-| Public | Tous les utilisateurs du chantier | Plans d'exécution, consignes |
-| Restreint | Chefs + Conducteurs + Admin | Documents techniques |
-| Confidentiel | Conducteurs + Admin | Contrats, budgets |
-| Secret | Admin uniquement | Documents RH, données sensibles |
+| Niveau | Acces | Exemples de donnees |
+|--------|-------|---------------------|
+| Public chantier | Tous les affectes au chantier | Plans, consignes, planning |
+| Restreint chef | Chefs + Conducteurs + Admin | Documents techniques |
+| Confidentiel | Conducteurs + Admin | Budgets, contrats, situations |
+| Secret | Admin uniquement | Documents RH, donnees sensibles |
 
 ---
 
-## 15. Tableau de Bord & Feed d'Actualités
+## 16. GLOSSAIRE
 
-*(Section à détailler)*
-
-### 15.1 Vue d'ensemble
-
-Le tableau de bord centralise les informations essentielles pour chaque rôle avec un feed d'actualités temps réel.
-
-### 15.2 Fonctionnalités prévues
-
-- Dashboard personnalisé par rôle
-- Feed d'actualités centralisé
-- Widgets configurables
-- Indicateurs KPIs
-- Alertes et notifications
-
----
-
-## 16. Glossaire
-
-| Terme | Définition |
+| Terme | Definition |
 |-------|------------|
-| **Affectation** | Attribution d'un utilisateur à un chantier pour une date/période |
-| **Chantier** | Projet de construction avec durée, équipe et budget définis |
-| **Compagnon** | Ouvrier qualifié intervenant sur les chantiers |
-| **Conducteur** | Responsable de la coordination de plusieurs chantiers |
-| **Chef de Chantier** | Responsable opérationnel d'un chantier spécifique |
-| **ERP** | Enterprise Resource Planning - logiciel de gestion intégré |
-| **GED** | Gestion Électronique des Documents |
-| **Intervention** | Mission ponctuelle de courte durée (SAV, maintenance) |
-| **Mémo** | Message d'alerte ou d'information rattaché à un chantier |
-| **Planning de charge** | Vision capacitaire des ressources par période |
-| **Planning opérationnel** | Affectation détaillée des équipes aux chantiers |
-| **PPSPS** | Plan Particulier de Sécurité et de Protection de la Santé |
-| **Sous-traitant** | Prestataire externe intervenant sur les chantiers |
+| Compagnon | Ouvrier de chantier (macon, coffreur, ferrailleur, grutier...) |
+| Conducteur de travaux | Responsable de plusieurs chantiers, gere planning et budgets |
+| Chef de chantier | Responsable operationnel d'un chantier specifique |
+| Sous-traitant | Prestataire externe intervenant ponctuellement sur chantier |
+| Gros oeuvre | Structure porteuse du batiment (fondations, murs, dalles, poteaux) |
+| Banche | Coffrage metallique modulaire pour couler les murs en beton |
+| Predalle | Dalle prefabriquee servant de coffrage perdu pour plancher |
+| Ferraillage | Armatures metalliques noyees dans le beton arme |
+| PV de reception | Proces-verbal de fin de travaux signe par le client |
+| Memo | Note d'urgence ou d'information importante a traiter |
+| FAB | Floating Action Button - bouton d'action flottant sur mobile |
+| Push | Notification instantanee envoyee sur le smartphone |
+| Offline | Mode deconnecte permettant de travailler sans internet |
+| ERP | Enterprise Resource Planning - logiciel de gestion d'entreprise |
+| GED | Gestion Electronique des Documents |
+| PPSPS | Plan Particulier de Securite et de Protection de la Sante |
+| N+1 | Superieur hierarchique direct (pour validation) |
+| SAV | Service Apres-Vente |
+| OS | Ordre de Service |
 
 ---
 
-## Historique des modifications
-
-| Version | Date | Auteur | Modifications |
-|---------|------|--------|---------------|
-| 2.1 | Janvier 2026 | Greg Constructions | Version initiale CDC |
-| 2.1-md | Janvier 2026 | Claude | Conversion en Markdown |
-
----
-
-> **Note** : Ce document est la source de vérité pour le développement de Hub Chantier.
-> Il sera mis à jour au fur et à mesure de l'implémentation des fonctionnalités.
-> Le fichier Word original reste disponible dans `docs/CDC Greg Constructions v2.1.docx`.
+*Greg Constructions - Cahier des Charges Fonctionnel v2.1 - Janvier 2026*
