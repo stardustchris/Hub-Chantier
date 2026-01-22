@@ -68,7 +68,22 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 **Regles d'utilisation des sous-agents** : `.claude/agents.md`
 
-Quand une fonctionnalite est demandee (ex: "Implemente CHT-03"):
+### REGLE CRITIQUE - Pre-commit
+
+**AVANT tout `git commit` contenant `*.py`, `*.ts`, `*.tsx`, `*.sql` :**
+
+```
+1. Lancer architect-reviewer → Corriger violations
+2. Lancer test-automator → Noter les gaps
+3. Lancer code-reviewer → Corriger issues critiques
+4. SEULEMENT APRES → git commit
+```
+
+> Details : `.claude/pre-commit-checklist.md`
+
+### Quand une fonctionnalite est demandee
+
+(ex: "Implemente CHT-03"):
 1. Lire `docs/SPECIFICATIONS.md` pour les details
 2. `python-pro` implemente selon Clean Architecture
 3. `architect-reviewer` verifie la conformite

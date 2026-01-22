@@ -17,7 +17,7 @@ from ...application.use_cases import (
 )
 from .dependencies import get_chantier_controller, get_user_repository
 from shared.infrastructure.web import get_current_user_id
-from modules.auth.infrastructure.persistence import SQLAlchemyUserRepository
+from modules.auth.domain.repositories import UserRepository
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 
@@ -153,7 +153,7 @@ class DeleteResponse(BaseModel):
 def create_chantier(
     request: CreateChantierRequest,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -214,7 +214,7 @@ def list_chantiers(
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
     search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -260,7 +260,7 @@ def list_chantiers(
 def get_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -292,7 +292,7 @@ def get_chantier(
 def get_chantier_by_code(
     code: str,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -325,7 +325,7 @@ def update_chantier(
     chantier_id: int,
     request: UpdateChantierRequest,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -428,7 +428,7 @@ def change_statut(
     chantier_id: int,
     request: ChangeStatutRequest,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -478,7 +478,7 @@ def change_statut(
 def demarrer_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Passe le chantier en statut 'En cours'."""
@@ -501,7 +501,7 @@ def demarrer_chantier(
 def receptionner_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Passe le chantier en statut 'Réceptionné'."""
@@ -524,7 +524,7 @@ def receptionner_chantier(
 def fermer_chantier(
     chantier_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Passe le chantier en statut 'Fermé'."""
@@ -553,7 +553,7 @@ def assigner_conducteur(
     chantier_id: int,
     request: AssignResponsableRequest,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -584,7 +584,7 @@ def retirer_conducteur(
     chantier_id: int,
     user_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Retire un conducteur du chantier."""
@@ -603,7 +603,7 @@ def assigner_chef_chantier(
     chantier_id: int,
     request: AssignResponsableRequest,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """
@@ -634,7 +634,7 @@ def retirer_chef_chantier(
     chantier_id: int,
     user_id: int,
     controller: ChantierController = Depends(get_chantier_controller),
-    user_repo: SQLAlchemyUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Retire un chef de chantier."""
@@ -653,8 +653,17 @@ def retirer_chef_chantier(
 # =============================================================================
 
 
-def _get_user_summary(user_id: int, user_repo: SQLAlchemyUserRepository) -> Optional[UserSummary]:
-    """Récupère les infos d'un utilisateur pour l'inclusion dans un chantier."""
+def _get_user_summary(user_id: int, user_repo: UserRepository) -> Optional[UserSummary]:
+    """
+    Récupère les infos d'un utilisateur pour l'inclusion dans un chantier.
+
+    Args:
+        user_id: ID de l'utilisateur à récupérer.
+        user_repo: Repository pour accéder aux utilisateurs.
+
+    Returns:
+        UserSummary avec les données utilisateur, ou None si non trouvé.
+    """
     try:
         user = user_repo.find_by_id(user_id)
         if user:
@@ -671,14 +680,15 @@ def _get_user_summary(user_id: int, user_repo: SQLAlchemyUserRepository) -> Opti
                 is_active=user.is_active,
             )
         return None
-    except Exception:
+    except (AttributeError, ValueError, TypeError):
+        # Erreurs de conversion de types ou attributs manquants
         return None
 
 
 def _transform_chantier_response(
     chantier_dict: dict,
     controller: ChantierController,
-    user_repo: Optional[SQLAlchemyUserRepository] = None,
+    user_repo: Optional[UserRepository] = None,
 ) -> ChantierResponse:
     """
     Transforme un dictionnaire chantier du controller en ChantierResponse.
