@@ -16,7 +16,7 @@ from ...application.use_cases import (
     InvalidRoleTypeError,
 )
 from .dependencies import get_chantier_controller
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from shared.infrastructure.web import get_current_user_id
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 

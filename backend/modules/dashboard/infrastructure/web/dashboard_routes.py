@@ -32,7 +32,7 @@ from .dependencies import (
     get_add_like_use_case,
     get_remove_like_use_case,
 )
-from modules.auth.infrastructure.web.dependencies import get_current_user_id, get_is_moderator
+from shared.infrastructure.web import get_current_user_id, get_is_moderator
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
