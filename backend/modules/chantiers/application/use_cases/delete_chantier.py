@@ -4,15 +4,7 @@ from typing import Optional, Callable
 
 from ...domain.repositories import ChantierRepository
 from ...domain.events import ChantierDeletedEvent
-
-
-class ChantierNotFoundError(Exception):
-    """Exception levée quand le chantier n'est pas trouvé."""
-
-    def __init__(self, chantier_id: int):
-        self.chantier_id = chantier_id
-        self.message = f"Chantier non trouvé: {chantier_id}"
-        super().__init__(self.message)
+from .get_chantier import ChantierNotFoundError
 
 
 class ChantierActifError(Exception):

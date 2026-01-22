@@ -6,15 +6,7 @@ from ...domain.repositories import ChantierRepository
 from ...domain.value_objects import StatutChantier
 from ...domain.events import ChantierStatutChangedEvent
 from ..dtos import ChangeStatutDTO, ChantierDTO
-
-
-class ChantierNotFoundError(Exception):
-    """Exception levée quand le chantier n'est pas trouvé."""
-
-    def __init__(self, chantier_id: int):
-        self.chantier_id = chantier_id
-        self.message = f"Chantier non trouvé: {chantier_id}"
-        super().__init__(self.message)
+from .get_chantier import ChantierNotFoundError
 
 
 class TransitionNonAutoriseeError(Exception):
