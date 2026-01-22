@@ -215,3 +215,80 @@ export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: st
   receptionne: { label: 'Receptionne', color: '#F1C40F', icon: 'check' },
   ferme: { label: 'Ferme', color: '#E74C3C', icon: 'lock' },
 }
+
+// ===== PLANNING / AFFECTATIONS =====
+export type TypeRecurrence = 'unique' | 'quotidien' | 'hebdomadaire'
+
+export interface Affectation {
+  id: string
+  utilisateur_id: number
+  chantier_id: number
+  date_affectation: string
+  heure_debut?: string
+  heure_fin?: string
+  note?: string
+  recurrence: TypeRecurrence
+  jours_recurrence: number[]
+  date_fin_recurrence?: string
+  created_at: string
+  updated_at?: string
+  // Relations enrichies (optionnelles)
+  utilisateur?: User
+  chantier?: Chantier
+}
+
+export interface AffectationCreate {
+  utilisateur_id: number
+  chantier_id: number
+  date_affectation: string
+  heure_debut?: string
+  heure_fin?: string
+  note?: string
+  recurrence?: TypeRecurrence
+  jours_recurrence?: number[]
+  date_fin_recurrence?: string
+}
+
+export interface AffectationUpdate {
+  chantier_id?: number
+  date_affectation?: string
+  heure_debut?: string
+  heure_fin?: string
+  note?: string
+}
+
+export interface DeplacerAffectation {
+  nouvelle_date: string
+  nouveau_chantier_id?: number
+}
+
+export interface DupliquerAffectations {
+  utilisateur_id: number
+  date_source_debut: string
+  date_source_fin: string
+  date_cible_debut: string
+}
+
+export interface AffectationListResponse {
+  affectations: Affectation[]
+  total: number
+  skip: number
+  limit: number
+}
+
+// ===== JOURS DE LA SEMAINE =====
+export const JOURS_SEMAINE = [
+  { value: 0, label: 'Lundi', short: 'L' },
+  { value: 1, label: 'Mardi', short: 'M' },
+  { value: 2, label: 'Mercredi', short: 'Me' },
+  { value: 3, label: 'Jeudi', short: 'J' },
+  { value: 4, label: 'Vendredi', short: 'V' },
+  { value: 5, label: 'Samedi', short: 'S' },
+  { value: 6, label: 'Dimanche', short: 'D' },
+] as const
+
+export const RECURRENCE_TYPES: Record<TypeRecurrence, { label: string }> = {
+  unique: { label: 'Unique' },
+  quotidien: { label: 'Quotidien' },
+  hebdomadaire: { label: 'Hebdomadaire' },
+}

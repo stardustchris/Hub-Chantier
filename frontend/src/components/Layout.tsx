@@ -25,7 +25,7 @@ const navigation = [
   { name: 'Tableau de bord', href: '/', icon: Home },
   { name: 'Chantiers', href: '/chantiers', icon: Building2 },
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
-  { name: 'Planning', href: '/planning', icon: Calendar, disabled: true },
+  { name: 'Planning', href: '/planning', icon: Calendar },
   { name: 'Documents', href: '/documents', icon: FileText, disabled: true },
 ]
 

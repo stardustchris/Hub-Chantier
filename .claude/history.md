@@ -3,6 +3,35 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (planning module frontend)
+
+- Implementation complete du frontend Planning (PLN-01 a PLN-28)
+- Types TypeScript : Affectation, AffectationCreate, AffectationUpdate, TypeRecurrence, JOURS_SEMAINE
+- Service planning.ts : API client avec list, create, update, delete, deplacer, dupliquer
+- Composants crees :
+  - `AffectationBlock.tsx` : Bloc colore avec horaires, nom chantier, icone note (PLN-17, PLN-18, PLN-19)
+  - `WeekNavigation.tsx` : Navigation semaine avec boutons prev/next et "Aujourd'hui" (PLN-09, PLN-10)
+  - `UserRow.tsx` : Ligne utilisateur avec avatar, metier, drag & drop (PLN-15, PLN-20, PLN-27)
+  - `AffectationForm.tsx` : Modal creation/edition avec recurrence (PLN-03, PLN-28)
+- Page PlanningPage.tsx :
+  - 3 onglets : Chantiers, Utilisateurs, Interventions (PLN-01, PLN-02)
+  - Groupement par metier avec badges colores (PLN-12, PLN-13)
+  - Chevrons repliables pour les groupes (PLN-14)
+  - Dropdown filtre utilisateurs (PLN-04)
+  - Recherche textuelle (PLN-22)
+  - Modal duplication semaine (PLN-16)
+  - Drag & drop des affectations (PLN-27)
+  - Double-clic cellule vide → creation (PLN-28)
+  - Support clavier (Enter/Space) pour accessibilite
+- Route ajoutee dans App.tsx : /planning
+- Lien navigation active dans Layout.tsx
+- Corrections code-review :
+  - Null safety pour initials (charAt avec fallback)
+  - React state pour drag-over (remplacement classList)
+  - Keyboard support pour accessibilite
+  - Modal pour duplication (remplacement prompt())
+- Mise a jour SPECIFICATIONS.md : 23 features sur 28 marquees ✅
+
 ## Session 2026-01-22 (planning module backend)
 
 - Implementation complete du module planning selon CDC Section 5 (PLN-01 a PLN-28)
