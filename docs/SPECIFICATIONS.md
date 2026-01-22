@@ -706,28 +706,30 @@ Le module Taches permet de creer des listes de travaux structurees par chantier 
 
 ### 13.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| TAC-01 | Onglet Taches par chantier | Accessible depuis la fiche chantier |
-| TAC-02 | Structure hierarchique | Taches parentes + sous-taches imbriquees |
-| TAC-03 | Chevrons repliables | ▼ / > pour afficher/masquer |
-| TAC-04 | Bibliotheque de modeles | Templates reutilisables avec sous-taches |
-| TAC-05 | Creation depuis modele | Importer un modele dans un chantier |
-| TAC-06 | Creation manuelle | Tache personnalisee libre |
-| TAC-07 | Bouton + Ajouter | Creation rapide de tache |
-| TAC-08 | Date d'echeance | Deadline pour la tache |
-| TAC-09 | Unite de mesure | m², litre, unite, ml, kg, m³... |
-| TAC-10 | Quantite estimee | Volume/quantite prevu |
-| TAC-11 | Heures estimees | Temps prevu pour realisation |
-| TAC-12 | Heures realisees | Temps effectivement passe |
-| TAC-13 | Statuts tache | A faire ☐ / Termine ✅ |
-| TAC-14 | Barre de recherche | Filtrer par mot-cle |
-| TAC-15 | Reorganiser les taches | Drag & drop pour reordonner |
-| TAC-16 | Export rapport PDF | Recapitulatif des taches |
-| TAC-17 | Vue mobile | Consultation et mise a jour |
-| TAC-18 | Feuilles de taches | Declaration quotidienne travail realise |
-| TAC-19 | Validation conducteur | Valide le travail declare |
-| TAC-20 | Code couleur avancement | Vert/Jaune/Rouge selon progression |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| TAC-01 | Onglet Taches par chantier | Accessible depuis la fiche chantier | ✅ |
+| TAC-02 | Structure hierarchique | Taches parentes + sous-taches imbriquees | ✅ |
+| TAC-03 | Chevrons repliables | ▼ / > pour afficher/masquer | ⏳ Frontend |
+| TAC-04 | Bibliotheque de modeles | Templates reutilisables avec sous-taches | ✅ |
+| TAC-05 | Creation depuis modele | Importer un modele dans un chantier | ✅ |
+| TAC-06 | Creation manuelle | Tache personnalisee libre | ✅ |
+| TAC-07 | Bouton + Ajouter | Creation rapide de tache | ✅ |
+| TAC-08 | Date d'echeance | Deadline pour la tache | ✅ |
+| TAC-09 | Unite de mesure | m², litre, unite, ml, kg, m³... | ✅ |
+| TAC-10 | Quantite estimee | Volume/quantite prevu | ✅ |
+| TAC-11 | Heures estimees | Temps prevu pour realisation | ✅ |
+| TAC-12 | Heures realisees | Temps effectivement passe | ✅ |
+| TAC-13 | Statuts tache | A faire ☐ / Termine ✅ | ✅ |
+| TAC-14 | Barre de recherche | Filtrer par mot-cle | ✅ |
+| TAC-15 | Reorganiser les taches | Drag & drop pour reordonner | ✅ |
+| TAC-16 | Export rapport PDF | Recapitulatif des taches | ⏳ Future |
+| TAC-17 | Vue mobile | Consultation et mise a jour | ⏳ Frontend |
+| TAC-18 | Feuilles de taches | Declaration quotidienne travail realise | ✅ |
+| TAC-19 | Validation conducteur | Valide le travail declare | ✅ |
+| TAC-20 | Code couleur avancement | Vert/Jaune/Rouge selon progression | ✅ |
+
+**Legende**: ✅ Backend complet | ⏳ Frontend/Future = En attente implementation frontend
 
 ### 13.3 Modeles de taches - Gros Oeuvre
 

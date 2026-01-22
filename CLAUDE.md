@@ -51,7 +51,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | memos | 10 | MEM-01 a MEM-13 | Structure only |
 | logistique | 11 | LOG-01 a LOG-18 | Structure only |
 | interventions | 12 | INT-01 a INT-17 | Structure only |
-| taches | 13 | TAC-01 a TAC-20 | Structure only |
+| taches | 13 | TAC-01 a TAC-20 | **Backend complet** |
 
 > Details des modules : voir `.claude/history.md`
 
@@ -64,7 +64,8 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 5. [x] **Module feuilles_heures** (CDC Section 7) - Backend complet (API REST + 17/20 fonctionnalites)
 6. [ ] **Frontend Planning** - Interface React pour le planning operationnel
 7. [ ] **Frontend Feuilles d'heures** - Interface React pour la saisie des heures
-8. [ ] **Module taches** (CDC Section 13) - Gestion des travaux par chantier
+8. [x] **Module taches** (CDC Section 13) - Backend complet (API REST + 17/20 fonctionnalites)
+9. [ ] **Frontend Taches** - Interface React pour la gestion des taches
 
 ## Workflow de developpement
 
