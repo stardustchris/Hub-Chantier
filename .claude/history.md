@@ -3,6 +3,54 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-22 (planning backend)
+
+- Implementation complete du backend module Planning Operationnel (CDC Section 5)
+- 28 fonctionnalites (PLN-01 a PLN-28), 20 implementations backend completes
+
+### Domain layer
+- Entite `Affectation` avec methodes metier (dupliquer, modifier_horaires, ajouter_note)
+- Value Objects : `HeureAffectation` (HH:MM), `TypeAffectation` (unique/recurrente), `JourSemaine`
+- Interface `AffectationRepository` (14 methodes)
+- Domain Events : AffectationCreated, Updated, Deleted, BulkCreated, BulkDeleted
+
+### Application layer
+- 6 Use Cases : CreateAffectation, UpdateAffectation, DeleteAffectation, GetPlanning, DuplicateAffectations, GetNonPlanifies
+- DTOs : CreateAffectationDTO, UpdateAffectationDTO, AffectationDTO, PlanningFiltersDTO, DuplicateAffectationsDTO
+- Exceptions centralisees : AffectationConflictError, AffectationNotFoundError, InvalidDateRangeError, NoAffectationsToDuplicateError
+- Interface EventBus pour decouplage
+
+### Adapters layer
+- Schemas Pydantic avec validation regex HH:MM stricte
+- PlanningController coordonnant les use cases
+- Vues par utilisateur, chantier, periode
+
+### Infrastructure layer
+- Modele SQLAlchemy `AffectationModel` avec 3 index composites
+- `SQLAlchemyAffectationRepository` implementation complete
+- Routes FastAPI : /planning/affectations (CRUD + duplicate + bulk)
+- EventBusImpl avec delegation au CoreEventBus
+
+### Tests
+- 220 tests unitaires generes
+- Couverture : Value Objects, Entities, Events, Use Cases
+
+### Validation agents
+- architect-reviewer : PASS (Clean Architecture respectee)
+- code-reviewer : PASS (apres corrections mineures)
+
+### Corrections appliquees
+- Centralisation des exceptions dans `exceptions.py`
+- Pattern regex HH:MM restrictif (refuse 99:99)
+- Remplacement `== True` par `.is_(True)` dans SQLAlchemy
+
+### Specifications mises a jour
+- PLN-01 a PLN-28 : Ajout colonne Status avec verifications
+- 20 fonctionnalites marquees "Backend complet"
+- 8 fonctionnalites en attente Frontend/Infra
+
+---
+
 ## Session 2026-01-22 (verification specs alignment)
 
 - Analyse complete de l'alignement entre specs, backend et frontend

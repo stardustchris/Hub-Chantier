@@ -288,36 +288,38 @@ Le Planning Operationnel permet d'affecter les collaborateurs aux chantiers avec
 
 ### 5.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| PLN-01 | 3 onglets de vue | [Chantiers] [Utilisateurs] [Gestion des interventions] |
-| PLN-02 | Onglet Utilisateurs par defaut | Vue ressource comme vue principale |
-| PLN-03 | Bouton + Creer | Creation rapide d'affectation en haut a droite |
-| PLN-04 | Dropdown filtre utilisateurs | Utilisateurs planifies / Non planifies / Tous |
-| PLN-05 | Icone entonnoir | Acces aux filtres avances |
-| PLN-06 | Icone engrenage | Parametres d'affichage |
-| PLN-07 | Bouton Filtrer | Filtrage textuel rapide |
-| PLN-08 | Selecteur periode | [Semaine] [Mois] [Trimestre] |
-| PLN-09 | Navigation temporelle | 21 - 27 juillet 2025 < [Aujourd'hui] > |
-| PLN-10 | Indicateur semaine | Semaine 30 affiche au-dessus du tableau |
-| PLN-11 | Section A Planifier | Badge compteur des ressources non affectees |
-| PLN-12 | Groupement par metier | Arborescence repliable par type d'utilisateur |
-| PLN-13 | Badges metier colores | Employe, Charpentier, Couvreur, Electricien, Sous-traitant... |
-| PLN-14 | Chevrons repliables | ▼ / > pour afficher/masquer les groupes |
-| PLN-15 | Avatar utilisateur | Cercle avec initiales + code couleur personnel |
-| PLN-16 | Icone duplication | 📋 pour dupliquer les affectations de la semaine |
-| PLN-17 | Blocs affectation colores | Couleur = chantier (coherence visuelle globale) |
-| PLN-18 | Format bloc | HH:MM - HH:MM + icone note + Nom chantier |
-| PLN-19 | Icone note dans bloc | 📝 Indicateur de commentaire sur l'affectation |
-| PLN-20 | Multi-affectations/jour | Plusieurs blocs possibles par utilisateur par jour |
-| PLN-21 | Colonnes jours | Lundi 21 juil. / Mardi 22 juil. etc. |
-| PLN-22 | Barre de recherche | Champ Rechercher dans la colonne utilisateurs |
-| PLN-23 | Notification push | Alerte a chaque nouvelle affectation |
-| PLN-24 | Mode Offline | Consultation planning sans connexion |
-| PLN-25 | Notes privees | Commentaires visibles uniquement par l'affecte |
-| PLN-26 | Acces profil utilisateur | Clic sur avatar → fiche profil + bouton appel |
-| PLN-27 | Drag & Drop | Deplacer les blocs pour modifier les affectations |
-| PLN-28 | Double-clic creation | Double-clic cellule vide → creation affectation |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| PLN-01 | 3 onglets de vue | [Chantiers] [Utilisateurs] [Gestion des interventions] | ✅ Backend |
+| PLN-02 | Onglet Utilisateurs par defaut | Vue ressource comme vue principale | ✅ Backend |
+| PLN-03 | Bouton + Creer | Creation rapide d'affectation en haut a droite | ✅ Backend |
+| PLN-04 | Dropdown filtre utilisateurs | Utilisateurs planifies / Non planifies / Tous | ✅ Backend |
+| PLN-05 | Icone entonnoir | Acces aux filtres avances | ✅ Backend |
+| PLN-06 | Icone engrenage | Parametres d'affichage | ⏳ Frontend |
+| PLN-07 | Bouton Filtrer | Filtrage textuel rapide | ✅ Backend |
+| PLN-08 | Selecteur periode | [Semaine] [Mois] [Trimestre] | ✅ Backend |
+| PLN-09 | Navigation temporelle | 21 - 27 juillet 2025 < [Aujourd'hui] > | ✅ Backend |
+| PLN-10 | Indicateur semaine | Semaine 30 affiche au-dessus du tableau | ⏳ Frontend |
+| PLN-11 | Section A Planifier | Badge compteur des ressources non affectees | ✅ Backend |
+| PLN-12 | Groupement par metier | Arborescence repliable par type d'utilisateur | ✅ Backend |
+| PLN-13 | Badges metier colores | Employe, Charpentier, Couvreur, Electricien, Sous-traitant... | ✅ Backend |
+| PLN-14 | Chevrons repliables | ▼ / > pour afficher/masquer les groupes | ⏳ Frontend |
+| PLN-15 | Avatar utilisateur | Cercle avec initiales + code couleur personnel | ✅ Backend |
+| PLN-16 | Icone duplication | 📋 pour dupliquer les affectations de la semaine | ✅ Backend |
+| PLN-17 | Blocs affectation colores | Couleur = chantier (coherence visuelle globale) | ✅ Backend |
+| PLN-18 | Format bloc | HH:MM - HH:MM + icone note + Nom chantier | ✅ Backend |
+| PLN-19 | Icone note dans bloc | 📝 Indicateur de commentaire sur l'affectation | ✅ Backend |
+| PLN-20 | Multi-affectations/jour | Plusieurs blocs possibles par utilisateur par jour | ✅ Backend |
+| PLN-21 | Colonnes jours | Lundi 21 juil. / Mardi 22 juil. etc. | ⏳ Frontend |
+| PLN-22 | Barre de recherche | Champ Rechercher dans la colonne utilisateurs | ⏳ Frontend |
+| PLN-23 | Notification push | Alerte a chaque nouvelle affectation | ⏳ Infra |
+| PLN-24 | Mode Offline | Consultation planning sans connexion | ⏳ Infra |
+| PLN-25 | Notes privees | Commentaires visibles uniquement par l'affecte | ✅ Backend |
+| PLN-26 | Acces profil utilisateur | Clic sur avatar → fiche profil + bouton appel | ⏳ Frontend |
+| PLN-27 | Drag & Drop | Deplacer les blocs pour modifier les affectations | ⏳ Frontend |
+| PLN-28 | Double-clic creation | Double-clic cellule vide → creation affectation | ⏳ Frontend |
+
+**Legende**: ✅ Backend complet | ⏳ Frontend/Infra en attente
 
 ### 5.3 Badges metiers (Groupement)
 
