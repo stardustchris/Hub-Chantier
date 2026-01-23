@@ -3,7 +3,33 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
-## Session 2026-01-23 (Completude tests unitaires Use Cases)
+## Session 2026-01-23 (Completude tests unitaires Use Cases - Phase 2)
+
+Finalisation de la couverture 100% des use cases avec ajout des derniers tests manquants.
+
+### Tests crees (Phase 2)
+
+| Fichier | Tests | Use Cases couverts |
+|---------|-------|-------------------|
+| `test_assign_responsable.py` | 13 | AssignResponsable (conducteur, chef chantier, retrait) |
+| `test_pointages_remaining_use_cases.py` | 21 | CreateVariablePaie, GetPointage, GetVueSemaine, ListFeuillesHeures, SubmitPointage |
+| `test_taches_remaining_use_cases.py` | 20 | CreateTemplate, ExportPDF, GetTacheStats, ListFeuillesTaches, ListTemplates, ReorderTaches |
+
+### Resultats Phase 2
+
+- **Avant** : 537 tests
+- **Apres** : 591 tests (+54 nouveaux)
+- **Statut** : 591 passed, 0 failed
+- **Couverture Use Cases** : 100%
+
+### Corrections techniques (Phase 2)
+
+1. **TypeVariablePaie** : Utiliser `panier_repas` et `indemnite_transport` (pas `panier` / `transport`)
+2. **Duree.from_minutes()** : Utiliser pour creer des durees > 23h (ex: `Duree.from_minutes(35 * 60)`)
+
+---
+
+## Session 2026-01-23 (Completude tests unitaires Use Cases - Phase 1)
 
 Audit complet et creation des tests unitaires manquants pour atteindre couverture cible.
 
@@ -46,13 +72,13 @@ Audit complet et creation des tests unitaires manquants pour atteindre couvertur
 | `test_get_non_planifies_use_case.py` | 6 | GetNonPlanifies |
 | `test_additional_use_cases.py` (taches) | 16 | Delete, Update |
 
-### Resultats
+### Resultats Phase 1
 
 - **Avant** : 499 tests
 - **Apres** : 537 tests (+38 nouveaux)
 - **Statut** : 537 passed, 0 failed
 
-### Corrections techniques
+### Corrections techniques (Phase 1)
 
 1. **StatutChantier** : Utiliser `StatutChantier.ouvert()` au lieu de `StatutChantier.OUVERT`
 2. **TypeAffectation** : Valeurs `UNIQUE` / `RECURRENTE` (pas JOURNEE_COMPLETE)
