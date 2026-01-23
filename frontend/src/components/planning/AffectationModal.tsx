@@ -192,17 +192,32 @@ export default function AffectationModal({
 
             {/* Date (seulement en création) */}
             {!isEdit && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date *
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={e => setFormData({ ...formData, date: e.target.value })}
-                  className="input w-full"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date début *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={e => setFormData({ ...formData, date: e.target.value })}
+                    className="input w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date fin {formData.type_affectation === 'recurrente' ? '*' : ''}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.date_fin_recurrence}
+                    onChange={e => setFormData({ ...formData, date_fin_recurrence: e.target.value })}
+                    className="input w-full"
+                    min={formData.date}
+                    required={formData.type_affectation === 'recurrente'}
+                  />
+                </div>
               </div>
             )}
 
@@ -265,43 +280,27 @@ export default function AffectationModal({
 
             {/* Jours de récurrence */}
             {!isEdit && formData.type_affectation === 'recurrente' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jours de récurrence
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {([0, 1, 2, 3, 4, 5, 6] as JourSemaine[]).map(jour => (
-                      <button
-                        key={jour}
-                        type="button"
-                        onClick={() => toggleJour(jour)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          formData.jours_recurrence.includes(jour)
-                            ? 'bg-primary-100 text-primary-700'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        {JOURS_SEMAINE[jour].short}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Jours de récurrence
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {([0, 1, 2, 3, 4, 5, 6] as JourSemaine[]).map(jour => (
+                    <button
+                      key={jour}
+                      type="button"
+                      onClick={() => toggleJour(jour)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        formData.jours_recurrence.includes(jour)
+                          ? 'bg-primary-100 text-primary-700'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {JOURS_SEMAINE[jour].short}
+                    </button>
+                  ))}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date de fin de récurrence *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.date_fin_recurrence}
-                    onChange={e => setFormData({ ...formData, date_fin_recurrence: e.target.value })}
-                    className="input w-full"
-                    min={formData.date}
-                    required={formData.type_affectation === 'recurrente'}
-                  />
-                </div>
-              </>
+              </div>
             )}
 
             {/* Note */}
