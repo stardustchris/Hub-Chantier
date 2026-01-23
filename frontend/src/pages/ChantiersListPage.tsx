@@ -51,13 +51,9 @@ export default function ChantiersListPage() {
   }
 
   const handleCreateChantier = async (data: ChantierCreate) => {
-    try {
-      await chantiersService.create(data)
-      setShowCreateModal(false)
-      loadChantiers()
-    } catch (error) {
-      console.error('Error creating chantier:', error)
-    }
+    await chantiersService.create(data)
+    setShowCreateModal(false)
+    loadChantiers()
   }
 
   const filteredChantiers = chantiers
@@ -327,12 +323,33 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
     couleur: USER_COLORS[0].code,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Validation des dates
+  const validateDates = (): boolean => {
+    if (formData.date_debut_prevue && formData.date_fin_prevue) {
+      if (formData.date_fin_prevue < formData.date_debut_prevue) {
+        setError('La date de fin doit être après la date de début')
+        return false
+      }
+    }
+    setError(null)
+    return true
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!validateDates()) {
+      return
+    }
+
     setIsSubmitting(true)
+    setError(null)
     try {
       await onSubmit(formData)
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Erreur lors de la création du chantier')
     } finally {
       setIsSubmitting(false)
     }
@@ -350,6 +367,12 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nom du chantier *
@@ -435,7 +458,10 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
               <input
                 type="date"
                 value={formData.date_debut_prevue || ''}
-                onChange={(e) => setFormData({ ...formData, date_debut_prevue: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, date_debut_prevue: e.target.value })
+                  setError(null)
+                }}
                 className="input"
               />
             </div>
@@ -446,7 +472,10 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
               <input
                 type="date"
                 value={formData.date_fin_prevue || ''}
-                onChange={(e) => setFormData({ ...formData, date_fin_prevue: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, date_fin_prevue: e.target.value })
+                  setError(null)
+                }}
                 className="input"
               />
             </div>
