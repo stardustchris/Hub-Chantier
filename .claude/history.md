@@ -3,6 +3,92 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Completude tests unitaires Use Cases - Phase 2)
+
+Finalisation de la couverture 100% des use cases avec ajout des derniers tests manquants.
+
+### Tests crees (Phase 2)
+
+| Fichier | Tests | Use Cases couverts |
+|---------|-------|-------------------|
+| `test_assign_responsable.py` | 13 | AssignResponsable (conducteur, chef chantier, retrait) |
+| `test_pointages_remaining_use_cases.py` | 21 | CreateVariablePaie, GetPointage, GetVueSemaine, ListFeuillesHeures, SubmitPointage |
+| `test_taches_remaining_use_cases.py` | 20 | CreateTemplate, ExportPDF, GetTacheStats, ListFeuillesTaches, ListTemplates, ReorderTaches |
+
+### Resultats Phase 2
+
+- **Avant** : 537 tests
+- **Apres** : 591 tests (+54 nouveaux)
+- **Statut** : 591 passed, 0 failed
+- **Couverture Use Cases** : 100%
+
+### Corrections techniques (Phase 2)
+
+1. **TypeVariablePaie** : Utiliser `panier_repas` et `indemnite_transport` (pas `panier` / `transport`)
+2. **Duree.from_minutes()** : Utiliser pour creer des durees > 23h (ex: `Duree.from_minutes(35 * 60)`)
+
+---
+
+## Session 2026-01-23 (Completude tests unitaires Use Cases - Phase 1)
+
+Audit complet et creation des tests unitaires manquants pour atteindre couverture cible.
+
+### Analyse des gaps
+
+| Module | Use Cases | Testes avant | Manquants | Testes apres |
+|--------|-----------|--------------|-----------|--------------|
+| auth | 8 | 2 | 6 | 8 |
+| chantiers | 7 | 2 | 5 | 7 |
+| dashboard | 8 | 4 | 4 | 8 |
+| planning | 6 | 4 | 2 | 6 |
+| pointages | 17 | ~10 | ~7 | 17 |
+| taches | 15 | ~10 | ~5 | 15 |
+
+### Tests unitaires crees
+
+**PRIORITE 1 - Impact metier fort**
+
+| Fichier | Tests | Use Cases couverts |
+|---------|-------|-------------------|
+| `test_update_user.py` | 9 | UpdateUserUseCase |
+| `test_additional_use_cases.py` (pointages) | 24 | Export, Bulk, Compare, Jauge, List, Delete |
+| `test_duplicate_affectations_use_case.py` | 5 | DuplicateAffectationsUseCase |
+
+**PRIORITE 2 - Couverture de base**
+
+| Fichier | Tests | Use Cases couverts |
+|---------|-------|-------------------|
+| `test_deactivate_user.py` | 6 | Deactivate, Activate |
+| `test_get_current_user.py` | 6 | GetCurrentUser |
+| `test_list_users.py` | 8 | ListUsers, GetUserById |
+| `test_delete_chantier.py` | 5 | DeleteChantier |
+| `test_get_chantier.py` | 4 | GetChantier |
+| `test_list_chantiers.py` | 8 | ListChantiers |
+| `test_update_chantier.py` | 8 | UpdateChantier |
+| `test_delete_post.py` | 5 | DeletePost |
+| `test_get_post.py` | 4 | GetPost |
+| `test_pin_post.py` | 9 | PinPost, Unpin |
+| `test_remove_like.py` | 3 | RemoveLike |
+| `test_get_non_planifies_use_case.py` | 6 | GetNonPlanifies |
+| `test_additional_use_cases.py` (taches) | 16 | Delete, Update |
+
+### Resultats Phase 1
+
+- **Avant** : 499 tests
+- **Apres** : 537 tests (+38 nouveaux)
+- **Statut** : 537 passed, 0 failed
+
+### Corrections techniques (Phase 1)
+
+1. **StatutChantier** : Utiliser `StatutChantier.ouvert()` au lieu de `StatutChantier.OUVERT`
+2. **TypeAffectation** : Valeurs `UNIQUE` / `RECURRENTE` (pas JOURNEE_COMPLETE)
+3. **TypeUtilisateur** : Valeurs `employe` / `sous_traitant` (pas interim)
+4. **Duree** : Heures 0-23 seulement, utiliser Mock pour total_heures > 23h
+5. **DuplicateAffectationsDTO** : `target_date_debut` au lieu de `days_offset`
+6. **Chantier** : `adresse` est un parametre obligatoire
+
+---
+
 ## Session 2026-01-23 (Regles critiques environnement)
 
 - Ajout de regles critiques dans CLAUDE.md suite a oubli d'installation des dependances
