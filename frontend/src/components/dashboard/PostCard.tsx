@@ -101,7 +101,7 @@ export default function PostCard({
               {author?.role && (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleBadgeColors[author.role] || 'bg-gray-100 text-gray-800'}`}>
                   {author.role === 'admin' && 'Direction'}
-                  {author.role === 'conducteur' && 'Conducteur'}
+                  {author.role === 'conducteur' && 'Conducteur de travaux'}
                   {author.role === 'chef_chantier' && 'Chef de chantier'}
                   {author.role === 'compagnon' && 'Compagnon'}
                 </span>
