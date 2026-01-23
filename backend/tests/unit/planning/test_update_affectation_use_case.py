@@ -298,15 +298,15 @@ class TestUpdateAffectationChantier:
     def test_should_raise_when_invalid_chantier_id(
         self, use_case, mock_affectation_repository, existing_affectation
     ):
-        """Test: echec si chantier_id invalide."""
+        """Test: echec si chantier_id invalide (validation dans DTO)."""
         # Arrange
         mock_affectation_repository.find_by_id.return_value = existing_affectation
 
-        dto = UpdateAffectationDTO(chantier_id=0)
+        # Act & Assert - ValueError est levee dans __post_init__ du DTO
+        with pytest.raises(ValueError) as exc_info:
+            UpdateAffectationDTO(chantier_id=0)
 
-        # Act & Assert
-        with pytest.raises(ValueError):
-            use_case.execute(affectation_id=1, dto=dto, updated_by=2)
+        assert "positif" in str(exc_info.value)
 
 
 # =============================================================================
