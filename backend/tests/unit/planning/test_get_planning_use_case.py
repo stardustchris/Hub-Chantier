@@ -559,12 +559,13 @@ class TestPlanningFiltersDTO:
 
     def test_should_create_filters_for_week(self):
         """Test: creation de filtres pour une semaine."""
-        # Lundi 20 janvier 2026
+        # Jeudi 22 janvier 2026 (weekday=3)
+        # Lundi de cette semaine = 22 - 3 = 19 janvier
         filters = PlanningFiltersDTO.for_week(date(2026, 1, 22))  # Jeudi
 
-        # Doit retourner Lundi 20 -> Dimanche 26
-        assert filters.date_debut == date(2026, 1, 20)
-        assert filters.date_fin == date(2026, 1, 26)
+        # Doit retourner Lundi 19 -> Dimanche 25
+        assert filters.date_debut == date(2026, 1, 19)
+        assert filters.date_fin == date(2026, 1, 25)
 
     def test_should_create_filters_for_month(self):
         """Test: creation de filtres pour un mois."""

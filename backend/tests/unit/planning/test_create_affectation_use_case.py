@@ -347,15 +347,15 @@ class TestCreateAffectationRecurrente:
 
         mock_affectation_repository.save.side_effect = save_with_id
 
-        # Lundi 20/01 -> Vendredi 24/01
-        # Jours: Lun, Mar, Mer, Jeu, Ven (tous les jours ouvrables)
+        # Lundi 19/01 -> Vendredi 23/01
+        # 19=Lun(0), 20=Mar(1), 21=Mer(2), 22=Jeu(3), 23=Ven(4)
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),  # Lundi
+            date=date(2026, 1, 19),  # Lundi
             type_affectation="recurrente",
             jours_recurrence=[0, 1, 2, 3, 4],  # Lundi a Vendredi
-            date_fin_recurrence=date(2026, 1, 24),
+            date_fin_recurrence=date(2026, 1, 23),
         )
 
         # Act
@@ -379,21 +379,22 @@ class TestCreateAffectationRecurrente:
 
         mock_affectation_repository.save.side_effect = save_with_id
 
-        # Lundi 20/01 -> Dimanche 26/01
+        # Lundi 19/01 -> Dimanche 25/01
         # Jours: seulement Lun et Mer
+        # 19=Lun(0), 21=Mer(2) = 2 jours
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),  # Lundi
+            date=date(2026, 1, 19),  # Lundi
             type_affectation="recurrente",
             jours_recurrence=[0, 2],  # Lundi et Mercredi
-            date_fin_recurrence=date(2026, 1, 26),  # Dimanche
+            date_fin_recurrence=date(2026, 1, 25),  # Dimanche
         )
 
         # Act
         result = use_case.execute(dto, created_by=3)
 
-        # Assert - Lundi 20, Mercredi 22 = 2 jours
+        # Assert - Lundi 19, Mercredi 21 = 2 jours
         assert len(result) == 2
 
     def test_should_publish_bulk_event_for_recurrence(
@@ -410,13 +411,14 @@ class TestCreateAffectationRecurrente:
 
         mock_affectation_repository.save.side_effect = save_with_id
 
+        # 19=Lun(0) et 26=Lun(0) = 2 lundis
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),
+            date=date(2026, 1, 19),
             type_affectation="recurrente",
             jours_recurrence=[0],  # Lundi seulement
-            date_fin_recurrence=date(2026, 1, 27),  # 2 lundis
+            date_fin_recurrence=date(2026, 1, 26),  # 2 lundis
         )
 
         # Act
@@ -442,13 +444,14 @@ class TestCreateAffectationRecurrente:
 
         mock_affectation_repository.save.side_effect = save_with_id
 
+        # 19=Lun(0), 20=Mar(1) = 2 jours
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),  # Lundi
+            date=date(2026, 1, 19),  # Lundi
             type_affectation="recurrente",
             jours_recurrence=[0, 1],  # Lundi, Mardi
-            date_fin_recurrence=date(2026, 1, 21),  # Mardi
+            date_fin_recurrence=date(2026, 1, 20),  # Mardi
         )
 
         # Act
@@ -468,13 +471,14 @@ class TestCreateAffectationRecurrente:
             True,   # Deuxieme date en conflit
         ]
 
+        # 19=Lun(0), 20=Mar(1) = 2 jours
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),  # Lundi
+            date=date(2026, 1, 19),  # Lundi
             type_affectation="recurrente",
             jours_recurrence=[0, 1],  # Lundi, Mardi
-            date_fin_recurrence=date(2026, 1, 21),
+            date_fin_recurrence=date(2026, 1, 20),
         )
 
         # Act & Assert
@@ -488,14 +492,14 @@ class TestCreateAffectationRecurrente:
         self, use_case, mock_affectation_repository
     ):
         """Test: echec si aucune date ne correspond a la recurrence."""
-        # Arrange
+        # Arrange - 19=Lun, 20=Mar, 21=Mer, 22=Jeu, 23=Ven (pas de weekend)
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),  # Lundi
+            date=date(2026, 1, 19),  # Lundi
             type_affectation="recurrente",
             jours_recurrence=[5, 6],  # Samedi, Dimanche
-            date_fin_recurrence=date(2026, 1, 23),  # Jeudi - pas de weekend
+            date_fin_recurrence=date(2026, 1, 23),  # Vendredi - pas de weekend
         )
 
         # Act & Assert
@@ -518,15 +522,16 @@ class TestCreateAffectationRecurrente:
 
         mock_affectation_repository.save.side_effect = save_with_id
 
+        # 19=Lun(0), 26=Lun(0) = 2 lundis
         dto = CreateAffectationDTO(
             utilisateur_id=1,
             chantier_id=2,
-            date=date(2026, 1, 20),
+            date=date(2026, 1, 19),
             heure_debut="08:00",
             heure_fin="17:00",
             type_affectation="recurrente",
             jours_recurrence=[0],  # Lundi
-            date_fin_recurrence=date(2026, 1, 27),
+            date_fin_recurrence=date(2026, 1, 26),
         )
 
         # Act
