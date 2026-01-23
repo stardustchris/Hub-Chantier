@@ -258,7 +258,7 @@ export default function PlanningChantierGrid({
                     onDragOver={(e) => handleDragOver(e, cellKey)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, chantier.id, day)}
-                    className={`p-1 border-r last:border-r-0 min-h-[80px] transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
+                    className={`p-1 border-r last:border-r-0 min-h-[80px] overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
                       isToday(day) ? 'bg-primary-50/50' : ''
                     } ${
                       isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
@@ -266,11 +266,11 @@ export default function PlanningChantierGrid({
                       !hasAffectations ? 'cursor-pointer hover:bg-gray-100' : ''
                     }`}
                   >
-                    <div className="space-y-1">
+                    <div className="space-y-1 w-full">
                       {cellAffectations.map(aff => (
                         <div
                           key={aff.id}
-                          className={`rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:opacity-90 transition-opacity ${!!onAffectationMove ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                          className={`w-full max-w-full rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:opacity-90 transition-opacity overflow-hidden ${!!onAffectationMove ? 'cursor-grab active:cursor-grabbing' : ''}`}
                           style={{ backgroundColor: aff.utilisateur_couleur || '#607D8B' }}
                           onClick={(e) => {
                             e.stopPropagation()
