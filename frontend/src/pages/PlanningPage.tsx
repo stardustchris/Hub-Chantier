@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { format, startOfWeek, endOfWeek, addWeeks } from 'date-fns'
 import { Plus, Filter, Users, Building2, AlertCircle } from 'lucide-react'
 import Layout from '../components/Layout'
-import { PlanningGrid, WeekNavigation, AffectationModal } from '../components/planning'
+import { PlanningGrid, PlanningChantierGrid, WeekNavigation, AffectationModal } from '../components/planning'
 import { planningService } from '../services/planning'
 import { usersService } from '../services/users'
 import { chantiersService } from '../services/chantiers'
@@ -37,6 +37,7 @@ export default function PlanningPage() {
   const [editingAffectation, setEditingAffectation] = useState<Affectation | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>()
+  const [selectedChantierId, setSelectedChantierId] = useState<string | undefined>()
 
   // Filtres
   const [showFilters, setShowFilters] = useState(false)
@@ -206,6 +207,57 @@ export default function PlanningPage() {
     } catch (err) {
       console.error('Erreur déplacement:', err)
       setError('Erreur lors du déplacement de l\'affectation')
+    }
+  }
+
+  // Vue Chantiers: Clic sur une cellule chantier/jour
+  const handleChantierCellClick = (chantierId: string, date: Date) => {
+    if (!canEdit) return
+    setSelectedChantierId(chantierId)
+    setSelectedDate(date)
+    setSelectedUserId(undefined)
+    setEditingAffectation(null)
+    setModalOpen(true)
+  }
+
+  // Vue Chantiers: Dupliquer les affectations d'un chantier vers la semaine suivante
+  const handleDuplicateChantier = async (chantierId: string) => {
+    if (!canEdit) return
+    const { date_debut: source_date_debut, date_fin: source_date_fin } = getDateRange()
+    const nextWeekStart = addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1)
+
+    // Trouver tous les utilisateurs affectés à ce chantier cette semaine
+    const usersOnChantier = [...new Set(
+      affectations
+        .filter(a => String(a.chantier_id) === chantierId)
+        .map(a => a.utilisateur_id)
+    )]
+
+    if (usersOnChantier.length === 0) {
+      setError('Aucune affectation à dupliquer pour ce chantier')
+      return
+    }
+
+    if (!confirm(`Dupliquer ${usersOnChantier.length} affectation(s) de ce chantier vers la semaine prochaine ?`)) {
+      return
+    }
+
+    try {
+      // Dupliquer pour chaque utilisateur affecté
+      await Promise.all(
+        usersOnChantier.map(userId =>
+          planningService.duplicate({
+            utilisateur_id: userId,
+            source_date_debut,
+            source_date_fin,
+            target_date_debut: format(nextWeekStart, 'yyyy-MM-dd'),
+          })
+        )
+      )
+      await loadData()
+    } catch (err) {
+      console.error('Erreur duplication chantier:', err)
+      setError('Erreur lors de la duplication')
     }
   }
 
@@ -396,9 +448,16 @@ export default function PlanningPage() {
             onAffectationMove={canEdit ? handleAffectationMove : undefined}
           />
         ) : (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-            Vue par chantiers - À venir
-          </div>
+          <PlanningChantierGrid
+            currentDate={currentDate}
+            affectations={filteredAffectations}
+            chantiers={chantiers}
+            onAffectationClick={handleAffectationClick}
+            onCellClick={handleChantierCellClick}
+            onDuplicateChantier={handleDuplicateChantier}
+            showWeekend={showWeekend}
+            onAffectationMove={canEdit ? handleAffectationMove : undefined}
+          />
         )}
 
         {/* Modal création/édition */}
@@ -411,6 +470,7 @@ export default function PlanningPage() {
           chantiers={chantiers}
           selectedDate={selectedDate}
           selectedUserId={selectedUserId}
+          selectedChantierId={selectedChantierId}
         />
       </div>
     </Layout>
