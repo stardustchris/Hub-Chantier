@@ -8,7 +8,7 @@ Selon CDC Section 5 - Planning Operationnel (PLN-01 a PLN-28).
 
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
-from datetime import date
+import datetime
 
 
 class CreateAffectationRequest(BaseModel):
@@ -30,7 +30,7 @@ class CreateAffectationRequest(BaseModel):
         >>> request = CreateAffectationRequest(
         ...     utilisateur_id=1,
         ...     chantier_id=2,
-        ...     date=date(2026, 1, 22),
+        ...     date=datetime.date(2026, 1, 22),
         ...     heure_debut="08:00",
         ...     heure_fin="17:00",
         ... )
@@ -38,7 +38,7 @@ class CreateAffectationRequest(BaseModel):
 
     utilisateur_id: int = Field(..., gt=0, description="ID de l'utilisateur a affecter")
     chantier_id: int = Field(..., gt=0, description="ID du chantier cible")
-    date: date = Field(..., description="Date de l'affectation")
+    date: datetime.date = Field(..., description="Date de l'affectation")
     heure_debut: Optional[str] = Field(
         None,
         pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
@@ -63,7 +63,7 @@ class CreateAffectationRequest(BaseModel):
         None,
         description="Jours de recurrence (0=Lundi, 6=Dimanche)",
     )
-    date_fin_recurrence: Optional[date] = Field(
+    date_fin_recurrence: Optional[datetime.date] = Field(
         None,
         description="Date de fin de la recurrence",
     )
@@ -238,8 +238,8 @@ class PlanningFiltersRequest(BaseModel):
         ... )
     """
 
-    date_debut: date = Field(..., description="Date de debut de la periode")
-    date_fin: date = Field(..., description="Date de fin de la periode")
+    date_debut: datetime.date = Field(..., description="Date de debut de la periode")
+    date_fin: datetime.date = Field(..., description="Date de fin de la periode")
     utilisateur_ids: Optional[List[int]] = Field(
         None,
         description="Liste d'IDs utilisateurs a filtrer",
@@ -263,7 +263,7 @@ class PlanningFiltersRequest(BaseModel):
 
     @field_validator("date_fin")
     @classmethod
-    def validate_date_fin(cls, v: date, info) -> date:
+    def validate_date_fin(cls, v: datetime.date, info) -> datetime.date:
         """Valide que la date de fin est >= date de debut."""
         if "date_debut" in info.data and v < info.data["date_debut"]:
             raise ValueError(
@@ -310,22 +310,22 @@ class DuplicateAffectationsRequest(BaseModel):
         gt=0,
         description="ID de l'utilisateur dont dupliquer les affectations",
     )
-    source_date_debut: date = Field(
+    source_date_debut: datetime.date = Field(
         ...,
         description="Date de debut de la periode source",
     )
-    source_date_fin: date = Field(
+    source_date_fin: datetime.date = Field(
         ...,
         description="Date de fin de la periode source",
     )
-    target_date_debut: date = Field(
+    target_date_debut: datetime.date = Field(
         ...,
         description="Date de debut de la periode cible",
     )
 
     @field_validator("source_date_fin")
     @classmethod
-    def validate_source_date_fin(cls, v: date, info) -> date:
+    def validate_source_date_fin(cls, v: datetime.date, info) -> datetime.date:
         """Valide que la date de fin source est >= date de debut source."""
         if "source_date_debut" in info.data and v < info.data["source_date_debut"]:
             raise ValueError(
@@ -335,7 +335,7 @@ class DuplicateAffectationsRequest(BaseModel):
 
     @field_validator("target_date_debut")
     @classmethod
-    def validate_target_date_debut(cls, v: date, info) -> date:
+    def validate_target_date_debut(cls, v: datetime.date, info) -> datetime.date:
         """Valide que la date cible est posterieure a la date de fin source."""
         if "source_date_fin" in info.data and v <= info.data["source_date_fin"]:
             raise ValueError(
