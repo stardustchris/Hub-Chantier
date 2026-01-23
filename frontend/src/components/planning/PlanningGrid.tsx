@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react'
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, isToday, isWeekend } from 'date-fns'
+import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isWeekend } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { ChevronDown, ChevronRight, Copy, Phone } from 'lucide-react'
 import type { Affectation, User, Metier } from '../../types'
@@ -18,6 +18,7 @@ interface PlanningGridProps {
   onToggleMetier: (metier: string) => void
   showWeekend?: boolean // PLN-06
   onAffectationMove?: (affectationId: string, newDate: string, newUserId?: string) => void // PLN-27
+  viewMode?: 'semaine' | 'mois' // PLN-05: Vue semaine ou mois
 }
 
 // Grouper les utilisateurs par métier
@@ -47,18 +48,26 @@ export default function PlanningGrid({
   onToggleMetier,
   showWeekend = true,
   onAffectationMove,
+  viewMode = 'semaine',
 }: PlanningGridProps) {
   // PLN-27: Drag state
   const [draggedAffectation, setDraggedAffectation] = useState<Affectation | null>(null)
   const [dragOverCell, setDragOverCell] = useState<string | null>(null)
 
-  // PLN-06: Jours de la semaine (filtrer weekend si nécessaire)
+  // PLN-05/PLN-06: Jours selon le mode de vue (semaine ou mois)
   const days = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
-    const end = endOfWeek(currentDate, { weekStartsOn: 1 })
+    let start: Date
+    let end: Date
+    if (viewMode === 'mois') {
+      start = startOfMonth(currentDate)
+      end = endOfMonth(currentDate)
+    } else {
+      start = startOfWeek(currentDate, { weekStartsOn: 1 })
+      end = endOfWeek(currentDate, { weekStartsOn: 1 })
+    }
     const allDays = eachDayOfInterval({ start, end })
     return showWeekend ? allDays : allDays.filter(day => !isWeekend(day))
-  }, [currentDate, showWeekend])
+  }, [currentDate, showWeekend, viewMode])
 
   // PLN-27: Drag handlers
   const handleDragStart = useCallback((e: React.DragEvent, affectation: Affectation) => {
@@ -122,28 +131,38 @@ export default function PlanningGrid({
     return affectationsByUserAndDate[userId]?.[dateKey] || []
   }
 
-  // PLN-06: Dynamic grid columns based on weekend visibility
-  const gridCols = showWeekend ? 'grid-cols-[250px_repeat(7,1fr)]' : 'grid-cols-[250px_repeat(5,1fr)]'
+  // PLN-05/PLN-06: Dynamic grid columns based on view mode and weekend visibility
+  const gridCols = useMemo(() => {
+    const numDays = days.length
+    if (viewMode === 'mois') {
+      // Pour le mois, colonne fixe pour utilisateurs + colonnes dynamiques pour les jours
+      return `grid-cols-[200px_repeat(${numDays},minmax(40px,1fr))]`
+    }
+    return showWeekend ? 'grid-cols-[250px_repeat(7,1fr)]' : 'grid-cols-[250px_repeat(5,1fr)]'
+  }, [days.length, viewMode, showWeekend])
+
+  // Mode mois = affichage compact
+  const isMonthView = viewMode === 'mois'
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''}`}>
       {/* Header - Jours */}
-      <div className={`grid ${gridCols} border-b bg-gray-50`}>
-        <div className="px-4 py-3 font-medium text-gray-700 border-r">
+      <div className={`grid ${gridCols} border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`}>
+        <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
           Utilisateurs
         </div>
         {days.map(day => (
           <div
             key={day.toISOString()}
-            className={`px-2 py-3 text-center border-r last:border-r-0 ${
+            className={`px-1 py-2 text-center border-r last:border-r-0 ${
               isToday(day) ? 'bg-primary-50' : ''
             }`}
           >
-            <div className="text-xs text-gray-500 uppercase">
-              {format(day, 'EEE', { locale: fr })}
+            <div className={`text-xs text-gray-500 uppercase ${isMonthView ? 'text-[10px]' : ''}`}>
+              {format(day, isMonthView ? 'EEEEE' : 'EEE', { locale: fr })}
             </div>
-            <div className={`text-sm font-medium ${isToday(day) ? 'text-primary-600' : 'text-gray-900'}`}>
-              {format(day, 'd MMM', { locale: fr })}
+            <div className={`font-medium ${isToday(day) ? 'text-primary-600' : 'text-gray-900'} ${isMonthView ? 'text-xs' : 'text-sm'}`}>
+              {format(day, isMonthView ? 'd' : 'd MMM', { locale: fr })}
             </div>
           </div>
         ))}
