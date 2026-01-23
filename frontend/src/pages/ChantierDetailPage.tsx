@@ -30,7 +30,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import type { Chantier, ChantierUpdate, User } from '../types'
+import type { Chantier, ChantierUpdate, User, ContactChantier } from '../types'
 import { CHANTIER_STATUTS, ROLES, USER_COLORS } from '../types'
 import type { UserRole } from '../types'
 
@@ -640,20 +640,53 @@ function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalPro
     nom: chantier.nom,
     adresse: chantier.adresse,
     couleur: chantier.couleur,
-    contact_nom: chantier.contact_nom,
-    contact_telephone: chantier.contact_telephone,
+    statut: chantier.statut,
     heures_estimees: chantier.heures_estimees,
     date_debut_prevue: chantier.date_debut_prevue,
     date_fin_prevue: chantier.date_fin_prevue,
     description: chantier.description,
   })
+
+  // Initialiser les contacts depuis les données existantes
+  const initialContacts: ContactChantier[] = chantier.contacts?.length
+    ? chantier.contacts
+    : chantier.contact_nom
+      ? [{ nom: chantier.contact_nom, profession: '', telephone: chantier.contact_telephone || '' }]
+      : [{ nom: '', profession: '', telephone: '' }]
+
+  const [contacts, setContacts] = useState<ContactChantier[]>(initialContacts)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const addContact = () => {
+    setContacts([...contacts, { nom: '', profession: '', telephone: '' }])
+  }
+
+  const removeContact = (index: number) => {
+    if (contacts.length > 1) {
+      setContacts(contacts.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateContact = (index: number, field: keyof ContactChantier, value: string) => {
+    const updated = [...contacts]
+    updated[index] = { ...updated[index], [field]: value }
+    setContacts(updated)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await onSubmit(formData)
+      // Filtrer les contacts vides
+      const validContacts = contacts.filter(c => c.nom.trim())
+      const dataToSubmit = {
+        ...formData,
+        contacts: validContacts.length > 0 ? validContacts : undefined,
+        // Pour compatibilité avec l'ancien format
+        contact_nom: validContacts[0]?.nom || undefined,
+        contact_telephone: validContacts[0]?.telephone || undefined,
+      }
+      await onSubmit(dataToSubmit)
     } finally {
       setIsSubmitting(false)
     }
@@ -717,28 +750,75 @@ function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalPro
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact nom
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Statut
+            </label>
+            <select
+              value={formData.statut || chantier.statut}
+              onChange={(e) => setFormData({ ...formData, statut: e.target.value as any })}
+              className="input"
+            >
+              {Object.entries(CHANTIER_STATUTS).map(([key, info]) => (
+                <option key={key} value={key}>
+                  {info.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Contacts dynamiques */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Contacts sur place
               </label>
-              <input
-                type="text"
-                value={formData.contact_nom || ''}
-                onChange={(e) => setFormData({ ...formData, contact_nom: e.target.value })}
-                className="input"
-              />
+              <button
+                type="button"
+                onClick={addContact}
+                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact telephone
-              </label>
-              <input
-                type="tel"
-                value={formData.contact_telephone || ''}
-                onChange={(e) => setFormData({ ...formData, contact_telephone: e.target.value })}
-                className="input"
-              />
+            <div className="space-y-3">
+              {contacts.map((contact, index) => (
+                <div key={index} className="flex gap-2 items-start bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-1 grid grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      value={contact.nom}
+                      onChange={(e) => updateContact(index, 'nom', e.target.value)}
+                      className="input"
+                      placeholder="Nom"
+                    />
+                    <input
+                      type="text"
+                      value={contact.profession || ''}
+                      onChange={(e) => updateContact(index, 'profession', e.target.value)}
+                      className="input"
+                      placeholder="Profession"
+                    />
+                    <input
+                      type="tel"
+                      value={contact.telephone || ''}
+                      onChange={(e) => updateContact(index, 'telephone', e.target.value)}
+                      className="input"
+                      placeholder="Telephone"
+                    />
+                  </div>
+                  {contacts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeContact(index)}
+                      className="p-2 text-gray-400 hover:text-red-500"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 

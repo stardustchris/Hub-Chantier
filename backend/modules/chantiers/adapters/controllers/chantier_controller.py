@@ -16,6 +16,7 @@ from ...application.dtos import (
     UpdateChantierDTO,
     ChangeStatutDTO,
     AssignResponsableDTO,
+    ContactDTO,
 )
 
 
@@ -60,6 +61,14 @@ class ChantierController:
 
     def _chantier_dto_to_dict(self, dto) -> Dict[str, Any]:
         """Convertit un ChantierDTO en dictionnaire."""
+        # Convertir les contacts en liste de dicts
+        contacts = []
+        if hasattr(dto, 'contacts') and dto.contacts:
+            contacts = [
+                {"nom": c.nom, "profession": c.profession, "telephone": c.telephone}
+                for c in dto.contacts
+            ]
+
         return {
             "id": dto.id,
             "code": dto.code,
@@ -71,6 +80,7 @@ class ChantierController:
             "coordonnees_gps": dto.coordonnees_gps,
             "photo_couverture": dto.photo_couverture,
             "contact": dto.contact,
+            "contacts": contacts,
             "heures_estimees": dto.heures_estimees,
             "date_debut": dto.date_debut,
             "date_fin": dto.date_fin,
@@ -93,6 +103,7 @@ class ChantierController:
         photo_couverture: Optional[str] = None,
         contact_nom: Optional[str] = None,
         contact_telephone: Optional[str] = None,
+        contacts: Optional[List[Dict[str, Any]]] = None,
         heures_estimees: Optional[float] = None,
         date_debut: Optional[str] = None,
         date_fin: Optional[str] = None,
@@ -111,8 +122,9 @@ class ChantierController:
             latitude: Latitude GPS (CHT-04).
             longitude: Longitude GPS (CHT-04).
             photo_couverture: URL photo (CHT-01).
-            contact_nom: Nom du contact (CHT-07).
-            contact_telephone: Téléphone du contact (CHT-07).
+            contact_nom: Nom du contact legacy (CHT-07).
+            contact_telephone: Téléphone du contact legacy (CHT-07).
+            contacts: Liste des contacts (CHT-07).
             heures_estimees: Budget temps (CHT-18).
             date_debut: Date début ISO (CHT-20).
             date_fin: Date fin ISO (CHT-20).
@@ -127,6 +139,19 @@ class ChantierController:
             CodeChantierAlreadyExistsError: Si code déjà utilisé.
             InvalidDatesError: Si dates invalides.
         """
+        # Convertir contacts dicts en ContactDTO
+        from ...application.dtos import ContactDTO
+        contacts_dto = None
+        if contacts:
+            contacts_dto = [
+                ContactDTO(
+                    nom=c.get("nom", ""),
+                    profession=c.get("profession"),
+                    telephone=c.get("telephone"),
+                )
+                for c in contacts
+            ]
+
         dto = CreateChantierDTO(
             nom=nom,
             adresse=adresse,
@@ -137,6 +162,7 @@ class ChantierController:
             photo_couverture=photo_couverture,
             contact_nom=contact_nom,
             contact_telephone=contact_telephone,
+            contacts=contacts_dto,
             heures_estimees=heures_estimees,
             date_debut=date_debut,
             date_fin=date_fin,
@@ -231,11 +257,13 @@ class ChantierController:
         nom: Optional[str] = None,
         adresse: Optional[str] = None,
         couleur: Optional[str] = None,
+        statut: Optional[str] = None,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         photo_couverture: Optional[str] = None,
         contact_nom: Optional[str] = None,
         contact_telephone: Optional[str] = None,
+        contacts: Optional[List[Dict[str, Any]]] = None,
         heures_estimees: Optional[float] = None,
         date_debut: Optional[str] = None,
         date_fin: Optional[str] = None,
@@ -249,11 +277,13 @@ class ChantierController:
             nom: Nouveau nom.
             adresse: Nouvelle adresse.
             couleur: Nouvelle couleur.
+            statut: Nouveau statut.
             latitude: Nouvelle latitude.
             longitude: Nouvelle longitude.
             photo_couverture: Nouvelle photo.
-            contact_nom: Nouveau contact nom.
-            contact_telephone: Nouveau contact tel.
+            contact_nom: Nouveau contact nom (legacy).
+            contact_telephone: Nouveau contact tel (legacy).
+            contacts: Liste des contacts.
             heures_estimees: Nouvelles heures.
             date_debut: Nouvelle date début.
             date_fin: Nouvelle date fin.
@@ -266,6 +296,19 @@ class ChantierController:
             ChantierNotFoundError: Si non trouvé.
             ChantierFermeError: Si fermé.
         """
+        # Convertir contacts dicts en ContactDTO
+        from ...application.dtos import ContactDTO
+        contacts_dto = None
+        if contacts:
+            contacts_dto = [
+                ContactDTO(
+                    nom=c.get("nom", ""),
+                    profession=c.get("profession"),
+                    telephone=c.get("telephone"),
+                )
+                for c in contacts
+            ]
+
         dto = UpdateChantierDTO(
             nom=nom,
             adresse=adresse,
@@ -275,12 +318,21 @@ class ChantierController:
             photo_couverture=photo_couverture,
             contact_nom=contact_nom,
             contact_telephone=contact_telephone,
+            contacts=contacts_dto,
             heures_estimees=heures_estimees,
             date_debut=date_debut,
             date_fin=date_fin,
             description=description,
         )
         result = self.update_use_case.execute(chantier_id, dto)
+
+        # Si statut fourni, changer aussi le statut
+        if statut:
+            result = self.change_statut_use_case.execute(
+                chantier_id,
+                ChangeStatutDTO(nouveau_statut=statut)
+            )
+
         return self._chantier_dto_to_dict(result)
 
     def delete(self, chantier_id: int, force: bool = False) -> Dict[str, Any]:

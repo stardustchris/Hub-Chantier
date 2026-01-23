@@ -16,7 +16,7 @@ from ...domain.value_objects import (
     ContactChantier,
     StatutChantierEnum,
 )
-from .chantier_model import ChantierModel
+from .chantier_model import ChantierModel, ContactChantierModel
 
 
 class SQLAlchemyChantierRepository(ChantierRepository):
