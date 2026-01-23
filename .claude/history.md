@@ -3,6 +3,70 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Formulaires - Photo, Signature, Chantier)
+
+Amelioration du module Formulaires avec implementation complete des composants photo et signature, plus selecteur de chantier.
+
+### Fichiers crees
+
+**Composants specialises**
+- `frontend/src/components/formulaires/PhotoCapture.tsx` : Capture/upload photo (FOR-04)
+  - Support camera mobile (`capture="environment"`)
+  - Upload depuis galerie
+  - Preview avec suppression
+  - Conversion base64 automatique
+  - Validation type MIME et taille (max 10Mo)
+
+- `frontend/src/components/formulaires/SignaturePad.tsx` : Signature electronique (FOR-05)
+  - Canvas tactile avec support mobile
+  - Gestion devicePixelRatio pour ecrans retina
+  - Export PNG base64
+  - Modal avec saisie nom signataire
+  - Boutons effacer/valider
+
+### Fichiers modifies
+
+- `frontend/src/components/formulaires/FieldRenderer.tsx` :
+  - Integration PhotoCapture pour champs type "photo"
+  - Integration SignaturePad pour champs type "signature"
+
+- `frontend/src/pages/FormulairesPage.tsx` :
+  - Ajout chargement liste des chantiers via chantiersService
+  - Selecteur de chantier obligatoire dans modal nouveau formulaire
+  - Validation selection chantier avant creation
+  - Ajout role="alert" pour accessibilite
+
+- `frontend/src/components/formulaires/index.ts` :
+  - Export PhotoCapture et SignaturePad
+
+### Validation agents
+
+- **architect-reviewer** : PASS (8.9/10)
+  - Separation of concerns excellente
+  - Pas de dependances circulaires
+  - Coherence avec patterns existants
+
+- **code-reviewer** : APPROVED
+  - Try-catch ajoute sur canvas.toDataURL()
+  - role="alert" ajoute sur messages d'erreur
+  - aria-label ajoute sur canvas signature
+
+### Build verification
+
+- TypeScript : 0 erreurs
+- Build : OK (538.24 kB JS, 144.84 kB gzip)
+- Tests backend formulaires : 67 passed
+
+### Fonctionnalites completees
+
+| Code | Fonctionnalite | Status |
+|------|---------------|--------|
+| FOR-04 | Photos horodatees | **COMPLET** (camera + galerie + preview) |
+| FOR-05 | Signature electronique | **COMPLET** (canvas tactile + nom signataire) |
+| - | Selecteur chantier | **COMPLET** (dropdown obligatoire) |
+
+---
+
 ## Session 2026-01-23 (Module Formulaires Frontend)
 
 Implementation complete du frontend React pour le module Formulaires (CDC Section 8 - FOR-01 a FOR-11).
