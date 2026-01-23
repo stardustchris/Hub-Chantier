@@ -33,7 +33,7 @@ Utilisateur demande: "Implemente CHT-03" ou "Cree le module chantiers"
 6. [SPECS] Mettre a jour SPECIFICATIONS.md:
    - Modifier le contenu si l'implementation differe de la spec initiale
    - Passer le statut a ✅
-7. [CLAUDE.md] Mettre a jour l'etat du projet
+7. [DOCS] Mettre a jour .claude/history.md (resume session)
 ```
 
 ### Quand ajouter une nouvelle fonctionnalite (hors CDC initial)
@@ -50,7 +50,7 @@ Utilisateur demande: "Ajoute la fonctionnalite X"
 4. [test-automator] Generer les tests unitaires
 5. [code-reviewer] Verifier qualite et securite
 6. [SPECS] Passer le statut a ✅
-7. [CLAUDE.md] Mettre a jour l'etat du projet
+7. [DOCS] Mettre a jour .claude/history.md (resume session)
 ```
 
 ### Quand creer un nouveau module
@@ -71,7 +71,7 @@ Utilisateur demande: "Cree le module X"
    - infrastructure/web/
 3. [architect-reviewer] Valider la structure
 4. [test-automator] Generer les tests de base
-5. [CLAUDE.md] Mettre a jour l'etat des modules
+5. [DOCS] Mettre a jour .claude/project-status.md (etat module)
 ```
 
 ### Quand modifier du code existant
@@ -143,7 +143,7 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
 │       • Modifier le contenu si implementation differe           │
 │       • Ajouter la feature si nouvelle (hors CDC)               │
 │       • Passer le statut a ✅                                   │
-│     - CLAUDE.md: Mettre a jour etat du module                   │
+│     - .claude/history.md: Resume de la session                  │
 └─────────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -247,8 +247,8 @@ Utilisateur: "Implemente CHT-03 (Statut chantier)"
 [SPECS] Mise a jour SPECIFICATIONS.md
 → CHT-03: ⏳ → ✅
 
-[CLAUDE.md] Mise a jour
-→ Module chantiers: "Structure only" → "CHT-03 implemente"
+[DOCS] Mise a jour .claude/history.md
+→ Resume: CHT-03 implemente avec tests
 
 Reponse a l'utilisateur:
 "CHT-03 (Statut chantier) implemente:
