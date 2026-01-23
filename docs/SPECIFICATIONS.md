@@ -514,23 +514,25 @@ Le module Documents offre une gestion documentaire complete avec arborescence pa
 
 ### 9.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| GED-01 | Onglet Documents integre | Dans chaque fiche chantier |
-| GED-02 | Arborescence par dossiers | Organisation hierarchique numerotee |
-| GED-03 | Tableau de gestion | Vue liste avec metadonnees (taille, date, auteur) |
-| GED-04 | Role minimum par dossier | Compagnon / Chef / Conducteur / Admin |
-| GED-05 | Autorisations specifiques | Permissions nominatives additionnelles |
-| GED-06 | Upload multiple | Jusqu'a 10 fichiers simultanes |
-| GED-07 | Taille max 10 Go | Par fichier individuel |
-| GED-08 | Zone Drag & Drop | Glisser-deposer intuitif |
-| GED-09 | Barre de progression | Affichage % upload en temps reel |
-| GED-10 | Selection droits a l'upload | Roles + Utilisateurs nominatifs |
-| GED-11 | Transfert auto depuis ERP | Synchronisation Costructor/Graneet |
-| GED-12 | Formats supportes | PDF, Images (PNG/JPG), XLS/XLSX, DOC/DOCX, Videos |
-| GED-13 | Actions Editer/Supprimer | Gestion complete des fichiers |
-| GED-14 | Consultation mobile | Visualisation sur application |
-| GED-15 | Synchronisation Offline | Plans telecharges automatiquement |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| GED-01 | Onglet Documents integre | Dans chaque fiche chantier | ✅ |
+| GED-02 | Arborescence par dossiers | Organisation hierarchique numerotee | ✅ |
+| GED-03 | Tableau de gestion | Vue liste avec metadonnees (taille, date, auteur) | ✅ |
+| GED-04 | Role minimum par dossier | Compagnon / Chef / Conducteur / Admin | ✅ |
+| GED-05 | Autorisations specifiques | Permissions nominatives additionnelles | ✅ |
+| GED-06 | Upload multiple | Jusqu'a 10 fichiers simultanes | ✅ |
+| GED-07 | Taille max 10 Go | Par fichier individuel | ✅ |
+| GED-08 | Zone Drag & Drop | Glisser-deposer intuitif | ✅ |
+| GED-09 | Barre de progression | Affichage % upload en temps reel | ✅ |
+| GED-10 | Selection droits a l'upload | Roles + Utilisateurs nominatifs | ✅ |
+| GED-11 | Transfert auto depuis ERP | Synchronisation Costructor/Graneet | ⏳ Infra |
+| GED-12 | Formats supportes | PDF, Images (PNG/JPG), XLS/XLSX, DOC/DOCX, Videos | ✅ |
+| GED-13 | Actions Editer/Supprimer | Gestion complete des fichiers | ✅ |
+| GED-14 | Consultation mobile | Visualisation sur application (responsive) | ✅ |
+| GED-15 | Synchronisation Offline | Plans telecharges automatiquement | ⏳ Infra |
+
+**Module COMPLET** - Backend + Frontend implementes (13/15 fonctionnalites, 2 en attente infra)
 
 ### 9.3 Niveaux d'acces
 

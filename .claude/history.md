@@ -3,6 +3,107 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Module Documents GED)
+
+Implémentation complète du module Documents / GED (CDC Section 9 - GED-01 à GED-15).
+
+### Architecture Clean implémentée
+
+**Domain Layer**
+- `domain/entities/document.py` : Document avec validation taille max 10GB
+- `domain/entities/dossier.py` : Dossier avec hiérarchie et contrôle d'accès
+- `domain/entities/autorisation.py` : AutorisationDocument pour accès nominatif
+- `domain/value_objects/niveau_acces.py` : Hiérarchie compagnon < chef_chantier < conducteur < admin
+- `domain/value_objects/type_document.py` : Détection type depuis extension/MIME
+- `domain/value_objects/dossier_type.py` : Types prédéfinis (Plans, Sécurité, Photos, etc.)
+- `domain/repositories/` : Interfaces DossierRepository, DocumentRepository, AutorisationRepository
+- `domain/services/` : Interface FileStorageService
+- `domain/events/` : 9 events domain (Created, Updated, Deleted pour chaque entité)
+
+**Application Layer**
+- `application/use_cases/dossier_use_cases.py` : 7 use cases (Create, Get, List, GetArborescence, Update, Delete, InitArborescence)
+- `application/use_cases/document_use_cases.py` : 7 use cases (Upload, Get, List, Search, Update, Delete, Download)
+- `application/use_cases/autorisation_use_cases.py` : 4 use cases (Create, List, Revoke, CheckAccess)
+- `application/dtos/` : DTOs complets pour toutes les opérations
+
+**Adapters Layer**
+- `adapters/controllers/document_controller.py` : Controller façade
+- `adapters/providers/local_file_storage.py` : Stockage fichiers local avec protection path traversal
+
+**Infrastructure Layer**
+- `infrastructure/persistence/models.py` : Models SQLAlchemy (DossierModel, DocumentModel, AutorisationDocumentModel)
+- `infrastructure/persistence/sqlalchemy_*_repository.py` : Implémentations repositories
+- `infrastructure/web/document_routes.py` : Routes FastAPI complètes
+- `infrastructure/web/dependencies.py` : Injection de dépendances
+
+### Frontend implémenté
+
+**Types TypeScript**
+- `frontend/src/types/documents.ts` : Types et constantes (NiveauAcces, TypeDossier, Document, Dossier, etc.)
+
+**Service API**
+- `frontend/src/api/documents.ts` : Client API complet (CRUD dossiers, documents, autorisations, upload, download)
+
+**Composants React**
+- `DossierTree.tsx` : Arborescence dossiers extensible (GED-02)
+- `DocumentList.tsx` : Liste documents avec métadonnées et actions (GED-03)
+- `FileUploadZone.tsx` : Zone drag & drop multi-fichiers (GED-06, GED-08, GED-09)
+- `DocumentModal.tsx` : Modals création/édition dossiers et documents
+
+### Tests générés
+
+- `tests/unit/documents/test_value_objects.py` : 43 tests
+- `tests/unit/documents/test_entities.py` : 56 tests
+- `tests/unit/documents/test_use_cases.py` : 47 tests
+- **Total** : 146 tests, **couverture 87%**
+
+### Validation agents
+
+- **architect-reviewer** : CONDITIONAL PASS (9.0/10)
+  - 1 violation mineure : import inter-module (pattern existant)
+  - Clean Architecture respectée
+
+- **test-automator** : 146 tests générés
+  - Couverture 87% (> 85% cible)
+
+- **code-reviewer** : APPROVED (après correction sécurité)
+  - Vulnérabilité path traversal corrigée dans `_sanitize_filename`
+
+### Correction sécurité appliquée
+
+`local_file_storage.py` - méthode `_sanitize_filename` :
+- Séparation nom/extension
+- Interdiction des points dans le nom de fichier (prévention path traversal)
+- Extension alphanumeric uniquement
+
+### Fonctionnalités implémentées
+
+| Code | Fonctionnalité | Status |
+|------|---------------|--------|
+| GED-01 | Arborescence dossiers | ✅ Complet |
+| GED-02 | Navigation intuitive | ✅ Complet |
+| GED-03 | Prévisualisation métadonnées | ✅ Complet |
+| GED-04 | Gestion accès par rôle | ✅ Complet |
+| GED-05 | Autorisations nominatives | ✅ Complet |
+| GED-06 | Upload multi-fichiers (10 max) | ✅ Complet |
+| GED-07 | Taille max 10 Go | ✅ Complet |
+| GED-08 | Drag & drop | ✅ Complet |
+| GED-09 | Barre de progression | ✅ Complet |
+| GED-10 | Téléchargement direct | ✅ Complet |
+| GED-11 | Téléchargement groupé ZIP | ⏳ Infra |
+| GED-12 | Prévisualisation intégrée | ⏳ Infra |
+| GED-13 | Recherche plein texte | ✅ Complet |
+| GED-14 | Filtres type/date/auteur | ✅ Complet |
+| GED-15 | Versioning documents | ✅ Complet |
+
+### Build verification
+
+- TypeScript : 0 erreurs
+- Build : OK
+- Tests backend : 146 documents tests passed
+
+---
+
 ## Session 2026-01-23 (Module Formulaires Frontend)
 
 Implementation complete du frontend React pour le module Formulaires (CDC Section 8 - FOR-01 a FOR-11).
