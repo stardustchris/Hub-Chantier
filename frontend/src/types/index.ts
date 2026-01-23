@@ -53,6 +53,13 @@ export interface UserUpdate {
 // ===== CHANTIERS =====
 export type ChantierStatut = 'ouvert' | 'en_cours' | 'receptionne' | 'ferme'
 
+// Contact sur chantier
+export interface ContactChantier {
+  nom: string
+  profession?: string
+  telephone?: string
+}
+
 export interface Chantier {
   id: string
   code: string
@@ -64,6 +71,7 @@ export interface Chantier {
   longitude?: number
   contact_nom?: string
   contact_telephone?: string
+  contacts?: ContactChantier[]
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string
@@ -82,6 +90,7 @@ export interface ChantierCreate {
   longitude?: number
   contact_nom?: string
   contact_telephone?: string
+  contacts?: ContactChantier[]
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string
@@ -97,6 +106,7 @@ export interface ChantierUpdate {
   longitude?: number
   contact_nom?: string
   contact_telephone?: string
+  contacts?: ContactChantier[]
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string

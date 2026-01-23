@@ -13,10 +13,11 @@ import {
   Loader2,
   X,
   Calendar,
+  Trash2,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import type { Chantier, ChantierStatut, ChantierCreate } from '../types'
+import type { Chantier, ChantierStatut, ChantierCreate, ContactChantier } from '../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../types'
 
 export default function ChantiersListPage() {
@@ -330,8 +331,27 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
     adresse: '',
     couleur: getAvailableColor(),
   })
+  const [contacts, setContacts] = useState<ContactChantier[]>([
+    { nom: '', profession: '', telephone: '' }
+  ])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const addContact = () => {
+    setContacts([...contacts, { nom: '', profession: '', telephone: '' }])
+  }
+
+  const removeContact = (index: number) => {
+    if (contacts.length > 1) {
+      setContacts(contacts.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateContact = (index: number, field: keyof ContactChantier, value: string) => {
+    const updated = [...contacts]
+    updated[index] = { ...updated[index], [field]: value }
+    setContacts(updated)
+  }
 
   // Validation des dates
   const validateDates = (): boolean => {
@@ -355,7 +375,16 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
     setIsSubmitting(true)
     setError(null)
     try {
-      await onSubmit(formData)
+      // Filtrer les contacts vides et ajouter au formData
+      const validContacts = contacts.filter(c => c.nom.trim())
+      const dataToSubmit = {
+        ...formData,
+        contacts: validContacts.length > 0 ? validContacts : undefined,
+        // Pour compatibilité avec l'ancien format
+        contact_nom: validContacts[0]?.nom || undefined,
+        contact_telephone: validContacts[0]?.telephone || undefined,
+      }
+      await onSubmit(dataToSubmit)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Erreur lors de la création du chantier')
     } finally {
@@ -411,30 +440,58 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
 
           {/* Couleur auto-assignée - pas de sélecteur */}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact nom
+          {/* Contacts dynamiques */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Contacts sur place
               </label>
-              <input
-                type="text"
-                value={formData.contact_nom || ''}
-                onChange={(e) => setFormData({ ...formData, contact_nom: e.target.value })}
-                className="input"
-                placeholder="Nom du contact"
-              />
+              <button
+                type="button"
+                onClick={addContact}
+                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact telephone
-              </label>
-              <input
-                type="tel"
-                value={formData.contact_telephone || ''}
-                onChange={(e) => setFormData({ ...formData, contact_telephone: e.target.value })}
-                className="input"
-                placeholder="06 12 34 56 78"
-              />
+            <div className="space-y-3">
+              {contacts.map((contact, index) => (
+                <div key={index} className="flex gap-2 items-start bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-1 grid grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      value={contact.nom}
+                      onChange={(e) => updateContact(index, 'nom', e.target.value)}
+                      className="input"
+                      placeholder="Nom"
+                    />
+                    <input
+                      type="text"
+                      value={contact.profession || ''}
+                      onChange={(e) => updateContact(index, 'profession', e.target.value)}
+                      className="input"
+                      placeholder="Profession"
+                    />
+                    <input
+                      type="tel"
+                      value={contact.telephone || ''}
+                      onChange={(e) => updateContact(index, 'telephone', e.target.value)}
+                      className="input"
+                      placeholder="Telephone"
+                    />
+                  </div>
+                  {contacts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeContact(index)}
+                      className="p-2 text-gray-400 hover:text-red-500"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
