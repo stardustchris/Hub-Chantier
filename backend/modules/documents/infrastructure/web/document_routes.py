@@ -58,6 +58,36 @@ class DocumentUpdateRequest(BaseModel):
     niveau_acces: Optional[str] = None
 
 
+class DownloadZipRequest(BaseModel):
+    """Request pour téléchargement groupé ZIP (GED-16)."""
+
+    document_ids: List[int]
+
+    @classmethod
+    def validate_max_documents(cls, v: List[int]) -> List[int]:
+        """Valide la liste des IDs de documents (max 100)."""
+        if len(v) > 100:
+            raise ValueError("Maximum 100 documents par archive")
+        if len(v) == 0:
+            raise ValueError("Au moins un document requis")
+        return v
+
+
+class PreviewResponse(BaseModel):
+    """Response pour la prévisualisation (GED-17)."""
+
+    id: int
+    nom: str
+    type_document: str
+    mime_type: str
+    taille: int
+    can_preview: bool
+    preview_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class AutorisationCreateRequest(BaseModel):
     """Request pour créer une autorisation."""
 
@@ -372,6 +402,57 @@ def download_document(
         return {"url": url, "filename": filename, "mime_type": mime_type}
     except DocumentNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/documents/download-zip")
+def download_documents_zip(
+    request: DownloadZipRequest,
+    controller: DocumentController = Depends(get_document_controller),
+    current_user: dict = Depends(get_current_user),
+):
+    """Télécharge plusieurs documents en archive ZIP (GED-16)."""
+    try:
+        zip_content = controller.download_documents_zip(request.document_ids)
+        return StreamingResponse(
+            zip_content,
+            media_type="application/zip",
+            headers={"Content-Disposition": "attachment; filename=documents.zip"},
+        )
+    except DocumentNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/documents/{document_id}/preview", response_model=PreviewResponse)
+def get_document_preview(
+    document_id: int,
+    controller: DocumentController = Depends(get_document_controller),
+    current_user: dict = Depends(get_current_user),
+):
+    """Obtient les informations de prévisualisation d'un document (GED-17)."""
+    try:
+        return controller.get_document_preview(document_id)
+    except DocumentNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/documents/{document_id}/preview/content")
+def get_document_preview_content(
+    document_id: int,
+    controller: DocumentController = Depends(get_document_controller),
+    current_user: dict = Depends(get_current_user),
+):
+    """Récupère le contenu d'un document pour prévisualisation (GED-17)."""
+    try:
+        content, mime_type = controller.get_document_preview_content(document_id)
+        return StreamingResponse(
+            iter([content]),
+            media_type=mime_type,
+            headers={"Content-Disposition": "inline"},
+        )
+    except DocumentNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except FileTooLargeError as e:
+        raise HTTPException(status_code=413, detail=str(e))
 
 
 # ============ AUTORISATIONS ============

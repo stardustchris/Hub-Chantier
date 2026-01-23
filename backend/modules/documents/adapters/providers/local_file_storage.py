@@ -1,12 +1,17 @@
 """Implémentation locale du service de stockage de fichiers."""
 
+import io
+import logging
 import os
 import shutil
+import zipfile
 from typing import BinaryIO, Optional
 from pathlib import Path
 import uuid
 
 from ...domain.services import FileStorageService
+
+logger = logging.getLogger(__name__)
 
 
 class LocalFileStorageService(FileStorageService):
@@ -167,3 +172,118 @@ class LocalFileStorageService(FileStorageService):
     def get_full_path(self, chemin_stockage: str) -> Path:
         """Retourne le chemin complet d'un fichier."""
         return self._base_path / chemin_stockage
+
+    def _validate_path(self, chemin_stockage: str) -> Optional[Path]:
+        """
+        Valide et résout un chemin de stockage en s'assurant qu'il reste dans base_path.
+
+        Sécurité: Prévient les attaques path traversal.
+
+        Args:
+            chemin_stockage: Chemin relatif du fichier.
+
+        Returns:
+            Le chemin résolu s'il est valide, None sinon.
+        """
+        try:
+            file_path = (self._base_path / chemin_stockage).resolve()
+            base_resolved = self._base_path.resolve()
+
+            # Vérifier que le chemin résolu est bien dans base_path
+            if not str(file_path).startswith(str(base_resolved)):
+                logger.warning(f"Tentative d'accès path traversal: {chemin_stockage}")
+                return None
+
+            return file_path
+        except Exception as e:
+            logger.error(f"Erreur de validation de chemin: {e}")
+            return None
+
+    def create_zip(
+        self,
+        files: list[tuple[str, str]],
+        archive_name: str,
+    ) -> Optional[BinaryIO]:
+        """
+        Crée une archive ZIP contenant plusieurs fichiers (GED-16).
+
+        Args:
+            files: Liste de tuples (chemin_stockage, nom_dans_archive).
+            archive_name: Nom de l'archive (ignoré, on retourne en mémoire).
+
+        Returns:
+            Le contenu binaire de l'archive ZIP ou None si erreur.
+        """
+        if not files:
+            return None
+
+        zip_buffer = io.BytesIO()
+
+        try:
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for chemin_stockage, nom_archive in files:
+                    file_path = self._validate_path(chemin_stockage)
+                    if file_path and file_path.exists():
+                        zip_file.write(file_path, nom_archive)
+
+            zip_buffer.seek(0)
+            return zip_buffer
+        except Exception as e:
+            logger.error(f"Erreur lors de la création ZIP: {e}")
+            return None
+
+    def get_preview_data(
+        self,
+        chemin_stockage: str,
+        max_size: int = 10 * 1024 * 1024,
+    ) -> Optional[tuple[bytes, str]]:
+        """
+        Récupère les données de prévisualisation d'un fichier (GED-17).
+
+        Args:
+            chemin_stockage: Chemin du fichier.
+            max_size: Taille maximale pour la prévisualisation (défaut: 10MB).
+
+        Returns:
+            Tuple (contenu, mime_type) ou None si fichier trop gros ou non trouvé.
+        """
+        # Valider le chemin (sécurité path traversal)
+        file_path = self._validate_path(chemin_stockage)
+        if not file_path:
+            return None
+
+        if not file_path.exists():
+            return None
+
+        # Vérifier la taille
+        file_size = file_path.stat().st_size
+        if file_size > max_size:
+            return None
+
+        # Détecter le mime type basé sur l'extension
+        extension = file_path.suffix.lower().lstrip(".")
+        mime_types = {
+            "pdf": "application/pdf",
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "gif": "image/gif",
+            "webp": "image/webp",
+            "svg": "image/svg+xml",
+            "mp4": "video/mp4",
+            "webm": "video/webm",
+            "mov": "video/quicktime",
+            "txt": "text/plain",
+            "html": "text/html",
+            "json": "application/json",
+        }
+
+        mime_type = mime_types.get(extension, "application/octet-stream")
+
+        try:
+            with open(file_path, "rb") as f:
+                content = f.read()
+            return content, mime_type
+        except Exception as e:
+            logger.error(f"Erreur lors de la lecture du fichier pour preview: {e}")
+            return None

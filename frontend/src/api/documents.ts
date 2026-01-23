@@ -155,6 +155,64 @@ export const downloadDocument = async (
   return response.data;
 };
 
+/**
+ * Télécharge plusieurs documents en archive ZIP (GED-16)
+ */
+export const downloadDocumentsZip = async (documentIds: number[]): Promise<Blob> => {
+  const response = await api.post(
+    '/documents/documents/download-zip',
+    { document_ids: documentIds },
+    { responseType: 'blob' }
+  );
+  return response.data;
+};
+
+/**
+ * Télécharge et sauvegarde un ZIP de documents
+ */
+export const downloadAndSaveZip = async (
+  documentIds: number[],
+  filename = 'documents.zip'
+): Promise<void> => {
+  const blob = await downloadDocumentsZip(documentIds);
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};
+
+/**
+ * Interface pour les informations de prévisualisation (GED-17)
+ */
+export interface DocumentPreview {
+  id: number;
+  nom: string;
+  type_document: string;
+  mime_type: string;
+  taille: number;
+  can_preview: boolean;
+  preview_url: string | null;
+}
+
+/**
+ * Obtient les informations de prévisualisation d'un document (GED-17)
+ */
+export const getDocumentPreview = async (documentId: number): Promise<DocumentPreview> => {
+  const response = await api.get(`/documents/documents/${documentId}/preview`);
+  return response.data;
+};
+
+/**
+ * Obtient l'URL de prévisualisation directe d'un document
+ */
+export const getDocumentPreviewUrl = (documentId: number): string => {
+  return `${api.defaults.baseURL}/documents/documents/${documentId}/preview/content`;
+};
+
 // ============ AUTORISATIONS ============
 
 export const createAutorisation = async (

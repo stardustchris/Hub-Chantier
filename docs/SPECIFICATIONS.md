@@ -531,8 +531,10 @@ Le module Documents offre une gestion documentaire complete avec arborescence pa
 | GED-13 | Actions Editer/Supprimer | Gestion complete des fichiers | ✅ |
 | GED-14 | Consultation mobile | Visualisation sur application (responsive) | ✅ |
 | GED-15 | Synchronisation Offline | Plans telecharges automatiquement | ⏳ Infra |
+| GED-16 | Telechargement groupe ZIP | Selection multiple + archive ZIP a telecharger | ✅ |
+| GED-17 | Previsualisation integree | Visionneuse PDF/images/videos dans l'application | ✅ |
 
-**Module COMPLET** - Backend + Frontend implementes (13/15 fonctionnalites, 2 en attente infra)
+**Module COMPLET** - Backend + Frontend implementes (15/17 fonctionnalites, 2 en attente infra)
 
 ### 9.3 Niveaux d'acces
 

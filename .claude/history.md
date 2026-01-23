@@ -3,6 +3,66 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (GED-16 et GED-17)
+
+Implémentation des fonctionnalités GED-16 (téléchargement ZIP) et GED-17 (prévisualisation).
+
+### Backend
+
+**Domain Layer**
+- `domain/services/file_storage_service.py` : Nouvelles méthodes `create_zip()` et `get_preview_data()`
+
+**Application Layer**
+- `application/use_cases/document_use_cases.py` : 3 nouveaux use cases
+  - `DownloadMultipleDocumentsUseCase` (GED-16)
+  - `GetDocumentPreviewUseCase` (GED-17)
+  - `GetDocumentPreviewContentUseCase` (GED-17)
+- `application/dtos/document_dtos.py` : Nouveaux DTOs `DownloadZipDTO`, `DocumentPreviewDTO`
+
+**Adapters Layer**
+- `adapters/providers/local_file_storage.py` : Implémentation ZIP et preview avec protection path traversal
+
+**Infrastructure Layer**
+- `infrastructure/web/document_routes.py` : 3 nouvelles routes
+  - `POST /documents/documents/download-zip`
+  - `GET /documents/documents/{id}/preview`
+  - `GET /documents/documents/{id}/preview/content`
+
+### Frontend
+
+**API**
+- `api/documents.ts` : Fonctions `downloadDocumentsZip`, `downloadAndSaveZip`, `getDocumentPreview`, `getDocumentPreviewUrl`
+
+**Composants**
+- `DocumentList.tsx` : Ajout sélection multiple et bouton téléchargement ZIP
+- `DocumentPreviewModal.tsx` : Nouveau composant de prévisualisation (PDF, images, vidéos)
+
+### Tests
+
+- 23 nouveaux tests unitaires
+- Total : 169 tests documents, couverture 96%
+
+### Validation agents
+
+- **architect-reviewer** : PASS (9/10)
+- **test-automator** : 169 tests, 96% couverture
+- **code-reviewer** : APPROVED (après corrections sécurité)
+
+### Corrections sécurité
+
+1. **Path traversal** : Ajout `_validate_path()` dans `LocalFileStorageService`
+2. **Limite documents ZIP** : Max 100 documents par archive
+3. **Logging** : Ajout logging des erreurs au lieu de `except: pass`
+
+### Fonctionnalités
+
+| Code | Fonctionnalité | Status |
+|------|---------------|--------|
+| GED-16 | Téléchargement groupé ZIP | ✅ Complet |
+| GED-17 | Prévisualisation intégrée | ✅ Complet |
+
+---
+
 ## Session 2026-01-23 (Module Documents GED)
 
 Implémentation complète du module Documents / GED (CDC Section 9 - GED-01 à GED-15).

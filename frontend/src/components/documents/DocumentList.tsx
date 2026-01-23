@@ -1,11 +1,13 @@
 /**
  * Composant DocumentList - Liste des documents d'un dossier (GED-03)
+ * Avec sélection multiple et téléchargement ZIP (GED-16)
+ * Et prévisualisation (GED-17)
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import type { Document, TypeDocument } from '../../types/documents';
 import { TYPE_DOCUMENT_LABELS } from '../../types/documents';
-import { getDocumentIcon } from '../../api/documents';
+import { getDocumentIcon, downloadAndSaveZip } from '../../api/documents';
 
 interface DocumentListProps {
   documents: Document[];
@@ -14,7 +16,9 @@ interface DocumentListProps {
   onDocumentDownload?: (document: Document) => void;
   onDocumentEdit?: (document: Document) => void;
   onDocumentDelete?: (document: Document) => void;
+  onDocumentPreview?: (document: Document) => void;
   selectedDocumentId?: number | null;
+  selectionEnabled?: boolean;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
@@ -24,8 +28,52 @@ const DocumentList: React.FC<DocumentListProps> = ({
   onDocumentDownload,
   onDocumentEdit,
   onDocumentDelete,
+  onDocumentPreview,
   selectedDocumentId,
+  selectionEnabled = true,
 }) => {
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+
+  const toggleSelection = useCallback((docId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === documents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(documents.map((d) => d.id)));
+    }
+  }, [documents, selectedIds.size]);
+
+  const handleDownloadZip = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+
+    setIsDownloadingZip(true);
+    try {
+      await downloadAndSaveZip(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    } catch (error) {
+      console.error('Erreur lors du téléchargement ZIP:', error);
+    } finally {
+      setIsDownloadingZip(false);
+    }
+  }, [selectedIds]);
+
+  const canPreview = (doc: Document): boolean => {
+    const previewableTypes = ['pdf', 'image', 'video'];
+    return previewableTypes.includes(doc.type_document) && doc.taille < 10 * 1024 * 1024;
+  };
   const getTypeColor = (type: TypeDocument): string => {
     const colors: Record<TypeDocument, string> = {
       pdf: 'text-red-500',
@@ -69,9 +117,52 @@ const DocumentList: React.FC<DocumentListProps> = ({
 
   return (
     <div className="overflow-x-auto">
+      {/* Barre d'actions pour la sélection (GED-16) */}
+      {selectionEnabled && selectedIds.size > 0 && (
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-blue-700">
+            {selectedIds.size} document{selectedIds.size > 1 ? 's' : ''} sélectionné{selectedIds.size > 1 ? 's' : ''}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownloadZip}
+              disabled={isDownloadingZip}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+            >
+              {isDownloadingZip ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Téléchargement...
+                </>
+              ) : (
+                <>
+                  📦 Télécharger en ZIP
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
+            {selectionEnabled && (
+              <th className="px-4 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={documents.length > 0 && selectedIds.size === documents.length}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+              </th>
+            )}
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Nom
             </th>
@@ -98,9 +189,20 @@ const DocumentList: React.FC<DocumentListProps> = ({
               key={doc.id}
               className={`hover:bg-gray-50 cursor-pointer ${
                 selectedDocumentId === doc.id ? 'bg-blue-50' : ''
-              }`}
+              } ${selectedIds.has(doc.id) ? 'bg-blue-50' : ''}`}
               onClick={() => onDocumentClick?.(doc)}
             >
+              {selectionEnabled && (
+                <td className="px-4 py-3 whitespace-nowrap w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(doc.id)}
+                    onChange={() => {}}
+                    onClick={(e) => toggleSelection(doc.id, e)}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                </td>
+              )}
               <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center">
                   <span className={`text-xl mr-3 ${getTypeColor(doc.type_document)}`}>
@@ -148,6 +250,19 @@ const DocumentList: React.FC<DocumentListProps> = ({
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                 <div className="flex justify-end gap-2">
+                  {/* Prévisualisation (GED-17) */}
+                  {onDocumentPreview && canPreview(doc) && (
+                    <button
+                      className="text-purple-600 hover:text-purple-800"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDocumentPreview(doc);
+                      }}
+                      title="Prévisualiser"
+                    >
+                      👁️
+                    </button>
+                  )}
                   {onDocumentDownload && (
                     <button
                       className="text-blue-600 hover:text-blue-800"

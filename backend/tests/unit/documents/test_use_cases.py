@@ -36,6 +36,9 @@ from modules.documents.application.use_cases.document_use_cases import (
     UpdateDocumentUseCase,
     DeleteDocumentUseCase,
     DownloadDocumentUseCase,
+    DownloadMultipleDocumentsUseCase,
+    GetDocumentPreviewUseCase,
+    GetDocumentPreviewContentUseCase,
     DocumentNotFoundError,
     DossierNotFoundError as DocDossierNotFoundError,
     FileTooLargeError,
@@ -56,6 +59,7 @@ from modules.documents.application.dtos import (
     DocumentUpdateDTO,
     DocumentSearchDTO,
     AutorisationCreateDTO,
+    DownloadZipDTO,
 )
 
 
@@ -1229,3 +1233,546 @@ class TestCheckAccessUseCase:
         result = use_case.can_access_dossier(user_id=1, user_role="admin", dossier_id=999)
 
         assert result is False
+
+
+# ====================
+# GED-16: DOWNLOAD ZIP USE CASE
+# ====================
+
+
+class TestDownloadMultipleDocumentsUseCase:
+    """Tests pour DownloadMultipleDocumentsUseCase (GED-16)."""
+
+    def test_download_multiple_documents_success(self):
+        """Telechargement ZIP de plusieurs documents reussi."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        # Configuration des documents
+        doc1 = Document(
+            id=1, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/rapport.pdf", taille=1024, mime_type="application/pdf", uploaded_by=1,
+        )
+        doc2 = Document(
+            id=2, chantier_id=1, dossier_id=1, nom="plan.dwg", nom_original="plan.dwg",
+            chemin_stockage="/s/plan.dwg", taille=2048, mime_type="application/acad", uploaded_by=1,
+        )
+
+        mock_document_repo.find_by_id.side_effect = lambda doc_id: {1: doc1, 2: doc2}.get(doc_id)
+        mock_file_storage.create_zip.return_value = BytesIO(b"PK ZIP content")
+
+        use_case = DownloadMultipleDocumentsUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        dto = DownloadZipDTO(document_ids=[1, 2])
+        result = use_case.execute(dto)
+
+        assert result is not None
+        mock_file_storage.create_zip.assert_called_once()
+        call_args = mock_file_storage.create_zip.call_args[0]
+        assert len(call_args[0]) == 2  # 2 fichiers dans l'archive
+        assert call_args[1] == "documents.zip"
+
+    def test_download_multiple_documents_no_ids_specified(self):
+        """Erreur si aucun document specifie."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        use_case = DownloadMultipleDocumentsUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        dto = DownloadZipDTO(document_ids=[])
+        with pytest.raises(DocumentNotFoundError, match="Aucun document spécifié"):
+            use_case.execute(dto)
+
+    def test_download_multiple_documents_no_valid_documents(self):
+        """Erreur si aucun document valide trouve."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        # Aucun document n'existe
+        mock_document_repo.find_by_id.return_value = None
+
+        use_case = DownloadMultipleDocumentsUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        dto = DownloadZipDTO(document_ids=[999, 888])
+        with pytest.raises(DocumentNotFoundError, match="Aucun document valide trouvé"):
+            use_case.execute(dto)
+
+    def test_download_multiple_documents_duplicate_names(self):
+        """Gestion des doublons de noms dans l'archive."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        # Deux documents avec le meme nom
+        doc1 = Document(
+            id=1, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/1/rapport.pdf", taille=1024, mime_type="application/pdf", uploaded_by=1,
+        )
+        doc2 = Document(
+            id=2, chantier_id=1, dossier_id=2, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/2/rapport.pdf", taille=2048, mime_type="application/pdf", uploaded_by=1,
+        )
+
+        mock_document_repo.find_by_id.side_effect = lambda doc_id: {1: doc1, 2: doc2}.get(doc_id)
+        mock_file_storage.create_zip.return_value = BytesIO(b"PK ZIP content")
+
+        use_case = DownloadMultipleDocumentsUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        dto = DownloadZipDTO(document_ids=[1, 2])
+        result = use_case.execute(dto)
+
+        assert result is not None
+        call_args = mock_file_storage.create_zip.call_args[0]
+        files = call_args[0]
+        noms = [f[1] for f in files]
+        # Les noms doivent etre differents
+        assert len(set(noms)) == 2
+        assert "rapport.pdf" in noms
+        assert "rapport_1.pdf" in noms
+
+    def test_download_multiple_documents_partial_valid(self):
+        """Telechargement avec certains documents valides seulement."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        doc1 = Document(
+            id=1, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/rapport.pdf", taille=1024, mime_type="application/pdf", uploaded_by=1,
+        )
+
+        # Doc1 existe, Doc2 n'existe pas
+        mock_document_repo.find_by_id.side_effect = lambda doc_id: doc1 if doc_id == 1 else None
+        mock_file_storage.create_zip.return_value = BytesIO(b"PK ZIP content")
+
+        use_case = DownloadMultipleDocumentsUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        dto = DownloadZipDTO(document_ids=[1, 999])
+        result = use_case.execute(dto)
+
+        assert result is not None
+        call_args = mock_file_storage.create_zip.call_args[0]
+        assert len(call_args[0]) == 1  # Seulement 1 fichier valide
+
+    def test_download_multiple_documents_zip_creation_error(self):
+        """Erreur lors de la creation de l'archive."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        doc1 = Document(
+            id=1, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/rapport.pdf", taille=1024, mime_type="application/pdf", uploaded_by=1,
+        )
+        mock_document_repo.find_by_id.return_value = doc1
+        mock_file_storage.create_zip.return_value = None  # Erreur de creation
+
+        use_case = DownloadMultipleDocumentsUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        dto = DownloadZipDTO(document_ids=[1])
+        with pytest.raises(DocumentNotFoundError, match="Erreur lors de la création de l'archive"):
+            use_case.execute(dto)
+
+
+# ====================
+# GED-17: PREVIEW USE CASES
+# ====================
+
+
+class TestGetDocumentPreviewUseCase:
+    """Tests pour GetDocumentPreviewUseCase (GED-17)."""
+
+    def test_preview_pdf_document_success(self):
+        """Previsualisation document PDF reussie."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=1, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/rapport.pdf", taille=1024 * 1024,  # 1 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(1)
+
+        assert result.id == 1
+        assert result.nom == "rapport.pdf"
+        assert result.can_preview is True
+        assert result.preview_url == "/api/documents/1/preview/content"
+        assert result.type_document == "pdf"
+
+    def test_preview_image_document_success(self):
+        """Previsualisation document image reussie."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=2, chantier_id=1, dossier_id=1, nom="photo.jpg", nom_original="photo.jpg",
+            chemin_stockage="/s/photo.jpg", taille=500 * 1024,  # 500 KB
+            mime_type="image/jpeg", uploaded_by=1, type_document=TypeDocument.IMAGE,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(2)
+
+        assert result.id == 2
+        assert result.nom == "photo.jpg"
+        assert result.can_preview is True
+        assert result.preview_url == "/api/documents/2/preview/content"
+        assert result.type_document == "image"
+
+    def test_preview_document_too_large(self):
+        """Document trop gros pour la previsualisation (>10MB)."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=3, chantier_id=1, dossier_id=1, nom="gros_fichier.pdf", nom_original="gros_fichier.pdf",
+            chemin_stockage="/s/gros_fichier.pdf", taille=15 * 1024 * 1024,  # 15 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(3)
+
+        assert result.id == 3
+        assert result.can_preview is False
+        assert result.preview_url is None
+
+    def test_preview_non_previewable_type(self):
+        """Type de document non previsualisable."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=4, chantier_id=1, dossier_id=1, nom="plan.dwg", nom_original="plan.dwg",
+            chemin_stockage="/s/plan.dwg", taille=1024 * 1024,  # 1 MB
+            mime_type="application/acad", uploaded_by=1, type_document=TypeDocument.AUTRE,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(4)
+
+        assert result.id == 4
+        assert result.can_preview is False
+        assert result.preview_url is None
+
+    def test_preview_document_not_found(self):
+        """Erreur si document non trouve."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+        mock_document_repo.find_by_id.return_value = None
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        with pytest.raises(DocumentNotFoundError):
+            use_case.execute(999)
+
+    def test_preview_video_document_success(self):
+        """Previsualisation document video reussie."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=5, chantier_id=1, dossier_id=1, nom="video.mp4", nom_original="video.mp4",
+            chemin_stockage="/s/video.mp4", taille=5 * 1024 * 1024,  # 5 MB
+            mime_type="video/mp4", uploaded_by=1, type_document=TypeDocument.VIDEO,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(5)
+
+        assert result.id == 5
+        assert result.can_preview is True
+        assert result.preview_url == "/api/documents/5/preview/content"
+
+    def test_preview_excel_document_not_previewable(self):
+        """Type de document Excel non previsualisable."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=6, chantier_id=1, dossier_id=1, nom="budget.xlsx", nom_original="budget.xlsx",
+            chemin_stockage="/s/budget.xlsx", taille=1024,  # 1 KB
+            mime_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            uploaded_by=1, type_document=TypeDocument.EXCEL,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(6)
+
+        assert result.id == 6
+        # Excel n'est pas dans PREVIEWABLE_TYPES
+        assert result.can_preview is False
+        assert result.preview_url is None
+
+    def test_preview_exactly_10mb(self):
+        """Document de exactement 10MB - a la limite."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=7, chantier_id=1, dossier_id=1, nom="limite.pdf", nom_original="limite.pdf",
+            chemin_stockage="/s/limite.pdf", taille=10 * 1024 * 1024,  # Exactement 10 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(7)
+
+        # A la limite exacte, le document PEUT etre previsualize (comparaison > stricte)
+        assert result.can_preview is True
+        assert result.preview_url == "/api/documents/7/preview/content"
+
+    def test_preview_over_10mb(self):
+        """Document juste au-dessus de 10MB - depasse la limite."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=8, chantier_id=1, dossier_id=1, nom="trop_gros.pdf", nom_original="trop_gros.pdf",
+            chemin_stockage="/s/trop_gros.pdf", taille=(10 * 1024 * 1024) + 1,  # 10 MB + 1 byte
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        result = use_case.execute(8)
+
+        # Juste au-dessus de la limite, le document ne peut PAS etre previsualize
+        assert result.can_preview is False
+        assert result.preview_url is None
+
+
+class TestGetDocumentPreviewContentUseCase:
+    """Tests pour GetDocumentPreviewContentUseCase (GED-17)."""
+
+    def test_get_preview_content_success(self):
+        """Recuperation du contenu de previsualisation reussie."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=1, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/rapport.pdf", taille=1024 * 1024,  # 1 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+        mock_file_storage.get_preview_data.return_value = (b"PDF content", "application/pdf")
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        content, mime_type = use_case.execute(1)
+
+        assert content == b"PDF content"
+        assert mime_type == "application/pdf"
+        mock_file_storage.get_preview_data.assert_called_once_with(
+            "/s/rapport.pdf", 10 * 1024 * 1024
+        )
+
+    def test_get_preview_content_document_too_large(self):
+        """Erreur si document trop gros pour previsualisation."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=2, chantier_id=1, dossier_id=1, nom="gros.pdf", nom_original="gros.pdf",
+            chemin_stockage="/s/gros.pdf", taille=15 * 1024 * 1024,  # 15 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        with pytest.raises(FileTooLargeError, match="trop volumineux pour la prévisualisation"):
+            use_case.execute(2)
+
+    def test_get_preview_content_document_not_found(self):
+        """Erreur si document non trouve."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+        mock_document_repo.find_by_id.return_value = None
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        with pytest.raises(DocumentNotFoundError):
+            use_case.execute(999)
+
+    def test_get_preview_content_file_read_error(self):
+        """Erreur si lecture du fichier echoue."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=3, chantier_id=1, dossier_id=1, nom="rapport.pdf", nom_original="rapport.pdf",
+            chemin_stockage="/s/rapport.pdf", taille=1024 * 1024,  # 1 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+        mock_file_storage.get_preview_data.return_value = None  # Erreur de lecture
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        with pytest.raises(DocumentNotFoundError, match="Impossible de lire le contenu"):
+            use_case.execute(3)
+
+    def test_get_preview_content_image(self):
+        """Recuperation du contenu d'une image."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=4, chantier_id=1, dossier_id=1, nom="photo.jpg", nom_original="photo.jpg",
+            chemin_stockage="/s/photo.jpg", taille=500 * 1024,  # 500 KB
+            mime_type="image/jpeg", uploaded_by=1, type_document=TypeDocument.IMAGE,
+        )
+        mock_document_repo.find_by_id.return_value = document
+        mock_file_storage.get_preview_data.return_value = (b"\xff\xd8\xff JPEG data", "image/jpeg")
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        content, mime_type = use_case.execute(4)
+
+        assert content == b"\xff\xd8\xff JPEG data"
+        assert mime_type == "image/jpeg"
+
+    def test_get_preview_content_exactly_at_limit(self):
+        """Document a la limite exacte de 10MB - est accepte."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=5, chantier_id=1, dossier_id=1, nom="limite.pdf", nom_original="limite.pdf",
+            chemin_stockage="/s/limite.pdf", taille=10 * 1024 * 1024,  # Exactement 10 MB
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+        mock_file_storage.get_preview_data.return_value = (b"PDF content", "application/pdf")
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        # A la limite exacte, le document PEUT etre recupere (comparaison > stricte)
+        content, mime_type = use_case.execute(5)
+
+        assert content == b"PDF content"
+        assert mime_type == "application/pdf"
+
+    def test_get_preview_content_over_limit(self):
+        """Document juste au-dessus de 10MB - refuse."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=7, chantier_id=1, dossier_id=1, nom="trop_gros.pdf", nom_original="trop_gros.pdf",
+            chemin_stockage="/s/trop_gros.pdf", taille=(10 * 1024 * 1024) + 1,  # 10 MB + 1 byte
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        # Juste au-dessus de la limite, erreur
+        with pytest.raises(FileTooLargeError):
+            use_case.execute(7)
+
+    def test_get_preview_content_just_under_limit(self):
+        """Document juste en dessous de la limite."""
+        mock_document_repo = Mock()
+        mock_file_storage = Mock()
+
+        document = Document(
+            id=6, chantier_id=1, dossier_id=1, nom="ok.pdf", nom_original="ok.pdf",
+            chemin_stockage="/s/ok.pdf", taille=(10 * 1024 * 1024) - 1,  # 10 MB - 1 byte
+            mime_type="application/pdf", uploaded_by=1, type_document=TypeDocument.PDF,
+        )
+        mock_document_repo.find_by_id.return_value = document
+        mock_file_storage.get_preview_data.return_value = (b"PDF content", "application/pdf")
+
+        use_case = GetDocumentPreviewContentUseCase(
+            document_repository=mock_document_repo,
+            file_storage=mock_file_storage,
+        )
+
+        content, mime_type = use_case.execute(6)
+
+        assert content == b"PDF content"
+        assert mime_type == "application/pdf"
