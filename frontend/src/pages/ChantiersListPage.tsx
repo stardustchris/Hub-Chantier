@@ -409,27 +409,7 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Couleur
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {USER_COLORS.map((color) => (
-                <button
-                  key={color.code}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, couleur: color.code })}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    formData.couleur === color.code
-                      ? 'border-gray-900 scale-110'
-                      : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color.code }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          </div>
+          {/* Couleur auto-assignée - pas de sélecteur */}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
