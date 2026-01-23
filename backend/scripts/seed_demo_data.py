@@ -22,7 +22,7 @@ from typing import List
 # Ajouter le chemin du backend pour les imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import SessionLocal, init_db
@@ -32,13 +32,12 @@ from modules.planning.infrastructure.persistence.affectation_model import Affect
 from modules.pointages.infrastructure.persistence.models import PointageModel, FeuilleHeuresModel
 from modules.taches.infrastructure.persistence import TacheModel
 
-# Configuration du hashage de mot de passe
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
-    """Hash un mot de passe."""
-    return pwd_context.hash(password)
+    """Hash un mot de passe avec bcrypt (meme methode que le module auth)."""
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
 
 
 # =============================================================================
