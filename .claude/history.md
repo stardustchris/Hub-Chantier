@@ -3,6 +3,103 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Frontend Feuilles d'heures)
+
+Implementation complete du frontend React pour le module Feuilles d'heures (CDC Section 7).
+
+### Fichiers crees
+
+**Service API**
+- `frontend/src/services/pointages.ts` : Service complet pour toutes les operations
+  - CRUD pointages (create, list, getById, update, delete)
+  - Workflow validation (sign, submit, validate, reject)
+  - Feuilles d'heures (listFeuilles, getFeuilleById, getFeuilleUtilisateurSemaine)
+  - Vues hebdomadaires (getVueChantiers, getVueCompagnons)
+  - Navigation semaine (getNavigation)
+  - Variables de paie (createVariablePaie)
+  - Statistiques (getJaugeAvancement)
+  - Export (export, getFeuilleRoute)
+  - Integration planning (bulkCreateFromPlanning)
+
+**Composants React**
+- `frontend/src/components/pointages/TimesheetWeekNavigation.tsx` : Navigation semaine avec export
+- `frontend/src/components/pointages/TimesheetGrid.tsx` : Grille vue par compagnons
+  - Utilisateurs en sections avec totaux
+  - Chantiers en lignes avec code couleur
+  - Jours en colonnes (lundi-vendredi, optionnel weekend)
+  - Affichage heures normales + supplementaires
+  - Badges statut (brouillon, soumis, valide, rejete)
+  - Ajout pointages via clic cellule
+- `frontend/src/components/pointages/TimesheetChantierGrid.tsx` : Grille vue par chantiers
+  - Chantiers en lignes
+  - Pointages multiples par cellule (plusieurs utilisateurs)
+- `frontend/src/components/pointages/PointageModal.tsx` : Modal creation/edition
+  - Formulaire heures normales + supplementaires (input time)
+  - Selection chantier
+  - Commentaire optionnel
+  - Signature electronique (FDH-12)
+  - Actions workflow (soumettre, valider, rejeter)
+  - Support validateur avec motif de rejet
+- `frontend/src/components/pointages/index.ts` : Exports module
+
+**Page principale**
+- `frontend/src/pages/FeuillesHeuresPage.tsx` : Page complete
+  - 2 onglets vue : Compagnons / Chantiers (FDH-01)
+  - Navigation semaine (FDH-02)
+  - Filtres utilisateurs et chantiers (FDH-04)
+  - Toggle weekend
+  - Export XLSX (FDH-03)
+  - Gestion permissions (canEdit, isValidateur)
+
+**Types TypeScript**
+Ajout dans `frontend/src/types/index.ts` :
+- `StatutPointage`, `TypeVariablePaie`
+- `Pointage`, `PointageCreate`, `PointageUpdate`, `PointageJour`
+- `FeuilleHeures`, `VariablePaieSemaine`, `VariablePaieCreate`
+- `VueChantier`, `VueCompagnon`, `VueCompagnonChantier`
+- `NavigationSemaine`, `JaugeAvancement`
+- `ExportFeuilleHeuresRequest`, `PointageFilters`, `FeuilleHeuresFilters`
+- Constantes : `STATUTS_POINTAGE`, `TYPES_VARIABLES_PAIE`, `JOURS_SEMAINE_LABELS`
+
+### Integration
+
+**Routes**
+- `frontend/src/App.tsx` : Ajout route `/feuilles-heures` protegee
+
+**Navigation**
+- `frontend/src/components/Layout.tsx` : Ajout lien "Feuilles d'heures" avec icone Clock
+
+### Fonctionnalites implementees (cote Frontend)
+
+| Code | Fonctionnalite | Status |
+|------|---------------|--------|
+| FDH-01 | 2 onglets (Chantiers/Compagnons) | OK |
+| FDH-02 | Navigation semaine | OK |
+| FDH-03 | Export XLSX | OK |
+| FDH-04 | Filtres utilisateurs/chantiers | OK |
+| FDH-05 | Vue tabulaire hebdomadaire | OK |
+| FDH-06 | Multi-chantiers par utilisateur | OK |
+| FDH-07 | Badges colores par chantier | OK |
+| FDH-08 | Total par ligne | OK |
+| FDH-09 | Total groupe | OK |
+| FDH-12 | Signature electronique | OK |
+
+### Fonctionnalites en attente
+
+| Code | Fonctionnalite | Raison |
+|------|---------------|--------|
+| FDH-11 | Saisie mobile roulette HH:MM | Necessite composant mobile specifique |
+| FDH-18 | Macros de paie | Interface configuration avancee |
+| FDH-20 | Mode Offline | PWA / Service Worker |
+
+### Validation
+
+- TypeScript : 0 erreurs
+- Build : OK (485 kB JS gzip: 133 kB)
+- Tests backend : 591 passed
+
+---
+
 ## Session 2026-01-23 (Completude tests unitaires Use Cases - Phase 2)
 
 Finalisation de la couverture 100% des use cases avec ajout des derniers tests manquants.

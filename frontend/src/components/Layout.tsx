@@ -6,6 +6,7 @@ import {
   Building2,
   Users,
   Calendar,
+  Clock,
   FileText,
   Settings,
   LogOut,
@@ -26,6 +27,7 @@ const navigation = [
   { name: 'Chantiers', href: '/chantiers', icon: Building2 },
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
   { name: 'Planning', href: '/planning', icon: Calendar },
+  { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
   { name: 'Documents', href: '/documents', icon: FileText, disabled: true },
 ]
 
