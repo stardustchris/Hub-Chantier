@@ -710,7 +710,7 @@ Le module Taches permet de creer des listes de travaux structurees par chantier 
 |----|----------------|-------------|--------|
 | TAC-01 | Onglet Taches par chantier | Accessible depuis la fiche chantier | ✅ |
 | TAC-02 | Structure hierarchique | Taches parentes + sous-taches imbriquees | ✅ |
-| TAC-03 | Chevrons repliables | ▼ / > pour afficher/masquer | ⏳ Frontend |
+| TAC-03 | Chevrons repliables | ▼ / > pour afficher/masquer | ✅ |
 | TAC-04 | Bibliotheque de modeles | Templates reutilisables avec sous-taches | ✅ |
 | TAC-05 | Creation depuis modele | Importer un modele dans un chantier | ✅ |
 | TAC-06 | Creation manuelle | Tache personnalisee libre | ✅ |
@@ -723,13 +723,13 @@ Le module Taches permet de creer des listes de travaux structurees par chantier 
 | TAC-13 | Statuts tache | A faire ☐ / Termine ✅ | ✅ |
 | TAC-14 | Barre de recherche | Filtrer par mot-cle | ✅ |
 | TAC-15 | Reorganiser les taches | Drag & drop pour reordonner | ✅ |
-| TAC-16 | Export rapport PDF | Recapitulatif des taches | ⏳ Future |
-| TAC-17 | Vue mobile | Consultation et mise a jour | ⏳ Frontend |
+| TAC-16 | Export rapport PDF | Recapitulatif des taches | ✅ |
+| TAC-17 | Vue mobile | Consultation et mise a jour (responsive) | ✅ |
 | TAC-18 | Feuilles de taches | Declaration quotidienne travail realise | ✅ |
 | TAC-19 | Validation conducteur | Valide le travail declare | ✅ |
 | TAC-20 | Code couleur avancement | Vert/Jaune/Rouge selon progression | ✅ |
 
-**Legende**: ✅ Backend complet | ⏳ Frontend/Future = En attente implementation frontend
+**Module COMPLET** - Backend + Frontend implementes (20/20 fonctionnalites)
 
 ### 13.3 Modeles de taches - Gros Oeuvre
 
