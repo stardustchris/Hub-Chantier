@@ -247,7 +247,12 @@ def list_taches_by_chantier(
     chantier_id: int,
     page: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=100),
-    query: Optional[str] = Query(None, max_length=100, description="Recherche (TAC-14)"),
+    query: Optional[str] = Query(
+        None,
+        max_length=100,
+        pattern=r"^[a-zA-Z0-9\s\-àâäéèêëïîôöùûüçœæÀÂÄÉÈÊËÏÎÔÖÙÛÜÇŒÆ.,!?'\"()]*$",
+        description="Recherche (TAC-14)"
+    ),
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
     include_sous_taches: bool = Query(True, description="Inclure sous-taches (TAC-02)"),
     controller: TacheController = Depends(get_tache_controller),
@@ -277,6 +282,43 @@ def get_taches_stats(
 ):
     """Obtient les statistiques des taches d'un chantier (TAC-20)."""
     return controller.get_tache_stats(chantier_id)
+
+
+@router.get("/chantier/{chantier_id}/export-pdf")
+def export_taches_pdf(
+    chantier_id: int,
+    include_completed: bool = Query(True, description="Inclure les taches terminees"),
+    controller: TacheController = Depends(get_tache_controller),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Exporte les taches d'un chantier en PDF (TAC-16).
+
+    Returns:
+        Fichier PDF ou HTML selon disponibilite de weasyprint.
+    """
+    from fastapi.responses import Response
+
+    try:
+        pdf_bytes, chantier_nom = controller.export_pdf(chantier_id, include_completed)
+
+        # Detecter si c'est du vrai PDF ou du HTML fallback
+        is_pdf = pdf_bytes[:4] == b'%PDF'
+        content_type = 'application/pdf' if is_pdf else 'text/html; charset=utf-8'
+        filename = f"taches-{chantier_nom}.pdf" if is_pdf else f"taches-{chantier_nom}.html"
+
+        return Response(
+            content=pdf_bytes,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de l'export: {str(e)}"
+        )
 
 
 @router.get("/{tache_id}", response_model=TacheResponse)

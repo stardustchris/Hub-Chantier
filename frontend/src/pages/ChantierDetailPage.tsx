@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
+import { TaskList } from '../components/taches'
 import {
   ArrowLeft,
   MapPin,
@@ -22,12 +23,17 @@ import {
   X,
   Navigation,
   ExternalLink,
+  ListTodo,
+  Info,
+  Users,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Chantier, ChantierUpdate, User } from '../types'
 import { CHANTIER_STATUTS, ROLES, USER_COLORS } from '../types'
 import type { UserRole } from '../types'
+
+type TabType = 'infos' | 'taches' | 'equipe'
 
 export default function ChantierDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -39,6 +45,7 @@ export default function ChantierDetailPage() {
   const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
+  const [activeTab, setActiveTab] = useState<TabType>('infos')
 
   const isAdmin = currentUser?.role === 'administrateur'
   const isConducteur = currentUser?.role === 'conducteur'
@@ -278,187 +285,230 @@ export default function ChantierDetailPage() {
           )}
         </div>
 
-        {/* Content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
-            {chantier.description && (
-              <div className="card">
-                <h2 className="font-semibold text-gray-900 mb-3">Description</h2>
-                <p className="text-gray-600 whitespace-pre-wrap">{chantier.description}</p>
-              </div>
-            )}
-
-            {/* Team */}
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-gray-900">Equipe</h2>
-              </div>
-
-              {/* Conducteurs */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Conducteurs de travaux</h3>
-                  {canEdit && (
-                    <button
-                      onClick={() => {
-                        loadAvailableUsers('conducteur')
-                        setShowAddUserModal('conducteur')
-                      }}
-                      className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Ajouter
-                    </button>
-                  )}
-                </div>
-                {chantier.conducteurs.length === 0 ? (
-                  <p className="text-sm text-gray-500">Aucun conducteur assigne</p>
-                ) : (
-                  <div className="space-y-2">
-                    {chantier.conducteurs.map((user) => (
-                      <UserRow
-                        key={user.id}
-                        user={user}
-                        canRemove={canEdit}
-                        onRemove={() => handleRemoveUser(user.id, 'conducteur')}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Chefs */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Chefs de chantier</h3>
-                  {canEdit && (
-                    <button
-                      onClick={() => {
-                        loadAvailableUsers('chef')
-                        setShowAddUserModal('chef')
-                      }}
-                      className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Ajouter
-                    </button>
-                  )}
-                </div>
-                {chantier.chefs.length === 0 ? (
-                  <p className="text-sm text-gray-500">Aucun chef assigne</p>
-                ) : (
-                  <div className="space-y-2">
-                    {chantier.chefs.map((user) => (
-                      <UserRow
-                        key={user.id}
-                        user={user}
-                        canRemove={canEdit}
-                        onRemove={() => handleRemoveUser(user.id, 'chef')}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Info */}
-            <div className="card">
-              <h2 className="font-semibold text-gray-900 mb-4">Informations</h2>
-              <div className="space-y-3">
-                {chantier.heures_estimees && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Clock className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-gray-500">Heures estimees</p>
-                      <p className="font-medium">{chantier.heures_estimees}h</p>
-                    </div>
-                  </div>
-                )}
-                {chantier.date_debut_prevue && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-gray-500">Date de debut</p>
-                      <p className="font-medium">
-                        {format(new Date(chantier.date_debut_prevue), 'dd MMMM yyyy', { locale: fr })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {chantier.date_fin_prevue && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-gray-500">Date de fin prevue</p>
-                      <p className="font-medium">
-                        {format(new Date(chantier.date_fin_prevue), 'dd MMMM yyyy', { locale: fr })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Contact */}
-            {(chantier.contact_nom || chantier.contact_telephone) && (
-              <div className="card">
-                <h2 className="font-semibold text-gray-900 mb-4">Contact sur place</h2>
-                {chantier.contact_nom && (
-                  <p className="font-medium text-gray-900">{chantier.contact_nom}</p>
-                )}
-                {chantier.contact_telephone && (
-                  <a
-                    href={`tel:${chantier.contact_telephone}`}
-                    className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mt-2"
-                  >
-                    <Phone className="w-4 h-4" />
-                    {chantier.contact_telephone}
-                  </a>
-                )}
-              </div>
-            )}
-
-            {/* Map / Navigation (CHT-08, CHT-09) */}
-            {chantier.latitude && chantier.longitude && (
-              <div className="card">
-                <h2 className="font-semibold text-gray-900 mb-4">Localisation</h2>
-                {/* Mini carte interactive (CHT-09) */}
-                <MiniMap
-                  latitude={chantier.latitude}
-                  longitude={chantier.longitude}
-                  height="h-40"
-                  locationName={chantier.nom}
-                />
-                {/* Boutons navigation GPS (CHT-08) */}
-                <div className="flex gap-2 mt-3">
-                  <a
-                    href={chantiersService.getGoogleMapsUrl(chantier.latitude, chantier.longitude)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 btn btn-primary flex items-center justify-center gap-2 text-sm"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    Google Maps
-                  </a>
-                  <a
-                    href={chantiersService.getWazeUrl(chantier.latitude, chantier.longitude)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 btn btn-outline flex items-center justify-center gap-2 text-sm"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Waze
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Onglets (TAC-01) */}
+        <div className="flex border-b mb-6 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('infos')}
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+              activeTab === 'infos'
+                ? 'border-primary-600 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Info className="w-4 h-4" />
+            Informations
+          </button>
+          <button
+            onClick={() => setActiveTab('taches')}
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+              activeTab === 'taches'
+                ? 'border-primary-600 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <ListTodo className="w-4 h-4" />
+            Taches
+          </button>
+          <button
+            onClick={() => setActiveTab('equipe')}
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+              activeTab === 'equipe'
+                ? 'border-primary-600 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Equipe
+          </button>
         </div>
+
+        {/* Contenu selon l'onglet actif */}
+        {activeTab === 'taches' ? (
+          /* Onglet Taches (TAC-01 à TAC-20) */
+          <TaskList chantierId={parseInt(id!)} chantierNom={chantier.nom} />
+        ) : activeTab === 'equipe' ? (
+          /* Onglet Equipe */
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-gray-900">Equipe</h2>
+            </div>
+
+            {/* Conducteurs */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-700">Conducteurs de travaux</h3>
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      loadAvailableUsers('conducteur')
+                      setShowAddUserModal('conducteur')
+                    }}
+                    className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter
+                  </button>
+                )}
+              </div>
+              {chantier.conducteurs.length === 0 ? (
+                <p className="text-sm text-gray-500">Aucun conducteur assigne</p>
+              ) : (
+                <div className="space-y-2">
+                  {chantier.conducteurs.map((user) => (
+                    <UserRow
+                      key={user.id}
+                      user={user}
+                      canRemove={canEdit}
+                      onRemove={() => handleRemoveUser(user.id, 'conducteur')}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Chefs */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-700">Chefs de chantier</h3>
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      loadAvailableUsers('chef')
+                      setShowAddUserModal('chef')
+                    }}
+                    className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter
+                  </button>
+                )}
+              </div>
+              {chantier.chefs.length === 0 ? (
+                <p className="text-sm text-gray-500">Aucun chef assigne</p>
+              ) : (
+                <div className="space-y-2">
+                  {chantier.chefs.map((user) => (
+                    <UserRow
+                      key={user.id}
+                      user={user}
+                      canRemove={canEdit}
+                      onRemove={() => handleRemoveUser(user.id, 'chef')}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Onglet Informations */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Colonne principale */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Description */}
+              {chantier.description && (
+                <div className="card">
+                  <h2 className="font-semibold text-gray-900 mb-3">Description</h2>
+                  <p className="text-gray-600 whitespace-pre-wrap">{chantier.description}</p>
+                </div>
+              )}
+
+              {/* Dates et heures */}
+              <div className="card">
+                <h2 className="font-semibold text-gray-900 mb-4">Planning</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {chantier.heures_estimees && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Clock className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-gray-500">Heures estimees</p>
+                        <p className="font-medium">{chantier.heures_estimees}h</p>
+                      </div>
+                    </div>
+                  )}
+                  {chantier.date_debut_prevue && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Calendar className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-gray-500">Date de debut</p>
+                        <p className="font-medium">
+                          {format(new Date(chantier.date_debut_prevue), 'dd MMMM yyyy', { locale: fr })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {chantier.date_fin_prevue && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Calendar className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-gray-500">Date de fin prevue</p>
+                        <p className="font-medium">
+                          {format(new Date(chantier.date_fin_prevue), 'dd MMMM yyyy', { locale: fr })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Contact */}
+              {(chantier.contact_nom || chantier.contact_telephone) && (
+                <div className="card">
+                  <h2 className="font-semibold text-gray-900 mb-4">Contact sur place</h2>
+                  {chantier.contact_nom && (
+                    <p className="font-medium text-gray-900">{chantier.contact_nom}</p>
+                  )}
+                  {chantier.contact_telephone && (
+                    <a
+                      href={`tel:${chantier.contact_telephone}`}
+                      className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mt-2"
+                    >
+                      <Phone className="w-4 h-4" />
+                      {chantier.contact_telephone}
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Map / Navigation (CHT-08, CHT-09) */}
+              {chantier.latitude && chantier.longitude && (
+                <div className="card">
+                  <h2 className="font-semibold text-gray-900 mb-4">Localisation</h2>
+                  {/* Mini carte interactive (CHT-09) */}
+                  <MiniMap
+                    latitude={chantier.latitude}
+                    longitude={chantier.longitude}
+                    height="h-40"
+                    locationName={chantier.nom}
+                  />
+                  {/* Boutons navigation GPS (CHT-08) */}
+                  <div className="flex gap-2 mt-3">
+                    <a
+                      href={chantiersService.getGoogleMapsUrl(chantier.latitude, chantier.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 btn btn-primary flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Navigation className="w-4 h-4" />
+                      Google Maps
+                    </a>
+                    <a
+                      href={chantiersService.getWazeUrl(chantier.latitude, chantier.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 btn btn-outline flex items-center justify-center gap-2 text-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Waze
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Edit Modal */}
         {showEditModal && (

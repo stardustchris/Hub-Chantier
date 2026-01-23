@@ -24,6 +24,7 @@ from ...application import (
     ValidateFeuilleTacheUseCase,
     ListFeuillesTachesUseCase,
     GetTacheStatsUseCase,
+    ExportTachesPDFUseCase,
     # DTOs
     CreateTacheDTO,
     UpdateTacheDTO,
@@ -359,3 +360,37 @@ class TacheController:
         use_case = ListFeuillesTachesUseCase(feuille_repo=self.feuille_repo)
         result = use_case.execute_en_attente(chantier_id, page, size)
         return asdict(result)
+
+    # ==========================================================================
+    # Export PDF
+    # ==========================================================================
+
+    def export_pdf(
+        self,
+        chantier_id: int,
+        include_completed: bool = True,
+    ) -> tuple:
+        """
+        Exporte les taches d'un chantier en PDF (TAC-16).
+
+        Args:
+            chantier_id: ID du chantier.
+            include_completed: Inclure les taches terminees.
+
+        Returns:
+            Tuple (pdf_bytes, chantier_nom).
+        """
+        # Recuperer le nom du chantier depuis une tache
+        taches = self.tache_repo.find_by_chantier(chantier_id, limit=1)
+        chantier_nom = f"chantier-{chantier_id}"
+        if taches:
+            # On utilise l'ID du chantier comme nom par defaut
+            chantier_nom = f"chantier-{chantier_id}"
+
+        use_case = ExportTachesPDFUseCase(tache_repo=self.tache_repo)
+        pdf_bytes = use_case.execute(
+            chantier_id=chantier_id,
+            chantier_nom=chantier_nom,
+            include_completed=include_completed,
+        )
+        return pdf_bytes, chantier_nom

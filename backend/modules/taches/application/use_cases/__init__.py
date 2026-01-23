@@ -22,6 +22,9 @@ from .list_feuilles_taches import ListFeuillesTachesUseCase
 # Stats
 from .get_tache_stats import GetTacheStatsUseCase
 
+# Export PDF
+from .export_pdf import ExportTachesPDFUseCase
+
 __all__ = [
     # Tache Use Cases
     "CreateTacheUseCase",
@@ -41,6 +44,8 @@ __all__ = [
     "ListFeuillesTachesUseCase",
     # Stats
     "GetTacheStatsUseCase",
+    # Export PDF
+    "ExportTachesPDFUseCase",
     # Errors
     "TacheNotFoundError",
     "TacheAlreadyExistsError",

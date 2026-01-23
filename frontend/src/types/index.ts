@@ -285,3 +285,164 @@ export const JOURS_SEMAINE: Record<JourSemaine, { label: string; short: string }
   5: { label: 'Samedi', short: 'Sam' },
   6: { label: 'Dimanche', short: 'Dim' },
 }
+
+// ===== TACHES (TAC-01 à TAC-20) =====
+export type StatutTache = 'a_faire' | 'termine'
+export type UniteMesure = 'm2' | 'm3' | 'ml' | 'kg' | 'litre' | 'unite' | 'forfait'
+export type CouleurProgression = 'gris' | 'vert' | 'jaune' | 'rouge'
+export type StatutValidation = 'en_attente' | 'validee' | 'rejetee'
+
+export interface Tache {
+  id: number
+  chantier_id: number
+  titre: string
+  description?: string
+  parent_id?: number
+  ordre: number
+  statut: StatutTache
+  statut_display: string
+  statut_icon: string
+  date_echeance?: string
+  unite_mesure?: UniteMesure
+  unite_mesure_display?: string
+  quantite_estimee?: number
+  quantite_realisee: number
+  heures_estimees?: number
+  heures_realisees: number
+  progression_heures: number
+  progression_quantite: number
+  couleur_progression: CouleurProgression
+  couleur_hex: string
+  est_terminee: boolean
+  est_en_retard: boolean
+  a_sous_taches: boolean
+  nombre_sous_taches: number
+  nombre_sous_taches_terminees: number
+  template_id?: number
+  created_at: string
+  updated_at: string
+  sous_taches: Tache[]
+}
+
+export interface TacheCreate {
+  chantier_id: number
+  titre: string
+  description?: string
+  parent_id?: number
+  date_echeance?: string
+  unite_mesure?: UniteMesure
+  quantite_estimee?: number
+  heures_estimees?: number
+}
+
+export interface TacheUpdate {
+  titre?: string
+  description?: string
+  date_echeance?: string
+  unite_mesure?: UniteMesure
+  quantite_estimee?: number
+  heures_estimees?: number
+  statut?: StatutTache
+  ordre?: number
+}
+
+export interface TacheStats {
+  chantier_id: number
+  total_taches: number
+  taches_terminees: number
+  taches_en_cours: number
+  taches_en_retard: number
+  heures_estimees_total: number
+  heures_realisees_total: number
+  progression_globale: number
+}
+
+// Templates de taches (TAC-04)
+export interface SousTacheModele {
+  titre: string
+  description?: string
+  ordre: number
+  unite_mesure?: UniteMesure
+  heures_estimees_defaut?: number
+}
+
+export interface TemplateModele {
+  id: number
+  nom: string
+  description?: string
+  categorie?: string
+  unite_mesure?: UniteMesure
+  unite_mesure_display?: string
+  heures_estimees_defaut?: number
+  nombre_sous_taches: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  sous_taches: SousTacheModele[]
+}
+
+export interface TemplateCreate {
+  nom: string
+  description?: string
+  categorie?: string
+  unite_mesure?: UniteMesure
+  heures_estimees_defaut?: number
+  sous_taches?: SousTacheModele[]
+}
+
+// Feuilles de taches (TAC-18)
+export interface FeuilleTache {
+  id: number
+  tache_id: number
+  utilisateur_id: number
+  chantier_id: number
+  date_travail: string
+  heures_travaillees: number
+  quantite_realisee: number
+  commentaire?: string
+  statut_validation: StatutValidation
+  statut_display: string
+  est_validee: boolean
+  est_en_attente: boolean
+  est_rejetee: boolean
+  validateur_id?: number
+  date_validation?: string
+  motif_rejet?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface FeuilleTacheCreate {
+  tache_id: number
+  utilisateur_id: number
+  chantier_id: number
+  date_travail: string
+  heures_travaillees: number
+  quantite_realisee?: number
+  commentaire?: string
+}
+
+// Constantes des unites de mesure (TAC-09)
+export const UNITES_MESURE: Record<UniteMesure, { label: string; symbol: string }> = {
+  m2: { label: 'Metres carres', symbol: 'm²' },
+  m3: { label: 'Metres cubes', symbol: 'm³' },
+  ml: { label: 'Metres lineaires', symbol: 'ml' },
+  kg: { label: 'Kilogrammes', symbol: 'kg' },
+  litre: { label: 'Litres', symbol: 'L' },
+  unite: { label: 'Unites', symbol: 'u' },
+  forfait: { label: 'Forfait', symbol: 'fft' },
+}
+
+// Couleurs de progression (TAC-20)
+export const COULEURS_PROGRESSION: Record<CouleurProgression, { label: string; color: string; bgColor: string }> = {
+  gris: { label: 'Non commence', color: '#9E9E9E', bgColor: '#F5F5F5' },
+  vert: { label: 'Dans les temps', color: '#4CAF50', bgColor: '#E8F5E9' },
+  jaune: { label: 'Attention', color: '#FFC107', bgColor: '#FFF8E1' },
+  rouge: { label: 'Depassement', color: '#F44336', bgColor: '#FFEBEE' },
+}
+
+// Statuts de tache (TAC-13)
+export const STATUTS_TACHE: Record<StatutTache, { label: string; icon: string; color: string }> = {
+  a_faire: { label: 'A faire', icon: '☐', color: '#9E9E9E' },
+  termine: { label: 'Termine', icon: '✅', color: '#4CAF50' },
+}

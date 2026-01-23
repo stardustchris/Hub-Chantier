@@ -65,7 +65,13 @@ class CreateTacheUseCase:
         # Convertir la date si fournie
         date_echeance = None
         if dto.date_echeance:
-            date_echeance = date.fromisoformat(dto.date_echeance)
+            try:
+                date_echeance = date.fromisoformat(dto.date_echeance)
+            except ValueError:
+                raise ValueError(
+                    f"Format de date invalide: {dto.date_echeance}. "
+                    "Utilisez le format YYYY-MM-DD."
+                )
 
         # Creer l'entite Tache
         tache = Tache(
