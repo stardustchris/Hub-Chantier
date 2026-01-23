@@ -679,3 +679,160 @@ export const JOURS_SEMAINE_LABELS: Record<string, string> = {
 
 // Tableau ordonne des jours de la semaine (pour iteration)
 export const JOURS_SEMAINE_ARRAY = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
+
+// ===== FORMULAIRES (FOR-01 à FOR-11) =====
+export type TypeChamp = 'text' | 'textarea' | 'number' | 'email' | 'date' | 'time' | 'select' | 'checkbox' | 'radio' | 'photo' | 'signature'
+export type CategorieFormulaire = 'interventions' | 'reception' | 'securite' | 'incidents' | 'approvisionnement' | 'administratif' | 'gros_oeuvre' | 'autre'
+export type StatutFormulaire = 'brouillon' | 'soumis' | 'valide'
+
+// Structure d'un champ de template (FOR-01)
+export interface ChampTemplate {
+  id?: number
+  nom: string
+  label: string
+  type_champ: TypeChamp
+  obligatoire: boolean
+  ordre: number
+  placeholder?: string
+  options?: string[]
+  valeur_defaut?: string
+  validation_regex?: string
+  min_value?: number
+  max_value?: number
+}
+
+// Template de formulaire (FOR-01)
+export interface TemplateFormulaire {
+  id: number
+  nom: string
+  categorie: CategorieFormulaire
+  description?: string
+  champs: ChampTemplate[]
+  is_active: boolean
+  version: number
+  nombre_champs: number
+  a_signature: boolean
+  a_photo: boolean
+  created_by?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface TemplateFormulaireCreate {
+  nom: string
+  categorie: CategorieFormulaire
+  description?: string
+  champs?: ChampTemplate[]
+}
+
+export interface TemplateFormulaireUpdate {
+  nom?: string
+  categorie?: CategorieFormulaire
+  description?: string
+  champs?: ChampTemplate[]
+  is_active?: boolean
+}
+
+// Photo horodatee (FOR-04)
+export interface PhotoFormulaire {
+  id?: number
+  url: string
+  nom_fichier: string
+  champ_nom: string
+  timestamp?: string
+  latitude?: number
+  longitude?: number
+}
+
+// Champ rempli dans un formulaire
+export interface ChampRempli {
+  nom: string
+  type_champ: TypeChamp
+  valeur?: string | number | boolean | string[]
+  timestamp?: string
+}
+
+// Formulaire rempli (FOR-02 à FOR-11)
+export interface FormulaireRempli {
+  id: number
+  template_id: number
+  template_nom?: string
+  template_categorie?: CategorieFormulaire
+  chantier_id: number
+  chantier_nom?: string
+  user_id: number
+  user_nom?: string
+  statut: StatutFormulaire
+  champs: ChampRempli[]
+  photos: PhotoFormulaire[]
+  est_signe: boolean
+  signature_url?: string
+  signature_nom?: string
+  signature_timestamp?: string
+  est_geolocalise: boolean
+  localisation_latitude?: number
+  localisation_longitude?: number
+  soumis_at?: string
+  valide_by?: number
+  valide_at?: string
+  version: number
+  parent_id?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface FormulaireCreate {
+  template_id: number
+  chantier_id: number
+  latitude?: number
+  longitude?: number
+}
+
+export interface FormulaireUpdate {
+  champs?: { nom: string; valeur: string | number | boolean | string[]; type_champ: TypeChamp }[]
+  latitude?: number
+  longitude?: number
+}
+
+// Historique des versions (FOR-08)
+export interface FormulaireHistorique {
+  id: number
+  version: number
+  statut: StatutFormulaire
+  modified_at: string
+  modified_by?: number
+}
+
+// Constantes pour les types de champs
+export const TYPES_CHAMPS: Record<TypeChamp, { label: string; icon: string }> = {
+  text: { label: 'Texte court', icon: 'Type' },
+  textarea: { label: 'Texte long', icon: 'FileText' },
+  number: { label: 'Nombre', icon: 'Hash' },
+  email: { label: 'Email', icon: 'Mail' },
+  date: { label: 'Date', icon: 'Calendar' },
+  time: { label: 'Heure', icon: 'Clock' },
+  select: { label: 'Liste deroulante', icon: 'List' },
+  checkbox: { label: 'Case a cocher', icon: 'CheckSquare' },
+  radio: { label: 'Choix unique', icon: 'Circle' },
+  photo: { label: 'Photo', icon: 'Camera' },
+  signature: { label: 'Signature', icon: 'PenTool' },
+}
+
+// Categories de formulaires (Section 8.3 du CDC)
+export const CATEGORIES_FORMULAIRES: Record<CategorieFormulaire, { label: string; color: string; description: string }> = {
+  interventions: { label: 'Interventions', color: '#3498DB', description: 'Rapport d\'intervention, Bon de SAV, Fiche depannage' },
+  reception: { label: 'Reception', color: '#27AE60', description: 'PV de reception, Constat de reserves, Attestation fin travaux' },
+  securite: { label: 'Securite', color: '#E74C3C', description: 'Formulaire securite, Visite PPSPS, Auto-controle' },
+  incidents: { label: 'Incidents', color: '#E67E22', description: 'Declaration sinistre, Fiche non-conformite, Rapport accident' },
+  approvisionnement: { label: 'Approvisionnement', color: '#9B59B6', description: 'Commande materiel, Bon de livraison, Reception materiaux' },
+  administratif: { label: 'Administratif', color: '#607D8B', description: 'Demande de conges, CERFA, Attestation diverse' },
+  gros_oeuvre: { label: 'Gros Oeuvre', color: '#795548', description: 'Rapport journalier, Bon de betonnage, Controle ferraillage' },
+  autre: { label: 'Autre', color: '#95A5A6', description: 'Formulaires divers' },
+}
+
+// Statuts de formulaire
+export const STATUTS_FORMULAIRE: Record<StatutFormulaire, { label: string; color: string; bgColor: string }> = {
+  brouillon: { label: 'Brouillon', color: '#9E9E9E', bgColor: '#F5F5F5' },
+  soumis: { label: 'Soumis', color: '#FFC107', bgColor: '#FFF8E1' },
+  valide: { label: 'Valide', color: '#4CAF50', bgColor: '#E8F5E9' },
+}

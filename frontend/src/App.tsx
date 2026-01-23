@@ -8,6 +8,7 @@ import UsersListPage from './pages/UsersListPage'
 import UserDetailPage from './pages/UserDetailPage'
 import PlanningPage from './pages/PlanningPage'
 import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
+import FormulairesPage from './pages/FormulairesPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -72,6 +73,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <FeuillesHeuresPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/formulaires"
+            element={
+              <ProtectedRoute>
+                <FormulairesPage />
               </ProtectedRoute>
             }
           />
