@@ -10,7 +10,6 @@ import type { Chantier } from '../types'
 import type { DossierTree as DossierTreeType, Document, Arborescence } from '../types/documents'
 import {
   FolderOpen,
-  Upload,
   Search,
   Loader2,
   FileText,
@@ -174,10 +173,22 @@ export default function DocumentsPage() {
     }
   }
 
-  const handleDossierSaved = async () => {
-    setShowDossierModal(false)
-    if (selectedChantier) {
-      await loadArborescence(selectedChantier.id)
+  const handleDossierSaved = async (data: Parameters<typeof documentsApi.createDossier>[0] | Parameters<typeof documentsApi.updateDossier>[1]) => {
+    try {
+      if (editingDossier) {
+        await documentsApi.updateDossier(editingDossier.id, data as Parameters<typeof documentsApi.updateDossier>[1])
+        addToast({ message: 'Dossier modifie', type: 'success' })
+      } else {
+        await documentsApi.createDossier(data as Parameters<typeof documentsApi.createDossier>[0])
+        addToast({ message: 'Dossier cree', type: 'success' })
+      }
+      setShowDossierModal(false)
+      if (selectedChantier) {
+        await loadArborescence(selectedChantier.id)
+      }
+    } catch (error) {
+      console.error('Error saving dossier:', error)
+      addToast({ message: 'Erreur lors de l\'enregistrement', type: 'error' })
     }
   }
 
@@ -393,7 +404,7 @@ export default function DocumentsPage() {
                 <div className="mb-4">
                   <FileUploadZone
                     onFilesSelected={handleUploadFiles}
-                    isUploading={isUploading}
+                    uploading={isUploading}
                   />
                 </div>
               )}
@@ -413,9 +424,9 @@ export default function DocumentsPage() {
               ) : (
                 <DocumentList
                   documents={documents}
-                  onPreview={(doc) => setPreviewDocument(doc)}
-                  onDownload={handleDownloadDocument}
-                  onDelete={canManage ? handleDeleteDocument : undefined}
+                  onDocumentPreview={(doc) => setPreviewDocument(doc)}
+                  onDocumentDownload={handleDownloadDocument}
+                  onDocumentDelete={canManage ? handleDeleteDocument : undefined}
                 />
               )}
             </div>
@@ -425,18 +436,21 @@ export default function DocumentsPage() {
         {/* Modals */}
         {showDossierModal && selectedChantier && (
           <DossierModal
+            isOpen={showDossierModal}
             chantierId={parseInt(selectedChantier.id)}
             parentId={parentDossierId}
             dossier={editingDossier}
             onClose={() => setShowDossierModal(false)}
-            onSaved={handleDossierSaved}
+            onSubmit={handleDossierSaved}
           />
         )}
 
         {previewDocument && (
           <DocumentPreviewModal
             document={previewDocument}
+            isOpen={!!previewDocument}
             onClose={() => setPreviewDocument(null)}
+            onDownload={handleDownloadDocument}
           />
         )}
       </div>

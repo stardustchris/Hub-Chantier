@@ -189,8 +189,6 @@ export default function ChantierDetailPage() {
     }
     setChantier(updatedChantier)
 
-    const roleLabel = type === 'conducteur' ? 'conducteur' : 'chef de chantier'
-
     // Show undo toast
     showUndoToast(
       `${removedUser.prenom} ${removedUser.nom} retire`,
