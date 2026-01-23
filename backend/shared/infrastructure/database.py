@@ -54,6 +54,8 @@ def init_db() -> None:
 
     À appeler au démarrage de l'application.
     """
+    from sqlalchemy import text
+
     from modules.auth.infrastructure.persistence import Base as AuthBase
     from modules.dashboard.infrastructure.persistence import Base as DashboardBase
     from modules.chantiers.infrastructure.persistence import Base as ChantiersBase
@@ -65,3 +67,29 @@ def init_db() -> None:
     ChantiersBase.metadata.create_all(bind=engine)
     PointagesBase.metadata.create_all(bind=engine)
     TachesBase.metadata.create_all(bind=engine)
+
+    # Creer la table affectations manuellement (module Planning)
+    # car elle a des ForeignKey vers d'autres modules (users, chantiers)
+    create_affectations = """
+    CREATE TABLE IF NOT EXISTS affectations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        utilisateur_id INTEGER NOT NULL,
+        chantier_id INTEGER NOT NULL,
+        created_by INTEGER NOT NULL,
+        date DATE NOT NULL,
+        type_affectation VARCHAR(20) NOT NULL DEFAULT 'unique',
+        heure_debut VARCHAR(5),
+        heure_fin VARCHAR(5),
+        note TEXT,
+        jours_recurrence TEXT,
+        date_fin DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """
+    with engine.connect() as conn:
+        conn.execute(text(create_affectations))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_affectations_utilisateur_id ON affectations(utilisateur_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_affectations_chantier_id ON affectations(chantier_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_affectations_date ON affectations(date)"))
+        conn.commit()

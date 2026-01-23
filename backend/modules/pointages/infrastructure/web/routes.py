@@ -167,6 +167,189 @@ def list_pointages(
     )
 
 
+# ===== Routes spécifiques (AVANT les routes paramétrées) =====
+
+
+@router.get("/feuilles")
+def list_feuilles_heures(
+    utilisateur_id: Optional[int] = None,
+    annee: Optional[int] = None,
+    numero_semaine: Optional[int] = None,
+    statut: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+    controller: PointageController = Depends(get_controller),
+):
+    """Liste les feuilles d'heures avec filtres."""
+    return controller.list_feuilles_heures(
+        utilisateur_id=utilisateur_id,
+        annee=annee,
+        numero_semaine=numero_semaine,
+        statut=statut,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get("/navigation")
+def get_navigation_semaine(
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Retourne les infos de navigation par semaine (FDH-02)."""
+    return controller.get_navigation_semaine(semaine_debut)
+
+
+@router.get("/vues/chantiers")
+def get_vue_chantiers(
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    chantier_ids: Optional[str] = Query(None, description="IDs chantiers séparés par virgule"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Vue par chantiers pour une semaine (FDH-01 onglet Chantiers)."""
+    chantier_ids_list = None
+    if chantier_ids:
+        chantier_ids_list = [int(x) for x in chantier_ids.split(",")]
+    return controller.get_vue_chantiers(semaine_debut, chantier_ids_list)
+
+
+@router.get("/vues/compagnons")
+def get_vue_compagnons(
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    utilisateur_ids: Optional[str] = Query(None, description="IDs utilisateurs séparés par virgule"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Vue par compagnons pour une semaine (FDH-01 onglet Compagnons)."""
+    utilisateur_ids_list = None
+    if utilisateur_ids:
+        utilisateur_ids_list = [int(x) for x in utilisateur_ids.split(",")]
+    return controller.get_vue_compagnons(semaine_debut, utilisateur_ids_list)
+
+
+@router.post("/variables-paie", status_code=201)
+def create_variable_paie(
+    request: CreateVariablePaieRequest,
+    controller: PointageController = Depends(get_controller),
+):
+    """Crée une variable de paie (FDH-13)."""
+    try:
+        return controller.create_variable_paie(
+            pointage_id=request.pointage_id,
+            type_variable=request.type_variable,
+            valeur=request.valeur,
+            date_application=request.date_application,
+            commentaire=request.commentaire,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/export")
+def export_feuilles_heures(
+    request: ExportRequest,
+    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Exporte les feuilles d'heures (FDH-03, FDH-17)."""
+    result = controller.export_feuilles_heures(
+        format_export=request.format_export,
+        date_debut=request.date_debut,
+        date_fin=request.date_fin,
+        utilisateur_ids=request.utilisateur_ids,
+        chantier_ids=request.chantier_ids,
+        inclure_variables_paie=request.inclure_variables_paie,
+        inclure_signatures=request.inclure_signatures,
+        exported_by=current_user_id,
+    )
+
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error_message"])
+
+    # Retourne le fichier si content disponible
+    if result.get("file_content"):
+        media_type = "text/csv" if request.format_export == "csv" else "application/octet-stream"
+        return Response(
+            content=result["file_content"],
+            media_type=media_type,
+            headers={"Content-Disposition": f"attachment; filename={result['filename']}"},
+        )
+
+    return result
+
+
+@router.get("/feuilles/{feuille_id}")
+def get_feuille_heures(
+    feuille_id: int,
+    controller: PointageController = Depends(get_controller),
+):
+    """Récupère une feuille d'heures par son ID."""
+    result = controller.get_feuille_heures(feuille_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Feuille d'heures non trouvée")
+    return result
+
+
+@router.get("/feuilles/utilisateur/{utilisateur_id}/semaine")
+def get_feuille_heures_semaine(
+    utilisateur_id: int,
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Récupère la feuille d'heures d'un utilisateur pour une semaine (FDH-05)."""
+    return controller.get_feuille_heures_semaine(utilisateur_id, semaine_debut)
+
+
+@router.get("/feuille-route/{utilisateur_id}")
+def get_feuille_route(
+    utilisateur_id: int,
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Génère une feuille de route (FDH-19)."""
+    return controller.generate_feuille_route(utilisateur_id, semaine_debut)
+
+
+@router.get("/stats/jauge-avancement/{utilisateur_id}")
+def get_jauge_avancement(
+    utilisateur_id: int,
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    heures_planifiees: Optional[float] = Query(None, description="Heures planifiées (défaut 35h)"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Jauge d'avancement planifié vs réalisé (FDH-14)."""
+    return controller.get_jauge_avancement(utilisateur_id, semaine_debut, heures_planifiees)
+
+
+@router.get("/stats/comparaison-equipes")
+def compare_equipes(
+    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Comparaison inter-équipes (FDH-15)."""
+    return controller.compare_equipes(semaine_debut)
+
+
+@router.post("/bulk-from-planning", status_code=201)
+def bulk_create_from_planning(
+    request: BulkCreateRequest,
+    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    controller: PointageController = Depends(get_controller),
+):
+    """Crée des pointages en masse depuis le planning (FDH-10)."""
+    try:
+        return controller.bulk_create_from_planning(
+            utilisateur_id=request.utilisateur_id,
+            semaine_debut=request.semaine_debut,
+            affectations=request.affectations,
+            created_by=current_user_id,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ===== Routes paramétrées (APRES les routes spécifiques) =====
+
+
 @router.get("/{pointage_id}")
 def get_pointage(
     pointage_id: int,
@@ -263,200 +446,5 @@ def reject_pointage(
     """Rejette un pointage soumis."""
     try:
         return controller.reject_pointage(pointage_id, validateur_id, request.motif)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-# ===== Routes Feuilles d'heures =====
-
-
-@router.get("/feuilles")
-def list_feuilles_heures(
-    utilisateur_id: Optional[int] = None,
-    annee: Optional[int] = None,
-    numero_semaine: Optional[int] = None,
-    statut: Optional[str] = None,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=50),
-    controller: PointageController = Depends(get_controller),
-):
-    """Liste les feuilles d'heures avec filtres."""
-    return controller.list_feuilles_heures(
-        utilisateur_id=utilisateur_id,
-        annee=annee,
-        numero_semaine=numero_semaine,
-        statut=statut,
-        page=page,
-        page_size=page_size,
-    )
-
-
-@router.get("/feuilles/{feuille_id}")
-def get_feuille_heures(
-    feuille_id: int,
-    controller: PointageController = Depends(get_controller),
-):
-    """Récupère une feuille d'heures par son ID."""
-    result = controller.get_feuille_heures(feuille_id)
-    if not result:
-        raise HTTPException(status_code=404, detail="Feuille d'heures non trouvée")
-    return result
-
-
-@router.get("/feuilles/utilisateur/{utilisateur_id}/semaine")
-def get_feuille_heures_semaine(
-    utilisateur_id: int,
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Récupère la feuille d'heures d'un utilisateur pour une semaine (FDH-05)."""
-    return controller.get_feuille_heures_semaine(utilisateur_id, semaine_debut)
-
-
-@router.get("/navigation")
-def get_navigation_semaine(
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Retourne les infos de navigation par semaine (FDH-02)."""
-    return controller.get_navigation_semaine(semaine_debut)
-
-
-# ===== Routes Vues (FDH-01) =====
-
-
-@router.get("/vues/chantiers")
-def get_vue_chantiers(
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    chantier_ids: Optional[str] = Query(None, description="IDs chantiers séparés par virgule"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Vue par chantiers pour une semaine (FDH-01 onglet Chantiers)."""
-    chantier_ids_list = None
-    if chantier_ids:
-        chantier_ids_list = [int(x) for x in chantier_ids.split(",")]
-    return controller.get_vue_chantiers(semaine_debut, chantier_ids_list)
-
-
-@router.get("/vues/compagnons")
-def get_vue_compagnons(
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    utilisateur_ids: Optional[str] = Query(None, description="IDs utilisateurs séparés par virgule"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Vue par compagnons pour une semaine (FDH-01 onglet Compagnons)."""
-    utilisateur_ids_list = None
-    if utilisateur_ids:
-        utilisateur_ids_list = [int(x) for x in utilisateur_ids.split(",")]
-    return controller.get_vue_compagnons(semaine_debut, utilisateur_ids_list)
-
-
-# ===== Routes Variables de paie (FDH-13) =====
-
-
-@router.post("/variables-paie", status_code=201)
-def create_variable_paie(
-    request: CreateVariablePaieRequest,
-    controller: PointageController = Depends(get_controller),
-):
-    """Crée une variable de paie (FDH-13)."""
-    try:
-        return controller.create_variable_paie(
-            pointage_id=request.pointage_id,
-            type_variable=request.type_variable,
-            valeur=request.valeur,
-            date_application=request.date_application,
-            commentaire=request.commentaire,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-# ===== Routes Export (FDH-03, FDH-17, FDH-19) =====
-
-
-@router.post("/export")
-def export_feuilles_heures(
-    request: ExportRequest,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Exporte les feuilles d'heures (FDH-03, FDH-17)."""
-    result = controller.export_feuilles_heures(
-        format_export=request.format_export,
-        date_debut=request.date_debut,
-        date_fin=request.date_fin,
-        utilisateur_ids=request.utilisateur_ids,
-        chantier_ids=request.chantier_ids,
-        inclure_variables_paie=request.inclure_variables_paie,
-        inclure_signatures=request.inclure_signatures,
-        exported_by=current_user_id,
-    )
-
-    if not result["success"]:
-        raise HTTPException(status_code=400, detail=result["error_message"])
-
-    # Retourne le fichier si content disponible
-    if result.get("file_content"):
-        media_type = "text/csv" if request.format_export == "csv" else "application/octet-stream"
-        return Response(
-            content=result["file_content"],
-            media_type=media_type,
-            headers={"Content-Disposition": f"attachment; filename={result['filename']}"},
-        )
-
-    return result
-
-
-@router.get("/feuille-route/{utilisateur_id}")
-def get_feuille_route(
-    utilisateur_id: int,
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Génère une feuille de route (FDH-19)."""
-    return controller.generate_feuille_route(utilisateur_id, semaine_debut)
-
-
-# ===== Routes Statistiques (FDH-14, FDH-15) =====
-
-
-@router.get("/stats/jauge-avancement/{utilisateur_id}")
-def get_jauge_avancement(
-    utilisateur_id: int,
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    heures_planifiees: Optional[float] = Query(None, description="Heures planifiées (défaut 35h)"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Jauge d'avancement planifié vs réalisé (FDH-14)."""
-    return controller.get_jauge_avancement(utilisateur_id, semaine_debut, heures_planifiees)
-
-
-@router.get("/stats/comparaison-equipes")
-def compare_equipes(
-    semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Comparaison inter-équipes (FDH-15)."""
-    return controller.compare_equipes(semaine_debut)
-
-
-# ===== Routes Planning Integration (FDH-10) =====
-
-
-@router.post("/bulk-from-planning", status_code=201)
-def bulk_create_from_planning(
-    request: BulkCreateRequest,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
-    controller: PointageController = Depends(get_controller),
-):
-    """Crée des pointages en masse depuis le planning (FDH-10)."""
-    try:
-        return controller.bulk_create_from_planning(
-            utilisateur_id=request.utilisateur_id,
-            semaine_debut=request.semaine_debut,
-            affectations=request.affectations,
-            created_by=current_user_id,
-        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
