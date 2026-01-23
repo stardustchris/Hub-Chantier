@@ -42,7 +42,7 @@ cd ../frontend && npm install && npm run build
 - [ ] architect-reviewer : PASS
 - [ ] test-automator : tests generes
 - [ ] code-reviewer : APPROVED
-- [ ] Couverture >= 85% sur code modifie
+- [ ] Couverture >= 90% sur code modifie
 - [ ] SPECIFICATIONS.md mis a jour
 - [ ] .claude/history.md mis a jour
 
