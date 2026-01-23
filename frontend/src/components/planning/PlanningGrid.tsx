@@ -132,13 +132,13 @@ export default function PlanningGrid({
   }
 
   // PLN-05/PLN-06: Dynamic grid columns based on view mode and weekend visibility
-  const gridCols = useMemo(() => {
+  const gridStyle = useMemo(() => {
     const numDays = days.length
     if (viewMode === 'mois') {
       // Pour le mois, colonne fixe pour utilisateurs + colonnes dynamiques pour les jours
-      return `grid-cols-[200px_repeat(${numDays},minmax(40px,1fr))]`
+      return { gridTemplateColumns: `200px repeat(${numDays}, minmax(40px, 1fr))` }
     }
-    return showWeekend ? 'grid-cols-[250px_repeat(7,1fr)]' : 'grid-cols-[250px_repeat(5,1fr)]'
+    return { gridTemplateColumns: showWeekend ? '250px repeat(7, 1fr)' : '250px repeat(5, 1fr)' }
   }, [days.length, viewMode, showWeekend])
 
   // Mode mois = affichage compact
@@ -147,7 +147,7 @@ export default function PlanningGrid({
   return (
     <div className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''}`}>
       {/* Header - Jours */}
-      <div className={`grid ${gridCols} border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`}>
+      <div className={`grid border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`} style={gridStyle}>
         <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
           Utilisateurs
         </div>
@@ -179,7 +179,7 @@ export default function PlanningGrid({
               {/* Header du groupe (métier) */}
               <button
                 onClick={() => onToggleMetier(metier)}
-                className={`w-full grid ${gridCols} bg-gray-50 hover:bg-gray-100 transition-colors`}
+                className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors" style={gridStyle}
               >
                 <div className="px-4 py-2 flex items-center gap-2 border-r">
                   {isExpanded ? (
@@ -205,7 +205,7 @@ export default function PlanningGrid({
               {isExpanded && users.map(user => (
                 <div
                   key={user.id}
-                  className={`group grid ${gridCols} hover:bg-gray-50 transition-colors`}
+                  className="group grid hover:bg-gray-50 transition-colors" style={gridStyle}
                 >
                   {/* Colonne utilisateur */}
                   <div className="px-4 py-3 flex items-center gap-3 border-r">
