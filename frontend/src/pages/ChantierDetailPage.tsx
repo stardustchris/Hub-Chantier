@@ -640,6 +640,7 @@ function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalPro
     nom: chantier.nom,
     adresse: chantier.adresse,
     couleur: chantier.couleur,
+    statut: chantier.statut,
     contact_nom: chantier.contact_nom,
     contact_telephone: chantier.contact_telephone,
     heures_estimees: chantier.heures_estimees,
@@ -715,6 +716,23 @@ function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalPro
                 />
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Statut
+            </label>
+            <select
+              value={formData.statut || chantier.statut}
+              onChange={(e) => setFormData({ ...formData, statut: e.target.value as any })}
+              className="input"
+            >
+              {Object.entries(CHANTIER_STATUTS).map(([key, info]) => (
+                <option key={key} value={key}>
+                  {info.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

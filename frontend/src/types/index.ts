@@ -92,6 +92,7 @@ export interface ChantierUpdate {
   nom?: string
   adresse?: string
   couleur?: string
+  statut?: ChantierStatut
   latitude?: number
   longitude?: number
   contact_nom?: string

@@ -215,6 +215,7 @@ export default function ChantiersListPage() {
           <CreateChantierModal
             onClose={() => setShowCreateModal(false)}
             onSubmit={handleCreateChantier}
+            usedColors={chantiers.map(c => c.couleur).filter(Boolean) as string[]}
           />
         )}
       </div>
@@ -314,13 +315,20 @@ function ChantierCard({ chantier }: ChantierCardProps) {
 interface CreateChantierModalProps {
   onClose: () => void
   onSubmit: (data: ChantierCreate) => void
+  usedColors: string[]
 }
 
-function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
+function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierModalProps) {
+  // Trouver la première couleur non utilisée
+  const getAvailableColor = () => {
+    const availableColor = USER_COLORS.find(c => !usedColors.includes(c.code))
+    return availableColor?.code || USER_COLORS[0].code
+  }
+
   const [formData, setFormData] = useState<ChantierCreate>({
     nom: '',
     adresse: '',
-    couleur: USER_COLORS[0].code,
+    couleur: getAvailableColor(),
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
