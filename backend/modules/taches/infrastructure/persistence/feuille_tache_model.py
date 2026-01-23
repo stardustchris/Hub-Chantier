@@ -4,7 +4,7 @@ from datetime import datetime, date
 
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Date
 
-from shared.infrastructure.database import Base
+from .tache_model import Base
 from ...domain.entities.feuille_tache import StatutValidation
 
 
