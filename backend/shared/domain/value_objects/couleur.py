@@ -61,14 +61,7 @@ class Couleur:
         except ValueError:
             raise ValueError(f"Code hexadécimal invalide: {self.value}")
 
-        # Vérifier que la couleur fait partie de la palette
-        if normalized not in [c.upper() for c in self.PALETTE.values()]:
-            valid_colors = list(self.PALETTE.keys())
-            raise ValueError(
-                f"Couleur non autorisée: {self.value}. "
-                f"Couleurs valides: {valid_colors}"
-            )
-
+        # Accepter tout code hex valide (palette non restrictive pour compatibilité)
         object.__setattr__(self, "value", normalized)
 
     def __str__(self) -> str:
