@@ -3,6 +3,36 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Regles critiques environnement)
+
+- Ajout de regles critiques dans CLAUDE.md suite a oubli d'installation des dependances
+- Correction de 6 tests unitaires avec calculs de dates incorrects (Jan 20, 2026 = Mardi, pas Lundi)
+- Fix Pydantic 2.12 : conflit nom de champ `date` avec type `date`
+
+### Nouvelles regles ajoutees
+
+1. **Verification environnement obligatoire en debut de session**
+   - `pip install -r requirements.txt`
+   - `pytest tests/unit` - tous les tests doivent passer
+   - `npm install && npm run build`
+
+2. **Couverture de tests >= 85%**
+   - Verifier avant chaque commit
+   - Ajouter des tests si couverture insuffisante
+
+### Analyse couverture actuelle
+
+| Metrique | Valeur |
+|----------|--------|
+| Couverture globale | 61% |
+| Tests unitaires | 417 |
+| Tests integration | 0 |
+| Tests E2E | 0 |
+
+Modules sans tests : documents, employes, formulaires (structure only)
+
+---
+
 ## Session 2026-01-23 (Frontend Planning - Vue Chantiers)
 
 - Implementation de la vue "Chantiers" dans le module Planning Frontend
