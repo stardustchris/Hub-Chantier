@@ -25,6 +25,7 @@ from modules.taches.infrastructure.persistence import Base as TachesBase
 from modules.dashboard.infrastructure.persistence import Base as DashboardBase
 from modules.pointages.infrastructure.persistence import Base as PointagesBase
 from modules.planning.infrastructure.persistence.affectation_model import Base as PlanningBase
+from modules.formulaires.infrastructure.persistence import Base as FormulairesBase
 
 
 @pytest.fixture(scope="function")
@@ -45,6 +46,7 @@ def test_db():
     TachesBase.metadata.create_all(bind=engine)
     DashboardBase.metadata.create_all(bind=engine)
     PointagesBase.metadata.create_all(bind=engine)
+    FormulairesBase.metadata.create_all(bind=engine)
 
     # Pour le module Planning, on doit reflechir les tables users et chantiers
     # dans sa metadata avant de creer la table affectations

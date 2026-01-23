@@ -46,7 +46,7 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 | planning | 5 | PLN-01 a PLN-28 | **COMPLET** |
 | planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | **COMPLET** |
-| formulaires | 8 | FOR-01 a FOR-11 | Structure only |
+| formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
 | documents | 9 | GED-01 a GED-15 | Structure only |
 | memos | 10 | MEM-01 a MEM-13 | Structure only |
 | logistique | 11 | LOG-01 a LOG-18 | Structure only |
@@ -66,7 +66,8 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 7. [x] **Frontend Feuilles d'heures** - Interface React pour la saisie des heures
 8. [x] **Module taches** (CDC Section 13) - Backend complet (API REST + 20/20 fonctionnalites)
 9. [x] **Frontend Taches** - Interface React pour la gestion des taches (onglet dans fiche chantier)
-10. [ ] **Module formulaires** (CDC Section 8) - Formulaires terrain personnalisables
+10. [x] **Module formulaires** (CDC Section 8) - Backend complet (API REST + 11/11 fonctionnalites)
+11. [ ] **Frontend formulaires** - Interface React pour les formulaires terrain
 
 ## Workflow de developpement
 
