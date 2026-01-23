@@ -3,6 +3,108 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Module Signalements SIG)
+
+Implementation complete du module Signalements (CDC Section 10 - SIG-01 a SIG-20).
+
+### Architecture Clean implementee
+
+**Domain Layer**
+- `domain/entities/signalement.py` : Signalement avec workflow complet et escalade
+- `domain/entities/reponse.py` : Reponse avec support photos
+- `domain/value_objects/priorite.py` : 4 niveaux (critique 4h, haute 24h, moyenne 48h, basse 72h)
+- `domain/value_objects/statut_signalement.py` : OUVERT → EN_COURS → TRAITE → CLOTURE
+- `domain/repositories/` : Interfaces SignalementRepository, ReponseRepository
+- `domain/services/escalade_service.py` : Service d'escalade (50% chef, 100% conducteur, 200% admin)
+- `domain/events/` : 9 events domain (Created, Updated, Deleted, Traite, Cloture, Escalade, etc.)
+
+**Application Layer**
+- `application/use_cases/signalement_use_cases.py` : 12 use cases
+  - CreateSignalement, GetSignalement, ListSignalements, SearchSignalements
+  - UpdateSignalement, DeleteSignalement, AssignerSignalement
+  - MarquerTraite, Cloturer, Reouvrir
+  - GetStatistiques, GetSignalementsEnRetard
+- `application/use_cases/reponse_use_cases.py` : CRUD reponses
+- `application/dtos/` : DTOs complets avec noms utilisateurs resolus
+
+**Adapters Layer**
+- `adapters/controllers/signalement_controller.py` : Controller facade
+
+**Infrastructure Layer**
+- `infrastructure/persistence/models.py` : SignalementModel, ReponseModel
+- `infrastructure/persistence/sqlalchemy_*_repository.py` : Implementations completes
+- `infrastructure/web/signalement_routes.py` : Routes FastAPI
+- `infrastructure/web/dependencies.py` : Injection de dependances
+
+### Frontend implemente
+
+**Types TypeScript**
+- `frontend/src/types/signalements.ts` : Types, DTOs, constantes (labels, couleurs)
+
+**Service API**
+- `frontend/src/api/signalements.ts` : Client API complet (20+ fonctions)
+
+**Composants React**
+- `SignalementCard.tsx` : Carte avec badge priorite/statut, barre temps
+- `SignalementList.tsx` : Liste paginee avec gestion vide
+- `SignalementFilters.tsx` : Filtres rapides et avances
+- `SignalementModal.tsx` : Modal creation/edition
+- `SignalementDetail.tsx` : Vue detaillee avec reponses et workflow
+- `SignalementStats.tsx` : Tableau de bord statistiques (SIG-18)
+
+### Tests generes
+
+- `tests/unit/signalements/test_priorite.py` : 13 tests
+- `tests/unit/signalements/test_statut_signalement.py` : 23 tests
+- `tests/unit/signalements/test_signalement_entity.py` : 33 tests
+- `tests/unit/signalements/test_create_signalement.py` : 8 tests
+- `tests/unit/signalements/test_workflow_signalement.py` : 26 tests
+- **Total** : 103 tests, couverture 90%+
+
+### Validation agents
+
+- **architect-reviewer** : PASS (9/10)
+  - 1 violation mineure : import inter-module auth (pattern existant dans tous modules)
+  - Clean Architecture respectee dans domain/application layers
+
+- **code-reviewer** : APPROVED
+  - Type hints complets
+  - Docstrings Google style
+  - Securite : validation entrees, permissions par role
+
+### Fonctionnalites implementees
+
+| Code | Fonctionnalite | Status |
+|------|---------------|--------|
+| SIG-01 | Creation signalement | ✅ Complet |
+| SIG-02 | Consultation signalement | ✅ Complet |
+| SIG-03 | Liste signalements chantier | ✅ Complet |
+| SIG-04 | Modification signalement | ✅ Complet |
+| SIG-05 | Suppression signalement | ✅ Complet |
+| SIG-06 | Photos signalement | ✅ Complet |
+| SIG-07 | Commentaires/reponses | ✅ Complet |
+| SIG-08 | Marquer traite | ✅ Complet |
+| SIG-09 | Cloturer signalement | ✅ Complet |
+| SIG-10 | Recherche signalements | ✅ Complet |
+| SIG-11 | Filtre par statut | ✅ Complet |
+| SIG-12 | Filtre par priorite | ✅ Complet |
+| SIG-13 | Notifications push | ⏳ Infra (backend OK) |
+| SIG-14 | 4 niveaux priorite | ✅ Complet |
+| SIG-15 | Date resolution souhaitee | ✅ Complet |
+| SIG-16 | Alertes retard | ✅ Complet (calcul backend) |
+| SIG-17 | Escalade auto | ⏳ Infra (job scheduler) |
+| SIG-18 | Tableau de bord stats | ✅ Complet |
+| SIG-19 | Filtre multi-chantiers | ✅ Complet |
+| SIG-20 | Filtre par periode | ✅ Complet |
+
+### Build verification
+
+- Backend tests : 930 passed (827 + 103 signalements)
+- Frontend build : OK (528.79 kB JS)
+- TypeScript : 0 erreurs
+
+---
+
 ## Session 2026-01-23 (GED-16 et GED-17)
 
 Implémentation des fonctionnalités GED-16 (téléchargement ZIP) et GED-17 (prévisualisation).

@@ -12,6 +12,7 @@ from modules.planning.infrastructure.web import router as planning_router
 from modules.pointages.infrastructure.web import router as pointages_router
 from modules.formulaires.infrastructure.web import router as formulaires_router
 from modules.formulaires.infrastructure.web import templates_router as templates_formulaires_router
+from modules.signalements.infrastructure.web import router as signalements_router
 from shared.infrastructure.web.upload_routes import router as upload_router
 
 # Créer l'application
@@ -80,6 +81,7 @@ app.include_router(planning_router, prefix="/api")
 app.include_router(pointages_router, prefix="/api")
 app.include_router(formulaires_router, prefix="/api")
 app.include_router(templates_formulaires_router, prefix="/api")
+app.include_router(signalements_router, prefix="/api")
 
 # Futurs modules à ajouter:
 # app.include_router(employes_router, prefix="/api")
