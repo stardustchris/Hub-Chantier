@@ -33,7 +33,7 @@ export default function UserDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
 
-  const isAdmin = currentUser?.role === 'administrateur'
+  const isAdmin = currentUser?.role === 'admin'
   const isSelf = currentUser?.id === id
 
   useEffect(() => {

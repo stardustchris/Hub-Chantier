@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, startOfWeek, endOfWeek, getISOWeek, addWeeks, subWeeks } from 'date-fns'
+import { format, startOfWeek, endOfWeek, getISOWeek, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 interface WeekNavigationProps {
@@ -20,11 +20,19 @@ export default function WeekNavigation({
   const weekNumber = getISOWeek(currentDate)
 
   const handlePrev = () => {
-    onDateChange(subWeeks(currentDate, 1))
+    if (viewMode === 'mois') {
+      onDateChange(subMonths(currentDate, 1))
+    } else {
+      onDateChange(subWeeks(currentDate, 1))
+    }
   }
 
   const handleNext = () => {
-    onDateChange(addWeeks(currentDate, 1))
+    if (viewMode === 'mois') {
+      onDateChange(addMonths(currentDate, 1))
+    } else {
+      onDateChange(addWeeks(currentDate, 1))
+    }
   }
 
   const handleToday = () => {
@@ -67,11 +75,22 @@ export default function WeekNavigation({
         </button>
 
         <div className="text-center min-w-[200px]">
-          <div className="text-sm text-gray-500">Semaine {weekNumber}</div>
-          <div className="font-medium">
-            {format(weekStart, 'd', { locale: fr })} -{' '}
-            {format(weekEnd, 'd MMMM yyyy', { locale: fr })}
-          </div>
+          {viewMode === 'mois' ? (
+            <>
+              <div className="text-sm text-gray-500">Mois</div>
+              <div className="font-medium capitalize">
+                {format(currentDate, 'MMMM yyyy', { locale: fr })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-sm text-gray-500">Semaine {weekNumber}</div>
+              <div className="font-medium">
+                {format(weekStart, 'd', { locale: fr })} -{' '}
+                {format(weekEnd, 'd MMMM yyyy', { locale: fr })}
+              </div>
+            </>
+          )}
         </div>
 
         <button

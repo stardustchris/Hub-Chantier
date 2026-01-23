@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  const isDirectionOrConducteur = user?.role === 'administrateur' || user?.role === 'conducteur'
+  const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
 
   useEffect(() => {
     loadFeed()
@@ -432,7 +432,7 @@ export default function DashboardPage() {
                         key={post.id}
                         post={post}
                         currentUserId={user?.id || ''}
-                        isAdmin={user?.role === 'administrateur'}
+                        isAdmin={user?.role === 'admin'}
                         onLike={handleLike}
                         onPin={handlePin}
                         onDelete={handleDelete}

@@ -30,7 +30,7 @@ export default function UsersListPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const isAdmin = currentUser?.role === 'administrateur'
+  const isAdmin = currentUser?.role === 'admin'
 
   useEffect(() => {
     loadUsers()

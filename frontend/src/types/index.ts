@@ -1,7 +1,7 @@
 // Types pour Hub Chantier
 
 // ===== UTILISATEURS =====
-export type UserRole = 'administrateur' | 'conducteur' | 'chef_chantier' | 'compagnon'
+export type UserRole = 'admin' | 'conducteur' | 'chef_chantier' | 'compagnon'
 export type UserType = 'employe' | 'sous_traitant'
 export type Metier = 'macon' | 'coffreur' | 'ferrailleur' | 'grutier' | 'charpentier' | 'couvreur' | 'electricien' | 'plombier' | 'autre'
 
@@ -202,8 +202,8 @@ export const METIERS: Record<Metier, { label: string; color: string }> = {
 
 // ===== ROLES =====
 export const ROLES: Record<UserRole, { label: string; color: string }> = {
-  administrateur: { label: 'Administrateur', color: '#9B59B6' },
-  conducteur: { label: 'Conducteur', color: '#3498DB' },
+  admin: { label: 'Administrateur', color: '#9B59B6' },
+  conducteur: { label: 'Conducteur de travaux', color: '#3498DB' },
   chef_chantier: { label: 'Chef de chantier', color: '#27AE60' },
   compagnon: { label: 'Compagnon', color: '#607D8B' },
 }

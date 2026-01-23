@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { format, startOfWeek, endOfWeek, addWeeks } from 'date-fns'
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks } from 'date-fns'
 import { Plus, Filter, Users, Building2, AlertCircle } from 'lucide-react'
 import Layout from '../components/Layout'
 import { PlanningGrid, PlanningChantierGrid, WeekNavigation, AffectationModal } from '../components/planning'
@@ -14,7 +14,7 @@ type ViewTab = 'utilisateurs' | 'chantiers'
 
 export default function PlanningPage() {
   const { user: currentUser } = useAuth()
-  const canEdit = currentUser?.role === 'administrateur' || currentUser?.role === 'conducteur'
+  const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
 
   // État principal
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -52,13 +52,22 @@ export default function PlanningPage() {
 
   // Calculer les dates de début et fin de la période
   const getDateRange = useCallback(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
-    const end = endOfWeek(currentDate, { weekStartsOn: 1 })
+    let start: Date
+    let end: Date
+
+    if (viewMode === 'mois') {
+      start = startOfMonth(currentDate)
+      end = endOfMonth(currentDate)
+    } else {
+      start = startOfWeek(currentDate, { weekStartsOn: 1 })
+      end = endOfWeek(currentDate, { weekStartsOn: 1 })
+    }
+
     return {
       date_debut: format(start, 'yyyy-MM-dd'),
       date_fin: format(end, 'yyyy-MM-dd'),
     }
-  }, [currentDate])
+  }, [currentDate, viewMode])
 
   // Charger les données
   const loadData = useCallback(async () => {
@@ -445,6 +454,7 @@ export default function PlanningPage() {
             expandedMetiers={expandedMetiers}
             onToggleMetier={handleToggleMetier}
             showWeekend={showWeekend}
+            viewMode={viewMode}
             onAffectationMove={canEdit ? handleAffectationMove : undefined}
           />
         ) : (
@@ -456,6 +466,7 @@ export default function PlanningPage() {
             onCellClick={handleChantierCellClick}
             onDuplicateChantier={handleDuplicateChantier}
             showWeekend={showWeekend}
+            viewMode={viewMode}
             onAffectationMove={canEdit ? handleAffectationMove : undefined}
           />
         )}

@@ -69,7 +69,7 @@ export default function FormulairesPage() {
   const [formulaireReadOnly, setFormulaireReadOnly] = useState(false)
 
   // Permissions
-  const canManageTemplates = currentUser?.role === 'administrateur' || currentUser?.role === 'conducteur'
+  const canManageTemplates = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
 
   // Charger les donnees
   const loadData = useCallback(async () => {

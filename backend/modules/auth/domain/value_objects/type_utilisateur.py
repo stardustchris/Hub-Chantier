@@ -33,8 +33,21 @@ class TypeUtilisateur(str, Enum):
         Raises:
             ValueError: Si la valeur ne correspond à aucun type.
         """
+        # Mapping des anciens types vers les nouveaux
+        legacy_mapping = {
+            "conducteur": "employe",
+            "chef_chantier": "employe",
+            "ouvrier": "employe",
+            "admin": "employe",
+            "siege": "employe",
+        }
+
+        normalized = value.lower()
+        if normalized in legacy_mapping:
+            normalized = legacy_mapping[normalized]
+
         try:
-            return cls(value.lower())
+            return cls(normalized)
         except ValueError:
             valid_types = [t.value for t in cls]
             raise ValueError(

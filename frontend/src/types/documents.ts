@@ -123,8 +123,8 @@ export interface AutorisationCreateDTO {
 // Constantes
 export const NIVEAU_ACCES_LABELS: Record<NiveauAcces, string> = {
   compagnon: 'Tous les utilisateurs',
-  chef_chantier: 'Chefs + Conducteurs + Admin',
-  conducteur: 'Conducteurs + Admin',
+  chef_chantier: 'Chefs + Conducteurs de travaux + Admin',
+  conducteur: 'Conducteurs de travaux + Admin',
   admin: 'Administrateurs uniquement',
 };
 

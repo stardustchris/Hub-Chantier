@@ -27,11 +27,11 @@ type ViewTab = 'compagnons' | 'chantiers'
 export default function FeuillesHeuresPage() {
   const { user: currentUser } = useAuth()
   const canEdit =
-    currentUser?.role === 'administrateur' ||
+    currentUser?.role === 'admin' ||
     currentUser?.role === 'conducteur' ||
     currentUser?.role === 'chef_chantier'
   const isValidateur =
-    currentUser?.role === 'administrateur' || currentUser?.role === 'conducteur'
+    currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
 
   // Etat principal
   const [currentDate, setCurrentDate] = useState(new Date())

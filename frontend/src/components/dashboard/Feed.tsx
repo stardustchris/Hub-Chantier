@@ -20,7 +20,7 @@ interface FeedProps {
 // Données mock pour la démo visuelle
 const MOCK_AUTHORS: Record<number, Author> = {
   1: { id: 1, prenom: 'Jean', nom: 'Martin', role: 'admin', couleur: '#9B59B6', metier: 'Direction' },
-  2: { id: 2, prenom: 'Pierre', nom: 'Dupont', role: 'conducteur', couleur: '#3498DB', metier: 'Conducteur' },
+  2: { id: 2, prenom: 'Pierre', nom: 'Dupont', role: 'conducteur', couleur: '#3498DB', metier: 'Conducteur de travaux' },
   3: { id: 3, prenom: 'Marc', nom: 'Bernard', role: 'chef_chantier', couleur: '#27AE60', metier: 'Chef de chantier' },
   4: { id: 4, prenom: 'Luc', nom: 'Moreau', role: 'compagnon', couleur: '#E67E22', metier: 'Maçon' },
 }

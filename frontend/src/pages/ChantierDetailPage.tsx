@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../contexts/ToastContext'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
@@ -39,6 +40,7 @@ export default function ChantierDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user: currentUser } = useAuth()
+  const { showUndoToast, addToast } = useToast()
   const [chantier, setChantier] = useState<Chantier | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -47,7 +49,7 @@ export default function ChantierDetailPage() {
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [activeTab, setActiveTab] = useState<TabType>('infos')
 
-  const isAdmin = currentUser?.role === 'administrateur'
+  const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
   const canEdit = isAdmin || isConducteur
 
@@ -102,15 +104,32 @@ export default function ChantierDetailPage() {
     }
   }
 
-  const handleDeleteChantier = async () => {
-    if (!confirm('Supprimer ce chantier ? Cette action est irreversible.')) return
+  const handleDeleteChantier = () => {
+    if (!chantier) return
 
-    try {
-      await chantiersService.delete(id!)
-      navigate('/chantiers')
-    } catch (error) {
-      console.error('Error deleting chantier:', error)
-    }
+    const chantierName = chantier.nom
+    // Navigate immediately for better UX
+    navigate('/chantiers')
+
+    // Show undo toast - delete only happens after timeout
+    showUndoToast(
+      `Chantier "${chantierName}" supprime`,
+      // onUndo - user clicked "Annuler"
+      () => {
+        navigate(`/chantiers/${id}`)
+        addToast({ message: 'Suppression annulee', type: 'success', duration: 3000 })
+      },
+      // onConfirm - timeout elapsed, actually delete
+      async () => {
+        try {
+          await chantiersService.delete(id!)
+        } catch (error) {
+          console.error('Error deleting chantier:', error)
+          addToast({ message: 'Erreur lors de la suppression', type: 'error', duration: 5000 })
+        }
+      },
+      5000 // 5 seconds to undo
+    )
   }
 
   const handleChangeStatut = async (action: 'demarrer' | 'receptionner' | 'fermer') => {
@@ -150,20 +169,52 @@ export default function ChantierDetailPage() {
     }
   }
 
-  const handleRemoveUser = async (userId: string, type: 'conducteur' | 'chef') => {
-    if (!confirm('Retirer cet utilisateur du chantier ?')) return
+  const handleRemoveUser = (userId: string, type: 'conducteur' | 'chef') => {
+    if (!chantier) return
 
-    try {
-      let updated: Chantier
-      if (type === 'conducteur') {
-        updated = await chantiersService.removeConducteur(id!, userId)
-      } else {
-        updated = await chantiersService.removeChef(id!, userId)
-      }
-      setChantier(updated)
-    } catch (error) {
-      console.error('Error removing user:', error)
+    // Find the user being removed
+    const userList = type === 'conducteur' ? chantier.conducteurs : chantier.chefs
+    const removedUser = userList.find((u) => u.id === userId)
+    if (!removedUser) return
+
+    // Optimistic update - remove immediately from UI
+    const updatedChantier = {
+      ...chantier,
+      conducteurs: type === 'conducteur'
+        ? chantier.conducteurs.filter((u) => u.id !== userId)
+        : chantier.conducteurs,
+      chefs: type === 'chef'
+        ? chantier.chefs.filter((u) => u.id !== userId)
+        : chantier.chefs,
     }
+    setChantier(updatedChantier)
+
+    const roleLabel = type === 'conducteur' ? 'conducteur' : 'chef de chantier'
+
+    // Show undo toast
+    showUndoToast(
+      `${removedUser.prenom} ${removedUser.nom} retire`,
+      // onUndo - restore user
+      () => {
+        setChantier(chantier) // Restore original state
+        addToast({ message: 'Retrait annule', type: 'success', duration: 3000 })
+      },
+      // onConfirm - actually call API
+      async () => {
+        try {
+          if (type === 'conducteur') {
+            await chantiersService.removeConducteur(id!, userId)
+          } else {
+            await chantiersService.removeChef(id!, userId)
+          }
+        } catch (error) {
+          console.error('Error removing user:', error)
+          setChantier(chantier) // Restore on error
+          addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
+        }
+      },
+      5000
+    )
   }
 
   if (isLoading || !chantier) {
