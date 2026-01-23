@@ -2,7 +2,15 @@
 
 from typing import Optional, List, BinaryIO
 
-from ..dtos import DocumentDTO, DocumentCreateDTO, DocumentUpdateDTO, DocumentListDTO, DocumentSearchDTO
+from ..dtos import (
+    DocumentDTO,
+    DocumentCreateDTO,
+    DocumentUpdateDTO,
+    DocumentListDTO,
+    DocumentSearchDTO,
+    DownloadZipDTO,
+    DocumentPreviewDTO,
+)
 from ...domain.entities import Document
 from ...domain.repositories import DocumentRepository, DossierRepository, AutorisationRepository
 from ...domain.services import FileStorageService
@@ -479,3 +487,162 @@ class DownloadDocumentUseCase:
         url = self._file_storage.get_url(document.chemin_stockage)
 
         return url, document.nom, document.mime_type
+
+
+class DownloadMultipleDocumentsUseCase:
+    """Use case pour télécharger plusieurs documents en ZIP (GED-16)."""
+
+    def __init__(
+        self,
+        document_repository: DocumentRepository,
+        file_storage: FileStorageService,
+    ):
+        """Initialise le use case."""
+        self._document_repo = document_repository
+        self._file_storage = file_storage
+
+    def execute(self, dto: DownloadZipDTO) -> Optional[BinaryIO]:
+        """
+        Crée une archive ZIP contenant les documents demandés.
+
+        Args:
+            dto: DTO contenant les IDs des documents.
+
+        Returns:
+            Le contenu binaire de l'archive ZIP.
+
+        Raises:
+            DocumentNotFoundError: Si aucun document valide n'est trouvé.
+        """
+        if not dto.document_ids:
+            raise DocumentNotFoundError("Aucun document spécifié")
+
+        # Récupérer les documents
+        files: list[tuple[str, str]] = []
+        for doc_id in dto.document_ids:
+            document = self._document_repo.find_by_id(doc_id)
+            if document:
+                # Gérer les doublons de noms
+                nom_archive = document.nom
+                counter = 1
+                while any(f[1] == nom_archive for f in files):
+                    base, ext = nom_archive.rsplit(".", 1) if "." in nom_archive else (nom_archive, "")
+                    nom_archive = f"{base}_{counter}.{ext}" if ext else f"{base}_{counter}"
+                    counter += 1
+                files.append((document.chemin_stockage, nom_archive))
+
+        if not files:
+            raise DocumentNotFoundError("Aucun document valide trouvé")
+
+        # Créer l'archive
+        archive = self._file_storage.create_zip(files, "documents.zip")
+        if not archive:
+            raise DocumentNotFoundError("Erreur lors de la création de l'archive")
+
+        return archive
+
+
+class GetDocumentPreviewUseCase:
+    """Use case pour obtenir la prévisualisation d'un document (GED-17)."""
+
+    # Types de fichiers supportés pour la prévisualisation
+    PREVIEWABLE_TYPES = {
+        "pdf": True,
+        "image": True,
+        "video": True,
+        "txt": True,
+    }
+
+    def __init__(
+        self,
+        document_repository: DocumentRepository,
+        file_storage: FileStorageService,
+    ):
+        """Initialise le use case."""
+        self._document_repo = document_repository
+        self._file_storage = file_storage
+
+    def execute(self, document_id: int) -> DocumentPreviewDTO:
+        """
+        Obtient les informations de prévisualisation d'un document.
+
+        Args:
+            document_id: ID du document.
+
+        Returns:
+            DTO avec les informations de prévisualisation.
+
+        Raises:
+            DocumentNotFoundError: Si le document n'existe pas.
+        """
+        document = self._document_repo.find_by_id(document_id)
+        if not document:
+            raise DocumentNotFoundError(f"Document {document_id} non trouvé")
+
+        # Vérifier si le type est prévisualisable
+        can_preview = document.type_document.value in self.PREVIEWABLE_TYPES
+
+        # Vérifier la taille (max 10MB pour prévisualisation)
+        max_preview_size = 10 * 1024 * 1024
+        if document.taille > max_preview_size:
+            can_preview = False
+
+        # Générer l'URL de prévisualisation si possible
+        preview_url = None
+        if can_preview:
+            preview_url = f"/api/documents/{document_id}/preview/content"
+
+        return DocumentPreviewDTO(
+            id=document.id,  # type: ignore
+            nom=document.nom,
+            type_document=document.type_document.value,
+            mime_type=document.mime_type,
+            taille=document.taille,
+            can_preview=can_preview,
+            preview_url=preview_url,
+        )
+
+
+class GetDocumentPreviewContentUseCase:
+    """Use case pour récupérer le contenu de prévisualisation (GED-17)."""
+
+    # Taille max pour prévisualisation (10 MB)
+    MAX_PREVIEW_SIZE = 10 * 1024 * 1024
+
+    def __init__(
+        self,
+        document_repository: DocumentRepository,
+        file_storage: FileStorageService,
+    ):
+        """Initialise le use case."""
+        self._document_repo = document_repository
+        self._file_storage = file_storage
+
+    def execute(self, document_id: int) -> tuple[bytes, str]:
+        """
+        Récupère le contenu d'un document pour prévisualisation.
+
+        Args:
+            document_id: ID du document.
+
+        Returns:
+            Tuple (contenu, mime_type).
+
+        Raises:
+            DocumentNotFoundError: Si le document n'existe pas.
+            FileTooLargeError: Si le fichier est trop gros pour la prévisualisation.
+        """
+        document = self._document_repo.find_by_id(document_id)
+        if not document:
+            raise DocumentNotFoundError(f"Document {document_id} non trouvé")
+
+        if document.taille > self.MAX_PREVIEW_SIZE:
+            raise FileTooLargeError("Le fichier est trop volumineux pour la prévisualisation")
+
+        result = self._file_storage.get_preview_data(
+            document.chemin_stockage, self.MAX_PREVIEW_SIZE
+        )
+        if not result:
+            raise DocumentNotFoundError("Impossible de lire le contenu du fichier")
+
+        return result

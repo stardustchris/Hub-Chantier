@@ -6,6 +6,8 @@ from .document_dtos import (
     DocumentUpdateDTO,
     DocumentListDTO,
     DocumentSearchDTO,
+    DownloadZipDTO,
+    DocumentPreviewDTO,
 )
 from .dossier_dtos import (
     DossierDTO,
@@ -27,6 +29,8 @@ __all__ = [
     "DocumentUpdateDTO",
     "DocumentListDTO",
     "DocumentSearchDTO",
+    "DownloadZipDTO",
+    "DocumentPreviewDTO",
     # Dossier DTOs
     "DossierDTO",
     "DossierCreateDTO",

@@ -74,3 +74,23 @@ class DocumentSearchDTO:
     dossier_id: Optional[int] = None
     skip: int = 0
     limit: int = 100
+
+
+@dataclass
+class DownloadZipDTO:
+    """DTO pour le téléchargement groupé en ZIP (GED-16)."""
+
+    document_ids: List[int]
+
+
+@dataclass
+class DocumentPreviewDTO:
+    """DTO pour la prévisualisation d'un document (GED-17)."""
+
+    id: int
+    nom: str
+    type_document: str
+    mime_type: str
+    taille: int
+    can_preview: bool
+    preview_url: Optional[str] = None

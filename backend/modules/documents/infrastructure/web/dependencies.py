@@ -16,6 +16,9 @@ from ...application.use_cases import (
     UpdateDocumentUseCase,
     DeleteDocumentUseCase,
     DownloadDocumentUseCase,
+    DownloadMultipleDocumentsUseCase,
+    GetDocumentPreviewUseCase,
+    GetDocumentPreviewContentUseCase,
     CreateDossierUseCase,
     GetDossierUseCase,
     ListDossiersUseCase,
@@ -67,6 +70,9 @@ def get_document_controller(
     update_document = UpdateDocumentUseCase(document_repo, dossier_repo)
     delete_document = DeleteDocumentUseCase(document_repo, file_storage, autorisation_repo)
     download_document = DownloadDocumentUseCase(document_repo, file_storage)
+    download_multiple_documents = DownloadMultipleDocumentsUseCase(document_repo, file_storage)
+    get_document_preview = GetDocumentPreviewUseCase(document_repo, file_storage)
+    get_document_preview_content = GetDocumentPreviewContentUseCase(document_repo, file_storage)
 
     # Use Cases - Dossiers
     create_dossier = CreateDossierUseCase(dossier_repo, document_repo)
@@ -93,6 +99,9 @@ def get_document_controller(
         update_document=update_document,
         delete_document=delete_document,
         download_document=download_document,
+        download_multiple_documents=download_multiple_documents,
+        get_document_preview=get_document_preview,
+        get_document_preview_content=get_document_preview_content,
         create_dossier=create_dossier,
         get_dossier=get_dossier,
         list_dossiers=list_dossiers,

@@ -10,6 +10,9 @@ from ...application.use_cases import (
     UpdateDocumentUseCase,
     DeleteDocumentUseCase,
     DownloadDocumentUseCase,
+    DownloadMultipleDocumentsUseCase,
+    GetDocumentPreviewUseCase,
+    GetDocumentPreviewContentUseCase,
     CreateDossierUseCase,
     GetDossierUseCase,
     ListDossiersUseCase,
@@ -27,6 +30,8 @@ from ...application.dtos import (
     DocumentUpdateDTO,
     DocumentListDTO,
     DocumentSearchDTO,
+    DownloadZipDTO,
+    DocumentPreviewDTO,
     DossierDTO,
     DossierCreateDTO,
     DossierUpdateDTO,
@@ -49,6 +54,9 @@ class DocumentController:
         update_document: UpdateDocumentUseCase,
         delete_document: DeleteDocumentUseCase,
         download_document: DownloadDocumentUseCase,
+        download_multiple_documents: DownloadMultipleDocumentsUseCase,
+        get_document_preview: GetDocumentPreviewUseCase,
+        get_document_preview_content: GetDocumentPreviewContentUseCase,
         create_dossier: CreateDossierUseCase,
         get_dossier: GetDossierUseCase,
         list_dossiers: ListDossiersUseCase,
@@ -69,6 +77,9 @@ class DocumentController:
         self._update_document = update_document
         self._delete_document = delete_document
         self._download_document = download_document
+        self._download_multiple_documents = download_multiple_documents
+        self._get_document_preview = get_document_preview
+        self._get_document_preview_content = get_document_preview_content
         self._create_dossier = create_dossier
         self._get_dossier = get_dossier
         self._list_dossiers = list_dossiers
@@ -134,6 +145,19 @@ class DocumentController:
     def download_document(self, document_id: int) -> tuple[str, str, str]:
         """Télécharge un document."""
         return self._download_document.execute(document_id)
+
+    def download_documents_zip(self, document_ids: List[int]) -> BinaryIO:
+        """Télécharge plusieurs documents en ZIP (GED-16)."""
+        dto = DownloadZipDTO(document_ids=document_ids)
+        return self._download_multiple_documents.execute(dto)
+
+    def get_document_preview(self, document_id: int) -> DocumentPreviewDTO:
+        """Obtient les informations de prévisualisation (GED-17)."""
+        return self._get_document_preview.execute(document_id)
+
+    def get_document_preview_content(self, document_id: int) -> tuple[bytes, str]:
+        """Récupère le contenu pour prévisualisation (GED-17)."""
+        return self._get_document_preview_content.execute(document_id)
 
     # Dossier operations
     def create_dossier(self, dto: DossierCreateDTO) -> DossierDTO:

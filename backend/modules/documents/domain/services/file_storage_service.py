@@ -127,3 +127,39 @@ class FileStorageService(ABC):
             True si copié avec succès.
         """
         pass
+
+    @abstractmethod
+    def create_zip(
+        self,
+        files: list[tuple[str, str]],
+        archive_name: str,
+    ) -> Optional[BinaryIO]:
+        """
+        Crée une archive ZIP contenant plusieurs fichiers (GED-16).
+
+        Args:
+            files: Liste de tuples (chemin_stockage, nom_dans_archive).
+            archive_name: Nom de l'archive.
+
+        Returns:
+            Le contenu binaire de l'archive ZIP ou None si erreur.
+        """
+        pass
+
+    @abstractmethod
+    def get_preview_data(
+        self,
+        chemin_stockage: str,
+        max_size: int = 10 * 1024 * 1024,
+    ) -> Optional[tuple[bytes, str]]:
+        """
+        Récupère les données de prévisualisation d'un fichier (GED-17).
+
+        Args:
+            chemin_stockage: Chemin du fichier.
+            max_size: Taille maximale pour la prévisualisation (défaut: 10MB).
+
+        Returns:
+            Tuple (contenu, mime_type) ou None si fichier trop gros ou non trouvé.
+        """
+        pass
