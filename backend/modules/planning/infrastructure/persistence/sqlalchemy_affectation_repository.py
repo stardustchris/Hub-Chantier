@@ -259,17 +259,17 @@ class SQLAlchemyAffectationRepository(AffectationRepository):
         """
         # Import UserModel dynamiquement pour eviter les imports circulaires
         from modules.auth.infrastructure.persistence import UserModel
+        from sqlalchemy import select
 
         # Subquery: IDs des utilisateurs avec au moins une affectation
         utilisateurs_planifies = (
-            self.session.query(AffectationModel.utilisateur_id.distinct())
-            .filter(
+            select(AffectationModel.utilisateur_id.distinct())
+            .where(
                 and_(
                     AffectationModel.date >= date_debut,
                     AffectationModel.date <= date_fin,
                 )
             )
-            .subquery()
         )
 
         # Utilisateurs actifs sans affectation
