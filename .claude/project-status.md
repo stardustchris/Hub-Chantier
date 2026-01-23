@@ -47,4 +47,4 @@
 
 ## Derniere mise a jour
 
-Session 2026-01-23 - Module Formulaires Frontend complet (Backend + Frontend)
+Session 2026-01-23 - Module Formulaires complet avec Photo, Signature et Selecteur Chantier
