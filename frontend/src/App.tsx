@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ToastProvider } from './contexts/ToastContext'
+import ToastContainer from './components/Toast'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ChantiersListPage from './pages/ChantiersListPage'
@@ -15,6 +17,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
@@ -88,6 +91,8 @@ function App() {
           {/* Catch all - redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <ToastContainer />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   )
