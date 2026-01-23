@@ -11,6 +11,7 @@ import UserDetailPage from './pages/UserDetailPage'
 import PlanningPage from './pages/PlanningPage'
 import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
 import FormulairesPage from './pages/FormulairesPage'
+import DocumentsPage from './pages/DocumentsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -84,6 +85,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <FormulairesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/documents"
+            element={
+              <ProtectedRoute>
+                <DocumentsPage />
               </ProtectedRoute>
             }
           />

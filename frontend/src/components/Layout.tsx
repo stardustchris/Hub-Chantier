@@ -8,6 +8,7 @@ import {
   Calendar,
   Clock,
   FileText,
+  FolderOpen,
   Settings,
   LogOut,
   Menu,
@@ -29,7 +30,7 @@ const navigation = [
   { name: 'Planning', href: '/planning', icon: Calendar },
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
-  { name: 'Documents', href: '/documents', icon: FileText, disabled: true },
+  { name: 'Documents', href: '/documents', icon: FolderOpen },
 ]
 
 export default function Layout({ children }: LayoutProps) {
