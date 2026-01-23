@@ -108,6 +108,29 @@ cd backend && python -m pytest tests/unit --cov=modules --cov-report=term-missin
 - Si couverture < 85% : ajouter des tests avant de committer
 - Verifier particulierement les use cases et les entites domain
 
+### REGLE CRITIQUE - Tests obligatoires par couche
+
+**Chaque module COMPLET doit avoir :**
+
+| Couche | Tests requis | Emplacement |
+|--------|--------------|-------------|
+| Domain | Entites, Value Objects | `tests/unit/{module}/test_entities.py`, `test_value_objects.py` |
+| Application | Use Cases (tous) | `tests/unit/{module}/test_use_cases.py` |
+| Infrastructure | Repository | `tests/unit/{module}/test_repository.py` |
+| **API** | **Integration tests** | `tests/integration/test_{module}_api.py` |
+
+**VERIFICATION OBLIGATOIRE avant de marquer un module COMPLET :**
+
+```bash
+# Verifier qu'un test d'integration existe pour chaque module backend complet
+ls backend/tests/integration/test_*_api.py
+```
+
+**Si un fichier manque → Le module N'EST PAS complet.**
+
+> Cette regle existe car les tests d'integration API sont essentiels pour detecter
+> les regressions sur les endpoints FastAPI et les problemes d'integration DB.
+
 ### REGLE CRITIQUE - Pre-commit
 
 **AVANT tout `git commit` contenant `*.py`, `*.ts`, `*.tsx`, `*.sql` :**
@@ -116,7 +139,8 @@ cd backend && python -m pytest tests/unit --cov=modules --cov-report=term-missin
 1. Lancer architect-reviewer → Corriger violations
 2. Lancer test-automator → Noter les gaps
 3. Lancer code-reviewer → Corriger issues critiques
-4. SEULEMENT APRES → git commit
+4. Verifier tests integration: ls tests/integration/test_*_api.py
+5. SEULEMENT APRES → git commit
 ```
 
 > Details : `.claude/pre-commit-checklist.md`
