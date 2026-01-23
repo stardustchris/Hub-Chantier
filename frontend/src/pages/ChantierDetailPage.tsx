@@ -47,7 +47,7 @@ export default function ChantierDetailPage() {
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [activeTab, setActiveTab] = useState<TabType>('infos')
 
-  const isAdmin = currentUser?.role === 'administrateur'
+  const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
   const canEdit = isAdmin || isConducteur
 

@@ -14,7 +14,7 @@ type ViewTab = 'utilisateurs' | 'chantiers'
 
 export default function PlanningPage() {
   const { user: currentUser } = useAuth()
-  const canEdit = currentUser?.role === 'administrateur' || currentUser?.role === 'conducteur'
+  const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
 
   // État principal
   const [currentDate, setCurrentDate] = useState(new Date())
