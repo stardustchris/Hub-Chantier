@@ -12,11 +12,11 @@ export interface AuthResponse {
 
 export const authService = {
   async login(email: string, password: string): Promise<AuthResponse> {
-    const formData = new FormData()
-    formData.append('username', email)
-    formData.append('password', password)
+    const params = new URLSearchParams()
+    params.append('username', email)
+    params.append('password', password)
 
-    const response = await api.post<AuthResponse>('/api/auth/login', formData, {
+    const response = await api.post<AuthResponse>('/api/auth/login', params, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },

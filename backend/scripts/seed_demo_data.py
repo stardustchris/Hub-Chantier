@@ -266,7 +266,10 @@ def seed_users(db: Session) -> dict:
         # Verifier si l'utilisateur existe deja
         existing = db.query(UserModel).filter(UserModel.email == user_data["email"]).first()
         if existing:
-            print(f"  [EXISTE] {user_data['prenom']} {user_data['nom']} ({user_data['role']})")
+            # Mettre a jour le mot de passe pour s'assurer qu'il correspond
+            existing.password_hash = hash_password(user_data["password"])
+            existing.is_active = True  # S'assurer que le compte est actif
+            print(f"  [MAJ] {user_data['prenom']} {user_data['nom']} ({user_data['role']}) - mot de passe mis a jour")
             user_ids[user_data["email"]] = existing.id
             continue
 

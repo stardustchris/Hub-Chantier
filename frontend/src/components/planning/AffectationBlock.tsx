@@ -32,7 +32,7 @@ export default function AffectationBlock({
   if (compact) {
     return (
       <div
-        className={`rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        className={`w-full max-w-full rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
         style={{ backgroundColor }}
         onClick={onClick}
         title={`${affectation.chantier_nom || 'Chantier'} ${affectation.heure_debut ? `${affectation.heure_debut} - ${affectation.heure_fin}` : ''}`}
@@ -47,7 +47,7 @@ export default function AffectationBlock({
 
   return (
     <div
-      className={`rounded-lg px-3 py-2 text-white cursor-pointer hover:opacity-90 transition-opacity relative group ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      className={`w-full max-w-full rounded-lg px-2 py-1.5 text-white cursor-pointer hover:opacity-90 transition-opacity relative group overflow-hidden ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
       style={{ backgroundColor }}
       onClick={onClick}
       draggable={draggable}
