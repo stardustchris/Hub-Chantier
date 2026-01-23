@@ -448,3 +448,234 @@ export const STATUTS_TACHE: Record<StatutTache, { label: string; icon: string; c
   a_faire: { label: 'A faire', icon: '☐', color: '#9E9E9E' },
   termine: { label: 'Termine', icon: '✅', color: '#4CAF50' },
 }
+
+// ===== FEUILLES D'HEURES / POINTAGES (FDH-01 à FDH-20) =====
+export type StatutPointage = 'brouillon' | 'soumis' | 'valide' | 'rejete'
+export type TypeVariablePaie =
+  | 'heures_normales' | 'heures_supplementaires' | 'heures_nuit' | 'heures_dimanche' | 'heures_ferie'
+  | 'panier_repas' | 'indemnite_transport' | 'prime_intemperies' | 'prime_salissure' | 'prime_outillage'
+  | 'conges_payes' | 'rtt' | 'maladie' | 'accident_travail' | 'absence_injustifiee' | 'absence_justifiee'
+  | 'formation' | 'deplacement'
+
+export interface Pointage {
+  id: number
+  utilisateur_id: number
+  chantier_id: number
+  date_pointage: string
+  heures_normales: string // Format HH:MM
+  heures_supplementaires: string // Format HH:MM
+  total_heures: string // Format HH:MM
+  total_heures_decimal: number
+  statut: StatutPointage
+  commentaire?: string
+  signature_utilisateur?: string
+  signature_date?: string
+  validateur_id?: number
+  validation_date?: string
+  motif_rejet?: string
+  affectation_id?: number
+  created_by?: number
+  created_at: string
+  updated_at: string
+  // Enrichissement
+  utilisateur_nom?: string
+  chantier_nom?: string
+  chantier_couleur?: string
+  is_editable?: boolean
+}
+
+export interface PointageCreate {
+  utilisateur_id: number
+  chantier_id: number
+  date_pointage: string
+  heures_normales: string // Format HH:MM
+  heures_supplementaires?: string // Format HH:MM
+  commentaire?: string
+  affectation_id?: number
+}
+
+export interface PointageUpdate {
+  heures_normales?: string
+  heures_supplementaires?: string
+  commentaire?: string
+}
+
+export interface PointageJour {
+  id: number
+  chantier_id: number
+  chantier_nom?: string
+  chantier_couleur?: string
+  date_pointage: string
+  jour_semaine: string
+  heures_normales: string
+  heures_supplementaires: string
+  total_heures: string
+  statut: StatutPointage
+  is_editable: boolean
+}
+
+export interface FeuilleHeures {
+  id: number
+  utilisateur_id: number
+  semaine_debut: string
+  semaine_fin: string
+  annee: number
+  numero_semaine: number
+  label_semaine: string
+  statut_global: StatutPointage
+  commentaire_global?: string
+  total_heures_normales: string
+  total_heures_supplementaires: string
+  total_heures: string
+  total_heures_decimal: number
+  is_complete: boolean
+  is_all_validated: boolean
+  created_at: string
+  updated_at: string
+  utilisateur_nom?: string
+  pointages: PointageJour[]
+  variables_paie: VariablePaieSemaine[]
+  totaux_par_jour: Record<string, string>
+  totaux_par_chantier: Record<number, string>
+}
+
+export interface VariablePaieSemaine {
+  id: number
+  pointage_id: number
+  type_variable: TypeVariablePaie
+  valeur: number
+  date_application: string
+  commentaire?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface VariablePaieCreate {
+  pointage_id: number
+  type_variable: TypeVariablePaie
+  valeur: number
+  date_application: string
+  commentaire?: string
+}
+
+// Vue par chantiers (FDH-01)
+export interface VueChantier {
+  chantier_id: number
+  chantier_nom: string
+  chantier_couleur?: string
+  total_heures: string
+  total_heures_decimal: number
+  pointages_par_jour: Record<string, Pointage[]>
+  total_par_jour: Record<string, string>
+}
+
+// Vue par compagnons (FDH-01)
+export interface VueCompagnon {
+  utilisateur_id: number
+  utilisateur_nom: string
+  total_heures: string
+  total_heures_decimal: number
+  chantiers: VueCompagnonChantier[]
+  totaux_par_jour: Record<string, string>
+}
+
+export interface VueCompagnonChantier {
+  chantier_id: number
+  chantier_nom: string
+  chantier_couleur?: string
+  total_heures: string
+  pointages_par_jour: Record<string, Pointage[]>
+}
+
+// Navigation semaine (FDH-02)
+export interface NavigationSemaine {
+  semaine_courante: string
+  semaine_precedente: string
+  semaine_suivante: string
+  numero_semaine: number
+  annee: number
+  label: string
+}
+
+// Jauge d'avancement (FDH-14)
+export interface JaugeAvancement {
+  utilisateur_id: number
+  semaine: string
+  heures_planifiees: number
+  heures_realisees: number
+  taux_completion: number
+  status: 'en_avance' | 'normal' | 'en_retard'
+}
+
+// Export (FDH-03, FDH-17)
+export interface ExportFeuilleHeuresRequest {
+  format_export: 'csv' | 'xlsx' | 'pdf' | 'erp'
+  date_debut: string
+  date_fin: string
+  utilisateur_ids?: number[]
+  chantier_ids?: number[]
+  inclure_variables_paie?: boolean
+  inclure_signatures?: boolean
+}
+
+// Filtres de recherche
+export interface PointageFilters {
+  utilisateur_id?: number
+  chantier_id?: number
+  date_debut?: string
+  date_fin?: string
+  statut?: StatutPointage
+  page?: number
+  page_size?: number
+}
+
+export interface FeuilleHeuresFilters {
+  utilisateur_id?: number
+  annee?: number
+  numero_semaine?: number
+  statut?: StatutPointage
+  page?: number
+  page_size?: number
+}
+
+// Constantes
+export const STATUTS_POINTAGE: Record<StatutPointage, { label: string; color: string; bgColor: string }> = {
+  brouillon: { label: 'Brouillon', color: '#9E9E9E', bgColor: '#F5F5F5' },
+  soumis: { label: 'En attente', color: '#FFC107', bgColor: '#FFF8E1' },
+  valide: { label: 'Valide', color: '#4CAF50', bgColor: '#E8F5E9' },
+  rejete: { label: 'Rejete', color: '#F44336', bgColor: '#FFEBEE' },
+}
+
+export const TYPES_VARIABLES_PAIE: Record<TypeVariablePaie, { label: string; categorie: string }> = {
+  heures_normales: { label: 'Heures normales', categorie: 'Heures' },
+  heures_supplementaires: { label: 'Heures supplementaires', categorie: 'Heures' },
+  heures_nuit: { label: 'Heures de nuit', categorie: 'Heures' },
+  heures_dimanche: { label: 'Heures dimanche', categorie: 'Heures' },
+  heures_ferie: { label: 'Heures ferie', categorie: 'Heures' },
+  panier_repas: { label: 'Panier repas', categorie: 'Indemnites' },
+  indemnite_transport: { label: 'Indemnite transport', categorie: 'Indemnites' },
+  prime_intemperies: { label: 'Prime intemperies', categorie: 'Indemnites' },
+  prime_salissure: { label: 'Prime salissure', categorie: 'Indemnites' },
+  prime_outillage: { label: 'Prime outillage', categorie: 'Indemnites' },
+  conges_payes: { label: 'Conges payes', categorie: 'Absences' },
+  rtt: { label: 'RTT', categorie: 'Absences' },
+  maladie: { label: 'Maladie', categorie: 'Absences' },
+  accident_travail: { label: 'Accident travail', categorie: 'Absences' },
+  absence_injustifiee: { label: 'Absence injustifiee', categorie: 'Absences' },
+  absence_justifiee: { label: 'Absence justifiee', categorie: 'Absences' },
+  formation: { label: 'Formation', categorie: 'Autres' },
+  deplacement: { label: 'Deplacement', categorie: 'Autres' },
+}
+
+export const JOURS_SEMAINE_LABELS: Record<string, string> = {
+  lundi: 'Lundi',
+  mardi: 'Mardi',
+  mercredi: 'Mercredi',
+  jeudi: 'Jeudi',
+  vendredi: 'Vendredi',
+  samedi: 'Samedi',
+  dimanche: 'Dimanche',
+}
+
+// Tableau ordonne des jours de la semaine (pour iteration)
+export const JOURS_SEMAINE_ARRAY = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const

@@ -7,6 +7,7 @@ import ChantierDetailPage from './pages/ChantierDetailPage'
 import UsersListPage from './pages/UsersListPage'
 import UserDetailPage from './pages/UserDetailPage'
 import PlanningPage from './pages/PlanningPage'
+import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -63,6 +64,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PlanningPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/feuilles-heures"
+            element={
+              <ProtectedRoute>
+                <FeuillesHeuresPage />
               </ProtectedRoute>
             }
           />
