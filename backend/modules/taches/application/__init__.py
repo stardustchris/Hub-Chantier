@@ -37,6 +37,8 @@ from .use_cases import (
     ListFeuillesTachesUseCase,
     # Stats
     GetTacheStatsUseCase,
+    # Export
+    ExportTachesPDFUseCase,
     # Errors
     TacheNotFoundError,
     TacheAlreadyExistsError,
@@ -78,6 +80,7 @@ __all__ = [
     "ValidateFeuilleTacheUseCase",
     "ListFeuillesTachesUseCase",
     "GetTacheStatsUseCase",
+    "ExportTachesPDFUseCase",
     # Errors
     "TacheNotFoundError",
     "TacheAlreadyExistsError",
