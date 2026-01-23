@@ -3,8 +3,8 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from core.database import get_db
-from modules.auth.infrastructure.web.dependencies import get_current_user
+from shared.infrastructure.database import get_db
+from modules.auth.infrastructure.web.dependencies import get_current_user_id
 
 from ...adapters.controllers import DocumentController
 from ...adapters.providers import LocalFileStorageService
@@ -116,5 +116,5 @@ def get_document_controller(
     )
 
 
-# Re-export get_current_user
-__all__ = ["get_document_controller", "get_current_user", "get_file_storage"]
+# Re-export get_current_user_id
+__all__ = ["get_document_controller", "get_current_user_id", "get_file_storage"]

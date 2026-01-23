@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from shared.infrastructure.database_base import Base
 
 
 class DossierModel(Base):

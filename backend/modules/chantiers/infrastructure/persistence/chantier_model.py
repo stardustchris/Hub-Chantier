@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON
+from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
 from shared.domain.value_objects import Couleur
@@ -68,6 +69,10 @@ class ChantierModel(Base):
     updated_at = Column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
+
+    # Relations avec le module Documents (GED)
+    dossiers = relationship("DossierModel", back_populates="chantier", cascade="all, delete-orphan")
+    documents = relationship("DocumentModel", back_populates="chantier", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<ChantierModel(id={self.id}, code={self.code}, nom={self.nom})>"

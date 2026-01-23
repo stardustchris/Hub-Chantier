@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from datetime import datetime
 
-from .dependencies import get_document_controller, get_current_user
+from .dependencies import get_document_controller, get_current_user_id
 from ...adapters.controllers import DocumentController
 from ...application.dtos import (
     DossierCreateDTO,
@@ -168,7 +168,7 @@ class AutorisationResponse(BaseModel):
 def create_dossier(
     request: DossierCreateRequest,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Crée un nouveau dossier."""
     try:
@@ -189,7 +189,7 @@ def create_dossier(
 def get_dossier(
     dossier_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Récupère un dossier par son ID."""
     try:
@@ -203,7 +203,7 @@ def list_dossiers(
     chantier_id: int,
     parent_id: Optional[int] = Query(None),
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les dossiers d'un chantier."""
     return controller.list_dossiers(chantier_id, parent_id)
@@ -213,7 +213,7 @@ def list_dossiers(
 def get_arborescence(
     chantier_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Récupère l'arborescence complète d'un chantier (GED-02)."""
     return controller.get_arborescence(chantier_id)
@@ -224,7 +224,7 @@ def update_dossier(
     dossier_id: int,
     request: DossierUpdateRequest,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Met à jour un dossier."""
     try:
@@ -245,7 +245,7 @@ def delete_dossier(
     dossier_id: int,
     force: bool = Query(False),
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Supprime un dossier."""
     try:
@@ -260,7 +260,7 @@ def delete_dossier(
 def init_arborescence(
     chantier_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Initialise l'arborescence type d'un chantier (GED-02)."""
     return controller.init_arborescence(chantier_id)
@@ -276,7 +276,7 @@ async def upload_document(
     description: Optional[str] = Query(None),
     niveau_acces: Optional[str] = Query(None),
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Upload un document (GED-06, GED-07, GED-08)."""
     try:
@@ -292,7 +292,7 @@ async def upload_document(
             filename=file.filename or "document",
             chantier_id=chantier_id,
             dossier_id=dossier_id,
-            uploaded_by=current_user["id"],
+            uploaded_by=current_user_id,
             taille=taille,
             mime_type=file.content_type or "application/octet-stream",
             description=description,
@@ -311,7 +311,7 @@ async def upload_document(
 def get_document(
     document_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Récupère un document par son ID."""
     try:
@@ -326,7 +326,7 @@ def list_documents(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les documents d'un dossier (GED-03)."""
     return controller.list_documents(dossier_id, skip, limit)
@@ -341,7 +341,7 @@ def search_documents(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Recherche des documents."""
     search_dto = DocumentSearchDTO(
@@ -360,7 +360,7 @@ def update_document(
     document_id: int,
     request: DocumentUpdateRequest,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Met à jour un document (GED-13)."""
     try:
@@ -381,7 +381,7 @@ def update_document(
 def delete_document(
     document_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Supprime un document (GED-13)."""
     try:
@@ -394,7 +394,7 @@ def delete_document(
 def download_document(
     document_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Télécharge un document."""
     try:
@@ -408,7 +408,7 @@ def download_document(
 def download_documents_zip(
     request: DownloadZipRequest,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Télécharge plusieurs documents en archive ZIP (GED-16)."""
     try:
@@ -426,7 +426,7 @@ def download_documents_zip(
 def get_document_preview(
     document_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Obtient les informations de prévisualisation d'un document (GED-17)."""
     try:
@@ -439,7 +439,7 @@ def get_document_preview(
 def get_document_preview_content(
     document_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Récupère le contenu d'un document pour prévisualisation (GED-17)."""
     try:
@@ -461,14 +461,14 @@ def get_document_preview_content(
 def create_autorisation(
     request: AutorisationCreateRequest,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Crée une autorisation nominative (GED-05, GED-10)."""
     try:
         dto = AutorisationCreateDTO(
             user_id=request.user_id,
             type_autorisation=request.type_autorisation,
-            accorde_par=current_user["id"],
+            accorde_par=current_user_id,
             dossier_id=request.dossier_id,
             document_id=request.document_id,
             expire_at=request.expire_at,
@@ -482,7 +482,7 @@ def create_autorisation(
 def list_autorisations_dossier(
     dossier_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les autorisations d'un dossier."""
     return controller.list_autorisations_by_dossier(dossier_id)
@@ -492,7 +492,7 @@ def list_autorisations_dossier(
 def list_autorisations_document(
     document_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les autorisations d'un document."""
     return controller.list_autorisations_by_document(document_id)
@@ -502,7 +502,7 @@ def list_autorisations_document(
 def revoke_autorisation(
     autorisation_id: int,
     controller: DocumentController = Depends(get_document_controller),
-    current_user: dict = Depends(get_current_user),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Révoque une autorisation."""
     try:

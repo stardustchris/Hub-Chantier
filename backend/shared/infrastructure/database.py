@@ -66,6 +66,7 @@ def init_db() -> None:
     from modules.formulaires.infrastructure.persistence import TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel, ChampRempliModel, PhotoFormulaireModel  # noqa: F401
     from modules.signalements.infrastructure.persistence import SignalementModel, ReponseModel  # noqa: F401
     from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
+    from modules.documents.infrastructure.persistence import DossierModel, DocumentModel, AutorisationDocumentModel  # noqa: F401
 
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
