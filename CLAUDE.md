@@ -2,6 +2,17 @@
 
 > Ce fichier est lu au debut de chaque session. Les regles ci-dessous sont OBLIGATOIRES.
 
+## ⛔ LECTURE OBLIGATOIRE AVANT TOUTE ACTION
+
+**LIRE ces fichiers AVANT de commencer :**
+
+1. Ce fichier (`CLAUDE.md`) - regles de session
+2. `.claude/agents.md` - workflow agents detaille
+
+**NE PAS coder, NE PAS planifier sans avoir lu ces deux fichiers.**
+
+---
+
 ## REGLES OBLIGATOIRES
 
 ### 1. Debut de session (AVANT tout dev)
@@ -16,16 +27,15 @@ cd ../frontend && npm install && npm run build
 ### 2. Workflow fonctionnalite
 
 ```
-1. Lire docs/SPECIFICATIONS.md (specs de la feature)
-2. python-pro/typescript-pro : implementer
-3. architect-reviewer : valider architecture
-4. test-automator : generer tests (couverture >= 85%)
-5. code-reviewer : valider qualite/securite
-6. Mettre a jour SPECIFICATIONS.md (statut -> done)
-7. Mettre a jour .claude/history.md (resume session)
+1. Lire .claude/agents.md (workflow agents)
+2. Lire docs/SPECIFICATIONS.md (specs de la feature)
+3. python-pro/typescript-pro : implementer
+4. architect-reviewer : valider architecture
+5. test-automator : generer tests (couverture >= 85%)
+6. code-reviewer : valider qualite/securite
+7. Mettre a jour SPECIFICATIONS.md (statut -> done)
+8. Mettre a jour .claude/history.md (resume session)
 ```
-
-Details complets : `.claude/agents.md`
 
 ### 3. Avant commit (code *.py, *.ts, *.tsx, *.sql)
 
