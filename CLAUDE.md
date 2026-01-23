@@ -72,6 +72,42 @@ Clean Architecture 4 layers : `Domain → Application → Adapters → Infrastru
 
 **Regles d'utilisation des sous-agents** : `.claude/agents.md`
 
+### REGLE CRITIQUE - Verification environnement (DEBUT DE SESSION)
+
+**AU DEBUT de chaque session de developpement, OBLIGATOIREMENT :**
+
+```bash
+# 1. Installer les dependances backend
+cd backend && pip install -r requirements.txt
+
+# 2. Verifier que TOUS les tests passent
+python -m pytest tests/unit -v --tb=short
+
+# 3. Installer les dependances frontend
+cd ../frontend && npm install
+
+# 4. Verifier le build frontend
+npm run build
+```
+
+**NE PAS commencer le developpement si ces verifications echouent.**
+
+> Cette regle existe car ne pas verifier l'environnement en debut de session
+> rend impossible la validation du code et peut mener a pousser du code casse.
+
+### REGLE CRITIQUE - Couverture de tests >= 85%
+
+**AVANT tout commit, verifier la couverture du code modifie :**
+
+```bash
+cd backend && python -m pytest tests/unit --cov=modules --cov-report=term-missing
+```
+
+**Seuil minimum : 85% sur le code modifie/ajoute.**
+
+- Si couverture < 85% : ajouter des tests avant de committer
+- Verifier particulierement les use cases et les entites domain
+
 ### REGLE CRITIQUE - Pre-commit
 
 **AVANT tout `git commit` contenant `*.py`, `*.ts`, `*.tsx`, `*.sql` :**
