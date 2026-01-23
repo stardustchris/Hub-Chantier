@@ -3,11 +3,9 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, Index, JSON
-from sqlalchemy.orm import declarative_base
 
+from shared.infrastructure.database_base import Base
 from ...domain.value_objects import TypeAffectation
-
-Base = declarative_base()
 
 
 class AffectationModel(Base):
