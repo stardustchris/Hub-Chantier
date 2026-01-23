@@ -18,6 +18,8 @@ import {
   Type,
 } from 'lucide-react'
 import type { ChampTemplate, TypeChamp } from '../../types'
+import PhotoCapture from './PhotoCapture'
+import SignaturePad from './SignaturePad'
 
 interface FieldRendererProps {
   champ: ChampTemplate
@@ -194,38 +196,21 @@ export default function FieldRenderer({
 
       case 'photo':
         return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <Camera className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">
-              {readOnly ? 'Aucune photo' : 'Cliquez pour ajouter une photo'}
-            </p>
-            {!readOnly && (
-              <button
-                type="button"
-                className="mt-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-lg text-sm font-medium hover:bg-primary-100"
-              >
-                Prendre une photo
-              </button>
-            )}
-          </div>
+          <PhotoCapture
+            value={localValue as string}
+            onChange={(value) => handleChange(value)}
+            readOnly={readOnly}
+            label={champ.label}
+          />
         )
 
       case 'signature':
         return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <PenTool className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">
-              {readOnly ? 'Aucune signature' : 'Cliquez pour signer'}
-            </p>
-            {!readOnly && (
-              <button
-                type="button"
-                className="mt-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-lg text-sm font-medium hover:bg-primary-100"
-              >
-                Signer
-              </button>
-            )}
-          </div>
+          <SignaturePad
+            value={localValue as string}
+            onChange={(value) => handleChange(value)}
+            readOnly={readOnly}
+          />
         )
 
       default:
