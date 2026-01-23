@@ -13,6 +13,7 @@ interface AffectationModalProps {
   chantiers: Chantier[]
   selectedDate?: Date
   selectedUserId?: string
+  selectedChantierId?: string
 }
 
 export default function AffectationModal({
@@ -24,6 +25,7 @@ export default function AffectationModal({
   chantiers,
   selectedDate,
   selectedUserId,
+  selectedChantierId,
 }: AffectationModalProps) {
   const isEdit = !!affectation
 
@@ -58,7 +60,7 @@ export default function AffectationModal({
     } else {
       setFormData({
         utilisateur_id: selectedUserId || '',
-        chantier_id: '',
+        chantier_id: selectedChantierId || '',
         date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
         heure_debut: '08:00',
         heure_fin: '17:00',
@@ -69,7 +71,7 @@ export default function AffectationModal({
       })
     }
     setError('')
-  }, [affectation, selectedDate, selectedUserId, isOpen])
+  }, [affectation, selectedDate, selectedUserId, selectedChantierId, isOpen])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

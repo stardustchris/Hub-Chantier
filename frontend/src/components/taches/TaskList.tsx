@@ -15,7 +15,7 @@ import {
   BookTemplate,
 } from 'lucide-react'
 import { tachesService } from '../../services/taches'
-import type { Tache, TacheStats, TemplateModele } from '../../types'
+import type { Tache, TacheStats } from '../../types'
 import { COULEURS_PROGRESSION } from '../../types'
 import TaskItem from './TaskItem'
 import TaskModal from './TaskModal'

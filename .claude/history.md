@@ -3,6 +3,43 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Frontend Planning - Vue Chantiers)
+
+- Implementation de la vue "Chantiers" dans le module Planning Frontend
+- Complement de PLN-01 (2 onglets de vue : Utilisateurs + Chantiers)
+
+### Composants React crees
+
+- `components/planning/PlanningChantierGrid.tsx` : Grille chantiers x jours
+  - Chantiers en lignes avec couleur, statut, adresse
+  - Jours en colonnes (lundi a dimanche)
+  - Affichage des utilisateurs affectes par cellule (avec avatar initiales)
+  - Drag & drop pour deplacer les affectations
+  - Duplication vers semaine suivante par chantier
+  - Support toggle weekend
+  - Tri des chantiers par statut puis par nom
+
+### Modifications
+
+- `PlanningPage.tsx` :
+  - Integration de PlanningChantierGrid dans l'onglet "Chantiers"
+  - Ajout des handlers handleChantierCellClick et handleDuplicateChantier
+  - Support de selectedChantierId pour pre-remplir le modal depuis la vue chantiers
+
+- `AffectationModal.tsx` :
+  - Ajout prop selectedChantierId pour pre-remplir le chantier a la creation
+  - Mise a jour du useEffect pour gerer le nouveau prop
+
+- `components/planning/index.ts` : Export du nouveau composant
+
+### Validation
+
+- TypeScript : 0 erreurs (apres suppression imports non utilises)
+- Toutes les fonctionnalites PLN-01 a PLN-28 desormais completes cote Frontend
+- Seuls PLN-23 (Notifications push) et PLN-24 (Mode Offline) restent en attente infrastructure
+
+---
+
 ## Session 2026-01-22 (module feuilles_heures backend)
 
 - Implementation complete du backend module Feuilles d'heures (CDC Section 7)
