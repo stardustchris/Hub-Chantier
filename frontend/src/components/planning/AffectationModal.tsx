@@ -190,35 +190,53 @@ export default function AffectationModal({
               </select>
             </div>
 
-            {/* Date (seulement en création) */}
+            {/* Dates (seulement en création) */}
             {!isEdit && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date début *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                    className="input w-full"
-                    required
-                  />
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date début *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={e => setFormData({ ...formData, date: e.target.value })}
+                      className="input w-full"
+                      required
+                    />
+                  </div>
+                  {formData.type_affectation === 'unique' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date fin
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.date_fin_recurrence}
+                        onChange={e => setFormData({ ...formData, date_fin_recurrence: e.target.value })}
+                        className="input w-full"
+                        min={formData.date}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date fin {formData.type_affectation === 'recurrente' ? '*' : ''}
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.date_fin_recurrence}
-                    onChange={e => setFormData({ ...formData, date_fin_recurrence: e.target.value })}
-                    className="input w-full"
-                    min={formData.date}
-                    required={formData.type_affectation === 'recurrente'}
-                  />
-                </div>
-              </div>
+                {formData.type_affectation === 'recurrente' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date fin de récurrence *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.date_fin_recurrence}
+                      onChange={e => setFormData({ ...formData, date_fin_recurrence: e.target.value })}
+                      className="input w-full"
+                      min={formData.date}
+                      required
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {/* Horaires */}
