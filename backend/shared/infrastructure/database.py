@@ -61,12 +61,14 @@ def init_db() -> None:
     from modules.chantiers.infrastructure.persistence import Base as ChantiersBase
     from modules.pointages.infrastructure.persistence import Base as PointagesBase
     from modules.taches.infrastructure.persistence import Base as TachesBase
+    from modules.formulaires.infrastructure.persistence import Base as FormulairesBase
 
     AuthBase.metadata.create_all(bind=engine)
     DashboardBase.metadata.create_all(bind=engine)
     ChantiersBase.metadata.create_all(bind=engine)
     PointagesBase.metadata.create_all(bind=engine)
     TachesBase.metadata.create_all(bind=engine)
+    FormulairesBase.metadata.create_all(bind=engine)
 
     # Creer la table affectations manuellement (module Planning)
     # car elle a des ForeignKey vers d'autres modules (users, chantiers)

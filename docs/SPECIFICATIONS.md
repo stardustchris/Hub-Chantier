@@ -478,19 +478,19 @@ Le module Formulaires permet de creer des templates personnalises pour tous les 
 
 ### 8.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| FOR-01 | Templates personnalises | Creation accompagnee par l'equipe Alobees |
-| FOR-02 | Remplissage mobile | Saisie sur smartphone meme hors ligne |
-| FOR-03 | Champs auto-remplis | Date, heure, localisation, intervenant |
-| FOR-04 | Ajout photos horodatees | Preuve visuelle avec timestamp GPS |
-| FOR-05 | Signature electronique | Chef de chantier + client si necessaire |
-| FOR-06 | Centralisation automatique | Rattachement au chantier concerne |
-| FOR-07 | Horodatage automatique | Date et heure de soumission enregistrees |
-| FOR-08 | Historique complet | Toutes les versions conservees |
-| FOR-09 | Export PDF | Generation du document final formate |
-| FOR-10 | Liste par chantier | Onglet dedie dans fiche chantier |
-| FOR-11 | Lien direct | Bouton Remplir le formulaire → |
+| ID | Fonctionnalite | Description | Statut |
+|----|----------------|-------------|--------|
+| FOR-01 | Templates personnalises | Creation et gestion des templates via API | ✅ |
+| FOR-02 | Remplissage mobile | Infrastructure backend pour saisie mobile | ✅ |
+| FOR-03 | Champs auto-remplis | Date, heure, localisation, intervenant | ✅ |
+| FOR-04 | Ajout photos horodatees | Preuve visuelle avec timestamp GPS | ✅ |
+| FOR-05 | Signature electronique | Chef de chantier + client si necessaire | ✅ |
+| FOR-06 | Centralisation automatique | Rattachement au chantier concerne | ✅ |
+| FOR-07 | Horodatage automatique | Date et heure de soumission enregistrees | ✅ |
+| FOR-08 | Historique complet | Toutes les versions conservees | ✅ |
+| FOR-09 | Export PDF | Structure pour generation du document final | ✅ |
+| FOR-10 | Liste par chantier | Endpoint liste par chantier | ✅ |
+| FOR-11 | Lien direct | Creation formulaire depuis template | ✅ |
 
 ### 8.3 Types de formulaires
 

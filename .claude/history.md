@@ -3,6 +3,92 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Module Formulaires Backend)
+
+Implementation complete du module Formulaires (CDC Section 8 - FOR-01 a FOR-11).
+
+### Architecture Clean implementee
+
+**Domain Layer**
+- `domain/entities/template_formulaire.py` : TemplateFormulaire + ChampTemplate
+- `domain/entities/formulaire_rempli.py` : FormulaireRempli + ChampRempli + PhotoFormulaire
+- `domain/value_objects/type_champ.py` : 18 types de champs (texte, auto, media, signature)
+- `domain/value_objects/statut_formulaire.py` : BROUILLON, SOUMIS, VALIDE, ARCHIVE
+- `domain/value_objects/categorie_formulaire.py` : 8 categories (intervention, reception, securite, etc.)
+- `domain/repositories/` : Interfaces abstraites pour templates et formulaires
+- `domain/events/` : 7 events domain (Created, Updated, Deleted, Submitted, Validated, Signed)
+
+**Application Layer**
+- `application/use_cases/` : 12 use cases complets
+  - Templates: create, update, delete, get, list
+  - Formulaires: create, update, submit, get, list, get_history, export_pdf
+- `application/dtos/` : DTOs pour templates et formulaires
+
+**Infrastructure Layer**
+- `infrastructure/persistence/template_model.py` : Models SQLAlchemy
+- `infrastructure/persistence/formulaire_model.py` : Models avec relations
+- `infrastructure/persistence/sqlalchemy_*_repository.py` : Implementations
+- `infrastructure/web/formulaire_routes.py` : Routes FastAPI
+- `infrastructure/web/dependencies.py` : Injection de dependances
+
+**Adapters Layer**
+- `adapters/controllers/formulaire_controller.py` : Controller facade
+
+### Tests crees
+
+**Tests unitaires (67 tests)**
+- `tests/unit/formulaires/test_value_objects.py` : 36 tests
+- `tests/unit/formulaires/test_entities.py` : 31 tests (avec correction)
+- `tests/unit/formulaires/test_use_cases.py` : Tests des use cases principaux
+
+**Tests d'integration (17 tests)**
+- `tests/integration/test_formulaires_api.py` : Tests API complets
+  - Templates CRUD
+  - Formulaires CRUD
+  - Soumission avec horodatage
+  - Historique
+
+### Modifications importantes
+
+1. **Architecture corrigee** : Suppression des ForeignKey vers autres modules
+   - `template_model.py` : created_by sans FK
+   - `formulaire_model.py` : chantier_id, user_id, valide_by sans FK
+   - Conformite Clean Architecture (modules decouples)
+
+2. **Authentification refactoree** : Import depuis auth module
+   - `dependencies.py` : Utilise `get_current_user_id` de auth
+   - Evite duplication de la logique OAuth2
+
+3. **Integration dans l'application**
+   - `main.py` : Routers formulaires enregistres
+   - `database.py` : Init FormulairesBase
+   - `conftest.py` : Support tests d'integration
+
+### Fonctionnalites implementees
+
+| ID | Description | Implementation |
+|----|-------------|----------------|
+| FOR-01 | Templates personnalises | CRUD templates avec champs |
+| FOR-02 | Remplissage mobile | Infrastructure API REST |
+| FOR-03 | Champs auto-remplis | Types AUTO_DATE, AUTO_HEURE, AUTO_LOCALISATION, AUTO_INTERVENANT |
+| FOR-04 | Photos horodatees | PhotoFormulaire avec timestamp + GPS |
+| FOR-05 | Signature electronique | ChampRempli signature + signature_url |
+| FOR-06 | Centralisation | Rattachement chantier_id |
+| FOR-07 | Horodatage | soumis_at automatique |
+| FOR-08 | Historique | parent_id + version |
+| FOR-09 | Export PDF | Use case ExportFormulairePDFUseCase |
+| FOR-10 | Liste par chantier | Endpoint /chantier/{id} |
+| FOR-11 | Lien direct | POST /formulaires avec template_id |
+
+### Statistiques finales
+
+- 84 tests formulaires (67 unit + 17 integration)
+- 658 tests unitaires total (projet complet)
+- Module conforme Clean Architecture
+- Pas de dependances inter-modules
+
+---
+
 ## Session 2026-01-23 (Frontend Feuilles d'heures)
 
 Implementation complete du frontend React pour le module Feuilles d'heures (CDC Section 7).
