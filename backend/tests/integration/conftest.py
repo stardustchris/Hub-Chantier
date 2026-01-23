@@ -15,11 +15,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from sqlalchemy import text
+
 from main import app
 from shared.infrastructure.database import get_db
 from modules.auth.infrastructure.persistence import Base as AuthBase
 from modules.chantiers.infrastructure.persistence import Base as ChantiersBase
 from modules.taches.infrastructure.persistence import Base as TachesBase
+from modules.dashboard.infrastructure.persistence import Base as DashboardBase
+from modules.pointages.infrastructure.persistence import Base as PointagesBase
+from modules.planning.infrastructure.persistence.affectation_model import Base as PlanningBase
 
 
 @pytest.fixture(scope="function")
@@ -34,10 +39,18 @@ def test_db():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    # Creer toutes les tables
+    # Creer les tables des modules sans dependances croisees
     AuthBase.metadata.create_all(bind=engine)
     ChantiersBase.metadata.create_all(bind=engine)
     TachesBase.metadata.create_all(bind=engine)
+    DashboardBase.metadata.create_all(bind=engine)
+    PointagesBase.metadata.create_all(bind=engine)
+
+    # Pour le module Planning, on doit reflechir les tables users et chantiers
+    # dans sa metadata avant de creer la table affectations
+    # Cela permet a SQLAlchemy de resoudre les ForeignKey
+    PlanningBase.metadata.reflect(bind=engine, only=['users', 'chantiers'])
+    PlanningBase.metadata.create_all(bind=engine)
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
