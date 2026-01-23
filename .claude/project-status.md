@@ -29,12 +29,11 @@
 
 ## Prochaine tache prioritaire
 
-**Frontend formulaires** (CDC Section 8)
-- Interface React pour les formulaires terrain
-- Templates personnalises (FOR-01)
-- Remplissage mobile (FOR-02)
-- Photos horodatees (FOR-04)
-- Signature electronique (FOR-05)
+**Module Documents (GED)** (CDC Section 9)
+- Arborescence par dossiers (GED-02)
+- Controle d'acces granulaire (GED-04, GED-05)
+- Upload multiple avec drag & drop (GED-06, GED-08)
+- Synchronisation Offline (GED-15)
 
 ## Modules en attente
 
@@ -48,4 +47,4 @@
 
 ## Derniere mise a jour
 
-Session 2026-01-23 - Module Formulaires Backend complet
+Session 2026-01-23 - Module Formulaires Frontend complet (Backend + Frontend)

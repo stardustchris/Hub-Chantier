@@ -28,6 +28,7 @@ const navigation = [
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
   { name: 'Planning', href: '/planning', icon: Calendar },
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
+  { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FileText, disabled: true },
 ]
 

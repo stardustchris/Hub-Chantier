@@ -3,6 +3,112 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-23 (Module Formulaires Frontend)
+
+Implementation complete du frontend React pour le module Formulaires (CDC Section 8 - FOR-01 a FOR-11).
+
+### Fichiers crees
+
+**Service API**
+- `frontend/src/services/formulaires.ts` : Service complet pour les operations formulaires
+  - Templates CRUD (listTemplates, getTemplate, createTemplate, updateTemplate, deleteTemplate)
+  - Formulaires CRUD (listFormulaires, listByChantier, getFormulaire, createFormulaire, updateFormulaire)
+  - Media (addPhoto)
+  - Signature (addSignature)
+  - Workflow (submitFormulaire, validateFormulaire, getHistory)
+  - Export PDF (exportPDF, downloadPDF)
+
+**Composants React**
+- `frontend/src/components/formulaires/FieldRenderer.tsx` : Rendu des champs de formulaire
+  - Support 11 types de champs (text, textarea, number, email, date, time, select, checkbox, radio, photo, signature)
+  - Gestion validation (required, pattern, min/max)
+  - Synchronisation etat local avec props
+- `frontend/src/components/formulaires/TemplateList.tsx` : Liste des templates
+  - Affichage en grid cards
+  - Actions (edit, delete, duplicate, toggle active, preview)
+  - Indicateurs (nombre champs, photos, signature)
+- `frontend/src/components/formulaires/TemplateModal.tsx` : Modal creation/edition template
+  - Gestion dynamique des champs (add, remove, reorder)
+  - Configuration par type de champ (options, min/max, placeholder)
+  - Validation avant soumission
+- `frontend/src/components/formulaires/FormulaireList.tsx` : Liste des formulaires remplis
+  - Affichage statut (brouillon, soumis, valide)
+  - Indicateurs (signe, geolocalisé, photos)
+  - Actions (view, edit, validate, export PDF)
+- `frontend/src/components/formulaires/FormulaireModal.tsx` : Modal remplissage formulaire
+  - Rendu des champs via FieldRenderer
+  - Affichage metadata (chantier, user, date, localisation)
+  - Workflow save/submit avec validation
+- `frontend/src/components/formulaires/index.ts` : Exports module
+
+**Page principale**
+- `frontend/src/pages/FormulairesPage.tsx` : Page complete
+  - 2 onglets : Formulaires / Templates (FOR-01)
+  - Filtres par categorie et recherche
+  - Modal selection template pour creation
+  - Geolocalisation automatique (FOR-03)
+  - Gestion permissions (admin/conducteur pour templates)
+
+**Types TypeScript**
+Ajout dans `frontend/src/types/index.ts` :
+- `TypeChamp`, `CategorieFormulaire`, `StatutFormulaire`
+- `ChampTemplate`, `TemplateFormulaire`, `TemplateFormulaireCreate`, `TemplateFormulaireUpdate`
+- `PhotoFormulaire`, `ChampRempli`, `FormulaireRempli`
+- `FormulaireCreate`, `FormulaireUpdate`, `FormulaireHistorique`
+- Constantes : `TYPES_CHAMPS`, `CATEGORIES_FORMULAIRES`, `STATUTS_FORMULAIRE`
+
+### Integration
+
+**Routes**
+- `frontend/src/App.tsx` : Ajout route `/formulaires` protegee
+
+**Navigation**
+- `frontend/src/components/Layout.tsx` : Ajout lien "Formulaires" avec icone FileText
+
+### Validation agents
+
+- **architect-reviewer** : PASS (9.4/10)
+  - Separation of concerns excellente
+  - Consistency avec modules existants
+  - TypeScript typing complet
+  - Aucune dependance circulaire
+
+- **code-reviewer** : NEEDS_CHANGES → Fixed
+  - Fix FieldRenderer state sync (useEffect added)
+  - Fix unsafe type assertions
+  - Fix base64 error handling
+  - Remaining minor issues documented
+
+### Corrections appliquees
+
+1. `FieldRenderer.tsx` : Ajout useEffect pour synchroniser localValue avec value prop
+2. `TemplateModal.tsx` : Remplacement non-null assertion par safe access
+3. `formulaires.ts` : Ajout try-catch pour decodage base64
+
+### Build verification
+
+- TypeScript : 0 erreurs
+- Build : OK (528.79 kB JS, 142.85 kB gzip)
+- Tests backend formulaires : 67 passed
+
+### Fonctionnalites implementees (cote Frontend)
+
+| Code | Fonctionnalite | Status |
+|------|---------------|--------|
+| FOR-01 | Templates personnalises | OK |
+| FOR-02 | Remplissage mobile | OK (responsive) |
+| FOR-03 | Champs auto-remplis | OK (geolocalisation) |
+| FOR-04 | Photos horodatees | OK (structure) |
+| FOR-05 | Signature electronique | OK (structure) |
+| FOR-06 | Centralisation | OK |
+| FOR-07 | Horodatage | OK |
+| FOR-08 | Historique | OK |
+| FOR-09 | Export PDF | OK |
+| FOR-10 | Liste par chantier | OK |
+| FOR-11 | Lien direct template | OK |
+
+---
+
 ## Session 2026-01-23 (Module Formulaires Backend)
 
 Implementation complete du module Formulaires (CDC Section 8 - FOR-01 a FOR-11).
