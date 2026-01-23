@@ -1,0 +1,76 @@
+"""Application layer du module Documents.
+
+Ce module contient les use cases et DTOs.
+"""
+
+from .use_cases import (
+    CreateDossierUseCase,
+    GetDossierUseCase,
+    ListDossiersUseCase,
+    GetArborescenceUseCase,
+    UpdateDossierUseCase,
+    DeleteDossierUseCase,
+    InitArborescenceUseCase,
+    UploadDocumentUseCase,
+    GetDocumentUseCase,
+    ListDocumentsUseCase,
+    SearchDocumentsUseCase,
+    UpdateDocumentUseCase,
+    DeleteDocumentUseCase,
+    DownloadDocumentUseCase,
+    CreateAutorisationUseCase,
+    ListAutorisationsUseCase,
+    RevokeAutorisationUseCase,
+    CheckAccessUseCase,
+)
+from .dtos import (
+    DocumentDTO,
+    DocumentCreateDTO,
+    DocumentUpdateDTO,
+    DocumentListDTO,
+    DocumentSearchDTO,
+    DossierDTO,
+    DossierCreateDTO,
+    DossierUpdateDTO,
+    DossierTreeDTO,
+    ArborescenceDTO,
+    AutorisationDTO,
+    AutorisationCreateDTO,
+    AutorisationListDTO,
+)
+
+__all__ = [
+    # Use Cases
+    "CreateDossierUseCase",
+    "GetDossierUseCase",
+    "ListDossiersUseCase",
+    "GetArborescenceUseCase",
+    "UpdateDossierUseCase",
+    "DeleteDossierUseCase",
+    "InitArborescenceUseCase",
+    "UploadDocumentUseCase",
+    "GetDocumentUseCase",
+    "ListDocumentsUseCase",
+    "SearchDocumentsUseCase",
+    "UpdateDocumentUseCase",
+    "DeleteDocumentUseCase",
+    "DownloadDocumentUseCase",
+    "CreateAutorisationUseCase",
+    "ListAutorisationsUseCase",
+    "RevokeAutorisationUseCase",
+    "CheckAccessUseCase",
+    # DTOs
+    "DocumentDTO",
+    "DocumentCreateDTO",
+    "DocumentUpdateDTO",
+    "DocumentListDTO",
+    "DocumentSearchDTO",
+    "DossierDTO",
+    "DossierCreateDTO",
+    "DossierUpdateDTO",
+    "DossierTreeDTO",
+    "ArborescenceDTO",
+    "AutorisationDTO",
+    "AutorisationCreateDTO",
+    "AutorisationListDTO",
+]
