@@ -13,12 +13,11 @@ from sqlalchemy import (
     UniqueConstraint,
     Index,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import relationship
 
+from shared.infrastructure.database_base import Base
 from ...domain.value_objects import PostStatus, TargetType
 from ...domain.entities.post_media import MediaType
-
-Base = declarative_base()
 
 
 class PostModel(Base):

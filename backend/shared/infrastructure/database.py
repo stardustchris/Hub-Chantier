@@ -53,47 +53,19 @@ def init_db() -> None:
     Initialise la base de données (crée les tables).
 
     À appeler au démarrage de l'application.
+    Utilise une Base partagée pour que les ForeignKeys entre modules fonctionnent.
     """
-    from sqlalchemy import text
+    from .database_base import Base
 
-    from modules.auth.infrastructure.persistence import Base as AuthBase
-    from modules.dashboard.infrastructure.persistence import Base as DashboardBase
-    from modules.chantiers.infrastructure.persistence import Base as ChantiersBase
-    from modules.pointages.infrastructure.persistence import Base as PointagesBase
-    from modules.taches.infrastructure.persistence import Base as TachesBase
-    from modules.formulaires.infrastructure.persistence import Base as FormulairesBase
-    from modules.signalements.infrastructure.persistence import Base as SignalementsBase
+    # Import des modèles pour les enregistrer dans la Base partagée
+    from modules.auth.infrastructure.persistence import UserModel  # noqa: F401
+    from modules.dashboard.infrastructure.persistence import PostModel, CommentModel, LikeModel, PostMediaModel  # noqa: F401
+    from modules.chantiers.infrastructure.persistence import ChantierModel  # noqa: F401
+    from modules.pointages.infrastructure.persistence import PointageModel, FeuilleHeuresModel, VariablePaieModel  # noqa: F401
+    from modules.taches.infrastructure.persistence import TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel  # noqa: F401
+    from modules.formulaires.infrastructure.persistence import TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel, ChampRempliModel, PhotoFormulaireModel  # noqa: F401
+    from modules.signalements.infrastructure.persistence import SignalementModel, ReponseModel  # noqa: F401
+    from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
 
-    AuthBase.metadata.create_all(bind=engine)
-    DashboardBase.metadata.create_all(bind=engine)
-    ChantiersBase.metadata.create_all(bind=engine)
-    PointagesBase.metadata.create_all(bind=engine)
-    TachesBase.metadata.create_all(bind=engine)
-    FormulairesBase.metadata.create_all(bind=engine)
-    SignalementsBase.metadata.create_all(bind=engine)
-
-    # Creer la table affectations manuellement (module Planning)
-    # car elle a des ForeignKey vers d'autres modules (users, chantiers)
-    create_affectations = """
-    CREATE TABLE IF NOT EXISTS affectations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        utilisateur_id INTEGER NOT NULL,
-        chantier_id INTEGER NOT NULL,
-        created_by INTEGER NOT NULL,
-        date DATE NOT NULL,
-        type_affectation VARCHAR(20) NOT NULL DEFAULT 'unique',
-        heure_debut VARCHAR(5),
-        heure_fin VARCHAR(5),
-        note TEXT,
-        jours_recurrence TEXT,
-        date_fin DATE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """
-    with engine.connect() as conn:
-        conn.execute(text(create_affectations))
-        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_affectations_utilisateur_id ON affectations(utilisateur_id)"))
-        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_affectations_chantier_id ON affectations(chantier_id)"))
-        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_affectations_date ON affectations(date)"))
-        conn.commit()
+    # Crée toutes les tables en une seule fois avec la Base partagée
+    Base.metadata.create_all(bind=engine)

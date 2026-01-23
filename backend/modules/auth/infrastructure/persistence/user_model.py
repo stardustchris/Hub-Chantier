@@ -3,11 +3,9 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from sqlalchemy.orm import declarative_base
 
+from shared.infrastructure.database_base import Base
 from ...domain.value_objects import Role, TypeUtilisateur, Couleur
-
-Base = declarative_base()
 
 
 class UserModel(Base):

@@ -2,9 +2,9 @@
 
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from shared.infrastructure.database_base import Base
 
 
 class SignalementModel(Base):

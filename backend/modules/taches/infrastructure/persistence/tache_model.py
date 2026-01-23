@@ -15,9 +15,9 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
 )
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from shared.infrastructure.database_base import Base
 from ...domain.value_objects import StatutTache, UniteMesure
 
 

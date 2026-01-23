@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON, ForeignKey
-from sqlalchemy.orm import relationship, Mapped, mapped_column, declarative_base
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-Base = declarative_base()
+from shared.infrastructure.database_base import Base
 
 
 class ChampTemplateModel(Base):

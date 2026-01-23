@@ -15,9 +15,9 @@ from sqlalchemy import (
     UniqueConstraint,
     Index,
 )
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from shared.infrastructure.database_base import Base
 
 
 class PointageModel(Base):
