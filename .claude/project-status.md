@@ -14,36 +14,46 @@
 | planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | **COMPLET** |
 | formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
-| documents | 9 | GED-01 a GED-15 | Structure only |
-| memos | 10 | MEM-01 a MEM-13 | Structure only |
+| documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
+| signalements | 10 | SIG-01 a SIG-20 | Structure only |
 | logistique | 11 | LOG-01 a LOG-18 | Structure only |
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
 
 ## Statistiques
 
-- **Modules complets** : 7/12
-- **Fonctionnalites totales** : 177
-- **Tests unitaires** : 658+
+- **Modules complets** : 8/12
+- **Fonctionnalites totales** : 186 (incluant GED-16, GED-17, SIG-14 a SIG-20)
+- **Tests unitaires** : 827+ (658 + 169 documents)
 - **Tests integration** : 17+ (formulaires)
 
 ## Prochaine tache prioritaire
 
-**Module Documents (GED)** (CDC Section 9)
-- Arborescence par dossiers (GED-02)
-- Controle d'acces granulaire (GED-04, GED-05)
-- Upload multiple avec drag & drop (GED-06, GED-08)
-- Synchronisation Offline (GED-15)
+**Module Signalements (SIG)** (CDC Section 10)
+- Fonctionnalites de base (SIG-01 a SIG-13)
+- Systeme de priorite 4 niveaux (SIG-14)
+- Date resolution souhaitee (SIG-15)
+- Alertes retard et escalade (SIG-16, SIG-17)
+- Tableau de bord alertes + filtres avances (SIG-18 a SIG-20)
 
 ## Modules en attente
 
 | Module | Priorite | Dependances |
 |--------|----------|-------------|
-| documents (GED) | Haute | Aucune |
-| memos | Moyenne | Aucune |
-| logistique | Moyenne | chantiers |
-| interventions | Basse | planning, taches |
-| planning_charge | Basse | planning |
+| signalements | Moyenne | Aucune |
+| logistique | Moyenne | chantiers (OK) |
+| interventions | Basse | planning (OK), taches (OK) |
+| planning_charge | Basse | planning (OK) |
+
+## Fonctionnalites en attente infrastructure
+
+- GED-11 : Transfert auto depuis ERP (Costructor/Graneet)
+- GED-15 : Synchronisation Offline
+- PLN-23/24 : Notifications push / Mode Offline
+- FDH-16 : Import ERP auto
+- FEED-17 : Notifications push
+- SIG-13 : Notifications push signalements
+- SIG-16/17 : Alertes retard et escalade automatique
 
 ## Derniere mise a jour
 
