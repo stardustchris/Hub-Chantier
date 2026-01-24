@@ -6,15 +6,17 @@
 
 ---
 
-## Agents disponibles
+## Agents disponibles (7 agents)
 
 | Agent | Prompt | Role | Outils |
 |-------|--------|------|--------|
-| architect-reviewer | `agents/architect-reviewer.md` | Validation Clean Architecture | Read, Glob, Grep |
-| code-reviewer | `agents/code-reviewer.md` | Qualite et securite du code | Read, Glob, Grep |
-| test-automator | `agents/test-automator.md` | Generation de tests pytest | Read, Write, Edit, Bash |
+| sql-pro | `agents/sql-pro.md` | Expert SQL/PostgreSQL, schema, migrations | Read, Glob, Grep, Bash |
 | python-pro | `agents/python-pro.md` | Expert FastAPI/SQLAlchemy | Read, Write, Edit, Bash |
 | typescript-pro | `agents/typescript-pro.md` | Expert React/TypeScript | Read, Write, Edit, Bash |
+| architect-reviewer | `agents/architect-reviewer.md` | Validation Clean Architecture | Read, Glob, Grep |
+| test-automator | `agents/test-automator.md` | Generation de tests pytest | Read, Write, Edit, Bash |
+| code-reviewer | `agents/code-reviewer.md` | Qualite et securite du code | Read, Glob, Grep |
+| security-auditor | `agents/security-auditor.md` | Audit securite et conformite RGPD | Read, Glob, Grep |
 
 ---
 
@@ -26,14 +28,16 @@
 Utilisateur demande: "Implemente CHT-03" ou "Cree le module chantiers"
 
 1. [SPECS] Lire docs/SPECIFICATIONS.md pour les details de la fonctionnalite
-2. [python-pro] Implementer selon Clean Architecture
-3. [architect-reviewer] Verifier la conformite architecture
-4. [test-automator] Generer les tests unitaires
-5. [code-reviewer] Verifier qualite et securite
-6. [SPECS] Mettre a jour SPECIFICATIONS.md:
+2. [sql-pro] Concevoir le schema DB et migrations (si nouvelles tables/colonnes)
+3. [python-pro] Implementer selon Clean Architecture
+4. [architect-reviewer] Verifier la conformite architecture
+5. [test-automator] Generer les tests unitaires
+6. [code-reviewer] Verifier qualite du code
+7. [security-auditor] Audit securite et conformite RGPD
+8. [SPECS] Mettre a jour SPECIFICATIONS.md:
    - Modifier le contenu si l'implementation differe de la spec initiale
    - Passer le statut a ✅
-7. [DOCS] Mettre a jour .claude/history.md (resume session)
+9. [DOCS] Mettre a jour .claude/history.md (resume session)
 ```
 
 ### Quand ajouter une nouvelle fonctionnalite (hors CDC initial)
@@ -45,12 +49,14 @@ Utilisateur demande: "Ajoute la fonctionnalite X"
    - Generer un nouvel ID (ex: CHT-21 si c'est pour chantiers)
    - Documenter la spec complete (description, regles metier, criteres)
    - Status initial: ⏳
-2. [python-pro] Implementer selon Clean Architecture
-3. [architect-reviewer] Verifier la conformite architecture
-4. [test-automator] Generer les tests unitaires
-5. [code-reviewer] Verifier qualite et securite
-6. [SPECS] Passer le statut a ✅
-7. [DOCS] Mettre a jour .claude/history.md (resume session)
+2. [sql-pro] Concevoir le schema DB et migrations (si nouvelles tables/colonnes)
+3. [python-pro] Implementer selon Clean Architecture
+4. [architect-reviewer] Verifier la conformite architecture
+5. [test-automator] Generer les tests unitaires
+6. [code-reviewer] Verifier qualite du code
+7. [security-auditor] Audit securite et conformite RGPD
+8. [SPECS] Passer le statut a ✅
+9. [DOCS] Mettre a jour .claude/history.md (resume session)
 ```
 
 ### Quand creer un nouveau module
@@ -59,7 +65,8 @@ Utilisateur demande: "Ajoute la fonctionnalite X"
 Utilisateur demande: "Cree le module X"
 
 1. [SPECS] Lire la section correspondante dans SPECIFICATIONS.md
-2. [python-pro] Creer la structure:
+2. [sql-pro] Concevoir le schema DB du module (tables, relations, index)
+3. [python-pro] Creer la structure:
    - domain/entities/
    - domain/value_objects/
    - domain/repositories/ (interfaces)
@@ -69,9 +76,10 @@ Utilisateur demande: "Cree le module X"
    - adapters/controllers/
    - infrastructure/persistence/
    - infrastructure/web/
-3. [architect-reviewer] Valider la structure
-4. [test-automator] Generer les tests de base
-5. [DOCS] Mettre a jour .claude/project-status.md (etat module)
+4. [architect-reviewer] Valider la structure
+5. [test-automator] Generer les tests de base
+6. [security-auditor] Valider securite du module (si donnees sensibles)
+7. [DOCS] Mettre a jour .claude/project-status.md (etat module)
 ```
 
 ### Quand modifier du code existant
@@ -79,15 +87,17 @@ Utilisateur demande: "Cree le module X"
 ```
 Utilisateur demande: "Modifie X" ou "Corrige Y"
 
-1. [python-pro/typescript-pro] Effectuer les modifications
-2. [architect-reviewer] Verifier que Clean Architecture est respectee
-3. [code-reviewer] Verifier qualite et securite
+1. [sql-pro] Si modifications DB: migrations, index (optionnel)
+2. [python-pro/typescript-pro] Effectuer les modifications
+3. [architect-reviewer] Verifier que Clean Architecture est respectee
 4. [test-automator] Mettre a jour les tests si necessaire
+5. [code-reviewer] Verifier qualite du code
+6. [security-auditor] Si donnees sensibles: audit securite (optionnel)
 ```
 
 ---
 
-## Workflow detaille
+## Workflow detaille (7 agents)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -98,7 +108,16 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. IMPLEMENTATION (python-pro ou typescript-pro)               │
+│  1. DATABASE (sql-pro) - si nouvelles tables/colonnes           │
+│     - Concevoir le schema (tables, relations, contraintes)      │
+│     - Creer les migrations Alembic                              │
+│     - Definir les index pour requetes frequentes                │
+│     - Objectif: requetes < 100ms                                │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. IMPLEMENTATION (python-pro ou typescript-pro)               │
 │     - Domain: Entities, Value Objects, Repository interfaces    │
 │     - Application: Use Cases, DTOs                              │
 │     - Adapters: Controllers, Providers                          │
@@ -107,7 +126,7 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  2. ARCHITECTURE REVIEW (architect-reviewer)                    │
+│  3. ARCHITECTURE REVIEW (architect-reviewer)                    │
 │     Checklist:                                                  │
 │     □ Domain n'importe pas de frameworks                        │
 │     □ Use cases dependent d'interfaces (pas d'implementations)  │
@@ -118,27 +137,39 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  3. TESTS (test-automator)                                      │
+│  4. TESTS (test-automator)                                      │
 │     - Generer tests/unit/{module}/test_{use_case}.py            │
 │     - Mocks pour toutes les dependances                         │
 │     - Cas nominaux + cas d'erreur                               │
-│     - Objectif: > 80% couverture                                │
+│     - Objectif: > 85% couverture                                │
 └─────────────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  4. CODE REVIEW (code-reviewer)                                 │
+│  5. CODE REVIEW (code-reviewer)                                 │
 │     Checklist:                                                  │
-│     □ Securite (injections, auth, validation)                   │
 │     □ Type hints sur toutes les signatures                      │
 │     □ Docstrings Google style                                   │
 │     □ Conventions de nommage respectees                         │
+│     □ Pas de code mort ou commente                              │
 │     → Si echec: CORRIGER avant de continuer                     │
 └─────────────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  5. MISE A JOUR DOCUMENTATION                                   │
+│  6. SECURITY AUDIT (security-auditor)                           │
+│     Checklist:                                                  │
+│     □ Aucune injection SQL/XSS possible                         │
+│     □ Validation des entrees (Pydantic)                         │
+│     □ Donnees sensibles chiffrees                               │
+│     □ Conformite RGPD (si donnees personnelles)                 │
+│     □ Audit trail sur actions sensibles                         │
+│     → Si finding CRITIQUE/HAUTE: CORRIGER avant commit          │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  7. MISE A JOUR DOCUMENTATION                                   │
 │     - SPECIFICATIONS.md:                                        │
 │       • Modifier le contenu si implementation differe           │
 │       • Ajouter la feature si nouvelle (hors CDC)               │
@@ -148,7 +179,7 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  6. COMMIT & PUSH                                               │
+│  8. COMMIT & PUSH                                               │
 │     Format: feat(module): description                           │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -222,6 +253,11 @@ Utilisateur: "Implemente CHT-03 (Statut chantier)"
 → CHT-03: Statut chantier - Ouvert / En cours / Receptionne / Ferme
 → Statuts avec icones et actions possibles
 
+[sql-pro]
+→ Pas de nouvelle table, statut = colonne enum existante
+→ Verifie index sur chantiers.statut... OK
+→ Status: SKIP (pas de migration necessaire)
+
 [python-pro]
 → Cree modules/chantiers/domain/value_objects/statut_chantier.py
 → Cree modules/chantiers/domain/entities/chantier.py (si n'existe pas)
@@ -236,13 +272,18 @@ Utilisateur: "Implemente CHT-03 (Statut chantier)"
 [test-automator]
 → Genere tests/unit/chantiers/test_statut_chantier.py
 → Tests: creation, transitions valides, transitions invalides
-→ 8 tests crees
+→ 8 tests crees, couverture 92%
 
 [code-reviewer]
 → Type hints... OK
 → Docstrings... OK
 → Enum bien utilise... OK
-→ Status: approved
+→ Status: APPROVED
+
+[security-auditor]
+→ Pas de donnees sensibles dans statut... OK
+→ Validation Pydantic sur changement statut... OK
+→ Status: PASS (aucun finding)
 
 [SPECS] Mise a jour SPECIFICATIONS.md
 → CHT-03: ⏳ → ✅
