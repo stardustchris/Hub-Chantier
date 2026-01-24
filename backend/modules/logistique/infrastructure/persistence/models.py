@@ -19,6 +19,8 @@ from sqlalchemy import (
     Text,
     Index,
     Enum as SQLEnum,
+    ForeignKey,
+    CheckConstraint,
 )
 
 from shared.infrastructure.database_base import Base
@@ -55,10 +57,19 @@ class RessourceModel(LogistiqueBase):
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
-    created_by = Column(Integer, nullable=True)
+    created_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     __table_args__ = (
         Index("ix_ressources_categorie_actif", "categorie", "actif"),
+        # CHECK: heure_fin_defaut > heure_debut_defaut
+        CheckConstraint(
+            "heure_fin_defaut > heure_debut_defaut",
+            name="check_ressources_plage_horaire",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -78,9 +89,24 @@ class ReservationModel(LogistiqueBase):
     __tablename__ = "reservations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ressource_id = Column(Integer, nullable=False, index=True)
-    chantier_id = Column(Integer, nullable=False, index=True)
-    demandeur_id = Column(Integer, nullable=False, index=True)
+    ressource_id = Column(
+        Integer,
+        ForeignKey("ressources.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    chantier_id = Column(
+        Integer,
+        ForeignKey("chantiers.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    demandeur_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
     date_reservation = Column(Date, nullable=False, index=True)
     heure_debut = Column(Time, nullable=False)
     heure_fin = Column(Time, nullable=False)
@@ -92,7 +118,11 @@ class ReservationModel(LogistiqueBase):
     )
     motif_refus = Column(Text, nullable=True)
     commentaire = Column(Text, nullable=True)
-    valideur_id = Column(Integer, nullable=True)
+    valideur_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     validated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
@@ -106,6 +136,18 @@ class ReservationModel(LogistiqueBase):
         Index("ix_reservations_chantier_date", "chantier_id", "date_reservation"),
         # Index pour les réservations par demandeur
         Index("ix_reservations_demandeur_statut", "demandeur_id", "statut"),
+        # Index composite pour détection de conflits
+        Index(
+            "ix_reservations_ressource_statut_date",
+            "ressource_id",
+            "statut",
+            "date_reservation",
+        ),
+        # CHECK: heure_fin > heure_debut
+        CheckConstraint(
+            "heure_fin > heure_debut",
+            name="check_reservations_plage_horaire",
+        ),
     )
 
     def __repr__(self) -> str:

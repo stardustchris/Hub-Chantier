@@ -10,7 +10,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from modules.auth.infrastructure.web.dependencies import get_current_user_id
-from shared.infrastructure.web import require_admin, require_conducteur_or_admin
+from shared.infrastructure.web import (
+    require_admin,
+    require_conducteur_or_admin,
+    get_current_user_role,
+)
 
 from ...domain.value_objects import CategorieRessource, StatutReservation
 from ...domain.entities.reservation import (
@@ -63,12 +67,12 @@ class RessourceCreateRequest(BaseModel):
     nom: str = Field(..., min_length=1, max_length=200)
     code: str = Field(..., min_length=1, max_length=20, pattern=r"^[A-Z0-9\-]+$")
     categorie: CategorieRessource
-    photo_url: Optional[str] = None
+    photo_url: Optional[str] = Field(None, max_length=500)
     couleur: str = Field(default="#3B82F6", pattern=r"^#[0-9A-Fa-f]{6}$")
     heure_debut_defaut: time = Field(default=time(8, 0))
     heure_fin_defaut: time = Field(default=time(18, 0))
     validation_requise: Optional[bool] = None
-    description: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=2000)
 
 
 class RessourceUpdateRequest(BaseModel):
@@ -77,13 +81,13 @@ class RessourceUpdateRequest(BaseModel):
     nom: Optional[str] = Field(None, min_length=1, max_length=200)
     code: Optional[str] = Field(None, min_length=1, max_length=20, pattern=r"^[A-Z0-9\-]+$")
     categorie: Optional[CategorieRessource] = None
-    photo_url: Optional[str] = None
+    photo_url: Optional[str] = Field(None, max_length=500)
     couleur: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     heure_debut_defaut: Optional[time] = None
     heure_fin_defaut: Optional[time] = None
     validation_requise: Optional[bool] = None
     actif: Optional[bool] = None
-    description: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=2000)
 
 
 class ReservationCreateRequest(BaseModel):
@@ -94,7 +98,7 @@ class ReservationCreateRequest(BaseModel):
     date_reservation: date
     heure_debut: time
     heure_fin: time
-    commentaire: Optional[str] = None
+    commentaire: Optional[str] = Field(None, max_length=1000)
 
 
 class ReservationUpdateRequest(BaseModel):
@@ -103,13 +107,13 @@ class ReservationUpdateRequest(BaseModel):
     date_reservation: Optional[date] = None
     heure_debut: Optional[time] = None
     heure_fin: Optional[time] = None
-    commentaire: Optional[str] = None
+    commentaire: Optional[str] = Field(None, max_length=1000)
 
 
 class RefuserReservationRequest(BaseModel):
     """Requête de refus de réservation."""
 
-    motif: Optional[str] = None
+    motif: Optional[str] = Field(None, max_length=1000)
 
 
 # =============================================================================
@@ -283,11 +287,24 @@ async def list_reservations_en_attente(
 async def get_reservation(
     reservation_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
     use_case=Depends(get_get_reservation_use_case),
 ):
-    """Récupère une réservation par son ID."""
+    """Récupère une réservation par son ID.
+
+    Accessible au demandeur de la réservation ou aux conducteurs/admins.
+    """
     try:
-        return use_case.execute(reservation_id)
+        reservation = use_case.execute(reservation_id)
+        # SEC-001: Vérifier que l'utilisateur est autorisé
+        is_owner = reservation.demandeur_id == current_user_id
+        is_privileged = current_user_role in ("admin", "conducteur", "chef_chantier")
+        if not is_owner and not is_privileged:
+            raise HTTPException(
+                status_code=403,
+                detail="Vous n'êtes pas autorisé à consulter cette réservation",
+            )
+        return reservation
     except ReservationNotFoundError:
         raise HTTPException(status_code=404, detail="Réservation non trouvée")
 
@@ -297,13 +314,23 @@ async def update_reservation(
     reservation_id: int,
     request: ReservationUpdateRequest,
     current_user_id: int = Depends(get_current_user_id),
+    get_use_case=Depends(get_get_reservation_use_case),
     use_case=Depends(get_update_reservation_use_case),
 ):
     """Met à jour une réservation.
 
     Seules les réservations en attente peuvent être modifiées.
+    Seul le demandeur peut modifier sa réservation.
     """
     try:
+        # SEC-002: Vérifier que l'utilisateur est le propriétaire
+        existing = get_use_case.execute(reservation_id)
+        if existing.demandeur_id != current_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Seul le demandeur peut modifier sa réservation",
+            )
+
         dto = ReservationUpdateDTO(
             date_reservation=request.date_reservation,
             heure_debut=request.heure_debut,
@@ -362,10 +389,25 @@ async def refuser_reservation(
 async def annuler_reservation(
     reservation_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    get_use_case=Depends(get_get_reservation_use_case),
     use_case=Depends(get_annuler_reservation_use_case),
 ):
-    """Annule une réservation."""
+    """Annule une réservation.
+
+    Accessible au demandeur de la réservation ou aux conducteurs/admins.
+    """
     try:
+        # SEC-003: Vérifier que l'utilisateur est autorisé
+        existing = get_use_case.execute(reservation_id)
+        is_owner = existing.demandeur_id == current_user_id
+        is_privileged = current_user_role in ("admin", "conducteur", "chef_chantier")
+        if not is_owner and not is_privileged:
+            raise HTTPException(
+                status_code=403,
+                detail="Vous n'êtes pas autorisé à annuler cette réservation",
+            )
+
         return use_case.execute(reservation_id, current_user_id)
     except ReservationNotFoundError:
         raise HTTPException(status_code=404, detail="Réservation non trouvée")
