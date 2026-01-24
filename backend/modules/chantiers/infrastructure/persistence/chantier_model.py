@@ -74,6 +74,9 @@ class ChantierModel(Base):
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
 
+    # Soft delete - permet de "supprimer" sans perdre les données (RGPD compliant)
+    deleted_at = Column(DateTime, nullable=True, default=None, index=True)
+
     # Relations avec les contacts
     contacts = relationship(
         "ContactChantierModel",

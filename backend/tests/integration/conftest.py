@@ -155,3 +155,74 @@ def sample_user_data():
         "telephone": "0612345678",
         "metier": "Macon",
     }
+
+
+# =============================================================================
+# Fixtures RBAC - Differents roles pour tester les permissions
+# =============================================================================
+
+
+@pytest.fixture
+def admin_auth_headers(client):
+    """
+    Cree un utilisateur admin et retourne les headers d'authentification.
+    Alias pour auth_headers pour la clarte des tests RBAC.
+    """
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "admin_rbac@test.com",
+            "password": "TestPassword123!",
+            "nom": "Admin",
+            "prenom": "RBAC",
+            "role": "admin",
+            "type_utilisateur": "employe",
+        },
+    )
+    assert response.status_code == 201, f"Registration failed: {response.json()}"
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def conducteur_auth_headers(client):
+    """
+    Cree un utilisateur conducteur et retourne les headers d'authentification.
+    Le conducteur peut creer/modifier des chantiers mais pas les supprimer.
+    """
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "conducteur@test.com",
+            "password": "TestPassword123!",
+            "nom": "Conducteur",
+            "prenom": "Test",
+            "role": "conducteur",
+            "type_utilisateur": "employe",
+        },
+    )
+    assert response.status_code == 201, f"Registration failed: {response.json()}"
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def compagnon_auth_headers(client):
+    """
+    Cree un utilisateur compagnon et retourne les headers d'authentification.
+    Le compagnon ne peut que lire les chantiers, pas les modifier.
+    """
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "compagnon@test.com",
+            "password": "TestPassword123!",
+            "nom": "Compagnon",
+            "prenom": "Test",
+            "role": "compagnon",
+            "type_utilisateur": "employe",
+        },
+    )
+    assert response.status_code == 201, f"Registration failed: {response.json()}"
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

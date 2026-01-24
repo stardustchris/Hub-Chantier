@@ -3,6 +3,74 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-24 (Audit sécurité module Chantiers)
+
+Analyse complète et remédiation du module Chantiers avec 7 agents (workflow agents.md).
+
+### Agents exécutés
+
+| Agent | Score | Résultat |
+|-------|-------|----------|
+| sql-pro | PASS | Migrations Alembic créées |
+| python-pro | 9/10 | 18/20 features (2 infra pending) |
+| architect-reviewer | PASS | Clean Architecture respectée |
+| test-automator | PASS | 109 tests (44→109) |
+| code-reviewer | APPROVED | |
+| security-auditor | 87.5% | Après remédiations (était 40%) |
+
+### Remédiations implémentées
+
+1. **Migrations Alembic** : Structure `/backend/migrations/` avec migration initiale `20260124_0001_initial_chantiers.py`
+2. **RGPD - UserPublicSummary** : Nouveau DTO sans email/téléphone dans `chantier_routes.py`
+3. **RBAC Guards** : `require_conducteur_or_admin`, `require_admin` dans `/shared/infrastructure/web/dependencies.py`
+4. **Soft Delete** : Colonne `deleted_at` + filtrage auto dans repository
+5. **Audit Trail Infrastructure** : `AuditLog` model + `AuditService` dans `/shared/infrastructure/audit/`
+6. **Pagination** : Fix `ListChantiersUseCase` pour total correct filtré
+7. **Tests Value Objects** : 87 nouveaux tests (CodeChantier, StatutChantier, CoordonneesGPS)
+8. **Tests intégration RBAC** : 8 nouveaux tests (RBAC, soft delete, privacy)
+
+### Fichiers créés
+
+**Infrastructure audit**
+- `backend/shared/infrastructure/audit/__init__.py`
+- `backend/shared/infrastructure/audit/audit_model.py`
+- `backend/shared/infrastructure/audit/audit_service.py`
+
+**Migrations Alembic**
+- `backend/alembic.ini`
+- `backend/migrations/env.py`
+- `backend/migrations/script.py.mako`
+- `backend/migrations/versions/20260124_0001_initial_chantiers.py`
+
+**Tests**
+- `backend/tests/unit/chantiers/value_objects/__init__.py`
+- `backend/tests/unit/chantiers/value_objects/test_code_chantier.py` (21 tests)
+- `backend/tests/unit/chantiers/value_objects/test_statut_chantier.py` (36 tests)
+- `backend/tests/unit/chantiers/value_objects/test_coordonnees_gps.py` (30 tests)
+
+### Fichiers modifiés
+
+- `backend/shared/infrastructure/web/dependencies.py` : Ajout guards RBAC
+- `backend/shared/infrastructure/web/__init__.py` : Exports des guards
+- `backend/modules/chantiers/infrastructure/web/chantier_routes.py` : RBAC + UserPublicSummary
+- `backend/modules/chantiers/infrastructure/persistence/chantier_model.py` : deleted_at
+- `backend/modules/chantiers/infrastructure/persistence/sqlalchemy_chantier_repository.py` : Soft delete filter
+- `backend/modules/chantiers/application/use_cases/list_chantiers.py` : Pagination fix
+- `backend/tests/integration/test_chantiers_api.py` : +8 tests RBAC/soft delete/privacy
+- `backend/tests/integration/conftest.py` : Fixtures RBAC
+
+### Remédiation restante
+
+- **Audit non intégré** : `AuditService` infrastructure créée mais pas injectée dans les Use Cases (amélioration future)
+
+### Statistiques
+
+- Score sécurité : 40% → 87.5%
+- Tests : 44 → 109 (+65)
+- Couverture Value Objects : 0% → 100%
+
+---
+
 ## Session 2026-01-23 (Module Signalements SIG)
 
 Implementation complete du module Signalements (CDC Section 10 - SIG-01 a SIG-20).

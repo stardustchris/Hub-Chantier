@@ -1,7 +1,8 @@
 """Use Case ListChantiers - Liste des chantiers avec filtres."""
 
-from typing import Optional
+from typing import Optional, List
 
+from ...domain.entities import Chantier
 from ...domain.repositories import ChantierRepository
 from ...domain.value_objects import StatutChantier
 from ..dtos import ChantierDTO, ChantierListDTO
@@ -26,6 +27,24 @@ class ListChantiersUseCase:
             chantier_repo: Repository chantiers (interface).
         """
         self.chantier_repo = chantier_repo
+
+    def _paginate(
+        self, all_items: List[Chantier], skip: int, limit: int
+    ) -> tuple[List[Chantier], int]:
+        """
+        Pagine une liste de chantiers et retourne le total.
+
+        Args:
+            all_items: Liste complète des chantiers.
+            skip: Nombre d'éléments à sauter.
+            limit: Nombre maximum d'éléments à retourner.
+
+        Returns:
+            Tuple (chantiers_paginés, total).
+        """
+        total = len(all_items)
+        paginated = all_items[skip : skip + limit]
+        return paginated, total
 
     def execute(
         self,
@@ -54,65 +73,76 @@ class ListChantiersUseCase:
         Returns:
             ChantierListDTO avec la liste paginée.
         """
-        # Déterminer quel filtre appliquer (par ordre de priorité)
-        if search:
-            statut_obj = None
-            if statut:
-                statut_obj = StatutChantier.from_string(statut)
-            chantiers = self.chantier_repo.search(
-                query=search,
-                statut=statut_obj,
-                skip=skip,
-                limit=limit,
-            )
-            total = len(chantiers)  # Approximation, idéalement count séparé
-
-        elif responsable_id is not None:
-            chantiers = self.chantier_repo.find_by_responsable(
-                user_id=responsable_id,
-                skip=skip,
-                limit=limit,
-            )
-            total = len(chantiers)
-
-        elif conducteur_id is not None:
-            chantiers = self.chantier_repo.find_by_conducteur(
-                conducteur_id=conducteur_id,
-                skip=skip,
-                limit=limit,
-            )
-            total = len(chantiers)
-
-        elif chef_chantier_id is not None:
-            chantiers = self.chantier_repo.find_by_chef_chantier(
-                chef_id=chef_chantier_id,
-                skip=skip,
-                limit=limit,
-            )
-            total = len(chantiers)
-
-        elif statut:
-            statut_obj = StatutChantier.from_string(statut)
-            chantiers = self.chantier_repo.find_by_statut(
-                statut=statut_obj,
-                skip=skip,
-                limit=limit,
-            )
-            total = len(chantiers)
-
-        elif actifs_uniquement:
-            chantiers = self.chantier_repo.find_active(
-                skip=skip,
-                limit=limit,
-            )
-            total = len(chantiers)
-
-        else:
+        # Cas par défaut: pas de filtre -> utiliser count() du repository
+        if not (search or responsable_id or conducteur_id or chef_chantier_id or statut or actifs_uniquement):
             chantiers = self.chantier_repo.find_all(
                 skip=skip,
                 limit=limit,
             )
             total = self.chantier_repo.count()
+            return ChantierListDTO(
+                chantiers=[ChantierDTO.from_entity(c) for c in chantiers],
+                total=total,
+                skip=skip,
+                limit=limit,
+            )
+
+        # Pour les filtres, récupérer tous les résultats puis paginer
+        # Note: Acceptable pour le volume PME (<500 chantiers)
+        # À optimiser si volume > 1000 avec count_* dans le repository
+        max_results = 10000  # Limite de sécurité
+
+        if search:
+            statut_obj = None
+            if statut:
+                statut_obj = StatutChantier.from_string(statut)
+            all_results = self.chantier_repo.search(
+                query=search,
+                statut=statut_obj,
+                skip=0,
+                limit=max_results,
+            )
+
+        elif responsable_id is not None:
+            all_results = self.chantier_repo.find_by_responsable(
+                user_id=responsable_id,
+                skip=0,
+                limit=max_results,
+            )
+
+        elif conducteur_id is not None:
+            all_results = self.chantier_repo.find_by_conducteur(
+                conducteur_id=conducteur_id,
+                skip=0,
+                limit=max_results,
+            )
+
+        elif chef_chantier_id is not None:
+            all_results = self.chantier_repo.find_by_chef_chantier(
+                chef_id=chef_chantier_id,
+                skip=0,
+                limit=max_results,
+            )
+
+        elif statut:
+            statut_obj = StatutChantier.from_string(statut)
+            all_results = self.chantier_repo.find_by_statut(
+                statut=statut_obj,
+                skip=0,
+                limit=max_results,
+            )
+
+        elif actifs_uniquement:
+            all_results = self.chantier_repo.find_active(
+                skip=0,
+                limit=max_results,
+            )
+
+        else:
+            all_results = []
+
+        # Paginer les résultats
+        chantiers, total = self._paginate(all_results, skip, limit)
 
         return ChantierListDTO(
             chantiers=[ChantierDTO.from_entity(c) for c in chantiers],

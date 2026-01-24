@@ -19,7 +19,11 @@ from ...application.use_cases import (
     InvalidRoleTypeError,
 )
 from .dependencies import get_chantier_controller, get_user_repository
-from shared.infrastructure.web import get_current_user_id
+from shared.infrastructure.web import (
+    get_current_user_id,
+    require_conducteur_or_admin,
+    require_admin,
+)
 from modules.auth.domain.repositories import UserRepository
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
@@ -160,19 +164,26 @@ class AssignResponsableRequest(BaseModel):
     user_id: int
 
 
-class UserSummary(BaseModel):
-    """Résumé d'un utilisateur pour l'inclusion dans Chantier."""
+class UserPublicSummary(BaseModel):
+    """
+    Résumé public d'un utilisateur (sans données sensibles RGPD).
+
+    Utilisé pour l'affichage des conducteurs/chefs dans les chantiers.
+    Ne contient PAS email ni téléphone pour conformité RGPD.
+    """
 
     id: str
-    email: str
     nom: str
     prenom: str
     role: str
     type_utilisateur: str
-    telephone: Optional[str] = None
     metier: Optional[str] = None
     couleur: Optional[str] = None
     is_active: bool
+
+
+# Alias pour compatibilité (ne pas utiliser pour nouvelles features)
+UserSummary = UserPublicSummary
 
 
 class ChantierResponse(BaseModel):
@@ -194,8 +205,8 @@ class ChantierResponse(BaseModel):
     date_debut_prevue: Optional[str] = None  # Renommé pour frontend
     date_fin_prevue: Optional[str] = None  # Renommé pour frontend
     description: Optional[str] = None
-    conducteurs: List[UserSummary] = []  # Objets User complets pour frontend
-    chefs: List[UserSummary] = []  # Objets User complets pour frontend
+    conducteurs: List[UserPublicSummary] = []  # Objets User publics (sans email/tel)
+    chefs: List[UserPublicSummary] = []  # Objets User publics (sans email/tel)
     created_at: str
     updated_at: Optional[str] = None
 
@@ -228,11 +239,13 @@ def create_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC: conducteur ou admin requis
 ):
     """
     Crée un nouveau chantier.
 
     Le code est auto-généré si non fourni (CHT-19).
+    RBAC: Requiert le rôle conducteur ou admin.
 
     Args:
         request: Données de création.
@@ -245,6 +258,7 @@ def create_chantier(
 
     Raises:
         HTTPException 400: Code déjà utilisé ou données invalides.
+        HTTPException 403: Accès non autorisé.
     """
     try:
         # Convertir les contacts en liste de dicts
@@ -409,9 +423,12 @@ def update_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC: conducteur ou admin requis
 ):
     """
     Met à jour un chantier.
+
+    RBAC: Requiert le rôle conducteur ou admin.
 
     Args:
         chantier_id: ID du chantier à mettre à jour.
@@ -426,6 +443,7 @@ def update_chantier(
     Raises:
         HTTPException 404: Chantier non trouvé.
         HTTPException 400: Chantier fermé ou données invalides.
+        HTTPException 403: Accès non autorisé.
     """
     try:
         # Convertir les contacts en liste de dicts
@@ -477,11 +495,13 @@ def delete_chantier(
     force: bool = Query(False, description="Forcer la suppression d'un chantier actif"),
     controller: ChantierController = Depends(get_chantier_controller),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_admin),  # RBAC: admin uniquement pour suppression
 ):
     """
-    Supprime un chantier.
+    Supprime un chantier (soft delete).
 
     Le chantier doit être fermé, sauf si force=True.
+    RBAC: Requiert le rôle admin.
 
     Args:
         chantier_id: ID du chantier à supprimer.
@@ -495,6 +515,7 @@ def delete_chantier(
     Raises:
         HTTPException 404: Chantier non trouvé.
         HTTPException 400: Chantier actif et force=False.
+        HTTPException 403: Accès non autorisé (admin requis).
     """
     try:
         return controller.delete(chantier_id, force=force)
@@ -522,9 +543,12 @@ def change_statut(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC: conducteur ou admin requis
 ):
     """
     Change le statut d'un chantier (CHT-03).
+
+    RBAC: Requiert le rôle conducteur ou admin.
 
     Transitions autorisées:
     - Ouvert → En cours, Fermé
@@ -545,6 +569,7 @@ def change_statut(
     Raises:
         HTTPException 404: Chantier non trouvé.
         HTTPException 400: Transition non autorisée.
+        HTTPException 403: Accès non autorisé.
     """
     try:
         result = controller.change_statut(chantier_id, request.statut)
@@ -572,8 +597,9 @@ def demarrer_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
-    """Passe le chantier en statut 'En cours'."""
+    """Passe le chantier en statut 'En cours'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.demarrer(chantier_id)
         return _transform_chantier_response(result, controller, user_repo)
@@ -595,8 +621,9 @@ def receptionner_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
-    """Passe le chantier en statut 'Réceptionné'."""
+    """Passe le chantier en statut 'Réceptionné'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.receptionner(chantier_id)
         return _transform_chantier_response(result, controller, user_repo)
@@ -618,8 +645,9 @@ def fermer_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
-    """Passe le chantier en statut 'Fermé'."""
+    """Passe le chantier en statut 'Fermé'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.fermer(chantier_id)
         return _transform_chantier_response(result, controller, user_repo)
@@ -647,9 +675,12 @@ def assigner_conducteur(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
     """
     Assigne un conducteur au chantier (CHT-05: Multi-conducteurs).
+
+    RBAC: Requiert le rôle conducteur ou admin.
 
     Args:
         chantier_id: ID du chantier.
@@ -678,8 +709,9 @@ def retirer_conducteur(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
-    """Retire un conducteur du chantier."""
+    """Retire un conducteur du chantier. RBAC: conducteur ou admin requis."""
     try:
         result = controller.retirer_conducteur(chantier_id, user_id)
         return _transform_chantier_response(result, controller, user_repo)
@@ -697,9 +729,12 @@ def assigner_chef_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
     """
     Assigne un chef de chantier (CHT-06: Multi-chefs de chantier).
+
+    RBAC: Requiert le rôle conducteur ou admin.
 
     Args:
         chantier_id: ID du chantier.
@@ -728,8 +763,9 @@ def retirer_chef_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ):
-    """Retire un chef de chantier."""
+    """Retire un chef de chantier. RBAC: conducteur ou admin requis."""
     try:
         result = controller.retirer_chef_chantier(chantier_id, user_id)
         return _transform_chantier_response(result, controller, user_repo)
@@ -1098,28 +1134,30 @@ def delete_phase(
 # =============================================================================
 
 
-def _get_user_summary(user_id: int, user_repo: UserRepository) -> Optional[UserSummary]:
+def _get_user_summary(user_id: int, user_repo: UserRepository) -> Optional[UserPublicSummary]:
     """
-    Récupère les infos d'un utilisateur pour l'inclusion dans un chantier.
+    Récupère les infos publiques d'un utilisateur pour l'inclusion dans un chantier.
+
+    RGPD: Ne retourne PAS l'email ni le téléphone des utilisateurs.
+    Ces données sensibles ne doivent pas être exposées dans les réponses API
+    pour les autres utilisateurs.
 
     Args:
         user_id: ID de l'utilisateur à récupérer.
         user_repo: Repository pour accéder aux utilisateurs.
 
     Returns:
-        UserSummary avec les données utilisateur, ou None si non trouvé.
+        UserPublicSummary avec les données publiques, ou None si non trouvé.
     """
     try:
         user = user_repo.find_by_id(user_id)
         if user:
-            return UserSummary(
+            return UserPublicSummary(
                 id=str(user.id),
-                email=str(user.email),
                 nom=user.nom,
                 prenom=user.prenom,
                 role=user.role.value,
                 type_utilisateur=user.type_utilisateur.value,
-                telephone=user.telephone,
                 metier=user.metier,
                 couleur=str(user.couleur) if user.couleur else None,
                 is_active=user.is_active,
