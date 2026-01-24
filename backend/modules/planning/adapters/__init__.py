@@ -19,10 +19,13 @@ from .controllers import (
     DeleteResponse,
     NonPlanifiesResponse,
 )
+from .presenters import AffectationPresenter
 
 __all__ = [
     # Controller
     "PlanningController",
+    # Presenter
+    "AffectationPresenter",
     # Schemas
     "CreateAffectationRequest",
     "UpdateAffectationRequest",
