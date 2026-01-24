@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { logger } from '../services/logger'
 
 export interface PaginatedResponse<T> {
   items: T[]
@@ -118,7 +119,7 @@ export function useListPage<T, TCreate = Partial<T>>(
       if (isMounted.current) {
         const message = err instanceof Error ? err.message : 'Erreur de chargement'
         setError(message)
-        console.error('useListPage error:', err)
+        logger.error('useListPage error', err, { context: 'useListPage' })
       }
     } finally {
       if (isMounted.current) {
@@ -141,7 +142,7 @@ export function useListPage<T, TCreate = Partial<T>>(
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur de creation'
       setError(message)
-      console.error('useListPage create error:', err)
+      logger.error('useListPage create error', err, { context: 'useListPage' })
       return null
     }
   }, [createItem, reload])
@@ -160,7 +161,7 @@ export function useListPage<T, TCreate = Partial<T>>(
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur de suppression'
       setError(message)
-      console.error('useListPage delete error:', err)
+      logger.error('useListPage delete error', err, { context: 'useListPage' })
       return false
     }
   }, [deleteItem, reload])

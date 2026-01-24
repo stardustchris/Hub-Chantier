@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from './AuthContext'
 
@@ -22,6 +22,19 @@ vi.mock('../services/authEvents', () => ({
 
 import { authService } from '../services/auth'
 import { onSessionExpired, emitLogout } from '../services/authEvents'
+
+// Mock user complet pour eviter les erreurs TS
+const createMockUser = (overrides = {}) => ({
+  id: '1',
+  email: 'test@example.com',
+  nom: 'Test',
+  prenom: 'User',
+  role: 'admin' as const,
+  is_active: true,
+  type_utilisateur: 'employe' as const,
+  created_at: '2026-01-01T00:00:00Z',
+  ...overrides,
+})
 
 // Composant de test pour acceder au contexte
 function TestConsumer({ onLoginError }: { onLoginError?: (error: Error) => void }) {
@@ -61,18 +74,7 @@ describe('AuthContext', () => {
       vi.mocked(authService.getCurrentUser).mockImplementation(
         () =>
           new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  id: '1',
-                  email: 'test@example.com',
-                  nom: 'Test',
-                  prenom: 'User',
-                  role: 'admin',
-                  is_active: true,
-                }),
-              50
-            )
+            setTimeout(() => resolve(createMockUser()), 50)
           )
       )
       sessionStorage.setItem('access_token', 'test-token')
@@ -93,14 +95,7 @@ describe('AuthContext', () => {
     })
 
     it('charge l\'utilisateur si un token existe', async () => {
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      }
+      const mockUser = createMockUser()
       sessionStorage.setItem('access_token', 'valid-token')
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser)
 
@@ -133,14 +128,7 @@ describe('AuthContext', () => {
     })
 
     it('reste non authentifie sans token', async () => {
-      vi.mocked(authService.getCurrentUser).mockResolvedValue({
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      })
+      vi.mocked(authService.getCurrentUser).mockResolvedValue(createMockUser())
 
       render(
         <AuthProvider>
@@ -171,14 +159,7 @@ describe('AuthContext', () => {
   describe('login', () => {
     it('stocke le token et l\'utilisateur apres login', async () => {
       const user = userEvent.setup()
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      }
+      const mockUser = createMockUser()
       vi.mocked(authService.login).mockResolvedValue({
         user: mockUser,
         access_token: 'new-token',
@@ -235,14 +216,7 @@ describe('AuthContext', () => {
   describe('logout', () => {
     it('supprime le token et reset l\'utilisateur', async () => {
       const user = userEvent.setup()
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      }
+      const mockUser = createMockUser()
       sessionStorage.setItem('access_token', 'valid-token')
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser)
 
@@ -265,14 +239,7 @@ describe('AuthContext', () => {
 
     it('emet un evenement de logout pour sync multi-onglets', async () => {
       const user = userEvent.setup()
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      }
+      const mockUser = createMockUser()
       sessionStorage.setItem('access_token', 'valid-token')
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser)
 

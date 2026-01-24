@@ -14,6 +14,18 @@ vi.mock('../contexts/AuthContext', () => ({
 
 import { useAuth } from '../contexts/AuthContext'
 
+// Mock user complet
+const createMockUser = () => ({
+  id: '1',
+  email: 'test@example.com',
+  nom: 'Test',
+  prenom: 'User',
+  role: 'admin' as const,
+  is_active: true,
+  type_utilisateur: 'employe' as const,
+  created_at: '2026-01-01T00:00:00Z',
+})
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -73,14 +85,7 @@ describe('ProtectedRoute', () => {
 
   it('affiche le contenu protege si authentifie', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      },
+      user: createMockUser(),
       isLoading: false,
       isAuthenticated: true,
       login: vi.fn(),
@@ -100,14 +105,7 @@ describe('ProtectedRoute', () => {
 
   it('rend les enfants complexes correctement', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: '1',
-        email: 'test@example.com',
-        nom: 'Test',
-        prenom: 'User',
-        role: 'admin',
-        is_active: true,
-      },
+      user: createMockUser(),
       isLoading: false,
       isAuthenticated: true,
       login: vi.fn(),
