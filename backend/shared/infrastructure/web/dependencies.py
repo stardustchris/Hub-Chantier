@@ -109,3 +109,82 @@ def get_is_moderator(
     """
     moderator_roles = {"admin", "conducteur"}
     return current_user_role in moderator_roles
+
+
+# =============================================================================
+# RBAC Guards pour contrôle d'accès
+# =============================================================================
+
+
+def require_admin(
+    current_user_role: str = Depends(get_current_user_role),
+) -> str:
+    """
+    Guard RBAC: Requiert le rôle admin.
+
+    Args:
+        current_user_role: Rôle de l'utilisateur connecté.
+
+    Returns:
+        Le rôle si autorisé.
+
+    Raises:
+        HTTPException 403: Si l'utilisateur n'est pas admin.
+    """
+    if current_user_role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux administrateurs",
+        )
+    return current_user_role
+
+
+def require_conducteur_or_admin(
+    current_user_role: str = Depends(get_current_user_role),
+) -> str:
+    """
+    Guard RBAC: Requiert le rôle conducteur ou admin.
+
+    Utilisé pour les actions de modification sur les chantiers.
+
+    Args:
+        current_user_role: Rôle de l'utilisateur connecté.
+
+    Returns:
+        Le rôle si autorisé.
+
+    Raises:
+        HTTPException 403: Si l'utilisateur n'est pas conducteur ou admin.
+    """
+    if current_user_role not in {"admin", "conducteur"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux conducteurs et administrateurs",
+        )
+    return current_user_role
+
+
+def require_chef_or_above(
+    current_user_role: str = Depends(get_current_user_role),
+) -> str:
+    """
+    Guard RBAC: Requiert le rôle chef_chantier, conducteur ou admin.
+
+    Utilisé pour certaines actions de lecture/modification limitées.
+
+    Args:
+        current_user_role: Rôle de l'utilisateur connecté.
+
+    Returns:
+        Le rôle si autorisé.
+
+    Raises:
+        HTTPException 403: Si l'utilisateur n'a pas les droits.
+    """
+    allowed_roles = {"admin", "conducteur", "chef_chantier"}
+    if current_user_role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux chefs de chantier et supérieurs",
+        )
+    return current_user_role

@@ -1,5 +1,6 @@
 """Implémentation SQLAlchemy du ChantierRepository."""
 
+from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy.orm import Session
@@ -25,6 +26,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
     Implémentation du ChantierRepository utilisant SQLAlchemy.
 
     Fait le mapping entre l'entité Chantier (Domain) et ChantierModel (Infrastructure).
+    Implémente le soft delete: les chantiers supprimés ont deleted_at != None.
 
     Attributes:
         session: Session SQLAlchemy pour les opérations DB.
@@ -39,9 +41,13 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         self.session = session
 
+    def _not_deleted(self):
+        """Filtre pour exclure les enregistrements supprimés (soft delete)."""
+        return ChantierModel.deleted_at.is_(None)
+
     def find_by_id(self, chantier_id: int) -> Optional[Chantier]:
         """
-        Trouve un chantier par son ID.
+        Trouve un chantier par son ID (excluant les supprimés).
 
         Args:
             chantier_id: L'identifiant unique.
@@ -52,13 +58,14 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         model = (
             self.session.query(ChantierModel)
             .filter(ChantierModel.id == chantier_id)
+            .filter(self._not_deleted())
             .first()
         )
         return self._to_entity(model) if model else None
 
     def find_by_code(self, code: CodeChantier) -> Optional[Chantier]:
         """
-        Trouve un chantier par son code unique.
+        Trouve un chantier par son code unique (excluant les supprimés).
 
         Args:
             code: Le code du chantier.
@@ -69,6 +76,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         model = (
             self.session.query(ChantierModel)
             .filter(ChantierModel.code == str(code))
+            .filter(self._not_deleted())
             .first()
         )
         return self._to_entity(model) if model else None
@@ -133,28 +141,34 @@ class SQLAlchemyChantierRepository(ChantierRepository):
 
     def delete(self, chantier_id: int) -> bool:
         """
-        Supprime un chantier.
+        Supprime un chantier (soft delete - marque deleted_at).
+
+        Le chantier n'est pas supprimé physiquement de la base de données,
+        mais marqué comme supprimé. Cela permet de conserver l'historique
+        et de respecter les exigences RGPD (droit à l'oubli avec traçabilité).
 
         Args:
             chantier_id: L'identifiant du chantier.
 
         Returns:
-            True si supprimé, False si non trouvé.
+            True si supprimé, False si non trouvé ou déjà supprimé.
         """
         model = (
             self.session.query(ChantierModel)
             .filter(ChantierModel.id == chantier_id)
+            .filter(self._not_deleted())
             .first()
         )
         if model:
-            self.session.delete(model)
+            # Soft delete: marquer comme supprimé au lieu de supprimer physiquement
+            model.deleted_at = datetime.now()
             self.session.commit()
             return True
         return False
 
     def find_all(self, skip: int = 0, limit: int = 100) -> List[Chantier]:
         """
-        Récupère tous les chantiers avec pagination.
+        Récupère tous les chantiers avec pagination (excluant les supprimés).
 
         Args:
             skip: Nombre d'éléments à sauter.
@@ -165,6 +179,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         models = (
             self.session.query(ChantierModel)
+            .filter(self._not_deleted())
             .order_by(ChantierModel.code)
             .offset(skip)
             .limit(limit)
@@ -174,18 +189,18 @@ class SQLAlchemyChantierRepository(ChantierRepository):
 
     def count(self) -> int:
         """
-        Compte le nombre total de chantiers.
+        Compte le nombre total de chantiers (excluant les supprimés).
 
         Returns:
             Nombre total de chantiers.
         """
-        return self.session.query(ChantierModel).count()
+        return self.session.query(ChantierModel).filter(self._not_deleted()).count()
 
     def find_by_statut(
         self, statut: StatutChantier, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers par statut.
+        Trouve les chantiers par statut (excluant les supprimés).
 
         Args:
             statut: Le statut à filtrer.
@@ -198,6 +213,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         models = (
             self.session.query(ChantierModel)
             .filter(ChantierModel.statut == str(statut))
+            .filter(self._not_deleted())
             .order_by(ChantierModel.code)
             .offset(skip)
             .limit(limit)
@@ -207,7 +223,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
 
     def find_active(self, skip: int = 0, limit: int = 100) -> List[Chantier]:
         """
-        Trouve les chantiers actifs (non fermés).
+        Trouve les chantiers actifs (non fermés, excluant les supprimés).
 
         Args:
             skip: Nombre d'éléments à sauter.
@@ -219,6 +235,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         models = (
             self.session.query(ChantierModel)
             .filter(ChantierModel.statut != StatutChantierEnum.FERME.value)
+            .filter(self._not_deleted())
             .order_by(ChantierModel.code)
             .offset(skip)
             .limit(limit)
@@ -230,7 +247,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         self, conducteur_id: int, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers d'un conducteur.
+        Trouve les chantiers d'un conducteur (excluant les supprimés).
 
         Args:
             conducteur_id: ID du conducteur.
@@ -242,7 +259,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         # Note: Pour PostgreSQL, on utiliserait l'opérateur JSON contains
         # Pour SQLite, on fait une recherche dans le JSON sérialisé
-        models = self.session.query(ChantierModel).all()
+        models = self.session.query(ChantierModel).filter(self._not_deleted()).all()
         filtered = [
             m for m in models if conducteur_id in (m.conducteur_ids or [])
         ]
@@ -252,7 +269,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         self, chef_id: int, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers d'un chef de chantier.
+        Trouve les chantiers d'un chef de chantier (excluant les supprimés).
 
         Args:
             chef_id: ID du chef de chantier.
@@ -262,7 +279,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         Returns:
             Liste des entités Chantier du chef.
         """
-        models = self.session.query(ChantierModel).all()
+        models = self.session.query(ChantierModel).filter(self._not_deleted()).all()
         filtered = [
             m for m in models if chef_id in (m.chef_chantier_ids or [])
         ]
@@ -272,7 +289,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         self, user_id: int, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers dont l'utilisateur est responsable.
+        Trouve les chantiers dont l'utilisateur est responsable (excluant les supprimés).
 
         Args:
             user_id: ID de l'utilisateur.
@@ -282,7 +299,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         Returns:
             Liste des entités Chantier de l'utilisateur.
         """
-        models = self.session.query(ChantierModel).all()
+        models = self.session.query(ChantierModel).filter(self._not_deleted()).all()
         filtered = [
             m
             for m in models
@@ -293,7 +310,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
 
     def exists_by_code(self, code: CodeChantier) -> bool:
         """
-        Vérifie si un code chantier est déjà utilisé.
+        Vérifie si un code chantier est déjà utilisé (excluant les supprimés).
 
         Args:
             code: Le code à vérifier.
@@ -304,17 +321,19 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         return (
             self.session.query(ChantierModel)
             .filter(ChantierModel.code == str(code))
+            .filter(self._not_deleted())
             .first()
             is not None
         )
 
     def get_last_code(self) -> Optional[str]:
         """
-        Récupère le dernier code chantier utilisé.
+        Récupère le dernier code chantier utilisé (incluant les supprimés pour éviter les collisions).
 
         Returns:
             Le dernier code ou None si aucun chantier.
         """
+        # Note: On inclut les supprimés pour éviter de réutiliser un code supprimé
         model = (
             self.session.query(ChantierModel)
             .order_by(ChantierModel.code.desc())
@@ -330,7 +349,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         limit: int = 100,
     ) -> List[Chantier]:
         """
-        Recherche des chantiers par nom ou code.
+        Recherche des chantiers par nom ou code (excluant les supprimés).
 
         Args:
             query: Terme de recherche.
@@ -348,7 +367,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
                 ChantierModel.code.ilike(search_pattern),
                 ChantierModel.adresse.ilike(search_pattern),
             )
-        )
+        ).filter(self._not_deleted())
 
         if statut:
             base_query = base_query.filter(ChantierModel.statut == str(statut))

@@ -54,4 +54,4 @@
 
 ## Derniere mise a jour
 
-Session 2026-01-23 - Module Signalements (SIG) COMPLET (SIG-01 a SIG-20, 18/20 done, 2 infra)
+Session 2026-01-24 - Audit securite module Chantiers (RBAC, Soft Delete, Audit Trail, 109 tests)
