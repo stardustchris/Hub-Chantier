@@ -5,17 +5,6 @@ import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
 import LoggerToastBridge from './components/LoggerToastBridge'
-import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
-import ChantiersListPage from './pages/ChantiersListPage'
-import ChantierDetailPage from './pages/ChantierDetailPage'
-import UsersListPage from './pages/UsersListPage'
-import UserDetailPage from './pages/UserDetailPage'
-import PlanningPage from './pages/PlanningPage'
-import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
-import FormulairesPage from './pages/FormulairesPage'
-import DocumentsPage from './pages/DocumentsPage'
-import LogistiquePage from './pages/LogistiquePage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Lazy load pages for code splitting
@@ -29,6 +18,7 @@ const PlanningPage = lazy(() => import('./pages/PlanningPage'))
 const FeuillesHeuresPage = lazy(() => import('./pages/FeuillesHeuresPage'))
 const FormulairesPage = lazy(() => import('./pages/FormulairesPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
+const LogistiquePage = lazy(() => import('./pages/LogistiquePage'))
 
 // CSS-only loading spinner (no lucide-react dependency)
 function PageLoader() {
