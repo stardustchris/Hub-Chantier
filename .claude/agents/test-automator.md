@@ -20,7 +20,7 @@ Read, Write, Edit, Bash, Glob, Grep
 
 | Metrique | Objectif |
 |----------|----------|
-| Couverture | > 80% |
+| Couverture | > 90% |
 | Temps d'execution | < 30min |
 | Taux de flaky tests | < 1% |
 | ROI | Positif |
@@ -251,7 +251,7 @@ pytest backend/tests/unit/auth/test_login.py -v
       "coverage_target": ["modules/auth/application/use_cases/login.py"]
     }
   ],
-  "coverage_estimate": "85%",
+  "coverage_estimate": "90%",
   "recommendations": [
     "Ajouter tests pour edge cases",
     "Mock du service externe X"
