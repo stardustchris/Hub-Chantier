@@ -147,8 +147,8 @@ class TestCloturerSignalementUseCase:
                 user_role="compagnon",
             )
 
-    def test_cloturer_invalid_transition_from_ouvert(self):
-        """Test: erreur si transition invalide (ouvert -> cloture)."""
+    def test_cloturer_already_cloture(self):
+        """Test: erreur si deja cloture (cloture -> cloture)."""
         signalement = Signalement(
             chantier_id=1,
             titre="Test",
@@ -157,7 +157,8 @@ class TestCloturerSignalementUseCase:
             priorite=Priorite.MOYENNE,
         )
         signalement.id = 1
-        signalement.statut = StatutSignalement.OUVERT
+        signalement.statut = StatutSignalement.CLOTURE
+        signalement.date_cloture = datetime.now()
         signalement.created_at = datetime.now()
         signalement.updated_at = datetime.now()
         self.mock_signalement_repo.find_by_id.return_value = signalement

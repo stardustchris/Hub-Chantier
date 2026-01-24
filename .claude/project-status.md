@@ -16,31 +16,30 @@
 | formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
 | signalements | 10 | SIG-01 a SIG-20 | **COMPLET** (18/20, 2 infra) |
-| logistique | 11 | LOG-01 a LOG-18 | Structure only |
+| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
 
 ## Statistiques
 
-- **Modules complets** : 9/12
+- **Modules complets** : 10/12
 - **Fonctionnalites totales** : 186 (incluant GED-16, GED-17, SIG-14 a SIG-20)
-- **Tests unitaires** : 930+ (827 + 103 signalements)
+- **Tests unitaires** : 1269 (incluant 154 logistique)
 - **Tests integration** : 17+ (formulaires)
 
 ## Prochaine tache prioritaire
 
-**Module Logistique (LOG)** (CDC Section 11)
-- Gestion des commandes (LOG-01 a LOG-08)
-- Suivi des livraisons (LOG-09 a LOG-12)
-- Gestion du materiel (LOG-13 a LOG-18)
+**Module Interventions (INT)** (CDC Section 12)
+- Gestion des interventions terrain (INT-01 a INT-08)
+- Workflow validation (INT-09 a INT-12)
+- Rapport et suivi (INT-13 a INT-17)
 
 ## Modules en attente
 
 | Module | Priorite | Dependances |
 |--------|----------|-------------|
-| logistique | Haute | chantiers (OK) |
-| interventions | Moyenne | planning (OK), taches (OK) |
-| planning_charge | Basse | planning (OK) |
+| interventions | Haute | planning (OK), taches (OK) |
+| planning_charge | Moyenne | planning (OK) |
 
 ## Fonctionnalites en attente infrastructure
 
@@ -51,7 +50,13 @@
 - FEED-17 : Notifications push
 - SIG-13 : Notifications push signalements (partiel - backend OK)
 - SIG-16/17 : Escalade auto temps reel (job scheduler requis)
+- LOG-13/14/15 : Notifications push reservations (backend OK)
 
 ## Derniere mise a jour
 
-Session 2026-01-24 - Audit securite module Chantiers (RBAC, Soft Delete, Audit Trail, 109 tests)
+Session 2026-01-24 - Module Logistique complet (LOG-01 a LOG-18)
+- Clean Architecture 4 layers
+- 18 fonctionnalites implementees
+- 154 tests unitaires (100% couverture)
+- Frontend types et API client
+- Audit securite PASS (RGPD soft delete)

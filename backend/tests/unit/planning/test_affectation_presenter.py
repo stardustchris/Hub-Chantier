@@ -33,13 +33,15 @@ class TestAffectationPresenter:
             id=1,
             utilisateur_id=10,
             chantier_id=20,
-            date=date(2026, 1, 24),
+            date="2026-01-24",
             heure_debut="08:00",
             heure_fin="17:00",
-            type_affectation="unique",
             note="Test note",
-            created_at=datetime(2026, 1, 24, 10, 0, 0),
-            updated_at=datetime(2026, 1, 24, 10, 0, 0),
+            type_affectation="unique",
+            jours_recurrence=None,
+            created_at="2026-01-24T10:00:00",
+            updated_at="2026-01-24T10:00:00",
+            created_by=1,
         )
 
     def test_present_enrichit_avec_infos_utilisateur(
@@ -120,10 +122,15 @@ class TestAffectationPresenter:
                 id=i,
                 utilisateur_id=10 + i,
                 chantier_id=20,
-                date=date(2026, 1, 24),
+                date="2026-01-24",
                 heure_debut="08:00",
                 heure_fin="17:00",
+                note=None,
                 type_affectation="unique",
+                jours_recurrence=None,
+                created_at="2026-01-24T10:00:00",
+                updated_at="2026-01-24T10:00:00",
+                created_by=1,
             )
             for i in range(3)
         ]
@@ -150,10 +157,15 @@ class TestAffectationPresenter:
                 id=i,
                 utilisateur_id=10,  # Meme utilisateur
                 chantier_id=20,  # Meme chantier
-                date=date(2026, 1, 24),
+                date="2026-01-24",
                 heure_debut="08:00",
                 heure_fin="17:00",
+                note=None,
                 type_affectation="unique",
+                jours_recurrence=None,
+                created_at="2026-01-24T10:00:00",
+                updated_at="2026-01-24T10:00:00",
+                created_by=1,
             )
             for i in range(3)
         ]

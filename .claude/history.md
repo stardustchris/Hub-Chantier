@@ -3,6 +3,75 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-24 (Module Logistique - Sprint 1)
+
+Implementation complete du module Logistique (CDC Section 11 - LOG-01 a LOG-18).
+
+### Resume
+
+| Composant | Resultat |
+|-----------|----------|
+| Domain Layer | Ressource, Reservation entities, Value Objects, Repository interfaces |
+| Application Layer | 15 use cases, DTOs, exceptions |
+| Infrastructure Layer | SQLAlchemy models/repos, FastAPI routes |
+| Tests | 154 tests (100% couverture) |
+| Frontend | Types TypeScript, API client |
+| Architecture | PASS (10/10 apres fix imports) |
+| Securite | PASS (RGPD soft delete) |
+
+### Fonctionnalites implementees
+
+- **LOG-01**: Referentiel materiel (Admin uniquement)
+- **LOG-02**: Fiche ressource (nom, code, photo, couleur, plage horaire)
+- **LOG-03**: Planning par ressource (vue calendrier hebdomadaire)
+- **LOG-04**: Navigation semaine
+- **LOG-05**: Axe horaire vertical configurable
+- **LOG-06**: Blocs reservation colores
+- **LOG-07**: Demande de reservation
+- **LOG-08**: Selection chantier obligatoire
+- **LOG-09**: Selection creneau (date + heures)
+- **LOG-10**: Option validation N+1 par ressource
+- **LOG-11**: Workflow validation (Demande -> Chef valide -> Confirmee)
+- **LOG-12**: Statuts reservation (En attente/Validee/Refusee/Annulee)
+- **LOG-16**: Motif de refus
+- **LOG-17**: Detection conflits de reservation
+- **LOG-18**: Historique des reservations
+
+### Fichiers crees
+
+**Backend - Domain**
+- `modules/logistique/domain/entities/ressource.py`
+- `modules/logistique/domain/entities/reservation.py`
+- `modules/logistique/domain/value_objects/type_ressource.py`
+- `modules/logistique/domain/value_objects/statut_reservation.py`
+- `modules/logistique/domain/repositories/ressource_repository.py`
+- `modules/logistique/domain/repositories/reservation_repository.py`
+
+**Backend - Application**
+- `modules/logistique/application/dtos/ressource_dto.py`
+- `modules/logistique/application/dtos/reservation_dto.py`
+- `modules/logistique/application/use_cases/ressource_use_cases.py`
+- `modules/logistique/application/use_cases/reservation_use_cases.py`
+
+**Backend - Infrastructure**
+- `modules/logistique/infrastructure/persistence/models.py`
+- `modules/logistique/infrastructure/persistence/sqlalchemy_ressource_repository.py`
+- `modules/logistique/infrastructure/persistence/sqlalchemy_reservation_repository.py`
+- `modules/logistique/infrastructure/web/dependencies.py`
+- `modules/logistique/infrastructure/web/logistique_routes.py`
+- `modules/logistique/schema.sql`
+
+**Backend - Tests**
+- `tests/unit/logistique/test_value_objects.py` (38 tests)
+- `tests/unit/logistique/test_entities.py` (62 tests)
+- `tests/unit/logistique/test_use_cases.py` (54 tests)
+
+**Frontend**
+- `src/types/logistique.ts`
+- `src/services/logistique.ts`
+
+---
+
 ## Session 2026-01-24 (Audit sécurité module Chantiers)
 
 Analyse complète et remédiation du module Chantiers avec 7 agents (workflow agents.md).
