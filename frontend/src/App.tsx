@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
+import LoggerToastBridge from './components/LoggerToastBridge'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ChantiersListPage from './pages/ChantiersListPage'
@@ -102,6 +103,7 @@ function App() {
           {/* Catch all - redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <LoggerToastBridge />
         <ToastContainer />
         </ToastProvider>
       </AuthProvider>
