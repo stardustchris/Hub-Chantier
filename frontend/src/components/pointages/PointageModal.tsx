@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Clock, Check, Send, XCircle, Trash2, PenTool } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { logger } from '../../services/logger'
 import type { Pointage, PointageCreate, PointageUpdate, Chantier, StatutPointage } from '../../types'
 import { STATUTS_POINTAGE } from '../../types'
 
@@ -107,7 +108,7 @@ export default function PointageModal({
       onClose()
     } catch (err) {
       setError('Erreur lors de l\'enregistrement')
-      console.error(err)
+      logger.error('Erreur pointage', err, { context: 'PointageModal' })
     } finally {
       setSaving(false)
     }
@@ -123,7 +124,7 @@ export default function PointageModal({
       onClose()
     } catch (err) {
       setError('Erreur lors de la suppression')
-      console.error(err)
+      logger.error('Erreur pointage', err, { context: 'PointageModal' })
     } finally {
       setSaving(false)
     }
@@ -141,7 +142,7 @@ export default function PointageModal({
       onClose()
     } catch (err) {
       setError('Erreur lors de la signature')
-      console.error(err)
+      logger.error('Erreur pointage', err, { context: 'PointageModal' })
     } finally {
       setSaving(false)
     }
@@ -156,7 +157,7 @@ export default function PointageModal({
       onClose()
     } catch (err) {
       setError('Erreur lors de la soumission')
-      console.error(err)
+      logger.error('Erreur pointage', err, { context: 'PointageModal' })
     } finally {
       setSaving(false)
     }
@@ -171,7 +172,7 @@ export default function PointageModal({
       onClose()
     } catch (err) {
       setError('Erreur lors de la validation')
-      console.error(err)
+      logger.error('Erreur pointage', err, { context: 'PointageModal' })
     } finally {
       setSaving(false)
     }
@@ -189,7 +190,7 @@ export default function PointageModal({
       onClose()
     } catch (err) {
       setError('Erreur lors du rejet')
-      console.error(err)
+      logger.error('Erreur pointage', err, { context: 'PointageModal' })
     } finally {
       setSaving(false)
     }

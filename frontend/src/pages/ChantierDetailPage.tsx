@@ -4,6 +4,7 @@ import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
+import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
@@ -63,7 +64,7 @@ export default function ChantierDetailPage() {
       const ids = await chantiersService.getNavigationIds(id!)
       setNavIds(ids)
     } catch (error) {
-      console.error('Error loading navigation:', error)
+      logger.error('Error loading navigation', error, { context: 'ChantierDetailPage' })
     }
   }
 
@@ -73,7 +74,7 @@ export default function ChantierDetailPage() {
       const data = await chantiersService.getById(id!)
       setChantier(data)
     } catch (error) {
-      console.error('Error loading chantier:', error)
+      logger.error('Error loading chantier', error, { context: 'ChantierDetailPage' })
       addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
       navigate('/chantiers')
     } finally {
@@ -93,7 +94,7 @@ export default function ChantierDetailPage() {
         : chantier?.chefs.map((u) => u.id) || []
       setAvailableUsers(response.items.filter((u) => !existingIds.includes(u.id)))
     } catch (error) {
-      console.error('Error loading users:', error)
+      logger.error('Error loading users', error, { context: 'ChantierDetailPage' })
       addToast({ message: 'Erreur lors du chargement des utilisateurs', type: 'error' })
     }
   }
@@ -105,7 +106,7 @@ export default function ChantierDetailPage() {
       setShowEditModal(false)
       addToast({ message: 'Chantier mis a jour', type: 'success' })
     } catch (error) {
-      console.error('Error updating chantier:', error)
+      logger.error('Error updating chantier', error, { context: 'ChantierDetailPage' })
       addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
     }
   }
@@ -126,7 +127,7 @@ export default function ChantierDetailPage() {
         try {
           await chantiersService.delete(id!)
         } catch (error) {
-          console.error('Error deleting chantier:', error)
+          logger.error('Error deleting chantier', error, { context: 'ChantierDetailPage' })
           addToast({ message: 'Erreur lors de la suppression', type: 'error', duration: 5000 })
         }
       },
@@ -151,7 +152,7 @@ export default function ChantierDetailPage() {
       setChantier(updated)
       addToast({ message: 'Statut mis a jour', type: 'success' })
     } catch (error) {
-      console.error('Error changing statut:', error)
+      logger.error('Error changing statut', error, { context: 'ChantierDetailPage' })
       addToast({ message: 'Erreur lors du changement de statut', type: 'error' })
     }
   }
@@ -170,7 +171,7 @@ export default function ChantierDetailPage() {
       setShowAddUserModal(null)
       addToast({ message: 'Utilisateur ajoute', type: 'success' })
     } catch (error) {
-      console.error('Error adding user:', error)
+      logger.error('Error adding user', error, { context: 'ChantierDetailPage' })
       addToast({ message: "Erreur lors de l'ajout", type: 'error' })
     }
   }
@@ -207,7 +208,7 @@ export default function ChantierDetailPage() {
             await chantiersService.removeChef(id!, userId)
           }
         } catch (error) {
-          console.error('Error removing user:', error)
+          logger.error('Error removing user', error, { context: 'ChantierDetailPage' })
           setChantier(chantier)
           addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
         }

@@ -8,12 +8,10 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 // Note: On doit tester le module de maniere isolee car il a un etat global
 describe('authEvents', () => {
   let originalBroadcastChannel: typeof BroadcastChannel | undefined
-  let originalLocalStorage: Storage
 
   beforeEach(() => {
     // Sauvegarder les originaux
     originalBroadcastChannel = globalThis.BroadcastChannel
-    originalLocalStorage = globalThis.localStorage
 
     vi.clearAllMocks()
     vi.resetModules()

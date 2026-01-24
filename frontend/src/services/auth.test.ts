@@ -38,7 +38,7 @@ describe('authService', () => {
       }
       vi.mocked(api.post).mockResolvedValue(mockResponse)
 
-      const result = await authService.login('test@example.com', 'password123')
+      await authService.login('test@example.com', 'password123')
 
       expect(api.post).toHaveBeenCalledWith(
         '/api/auth/login',

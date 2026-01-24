@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardService } from '../services/dashboard'
 import { chantiersService } from '../services/chantiers'
+import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -65,7 +66,7 @@ export default function DashboardPage() {
       setHasMore(response.page < response.pages)
       setPage(pageNum)
     } catch (error) {
-      console.error('Error loading feed:', error)
+      logger.error('Error loading feed', error, { context: 'DashboardPage' })
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +77,7 @@ export default function DashboardPage() {
       const response = await chantiersService.list({ size: 100, statut: 'en_cours' })
       setChantiers(response.items)
     } catch (error) {
-      console.error('Error loading chantiers:', error)
+      logger.error('Error loading chantiers', error, { context: 'DashboardPage' })
     }
   }
 
@@ -97,7 +98,7 @@ export default function DashboardPage() {
       setIsUrgent(false)
       loadFeed(1)
     } catch (error) {
-      console.error('Error creating post:', error)
+      logger.error('Error creating post', error, { context: 'DashboardPage' })
     } finally {
       setIsPosting(false)
     }
@@ -113,7 +114,7 @@ export default function DashboardPage() {
       const updatedPost = await dashboardService.getPost(postId)
       setPosts((prev) => prev.map((p) => (p.id === postId ? updatedPost : p)))
     } catch (error) {
-      console.error('Error toggling like:', error)
+      logger.error('Error toggling like', error, { context: 'DashboardPage' })
     }
   }
 
@@ -126,7 +127,7 @@ export default function DashboardPage() {
       }
       loadFeed(1)
     } catch (error) {
-      console.error('Error toggling pin:', error)
+      logger.error('Error toggling pin', error, { context: 'DashboardPage' })
     }
   }
 
@@ -137,7 +138,7 @@ export default function DashboardPage() {
       await dashboardService.deletePost(postId)
       setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch (error) {
-      console.error('Error deleting post:', error)
+      logger.error('Error deleting post', error, { context: 'DashboardPage' })
     }
   }
 
@@ -328,7 +329,7 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
       setComments(updatedPost.commentaires || [])
       setNewComment('')
     } catch (error) {
-      console.error('Error adding comment:', error)
+      logger.error('Error adding comment', error, { context: 'DashboardPage' })
     } finally {
       setIsCommenting(false)
     }
