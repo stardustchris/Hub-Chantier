@@ -67,6 +67,18 @@ class PostModel(Base):
     likes = relationship("LikeModel", back_populates="post", cascade="all, delete-orphan")
     medias = relationship("PostMediaModel", back_populates="post", cascade="all, delete-orphan")
 
+    # Relations de ciblage (remplacent les colonnes CSV)
+    target_chantiers = relationship(
+        "PostTargetChantierModel",
+        cascade="all, delete-orphan",
+        lazy="selectin",  # Évite N+1 queries
+    )
+    target_users = relationship(
+        "PostTargetUserModel",
+        cascade="all, delete-orphan",
+        lazy="selectin",  # Évite N+1 queries
+    )
+
     # Index pour la recherche du feed
     __table_args__ = (
         Index("ix_posts_feed", "status", "created_at"),
@@ -126,6 +138,54 @@ class LikeModel(Base):
 
     def __repr__(self) -> str:
         return f"<LikeModel(id={self.id}, post_id={self.post_id}, user_id={self.user_id})>"
+
+
+class PostTargetChantierModel(Base):
+    """
+    Table de jointure Post <-> Chantier pour le ciblage (FEED-03).
+
+    Remplace l'ancienne colonne CSV target_chantier_ids pour permettre
+    des requêtes SQL indexées et éviter les full table scans.
+    """
+
+    __tablename__ = "post_target_chantiers"
+    __table_args__ = (
+        UniqueConstraint("post_id", "chantier_id", name="uq_post_target_chantier"),
+        Index("ix_post_target_chantiers_chantier_id", "chantier_id"),
+        Index("ix_post_target_chantiers_post_id", "post_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(
+        Integer,
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    chantier_id = Column(Integer, nullable=False)  # Pas de FK pour découplage modules
+
+
+class PostTargetUserModel(Base):
+    """
+    Table de jointure Post <-> User pour le ciblage (FEED-03).
+
+    Remplace l'ancienne colonne CSV target_user_ids pour permettre
+    des requêtes SQL indexées et éviter les full table scans.
+    """
+
+    __tablename__ = "post_target_users"
+    __table_args__ = (
+        UniqueConstraint("post_id", "user_id", name="uq_post_target_user"),
+        Index("ix_post_target_users_user_id", "user_id"),
+        Index("ix_post_target_users_post_id", "post_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(
+        Integer,
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id = Column(Integer, nullable=False)  # Pas de FK pour découplage modules
 
 
 class PostMediaModel(Base):

@@ -66,13 +66,13 @@ class AffectationPresenter:
             "chantier_id": affectation.chantier_id,
             "chantier_nom": chantier_info.get("nom"),
             "chantier_couleur": chantier_info.get("couleur"),
-            "date": affectation.date.isoformat() if affectation.date else None,
+            "date": affectation.date,  # Already ISO string from DTO
             "heure_debut": affectation.heure_debut,
             "heure_fin": affectation.heure_fin,
             "type_affectation": affectation.type_affectation,
             "note": affectation.note,
-            "created_at": affectation.created_at.isoformat() if affectation.created_at else None,
-            "updated_at": affectation.updated_at.isoformat() if affectation.updated_at else None,
+            "created_at": affectation.created_at,  # Already ISO string from DTO
+            "updated_at": affectation.updated_at,  # Already ISO string from DTO
         }
 
     def present_many(self, affectations: List[AffectationDTO]) -> List[Dict[str, Any]]:
