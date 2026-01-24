@@ -19,8 +19,9 @@ export default function LoginPage() {
     try {
       await login(email, password)
       navigate('/')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur de connexion')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { detail?: string } } }
+      setError(axiosError.response?.data?.detail || 'Erreur de connexion')
     } finally {
       setIsLoading(false)
     }

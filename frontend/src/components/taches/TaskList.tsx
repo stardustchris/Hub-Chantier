@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { tachesService } from '../../services/taches'
 import { logger } from '../../services/logger'
-import type { Tache, TacheStats } from '../../types'
+import type { Tache, TacheStats, TacheCreate, TacheUpdate } from '../../types'
 import { COULEURS_PROGRESSION } from '../../types'
 import TaskItem from './TaskItem'
 import TaskModal from './TaskModal'
@@ -96,14 +96,15 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
     }
   }
 
-  const handleSaveTache = async (data: any) => {
+  const handleSaveTache = async (data: TacheCreate | TacheUpdate) => {
     try {
       setError(null)
       if (editingTache) {
-        await tachesService.update(editingTache.id, data)
+        await tachesService.update(editingTache.id, data as TacheUpdate)
       } else {
+        const createData = data as Omit<TacheCreate, 'chantier_id'>
         await tachesService.create({
-          ...data,
+          ...createData,
           chantier_id: chantierId,
           parent_id: parentIdForNew || undefined,
         })

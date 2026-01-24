@@ -148,9 +148,9 @@ export default function Feed({
     })
   }
 
-  // Commenter (ouvre modal - à implémenter)
-  const handleComment = (postId: number) => {
-    console.log('Open comment modal for post', postId)
+  // Commenter (ouvre modal - TODO: implémenter CommentModal)
+  const handleComment = (_postId: number) => {
+    // TODO: Ouvrir CommentModal avec postId
   }
 
   // Supprimer

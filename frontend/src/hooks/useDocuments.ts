@@ -56,8 +56,9 @@ export function useDocuments() {
       setArborescence(data)
       setSelectedDossier(null)
       setDocuments([])
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } }
+      if (axiosError.response?.status === 404) {
         setArborescence({ chantier_id: parseInt(chantierId), dossiers: [], total_documents: 0, total_taille: 0 })
       } else {
         logger.error('Error loading arborescence', error, { context: 'DocumentsPage' })
