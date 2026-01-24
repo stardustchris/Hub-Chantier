@@ -33,6 +33,9 @@ class Ressource:
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     created_by: Optional[int] = None
+    # H10: Soft delete fields
+    deleted_at: Optional[datetime] = None
+    deleted_by: Optional[int] = None
 
     def __post_init__(self) -> None:
         """Validation à la création."""
@@ -84,7 +87,17 @@ class Ressource:
 
     def peut_etre_reservee(self) -> bool:
         """Vérifie si la ressource peut être réservée."""
-        return self.actif
+        return self.actif and not self.est_supprimee
+
+    @property
+    def est_supprimee(self) -> bool:
+        """Vérifie si la ressource a été supprimée (soft delete)."""
+        return self.deleted_at is not None
+
+    def supprimer(self, deleted_by: int) -> None:
+        """Marque la ressource comme supprimée (soft delete)."""
+        self.deleted_at = datetime.utcnow()
+        self.deleted_by = deleted_by
 
     @property
     def label_complet(self) -> str:

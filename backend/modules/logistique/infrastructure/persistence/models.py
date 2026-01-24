@@ -21,6 +21,7 @@ from sqlalchemy import (
     Enum as SQLEnum,
     ForeignKey,
     CheckConstraint,
+    text,
 )
 
 from shared.infrastructure.database_base import Base
@@ -58,6 +59,13 @@ class RessourceModel(LogistiqueBase):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
     created_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    # H10: Soft delete columns
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
@@ -126,6 +134,13 @@ class ReservationModel(LogistiqueBase):
     validated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
+    # H10: Soft delete columns
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     __table_args__ = (
         # Index pour le planning par ressource et date
@@ -142,6 +157,16 @@ class ReservationModel(LogistiqueBase):
             "ressource_id",
             "statut",
             "date_reservation",
+        ),
+        # H9: Partial unique index for active reservations (prevent exact duplicates)
+        Index(
+            "ix_reservations_unique_active",
+            "ressource_id",
+            "date_reservation",
+            "heure_debut",
+            "heure_fin",
+            unique=True,
+            postgresql_where=text("statut IN ('en_attente', 'validee')"),
         ),
         # CHECK: heure_fin > heure_debut
         CheckConstraint(

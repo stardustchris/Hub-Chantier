@@ -427,6 +427,7 @@ class TestListReservationsEnAttenteUseCase:
     ):
         """Test: liste des réservations en attente."""
         mock_reservation_repository.find_en_attente_validation.return_value = [sample_reservation]
+        mock_reservation_repository.count_en_attente.return_value = 1  # H11
         mock_ressource_repository.find_by_id.return_value = sample_ressource
 
         use_case = ListReservationsEnAttenteUseCase(

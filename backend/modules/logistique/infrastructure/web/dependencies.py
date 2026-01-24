@@ -4,7 +4,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
-from ...application.ports.event_bus import EventBus, NoOpEventBus
+from shared.infrastructure.event_bus import EventBus as CoreEventBus
+from ...application.ports.event_bus import EventBus
+from ..event_bus_impl import LogistiqueEventBus
 
 from ...domain.repositories import RessourceRepository, ReservationRepository
 from ...application.use_cases import (
@@ -27,8 +29,8 @@ from ..persistence import SQLAlchemyRessourceRepository, SQLAlchemyReservationRe
 
 
 def get_event_bus() -> EventBus:
-    """Retourne l'EventBus."""
-    return NoOpEventBus()
+    """Retourne l'EventBus avec logging pour audit trail (H8)."""
+    return LogistiqueEventBus(CoreEventBus)
 
 
 def get_ressource_repository(

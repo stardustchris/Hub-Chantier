@@ -1,5 +1,6 @@
-"""Adapters layer - Logistique module."""
+"""Adapters layer - Logistique module.
 
-from .controllers import LogistiqueController
+M16: LogistiqueController removed - routes use use cases directly via DI.
+"""
 
-__all__ = ["LogistiqueController"]
+__all__ = []

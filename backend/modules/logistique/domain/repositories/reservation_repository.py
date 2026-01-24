@@ -184,11 +184,21 @@ class ReservationRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, reservation_id: int) -> bool:
-        """Supprime une réservation.
+    def count_en_attente(self) -> int:
+        """Compte le nombre total de réservations en attente (H11).
+
+        Returns:
+            Le nombre de réservations en attente
+        """
+        pass
+
+    @abstractmethod
+    def delete(self, reservation_id: int, deleted_by: Optional[int] = None) -> bool:
+        """Supprime une réservation (soft delete - H10).
 
         Args:
             reservation_id: L'ID de la réservation à supprimer
+            deleted_by: L'ID de l'utilisateur qui supprime (optionnel)
 
         Returns:
             True si supprimée, False si non trouvée

@@ -42,9 +42,14 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('created_by', sa.Integer(), nullable=True),
+        # H10: Soft delete columns
+        sa.Column('deleted_at', sa.DateTime(), nullable=True),
+        sa.Column('deleted_by', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         # FK: created_by -> users.id
         sa.ForeignKeyConstraint(['created_by'], ['users.id'], ondelete='SET NULL'),
+        # FK: deleted_by -> users.id
+        sa.ForeignKeyConstraint(['deleted_by'], ['users.id'], ondelete='SET NULL'),
         # CHECK: heure_fin_defaut > heure_debut_defaut
         sa.CheckConstraint(
             'heure_fin_defaut > heure_debut_defaut',
@@ -77,6 +82,9 @@ def upgrade() -> None:
         sa.Column('validated_at', sa.DateTime(), nullable=True),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
+        # H10: Soft delete columns
+        sa.Column('deleted_at', sa.DateTime(), nullable=True),
+        sa.Column('deleted_by', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         # FK: ressource_id -> ressources.id
         sa.ForeignKeyConstraint(
@@ -101,6 +109,12 @@ def upgrade() -> None:
             ['valideur_id'], ['users.id'],
             ondelete='SET NULL',
             name='fk_reservations_valideur'
+        ),
+        # FK: deleted_by -> users.id (H10)
+        sa.ForeignKeyConstraint(
+            ['deleted_by'], ['users.id'],
+            ondelete='SET NULL',
+            name='fk_reservations_deleted_by'
         ),
         # CHECK: heure_fin > heure_debut
         sa.CheckConstraint(
@@ -144,11 +158,22 @@ def upgrade() -> None:
         ['ressource_id', 'statut', 'date_reservation']
     )
 
+    # H9: Partial unique index for active reservations (prevent exact duplicates)
+    # Only for en_attente and validee statuses - cancelled/refused can have duplicates
+    op.create_index(
+        'ix_reservations_unique_active',
+        'reservations',
+        ['ressource_id', 'date_reservation', 'heure_debut', 'heure_fin'],
+        unique=True,
+        postgresql_where=sa.text("statut IN ('en_attente', 'validee')")
+    )
+
 
 def downgrade() -> None:
     """Drop ressources and reservations tables."""
 
     # Drop indexes for reservations
+    op.drop_index('ix_reservations_unique_active')
     op.drop_index('ix_reservations_ressource_statut_date')
     op.drop_index('ix_reservations_demandeur_statut')
     op.drop_index('ix_reservations_chantier_date')

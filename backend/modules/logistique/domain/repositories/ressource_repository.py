@@ -88,11 +88,12 @@ class RessourceRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, ressource_id: int) -> bool:
-        """Supprime une ressource.
+    def delete(self, ressource_id: int, deleted_by: Optional[int] = None) -> bool:
+        """Supprime une ressource (soft delete - H10).
 
         Args:
             ressource_id: L'ID de la ressource à supprimer
+            deleted_by: L'ID de l'utilisateur qui supprime (optionnel)
 
         Returns:
             True si supprimée, False si non trouvée

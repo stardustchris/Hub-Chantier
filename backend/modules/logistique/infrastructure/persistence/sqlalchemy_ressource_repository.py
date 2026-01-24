@@ -36,6 +36,9 @@ class SQLAlchemyRessourceRepository(RessourceRepository):
             created_at=model.created_at,
             updated_at=model.updated_at,
             created_by=model.created_by,
+            # H10: Soft delete fields
+            deleted_at=model.deleted_at,
+            deleted_by=model.deleted_by,
         )
 
     def _to_model(self, entity: Ressource) -> RessourceModel:
@@ -87,19 +90,21 @@ class SQLAlchemyRessourceRepository(RessourceRepository):
         return self._to_entity(model)
 
     def find_by_id(self, ressource_id: int) -> Optional[Ressource]:
-        """Recherche une ressource par son ID."""
+        """Recherche une ressource par son ID (exclut les supprimées)."""
         model = (
             self._session.query(RessourceModel)
             .filter(RessourceModel.id == ressource_id)
+            .filter(RessourceModel.deleted_at.is_(None))
             .first()
         )
         return self._to_entity(model) if model else None
 
     def find_by_code(self, code: str) -> Optional[Ressource]:
-        """Recherche une ressource par son code."""
+        """Recherche une ressource par son code (exclut les supprimées)."""
         model = (
             self._session.query(RessourceModel)
             .filter(RessourceModel.code == code)
+            .filter(RessourceModel.deleted_at.is_(None))
             .first()
         )
         return self._to_entity(model) if model else None
@@ -111,8 +116,10 @@ class SQLAlchemyRessourceRepository(RessourceRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> List[Ressource]:
-        """Liste les ressources avec filtres."""
+        """Liste les ressources avec filtres (exclut les supprimées)."""
         query = self._session.query(RessourceModel)
+        # H10: Exclure les supprimées
+        query = query.filter(RessourceModel.deleted_at.is_(None))
 
         if categorie:
             query = query.filter(RessourceModel.categorie == categorie)
@@ -129,8 +136,10 @@ class SQLAlchemyRessourceRepository(RessourceRepository):
         categorie: Optional[CategorieRessource] = None,
         actif_seulement: bool = True,
     ) -> int:
-        """Compte le nombre de ressources."""
+        """Compte le nombre de ressources (exclut les supprimées)."""
         query = self._session.query(RessourceModel)
+        # H10: Exclure les supprimées
+        query = query.filter(RessourceModel.deleted_at.is_(None))
 
         if categorie:
             query = query.filter(RessourceModel.categorie == categorie)
@@ -139,15 +148,21 @@ class SQLAlchemyRessourceRepository(RessourceRepository):
 
         return query.count()
 
-    def delete(self, ressource_id: int) -> bool:
-        """Supprime une ressource."""
-        result = (
+    def delete(self, ressource_id: int, deleted_by: Optional[int] = None) -> bool:
+        """Supprime une ressource (soft delete - H10)."""
+        model = (
             self._session.query(RessourceModel)
             .filter(RessourceModel.id == ressource_id)
-            .delete()
+            .filter(RessourceModel.deleted_at.is_(None))
+            .first()
         )
+        if not model:
+            return False
+
+        model.deleted_at = datetime.utcnow()
+        model.deleted_by = deleted_by
         self._session.flush()
-        return result > 0
+        return True
 
     def find_by_categorie(self, categorie: CategorieRessource) -> List[Ressource]:
         """Liste les ressources d'une catégorie."""

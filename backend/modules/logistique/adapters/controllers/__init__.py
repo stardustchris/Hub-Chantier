@@ -1,5 +1,6 @@
-"""Controllers du module Logistique."""
+"""Controllers du module Logistique.
 
-from .logistique_controller import LogistiqueController
+M16: LogistiqueController removed - routes use use cases directly via DI.
+"""
 
-__all__ = ["LogistiqueController"]
+__all__ = []
