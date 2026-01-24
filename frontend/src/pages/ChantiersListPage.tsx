@@ -22,6 +22,7 @@ import { CHANTIER_STATUTS, USER_COLORS } from '../types'
 
 export default function ChantiersListPage() {
   const [chantiers, setChantiers] = useState<Chantier[]>([])
+  const [allChantiers, setAllChantiers] = useState<Chantier[]>([])  // Pour les compteurs
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statutFilter, setStatutFilter] = useState<ChantierStatut | ''>('')
@@ -29,10 +30,19 @@ export default function ChantiersListPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  useEffect(() => {
-    loadChantiers()
-  }, [page, search, statutFilter])
+  // Charger tous les chantiers pour les compteurs
+  const loadAllChantiers = async () => {
+    try {
+      const response = await chantiersService.list({ size: 500 })
+      setAllChantiers(response.items)
+      return response.items
+    } catch (error) {
+      console.error('Error loading all chantiers:', error)
+      return []
+    }
+  }
 
+  // Charger les chantiers filtrés pour l'affichage
   const loadChantiers = async () => {
     try {
       setIsLoading(true)
@@ -51,16 +61,60 @@ export default function ChantiersListPage() {
     }
   }
 
-  const handleCreateChantier = async (data: ChantierCreate) => {
-    await chantiersService.create(data)
-    setShowCreateModal(false)
+  // Chargement initial : tous les chantiers puis les chantiers filtrés
+  useEffect(() => {
+    const init = async () => {
+      await loadAllChantiers()
+      await loadChantiers()
+    }
+    init()
+  }, [])
+
+  // Recharger les chantiers filtrés quand les filtres changent
+  useEffect(() => {
     loadChantiers()
+  }, [page, search, statutFilter])
+
+  const handleCreateChantier = async (
+    data: ChantierCreate,
+    contacts: { nom: string; telephone: string; profession: string }[],
+    phases: { nom: string; date_debut: string; date_fin: string }[]
+  ) => {
+    // Créer le chantier
+    const chantier = await chantiersService.create(data)
+
+    // Créer les contacts (ignorer les contacts vides)
+    for (const contact of contacts) {
+      if (contact.nom && contact.telephone) {
+        await chantiersService.addContact(chantier.id, {
+          nom: contact.nom,
+          telephone: contact.telephone,
+          profession: contact.profession || undefined,
+        })
+      }
+    }
+
+    // Créer les phases (ignorer les phases vides)
+    for (const phase of phases) {
+      if (phase.nom) {
+        await chantiersService.addPhase(chantier.id, {
+          nom: phase.nom,
+          date_debut: phase.date_debut || undefined,
+          date_fin: phase.date_fin || undefined,
+        })
+      }
+    }
+
+    setShowCreateModal(false)
+    await loadAllChantiers()  // Recharger les compteurs
+    await loadChantiers()
   }
 
   const filteredChantiers = chantiers
 
+  // Utiliser allChantiers pour les compteurs (pas les chantiers filtrés)
   const getStatutCount = (statut: ChantierStatut) => {
-    return chantiers.filter((c) => c.statut === statut).length
+    return allChantiers.filter((c) => c.statut === statut).length
   }
 
   return (
@@ -82,7 +136,25 @@ export default function ChantiersListPage() {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          {/* Bouton "Tous" */}
+          <button
+            onClick={() => setStatutFilter('')}
+            className={`card text-left transition-all ${
+              statutFilter === '' ? 'ring-2 ring-primary-500' : ''
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: '#6B7280' }}
+              />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{allChantiers.length}</p>
+                <p className="text-xs text-gray-500">Tous</p>
+              </div>
+            </div>
+          </button>
           {(Object.entries(CHANTIER_STATUTS) as [ChantierStatut, typeof CHANTIER_STATUTS[ChantierStatut]][]).map(
             ([statut, info]) => (
               <button
@@ -315,8 +387,31 @@ function ChantierCard({ chantier }: ChantierCardProps) {
 
 interface CreateChantierModalProps {
   onClose: () => void
-  onSubmit: (data: ChantierCreate) => void
+  onSubmit: (
+    data: ChantierCreate,
+    contacts: { nom: string; telephone: string; profession: string }[],
+    phases: { nom: string; date_debut: string; date_fin: string }[]
+  ) => void
   usedColors: string[]
+}
+
+// Génère une couleur aléatoire parmi la palette
+const getRandomColor = () => {
+  const index = Math.floor(Math.random() * USER_COLORS.length)
+  return USER_COLORS[index].code
+}
+
+// Types pour les contacts et phases temporaires
+interface TempContact {
+  nom: string
+  telephone: string
+  profession: string
+}
+
+interface TempPhase {
+  nom: string
+  date_debut: string
+  date_fin: string
 }
 
 function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierModalProps) {
@@ -329,16 +424,16 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
   const [formData, setFormData] = useState<ChantierCreate>({
     nom: '',
     adresse: '',
-    couleur: getAvailableColor(),
+    couleur: getRandomColor(),
   })
-  const [contacts, setContacts] = useState<ContactChantier[]>([
-    { nom: '', profession: '', telephone: '' }
-  ])
+  const [contacts, setContacts] = useState<TempContact[]>([{ nom: '', telephone: '', profession: '' }])
+  const [phases, setPhases] = useState<TempPhase[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Gestion des contacts
   const addContact = () => {
-    setContacts([...contacts, { nom: '', profession: '', telephone: '' }])
+    setContacts([...contacts, { nom: '', telephone: '', profession: '' }])
   }
 
   const removeContact = (index: number) => {
@@ -347,10 +442,25 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
     }
   }
 
-  const updateContact = (index: number, field: keyof ContactChantier, value: string) => {
-    const updated = [...contacts]
-    updated[index] = { ...updated[index], [field]: value }
-    setContacts(updated)
+  const updateContact = (index: number, field: keyof TempContact, value: string) => {
+    const newContacts = [...contacts]
+    newContacts[index][field] = value
+    setContacts(newContacts)
+  }
+
+  // Gestion des phases
+  const addPhase = () => {
+    setPhases([...phases, { nom: '', date_debut: '', date_fin: '' }])
+  }
+
+  const removePhase = (index: number) => {
+    setPhases(phases.filter((_, i) => i !== index))
+  }
+
+  const updatePhase = (index: number, field: keyof TempPhase, value: string) => {
+    const newPhases = [...phases]
+    newPhases[index][field] = value
+    setPhases(newPhases)
   }
 
   // Validation des dates
@@ -375,16 +485,7 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
     setIsSubmitting(true)
     setError(null)
     try {
-      // Filtrer les contacts vides et ajouter au formData
-      const validContacts = contacts.filter(c => c.nom.trim())
-      const dataToSubmit = {
-        ...formData,
-        contacts: validContacts.length > 0 ? validContacts : undefined,
-        // Pour compatibilité avec l'ancien format
-        contact_nom: validContacts[0]?.nom || undefined,
-        contact_telephone: validContacts[0]?.telephone || undefined,
-      }
-      await onSubmit(dataToSubmit)
+      await onSubmit(formData, contacts, phases)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Erreur lors de la création du chantier')
     } finally {
@@ -438,93 +539,152 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
             />
           </div>
 
-          {/* Couleur auto-assignée - pas de sélecteur */}
-
-          {/* Contacts dynamiques */}
-          <div>
+          {/* Section Contacts */}
+          <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                Contacts sur place
+                Contacts sur le chantier
               </label>
               <button
                 type="button"
                 onClick={addContact}
-                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                className="text-primary-600 hover:text-primary-700 text-sm flex items-center gap-1"
               >
                 <Plus className="w-4 h-4" />
                 Ajouter
               </button>
             </div>
-            <div className="space-y-3">
-              {contacts.map((contact, index) => (
-                <div key={index} className="flex gap-2 items-start bg-gray-50 p-3 rounded-lg">
-                  <div className="flex-1 grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      value={contact.nom}
-                      onChange={(e) => updateContact(index, 'nom', e.target.value)}
-                      className="input"
-                      placeholder="Nom"
-                    />
-                    <input
-                      type="text"
-                      value={contact.profession || ''}
-                      onChange={(e) => updateContact(index, 'profession', e.target.value)}
-                      className="input"
-                      placeholder="Profession"
-                    />
-                    <input
-                      type="tel"
-                      value={contact.telephone || ''}
-                      onChange={(e) => updateContact(index, 'telephone', e.target.value)}
-                      className="input"
-                      placeholder="Telephone"
-                    />
-                  </div>
-                  {contacts.length > 1 && (
+            {contacts.map((contact, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={contact.nom}
+                  onChange={(e) => updateContact(index, 'nom', e.target.value)}
+                  className="input flex-1"
+                  placeholder="Nom"
+                />
+                <input
+                  type="tel"
+                  value={contact.telephone}
+                  onChange={(e) => updateContact(index, 'telephone', e.target.value)}
+                  className="input flex-1"
+                  placeholder="Téléphone"
+                />
+                <input
+                  type="text"
+                  value={contact.profession}
+                  onChange={(e) => updateContact(index, 'profession', e.target.value)}
+                  className="input flex-1"
+                  placeholder="Profession"
+                />
+                {contacts.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeContact(index)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Section Phases/Dates */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Phases du chantier (optionnel)
+              </label>
+              <button
+                type="button"
+                onClick={addPhase}
+                className="text-primary-600 hover:text-primary-700 text-sm flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter une phase
+              </button>
+            </div>
+            {phases.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">Aucune phase définie. Ajoutez des phases si le chantier se fait en plusieurs étapes.</p>
+            ) : (
+              phases.map((phase, index) => (
+                <div key={index} className="border rounded-lg p-3 mb-2 bg-gray-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Phase {index + 1}</span>
                     <button
                       type="button"
-                      onClick={() => removeContact(index)}
-                      className="p-2 text-gray-400 hover:text-red-500"
+                      onClick={() => removePhase(index)}
+                      className="p-1 text-red-500 hover:bg-red-100 rounded"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
+                  </div>
+                  <input
+                    type="text"
+                    value={phase.nom}
+                    onChange={(e) => updatePhase(index, 'nom', e.target.value)}
+                    className="input w-full mb-2"
+                    placeholder="Nom de la phase (ex: Gros oeuvre)"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500">Début</label>
+                      <input
+                        type="date"
+                        value={phase.date_debut}
+                        onChange={(e) => updatePhase(index, 'date_debut', e.target.value)}
+                        className="input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Fin</label>
+                      <input
+                        type="date"
+                        value={phase.date_fin}
+                        onChange={(e) => updatePhase(index, 'date_fin', e.target.value)}
+                        className="input w-full"
+                      />
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date debut prevue
-              </label>
-              <input
-                type="date"
-                value={formData.date_debut_prevue || ''}
-                onChange={(e) => {
-                  setFormData({ ...formData, date_debut_prevue: e.target.value })
-                  setError(null)
-                }}
-                className="input"
-              />
+          {/* Dates globales du chantier (si pas de phases) */}
+          {phases.length === 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date debut prevue
+                </label>
+                <input
+                  type="date"
+                  value={formData.date_debut_prevue || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, date_debut_prevue: e.target.value })
+                    setError(null)
+                  }}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date fin prevue
+                </label>
+                <input
+                  type="date"
+                  value={formData.date_fin_prevue || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, date_fin_prevue: e.target.value })
+                    setError(null)
+                  }}
+                  className="input"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date fin prevue
-              </label>
-              <input
-                type="date"
-                value={formData.date_fin_prevue || ''}
-                onChange={(e) => {
-                  setFormData({ ...formData, date_fin_prevue: e.target.value })
-                  setError(null)
-                }}
-                className="input"
-              />
-            </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
