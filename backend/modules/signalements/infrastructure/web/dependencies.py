@@ -5,9 +5,10 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
-from modules.auth.infrastructure.web.dependencies import (
+from shared.infrastructure.web.dependencies import (  # Facade centralisée
     get_current_user_id,
     get_current_user_role,
+    get_user_repository,
 )
 from ...adapters.controllers import SignalementController
 from ..persistence import SQLAlchemySignalementRepository, SQLAlchemyReponseRepository
@@ -34,18 +35,20 @@ def get_user_name_resolver(db: Session):
     """
     Crée une fonction pour résoudre les noms d'utilisateurs.
 
+    Utilise le repository via la facade centralisée (Clean Architecture).
+
     Args:
         db: Session SQLAlchemy.
 
     Returns:
         Fonction qui prend un user_id et retourne le nom.
     """
-    from modules.auth.infrastructure.persistence import UserModel
+    user_repo = get_user_repository(db)
 
     def resolver(user_id: int) -> Optional[str]:
-        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        user = user_repo.find_by_id(user_id)
         if user:
-            return f"{user.prenom} {user.nom}" if hasattr(user, 'prenom') else user.nom
+            return f"{user.prenom} {user.nom}"
         return None
 
     return resolver
