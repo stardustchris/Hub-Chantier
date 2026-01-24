@@ -24,24 +24,28 @@ cd ../frontend && npm install && npm run build
 
 **NE PAS commencer si ces commandes echouent.**
 
-### 2. Workflow fonctionnalite
+### 2. Workflow fonctionnalite (7 agents)
 
 ```
 1. Lire .claude/agents.md (workflow agents)
 2. Lire docs/SPECIFICATIONS.md (specs de la feature)
-3. python-pro/typescript-pro : implementer
-4. architect-reviewer : valider architecture
-5. test-automator : generer tests (couverture >= 85%)
-6. code-reviewer : valider qualite/securite
-7. Mettre a jour SPECIFICATIONS.md (statut -> done)
-8. Mettre a jour .claude/history.md (resume session)
+3. sql-pro : schema DB et migrations (si nouvelles tables)
+4. python-pro/typescript-pro : implementer
+5. architect-reviewer : valider architecture
+6. test-automator : generer tests (couverture >= 85%)
+7. code-reviewer : valider qualite
+8. security-auditor : audit securite/RGPD
+9. Mettre a jour SPECIFICATIONS.md (statut -> done)
+10. Mettre a jour .claude/history.md (resume session)
 ```
 
 ### 3. Avant commit (code *.py, *.ts, *.tsx, *.sql)
 
+- [ ] sql-pro : migrations OK (si modifs DB)
 - [ ] architect-reviewer : PASS
 - [ ] test-automator : tests generes
 - [ ] code-reviewer : APPROVED
+- [ ] security-auditor : PASS (aucun finding critique/haute)
 - [ ] Couverture >= 90% sur code modifie
 - [ ] SPECIFICATIONS.md mis a jour
 - [ ] .claude/history.md mis a jour
