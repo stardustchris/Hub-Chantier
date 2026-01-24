@@ -1,11 +1,24 @@
 """Hub Chantier - Application FastAPI principale."""
 
-from fastapi import FastAPI
+import logging
+from datetime import datetime
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
 
 from shared.infrastructure import settings, init_db
+from shared.infrastructure.database import SessionLocal
+
+# P2-3: Configuration logging
+logging.basicConfig(
+    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.web.security_middleware import SecurityHeadersMiddleware
 from modules.auth.infrastructure.web import router as auth_router, users_router
@@ -47,19 +60,55 @@ app.add_middleware(
 app.add_middleware(SecurityHeadersMiddleware)
 
 
+# P2-8: Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Gestionnaire global d'exceptions non gérées.
+
+    Log l'erreur et retourne une réponse générique
+    pour ne pas exposer de détails internes.
+    """
+    logger.error(
+        f"Erreur non gérée: {type(exc).__name__}: {exc}",
+        exc_info=True,
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+
+    # En mode debug, on peut exposer plus de détails
+    if settings.DEBUG:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": f"{type(exc).__name__}: {str(exc)}",
+                "path": request.url.path,
+            },
+        )
+
+    # En production, message générique
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Une erreur interne s'est produite"},
+    )
+
+
 # Event handlers
 @app.on_event("startup")
 async def startup_event():
     """Initialisation au démarrage."""
-    print(f"Démarrage de {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info(f"Démarrage de {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info(f"Mode DEBUG: {settings.DEBUG}")
     init_db()
-    print("Base de données initialisée")
+    logger.info("Base de données initialisée")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Nettoyage à l'arrêt."""
-    print("Arrêt de l'application")
+    logger.info("Arrêt de l'application")
 
 
 # Routes
@@ -75,11 +124,37 @@ async def root():
 
 @app.get("/health", tags=["health"])
 async def health_check():
-    """Health check détaillé."""
+    """
+    Health check détaillé (P2-9).
+
+    Vérifie réellement la connexion à la base de données.
+    """
+    db_status = "disconnected"
+    db_latency_ms = None
+
+    try:
+        db = SessionLocal()
+        start = datetime.now()
+        db.execute(text("SELECT 1"))
+        db_latency_ms = (datetime.now() - start).total_seconds() * 1000
+        db_status = "connected"
+        db.close()
+    except Exception as e:
+        logger.error(f"Health check DB failed: {e}")
+        db_status = f"error: {type(e).__name__}"
+
+    status = "healthy" if db_status == "connected" else "unhealthy"
+
     return {
-        "status": "healthy",
-        "database": "connected",
+        "status": status,
         "version": settings.APP_VERSION,
+        "timestamp": datetime.now().isoformat(),
+        "checks": {
+            "database": {
+                "status": db_status,
+                "latency_ms": round(db_latency_ms, 2) if db_latency_ms else None,
+            },
+        },
     }
 
 

@@ -4,7 +4,6 @@ Ces tests verifient les endpoints FastAPI avec une vraie DB SQLite.
 Selon CDC Section 9 - Gestion Documentaire (GED-01 a GED-17).
 """
 
-import pytest
 import io
 
 

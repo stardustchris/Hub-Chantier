@@ -15,7 +15,6 @@ from ...application.use_cases import (
     EmailAlreadyExistsError,
     CodeAlreadyExistsError,
     WeakPasswordError,
-    InvalidTokenError,
     UserNotFoundError,
 )
 from .dependencies import get_auth_controller, get_current_user_id

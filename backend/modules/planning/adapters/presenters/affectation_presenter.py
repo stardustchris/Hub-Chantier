@@ -9,7 +9,7 @@ L'enrichissement (nom utilisateur, couleur chantier) est une preoccupation
 de PRESENTATION, pas de logique metier. Il doit donc etre dans Adapters.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 
 from shared.application.ports import EntityInfoService
 from ...application.dtos import AffectationDTO

@@ -49,7 +49,6 @@ class TemplateModeleDTO:
     @classmethod
     def from_entity(cls, template: TemplateModele) -> "TemplateModeleDTO":
         """Convertit une entite TemplateModele en DTO."""
-        from ...domain.value_objects import UniteMesure
 
         unite_display = None
         if template.unite_mesure:

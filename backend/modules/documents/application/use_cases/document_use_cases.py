@@ -1,10 +1,9 @@
 """Use Cases pour la gestion des documents."""
 
-from typing import Optional, List, BinaryIO
+from typing import Optional, BinaryIO
 
 from ..dtos import (
     DocumentDTO,
-    DocumentCreateDTO,
     DocumentUpdateDTO,
     DocumentListDTO,
     DocumentSearchDTO,

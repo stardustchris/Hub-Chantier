@@ -4,7 +4,6 @@ Ce module centralise toutes les exceptions metier utilisees par les use cases.
 """
 
 from datetime import date
-from typing import Optional
 
 
 class AffectationConflictError(Exception):

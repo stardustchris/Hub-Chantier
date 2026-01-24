@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Tuple
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_
 
 from .models import SignalementModel
 from ...domain.entities import Signalement
@@ -245,7 +245,7 @@ class SQLAlchemySignalementRepository(SignalementRepository):
         limit: int = 100,
     ) -> List[Signalement]:
         """Récupère les signalements en retard."""
-        now = datetime.now()
+        datetime.now()
 
         # Signalements actifs (non résolus)
         query = self._session.query(SignalementModel).filter(

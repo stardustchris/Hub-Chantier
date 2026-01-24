@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional, List
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, not_
+from sqlalchemy import and_
 
 from ...domain.entities import Affectation
 from ...domain.repositories import AffectationRepository

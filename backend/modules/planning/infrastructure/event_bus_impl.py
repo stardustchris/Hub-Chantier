@@ -3,7 +3,6 @@
 from typing import Any, List, Optional
 import logging
 
-from shared.infrastructure.event_bus import EventBus as CoreEventBus
 from ..application.ports.event_bus import EventBus
 
 logger = logging.getLogger(__name__)

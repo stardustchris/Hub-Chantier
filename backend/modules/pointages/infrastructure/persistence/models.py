@@ -1,7 +1,6 @@
 """Modèles SQLAlchemy pour le module pointages."""
 
-from datetime import datetime, date
-from decimal import Decimal
+from datetime import datetime
 from sqlalchemy import (
     Column,
     Integer,
@@ -11,7 +10,6 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     Numeric,
-    Enum as SQLEnum,
     UniqueConstraint,
     Index,
 )

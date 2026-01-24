@@ -12,8 +12,6 @@ from shared.infrastructure.database_base import Base
 from shared.infrastructure.config import settings
 
 # Import all module models
-from modules.chantiers.infrastructure.persistence import ChantierModel, ContactChantierModel, PhaseChantierModel
-from modules.auth.infrastructure.persistence import UserModel
 
 # this is the Alembic Config object
 config = context.config

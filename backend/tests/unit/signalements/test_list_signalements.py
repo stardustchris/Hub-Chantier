@@ -1,6 +1,5 @@
 """Tests unitaires pour ListSignalementsUseCase."""
 
-import pytest
 from unittest.mock import Mock
 from datetime import datetime
 
@@ -75,7 +74,7 @@ class TestListSignalementsUseCase:
         self.mock_signalement_repo.count_by_chantier.return_value = 1
         self.mock_reponse_repo.count_by_signalement.return_value = 0
 
-        result = self.use_case.execute(chantier_id=1, statut="ouvert")
+        self.use_case.execute(chantier_id=1, statut="ouvert")
 
         # Verifier que le repository est appele avec le bon statut
         call_args = self.mock_signalement_repo.find_by_chantier.call_args
@@ -88,7 +87,7 @@ class TestListSignalementsUseCase:
         self.mock_signalement_repo.count_by_chantier.return_value = 1
         self.mock_reponse_repo.count_by_signalement.return_value = 0
 
-        result = self.use_case.execute(chantier_id=1, priorite="haute")
+        self.use_case.execute(chantier_id=1, priorite="haute")
 
         # Verifier que le repository est appele avec la bonne priorite
         call_args = self.mock_signalement_repo.find_by_chantier.call_args

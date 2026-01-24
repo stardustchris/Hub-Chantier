@@ -2,7 +2,6 @@
 
 from typing import Callable, Optional
 
-from ...domain.entities import User
 from ...domain.repositories import UserRepository
 from ...domain.value_objects import Role, TypeUtilisateur, Couleur
 from ...domain.events import UserUpdatedEvent

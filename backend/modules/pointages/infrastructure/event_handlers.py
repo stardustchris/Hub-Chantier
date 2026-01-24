@@ -5,7 +5,6 @@ et créent les pointages correspondants (FDH-10).
 """
 
 import logging
-from typing import Optional
 
 from sqlalchemy.orm import Session
 

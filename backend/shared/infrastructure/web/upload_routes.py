@@ -1,6 +1,6 @@
 """Routes FastAPI pour l'upload de fichiers."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
@@ -16,6 +16,43 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 # Configuration
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "uploads")
 MAX_PHOTOS_PER_POST = 5
+MAX_UPLOAD_SIZE_MB = 10  # P2-2: Limite avant compression (10 Mo max)
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+
+async def validate_file_size(file: UploadFile, max_size: int = MAX_UPLOAD_SIZE_BYTES) -> bytes:
+    """
+    Valide la taille du fichier avant lecture complète (P2-2).
+
+    Lit le fichier par chunks pour éviter l'épuisement mémoire.
+
+    Args:
+        file: Fichier uploadé.
+        max_size: Taille maximale en bytes.
+
+    Returns:
+        Contenu du fichier si valide.
+
+    Raises:
+        HTTPException: Si le fichier dépasse la taille maximale.
+    """
+    chunks = []
+    total_size = 0
+    chunk_size = 64 * 1024  # 64 KB chunks
+
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        total_size += len(chunk)
+        if total_size > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"Fichier trop volumineux. Maximum: {MAX_UPLOAD_SIZE_MB} Mo",
+            )
+        chunks.append(chunk)
+
+    return b"".join(chunks)
 
 
 def get_file_service() -> FileService:
@@ -64,7 +101,7 @@ async def upload_profile_photo(
         URL du fichier uploadé.
     """
     try:
-        content = await file.read()
+        content = await validate_file_size(file)  # P2-2: Validation taille
         url = file_service.upload_profile_photo(
             file_content=content,
             filename=file.filename or "photo.jpg",
@@ -108,7 +145,7 @@ async def upload_post_media(
     results = []
     for file in files:
         try:
-            content = await file.read()
+            content = await validate_file_size(file)  # P2-2: Validation taille
             url, thumbnail_url = file_service.upload_post_media(
                 file_content=content,
                 filename=file.filename or "photo.jpg",
@@ -144,7 +181,7 @@ async def upload_chantier_photo(
         URL du fichier uploadé.
     """
     try:
-        content = await file.read()
+        content = await validate_file_size(file)  # P2-2: Validation taille
         url = file_service.upload_chantier_photo(
             file_content=content,
             filename=file.filename or "photo.jpg",

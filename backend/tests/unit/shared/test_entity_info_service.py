@@ -4,7 +4,7 @@ Teste le service partage de recuperation des infos utilisateur/chantier.
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 from sqlalchemy.orm import Session
 
 from shared.application.ports import (

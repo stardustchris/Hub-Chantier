@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
 from sqlalchemy.orm import Session
 
 from ...adapters.controllers import ChantierController
@@ -16,7 +15,6 @@ from ...application.use_cases import (
     ChantierFermeError,
     ChantierActifError,
     TransitionNonAutoriseeError,
-    InvalidRoleTypeError,
 )
 from .dependencies import get_chantier_controller, get_user_repository
 from shared.infrastructure.web import (

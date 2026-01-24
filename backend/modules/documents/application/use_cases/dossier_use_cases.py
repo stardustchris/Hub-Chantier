@@ -210,7 +210,7 @@ class GetArborescenceUseCase:
         all_dossiers = self._dossier_repo.get_arborescence(chantier_id)
 
         # Construire l'arbre
-        dossiers_by_id = {d.id: d for d in all_dossiers}
+        {d.id: d for d in all_dossiers}
         root_dossiers = []
 
         def build_tree(dossier: Dossier) -> DossierTreeDTO:

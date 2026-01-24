@@ -122,7 +122,6 @@ class PlanningFiltersDTO:
         Returns:
             Filtre pour le mois specifie.
         """
-        from datetime import timedelta
         import calendar
 
         first_day = date(year, month, 1)

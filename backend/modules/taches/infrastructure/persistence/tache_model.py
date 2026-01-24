@@ -1,7 +1,6 @@
 """SQLAlchemy Model pour les taches."""
 
-from datetime import datetime, date
-from typing import Optional, List
+from datetime import datetime
 
 from sqlalchemy import (
     Column,
@@ -9,16 +8,14 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-    Boolean,
     DateTime,
     Date,
-    Enum,
     ForeignKey,
 )
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
-from ...domain.value_objects import StatutTache, UniteMesure
+from ...domain.value_objects import StatutTache
 
 
 class TacheModel(Base):

@@ -1,7 +1,6 @@
 """Use Case: Lister les feuilles d'heures avec filtres."""
 
 from math import ceil
-from typing import List
 
 from ...domain.entities import FeuilleHeures
 from ...domain.repositories import FeuilleHeuresRepository, PointageRepository

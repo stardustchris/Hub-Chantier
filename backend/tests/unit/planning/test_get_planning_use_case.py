@@ -7,16 +7,14 @@ Ce fichier teste :
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from datetime import date
 
 from modules.planning.domain.entities.affectation import Affectation
 from modules.planning.domain.repositories.affectation_repository import AffectationRepository
 from modules.planning.domain.value_objects.heure_affectation import HeureAffectation
-from modules.planning.domain.value_objects.type_affectation import TypeAffectation
 from modules.planning.application.use_cases.get_planning import GetPlanningUseCase
 from modules.planning.application.dtos.planning_filters_dto import PlanningFiltersDTO
-from modules.planning.application.dtos.affectation_dto import AffectationDTO
 
 
 # =============================================================================

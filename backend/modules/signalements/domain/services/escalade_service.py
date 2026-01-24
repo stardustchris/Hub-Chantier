@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List, Optional, Tuple
 
 from ..entities import Signalement
-from ..value_objects import StatutSignalement
 
 
 @dataclass

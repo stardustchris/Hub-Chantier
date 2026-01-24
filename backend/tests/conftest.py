@@ -4,11 +4,13 @@ import pytest
 import sys
 import os
 
+# P2-1: Activer DEBUG pour les tests (avant import des modules)
+os.environ.setdefault("DEBUG", "true")
+
 # Ajouter le dossier backend au path pour les imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
-from unittest.mock import Mock
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

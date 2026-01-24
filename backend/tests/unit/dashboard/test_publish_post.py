@@ -2,11 +2,8 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import datetime
 
-from modules.dashboard.domain.entities import Post
 from modules.dashboard.domain.repositories import PostRepository, PostMediaRepository
-from modules.dashboard.domain.value_objects import PostTargeting, PostStatus
 from modules.dashboard.application.use_cases import (
     PublishPostUseCase,
     PostContentEmptyError,

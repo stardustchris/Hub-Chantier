@@ -1,6 +1,6 @@
 """SQLAlchemy Model pour les feuilles de taches."""
 
-from datetime import datetime, date
+from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Date
 

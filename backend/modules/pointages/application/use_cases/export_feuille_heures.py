@@ -2,7 +2,7 @@
 
 import csv
 import io
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 from typing import Optional, List
 
 from ...domain.repositories import PointageRepository, FeuilleHeuresRepository

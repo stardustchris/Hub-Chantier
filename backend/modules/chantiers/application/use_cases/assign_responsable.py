@@ -71,10 +71,8 @@ class AssignResponsableUseCase:
 
         if role_type == "conducteur":
             chantier.assigner_conducteur(dto.user_id)
-            event_class = ConducteurAssigneEvent
         elif role_type in ("chef_chantier", "chef"):
             chantier.assigner_chef_chantier(dto.user_id)
-            event_class = ChefChantierAssigneEvent
         else:
             raise InvalidRoleTypeError(dto.role_type)
 
