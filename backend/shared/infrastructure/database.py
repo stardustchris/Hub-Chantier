@@ -70,3 +70,67 @@ def init_db() -> None:
 
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
+
+    # Migration des donnees JSON vers tables de jointure (si necessaire)
+    _migrate_chantier_responsables()
+
+
+def _migrate_chantier_responsables() -> None:
+    """
+    Migre les donnees legacy JSON (conducteur_ids, chef_chantier_ids)
+    vers les tables de jointure (chantier_conducteurs, chantier_chefs).
+
+    Cette migration s'execute au demarrage et est idempotente.
+    """
+    from modules.chantiers.infrastructure.persistence import (
+        ChantierModel,
+        ChantierConducteurModel,
+        ChantierChefModel,
+    )
+
+    db = SessionLocal()
+    try:
+        # Verifier si la migration est necessaire
+        existing_count = db.query(ChantierConducteurModel).count()
+        if existing_count > 0:
+            # Deja migre, on skip
+            return
+
+        # Recuperer tous les chantiers avec leurs IDs JSON
+        chantiers = db.query(ChantierModel).filter(
+            ChantierModel.deleted_at.is_(None)
+        ).all()
+
+        migrated = 0
+        for chantier in chantiers:
+            # Migrer les conducteurs
+            conducteur_ids = chantier.conducteur_ids or []
+            for user_id in conducteur_ids:
+                if user_id:
+                    db.add(ChantierConducteurModel(
+                        chantier_id=chantier.id,
+                        user_id=user_id,
+                    ))
+                    migrated += 1
+
+            # Migrer les chefs de chantier
+            chef_ids = chantier.chef_chantier_ids or []
+            for user_id in chef_ids:
+                if user_id:
+                    db.add(ChantierChefModel(
+                        chantier_id=chantier.id,
+                        user_id=user_id,
+                    ))
+                    migrated += 1
+
+        if migrated > 0:
+            db.commit()
+            print(f"Migration tables jointure: {migrated} associations migrees")
+        else:
+            print("Migration tables jointure: aucune donnee a migrer")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Erreur migration tables jointure: {e}")
+    finally:
+        db.close()
