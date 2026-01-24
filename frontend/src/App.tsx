@@ -13,6 +13,7 @@ import PlanningPage from './pages/PlanningPage'
 import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
 import FormulairesPage from './pages/FormulairesPage'
 import DocumentsPage from './pages/DocumentsPage'
+import LogistiquePage from './pages/LogistiquePage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -95,6 +96,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DocumentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/logistique"
+            element={
+              <ProtectedRoute>
+                <LogistiquePage />
               </ProtectedRoute>
             }
           />
