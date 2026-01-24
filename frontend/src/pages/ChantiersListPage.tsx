@@ -29,24 +29,19 @@ export default function ChantiersListPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // Charger tous les chantiers pour les compteurs (une seule fois ou lors d'un changement)
+  // Charger tous les chantiers pour les compteurs
   const loadAllChantiers = async () => {
     try {
       const response = await chantiersService.list({ size: 500 })
       setAllChantiers(response.items)
+      return response.items
     } catch (error) {
       console.error('Error loading all chantiers:', error)
+      return []
     }
   }
 
-  useEffect(() => {
-    loadAllChantiers()
-  }, [])
-
-  useEffect(() => {
-    loadChantiers()
-  }, [page, search, statutFilter])
-
+  // Charger les chantiers filtrés pour l'affichage
   const loadChantiers = async () => {
     try {
       setIsLoading(true)
@@ -65,11 +60,25 @@ export default function ChantiersListPage() {
     }
   }
 
+  // Chargement initial : tous les chantiers puis les chantiers filtrés
+  useEffect(() => {
+    const init = async () => {
+      await loadAllChantiers()
+      await loadChantiers()
+    }
+    init()
+  }, [])
+
+  // Recharger les chantiers filtrés quand les filtres changent
+  useEffect(() => {
+    loadChantiers()
+  }, [page, search, statutFilter])
+
   const handleCreateChantier = async (data: ChantierCreate) => {
     await chantiersService.create(data)
     setShowCreateModal(false)
-    loadChantiers()
-    loadAllChantiers()  // Recharger les compteurs aussi
+    await loadAllChantiers()  // Recharger les compteurs
+    await loadChantiers()
   }
 
   const filteredChantiers = chantiers
@@ -98,7 +107,25 @@ export default function ChantiersListPage() {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          {/* Bouton "Tous" */}
+          <button
+            onClick={() => setStatutFilter('')}
+            className={`card text-left transition-all ${
+              statutFilter === '' ? 'ring-2 ring-primary-500' : ''
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: '#6B7280' }}
+              />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{allChantiers.length}</p>
+                <p className="text-xs text-gray-500">Tous</p>
+              </div>
+            </div>
+          </button>
           {(Object.entries(CHANTIER_STATUTS) as [ChantierStatut, typeof CHANTIER_STATUTS[ChantierStatut]][]).map(
             ([statut, info]) => (
               <button
