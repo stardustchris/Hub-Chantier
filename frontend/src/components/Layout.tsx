@@ -23,7 +23,14 @@ interface LayoutProps {
   children: ReactNode
 }
 
-const navigation = [
+interface NavItem {
+  name: string
+  href: string
+  icon: typeof Home
+  disabled?: boolean
+}
+
+const navigation: NavItem[] = [
   { name: 'Tableau de bord', href: '/', icon: Home },
   { name: 'Chantiers', href: '/chantiers', icon: Building2 },
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
