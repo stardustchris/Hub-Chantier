@@ -27,6 +27,7 @@ from modules.planning.infrastructure.persistence.affectation_model import Base a
 from modules.formulaires.infrastructure.persistence import Base as FormulairesBase
 from modules.signalements.infrastructure.persistence import Base as SignalementsBase
 from modules.documents.infrastructure.persistence.models import Base as DocumentsBase
+from modules.planning_charge.infrastructure.persistence import BesoinChargeModel
 
 
 @pytest.fixture(scope="function")
@@ -60,6 +61,10 @@ def test_db():
     SignalementsBase.metadata.create_all(bind=engine)
     DocumentsBase.metadata.reflect(bind=engine, only=['users', 'chantiers'])
     DocumentsBase.metadata.create_all(bind=engine)
+
+    # Pour le module planning_charge, creer la table besoins_charge
+    # La table a des ForeignKeys vers users et chantiers deja creees
+    BesoinChargeModel.__table__.create(bind=engine, checkfirst=True)
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -227,6 +232,28 @@ def compagnon_auth_headers(client):
             "nom": "Compagnon",
             "prenom": "Test",
             "role": "compagnon",
+            "type_utilisateur": "employe",
+        },
+    )
+    assert response.status_code == 201, f"Registration failed: {response.json()}"
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def chef_chantier_auth_headers(client):
+    """
+    Cree un utilisateur chef de chantier et retourne les headers d'authentification.
+    Le chef de chantier peut lire le planning de charge mais pas modifier les besoins.
+    """
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "chef@test.com",
+            "password": "TestPassword123!",
+            "nom": "Chef",
+            "prenom": "Chantier",
+            "role": "chef_chantier",
             "type_utilisateur": "employe",
         },
     )

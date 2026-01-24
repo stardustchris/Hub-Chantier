@@ -103,7 +103,7 @@ class SQLAlchemyUtilisateurProvider(UtilisateurProvider):
         from modules.auth.infrastructure.persistence import UserModel
         from modules.planning.infrastructure.persistence import AffectationModel
 
-        date_debut, date_fin = semaine.dates_debut_fin()
+        date_debut, date_fin = semaine.date_range()
 
         # Sous-requete: utilisateurs avec affectations cette semaine
         utilisateurs_affectes = self.session.query(

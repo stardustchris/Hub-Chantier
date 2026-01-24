@@ -25,9 +25,12 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         """
         self.session = session
 
-    def get_chantiers_actifs(self) -> List[Dict]:
+    def get_chantiers_actifs(self, search: Optional[str] = None) -> List[Dict]:
         """
         Recupere la liste des chantiers actifs.
+
+        Args:
+            search: Terme de recherche optionnel.
 
         Returns:
             Liste de dicts avec id, code, nom, couleur, heures_estimees.
@@ -35,10 +38,20 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         # Import differe pour eviter dependance circulaire
         from modules.chantiers.infrastructure.persistence import ChantierModel
 
-        models = self.session.query(ChantierModel).filter(
+        query = self.session.query(ChantierModel).filter(
             ChantierModel.statut.in_(["ouvert", "en_cours"]),
-            ChantierModel.is_deleted == False,
-        ).order_by(ChantierModel.code).all()
+            ChantierModel.deleted_at.is_(None),
+        )
+
+        # Appliquer le filtre de recherche si present
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                (ChantierModel.nom.ilike(search_term)) |
+                (ChantierModel.code.ilike(search_term))
+            )
+
+        models = query.order_by(ChantierModel.code).all()
 
         return [
             {
@@ -65,7 +78,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
 
         model = self.session.query(ChantierModel).filter(
             ChantierModel.id == chantier_id,
-            ChantierModel.is_deleted == False,
+            ChantierModel.deleted_at.is_(None),
         ).first()
 
         if not model:
@@ -94,7 +107,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         search_term = f"%{query}%"
 
         models = self.session.query(ChantierModel).filter(
-            ChantierModel.is_deleted == False,
+            ChantierModel.deleted_at.is_(None),
             ChantierModel.statut.in_(["ouvert", "en_cours"]),
             (ChantierModel.nom.ilike(search_term)) |
             (ChantierModel.code.ilike(search_term)),
@@ -128,7 +141,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
 
         models = self.session.query(ChantierModel).filter(
             ChantierModel.id.in_(chantier_ids),
-            ChantierModel.is_deleted == False,
+            ChantierModel.deleted_at.is_(None),
         ).order_by(ChantierModel.code).all()
 
         return [
