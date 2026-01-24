@@ -34,7 +34,6 @@ class ChantierDTO:
     coordonnees_gps: Optional[dict]  # {"latitude": float, "longitude": float}
     photo_couverture: Optional[str]
     contact: Optional[dict]  # {"nom": str, "profession": str, "telephone": str} - legacy single contact
-    contacts: List[ContactDTO]  # Liste des contacts (CHT-07)
     heures_estimees: Optional[float]
     date_debut: Optional[str]  # ISO format
     date_fin: Optional[str]  # ISO format
@@ -44,6 +43,7 @@ class ChantierDTO:
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    contacts: List[ContactDTO] = field(default_factory=list)  # Liste des contacts (CHT-07)
 
     @classmethod
     def from_entity(cls, chantier: Chantier) -> "ChantierDTO":
@@ -92,6 +92,7 @@ class ChantierDTO:
             is_active=chantier.is_active,
             created_at=chantier.created_at,
             updated_at=chantier.updated_at,
+            contacts=[],  # Les contacts sont chargés séparément via l'infrastructure
         )
 
 

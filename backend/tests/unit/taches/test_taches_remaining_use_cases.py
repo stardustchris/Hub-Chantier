@@ -4,13 +4,15 @@ import pytest
 from datetime import date
 from unittest.mock import Mock
 
-from modules.taches.domain.entities import Tache, TemplateModele, FeuilleTache
-from modules.taches.domain.value_objects import StatutTache, UniteMesure
-from modules.taches.domain.repositories import (
-    TacheRepository,
-    TemplateModeleRepository,
-    FeuilleTacheRepository,
-)
+# Imports directs pour éviter le chargement de l'infrastructure via __init__.py
+from modules.taches.domain.entities.tache import Tache
+from modules.taches.domain.entities.template_modele import TemplateModele
+from modules.taches.domain.entities.feuille_tache import FeuilleTache
+from modules.taches.domain.value_objects.statut_tache import StatutTache
+from modules.taches.domain.value_objects.unite_mesure import UniteMesure
+from modules.taches.domain.repositories.tache_repository import TacheRepository
+from modules.taches.domain.repositories.template_modele_repository import TemplateModeleRepository
+from modules.taches.domain.repositories.feuille_tache_repository import FeuilleTacheRepository
 from modules.taches.application.use_cases.create_template import (
     CreateTemplateUseCase,
     TemplateAlreadyExistsError,
@@ -23,7 +25,7 @@ from modules.taches.application.use_cases.list_feuilles_taches import (
 from modules.taches.application.use_cases.list_templates import ListTemplatesUseCase
 from modules.taches.application.use_cases.reorder_taches import ReorderTachesUseCase
 from modules.taches.application.use_cases.get_tache import TacheNotFoundError
-from modules.taches.application.dtos import CreateTemplateModeleDTO, SousTacheModeleDTO
+from modules.taches.application.dtos.template_modele_dto import CreateTemplateModeleDTO, SousTacheModeleDTO
 
 
 class TestCreateTemplateUseCase:

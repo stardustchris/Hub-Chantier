@@ -17,6 +17,7 @@ class PhaseChantierModel(Base):
     """
 
     __tablename__ = "phases_chantier"
+    __table_args__ = {"extend_existing": True}
 
     # Identifiant
     id = Column(Integer, primary_key=True, autoincrement=True)

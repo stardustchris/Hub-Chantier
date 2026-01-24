@@ -30,6 +30,7 @@ class TacheModel(Base):
     """
 
     __tablename__ = "taches"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     chantier_id = Column(Integer, nullable=False, index=True)

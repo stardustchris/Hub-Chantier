@@ -18,6 +18,7 @@ class TemplateModeleModel(Base):
     """
 
     __tablename__ = "templates_modeles"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nom = Column(String(255), nullable=False, unique=True)
@@ -112,6 +113,7 @@ class SousTacheModeleModel(Base):
     """
 
     __tablename__ = "sous_taches_modeles"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     template_id = Column(Integer, ForeignKey("templates_modeles.id"), nullable=False)

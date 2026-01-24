@@ -16,6 +16,7 @@ class ContactChantierModel(Base):
     """
 
     __tablename__ = "contacts_chantier"
+    __table_args__ = {"extend_existing": True}
 
     # Identifiant
     id = Column(Integer, primary_key=True, autoincrement=True)

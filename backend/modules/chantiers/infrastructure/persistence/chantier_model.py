@@ -18,6 +18,7 @@ class ContactChantierModel(Base):
     """
 
     __tablename__ = "contacts_chantier"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     chantier_id = Column(Integer, ForeignKey("chantiers.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -46,6 +47,7 @@ class ChantierModel(Base):
     """
 
     __tablename__ = "chantiers"
+    __table_args__ = {"extend_existing": True}
 
     # Identifiant
     id = Column(Integer, primary_key=True, autoincrement=True)
