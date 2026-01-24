@@ -8,6 +8,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
+from shared.infrastructure.web.dependencies import (
+    get_current_user_id,
+    require_conducteur_or_admin,
+    require_chef_or_above,
+)
 from ..persistence import (
     SQLAlchemyPointageRepository,
     SQLAlchemyFeuilleHeuresRepository,
@@ -109,7 +114,7 @@ def get_controller(db: Session = Depends(get_db)) -> PointageController:
 @router.post("", status_code=201)
 def create_pointage(
     request: CreatePointageRequest,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """
@@ -145,6 +150,7 @@ def list_pointages(
     statut: Optional[str] = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """
@@ -178,6 +184,7 @@ def list_feuilles_heures(
     statut: Optional[str] = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Liste les feuilles d'heures avec filtres."""
@@ -194,6 +201,7 @@ def list_feuilles_heures(
 @router.get("/navigation")
 def get_navigation_semaine(
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Retourne les infos de navigation par semaine (FDH-02)."""
@@ -203,7 +211,8 @@ def get_navigation_semaine(
 @router.get("/vues/chantiers")
 def get_vue_chantiers(
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    chantier_ids: Optional[str] = Query(None, description="IDs chantiers séparés par virgule"),
+    chantier_ids: Optional[str] = Query(None, description="IDs chantiers separes par virgule"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Vue par chantiers pour une semaine (FDH-01 onglet Chantiers)."""
@@ -216,7 +225,8 @@ def get_vue_chantiers(
 @router.get("/vues/compagnons")
 def get_vue_compagnons(
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    utilisateur_ids: Optional[str] = Query(None, description="IDs utilisateurs séparés par virgule"),
+    utilisateur_ids: Optional[str] = Query(None, description="IDs utilisateurs separes par virgule"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Vue par compagnons pour une semaine (FDH-01 onglet Compagnons)."""
@@ -229,6 +239,7 @@ def get_vue_compagnons(
 @router.post("/variables-paie", status_code=201)
 def create_variable_paie(
     request: CreateVariablePaieRequest,
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Crée une variable de paie (FDH-13)."""
@@ -247,7 +258,7 @@ def create_variable_paie(
 @router.post("/export")
 def export_feuilles_heures(
     request: ExportRequest,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Exporte les feuilles d'heures (FDH-03, FDH-17)."""
@@ -280,6 +291,7 @@ def export_feuilles_heures(
 @router.get("/feuilles/{feuille_id}")
 def get_feuille_heures(
     feuille_id: int,
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Récupère une feuille d'heures par son ID."""
@@ -293,6 +305,7 @@ def get_feuille_heures(
 def get_feuille_heures_semaine(
     utilisateur_id: int,
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Récupère la feuille d'heures d'un utilisateur pour une semaine (FDH-05)."""
@@ -303,6 +316,7 @@ def get_feuille_heures_semaine(
 def get_feuille_route(
     utilisateur_id: int,
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Génère une feuille de route (FDH-19)."""
@@ -313,7 +327,8 @@ def get_feuille_route(
 def get_jauge_avancement(
     utilisateur_id: int,
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
-    heures_planifiees: Optional[float] = Query(None, description="Heures planifiées (défaut 35h)"),
+    heures_planifiees: Optional[float] = Query(None, description="Heures planifiees (defaut 35h)"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Jauge d'avancement planifié vs réalisé (FDH-14)."""
@@ -323,6 +338,7 @@ def get_jauge_avancement(
 @router.get("/stats/comparaison-equipes")
 def compare_equipes(
     semaine_debut: date = Query(..., description="Date du lundi de la semaine"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Comparaison inter-équipes (FDH-15)."""
@@ -332,7 +348,7 @@ def compare_equipes(
 @router.post("/bulk-from-planning", status_code=201)
 def bulk_create_from_planning(
     request: BulkCreateRequest,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Crée des pointages en masse depuis le planning (FDH-10)."""
@@ -353,6 +369,7 @@ def bulk_create_from_planning(
 @router.get("/{pointage_id}")
 def get_pointage(
     pointage_id: int,
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Récupère un pointage par son ID."""
@@ -366,7 +383,7 @@ def get_pointage(
 def update_pointage(
     pointage_id: int,
     request: UpdatePointageRequest,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Met à jour un pointage (si en brouillon ou rejeté)."""
@@ -385,7 +402,7 @@ def update_pointage(
 @router.delete("/{pointage_id}", status_code=204)
 def delete_pointage(
     pointage_id: int,
-    current_user_id: int = Query(..., description="ID de l'utilisateur connecté"),
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Supprime un pointage (si en brouillon ou rejeté)."""
@@ -402,6 +419,7 @@ def delete_pointage(
 def sign_pointage(
     pointage_id: int,
     request: SignPointageRequest,
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Signe électroniquement un pointage (FDH-12)."""
@@ -414,6 +432,7 @@ def sign_pointage(
 @router.post("/{pointage_id}/submit")
 def submit_pointage(
     pointage_id: int,
+    current_user_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Soumet un pointage pour validation."""
@@ -426,7 +445,7 @@ def submit_pointage(
 @router.post("/{pointage_id}/validate")
 def validate_pointage(
     pointage_id: int,
-    validateur_id: int = Query(..., description="ID du validateur"),
+    validateur_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Valide un pointage soumis."""
@@ -440,7 +459,7 @@ def validate_pointage(
 def reject_pointage(
     pointage_id: int,
     request: RejectPointageRequest,
-    validateur_id: int = Query(..., description="ID du validateur"),
+    validateur_id: int = Depends(get_current_user_id),
     controller: PointageController = Depends(get_controller),
 ):
     """Rejette un pointage soumis."""

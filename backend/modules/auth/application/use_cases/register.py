@@ -1,5 +1,7 @@
 """Use Case Register - Inscription d'un nouvel utilisateur."""
 
+from typing import Callable, Optional
+
 from ...domain.entities import User
 from ...domain.repositories import UserRepository
 from ...domain.services import PasswordService
@@ -58,7 +60,7 @@ class RegisterUseCase:
         user_repo: UserRepository,
         password_service: PasswordService,
         token_service: TokenService,
-        event_publisher: callable = None,
+        event_publisher: Optional[Callable] = None,
     ):
         """
         Initialise le use case.
