@@ -22,7 +22,7 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
-  const [pendingActions, setPendingActions] = useState<Map<string, NodeJS.Timeout>>(new Map())
+  const [pendingActions, setPendingActions] = useState<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substring(2, 9)

@@ -42,7 +42,16 @@ class ContactResponse(BaseModel):
     """Contact sur place d'un chantier."""
 
     nom: str
-    telephone: str
+    profession: Optional[str] = None
+    telephone: Optional[str] = None
+
+
+class ContactRequest(BaseModel):
+    """Contact pour création/mise à jour."""
+
+    nom: str
+    profession: Optional[str] = None
+    telephone: Optional[str] = None
 
 
 class ContactChantierResponse(BaseModel):
@@ -111,8 +120,9 @@ class CreateChantierRequest(BaseModel):
     latitude: Optional[float] = None  # CHT-04
     longitude: Optional[float] = None  # CHT-04
     photo_couverture: Optional[str] = None  # CHT-01
-    contact_nom: Optional[str] = None  # CHT-07
-    contact_telephone: Optional[str] = None  # CHT-07
+    contact_nom: Optional[str] = None  # CHT-07 (legacy single contact)
+    contact_telephone: Optional[str] = None  # CHT-07 (legacy single contact)
+    contacts: Optional[List[ContactRequest]] = None  # CHT-07 (multiple contacts)
     heures_estimees: Optional[float] = None  # CHT-18
     date_debut_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
     date_fin_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
@@ -125,11 +135,13 @@ class UpdateChantierRequest(BaseModel):
     nom: Optional[str] = None
     adresse: Optional[str] = None
     couleur: Optional[str] = None
+    statut: Optional[str] = None  # Pour changement direct de statut
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     photo_couverture: Optional[str] = None
-    contact_nom: Optional[str] = None
-    contact_telephone: Optional[str] = None
+    contact_nom: Optional[str] = None  # Legacy
+    contact_telephone: Optional[str] = None  # Legacy
+    contacts: Optional[List[ContactRequest]] = None  # Multiple contacts
     heures_estimees: Optional[float] = None
     date_debut_prevue: Optional[str] = None  # Renommé pour frontend
     date_fin_prevue: Optional[str] = None  # Renommé pour frontend
@@ -176,7 +188,7 @@ class ChantierResponse(BaseModel):
     longitude: Optional[float] = None
     contact_nom: Optional[str] = None  # Legacy field
     contact_telephone: Optional[str] = None  # Legacy field
-    contacts: List[ContactChantierResponse] = []  # Multi-contacts avec profession
+    contacts: List[ContactResponse] = []  # Multi-contacts
     phases: List[PhaseChantierResponse] = []  # Phases/étapes du chantier
     heures_estimees: Optional[float] = None
     date_debut_prevue: Optional[str] = None  # Renommé pour frontend
@@ -235,6 +247,14 @@ def create_chantier(
         HTTPException 400: Code déjà utilisé ou données invalides.
     """
     try:
+        # Convertir les contacts en liste de dicts
+        contacts_data = None
+        if request.contacts:
+            contacts_data = [
+                {"nom": c.nom, "profession": c.profession, "telephone": c.telephone}
+                for c in request.contacts
+            ]
+
         result = controller.create(
             nom=request.nom,
             adresse=request.adresse,
@@ -245,6 +265,7 @@ def create_chantier(
             photo_couverture=request.photo_couverture,
             contact_nom=request.contact_nom,
             contact_telephone=request.contact_telephone,
+            contacts=contacts_data,
             heures_estimees=request.heures_estimees,
             date_debut=request.date_debut_prevue,  # Mapping frontend -> backend
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
@@ -407,16 +428,26 @@ def update_chantier(
         HTTPException 400: Chantier fermé ou données invalides.
     """
     try:
+        # Convertir les contacts en liste de dicts
+        contacts_data = None
+        if request.contacts:
+            contacts_data = [
+                {"nom": c.nom, "profession": c.profession, "telephone": c.telephone}
+                for c in request.contacts
+            ]
+
         result = controller.update(
             chantier_id=chantier_id,
             nom=request.nom,
             adresse=request.adresse,
             couleur=request.couleur,
+            statut=request.statut,
             latitude=request.latitude,
             longitude=request.longitude,
             photo_couverture=request.photo_couverture,
             contact_nom=request.contact_nom,
             contact_telephone=request.contact_telephone,
+            contacts=contacts_data,
             heures_estimees=request.heures_estimees,
             date_debut=request.date_debut_prevue,  # Mapping frontend -> backend
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
@@ -1114,10 +1145,29 @@ def _transform_chantier_response(
     latitude = coords.get("latitude") if coords else None
     longitude = coords.get("longitude") if coords else None
 
-    # Récupérer le contact
+    # Récupérer le contact legacy (premier contact)
     contact = chantier_dict.get("contact") or {}
     contact_nom = contact.get("nom") if contact else None
     contact_telephone = contact.get("telephone") if contact else None
+
+    # Récupérer les contacts multiples
+    contacts_data = chantier_dict.get("contacts", [])
+    contacts = [
+        ContactResponse(
+            nom=c.get("nom", ""),
+            profession=c.get("profession"),
+            telephone=c.get("telephone"),
+        )
+        for c in contacts_data
+    ] if contacts_data else []
+
+    # Si pas de contacts mais contact legacy, créer un contact
+    if not contacts and contact_nom:
+        contacts = [ContactResponse(
+            nom=contact_nom,
+            profession=None,
+            telephone=contact_telephone,
+        )]
 
     # Récupérer les IDs des conducteurs et chefs
     conducteur_ids = chantier_dict.get("conducteur_ids", [])
@@ -1149,6 +1199,7 @@ def _transform_chantier_response(
         longitude=longitude,
         contact_nom=contact_nom,
         contact_telephone=contact_telephone,
+        contacts=contacts,
         heures_estimees=chantier_dict.get("heures_estimees"),
         date_debut_prevue=chantier_dict.get("date_debut"),
         date_fin_prevue=chantier_dict.get("date_fin"),

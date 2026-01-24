@@ -7,6 +7,7 @@ from .chantier_dto import (
     UpdateChantierDTO,
     ChangeStatutDTO,
     AssignResponsableDTO,
+    ContactDTO,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "UpdateChantierDTO",
     "ChangeStatutDTO",
     "AssignResponsableDTO",
+    "ContactDTO",
 ]

@@ -1,10 +1,18 @@
 """DTOs pour les chantiers."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional, List
 
 from ...domain.entities import Chantier
+
+
+@dataclass(frozen=True)
+class ContactDTO:
+    """DTO pour un contact sur chantier."""
+    nom: str
+    profession: Optional[str] = None
+    telephone: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -25,7 +33,8 @@ class ChantierDTO:
     couleur: str
     coordonnees_gps: Optional[dict]  # {"latitude": float, "longitude": float}
     photo_couverture: Optional[str]
-    contact: Optional[dict]  # {"nom": str, "telephone": str}
+    contact: Optional[dict]  # {"nom": str, "profession": str, "telephone": str} - legacy single contact
+    contacts: List[ContactDTO]  # Liste des contacts (CHT-07)
     heures_estimees: Optional[float]
     date_debut: Optional[str]  # ISO format
     date_fin: Optional[str]  # ISO format
@@ -108,7 +117,7 @@ class ChantierListDTO:
         return self.skip > 0
 
 
-@dataclass(frozen=True)
+@dataclass
 class CreateChantierDTO:
     """
     DTO pour la création d'un chantier.
@@ -123,8 +132,9 @@ class CreateChantierDTO:
     latitude: Optional[float] = None  # CHT-04
     longitude: Optional[float] = None  # CHT-04
     photo_couverture: Optional[str] = None  # CHT-01
-    contact_nom: Optional[str] = None  # CHT-07
-    contact_telephone: Optional[str] = None  # CHT-07
+    contact_nom: Optional[str] = None  # CHT-07 (legacy)
+    contact_telephone: Optional[str] = None  # CHT-07 (legacy)
+    contacts: Optional[List[ContactDTO]] = None  # CHT-07 (multiple contacts)
     heures_estimees: Optional[float] = None  # CHT-18
     date_debut: Optional[str] = None  # CHT-20 (ISO format)
     date_fin: Optional[str] = None  # CHT-20 (ISO format)
@@ -133,7 +143,7 @@ class CreateChantierDTO:
     chef_chantier_ids: Optional[List[int]] = None  # CHT-06
 
 
-@dataclass(frozen=True)
+@dataclass
 class UpdateChantierDTO:
     """
     DTO pour la mise à jour d'un chantier.
@@ -147,8 +157,9 @@ class UpdateChantierDTO:
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     photo_couverture: Optional[str] = None
-    contact_nom: Optional[str] = None
-    contact_telephone: Optional[str] = None
+    contact_nom: Optional[str] = None  # Legacy
+    contact_telephone: Optional[str] = None  # Legacy
+    contacts: Optional[List[ContactDTO]] = None  # Multiple contacts
     heures_estimees: Optional[float] = None
     date_debut: Optional[str] = None
     date_fin: Optional[str] = None

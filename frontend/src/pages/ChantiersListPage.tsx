@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import type { Chantier, ChantierStatut, ChantierCreate } from '../types'
+import type { Chantier, ChantierStatut, ChantierCreate, ContactChantier } from '../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../types'
 
 export default function ChantiersListPage() {
@@ -288,6 +288,7 @@ export default function ChantiersListPage() {
           <CreateChantierModal
             onClose={() => setShowCreateModal(false)}
             onSubmit={handleCreateChantier}
+            usedColors={chantiers.map(c => c.couleur).filter(Boolean) as string[]}
           />
         )}
       </div>
@@ -391,6 +392,7 @@ interface CreateChantierModalProps {
     contacts: { nom: string; telephone: string; profession: string }[],
     phases: { nom: string; date_debut: string; date_fin: string }[]
   ) => void
+  usedColors: string[]
 }
 
 // Génère une couleur aléatoire parmi la palette
@@ -412,7 +414,13 @@ interface TempPhase {
   date_fin: string
 }
 
-function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
+function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierModalProps) {
+  // Trouver la première couleur non utilisée
+  const getAvailableColor = () => {
+    const availableColor = USER_COLORS.find(c => !usedColors.includes(c.code))
+    return availableColor?.code || USER_COLORS[0].code
+  }
+
   const [formData, setFormData] = useState<ChantierCreate>({
     nom: '',
     adresse: '',

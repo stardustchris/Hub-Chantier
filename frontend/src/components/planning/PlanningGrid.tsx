@@ -273,7 +273,7 @@ export default function PlanningGrid({
                         onDragOver={(e) => handleDragOver(e, cellKey)}
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, user.id, day)}
-                        className={`p-1 border-r last:border-r-0 min-h-[60px] transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
+                        className={`p-1 border-r last:border-r-0 min-h-[60px] overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
                           isToday(day) ? 'bg-primary-50/50' : ''
                         } ${
                           isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
@@ -281,7 +281,7 @@ export default function PlanningGrid({
                           !hasAffectations ? 'cursor-pointer hover:bg-gray-100' : ''
                         }`}
                       >
-                        <div className="space-y-1">
+                        <div className="space-y-1 w-full">
                           {cellAffectations.map(aff => (
                             <AffectationBlock
                               key={aff.id}

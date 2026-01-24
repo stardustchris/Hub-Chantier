@@ -23,7 +23,14 @@ interface LayoutProps {
   children: ReactNode
 }
 
-const navigation = [
+interface NavItem {
+  name: string
+  href: string
+  icon: typeof Home
+  disabled?: boolean
+}
+
+const navigation: NavItem[] = [
   { name: 'Tableau de bord', href: '/', icon: Home },
   { name: 'Chantiers', href: '/chantiers', icon: Building2 },
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
@@ -38,6 +45,15 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+
+  // TODO: Remplacer par de vraies notifications depuis l'API
+  const notifications = [
+    { id: 1, message: 'Nouvelle affectation sur le chantier Villa Duplex', time: 'Il y a 5 min', read: false },
+    { id: 2, message: 'Feuille d\'heures validée pour la semaine 3', time: 'Il y a 1h', read: false },
+    { id: 3, message: 'Document ajouté: Plan électrique v2', time: 'Il y a 2h', read: true },
+  ]
+  const unreadCount = notifications.filter(n => !n.read).length
 
   const roleInfo = user?.role ? ROLES[user.role as UserRole] : null
 
@@ -188,10 +204,55 @@ export default function Layout({ children }: LayoutProps) {
             {/* Right side */}
             <div className="flex items-center gap-2">
               {/* Notifications */}
-              <button className="p-2 rounded-lg hover:bg-gray-100 relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  className="p-2 rounded-lg hover:bg-gray-100 relative"
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setNotificationsOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-20">
+                      <div className="px-4 py-3 border-b">
+                        <h3 className="font-semibold text-gray-900">Notifications</h3>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="px-4 py-8 text-center text-gray-500">
+                            Aucune notification
+                          </div>
+                        ) : (
+                          notifications.map(notif => (
+                            <div
+                              key={notif.id}
+                              className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer ${
+                                !notif.read ? 'bg-blue-50' : ''
+                              }`}
+                            >
+                              <p className="text-sm text-gray-900">{notif.message}</p>
+                              <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="px-4 py-2 border-t">
+                        <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                          Tout marquer comme lu
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* User menu */}
               <div className="relative">

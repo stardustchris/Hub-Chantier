@@ -10,15 +10,17 @@ class ContactChantier:
     """
     Value Object représentant le contact sur place d'un chantier.
 
-    Selon CDC CHT-07: Nom et téléphone du contact sur place.
+    Selon CDC CHT-07: Nom, profession et téléphone du contact sur place.
 
     Attributes:
         nom: Nom du contact.
-        telephone: Numéro de téléphone du contact.
+        profession: Profession/rôle du contact (optionnel).
+        telephone: Numéro de téléphone du contact (optionnel).
     """
 
     nom: str
-    telephone: str
+    profession: Optional[str] = None
+    telephone: Optional[str] = None
 
     # Pattern pour validation du téléphone (français ou international)
     PHONE_PATTERN = r"^(\+\d{1,3})?[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{0,4}$"
@@ -33,39 +35,44 @@ class ContactChantier:
         normalized_nom = self.nom.strip().title()
         object.__setattr__(self, "nom", normalized_nom)
 
-        # Valider le téléphone
-        if not self.telephone or not self.telephone.strip():
-            raise ValueError("Le téléphone du contact ne peut pas être vide")
+        # Normaliser la profession si présente
+        if self.profession:
+            normalized_profession = self.profession.strip()
+            object.__setattr__(self, "profession", normalized_profession if normalized_profession else None)
 
-        # Nettoyer le téléphone (garder + et chiffres)
-        cleaned_phone = re.sub(r"[^\d+]", "", self.telephone)
+        # Valider et nettoyer le téléphone si présent
+        if self.telephone and self.telephone.strip():
+            # Nettoyer le téléphone (garder + et chiffres)
+            cleaned_phone = re.sub(r"[^\d+]", "", self.telephone)
 
-        if len(cleaned_phone) < 8:
-            raise ValueError(
-                f"Numéro de téléphone trop court: {self.telephone}. "
-                f"Minimum 8 chiffres requis."
-            )
-
-        if len(cleaned_phone) > 15:
-            raise ValueError(
-                f"Numéro de téléphone trop long: {self.telephone}. "
-                f"Maximum 15 chiffres autorisés."
-            )
-
-        object.__setattr__(self, "telephone", cleaned_phone)
+            if len(cleaned_phone) >= 8 and len(cleaned_phone) <= 15:
+                object.__setattr__(self, "telephone", cleaned_phone)
+            else:
+                # Si format invalide, garder tel quel
+                object.__setattr__(self, "telephone", self.telephone.strip())
+        else:
+            object.__setattr__(self, "telephone", None)
 
     def __str__(self) -> str:
         """Retourne le contact formaté."""
-        return f"{self.nom} ({self.formatted_phone})"
+        parts = [self.nom]
+        if self.profession:
+            parts.append(f"({self.profession})")
+        if self.telephone:
+            parts.append(f"- {self.formatted_phone}")
+        return " ".join(parts)
 
     @property
-    def formatted_phone(self) -> str:
+    def formatted_phone(self) -> Optional[str]:
         """
         Retourne le téléphone formaté pour affichage.
 
         Returns:
-            Téléphone au format lisible.
+            Téléphone au format lisible, ou None si pas de téléphone.
         """
+        if not self.telephone:
+            return None
+
         phone = self.telephone
 
         # Format français (10 chiffres commençant par 0)
@@ -83,41 +90,48 @@ class ContactChantier:
         return phone
 
     @property
-    def callable_phone(self) -> str:
+    def callable_phone(self) -> Optional[str]:
         """
         Retourne le numéro au format appelable (tel:).
 
         Returns:
-            URL tel: pour click-to-call.
+            URL tel: pour click-to-call, ou None si pas de téléphone.
         """
+        if not self.telephone:
+            return None
         return f"tel:{self.telephone}"
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, Optional[str]]:
         """
         Convertit en dictionnaire pour sérialisation.
 
         Returns:
-            Dictionnaire avec nom et telephone.
+            Dictionnaire avec nom, profession et telephone.
         """
         return {
             "nom": self.nom,
+            "profession": self.profession,
             "telephone": self.telephone,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, str]) -> "ContactChantier":
+    def from_dict(cls, data: dict[str, Optional[str]]) -> "ContactChantier":
         """
         Crée un contact à partir d'un dictionnaire.
 
         Args:
-            data: Dictionnaire avec 'nom' et 'telephone'.
+            data: Dictionnaire avec 'nom', 'profession' (optionnel) et 'telephone' (optionnel).
 
         Returns:
             Instance ContactChantier.
 
         Raises:
-            ValueError: Si les clés sont manquantes.
+            ValueError: Si la clé 'nom' est manquante.
         """
-        if "nom" not in data or "telephone" not in data:
-            raise ValueError("Dictionnaire doit contenir 'nom' et 'telephone'")
-        return cls(nom=data["nom"], telephone=data["telephone"])
+        if "nom" not in data:
+            raise ValueError("Dictionnaire doit contenir 'nom'")
+        return cls(
+            nom=data["nom"],
+            profession=data.get("profession"),
+            telephone=data.get("telephone"),
+        )

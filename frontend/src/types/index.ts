@@ -55,9 +55,9 @@ export type ChantierStatut = 'ouvert' | 'en_cours' | 'receptionne' | 'ferme'
 
 // Contact de chantier (multi-contacts avec profession)
 export interface ContactChantier {
-  id: number
+  id?: number
   nom: string
-  telephone: string
+  telephone?: string
   profession?: string
 }
 
@@ -116,6 +116,7 @@ export interface ChantierCreate {
   longitude?: number
   contact_nom?: string
   contact_telephone?: string
+  contacts?: ContactChantier[]
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string
@@ -126,10 +127,12 @@ export interface ChantierUpdate {
   nom?: string
   adresse?: string
   couleur?: string
+  statut?: ChantierStatut
   latitude?: number
   longitude?: number
   contact_nom?: string
   contact_telephone?: string
+  contacts?: ContactChantier[]
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string

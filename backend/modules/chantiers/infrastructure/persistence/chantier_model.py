@@ -1,13 +1,37 @@
-"""Modèle SQLAlchemy pour Chantier."""
+"""Modèle SQLAlchemy pour Chantier et ContactChantier."""
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
 from shared.domain.value_objects import Couleur
 from ...domain.value_objects import StatutChantierEnum
+
+
+class ContactChantierModel(Base):
+    """
+    Modèle SQLAlchemy représentant un contact sur un chantier.
+
+    Selon CDC CHT-07: Contacts sur place avec nom, profession et téléphone.
+    """
+
+    __tablename__ = "contacts_chantier"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chantier_id = Column(Integer, ForeignKey("chantiers.id", ondelete="CASCADE"), nullable=False, index=True)
+    nom = Column(String(200), nullable=False)
+    profession = Column(String(100), nullable=True)
+    telephone = Column(String(20), nullable=True)
+    ordre = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=datetime.now)
+
+    # Relation vers le chantier
+    chantier = relationship("ChantierModel", back_populates="contacts")
+
+    def __repr__(self) -> str:
+        return f"<ContactChantierModel(id={self.id}, nom={self.nom}, chantier_id={self.chantier_id})>"
 
 
 class ChantierModel(Base):
@@ -74,6 +98,14 @@ class ChantierModel(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+    )
+
+    # Relations avec les contacts
+    contacts = relationship(
+        "ContactChantierModel",
+        back_populates="chantier",
+        cascade="all, delete-orphan",
+        order_by="ContactChantierModel.ordre"
     )
 
     # Relations avec le module Documents (GED)
