@@ -1,9 +1,8 @@
 """Tests unitaires supplémentaires pour les Use Cases du module pointages."""
 
 import pytest
-from datetime import date, timedelta
-from unittest.mock import Mock, MagicMock
-import io
+from datetime import date
+from unittest.mock import Mock
 
 from modules.pointages.application.use_cases.bulk_create_from_planning import (
     BulkCreateFromPlanningUseCase,
@@ -322,7 +321,7 @@ class TestListPointagesUseCase:
             page_size=20,
         )
 
-        result = self.use_case.execute(dto)
+        self.use_case.execute(dto)
 
         call_kwargs = self.pointage_repo.search.call_args[1]
         assert call_kwargs["utilisateur_id"] == 1
@@ -335,7 +334,7 @@ class TestListPointagesUseCase:
 
         dto = PointageSearchDTO(page=3, page_size=10)
 
-        result = self.use_case.execute(dto)
+        self.use_case.execute(dto)
 
         call_kwargs = self.pointage_repo.search.call_args[1]
         assert call_kwargs["skip"] == 20  # (3-1) * 10

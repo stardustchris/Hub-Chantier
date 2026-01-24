@@ -4,8 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateDayMonthYearTime, formatDateTimeShort } from '../../utils/dates'
 import {
   X,
   Send,
@@ -202,7 +201,7 @@ export default function FormulaireModal({
             )}
             <span className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              {format(new Date(formulaire.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
+              {formatDateDayMonthYearTime(formulaire.created_at)}
             </span>
             {formulaire.est_geolocalise && (
               <span className="flex items-center gap-1.5 text-purple-600">
@@ -273,7 +272,7 @@ export default function FormulaireModal({
                 Signe par {formulaire.signature_nom}
                 {formulaire.signature_timestamp && (
                   <span className="text-gray-400">
-                    {' '}le {format(new Date(formulaire.signature_timestamp), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                    {' '}le {formatDateTimeShort(formulaire.signature_timestamp)}
                   </span>
                 )}
               </p>

@@ -1,8 +1,10 @@
 """PlanningController - Gestion des requetes de planning."""
 
+import logging
 from datetime import date
 from typing import Dict, Any, List, Optional
 
+from ...domain.entities import Affectation
 from ...application.use_cases import (
     CreateAffectationUseCase,
     UpdateAffectationUseCase,
@@ -23,8 +25,11 @@ from .planning_schemas import (
     UpdateAffectationRequest,
     PlanningFiltersRequest,
     DuplicateAffectationsRequest,
-    AffectationResponse,
 )
+from ..presenters import AffectationPresenter
+
+
+logger = logging.getLogger(__name__)
 
 
 class PlanningController:
@@ -43,6 +48,7 @@ class PlanningController:
         get_planning_uc: Use case de recuperation du planning.
         duplicate_affectations_uc: Use case de duplication d'affectations.
         get_non_planifies_uc: Use case de recuperation des non planifies.
+        presenter: Presenter pour enrichir les reponses (optionnel).
     """
 
     def __init__(
@@ -53,6 +59,7 @@ class PlanningController:
         get_planning_uc: GetPlanningUseCase,
         duplicate_affectations_uc: DuplicateAffectationsUseCase,
         get_non_planifies_uc: GetNonPlanifiesUseCase,
+        presenter: Optional[AffectationPresenter] = None,
     ):
         """
         Initialise le controller.
@@ -64,6 +71,7 @@ class PlanningController:
             get_planning_uc: Use case de recuperation planning.
             duplicate_affectations_uc: Use case de duplication.
             get_non_planifies_uc: Use case des non planifies.
+            presenter: Presenter pour enrichir les donnees (optionnel).
         """
         self.create_affectation_uc = create_affectation_uc
         self.update_affectation_uc = update_affectation_uc
@@ -71,6 +79,7 @@ class PlanningController:
         self.get_planning_uc = get_planning_uc
         self.duplicate_affectations_uc = duplicate_affectations_uc
         self.get_non_planifies_uc = get_non_planifies_uc
+        self.presenter = presenter
 
     def _dto_to_response(self, dto: AffectationDTO) -> Dict[str, Any]:
         """
@@ -102,7 +111,7 @@ class PlanningController:
             "chantier_couleur": dto.chantier_couleur,
         }
 
-    def _entity_to_response(self, entity) -> Dict[str, Any]:
+    def _entity_to_response(self, entity: Affectation) -> Dict[str, Any]:
         """
         Convertit une entite Affectation en dictionnaire de reponse.
 
@@ -160,6 +169,12 @@ class PlanningController:
         Example:
             >>> result = controller.create(request, current_user_id=1)
         """
+        logger.info(
+            f"Creation affectation: user={request.utilisateur_id}, "
+            f"chantier={request.chantier_id}, date={request.date}, "
+            f"created_by={current_user_id}"
+        )
+
         # Convertir la requete en DTO
         dto = CreateAffectationDTO(
             utilisateur_id=request.utilisateur_id,
@@ -175,6 +190,11 @@ class PlanningController:
 
         # Executer le use case
         affectations = self.create_affectation_uc.execute(dto, current_user_id)
+
+        logger.info(
+            f"Affectation(s) creee(s): {len(affectations)} affectation(s), "
+            f"premiere_id={affectations[0].id}"
+        )
 
         # Retourner la premiere affectation (pour affectation unique)
         # ou la premiere d'une serie (pour recurrente)
@@ -237,6 +257,11 @@ class PlanningController:
         Example:
             >>> result = controller.update(1, request, current_user_id=2)
         """
+        logger.info(
+            f"Mise a jour affectation: id={affectation_id}, "
+            f"updated_by={current_user_id}"
+        )
+
         dto = UpdateAffectationDTO(
             heure_debut=request.heure_debut,
             heure_fin=request.heure_fin,
@@ -247,6 +272,9 @@ class PlanningController:
         affectation = self.update_affectation_uc.execute(
             affectation_id, dto, current_user_id
         )
+
+        logger.info(f"Affectation mise a jour: id={affectation.id}")
+
         return self._entity_to_response(affectation)
 
     def delete(self, affectation_id: int, current_user_id: int) -> Dict[str, Any]:
@@ -266,7 +294,18 @@ class PlanningController:
         Example:
             >>> result = controller.delete(1, current_user_id=2)
         """
+        logger.info(
+            f"Suppression affectation: id={affectation_id}, "
+            f"deleted_by={current_user_id}"
+        )
+
         success = self.delete_affectation_uc.execute(affectation_id, current_user_id)
+
+        if success:
+            logger.info(f"Affectation supprimee: id={affectation_id}")
+        else:
+            logger.warning(f"Echec suppression affectation: id={affectation_id}")
+
         return {"deleted": success, "id": affectation_id}
 
     def get_planning(
@@ -384,6 +423,12 @@ class PlanningController:
         Example:
             >>> results = controller.duplicate(request, current_user_id=1)
         """
+        logger.info(
+            f"Duplication affectations: user={request.utilisateur_id}, "
+            f"source={request.source_date_debut} -> {request.source_date_fin}, "
+            f"target={request.target_date_debut}, created_by={current_user_id}"
+        )
+
         dto = DuplicateAffectationsDTO(
             utilisateur_id=request.utilisateur_id,
             source_date_debut=request.source_date_debut,
@@ -392,6 +437,11 @@ class PlanningController:
         )
 
         affectations = self.duplicate_affectations_uc.execute(dto, current_user_id)
+
+        logger.info(
+            f"Affectations dupliquees: {len(affectations)} affectation(s) creee(s)"
+        )
+
         return [self._entity_to_response(a) for a in affectations]
 
     def get_non_planifies(

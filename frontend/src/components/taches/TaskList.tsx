@@ -15,6 +15,7 @@ import {
   BookTemplate,
 } from 'lucide-react'
 import { tachesService } from '../../services/taches'
+import { logger } from '../../services/logger'
 import type { Tache, TacheStats } from '../../types'
 import { COULEURS_PROGRESSION } from '../../types'
 import TaskItem from './TaskItem'
@@ -58,7 +59,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       })
       setTaches(response.items)
     } catch (err) {
-      console.error('Erreur chargement taches:', err)
+      logger.error('Erreur chargement taches', err, { context: 'TaskList' })
       setError('Impossible de charger les taches. Verifiez votre connexion.')
     } finally {
       setIsLoading(false)
@@ -70,7 +71,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       const statsData = await tachesService.getStats(chantierId)
       setStats(statsData)
     } catch (err) {
-      console.error('Erreur chargement stats:', err)
+      logger.error('Erreur chargement stats', err, { context: 'TaskList' })
       // Stats non critiques, pas d'affichage d'erreur
     }
   }
@@ -90,7 +91,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       loadTaches()
       loadStats()
     } catch (err) {
-      console.error('Erreur completion tache:', err)
+      logger.error('Erreur completion tache', err, { context: 'TaskList' })
       setError('Impossible de modifier le statut de la tache.')
     }
   }
@@ -113,7 +114,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       loadTaches()
       loadStats()
     } catch (err) {
-      console.error('Erreur sauvegarde tache:', err)
+      logger.error('Erreur sauvegarde tache', err, { context: 'TaskList' })
       setError('Impossible de sauvegarder la tache. Verifiez les donnees.')
     }
   }
@@ -127,7 +128,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       loadTaches()
       loadStats()
     } catch (err) {
-      console.error('Erreur suppression tache:', err)
+      logger.error('Erreur suppression tache', err, { context: 'TaskList' })
       setError('Impossible de supprimer la tache.')
     }
   }
@@ -140,7 +141,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       loadTaches()
       loadStats()
     } catch (err) {
-      console.error('Erreur import template:', err)
+      logger.error('Erreur import template', err, { context: 'TaskList' })
       setError('Impossible d\'importer le modele.')
     }
   }
@@ -153,7 +154,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       const blob = await tachesService.exportPDF(chantierId)
       tachesService.downloadPDF(blob, `taches-${chantierNom}.pdf`)
     } catch (err) {
-      console.error('Erreur export PDF:', err)
+      logger.error('Erreur export PDF', err, { context: 'TaskList' })
       setError('Export PDF non disponible pour le moment.')
     } finally {
       setIsExporting(false)

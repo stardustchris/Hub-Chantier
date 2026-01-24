@@ -74,7 +74,11 @@ class DuplicateAffectationsUseCase:
         )
 
         if not source_affectations:
-            raise NoAffectationsToDuplicateError(dto.utilisateur_id)
+            raise NoAffectationsToDuplicateError(
+                dto.utilisateur_id,
+                dto.source_date_debut,
+                dto.source_date_fin,
+            )
 
         # Calculer le decalage de jours
         days_offset = dto.days_offset

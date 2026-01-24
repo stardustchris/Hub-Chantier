@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock
 from datetime import datetime
 
-from modules.dashboard.domain.entities import Post, Comment, PostMedia
+from modules.dashboard.domain.entities import Post, Comment
 from modules.dashboard.domain.repositories import (
     PostRepository,
     LikeRepository,

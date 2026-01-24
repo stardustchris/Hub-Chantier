@@ -1,14 +1,13 @@
 """Tests unitaires pour les Use Cases du module pointages."""
 
 import pytest
-from datetime import date, timedelta
-from unittest.mock import Mock, MagicMock
+from datetime import date
+from unittest.mock import Mock
 
 from modules.pointages.application.use_cases import (
     CreatePointageUseCase,
     UpdatePointageUseCase,
     SignPointageUseCase,
-    SubmitPointageUseCase,
     ValidatePointageUseCase,
     RejectPointageUseCase,
     GetFeuilleHeuresUseCase,
@@ -20,7 +19,7 @@ from modules.pointages.application.dtos import (
     ValidatePointageDTO,
     RejectPointageDTO,
 )
-from modules.pointages.domain.entities import Pointage, FeuilleHeures
+from modules.pointages.domain.entities import Pointage
 from modules.pointages.domain.value_objects import StatutPointage, Duree
 from modules.pointages.application.ports import NullEventBus
 

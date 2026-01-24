@@ -9,7 +9,7 @@ from sqlalchemy import or_, and_
 from ...domain.entities import Post
 from ...domain.repositories import PostRepository
 from ...domain.value_objects import PostTargeting, PostStatus, TargetType
-from .models import PostModel
+from .models import PostModel, PostTargetChantierModel, PostTargetUserModel
 
 
 # Constante pour archivage automatique
@@ -37,14 +37,22 @@ class SQLAlchemyPostRepository(PostRepository):
                 model.is_urgent = post.is_urgent
                 model.pinned_until = post.pinned_until
                 model.target_type = post.targeting.target_type.value
+                # Colonnes CSV conservées pour backward compatibility (à supprimer après migration)
                 model.target_chantier_ids = self._ids_to_string(post.targeting.chantier_ids)
                 model.target_user_ids = self._ids_to_string(post.targeting.user_ids)
                 model.updated_at = post.updated_at
                 model.archived_at = post.archived_at
+
+                # Sync tables de jointure
+                self._sync_post_targets(model.id, post.targeting)
         else:
             # Create
             model = self._to_model(post)
             self.session.add(model)
+            self.session.flush()  # Pour obtenir l'ID
+
+            # Créer les entrées dans les tables de jointure
+            self._sync_post_targets(model.id, post.targeting)
 
         self.session.commit()
         self.session.refresh(model)
@@ -89,7 +97,7 @@ class SQLAlchemyPostRepository(PostRepository):
                 ])
             )
 
-        # Filtrer par ciblage (FEED-09)
+        # Filtrer par ciblage (FEED-09) - Utilise les tables de jointure (indexées)
         # L'utilisateur voit:
         # - Posts ciblant "everyone"
         # - Posts dont il est l'auteur
@@ -100,24 +108,32 @@ class SQLAlchemyPostRepository(PostRepository):
             PostModel.author_id == user_id,
         ]
 
-        # Ciblage par utilisateur - SÉCURISÉ contre SQL injection
-        # On vérifie que l'ID est bien un élément complet, pas une sous-chaîne
+        # Ciblage par utilisateur via table de jointure (indexée)
+        user_targeted_post_ids = (
+            self.session.query(PostTargetUserModel.post_id)
+            .filter(PostTargetUserModel.user_id == user_id)
+            .subquery()
+        )
         targeting_conditions.append(
             and_(
                 PostModel.target_type == TargetType.SPECIFIC_PEOPLE.value,
-                self._id_in_csv_column(PostModel.target_user_ids, user_id),
+                PostModel.id.in_(user_targeted_post_ids),
             )
         )
 
-        # Ciblage par chantier - SÉCURISÉ contre SQL injection
+        # Ciblage par chantier via table de jointure (indexée)
         if user_chantier_ids:
-            for chantier_id in user_chantier_ids:
-                targeting_conditions.append(
-                    and_(
-                        PostModel.target_type == TargetType.SPECIFIC_CHANTIERS.value,
-                        self._id_in_csv_column(PostModel.target_chantier_ids, chantier_id),
-                    )
+            chantier_targeted_post_ids = (
+                self.session.query(PostTargetChantierModel.post_id)
+                .filter(PostTargetChantierModel.chantier_id.in_(user_chantier_ids))
+                .subquery()
+            )
+            targeting_conditions.append(
+                and_(
+                    PostModel.target_type == TargetType.SPECIFIC_CHANTIERS.value,
+                    PostModel.id.in_(chantier_targeted_post_ids),
                 )
+            )
 
         query = query.filter(or_(*targeting_conditions))
 
@@ -203,10 +219,21 @@ class SQLAlchemyPostRepository(PostRepository):
 
     def _to_entity(self, model: PostModel) -> Post:
         """Convertit un modèle en entité."""
-        targeting = self._build_targeting(
+        # Utiliser les tables de jointure en priorité (si disponibles),
+        # sinon fallback sur les colonnes CSV (backward compatibility)
+        chantier_ids = [t.chantier_id for t in model.target_chantiers] if model.target_chantiers else []
+        user_ids = [t.user_id for t in model.target_users] if model.target_users else []
+
+        # Fallback sur CSV si tables vides mais CSV non-vide (données legacy)
+        if not chantier_ids and model.target_chantier_ids:
+            chantier_ids = self._string_to_ids(model.target_chantier_ids)
+        if not user_ids and model.target_user_ids:
+            user_ids = self._string_to_ids(model.target_user_ids)
+
+        targeting = self._build_targeting_from_lists(
             model.target_type,
-            model.target_chantier_ids,
-            model.target_user_ids,
+            chantier_ids,
+            user_ids,
         )
 
         return Post(
@@ -239,27 +266,50 @@ class SQLAlchemyPostRepository(PostRepository):
             archived_at=post.archived_at,
         )
 
-    def _build_targeting(
+    def _build_targeting_from_lists(
         self,
         target_type: str,
-        chantier_ids_str: Optional[str],
-        user_ids_str: Optional[str],
+        chantier_ids: List[int],
+        user_ids: List[int],
     ) -> PostTargeting:
-        """Construit le ciblage à partir des données du modèle."""
+        """Construit le ciblage à partir de listes d'IDs."""
         target_type_enum = TargetType(target_type)
 
         if target_type_enum == TargetType.EVERYONE:
             return PostTargeting.everyone()
 
         if target_type_enum == TargetType.SPECIFIC_CHANTIERS:
-            ids = self._string_to_ids(chantier_ids_str)
-            return PostTargeting.for_chantiers(ids)
+            return PostTargeting.for_chantiers(chantier_ids)
 
         if target_type_enum == TargetType.SPECIFIC_PEOPLE:
-            ids = self._string_to_ids(user_ids_str)
-            return PostTargeting.for_users(ids)
+            return PostTargeting.for_users(user_ids)
 
         return PostTargeting.everyone()
+
+    def _sync_post_targets(self, post_id: int, targeting: PostTargeting) -> None:
+        """Synchronise les tables de jointure avec le ciblage du post."""
+        # Supprimer les anciennes entrées
+        self.session.query(PostTargetChantierModel).filter(
+            PostTargetChantierModel.post_id == post_id
+        ).delete()
+        self.session.query(PostTargetUserModel).filter(
+            PostTargetUserModel.post_id == post_id
+        ).delete()
+
+        # Ajouter les nouvelles entrées
+        if targeting.target_type == TargetType.SPECIFIC_CHANTIERS and targeting.chantier_ids:
+            for chantier_id in targeting.chantier_ids:
+                self.session.add(PostTargetChantierModel(
+                    post_id=post_id,
+                    chantier_id=chantier_id,
+                ))
+
+        if targeting.target_type == TargetType.SPECIFIC_PEOPLE and targeting.user_ids:
+            for user_id in targeting.user_ids:
+                self.session.add(PostTargetUserModel(
+                    post_id=post_id,
+                    user_id=user_id,
+                ))
 
     def _ids_to_string(self, ids: Optional[tuple]) -> Optional[str]:
         """Convertit un tuple d'IDs en string."""

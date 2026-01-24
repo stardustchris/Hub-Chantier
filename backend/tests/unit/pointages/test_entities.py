@@ -1,7 +1,7 @@
 """Tests unitaires pour les Entities du module pointages."""
 
 import pytest
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from modules.pointages.domain.entities import (
     Pointage,

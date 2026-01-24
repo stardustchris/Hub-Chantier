@@ -1,11 +1,10 @@
 """Fixtures pour les tests du module Taches."""
 
 import pytest
-from datetime import datetime, date
+from datetime import date
 from typing import Optional, List
 
 from backend.modules.taches.domain.entities import Tache, TemplateModele, FeuilleTache
-from backend.modules.taches.domain.entities.template_modele import SousTacheModele
 from backend.modules.taches.domain.entities.feuille_tache import StatutValidation
 from backend.modules.taches.domain.value_objects import StatutTache, UniteMesure
 from backend.modules.taches.domain.repositories import (

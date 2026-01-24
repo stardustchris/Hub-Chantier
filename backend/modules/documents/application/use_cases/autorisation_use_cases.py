@@ -1,6 +1,5 @@
 """Use Cases pour la gestion des autorisations (GED-05, GED-10)."""
 
-from typing import Optional, List
 
 from ..dtos import AutorisationDTO, AutorisationCreateDTO, AutorisationListDTO
 from ...domain.entities import AutorisationDocument, TypeAutorisation

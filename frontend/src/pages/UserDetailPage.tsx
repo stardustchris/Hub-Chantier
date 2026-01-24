@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { usersService, NavigationIds } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
+import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import ImageUpload from '../components/ImageUpload'
@@ -19,8 +20,7 @@ import {
   Briefcase,
   Hash,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateFull } from '../utils/dates'
 import type { User, UserUpdate, UserRole, Metier } from '../types'
 import { ROLES, METIERS, USER_COLORS } from '../types'
 
@@ -49,7 +49,7 @@ export default function UserDetailPage() {
       const data = await usersService.getById(id!)
       setUser(data)
     } catch (error) {
-      console.error('Error loading user:', error)
+      logger.error('Error loading user', error, { context: 'UserDetailPage' })
       navigate('/utilisateurs')
     } finally {
       setIsLoading(false)
@@ -66,7 +66,7 @@ export default function UserDetailPage() {
       const updated = await usersService.update(id!, { photo_profil: url } as UserUpdate)
       setUser(updated)
     } catch (error) {
-      console.error('Error updating photo:', error)
+      logger.error('Error updating photo', error, { context: 'UserDetailPage' })
     }
   }
 
@@ -76,7 +76,7 @@ export default function UserDetailPage() {
       setUser(updated)
       setShowEditModal(false)
     } catch (error) {
-      console.error('Error updating user:', error)
+      logger.error('Error updating user', error, { context: 'UserDetailPage' })
     }
   }
 
@@ -92,7 +92,7 @@ export default function UserDetailPage() {
       }
       setUser(updated)
     } catch (error) {
-      console.error('Error toggling user status:', error)
+      logger.error('Error toggling user status', error, { context: 'UserDetailPage' })
     }
   }
 
@@ -293,7 +293,7 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">Membre depuis</p>
                   <p className="font-medium">
-                    {format(new Date(user.created_at), 'dd MMMM yyyy', { locale: fr })}
+                    {formatDateFull(user.created_at)}
                   </p>
                 </div>
               </div>

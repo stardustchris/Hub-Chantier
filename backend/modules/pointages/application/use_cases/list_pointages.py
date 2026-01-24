@@ -1,6 +1,5 @@
 """Use Case: Lister les pointages avec filtres (FDH-04)."""
 
-from typing import List
 from math import ceil
 
 from ...domain.entities import Pointage

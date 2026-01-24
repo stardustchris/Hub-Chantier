@@ -11,18 +11,29 @@ from .config import settings
 os.makedirs("data", exist_ok=True)
 
 # Configuration du moteur SQLAlchemy
-# Pour SQLite, on désactive check_same_thread et on utilise StaticPool
+# P2-7: Ajout de timeouts pour éviter les requêtes bloquantes
 if settings.DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         settings.DATABASE_URL,
-        connect_args={"check_same_thread": False},
+        connect_args={
+            "check_same_thread": False,
+            "timeout": 30,  # P2-7: SQLite busy timeout 30s
+        },
         poolclass=StaticPool,
         echo=settings.DEBUG,
     )
 else:
+    # PostgreSQL ou autre DB
     engine = create_engine(
         settings.DATABASE_URL,
         echo=settings.DEBUG,
+        pool_size=5,
+        max_overflow=10,
+        pool_timeout=30,  # P2-7: Attente max pour une connexion du pool
+        pool_recycle=1800,  # Recycle les connexions après 30min
+        connect_args={
+            "connect_timeout": 10,  # P2-7: Timeout connexion 10s
+        },
     )
 
 # Factory de sessions
@@ -67,6 +78,71 @@ def init_db() -> None:
     from modules.signalements.infrastructure.persistence import SignalementModel, ReponseModel  # noqa: F401
     from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
     from modules.documents.infrastructure.persistence import DossierModel, DocumentModel, AutorisationDocumentModel  # noqa: F401
+    from modules.logistique.infrastructure.persistence import RessourceModel, ReservationModel  # noqa: F401
 
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
+
+    # Migration des donnees JSON vers tables de jointure (si necessaire)
+    _migrate_chantier_responsables()
+
+
+def _migrate_chantier_responsables() -> None:
+    """
+    Migre les donnees legacy JSON (conducteur_ids, chef_chantier_ids)
+    vers les tables de jointure (chantier_conducteurs, chantier_chefs).
+
+    Cette migration s'execute au demarrage et est idempotente.
+    """
+    from modules.chantiers.infrastructure.persistence import (
+        ChantierModel,
+        ChantierConducteurModel,
+        ChantierChefModel,
+    )
+
+    db = SessionLocal()
+    try:
+        # Verifier si la migration est necessaire
+        existing_count = db.query(ChantierConducteurModel).count()
+        if existing_count > 0:
+            # Deja migre, on skip
+            return
+
+        # Recuperer tous les chantiers avec leurs IDs JSON
+        chantiers = db.query(ChantierModel).filter(
+            ChantierModel.deleted_at.is_(None)
+        ).all()
+
+        migrated = 0
+        for chantier in chantiers:
+            # Migrer les conducteurs
+            conducteur_ids = chantier.conducteur_ids or []
+            for user_id in conducteur_ids:
+                if user_id:
+                    db.add(ChantierConducteurModel(
+                        chantier_id=chantier.id,
+                        user_id=user_id,
+                    ))
+                    migrated += 1
+
+            # Migrer les chefs de chantier
+            chef_ids = chantier.chef_chantier_ids or []
+            for user_id in chef_ids:
+                if user_id:
+                    db.add(ChantierChefModel(
+                        chantier_id=chantier.id,
+                        user_id=user_id,
+                    ))
+                    migrated += 1
+
+        if migrated > 0:
+            db.commit()
+            print(f"Migration tables jointure: {migrated} associations migrees")
+        else:
+            print("Migration tables jointure: aucune donnee a migrer")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Erreur migration tables jointure: {e}")
+    finally:
+        db.close()

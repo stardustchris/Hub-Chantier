@@ -1,7 +1,6 @@
 """Modèles SQLAlchemy pour le module pointages."""
 
-from datetime import datetime, date
-from decimal import Decimal
+from datetime import datetime
 from sqlalchemy import (
     Column,
     Integer,
@@ -11,7 +10,6 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     Numeric,
-    Enum as SQLEnum,
     UniqueConstraint,
     Index,
 )
@@ -26,6 +24,7 @@ class PointageModel(Base):
     __tablename__ = "pointages"
 
     id = Column(Integer, primary_key=True, index=True)
+    # Pas de FK vers users/chantiers - découplage modules Clean Architecture
     utilisateur_id = Column(Integer, nullable=False, index=True)
     chantier_id = Column(Integer, nullable=False, index=True)
     date_pointage = Column(Date, nullable=False, index=True)
@@ -42,15 +41,15 @@ class PointageModel(Base):
     signature_utilisateur = Column(Text, nullable=True)
     signature_date = Column(DateTime, nullable=True)
 
-    # Validation
+    # Validation (pas de FK - découplage modules)
     validateur_id = Column(Integer, nullable=True)
     validation_date = Column(DateTime, nullable=True)
     motif_rejet = Column(Text, nullable=True)
 
-    # Lien avec planning (FDH-10)
+    # Lien avec planning (FDH-10) - pas de FK pour découplage modules
     affectation_id = Column(Integer, nullable=True, index=True)
 
-    # Métadonnées
+    # Métadonnées (pas de FK - découplage modules)
     created_by = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
@@ -81,6 +80,7 @@ class FeuilleHeuresModel(Base):
     __tablename__ = "feuilles_heures"
 
     id = Column(Integer, primary_key=True, index=True)
+    # Pas de FK vers users - découplage modules Clean Architecture
     utilisateur_id = Column(Integer, nullable=False, index=True)
     semaine_debut = Column(Date, nullable=False, index=True)  # Toujours un lundi
     annee = Column(Integer, nullable=False)

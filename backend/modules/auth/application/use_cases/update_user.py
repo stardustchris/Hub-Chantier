@@ -1,8 +1,7 @@
 """Use Case UpdateUser - Mise à jour d'un utilisateur."""
 
-from typing import Optional
+from typing import Callable, Optional
 
-from ...domain.entities import User
 from ...domain.repositories import UserRepository
 from ...domain.value_objects import Role, TypeUtilisateur, Couleur
 from ...domain.events import UserUpdatedEvent
@@ -42,7 +41,7 @@ class UpdateUserUseCase:
     def __init__(
         self,
         user_repo: UserRepository,
-        event_publisher: callable = None,
+        event_publisher: Optional[Callable] = None,
     ):
         """
         Initialise le use case.

@@ -1,8 +1,23 @@
+/**
+ * DashboardPage - Page d'accueil avec tableau de bord et fil d'actualites
+ * CDC Section 2 - Tableau de Bord & Feed d'Actualites
+ */
+
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardService } from '../services/dashboard'
 import { chantiersService } from '../services/chantiers'
+import { logger } from '../services/logger'
 import Layout from '../components/Layout'
+import {
+  ClockCard,
+  WeatherCard,
+  StatsCard,
+  QuickActions,
+  TodayPlanningCard,
+  TeamCard,
+  DocumentsCard,
+} from '../components/dashboard'
 import {
   Send,
   Heart,
@@ -10,22 +25,11 @@ import {
   Pin,
   MoreHorizontal,
   Trash2,
-  Users,
   AlertTriangle,
-  Clock,
-  MapPin,
-  Calendar,
   Loader2,
-  FileText,
-  CheckCircle,
   Camera,
-  Phone,
-  Navigation,
-  Sun,
-  Plus,
 } from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatRelative } from '../utils/dates'
 import type { Post, Chantier, TargetType } from '../types'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -42,15 +46,12 @@ export default function DashboardPage() {
   const [isUrgent, setIsUrgent] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [currentTime, setCurrentTime] = useState(new Date())
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
 
   useEffect(() => {
     loadFeed()
     loadChantiers()
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
   }, [])
 
   const loadFeed = async (pageNum = 1) => {
@@ -65,7 +66,7 @@ export default function DashboardPage() {
       setHasMore(response.page < response.pages)
       setPage(pageNum)
     } catch (error) {
-      console.error('Error loading feed:', error)
+      logger.error('Error loading feed', error, { context: 'DashboardPage' })
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +77,7 @@ export default function DashboardPage() {
       const response = await chantiersService.list({ size: 100, statut: 'en_cours' })
       setChantiers(response.items)
     } catch (error) {
-      console.error('Error loading chantiers:', error)
+      logger.error('Error loading chantiers', error, { context: 'DashboardPage' })
     }
   }
 
@@ -97,7 +98,7 @@ export default function DashboardPage() {
       setIsUrgent(false)
       loadFeed(1)
     } catch (error) {
-      console.error('Error creating post:', error)
+      logger.error('Error creating post', error, { context: 'DashboardPage' })
     } finally {
       setIsPosting(false)
     }
@@ -113,7 +114,7 @@ export default function DashboardPage() {
       const updatedPost = await dashboardService.getPost(postId)
       setPosts((prev) => prev.map((p) => (p.id === postId ? updatedPost : p)))
     } catch (error) {
-      console.error('Error toggling like:', error)
+      logger.error('Error toggling like', error, { context: 'DashboardPage' })
     }
   }
 
@@ -126,7 +127,7 @@ export default function DashboardPage() {
       }
       loadFeed(1)
     } catch (error) {
-      console.error('Error toggling pin:', error)
+      logger.error('Error toggling pin', error, { context: 'DashboardPage' })
     }
   }
 
@@ -137,7 +138,7 @@ export default function DashboardPage() {
       await dashboardService.deletePost(postId)
       setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch (error) {
-      console.error('Error deleting post:', error)
+      logger.error('Error deleting post', error, { context: 'DashboardPage' })
     }
   }
 
@@ -150,190 +151,23 @@ export default function DashboardPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
-        {/* Top Cards */}
         <div className="p-4 space-y-4">
+          {/* Top Cards - Extracted Components */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Clock-in Card */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white relative overflow-hidden shadow-lg">
-              <div className="absolute top-4 right-4 opacity-30">
-                <Clock className="w-16 h-16" />
-              </div>
-              <p className="text-sm text-white/80">
-                {format(currentTime, "EEEE d MMMM yyyy", { locale: fr })}
-              </p>
-              <p className="text-4xl font-bold mt-1 mb-4">
-                {format(currentTime, "HH:mm")}
-              </p>
-              <button className="w-full bg-white text-orange-600 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-50 transition-colors shadow-md">
-                <Plus className="w-5 h-5" />
-                Pointer l'arrivee
-              </button>
-              <p className="text-xs text-white/70 mt-3 text-center">Derniere pointee : Hier 17:32</p>
-            </div>
-
-            {/* Weather Card */}
-            <div className="bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl p-5 text-white relative overflow-hidden shadow-lg">
-              <div className="absolute top-2 right-2 opacity-50">
-                <Sun className="w-20 h-20" />
-              </div>
-              <p className="text-sm font-medium text-white/80">Lyon</p>
-              <p className="text-5xl font-bold">12°C</p>
-              <p className="text-sm mt-1 flex items-center gap-1">
-                <Sun className="w-4 h-4" /> Ensoleille
-              </p>
-              <div className="mt-3 text-xs text-white/80 space-y-0.5">
-                <p>Vent 12 km/h - Pluie 0%</p>
-                <p>Min 8°C - Max 15°C</p>
-              </div>
-            </div>
-
-            {/* Weekly Stats Card */}
-            <div className="bg-white rounded-2xl p-5 shadow-lg">
-              <h3 className="font-semibold text-gray-800 mb-4">Cette semaine</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Heures travaillees</span>
-                    <span className="font-bold text-xl text-gray-900">32h15</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: '80%' }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Taches terminees</span>
-                    <span className="font-bold text-xl text-green-600">8/12</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ClockCard />
+            <WeatherCard />
+            <StatsCard />
           </div>
 
-          {/* Quick Actions */}
-          <div>
-            <h2 className="font-semibold text-gray-800 mb-3">Actions rapides</h2>
-            <div className="grid grid-cols-4 gap-3">
-              <button className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-2">
-                  <Clock className="w-6 h-6 text-blue-600" />
-                </div>
-                <span className="text-sm text-gray-700 font-medium text-center">Mes heures</span>
-              </button>
-              <button className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-                <span className="text-sm text-gray-700 font-medium text-center">Mes taches</span>
-              </button>
-              <button className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                  <FileText className="w-6 h-6 text-purple-600" />
-                </div>
-                <span className="text-sm text-gray-700 font-medium text-center">Documents</span>
-              </button>
-              <button className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-2">
-                  <Camera className="w-6 h-6 text-orange-600" />
-                </div>
-                <span className="text-sm text-gray-700 font-medium text-center">Photo</span>
-              </button>
-            </div>
-          </div>
+          {/* Quick Actions - Extracted Component */}
+          <QuickActions />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Column - Planning & Feed */}
             <div className="lg:col-span-2 space-y-4">
-              {/* Today's Planning */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-green-600" />
-                    Mon planning aujourd'hui
-                  </h2>
-                  <a href="#" className="text-sm text-green-600 hover:text-green-700 font-medium">
-                    Voir semaine →
-                  </a>
-                </div>
-
-                {/* Morning Slot */}
-                <div className="border-l-4 border-orange-500 rounded-xl bg-orange-50 p-4 mb-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className="text-xs px-2 py-1 rounded-md font-semibold bg-orange-500 text-white">08:00 - 12:00</span>
-                      <span className="ml-2 text-sm text-gray-600">Matin</span>
-                    </div>
-                    <span className="text-xs px-3 py-1 rounded-full font-medium bg-green-100 text-green-700">En cours</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 text-lg">Villa Moderne - Lyon 3eme</h3>
-                  <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                    <MapPin className="w-4 h-4 text-red-500" />
-                    45 rue de la Republique, Lyon 3eme
-                  </p>
-
-                  <div className="mt-3">
-                    <p className="text-sm text-gray-600 flex items-center gap-1 mb-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Taches assignees :
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-1 text-sm">
-                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                        Coulage dalle beton - Zone A
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">Urgent</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <button className="bg-green-600 text-white py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 font-medium">
-                      <Navigation className="w-4 h-4" />
-                      Itineraire
-                    </button>
-                    <button className="border-2 border-gray-200 py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 font-medium">
-                      <Phone className="w-4 h-4" />
-                      Appeler
-                    </button>
-                  </div>
-                </div>
-
-                {/* Lunch Break */}
-                <div className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-xl mb-4">
-                  <span className="text-xs px-2 py-1 rounded-md font-semibold bg-gray-400 text-white">12:00 - 13:30</span>
-                  <span className="text-sm text-gray-600">Pause dejeuner</span>
-                </div>
-
-                {/* Afternoon Slot */}
-                <div className="border-l-4 border-blue-500 rounded-xl bg-blue-50 p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className="text-xs px-2 py-1 rounded-md font-semibold bg-blue-500 text-white">13:30 - 17:00</span>
-                      <span className="ml-2 text-sm text-gray-600">Apres-midi</span>
-                    </div>
-                    <span className="text-xs px-3 py-1 rounded-full font-medium bg-blue-100 text-blue-700">Planifie</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 text-lg">Villa Moderne - Lyon 3eme</h3>
-                  <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                    <MapPin className="w-4 h-4 text-red-500" />
-                    Meme adresse
-                  </p>
-
-                  <div className="mt-3">
-                    <p className="text-sm text-gray-600 flex items-center gap-1 mb-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Taches assignees :
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-1 text-sm">
-                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                        Montage murs porteurs
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700">Moyenne</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Today's Planning - Extracted Component */}
+              <TodayPlanningCard />
 
               {/* Actualites Section */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
@@ -452,95 +286,10 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Right Column - Documents & Team */}
+            {/* Right Column - Documents & Team - Extracted Components */}
             <div className="space-y-4">
-              {/* My Documents */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-purple-600" />
-                    Mes documents
-                  </h2>
-                  <a href="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    Voir tout
-                  </a>
-                </div>
-                <div className="space-y-3">
-                  <a href="#" className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                      <FileText className="w-5 h-5 text-red-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">Plan etage 1.pdf</p>
-                      <p className="text-xs text-gray-500">Villa Lyon</p>
-                    </div>
-                  </a>
-                  <a href="#" className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">Consignes securite</p>
-                      <p className="text-xs text-gray-500">General</p>
-                    </div>
-                  </a>
-                  <a href="#" className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">Checklist qualite</p>
-                      <p className="text-xs text-gray-500">Villa Lyon</p>
-                    </div>
-                  </a>
-                </div>
-              </div>
-
-              {/* Today's Team */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg">
-                <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-green-600" />
-                  Equipe du jour
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                        MD
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Marc Dubois</p>
-                        <p className="text-xs text-gray-500">Chef de chantier</p>
-                      </div>
-                    </div>
-                    <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg">
-                      <Phone className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-sm">
-                        LM
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Luc Martin</p>
-                        <p className="text-xs text-gray-500">Macon</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                        TB
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Thomas Bernard</p>
-                        <p className="text-xs text-gray-500">Coffreur</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <DocumentsCard />
+              <TeamCard />
             </div>
           </div>
         </div>
@@ -549,6 +298,7 @@ export default function DashboardPage() {
   )
 }
 
+// PostCard component - inline pour garder la cohesion avec le state parent
 interface PostCardProps {
   post: Post
   currentUserId: string
@@ -579,7 +329,7 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
       setComments(updatedPost.commentaires || [])
       setNewComment('')
     } catch (error) {
-      console.error('Error adding comment:', error)
+      logger.error('Error adding comment', error, { context: 'DashboardPage' })
     } finally {
       setIsCommenting(false)
     }
@@ -620,7 +370,7 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
                 )}
               </div>
               <p className="text-xs text-gray-400">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr })}
+                {formatRelative(post.created_at)}
               </p>
             </div>
 
@@ -718,7 +468,7 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
                       <p className="text-sm text-gray-700">{comment.contenu}</p>
                     </div>
                     <span className="text-xs text-gray-500 ml-2">
-                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: fr })}
+                      {formatRelative(comment.created_at)}
                     </span>
                   </div>
                 </div>

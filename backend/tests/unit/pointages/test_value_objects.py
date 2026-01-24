@@ -1,7 +1,6 @@
 """Tests unitaires pour les Value Objects du module pointages."""
 
 import pytest
-from datetime import date
 
 from modules.pointages.domain.value_objects import (
     StatutPointage,

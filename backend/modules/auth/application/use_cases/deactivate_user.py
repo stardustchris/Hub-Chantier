@@ -1,4 +1,6 @@
-"""Use Case DeactivateUser - Désactivation/Activation d'un utilisateur."""
+"""Use Case DeactivateUser - Desactivation/Activation d'un utilisateur."""
+
+from typing import Callable, Optional
 
 from ...domain.repositories import UserRepository
 from ...domain.events import UserDeactivatedEvent, UserActivatedEvent
@@ -29,7 +31,7 @@ class DeactivateUserUseCase:
     def __init__(
         self,
         user_repo: UserRepository,
-        event_publisher: callable = None,
+        event_publisher: Optional[Callable] = None,
     ):
         """
         Initialise le use case.
@@ -90,7 +92,7 @@ class ActivateUserUseCase:
     def __init__(
         self,
         user_repo: UserRepository,
-        event_publisher: callable = None,
+        event_publisher: Optional[Callable] = None,
     ):
         """
         Initialise le use case.

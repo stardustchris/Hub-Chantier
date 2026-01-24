@@ -15,7 +15,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from sqlalchemy import text
 
 from main import app
 from shared.infrastructure.database import get_db
@@ -26,6 +25,8 @@ from modules.dashboard.infrastructure.persistence import Base as DashboardBase
 from modules.pointages.infrastructure.persistence import Base as PointagesBase
 from modules.planning.infrastructure.persistence.affectation_model import Base as PlanningBase
 from modules.formulaires.infrastructure.persistence import Base as FormulairesBase
+from modules.signalements.infrastructure.persistence import Base as SignalementsBase
+from modules.documents.infrastructure.persistence.models import Base as DocumentsBase
 
 
 @pytest.fixture(scope="function")
@@ -53,6 +54,12 @@ def test_db():
     # Cela permet a SQLAlchemy de resoudre les ForeignKey
     PlanningBase.metadata.reflect(bind=engine, only=['users', 'chantiers'])
     PlanningBase.metadata.create_all(bind=engine)
+
+    # Modules Signalements et Documents (avec FK vers users et chantiers)
+    SignalementsBase.metadata.reflect(bind=engine, only=['users', 'chantiers'])
+    SignalementsBase.metadata.create_all(bind=engine)
+    DocumentsBase.metadata.reflect(bind=engine, only=['users', 'chantiers'])
+    DocumentsBase.metadata.create_all(bind=engine)
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

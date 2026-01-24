@@ -1,10 +1,11 @@
-"""Modèle SQLAlchemy pour User."""
+"""Modele SQLAlchemy pour User."""
 
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 
 from shared.infrastructure.database_base import Base
+from shared.infrastructure.security import EncryptedString
 from ...domain.value_objects import Role, TypeUtilisateur, Couleur
 
 
@@ -31,7 +32,7 @@ class UserModel(Base):
     # Informations personnelles
     nom = Column(String(100), nullable=False)
     prenom = Column(String(100), nullable=False)
-    telephone = Column(String(20), nullable=True)  # USR-08
+    telephone = Column(EncryptedString(20), nullable=True)  # USR-08 - Chiffre RGPD
 
     # Rôle et type
     role = Column(String(50), nullable=False, default=Role.COMPAGNON.value)  # USR-06
@@ -50,15 +51,18 @@ class UserModel(Base):
     code_utilisateur = Column(String(50), nullable=True, index=True)  # USR-07 (matricule)
     metier = Column(String(100), nullable=True)  # USR-11
 
-    # Contact d'urgence (USR-13)
-    contact_urgence_nom = Column(String(200), nullable=True)
-    contact_urgence_tel = Column(String(20), nullable=True)
+    # Contact d'urgence (USR-13) - Donnees chiffrees RGPD Art. 32
+    contact_urgence_nom = Column(EncryptedString(200), nullable=True)
+    contact_urgence_tel = Column(EncryptedString(20), nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
+
+    # Soft delete - RGPD Art. 17 (Droit a l'oubli) avec conservation audit
+    deleted_at = Column(DateTime, nullable=True, default=None, index=True)
 
     def __repr__(self) -> str:
         return f"<UserModel(id={self.id}, email={self.email}, role={self.role})>"

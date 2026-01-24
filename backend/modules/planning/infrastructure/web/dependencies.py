@@ -1,10 +1,18 @@
-"""Dependances FastAPI pour le module planning."""
+"""Dependances FastAPI pour le module planning.
 
-from typing import Dict, Any, List, Optional, Callable
+Ce fichier configure l'injection de dependances pour le module planning.
+
+ARCHITECTURE CLEAN RESPECTEE:
+- AUCUN import direct vers d'autres modules (auth, chantiers)
+- Utilise le service shared EntityInfoService pour les infos inter-modules
+- EventBus actif pour la communication par evenements
+"""
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from ...adapters.controllers import PlanningController
+from ...adapters.presenters import AffectationPresenter
 from ...application.use_cases import (
     CreateAffectationUseCase,
     UpdateAffectationUseCase,
@@ -14,8 +22,11 @@ from ...application.use_cases import (
     GetNonPlanifiesUseCase,
 )
 from ..persistence import SQLAlchemyAffectationRepository
-from ..event_bus_impl import EventBusImpl, NoOpEventBus
+from ..event_bus_impl import EventBusImpl
 from shared.infrastructure.database import get_db
+from shared.infrastructure.event_bus import EventBus as CoreEventBus
+from shared.infrastructure import get_entity_info_service
+from shared.application.ports import EntityInfoService
 
 
 def get_affectation_repository(
@@ -35,119 +46,49 @@ def get_affectation_repository(
 
 def get_event_bus() -> EventBusImpl:
     """
-    Retourne l'implementation de l'EventBus.
+    Retourne l'implementation de l'EventBus ACTIVE.
+
+    L'EventBus permet la communication inter-modules par evenements
+    sans creer de couplage direct.
 
     Returns:
-        Instance de l'EventBus (NoOp pour l'instant).
+        Instance de l'EventBus connecte au CoreEventBus.
     """
-    # Pour l'instant, on utilise NoOpEventBus pour simplifier
-    # On peut activer le CoreEventBus plus tard
-    return NoOpEventBus()
+    return EventBusImpl(CoreEventBus)
 
 
-def _get_user_info_func(db: Session) -> Callable[[int], Dict[str, Any]]:
+def get_entity_info(db: Session = Depends(get_db)) -> EntityInfoService:
     """
-    Cree une fonction pour recuperer les infos utilisateur.
+    Retourne le service d'information des entites.
+
+    Ce service permet de recuperer les infos utilisateur/chantier
+    SANS importer directement les modules auth/chantiers.
 
     Args:
         db: Session SQLAlchemy.
 
     Returns:
-        Fonction qui prend un user_id et retourne ses infos.
+        Instance du service.
     """
-    def get_user_info(user_id: int) -> Dict[str, Any]:
-        """Recupere nom, couleur, metier d'un utilisateur."""
-        try:
-            from modules.auth.infrastructure.persistence import SQLAlchemyUserRepository
-            user_repo = SQLAlchemyUserRepository(db)
-            user = user_repo.find_by_id(user_id)
-            if user:
-                return {
-                    "nom": f"{user.prenom.value} {user.nom.value}",
-                    "couleur": user.couleur.value if user.couleur else None,
-                    "metier": user.metier,
-                }
-        except Exception:
-            pass
-        return {}
-
-    return get_user_info
+    return get_entity_info_service(db)
 
 
-def _get_chantier_info_func(db: Session) -> Callable[[int], Dict[str, Any]]:
+def get_affectation_presenter(
+    entity_info: EntityInfoService = Depends(get_entity_info),
+) -> AffectationPresenter:
     """
-    Cree une fonction pour recuperer les infos chantier.
+    Retourne le presenter pour enrichir les affectations.
+
+    Le presenter ajoute les infos d'affichage (nom, couleur)
+    aux DTOs d'affectation.
 
     Args:
-        db: Session SQLAlchemy.
+        entity_info: Service d'information des entites.
 
     Returns:
-        Fonction qui prend un chantier_id et retourne ses infos.
+        Instance du presenter.
     """
-    def get_chantier_info(chantier_id: int) -> Dict[str, Any]:
-        """Recupere nom, couleur d'un chantier."""
-        try:
-            from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
-            chantier_repo = SQLAlchemyChantierRepository(db)
-            chantier = chantier_repo.find_by_id(chantier_id)
-            if chantier:
-                return {
-                    "nom": chantier.nom,
-                    "couleur": chantier.couleur.value if chantier.couleur else None,
-                }
-        except Exception:
-            pass
-        return {}
-
-    return get_chantier_info
-
-
-def _get_user_chantiers_func(db: Session) -> Callable[[int], List[int]]:
-    """
-    Cree une fonction pour recuperer les chantiers d'un chef.
-
-    Args:
-        db: Session SQLAlchemy.
-
-    Returns:
-        Fonction qui prend un user_id et retourne ses chantiers.
-    """
-    def get_user_chantiers(user_id: int) -> List[int]:
-        """Recupere les IDs des chantiers dont l'utilisateur est responsable."""
-        try:
-            from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
-            chantier_repo = SQLAlchemyChantierRepository(db)
-            chantiers = chantier_repo.find_by_responsable(user_id)
-            return [c.id for c in chantiers]
-        except Exception:
-            pass
-        return []
-
-    return get_user_chantiers
-
-
-def _get_active_user_ids_func(db: Session) -> Callable[[], List[int]]:
-    """
-    Cree une fonction pour recuperer les IDs des utilisateurs actifs.
-
-    Args:
-        db: Session SQLAlchemy.
-
-    Returns:
-        Fonction qui retourne les IDs des utilisateurs actifs.
-    """
-    def get_active_user_ids() -> List[int]:
-        """Recupere les IDs de tous les utilisateurs actifs."""
-        try:
-            from modules.auth.infrastructure.persistence import SQLAlchemyUserRepository
-            user_repo = SQLAlchemyUserRepository(db)
-            users = user_repo.find_active()
-            return [u.id for u in users]
-        except Exception:
-            pass
-        return []
-
-    return get_active_user_ids
+    return AffectationPresenter(entity_info)
 
 
 def get_create_affectation_use_case(
@@ -183,16 +124,43 @@ def get_delete_affectation_use_case(
     )
 
 
+def _wrap_user_info(entity_info: EntityInfoService):
+    """Wrap EntityInfoService.get_user_info pour retourner un dict."""
+    def get_user_info(user_id: int):
+        info = entity_info.get_user_info(user_id)
+        if info:
+            return {"nom": info.nom, "couleur": info.couleur, "metier": info.metier}
+        return {}
+    return get_user_info
+
+
+def _wrap_chantier_info(entity_info: EntityInfoService):
+    """Wrap EntityInfoService.get_chantier_info pour retourner un dict."""
+    def get_chantier_info(chantier_id: int):
+        info = entity_info.get_chantier_info(chantier_id)
+        if info:
+            return {"nom": info.nom, "couleur": info.couleur}
+        return {}
+    return get_chantier_info
+
+
 def get_get_planning_use_case(
     affectation_repo: SQLAlchemyAffectationRepository = Depends(get_affectation_repository),
-    db: Session = Depends(get_db),
+    entity_info: EntityInfoService = Depends(get_entity_info),
 ) -> GetPlanningUseCase:
-    """Retourne le use case de recuperation du planning."""
+    """
+    Retourne le use case de recuperation du planning.
+
+    Note: L'enrichissement reste dans le Use Case car le filtre
+    par metier necessite cette information. C'est un compromis
+    documente pour eviter une refactorisation majeure.
+    Les infos sont recuperees via le service shared EntityInfoService.
+    """
     return GetPlanningUseCase(
         affectation_repo=affectation_repo,
-        get_user_info=_get_user_info_func(db),
-        get_chantier_info=_get_chantier_info_func(db),
-        get_user_chantiers=_get_user_chantiers_func(db),
+        get_user_info=_wrap_user_info(entity_info),
+        get_chantier_info=_wrap_chantier_info(entity_info),
+        get_user_chantiers=entity_info.get_user_chantier_ids,
     )
 
 
@@ -209,12 +177,12 @@ def get_duplicate_affectations_use_case(
 
 def get_get_non_planifies_use_case(
     affectation_repo: SQLAlchemyAffectationRepository = Depends(get_affectation_repository),
-    db: Session = Depends(get_db),
+    entity_info: EntityInfoService = Depends(get_entity_info),
 ) -> GetNonPlanifiesUseCase:
     """Retourne le use case de recuperation des non planifies."""
     return GetNonPlanifiesUseCase(
         affectation_repo=affectation_repo,
-        get_active_user_ids=_get_active_user_ids_func(db),
+        get_active_user_ids=entity_info.get_active_user_ids,
     )
 
 
@@ -225,6 +193,7 @@ def get_planning_controller(
     get_planning_uc: GetPlanningUseCase = Depends(get_get_planning_use_case),
     duplicate_uc: DuplicateAffectationsUseCase = Depends(get_duplicate_affectations_use_case),
     get_non_planifies_uc: GetNonPlanifiesUseCase = Depends(get_get_non_planifies_use_case),
+    presenter: AffectationPresenter = Depends(get_affectation_presenter),
 ) -> PlanningController:
     """
     Retourne le controller du planning.
@@ -236,6 +205,7 @@ def get_planning_controller(
         get_planning_uc: Use case de recuperation.
         duplicate_uc: Use case de duplication.
         get_non_planifies_uc: Use case des non planifies.
+        presenter: Presenter pour enrichir les reponses.
 
     Returns:
         Instance du PlanningController.
@@ -247,4 +217,5 @@ def get_planning_controller(
         get_planning_uc=get_planning_uc,
         duplicate_affectations_uc=duplicate_uc,
         get_non_planifies_uc=get_non_planifies_uc,
+        presenter=presenter,
     )

@@ -100,6 +100,63 @@ Implementation complete du module Planning de Charge avec corrections suite a au
 | test-automator | 6/10 | 8/10 |
 | code-reviewer | 8/10 | 9/10 |
 | security-auditor | 4/10 | 9/10 |
+## Session 2026-01-24 (Corrections P0 Frontend - Sprint 1)
+
+Suite a l'analyse des agents sur le frontend, correction des problemes P0 critiques identifies.
+
+### Problemes corriges (Sprint 1)
+
+| # | Probleme | Status |
+|---|----------|--------|
+| 1 | 6 vulnerabilites npm moderees (esbuild/vite) | CORRIGE |
+| 2 | AuthContext.tsx 0 test | CORRIGE (10 tests) |
+| 3 | ProtectedRoute.tsx 0 test | CORRIGE (5 tests) |
+| 4 | auth.test.ts manquant | CORRIGE (9 tests) |
+| 5 | authEvents.test.ts manquant | CORRIGE (14 tests) |
+| 6 | Logger centralise manquant | CORRIGE |
+| 7 | act() warnings useListPage.test.ts | CORRIGE |
+
+### Mises a jour dependencies
+
+| Package | Avant | Apres |
+|---------|-------|-------|
+| vite | ^5.0.0 | ^6.4.0 |
+| vitest | ^2.1.0 | ^3.2.0 |
+| @vitest/coverage-v8 | ^2.1.0 | ^3.2.0 |
+
+**Resultat** : 0 vulnerabilites npm (etait 6 moderees)
+
+### Fichiers crees
+
+**Tests**
+- `frontend/src/contexts/AuthContext.test.tsx` (10 tests)
+- `frontend/src/components/ProtectedRoute.test.tsx` (5 tests)
+- `frontend/src/services/auth.test.ts` (9 tests)
+- `frontend/src/services/authEvents.test.ts` (14 tests)
+
+**Services**
+- `frontend/src/services/logger.ts` : Service de logging centralise
+
+### Fichiers modifies
+
+- `frontend/package.json` : Mise a jour vite/vitest
+- `frontend/src/hooks/useListPage.ts` : Remplacement console.error par logger
+- `frontend/src/hooks/useListPage.test.ts` : Fix act() warnings
+- `frontend/src/pages/DashboardPage.tsx` : Remplacement console.error par logger
+
+### Statistiques
+
+- Tests frontend : 84 → 122 (+38)
+- Vulnerabilites npm : 6 → 0
+- Build : OK (588KB JS, warning >500KB)
+
+### Reste a faire (Sprint 2+)
+
+- Remplacer tous les console.error restants (~50) par logger
+- Ajouter aria-labels (accessibilite)
+- Fixer dependances useEffect manquantes
+- Remonter erreurs au user (Toast)
+- Refactorer composants >400 lignes
 
 ---
 
@@ -168,6 +225,182 @@ Analyse complète et remédiation du module Chantiers avec 7 agents (workflow ag
 - Score sécurité : 40% → 87.5%
 - Tests : 44 → 109 (+65)
 - Couverture Value Objects : 0% → 100%
+
+---
+
+## Session 2026-01-24 (Refactorisation Architecture Planning + Analyse Dependances)
+
+Analyse complete et refactorisation du module Planning pour corriger les violations Clean Architecture.
+
+### Objectif
+
+Analyser le developpement de la fonctionnalite planning avec le workflow agents.md et corriger les problemes identifies.
+
+### Corrections Clean Architecture appliquees
+
+#### 1. Service shared EntityInfoService (NOUVEAU)
+
+**Fichiers crees** :
+- `shared/application/__init__.py`
+- `shared/application/ports/__init__.py`
+- `shared/application/ports/entity_info_service.py` : Interface abstraite
+- `shared/infrastructure/entity_info_impl.py` : Implementation SQLAlchemy
+
+**Principe** : Centraliser TOUS les imports inter-modules dans un seul endroit (`shared/infrastructure`) pour eviter le couplage direct entre modules.
+
+```python
+# AVANT (violation) - dans planning/infrastructure
+from modules.auth.infrastructure.persistence import UserModel  # ❌
+
+# APRES (correct) - via service shared
+from shared.application.ports import EntityInfoService  # ✓
+entity_info.get_user_info(user_id)  # ✓
+```
+
+#### 2. EventBus active (CoreEventBus)
+
+**Fichier modifie** : `planning/infrastructure/web/dependencies.py`
+
+```python
+# AVANT
+return NoOpEventBus()  # ❌ Events jamais traites
+
+# APRES
+return EventBusImpl(CoreEventBus)  # ✓ Events publies au CoreEventBus
+```
+
+#### 3. Presenter pour enrichissement (NOUVEAU)
+
+**Fichier cree** : `planning/adapters/presenters/affectation_presenter.py`
+
+**Principe** : L'enrichissement des donnees (nom utilisateur, couleur chantier) est une preoccupation de PRESENTATION, pas de logique metier.
+
+**Note architecture** : L'enrichissement reste dans le Use Case `GetPlanningUseCase` car le filtre par metier necessite cette information. C'est un compromis documente.
+
+#### 4. Suppression import UserModel du Repository
+
+**Fichier modifie** : `planning/infrastructure/persistence/sqlalchemy_affectation_repository.py`
+
+```python
+# AVANT (violation ligne 261)
+from modules.auth.infrastructure.persistence import UserModel  # ❌
+
+# APRES (delegation au Use Case)
+def find_non_planifies(self, date_debut, date_fin) -> List[int]:
+    return []  # Use Case utilise EntityInfoService via get_active_user_ids()
+```
+
+### Bugs corriges
+
+#### Bug critique (security-auditor)
+
+**Fichier** : `planning/application/use_cases/duplicate_affectations.py` ligne 77
+
+```python
+# AVANT (TypeError a l'execution)
+raise NoAffectationsToDuplicateError(dto.utilisateur_id)  # ❌ 1 arg
+
+# APRES (3 arguments requis)
+raise NoAffectationsToDuplicateError(
+    dto.utilisateur_id,
+    dto.source_date_debut,
+    dto.source_date_fin,
+)  # ✓
+```
+
+#### Issues mineures (code-reviewer)
+
+1. **Import duplique** : Suppression `from typing import Optional as Opt`
+2. **Type hint manquant** : Ajout `entity: Affectation` dans `_entity_to_response()`
+3. **Import Affectation** : Ajout dans planning_controller.py
+
+### Validation agents
+
+#### architect-reviewer : FAIL → PASS (apres corrections)
+
+**Violation trouvee** :
+- `sqlalchemy_affectation_repository.py:261` : Import direct `UserModel`
+
+**Resolution** : Methode `find_non_planifies()` retourne liste vide, delegue au Use Case.
+
+#### code-reviewer : CHANGES_REQUESTED → APPROVED (apres corrections)
+
+| Issue | Severite | Status |
+|-------|----------|--------|
+| Import duplique `Optional as Opt` | MINEURE | ✓ Corrige |
+| Type hint manquant `entity` | MINEURE | ✓ Corrige |
+| Duplication code wrappers | MINEURE | Accepte (2 fonctions) |
+| Logging insuffisant | MINEURE | ✓ Corrige |
+
+#### security-auditor : PASS
+
+| Finding | Severite | Status |
+|---------|----------|--------|
+| Bug `NoAffectationsToDuplicateError` | CRITIQUE | ✓ Corrige |
+| Validation entrees Pydantic | - | ✓ OK |
+| Permissions par role | - | ✓ OK |
+| Pas d'injection SQL | - | ✓ OK |
+
+**Score securite** : 8.5/10 → 9/10
+
+### Graphe de dependances APRES refactorisation
+
+```
+planning.domain
+    ↓ (aucun framework)
+planning.application
+    ↓ (interfaces: Repository, EventBus)
+planning.adapters
+    ↓ (EntityInfoService via shared)
+planning.infrastructure
+    ↓ (implementations, AUCUN import modules.*)
+
+shared.application.ports
+    ├── EntityInfoService (interface)
+    └── EventBus (interface)
+        ↓
+shared.infrastructure
+    ├── entity_info_impl.py → imports auth + chantiers CENTRALISES
+    └── event_bus.py → CoreEventBus
+```
+
+### Fichiers modifies/crees
+
+| Fichier | Action | Description |
+|---------|--------|-------------|
+| `shared/application/__init__.py` | CREE | Export EntityInfoService |
+| `shared/application/ports/__init__.py` | CREE | Export ports |
+| `shared/application/ports/entity_info_service.py` | CREE | Interface abstraite |
+| `shared/infrastructure/entity_info_impl.py` | CREE | Implementation SQLAlchemy |
+| `shared/infrastructure/__init__.py` | MODIFIE | Export get_entity_info_service |
+| `planning/adapters/presenters/affectation_presenter.py` | CREE | Presenter enrichissement |
+| `planning/adapters/presenters/__init__.py` | MODIFIE | Export AffectationPresenter |
+| `planning/adapters/__init__.py` | MODIFIE | Export AffectationPresenter |
+| `planning/adapters/controllers/planning_controller.py` | MODIFIE | Import Affectation, type hints, logging |
+| `planning/infrastructure/web/dependencies.py` | MODIFIE | Wrappers, CoreEventBus |
+| `planning/infrastructure/persistence/sqlalchemy_affectation_repository.py` | MODIFIE | Suppression import UserModel |
+| `planning/application/use_cases/duplicate_affectations.py` | MODIFIE | Fix exception args |
+
+### Tests crees
+
+| Fichier | Tests | Description |
+|---------|-------|-------------|
+| `tests/unit/planning/test_affectation_presenter.py` | 10 | Tests AffectationPresenter (enrichissement, cache) |
+| `tests/unit/shared/test_entity_info_service.py` | 21 | Tests EntityInfoService (interface, impl, factory) |
+
+### Documentation mise a jour
+
+- `docs/architecture/CLEAN_ARCHITECTURE.md` : Ajout pattern EntityInfoService pour imports inter-modules
+
+### Notes architecture importantes
+
+1. **Compromis enrichissement** : L'enrichissement reste dans `GetPlanningUseCase` car le filtre par metier l'exige. Documente comme compromis acceptable.
+
+2. **ForeignKey inter-modules** : Les FK vers `users.id` et `chantiers.id` dans `AffectationModel` sont conservees. C'est un compromis acceptable pour un monolithe (integrite referentielle).
+
+3. **Lazy imports** : Les imports dans `entity_info_impl.py` sont faits dans les methodes pour eviter les imports circulaires au demarrage. Pattern documente.
+
+4. **Presenter optionnel** : Le `AffectationPresenter` est injecte dans le Controller mais pas encore utilise pour `get_planning()`. Prepare pour utilisation future
 
 ---
 

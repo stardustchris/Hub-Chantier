@@ -7,6 +7,7 @@ from .dependencies import (
     require_admin,
     require_conducteur_or_admin,
     require_chef_or_above,
+    get_current_user_chantier_ids,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "require_admin",
     "require_conducteur_or_admin",
     "require_chef_or_above",
+    "get_current_user_chantier_ids",
 ]

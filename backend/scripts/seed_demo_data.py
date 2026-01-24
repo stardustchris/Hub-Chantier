@@ -16,8 +16,7 @@ Cree:
 
 import os
 import sys
-from datetime import datetime, date, timedelta
-from typing import List
+from datetime import date, timedelta
 
 # Ajouter le chemin du backend pour les imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -29,7 +28,7 @@ from shared.infrastructure.database import SessionLocal, init_db
 from modules.auth.infrastructure.persistence.user_model import UserModel
 from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
 from modules.planning.infrastructure.persistence.affectation_model import AffectationModel
-from modules.pointages.infrastructure.persistence.models import PointageModel, FeuilleHeuresModel
+from modules.pointages.infrastructure.persistence.models import PointageModel
 from modules.taches.infrastructure.persistence import TacheModel
 
 

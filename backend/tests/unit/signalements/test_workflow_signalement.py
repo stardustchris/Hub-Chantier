@@ -2,7 +2,6 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import datetime
 
 from modules.signalements.domain.entities import Signalement
 from modules.signalements.domain.value_objects import Priorite, StatutSignalement
@@ -145,18 +144,16 @@ class TestCloturerSignalementUseCase:
         assert result.statut == "cloture"
         self.mock_sig_repo.save.assert_called_once()
 
-    def test_cloturer_success_from_ouvert(self):
-        """Test: peut clôturer directement depuis OUVERT."""
+    def test_cloturer_from_ouvert_raises_error(self):
+        """Test: NE peut PAS clôturer directement depuis OUVERT (doit passer par TRAITE)."""
         signalement = self._create_signalement(statut=StatutSignalement.OUVERT)
         self.mock_sig_repo.find_by_id.return_value = signalement
-        self.mock_sig_repo.save.return_value = signalement
 
-        result = self.use_case.execute(
-            signalement_id=1,
-            user_role="admin",
-        )
-
-        assert result.statut == "cloture"
+        with pytest.raises(InvalidStatusTransitionError):
+            self.use_case.execute(
+                signalement_id=1,
+                user_role="admin",
+            )
 
     def test_cloturer_not_found(self):
         """Test: erreur si signalement non trouvé."""

@@ -188,3 +188,53 @@ def require_chef_or_above(
             detail="Accès réservé aux chefs de chantier et supérieurs",
         )
     return current_user_role
+
+
+# =============================================================================
+# Dépendances spécifiques au filtrage par chantier
+# =============================================================================
+
+
+def get_current_user_chantier_ids(
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    db: Session = Depends(get_db),
+) -> list[int] | None:
+    """
+    Récupère les IDs des chantiers auxquels l'utilisateur est affecté.
+
+    Pour les admins et conducteurs, retourne None (accès à tous les chantiers).
+    Pour les chefs de chantier et compagnons, retourne la liste des chantiers
+    où ils ont des affectations actives.
+
+    Args:
+        current_user_id: ID de l'utilisateur connecté.
+        current_user_role: Rôle de l'utilisateur connecté.
+        db: Session de base de données.
+
+    Returns:
+        Liste des IDs de chantiers, ou None pour accès global.
+    """
+    # Admins et conducteurs voient tous les posts
+    if current_user_role in {"admin", "conducteur"}:
+        return None
+
+    # Import différé pour éviter les dépendances circulaires
+    from modules.planning.infrastructure.persistence import AffectationModel
+    from sqlalchemy import distinct
+    from datetime import date, timedelta
+
+    # Récupérer les chantiers avec affectations récentes (30 derniers jours)
+    # pour éviter de charger tout l'historique
+    date_limite = date.today() - timedelta(days=30)
+
+    chantier_ids = (
+        db.query(distinct(AffectationModel.chantier_id))
+        .filter(
+            AffectationModel.utilisateur_id == current_user_id,
+            AffectationModel.date >= date_limite,
+        )
+        .all()
+    )
+
+    return [row[0] for row in chantier_ids] if chantier_ids else []

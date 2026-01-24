@@ -1,5 +1,6 @@
-"""Implémentation SQLAlchemy du UserRepository."""
+"""Implementation SQLAlchemy du UserRepository."""
 
+from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy.orm import Session
@@ -12,12 +13,13 @@ from .user_model import UserModel
 
 class SQLAlchemyUserRepository(UserRepository):
     """
-    Implémentation du UserRepository utilisant SQLAlchemy.
+    Implementation du UserRepository utilisant SQLAlchemy.
 
-    Fait le mapping entre l'entité User (Domain) et UserModel (Infrastructure).
+    Fait le mapping entre l'entite User (Domain) et UserModel (Infrastructure).
+    Implemente le soft delete: les utilisateurs supprimes ont deleted_at != None.
 
     Attributes:
-        session: Session SQLAlchemy pour les opérations DB.
+        session: Session SQLAlchemy pour les operations DB.
     """
 
     def __init__(self, session: Session):
@@ -29,49 +31,60 @@ class SQLAlchemyUserRepository(UserRepository):
         """
         self.session = session
 
+    def _not_deleted(self):
+        """Filtre pour exclure les enregistrements supprimes (soft delete)."""
+        return UserModel.deleted_at.is_(None)
+
     def find_by_id(self, user_id: int) -> Optional[User]:
         """
-        Trouve un utilisateur par son ID.
+        Trouve un utilisateur par son ID (excluant les supprimes).
 
         Args:
             user_id: L'identifiant unique.
 
         Returns:
-            L'entité User ou None.
+            L'entite User ou None.
         """
-        model = self.session.query(UserModel).filter(UserModel.id == user_id).first()
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.id == user_id)
+            .filter(self._not_deleted())
+            .first()
+        )
         return self._to_entity(model) if model else None
 
     def find_by_email(self, email: Email) -> Optional[User]:
         """
-        Trouve un utilisateur par son email.
+        Trouve un utilisateur par son email (excluant les supprimes).
 
         Args:
             email: L'adresse email (Value Object).
 
         Returns:
-            L'entité User ou None.
+            L'entite User ou None.
         """
         model = (
             self.session.query(UserModel)
             .filter(UserModel.email == str(email))
+            .filter(self._not_deleted())
             .first()
         )
         return self._to_entity(model) if model else None
 
     def find_by_code(self, code_utilisateur: str) -> Optional[User]:
         """
-        Trouve un utilisateur par son code/matricule.
+        Trouve un utilisateur par son code/matricule (excluant les supprimes).
 
         Args:
             code_utilisateur: Le code utilisateur (matricule).
 
         Returns:
-            L'entité User ou None.
+            L'entite User ou None.
         """
         model = (
             self.session.query(UserModel)
             .filter(UserModel.code_utilisateur == code_utilisateur)
+            .filter(self._not_deleted())
             .first()
         )
         return self._to_entity(model) if model else None
@@ -116,34 +129,45 @@ class SQLAlchemyUserRepository(UserRepository):
 
     def delete(self, user_id: int) -> bool:
         """
-        Supprime un utilisateur.
+        Supprime un utilisateur (soft delete - marque deleted_at).
+
+        L'utilisateur n'est pas supprime physiquement de la base de donnees,
+        mais marque comme supprime. Cela permet de conserver l'historique
+        et de respecter les exigences RGPD (droit a l'oubli avec tracabilite).
 
         Args:
             user_id: L'identifiant de l'utilisateur.
 
         Returns:
-            True si supprimé, False si non trouvé.
+            True si supprime, False si non trouve ou deja supprime.
         """
-        model = self.session.query(UserModel).filter(UserModel.id == user_id).first()
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.id == user_id)
+            .filter(self._not_deleted())
+            .first()
+        )
         if model:
-            self.session.delete(model)
+            # Soft delete: marquer comme supprime au lieu de supprimer physiquement
+            model.deleted_at = datetime.now()
             self.session.commit()
             return True
         return False
 
     def find_all(self, skip: int = 0, limit: int = 100) -> List[User]:
         """
-        Récupère tous les utilisateurs avec pagination.
+        Recupere tous les utilisateurs avec pagination (excluant les supprimes).
 
         Args:
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités User.
+            Liste des entites User.
         """
         models = (
             self.session.query(UserModel)
+            .filter(self._not_deleted())
             .order_by(UserModel.nom, UserModel.prenom)
             .offset(skip)
             .limit(limit)
@@ -153,28 +177,29 @@ class SQLAlchemyUserRepository(UserRepository):
 
     def count(self) -> int:
         """
-        Compte le nombre total d'utilisateurs.
+        Compte le nombre total d'utilisateurs (excluant les supprimes).
 
         Returns:
             Nombre total d'utilisateurs.
         """
-        return self.session.query(UserModel).count()
+        return self.session.query(UserModel).filter(self._not_deleted()).count()
 
     def find_by_role(self, role: Role, skip: int = 0, limit: int = 100) -> List[User]:
         """
-        Trouve les utilisateurs par rôle.
+        Trouve les utilisateurs par role (excluant les supprimes).
 
         Args:
-            role: Le rôle à filtrer.
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            role: Le role a filtrer.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités User avec ce rôle.
+            Liste des entites User avec ce role.
         """
         models = (
             self.session.query(UserModel)
             .filter(UserModel.role == role.value)
+            .filter(self._not_deleted())
             .order_by(UserModel.nom, UserModel.prenom)
             .offset(skip)
             .limit(limit)
@@ -186,19 +211,20 @@ class SQLAlchemyUserRepository(UserRepository):
         self, type_utilisateur: TypeUtilisateur, skip: int = 0, limit: int = 100
     ) -> List[User]:
         """
-        Trouve les utilisateurs par type (employé/sous-traitant).
+        Trouve les utilisateurs par type (employe/sous-traitant) excluant les supprimes.
 
         Args:
-            type_utilisateur: Le type à filtrer.
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            type_utilisateur: Le type a filtrer.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités User de ce type.
+            Liste des entites User de ce type.
         """
         models = (
             self.session.query(UserModel)
             .filter(UserModel.type_utilisateur == type_utilisateur.value)
+            .filter(self._not_deleted())
             .order_by(UserModel.nom, UserModel.prenom)
             .offset(skip)
             .limit(limit)
@@ -208,18 +234,19 @@ class SQLAlchemyUserRepository(UserRepository):
 
     def find_active(self, skip: int = 0, limit: int = 100) -> List[User]:
         """
-        Trouve les utilisateurs actifs.
+        Trouve les utilisateurs actifs (excluant les supprimes).
 
         Args:
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités User actifs.
+            Liste des entites User actifs.
         """
         models = (
             self.session.query(UserModel)
             .filter(UserModel.is_active == True)
+            .filter(self._not_deleted())
             .order_by(UserModel.nom, UserModel.prenom)
             .offset(skip)
             .limit(limit)
@@ -229,10 +256,10 @@ class SQLAlchemyUserRepository(UserRepository):
 
     def exists_by_email(self, email: Email) -> bool:
         """
-        Vérifie si un email existe.
+        Verifie si un email existe (excluant les supprimes).
 
         Args:
-            email: L'email à vérifier.
+            email: L'email a verifier.
 
         Returns:
             True si l'email existe.
@@ -240,16 +267,17 @@ class SQLAlchemyUserRepository(UserRepository):
         return (
             self.session.query(UserModel)
             .filter(UserModel.email == str(email))
+            .filter(self._not_deleted())
             .first()
             is not None
         )
 
     def exists_by_code(self, code_utilisateur: str) -> bool:
         """
-        Vérifie si un code utilisateur existe.
+        Verifie si un code utilisateur existe (excluant les supprimes).
 
         Args:
-            code_utilisateur: Le code à vérifier.
+            code_utilisateur: Le code a verifier.
 
         Returns:
             True si le code existe.
@@ -257,6 +285,7 @@ class SQLAlchemyUserRepository(UserRepository):
         return (
             self.session.query(UserModel)
             .filter(UserModel.code_utilisateur == code_utilisateur)
+            .filter(self._not_deleted())
             .first()
             is not None
         )
@@ -271,22 +300,22 @@ class SQLAlchemyUserRepository(UserRepository):
         limit: int = 100,
     ) -> tuple[List[User], int]:
         """
-        Recherche des utilisateurs avec filtres multiples.
+        Recherche des utilisateurs avec filtres multiples (excluant les supprimes).
 
         Args:
-            query: Texte à rechercher dans nom, prénom, email.
-            role: Filtrer par rôle (optionnel).
+            query: Texte a rechercher dans nom, prenom, email.
+            role: Filtrer par role (optionnel).
             type_utilisateur: Filtrer par type (optionnel).
             active_only: Filtrer les actifs uniquement.
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
             Tuple (liste des utilisateurs, total count).
         """
         from sqlalchemy import or_
 
-        base_query = self.session.query(UserModel)
+        base_query = self.session.query(UserModel).filter(self._not_deleted())
 
         # Appliquer les filtres
         if query:

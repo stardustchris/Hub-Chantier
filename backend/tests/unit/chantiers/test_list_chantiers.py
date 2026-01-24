@@ -1,8 +1,6 @@
 """Tests unitaires pour ListChantiersUseCase."""
 
-import pytest
 from unittest.mock import Mock
-from datetime import date
 
 from modules.chantiers.domain.entities import Chantier
 from modules.chantiers.domain.value_objects import CodeChantier, StatutChantier
@@ -59,7 +57,7 @@ class TestListChantiersUseCase:
         """Test: filtre actifs uniquement."""
         self.mock_chantier_repo.find_active.return_value = self.chantiers
 
-        result = self.use_case.execute(actifs_uniquement=True)
+        self.use_case.execute(actifs_uniquement=True)
 
         self.mock_chantier_repo.find_active.assert_called_once()
 
@@ -67,7 +65,7 @@ class TestListChantiersUseCase:
         """Test: filtre par conducteur."""
         self.mock_chantier_repo.find_by_conducteur.return_value = [self.chantiers[0]]
 
-        result = self.use_case.execute(conducteur_id=10)
+        self.use_case.execute(conducteur_id=10)
 
         self.mock_chantier_repo.find_by_conducteur.assert_called_once()
         call_kwargs = self.mock_chantier_repo.find_by_conducteur.call_args[1]
@@ -77,7 +75,7 @@ class TestListChantiersUseCase:
         """Test: filtre par chef de chantier."""
         self.mock_chantier_repo.find_by_chef_chantier.return_value = [self.chantiers[0]]
 
-        result = self.use_case.execute(chef_chantier_id=20)
+        self.use_case.execute(chef_chantier_id=20)
 
         self.mock_chantier_repo.find_by_chef_chantier.assert_called_once()
 
@@ -85,7 +83,7 @@ class TestListChantiersUseCase:
         """Test: filtre par responsable (conducteur OU chef)."""
         self.mock_chantier_repo.find_by_responsable.return_value = self.chantiers
 
-        result = self.use_case.execute(responsable_id=5)
+        self.use_case.execute(responsable_id=5)
 
         self.mock_chantier_repo.find_by_responsable.assert_called_once()
 
@@ -93,7 +91,7 @@ class TestListChantiersUseCase:
         """Test: recherche textuelle."""
         self.mock_chantier_repo.search.return_value = [self.chantiers[0]]
 
-        result = self.use_case.execute(search="Chantier A")
+        self.use_case.execute(search="Chantier A")
 
         self.mock_chantier_repo.search.assert_called_once()
         call_kwargs = self.mock_chantier_repo.search.call_args[1]

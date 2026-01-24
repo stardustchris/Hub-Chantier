@@ -1,7 +1,10 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
+import LoggerToastBridge from './components/LoggerToastBridge'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ChantiersListPage from './pages/ChantiersListPage'
@@ -12,13 +15,37 @@ import PlanningPage from './pages/PlanningPage'
 import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
 import FormulairesPage from './pages/FormulairesPage'
 import DocumentsPage from './pages/DocumentsPage'
+import LogistiquePage from './pages/LogistiquePage'
 import ProtectedRoute from './components/ProtectedRoute'
+
+// Lazy load pages for code splitting
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const ChantiersListPage = lazy(() => import('./pages/ChantiersListPage'))
+const ChantierDetailPage = lazy(() => import('./pages/ChantierDetailPage'))
+const UsersListPage = lazy(() => import('./pages/UsersListPage'))
+const UserDetailPage = lazy(() => import('./pages/UserDetailPage'))
+const PlanningPage = lazy(() => import('./pages/PlanningPage'))
+const FeuillesHeuresPage = lazy(() => import('./pages/FeuillesHeuresPage'))
+const FormulairesPage = lazy(() => import('./pages/FormulairesPage'))
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
+
+// CSS-only loading spinner (no lucide-react dependency)
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+    </div>
+  )
+}
 
 function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
@@ -96,14 +123,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/logistique"
+            element={
+              <ProtectedRoute>
+                <LogistiquePage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch all - redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
+        <LoggerToastBridge />
         <ToastContainer />
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 

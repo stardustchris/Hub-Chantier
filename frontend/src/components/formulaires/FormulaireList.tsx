@@ -3,8 +3,7 @@
  * Affiche les formulaires avec leur statut et actions disponibles
  */
 
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateDayMonthYear, formatDateTimeShort } from '../../utils/dates'
 import {
   FileText,
   Eye,
@@ -122,7 +121,7 @@ export default function FormulaireList({
                   )}
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {format(new Date(formulaire.created_at), 'dd MMM yyyy', { locale: fr })}
+                    {formatDateDayMonthYear(formulaire.created_at)}
                   </span>
                 </div>
 
@@ -147,7 +146,7 @@ export default function FormulaireList({
                   {formulaire.soumis_at && (
                     <span className="flex items-center gap-1 text-gray-500">
                       <Clock className="w-3.5 h-3.5" />
-                      Soumis le {format(new Date(formulaire.soumis_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                      Soumis le {formatDateTimeShort(formulaire.soumis_at)}
                     </span>
                   )}
                 </div>

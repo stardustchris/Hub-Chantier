@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional, List
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, not_
+from sqlalchemy import and_
 
 from ...domain.entities import Affectation
 from ...domain.repositories import AffectationRepository
@@ -250,41 +250,24 @@ class SQLAlchemyAffectationRepository(AffectationRepository):
         """
         Trouve les utilisateurs sans affectation sur une periode.
 
+        ARCHITECTURE: Cette methode retourne une liste vide pour forcer
+        le Use Case a utiliser le calcul via EntityInfoService.
+        Cela evite l'import direct de UserModel (violation Clean Architecture).
+
+        Le calcul reel est fait dans GetNonPlanifiesUseCase._calculate_non_planifies()
+        qui utilise get_active_user_ids() du service shared.
+
         Args:
             date_debut: Date de debut de la periode (incluse).
             date_fin: Date de fin de la periode (incluse).
 
         Returns:
-            Liste des IDs utilisateurs sans affectation sur cette periode.
+            Liste vide - le Use Case utilise le fallback via EntityInfoService.
         """
-        # Import UserModel dynamiquement pour eviter les imports circulaires
-        from modules.auth.infrastructure.persistence import UserModel
-        from sqlalchemy import select
-
-        # Subquery: IDs des utilisateurs avec au moins une affectation
-        utilisateurs_planifies = (
-            select(AffectationModel.utilisateur_id.distinct())
-            .where(
-                and_(
-                    AffectationModel.date >= date_debut,
-                    AffectationModel.date <= date_fin,
-                )
-            )
-        )
-
-        # Utilisateurs actifs sans affectation
-        utilisateurs_non_planifies = (
-            self.session.query(UserModel.id)
-            .filter(
-                and_(
-                    UserModel.is_active.is_(True),
-                    not_(UserModel.id.in_(utilisateurs_planifies)),
-                )
-            )
-            .all()
-        )
-
-        return [u.id for u in utilisateurs_non_planifies]
+        # Retourne vide pour forcer le Use Case a utiliser EntityInfoService
+        # via get_active_user_ids() injecte dans le constructeur.
+        # Cela respecte Clean Architecture (pas d'import modules.auth).
+        return []
 
     def find_utilisateurs_disponibles(
         self,

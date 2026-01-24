@@ -1,13 +1,11 @@
 """Tests unitaires supplémentaires pour les Use Cases du module taches."""
 
 import pytest
-from datetime import date
 from unittest.mock import Mock
 
 # Imports directs pour éviter le chargement de l'infrastructure via __init__.py
 from modules.taches.domain.entities.tache import Tache
 from modules.taches.domain.value_objects.statut_tache import StatutTache
-from modules.taches.domain.value_objects.unite_mesure import UniteMesure
 from modules.taches.domain.repositories.tache_repository import TacheRepository
 from modules.taches.application.use_cases.delete_tache import DeleteTacheUseCase
 from modules.taches.application.use_cases.update_tache import UpdateTacheUseCase
@@ -111,7 +109,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(description="Nouvelle description")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -122,7 +120,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(date_echeance="2026-02-15")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -133,7 +131,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(unite_mesure="m2")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -144,7 +142,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(quantite_estimee=100.5)
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -155,7 +153,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(heures_estimees=40.0)
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -166,7 +164,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(statut="termine")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -184,7 +182,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(statut="a_faire")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -195,7 +193,7 @@ class TestUpdateTacheUseCase:
 
         dto = UpdateTacheDTO(ordre=5)
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()
 
@@ -230,6 +228,6 @@ class TestUpdateTacheUseCase:
             heures_estimees=20.0,
         )
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.tache_repo.save.assert_called_once()

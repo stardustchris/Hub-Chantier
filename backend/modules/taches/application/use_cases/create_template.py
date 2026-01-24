@@ -1,8 +1,7 @@
 """Use Case CreateTemplate - Creation d'un modele de taches (TAC-04)."""
 
-from typing import Optional, Callable
 
-from ...domain.entities import TemplateModele, SousTacheModele
+from ...domain.entities import TemplateModele
 from ...domain.repositories import TemplateModeleRepository
 from ...domain.value_objects import UniteMesure
 from ..dtos import CreateTemplateModeleDTO, TemplateModeleDTO

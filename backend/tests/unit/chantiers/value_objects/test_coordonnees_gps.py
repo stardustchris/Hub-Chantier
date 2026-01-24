@@ -159,12 +159,12 @@ class TestCoordonneesGPS:
         assert distance == 0.0
 
     def test_distance_lyon_to_paris(self):
-        """Test: distance Lyon-Paris ~465 km."""
+        """Test: distance Lyon-Paris ~392 km a vol d'oiseau."""
         lyon = CoordonneesGPS(latitude=45.764043, longitude=4.835659)
         paris = CoordonneesGPS(latitude=48.856614, longitude=2.3522219)
         distance = lyon.distance_to(paris)
-        # La distance réelle est ~465 km, on accepte une marge
-        assert 400 < distance < 500
+        # La distance reelle a vol d'oiseau est ~392 km
+        assert 380 < distance < 410
 
     def test_distance_is_symmetric(self):
         """Test: la distance est symétrique (A->B = B->A)."""

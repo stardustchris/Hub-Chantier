@@ -2,9 +2,8 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import date, timedelta
+from datetime import date
 
-from modules.planning.domain.entities import Affectation
 from modules.planning.domain.repositories import AffectationRepository
 from modules.planning.application.use_cases.get_non_planifies import (
     GetNonPlanifiesUseCase,
@@ -80,7 +79,7 @@ class TestGetNonPlanifiesUseCase:
         """Test: méthode de commodité pour une journée."""
         self.mock_affectation_repo.find_non_planifies.return_value = [1, 2]
 
-        result = self.use_case.execute_for_day(self.date_debut)
+        self.use_case.execute_for_day(self.date_debut)
 
         self.mock_affectation_repo.find_non_planifies.assert_called_once_with(
             self.date_debut, self.date_debut

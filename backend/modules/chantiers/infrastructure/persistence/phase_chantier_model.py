@@ -1,9 +1,8 @@
 """Modèle SQLAlchemy pour PhaseChantier."""
 
-from datetime import datetime, date
+from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey
-from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
 

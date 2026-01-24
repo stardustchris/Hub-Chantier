@@ -68,9 +68,11 @@ class ChantierModel(Base):
     date_debut = Column(Date, nullable=True)
     date_fin = Column(Date, nullable=True)
 
-    # Responsables (CHT-05, CHT-06) - Stockés en JSON pour simplifier
-    conducteur_ids = Column(JSON, nullable=False, default=list)
-    chef_chantier_ids = Column(JSON, nullable=False, default=list)
+    # Responsables (CHT-05, CHT-06) - DEPRECATED: Utiliser conducteurs_rel/chefs_rel
+    # Ces colonnes JSON sont conservées pour backward compatibility mais les tables
+    # de jointure (chantier_conducteurs, chantier_chefs) sont la source de vérité.
+    conducteur_ids = Column(JSON, nullable=False, default=list)  # DEPRECATED
+    chef_chantier_ids = Column(JSON, nullable=False, default=list)  # DEPRECATED
 
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.now)
@@ -91,6 +93,20 @@ class ChantierModel(Base):
     # Relations avec le module Documents (GED)
     dossiers = relationship("DossierModel", back_populates="chantier", cascade="all, delete-orphan")
     documents = relationship("DocumentModel", back_populates="chantier", cascade="all, delete-orphan")
+
+    # Relations via tables de jointure (optimisation N+1)
+    conducteurs_rel = relationship(
+        "ChantierConducteurModel",
+        backref="chantier",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+    chefs_rel = relationship(
+        "ChantierChefModel",
+        backref="chantier",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
 
     def __repr__(self) -> str:
         return f"<ChantierModel(id={self.id}, code={self.code}, nom={self.nom})>"

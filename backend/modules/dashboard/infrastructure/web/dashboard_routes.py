@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
 
 from ...application.use_cases import (
     PublishPostUseCase,
@@ -32,7 +31,7 @@ from .dependencies import (
     get_add_like_use_case,
     get_remove_like_use_case,
 )
-from shared.infrastructure.web import get_current_user_id, get_is_moderator
+from shared.infrastructure.web import get_current_user_id, get_is_moderator, get_current_user_chantier_ids
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -140,6 +139,7 @@ def get_feed(
     page: int = Query(default=1, ge=1, description="Numéro de page"),
     size: int = Query(default=20, ge=1, le=100, description="Nombre d'éléments par page"),
     current_user_id: int = Depends(get_current_user_id),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
     use_case: GetFeedUseCase = Depends(get_feed_use_case),
 ):
     """
@@ -147,13 +147,17 @@ def get_feed(
 
     Les posts sont filtrés selon le ciblage et triés par date décroissante.
     Les posts épinglés apparaissent en premier.
+
+    Le filtrage par chantier s'applique automatiquement selon le rôle:
+    - Admin/Conducteur: voient tous les posts
+    - Chef de chantier/Compagnon: voient uniquement les posts ciblant leurs chantiers
     """
     # Convertir page/size en offset/limit
     offset = (page - 1) * size
 
     result = use_case.execute(
         user_id=current_user_id,
-        user_chantier_ids=None,
+        user_chantier_ids=user_chantier_ids,
         limit=size,
         offset=offset,
         include_archived=False,
@@ -196,7 +200,7 @@ def create_post(
         try:
             chantier_ids = [int(id) for id in request.target_chantier_ids] if request.target_chantier_ids else None
             user_ids = [int(id) for id in request.target_utilisateur_ids] if request.target_utilisateur_ids else None
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Les IDs doivent être des nombres valides",

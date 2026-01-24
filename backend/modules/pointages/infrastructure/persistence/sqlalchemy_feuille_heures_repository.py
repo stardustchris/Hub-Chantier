@@ -1,6 +1,6 @@
 """Implémentation SQLAlchemy du FeuilleHeuresRepository."""
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Optional, List, Tuple
 
 from sqlalchemy.orm import Session

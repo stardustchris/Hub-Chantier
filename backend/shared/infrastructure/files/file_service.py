@@ -1,11 +1,9 @@
 """Service de gestion des fichiers uploadés."""
 
-import os
 import uuid
-import hashlib
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 from PIL import Image
 import io
 

@@ -12,7 +12,6 @@ from modules.planning.application.use_cases.duplicate_affectations import (
 )
 from modules.planning.application.use_cases.exceptions import (
     AffectationConflictError,
-    NoAffectationsToDuplicateError,
 )
 from modules.planning.application.dtos import DuplicateAffectationsDTO
 

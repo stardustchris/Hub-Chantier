@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional
 
 from ..value_objects import Priorite, StatutSignalement
 

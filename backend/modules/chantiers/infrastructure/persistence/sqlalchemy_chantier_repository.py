@@ -18,7 +18,7 @@ from ...domain.value_objects import (
     StatutChantierEnum,
 )
 from .chantier_model import ChantierModel
-from .contact_chantier_model import ContactChantierModel
+from .chantier_responsable_model import ChantierConducteurModel, ChantierChefModel
 
 
 class SQLAlchemyChantierRepository(ChantierRepository):
@@ -137,6 +137,14 @@ class SQLAlchemyChantierRepository(ChantierRepository):
 
         self.session.commit()
         self.session.refresh(model)
+
+        # Synchroniser les tables de jointure avec les champs JSON
+        self.sync_responsables(
+            model.id,
+            list(chantier.conducteur_ids),
+            list(chantier.chef_chantier_ids),
+        )
+
         return self._to_entity(model)
 
     def delete(self, chantier_id: int) -> bool:
@@ -247,66 +255,147 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         self, conducteur_id: int, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers d'un conducteur (excluant les supprimés).
+        Trouve les chantiers d'un conducteur (excluant les supprimes).
+
+        Utilise une requete SQL avec JOIN sur la table de jointure
+        pour des performances optimales (evite le N+1).
 
         Args:
             conducteur_id: ID du conducteur.
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités Chantier du conducteur.
+            Liste des entites Chantier du conducteur.
         """
-        # Note: Pour PostgreSQL, on utiliserait l'opérateur JSON contains
-        # Pour SQLite, on fait une recherche dans le JSON sérialisé
-        models = self.session.query(ChantierModel).filter(self._not_deleted()).all()
-        filtered = [
-            m for m in models if conducteur_id in (m.conducteur_ids or [])
-        ]
-        return [self._to_entity(m) for m in filtered[skip : skip + limit]]
+        # Requete optimisee via table de jointure
+        models = (
+            self.session.query(ChantierModel)
+            .join(
+                ChantierConducteurModel,
+                ChantierModel.id == ChantierConducteurModel.chantier_id,
+            )
+            .filter(ChantierConducteurModel.user_id == conducteur_id)
+            .filter(self._not_deleted())
+            .order_by(ChantierModel.code)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return [self._to_entity(m) for m in models]
 
     def find_by_chef_chantier(
         self, chef_id: int, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers d'un chef de chantier (excluant les supprimés).
+        Trouve les chantiers d'un chef de chantier (excluant les supprimes).
+
+        Utilise une requete SQL avec JOIN sur la table de jointure
+        pour des performances optimales (evite le N+1).
 
         Args:
             chef_id: ID du chef de chantier.
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités Chantier du chef.
+            Liste des entites Chantier du chef.
         """
-        models = self.session.query(ChantierModel).filter(self._not_deleted()).all()
-        filtered = [
-            m for m in models if chef_id in (m.chef_chantier_ids or [])
-        ]
-        return [self._to_entity(m) for m in filtered[skip : skip + limit]]
+        # Requete optimisee via table de jointure
+        models = (
+            self.session.query(ChantierModel)
+            .join(
+                ChantierChefModel,
+                ChantierModel.id == ChantierChefModel.chantier_id,
+            )
+            .filter(ChantierChefModel.user_id == chef_id)
+            .filter(self._not_deleted())
+            .order_by(ChantierModel.code)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return [self._to_entity(m) for m in models]
 
     def find_by_responsable(
         self, user_id: int, skip: int = 0, limit: int = 100
     ) -> List[Chantier]:
         """
-        Trouve les chantiers dont l'utilisateur est responsable (excluant les supprimés).
+        Trouve les chantiers dont l'utilisateur est responsable (excluant les supprimes).
+
+        Utilise une requete SQL avec UNION sur les tables de jointure
+        pour des performances optimales (evite le N+1).
 
         Args:
             user_id: ID de l'utilisateur.
-            skip: Nombre d'éléments à sauter.
-            limit: Nombre maximum à retourner.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum a retourner.
 
         Returns:
-            Liste des entités Chantier de l'utilisateur.
+            Liste des entites Chantier de l'utilisateur.
         """
-        models = self.session.query(ChantierModel).filter(self._not_deleted()).all()
-        filtered = [
-            m
-            for m in models
-            if user_id in (m.conducteur_ids or [])
-            or user_id in (m.chef_chantier_ids or [])
-        ]
-        return [self._to_entity(m) for m in filtered[skip : skip + limit]]
+        from sqlalchemy import union, select
+
+        # Sous-requete pour les chantiers ou l'user est conducteur
+        conducteur_ids = (
+            select(ChantierConducteurModel.chantier_id)
+            .where(ChantierConducteurModel.user_id == user_id)
+        )
+
+        # Sous-requete pour les chantiers ou l'user est chef
+        chef_ids = (
+            select(ChantierChefModel.chantier_id)
+            .where(ChantierChefModel.user_id == user_id)
+        )
+
+        # Union des deux ensembles
+        all_chantier_ids = union(conducteur_ids, chef_ids).subquery()
+
+        # Requete finale avec les chantiers
+        models = (
+            self.session.query(ChantierModel)
+            .filter(ChantierModel.id.in_(select(all_chantier_ids)))
+            .filter(self._not_deleted())
+            .order_by(ChantierModel.code)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return [self._to_entity(m) for m in models]
+
+    def sync_responsables(self, chantier_id: int, conducteur_ids: List[int], chef_ids: List[int]) -> None:
+        """
+        Synchronise les tables de jointure avec les listes de responsables.
+
+        Cette methode doit etre appelee apres save() pour maintenir
+        les tables de jointure a jour avec les champs JSON legacy.
+
+        Args:
+            chantier_id: ID du chantier.
+            conducteur_ids: Liste des IDs de conducteurs.
+            chef_ids: Liste des IDs de chefs de chantier.
+        """
+        # Supprimer les anciennes associations
+        self.session.query(ChantierConducteurModel).filter(
+            ChantierConducteurModel.chantier_id == chantier_id
+        ).delete()
+        self.session.query(ChantierChefModel).filter(
+            ChantierChefModel.chantier_id == chantier_id
+        ).delete()
+
+        # Ajouter les nouvelles associations conducteurs
+        for user_id in conducteur_ids:
+            self.session.add(
+                ChantierConducteurModel(chantier_id=chantier_id, user_id=user_id)
+            )
+
+        # Ajouter les nouvelles associations chefs
+        for user_id in chef_ids:
+            self.session.add(
+                ChantierChefModel(chantier_id=chantier_id, user_id=user_id)
+            )
+
+        self.session.flush()
 
     def exists_by_code(self, code: CodeChantier) -> bool:
         """
@@ -406,6 +495,17 @@ class SQLAlchemyChantierRepository(ChantierRepository):
                 telephone=model.contact_telephone,
             )
 
+        # Lire depuis les tables de jointure (source de vérité)
+        # Fallback sur JSON si tables vides (données legacy)
+        conducteur_ids = [r.user_id for r in model.conducteurs_rel] if model.conducteurs_rel else []
+        chef_ids = [r.user_id for r in model.chefs_rel] if model.chefs_rel else []
+
+        # Fallback sur colonnes JSON si tables de jointure vides
+        if not conducteur_ids and model.conducteur_ids:
+            conducteur_ids = list(model.conducteur_ids)
+        if not chef_ids and model.chef_chantier_ids:
+            chef_ids = list(model.chef_chantier_ids)
+
         return Chantier(
             id=model.id,
             code=CodeChantier(model.code),
@@ -420,8 +520,8 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             heures_estimees=model.heures_estimees,
             date_debut=model.date_debut,
             date_fin=model.date_fin,
-            conducteur_ids=list(model.conducteur_ids or []),
-            chef_chantier_ids=list(model.chef_chantier_ids or []),
+            conducteur_ids=conducteur_ids,
+            chef_chantier_ids=chef_ids,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )

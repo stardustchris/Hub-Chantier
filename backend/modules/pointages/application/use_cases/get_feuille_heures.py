@@ -1,11 +1,10 @@
 """Use Case: Récupérer une feuille d'heures."""
 
 from datetime import date, timedelta
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 
-from ...domain.entities import FeuilleHeures, Pointage
+from ...domain.entities import FeuilleHeures
 from ...domain.repositories import FeuilleHeuresRepository, PointageRepository
-from ...domain.value_objects import TypeVariablePaie
 from ..dtos import (
     FeuilleHeuresDTO,
     PointageJourDTO,
