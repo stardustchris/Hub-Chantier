@@ -55,7 +55,12 @@ class ChantierModel(Base):
     contact_telephone = Column(String(20), nullable=True)
 
     # Relation avec les phases (chantiers en plusieurs étapes)
-    phases = relationship("PhaseChantierModel", back_populates="chantier", cascade="all, delete-orphan", order_by="PhaseChantierModel.ordre")
+    phases = relationship(
+        "modules.chantiers.infrastructure.persistence.phase_chantier_model.PhaseChantierModel",
+        back_populates="chantier",
+        cascade="all, delete-orphan",
+        order_by="PhaseChantierModel.ordre"
+    )
 
     # Budget temps (CHT-18)
     heures_estimees = Column(Float, nullable=True)
@@ -76,7 +81,7 @@ class ChantierModel(Base):
 
     # Relations avec les contacts
     contacts = relationship(
-        "ContactChantierModel",
+        "modules.chantiers.infrastructure.persistence.contact_chantier_model.ContactChantierModel",
         back_populates="chantier",
         cascade="all, delete-orphan",
         order_by="ContactChantierModel.ordre"

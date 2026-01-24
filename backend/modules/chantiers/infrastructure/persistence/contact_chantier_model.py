@@ -35,7 +35,10 @@ class ContactChantierModel(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
     # Relation avec le chantier
-    chantier = relationship("ChantierModel", back_populates="contacts")
+    chantier = relationship(
+        "modules.chantiers.infrastructure.persistence.chantier_model.ChantierModel",
+        back_populates="contacts"
+    )
 
     def __repr__(self) -> str:
         return f"<ContactChantierModel(id={self.id}, nom={self.nom}, profession={self.profession})>"
