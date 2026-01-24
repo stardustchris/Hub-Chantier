@@ -6,7 +6,6 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
 import LoggerToastBridge from './components/LoggerToastBridge'
 import ProtectedRoute from './components/ProtectedRoute'
-import { Loader2 } from 'lucide-react'
 
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -20,11 +19,11 @@ const FeuillesHeuresPage = lazy(() => import('./pages/FeuillesHeuresPage'))
 const FormulairesPage = lazy(() => import('./pages/FormulairesPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 
-// Loading fallback component
+// CSS-only loading spinner (no lucide-react dependency)
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
     </div>
   )
 }

@@ -1,19 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { ToastProvider, useToast } from './ToastContext'
 
 // Test component that uses the hook
-function TestComponent() {
+function TestComponent({ onToastAdded }: { onToastAdded?: (id: string) => void }) {
   const { toasts, addToast, removeToast, showUndoToast } = useToast()
+
+  const handleAddSuccess = () => {
+    const id = addToast({ type: 'success', message: 'Success!' })
+    onToastAdded?.(id)
+  }
 
   return (
     <div>
       <div data-testid="toast-count">{toasts.length}</div>
-      <button
-        data-testid="add-success"
-        onClick={() => addToast({ type: 'success', message: 'Success!' })}
-      >
+      <button data-testid="add-success" onClick={handleAddSuccess}>
         Add Success
       </button>
       <button
@@ -27,18 +28,6 @@ function TestComponent() {
         onClick={() => addToast({ type: 'warning', message: 'Warning!' })}
       >
         Add Warning
-      </button>
-      <button
-        data-testid="add-with-action"
-        onClick={() =>
-          addToast({
-            type: 'info',
-            message: 'Info with action',
-            action: { label: 'Undo', onClick: vi.fn() },
-          })
-        }
-      >
-        Add With Action
       </button>
       <button
         data-testid="show-undo"
@@ -56,10 +45,7 @@ function TestComponent() {
       {toasts.map((toast) => (
         <div key={toast.id} data-testid={`toast-${toast.type}`}>
           {toast.message}
-          <button
-            data-testid={`remove-${toast.id}`}
-            onClick={() => removeToast(toast.id)}
-          >
+          <button data-testid={`remove-${toast.id}`} onClick={() => removeToast(toast.id)}>
             Remove
           </button>
         </div>
@@ -88,8 +74,7 @@ describe('ToastContext', () => {
     console.error = originalError
   })
 
-  it('should add toast', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('should add toast', () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -98,23 +83,26 @@ describe('ToastContext', () => {
 
     expect(screen.getByTestId('toast-count').textContent).toBe('0')
 
-    await user.click(screen.getByTestId('add-success'))
+    act(() => {
+      screen.getByTestId('add-success').click()
+    })
 
     expect(screen.getByTestId('toast-count').textContent).toBe('1')
     expect(screen.getByTestId('toast-success')).toHaveTextContent('Success!')
   })
 
-  it('should add different toast types', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('should add different toast types', () => {
     render(
       <ToastProvider>
         <TestComponent />
       </ToastProvider>
     )
 
-    await user.click(screen.getByTestId('add-success'))
-    await user.click(screen.getByTestId('add-error'))
-    await user.click(screen.getByTestId('add-warning'))
+    act(() => {
+      screen.getByTestId('add-success').click()
+      screen.getByTestId('add-error').click()
+      screen.getByTestId('add-warning').click()
+    })
 
     expect(screen.getByTestId('toast-count').textContent).toBe('3')
     expect(screen.getByTestId('toast-success')).toBeInTheDocument()
@@ -122,15 +110,16 @@ describe('ToastContext', () => {
     expect(screen.getByTestId('toast-warning')).toBeInTheDocument()
   })
 
-  it('should auto-remove toast after duration', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('should auto-remove toast after duration', () => {
     render(
       <ToastProvider>
         <TestComponent />
       </ToastProvider>
     )
 
-    await user.click(screen.getByTestId('add-success'))
+    act(() => {
+      screen.getByTestId('add-success').click()
+    })
     expect(screen.getByTestId('toast-count').textContent).toBe('1')
 
     // Fast-forward past the default 5 second duration
@@ -141,42 +130,44 @@ describe('ToastContext', () => {
     expect(screen.getByTestId('toast-count').textContent).toBe('0')
   })
 
-  it('should remove toast manually', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('should remove toast manually', () => {
     render(
       <ToastProvider>
         <TestComponent />
       </ToastProvider>
     )
 
-    await user.click(screen.getByTestId('add-success'))
+    act(() => {
+      screen.getByTestId('add-success').click()
+    })
     expect(screen.getByTestId('toast-count').textContent).toBe('1')
 
     const toastElement = screen.getByTestId('toast-success')
-    const toastId = toastElement.querySelector('button')?.getAttribute('data-testid')?.replace('remove-', '')
+    const removeButton = toastElement.querySelector('button')
 
-    if (toastId) {
-      await user.click(screen.getByTestId(`remove-${toastId}`))
-    }
+    act(() => {
+      removeButton?.click()
+    })
 
     expect(screen.getByTestId('toast-count').textContent).toBe('0')
   })
 
-  it('should show undo toast with action', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('should show undo toast with action', () => {
     render(
       <ToastProvider>
         <TestComponent />
       </ToastProvider>
     )
 
-    await user.click(screen.getByTestId('show-undo'))
+    act(() => {
+      screen.getByTestId('show-undo').click()
+    })
 
     expect(screen.getByTestId('toast-count').textContent).toBe('1')
     expect(screen.getByTestId('toast-warning')).toHaveTextContent('Item deleted')
   })
 
-  it('should execute confirm action after undo toast timeout', async () => {
+  it('should execute confirm action after undo toast timeout', () => {
     const onConfirm = vi.fn()
     const onUndo = vi.fn()
 
@@ -195,14 +186,15 @@ describe('ToastContext', () => {
       )
     }
 
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     render(
       <ToastProvider>
         <TestUndoComponent />
       </ToastProvider>
     )
 
-    await user.click(screen.getByTestId('show-undo'))
+    act(() => {
+      screen.getByTestId('show-undo').click()
+    })
 
     // Wait for the undo timeout
     act(() => {
@@ -213,31 +205,18 @@ describe('ToastContext', () => {
     expect(onUndo).not.toHaveBeenCalled()
   })
 
-  it('should return toast id when adding', async () => {
+  it('should return toast id when adding', () => {
     let returnedId: string | undefined
 
-    function TestIdComponent() {
-      const { addToast } = useToast()
-      return (
-        <button
-          data-testid="add"
-          onClick={() => {
-            returnedId = addToast({ type: 'success', message: 'Test' })
-          }}
-        >
-          Add
-        </button>
-      )
-    }
-
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     render(
       <ToastProvider>
-        <TestIdComponent />
+        <TestComponent onToastAdded={(id) => { returnedId = id }} />
       </ToastProvider>
     )
 
-    await user.click(screen.getByTestId('add'))
+    act(() => {
+      screen.getByTestId('add-success').click()
+    })
 
     expect(returnedId).toBeDefined()
     expect(typeof returnedId).toBe('string')
