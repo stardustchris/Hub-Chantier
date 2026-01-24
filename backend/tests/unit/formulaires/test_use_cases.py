@@ -1,8 +1,7 @@
 """Tests des Use Cases du module Formulaires."""
 
 import pytest
-from unittest.mock import Mock, MagicMock
-from datetime import datetime
+from unittest.mock import Mock
 
 from modules.formulaires.domain.entities import (
     TemplateFormulaire,
@@ -16,19 +15,14 @@ from modules.formulaires.domain.value_objects import (
 )
 from modules.formulaires.application.use_cases import (
     CreateTemplateUseCase,
-    UpdateTemplateUseCase,
-    DeleteTemplateUseCase,
     GetTemplateUseCase,
     ListTemplatesUseCase,
     CreateFormulaireUseCase,
     UpdateFormulaireUseCase,
     SubmitFormulaireUseCase,
-    GetFormulaireUseCase,
-    ListFormulairesUseCase,
 )
 from modules.formulaires.application.dtos import (
     CreateTemplateDTO,
-    UpdateTemplateDTO,
     ChampTemplateDTO,
     CreateFormulaireDTO,
     UpdateFormulaireDTO,

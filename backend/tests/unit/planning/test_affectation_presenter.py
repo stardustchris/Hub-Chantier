@@ -4,8 +4,7 @@ Teste l'enrichissement des affectations avec les infos utilisateur/chantier.
 """
 
 import pytest
-from datetime import date, datetime
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from modules.planning.adapters.presenters import AffectationPresenter
 from modules.planning.application.dtos import AffectationDTO

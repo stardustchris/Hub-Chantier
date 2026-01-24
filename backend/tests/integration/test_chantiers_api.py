@@ -4,7 +4,6 @@ Ces tests verifient les endpoints FastAPI avec une vraie DB SQLite.
 Selon CDC Section 4 - Gestion des Chantiers (CHT-01 a CHT-20).
 """
 
-import pytest
 
 
 class TestChantierCreate:

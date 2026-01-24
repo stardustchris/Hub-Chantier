@@ -1,8 +1,7 @@
 """Tests unitaires pour les Use Cases restants du module pointages."""
 
 import pytest
-from datetime import date, timedelta
-from decimal import Decimal
+from datetime import date
 from unittest.mock import Mock
 
 from modules.pointages.application.use_cases.create_variable_paie import (
@@ -18,7 +17,7 @@ from modules.pointages.application.dtos import (
     CreateVariablePaieDTO,
     FeuilleHeuresSearchDTO,
 )
-from modules.pointages.domain.entities import Pointage, FeuilleHeures
+from modules.pointages.domain.entities import Pointage
 from modules.pointages.domain.value_objects import StatutPointage, Duree
 from modules.pointages.application.ports import NullEventBus
 
@@ -201,7 +200,7 @@ class TestGetVueSemaineUseCase:
         self.pointage_repo.search.return_value = ([], 0)
 
         # Passer un jeudi
-        result = self.use_case.get_vue_chantiers(
+        self.use_case.get_vue_chantiers(
             semaine_debut=date(2026, 1, 22),  # Jeudi
         )
 
@@ -312,7 +311,7 @@ class TestListFeuillesHeuresUseCase:
             page_size=20,
         )
 
-        result = self.use_case.execute(dto)
+        self.use_case.execute(dto)
 
         call_kwargs = self.feuille_repo.search.call_args[1]
         assert call_kwargs["utilisateur_id"] == 1
@@ -325,7 +324,7 @@ class TestListFeuillesHeuresUseCase:
 
         dto = FeuilleHeuresSearchDTO(page=3, page_size=10)
 
-        result = self.use_case.execute(dto)
+        self.use_case.execute(dto)
 
         call_kwargs = self.feuille_repo.search.call_args[1]
         assert call_kwargs["skip"] == 20  # (3-1) * 10

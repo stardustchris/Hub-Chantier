@@ -2,7 +2,6 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import date
 
 from modules.chantiers.domain.entities import Chantier
 from modules.chantiers.domain.value_objects import CodeChantier, StatutChantier
@@ -46,7 +45,7 @@ class TestUpdateChantierUseCase:
 
         dto = UpdateChantierDTO(nom="Nouveau Nom")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -77,7 +76,7 @@ class TestUpdateChantierUseCase:
 
         dto = UpdateChantierDTO(latitude=48.8566, longitude=2.3522)
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -91,7 +90,7 @@ class TestUpdateChantierUseCase:
             contact_telephone="0612345678",
         )
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -105,7 +104,7 @@ class TestUpdateChantierUseCase:
             date_fin="2026-12-31",
         )
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -116,7 +115,7 @@ class TestUpdateChantierUseCase:
 
         dto = UpdateChantierDTO(heures_estimees=500.0)
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 

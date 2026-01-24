@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from ..entities import AutorisationDocument, TypeAutorisation
+from ..entities import AutorisationDocument
 
 
 class AutorisationRepository(ABC):

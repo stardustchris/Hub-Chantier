@@ -1,7 +1,7 @@
 """Interface VariablePaieRepository - Abstraction pour la persistence des variables de paie."""
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Tuple
+from typing import Optional, List
 from datetime import date
 
 from ..entities import VariablePaie

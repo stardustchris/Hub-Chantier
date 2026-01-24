@@ -1,7 +1,7 @@
 """Use Cases pour la gestion des signalements."""
 
 from datetime import datetime
-from typing import Optional, List, Callable
+from typing import Optional, Callable
 
 from ..dtos import (
     SignalementDTO,

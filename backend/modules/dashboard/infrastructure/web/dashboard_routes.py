@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
 
 from ...application.use_cases import (
     PublishPostUseCase,
@@ -201,7 +200,7 @@ def create_post(
         try:
             chantier_ids = [int(id) for id in request.target_chantier_ids] if request.target_chantier_ids else None
             user_ids = [int(id) for id in request.target_utilisateur_ids] if request.target_utilisateur_ids else None
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Les IDs doivent être des nombres valides",

@@ -19,8 +19,6 @@ from backend.modules.taches.application.dtos import (
     CreateFeuilleTacheDTO,
     ValidateFeuilleTacheDTO,
 )
-from backend.modules.taches.domain.entities import TemplateModele
-from backend.modules.taches.domain.value_objects import UniteMesure
 
 
 class TestCreateTacheUseCase:

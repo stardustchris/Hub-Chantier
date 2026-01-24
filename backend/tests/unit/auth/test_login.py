@@ -1,7 +1,7 @@
 """Tests unitaires pour LoginUseCase."""
 
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from datetime import datetime
 
 from modules.auth.domain.entities import User

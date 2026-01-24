@@ -1,11 +1,10 @@
 """Tests unitaires pour GetStatistiquesUseCase et GetSignalementsEnRetardUseCase."""
 
-import pytest
 from unittest.mock import Mock
 from datetime import datetime, timedelta
 
 from modules.signalements.domain.entities import Signalement
-from modules.signalements.domain.value_objects import Priorite, StatutSignalement
+from modules.signalements.domain.value_objects import Priorite
 from modules.signalements.domain.repositories import SignalementRepository, ReponseRepository
 from modules.signalements.application.use_cases import (
     GetStatistiquesUseCase,
@@ -176,7 +175,7 @@ class TestGetSignalementsEnRetardUseCase:
         self.mock_signalement_repo.find_en_retard.return_value = signalements
         self.mock_reponse_repo.count_by_signalement.return_value = 0
 
-        result = self.use_case.execute(chantier_id=5)
+        self.use_case.execute(chantier_id=5)
 
         self.mock_signalement_repo.find_en_retard.assert_called_once_with(5, 0, 100)
 

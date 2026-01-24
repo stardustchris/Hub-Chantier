@@ -7,7 +7,7 @@ from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository, FeuilleHeuresRepository
 from ...domain.value_objects import Duree
 from ...domain.events import PointageBulkCreatedEvent
-from ..dtos import BulkCreatePointageDTO, AffectationSourceDTO, PointageDTO
+from ..dtos import BulkCreatePointageDTO, PointageDTO
 from ..ports import EventBus, NullEventBus
 
 
@@ -51,7 +51,6 @@ class BulkCreateFromPlanningUseCase:
         Note:
             Les pointages existants ne sont pas recréés.
         """
-        pointages_crees = []
         pointages_to_save = []
 
         for affectation in dto.affectations:

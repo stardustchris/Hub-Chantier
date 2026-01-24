@@ -1,7 +1,6 @@
 """Use Case: Comparer les équipes (FDH-15)."""
 
 from datetime import date, timedelta
-from typing import List
 from collections import defaultdict
 
 from ...domain.repositories import PointageRepository

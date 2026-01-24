@@ -1,7 +1,6 @@
 """DTOs pour les médias."""
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
 
 from ...domain.entities import PostMedia

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from ...domain.entities import TemplateFormulaire, ChampTemplate
-from ...domain.value_objects import TypeChamp, CategorieFormulaire
+from ...domain.value_objects import TypeChamp
 
 
 @dataclass

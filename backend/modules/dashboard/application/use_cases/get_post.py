@@ -1,6 +1,6 @@
 """Use Case GetPost - Récupération d'un post avec ses détails."""
 
-from typing import Optional, List
+from typing import Optional
 
 from ...domain.repositories import (
     PostRepository,

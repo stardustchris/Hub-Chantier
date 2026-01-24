@@ -2,9 +2,8 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import datetime
 
-from modules.dashboard.domain.entities import Post, Comment
+from modules.dashboard.domain.entities import Post
 from modules.dashboard.domain.repositories import PostRepository, CommentRepository
 from modules.dashboard.domain.value_objects import PostTargeting
 from modules.dashboard.application.use_cases import AddCommentUseCase

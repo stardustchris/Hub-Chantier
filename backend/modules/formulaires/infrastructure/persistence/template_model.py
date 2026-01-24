@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON, ForeignKey
+from sqlalchemy import Integer, String, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from shared.infrastructure.database_base import Base

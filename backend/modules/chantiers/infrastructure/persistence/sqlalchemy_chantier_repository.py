@@ -18,7 +18,6 @@ from ...domain.value_objects import (
     StatutChantierEnum,
 )
 from .chantier_model import ChantierModel
-from .contact_chantier_model import ContactChantierModel
 from .chantier_responsable_model import ChantierConducteurModel, ChantierChefModel
 
 
@@ -335,7 +334,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         Returns:
             Liste des entites Chantier de l'utilisateur.
         """
-        from sqlalchemy import union, select, distinct
+        from sqlalchemy import union, select
 
         # Sous-requete pour les chantiers ou l'user est conducteur
         conducteur_ids = (

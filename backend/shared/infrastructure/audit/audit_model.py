@@ -1,7 +1,5 @@
 """Modèle SQLAlchemy pour l'audit trail."""
 
-from datetime import datetime
-from typing import Any, Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Index
 from sqlalchemy.sql import func

@@ -8,13 +8,12 @@ Ce fichier teste :
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, call
+from unittest.mock import Mock
 from datetime import date
 
 from modules.planning.domain.entities.affectation import Affectation
 from modules.planning.domain.repositories.affectation_repository import AffectationRepository
 from modules.planning.domain.value_objects.type_affectation import TypeAffectation
-from modules.planning.domain.value_objects.jour_semaine import JourSemaine
 from modules.planning.domain.events.affectation_events import (
     AffectationCreatedEvent,
     AffectationBulkCreatedEvent,

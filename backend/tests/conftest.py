@@ -11,7 +11,6 @@ os.environ.setdefault("DEBUG", "true")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
-from unittest.mock import Mock
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

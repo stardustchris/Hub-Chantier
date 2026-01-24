@@ -1,6 +1,5 @@
 """Use Case GetChantier - Récupération d'un chantier."""
 
-from typing import Optional
 
 from ...domain.repositories import ChantierRepository
 from ...domain.value_objects import CodeChantier

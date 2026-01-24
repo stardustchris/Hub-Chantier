@@ -1,7 +1,7 @@
 """DTOs pour les chantiers."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, date
+from datetime import datetime
 from typing import Optional, List
 
 from ...domain.entities import Chantier

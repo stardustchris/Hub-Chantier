@@ -1,6 +1,5 @@
 """Use Case GetCurrentUser - Récupération de l'utilisateur connecté."""
 
-from typing import Optional
 
 from ...domain.repositories import UserRepository
 from ..ports import TokenService

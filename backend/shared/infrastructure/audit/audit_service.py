@@ -1,7 +1,6 @@
 """Service d'audit pour tracer les actions sur les entités."""
 
-from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from sqlalchemy.orm import Session
 

@@ -1,6 +1,6 @@
 """Routes FastAPI pour l'upload de fichiers."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List

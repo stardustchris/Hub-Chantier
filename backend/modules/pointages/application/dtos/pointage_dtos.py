@@ -1,6 +1,6 @@
 """DTOs pour les pointages."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, date
 from typing import Optional, List
 from decimal import Decimal

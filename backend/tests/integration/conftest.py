@@ -15,7 +15,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from sqlalchemy import text
 
 from main import app
 from shared.infrastructure.database import get_db

@@ -1,15 +1,11 @@
 """Tests unitaires pour les Use Cases restants du module taches."""
 
 import pytest
-from datetime import date
 from unittest.mock import Mock
 
 # Imports directs pour éviter le chargement de l'infrastructure via __init__.py
 from modules.taches.domain.entities.tache import Tache
-from modules.taches.domain.entities.template_modele import TemplateModele
-from modules.taches.domain.entities.feuille_tache import FeuilleTache
 from modules.taches.domain.value_objects.statut_tache import StatutTache
-from modules.taches.domain.value_objects.unite_mesure import UniteMesure
 from modules.taches.domain.repositories.tache_repository import TacheRepository
 from modules.taches.domain.repositories.template_modele_repository import TemplateModeleRepository
 from modules.taches.domain.repositories.feuille_tache_repository import FeuilleTacheRepository
@@ -95,7 +91,7 @@ class TestCreateTemplateUseCase:
             ],
         )
 
-        result = self.use_case.execute(dto)
+        self.use_case.execute(dto)
 
         self.template_repo.save.assert_called_once()
 
@@ -115,7 +111,7 @@ class TestCreateTemplateUseCase:
             sous_taches=[],
         )
 
-        result = self.use_case.execute(dto)
+        self.use_case.execute(dto)
 
         self.template_repo.save.assert_called_once()
 
@@ -342,7 +338,7 @@ class TestListFeuillesTachesUseCase:
         self.feuille_repo.get_total_heures_tache.return_value = 0.0
         self.feuille_repo.get_total_quantite_tache.return_value = 0.0
 
-        result = self.use_case.execute_by_tache(
+        self.use_case.execute_by_tache(
             tache_id=10,
             page=3,
             size=10,
@@ -383,7 +379,7 @@ class TestListTemplatesUseCase:
         self.template_repo.search.return_value = ([], 0)
         self.template_repo.get_categories.return_value = []
 
-        result = self.use_case.execute(query="Coffrage")
+        self.use_case.execute(query="Coffrage")
 
         call_kwargs = self.template_repo.search.call_args[1]
         assert call_kwargs["query"] == "Coffrage"
@@ -393,7 +389,7 @@ class TestListTemplatesUseCase:
         self.template_repo.search.return_value = ([], 0)
         self.template_repo.get_categories.return_value = []
 
-        result = self.use_case.execute(categorie="Gros oeuvre")
+        self.use_case.execute(categorie="Gros oeuvre")
 
         call_kwargs = self.template_repo.search.call_args[1]
         assert call_kwargs["categorie"] == "Gros oeuvre"
@@ -403,7 +399,7 @@ class TestListTemplatesUseCase:
         self.template_repo.search.return_value = ([], 100)
         self.template_repo.get_categories.return_value = []
 
-        result = self.use_case.execute(page=3, size=10)
+        self.use_case.execute(page=3, size=10)
 
         call_kwargs = self.template_repo.search.call_args[1]
         assert call_kwargs["skip"] == 20
@@ -429,7 +425,7 @@ class TestReorderTachesUseCase:
         )
         self.tache_repo.find_by_id.return_value = tache
 
-        result = self.use_case.execute(tache_id=1, nouvel_ordre=5)
+        self.use_case.execute(tache_id=1, nouvel_ordre=5)
 
         self.tache_repo.reorder.assert_called_once_with(1, 5)
 
