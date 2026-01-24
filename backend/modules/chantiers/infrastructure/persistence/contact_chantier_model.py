@@ -28,6 +28,7 @@ class ContactChantierModel(Base):
     nom = Column(String(200), nullable=False)
     telephone = Column(String(20), nullable=False)
     profession = Column(String(100), nullable=True)
+    ordre = Column(Integer, nullable=False, default=0)  # Ordre d'affichage
 
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.now)

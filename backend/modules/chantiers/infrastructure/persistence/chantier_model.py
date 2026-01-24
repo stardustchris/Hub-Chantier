@@ -1,4 +1,4 @@
-"""Modèle SQLAlchemy pour Chantier et ContactChantier."""
+"""Modèle SQLAlchemy pour Chantier."""
 
 from datetime import datetime
 
@@ -8,31 +8,6 @@ from sqlalchemy.orm import relationship
 from shared.infrastructure.database_base import Base
 from shared.domain.value_objects import Couleur
 from ...domain.value_objects import StatutChantierEnum
-
-
-class ContactChantierModel(Base):
-    """
-    Modèle SQLAlchemy représentant un contact sur un chantier.
-
-    Selon CDC CHT-07: Contacts sur place avec nom, profession et téléphone.
-    """
-
-    __tablename__ = "contacts_chantier"
-    __table_args__ = {"extend_existing": True}
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    chantier_id = Column(Integer, ForeignKey("chantiers.id", ondelete="CASCADE"), nullable=False, index=True)
-    nom = Column(String(200), nullable=False)
-    profession = Column(String(100), nullable=True)
-    telephone = Column(String(20), nullable=True)
-    ordre = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
-
-    # Relation vers le chantier
-    chantier = relationship("ChantierModel", back_populates="contacts")
-
-    def __repr__(self) -> str:
-        return f"<ContactChantierModel(id={self.id}, nom={self.nom}, chantier_id={self.chantier_id})>"
 
 
 class ChantierModel(Base):
@@ -78,9 +53,6 @@ class ChantierModel(Base):
     # Contact sur place (CHT-07) - Legacy fields (kept for backward compatibility)
     contact_nom = Column(String(200), nullable=True)
     contact_telephone = Column(String(20), nullable=True)
-
-    # Relation avec les contacts (nouvelle structure multi-contacts)
-    contacts = relationship("ContactChantierModel", back_populates="chantier", cascade="all, delete-orphan")
 
     # Relation avec les phases (chantiers en plusieurs étapes)
     phases = relationship("PhaseChantierModel", back_populates="chantier", cascade="all, delete-orphan", order_by="PhaseChantierModel.ordre")
