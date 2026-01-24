@@ -1,5 +1,7 @@
 """Use Case Login - Authentification d'un utilisateur."""
 
+from typing import Callable, Optional
+
 from ...domain.repositories import UserRepository
 from ...domain.services import PasswordService
 from ...domain.value_objects import Email
@@ -42,7 +44,7 @@ class LoginUseCase:
         user_repo: UserRepository,
         password_service: PasswordService,
         token_service: TokenService,
-        event_publisher: callable = None,
+        event_publisher: Optional[Callable] = None,
     ):
         """
         Initialise le use case.

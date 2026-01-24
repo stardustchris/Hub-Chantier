@@ -92,5 +92,19 @@ class ChantierModel(Base):
     dossiers = relationship("DossierModel", back_populates="chantier", cascade="all, delete-orphan")
     documents = relationship("DocumentModel", back_populates="chantier", cascade="all, delete-orphan")
 
+    # Relations via tables de jointure (optimisation N+1)
+    conducteurs_rel = relationship(
+        "ChantierConducteurModel",
+        backref="chantier",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+    chefs_rel = relationship(
+        "ChantierChefModel",
+        backref="chantier",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+
     def __repr__(self) -> str:
         return f"<ChantierModel(id={self.id}, code={self.code}, nom={self.nom})>"

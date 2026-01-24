@@ -29,6 +29,9 @@ class Settings:
     # CORS
     CORS_ORIGINS: list = None
 
+    # Encryption (RGPD Art. 32)
+    ENCRYPTION_KEY: str = "dev-encryption-key-change-in-production-32ch"
+
     def __post_init__(self):
         """Charge les variables d'environnement."""
         self.APP_NAME = os.getenv("APP_NAME", self.APP_NAME)
@@ -41,6 +44,9 @@ class Settings:
 
         cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173")
         self.CORS_ORIGINS = [origin.strip() for origin in cors_origins.split(",")]
+
+        # Encryption key (must be 32 bytes for AES-256)
+        self.ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", self.ENCRYPTION_KEY)
 
 
 # Instance globale

@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from shared.infrastructure import settings, init_db
+from shared.infrastructure.web.security_middleware import SecurityHeadersMiddleware
 from modules.auth.infrastructure.web import router as auth_router, users_router
 from modules.chantiers.infrastructure.web import router as chantiers_router
 from modules.dashboard.infrastructure.web import dashboard_router
@@ -33,6 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Middleware de securite HTTP (OWASP headers)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 # Event handlers
