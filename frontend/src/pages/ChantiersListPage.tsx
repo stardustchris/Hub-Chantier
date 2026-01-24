@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import type { Chantier, ChantierStatut, ChantierCreate, ContactChantier } from '../types'
+import type { Chantier, ChantierStatut, ChantierCreate } from '../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../types'
 
 export default function ChantiersListPage() {
@@ -395,12 +395,6 @@ interface CreateChantierModalProps {
   usedColors: string[]
 }
 
-// Génère une couleur aléatoire parmi la palette
-const getRandomColor = () => {
-  const index = Math.floor(Math.random() * USER_COLORS.length)
-  return USER_COLORS[index].code
-}
-
 // Types pour les contacts et phases temporaires
 interface TempContact {
   nom: string
@@ -424,7 +418,7 @@ function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierMo
   const [formData, setFormData] = useState<ChantierCreate>({
     nom: '',
     adresse: '',
-    couleur: getRandomColor(),
+    couleur: getAvailableColor(),
   })
   const [contacts, setContacts] = useState<TempContact[]>([{ nom: '', telephone: '', profession: '' }])
   const [phases, setPhases] = useState<TempPhase[]>([])
