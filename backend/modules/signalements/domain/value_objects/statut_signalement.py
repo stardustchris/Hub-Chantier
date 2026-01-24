@@ -81,8 +81,8 @@ class StatutSignalement(Enum):
         Vérifie si la transition vers un nouveau statut est valide.
 
         Transitions autorisées:
-        - OUVERT -> EN_COURS, TRAITE, CLOTURE
-        - EN_COURS -> TRAITE, CLOTURE, OUVERT (réouverture)
+        - OUVERT -> EN_COURS, TRAITE (pas de clôture directe - doit traiter d'abord)
+        - EN_COURS -> TRAITE, OUVERT (réouverture)
         - TRAITE -> CLOTURE, OUVERT (réouverture)
         - CLOTURE -> OUVERT (réouverture exceptionnelle)
 
@@ -96,12 +96,12 @@ class StatutSignalement(Enum):
             StatutSignalement.OUVERT: [
                 StatutSignalement.EN_COURS,
                 StatutSignalement.TRAITE,
-                StatutSignalement.CLOTURE,
+                # Pas de CLOTURE directe - doit passer par TRAITE d'abord
             ],
             StatutSignalement.EN_COURS: [
                 StatutSignalement.OUVERT,
                 StatutSignalement.TRAITE,
-                StatutSignalement.CLOTURE,
+                # Pas de CLOTURE directe - doit passer par TRAITE d'abord
             ],
             StatutSignalement.TRAITE: [
                 StatutSignalement.OUVERT,

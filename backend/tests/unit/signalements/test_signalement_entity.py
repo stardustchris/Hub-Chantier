@@ -322,8 +322,8 @@ class TestSignalementWorkflow:
         assert signalement.statut == StatutSignalement.CLOTURE
         assert signalement.date_cloture is not None
 
-    def test_cloturer_from_ouvert_success(self):
-        """Test: peut clôturer directement depuis OUVERT."""
+    def test_cloturer_from_ouvert_raises_error(self):
+        """Test: NE peut PAS clôturer directement depuis OUVERT (doit passer par TRAITE)."""
         signalement = Signalement(
             chantier_id=1,
             titre="Test",
@@ -332,9 +332,8 @@ class TestSignalementWorkflow:
             statut=StatutSignalement.OUVERT,
         )
 
-        signalement.cloturer()
-
-        assert signalement.statut == StatutSignalement.CLOTURE
+        with pytest.raises(ValueError, match="Impossible de clôturer"):
+            signalement.cloturer()
 
     def test_reouvrir_success(self):
         """Test: réouvrir avec succès."""
