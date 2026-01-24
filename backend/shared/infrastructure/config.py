@@ -48,6 +48,42 @@ class Settings:
         # Encryption key (must be 32 bytes for AES-256)
         self.ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", self.ENCRYPTION_KEY)
 
+        # Validation sécurité en production (P0 - CRITIQUE)
+        self._validate_production_security()
+
+    def _validate_production_security(self) -> None:
+        """
+        Valide que les clés secrètes sont configurées en production.
+
+        Raises:
+            RuntimeError: Si les clés par défaut sont utilisées en production.
+        """
+        if not self.DEBUG:
+            if self.SECRET_KEY.startswith("dev-"):
+                raise RuntimeError(
+                    "ERREUR CRITIQUE DE SECURITE: SECRET_KEY ne doit pas utiliser "
+                    "la valeur par défaut en production. "
+                    "Définissez la variable d'environnement SECRET_KEY avec une "
+                    "clé sécurisée d'au moins 32 caractères."
+                )
+            if self.ENCRYPTION_KEY.startswith("dev-"):
+                raise RuntimeError(
+                    "ERREUR CRITIQUE DE SECURITE: ENCRYPTION_KEY ne doit pas utiliser "
+                    "la valeur par défaut en production. "
+                    "Définissez la variable d'environnement ENCRYPTION_KEY avec une "
+                    "clé de 32 caractères exactement pour le chiffrement AES-256."
+                )
+            if len(self.SECRET_KEY) < 32:
+                raise RuntimeError(
+                    "ERREUR CRITIQUE DE SECURITE: SECRET_KEY doit contenir au moins "
+                    "32 caractères pour assurer la sécurité des tokens JWT."
+                )
+            if len(self.ENCRYPTION_KEY) != 32:
+                raise RuntimeError(
+                    "ERREUR CRITIQUE DE SECURITE: ENCRYPTION_KEY doit contenir exactement "
+                    "32 caractères pour le chiffrement AES-256 (RGPD Art. 32)."
+                )
+
 
 # Instance globale
 settings = Settings()
