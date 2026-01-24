@@ -21,7 +21,7 @@ import {
   reouvrirSignalement,
   getPrioriteIcon,
   getStatutIcon,
-} from '../../api/signalements';
+} from '../../services/signalements';
 
 interface SignalementDetailProps {
   signalementId: number;

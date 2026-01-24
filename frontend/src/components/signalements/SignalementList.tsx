@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Signalement, Priorite, StatutSignalement } from '../../types/signalements';
-import { listSignalementsByChantier, searchSignalements } from '../../api/signalements';
+import { listSignalementsByChantier, searchSignalements } from '../../services/signalements';
 import SignalementCard from './SignalementCard';
 import SignalementFilters from './SignalementFilters';
 

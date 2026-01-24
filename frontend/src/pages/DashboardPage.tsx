@@ -28,8 +28,7 @@ import {
   Loader2,
   Camera,
 } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatRelative } from '../utils/dates'
 import type { Post, Chantier, TargetType } from '../types'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -370,7 +369,7 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
                 )}
               </div>
               <p className="text-xs text-gray-400">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr })}
+                {formatRelative(post.created_at)}
               </p>
             </div>
 
@@ -468,7 +467,7 @@ function PostCard({ post, currentUserId, isAdmin, onLike, onPin, onDelete }: Pos
                       <p className="text-sm text-gray-700">{comment.contenu}</p>
                     </div>
                     <span className="text-xs text-gray-500 ml-2">
-                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: fr })}
+                      {formatRelative(comment.created_at)}
                     </span>
                   </div>
                 </div>

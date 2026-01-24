@@ -17,8 +17,7 @@ import {
   Plus,
   GripVertical,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateDayMonthShort } from '../../utils/dates'
 import type { Tache, UniteMesure } from '../../types'
 import { UNITES_MESURE, COULEURS_PROGRESSION } from '../../types'
 
@@ -151,7 +150,7 @@ export default function TaskItem({
                 }`}
               >
                 <Calendar className="w-3 h-3" />
-                {format(new Date(tache.date_echeance), 'dd/MM', { locale: fr })}
+                {formatDateDayMonthShort(tache.date_echeance)}
               </span>
             )}
 

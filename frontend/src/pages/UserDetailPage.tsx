@@ -19,8 +19,7 @@ import {
   Briefcase,
   Hash,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateFull } from '../utils/dates'
 import type { User, UserUpdate, UserRole, Metier } from '../types'
 import { ROLES, METIERS, USER_COLORS } from '../types'
 
@@ -293,7 +292,7 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">Membre depuis</p>
                   <p className="font-medium">
-                    {format(new Date(user.created_at), 'dd MMMM yyyy', { locale: fr })}
+                    {formatDateFull(user.created_at)}
                   </p>
                 </div>
               </div>

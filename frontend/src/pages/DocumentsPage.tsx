@@ -5,7 +5,7 @@ import { DossierTree, DocumentList, FileUploadZone, DossierModal, DocumentPrevie
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { chantiersService } from '../services/chantiers'
-import * as documentsApi from '../api/documents'
+import * as documentsApi from '../services/documents'
 import type { Chantier } from '../types'
 import type { DossierTree as DossierTreeType, Document, Arborescence } from '../types/documents'
 import {

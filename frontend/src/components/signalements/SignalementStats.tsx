@@ -10,7 +10,7 @@ import {
   STATUT_LABELS,
   STATUT_BG_COLORS,
 } from '../../types/signalements';
-import { getStatistiques } from '../../api/signalements';
+import { getStatistiques } from '../../services/signalements';
 
 interface SignalementStatsProps {
   chantierId?: number;

@@ -8,6 +8,7 @@ import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
 import { TaskList } from '../components/taches'
+import { EditChantierModal, AddUserModal, UserRow } from '../components/chantiers'
 import {
   ArrowLeft,
   MapPin,
@@ -21,18 +22,15 @@ import {
   Lock,
   Loader2,
   Plus,
-  X,
   Navigation,
   ExternalLink,
   ListTodo,
   Info,
   Users,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import type { Chantier, ChantierUpdate, User, ContactChantier } from '../types'
-import { CHANTIER_STATUTS, ROLES, USER_COLORS } from '../types'
-import type { UserRole } from '../types'
+import { formatDateFull } from '../utils/dates'
+import type { Chantier, ChantierUpdate, User } from '../types'
+import { CHANTIER_STATUTS } from '../types'
 
 type TabType = 'infos' | 'taches' | 'equipe'
 
@@ -61,8 +59,12 @@ export default function ChantierDetailPage() {
   }, [id])
 
   const loadNavigation = async () => {
-    const ids = await chantiersService.getNavigationIds(id!)
-    setNavIds(ids)
+    try {
+      const ids = await chantiersService.getNavigationIds(id!)
+      setNavIds(ids)
+    } catch (error) {
+      console.error('Error loading navigation:', error)
+    }
   }
 
   const loadChantier = async () => {
@@ -72,6 +74,7 @@ export default function ChantierDetailPage() {
       setChantier(data)
     } catch (error) {
       console.error('Error loading chantier:', error)
+      addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
       navigate('/chantiers')
     } finally {
       setIsLoading(false)
@@ -91,6 +94,7 @@ export default function ChantierDetailPage() {
       setAvailableUsers(response.items.filter((u) => !existingIds.includes(u.id)))
     } catch (error) {
       console.error('Error loading users:', error)
+      addToast({ message: 'Erreur lors du chargement des utilisateurs', type: 'error' })
     }
   }
 
@@ -99,8 +103,10 @@ export default function ChantierDetailPage() {
       const updated = await chantiersService.update(id!, data)
       setChantier(updated)
       setShowEditModal(false)
+      addToast({ message: 'Chantier mis a jour', type: 'success' })
     } catch (error) {
       console.error('Error updating chantier:', error)
+      addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
     }
   }
 
@@ -108,18 +114,14 @@ export default function ChantierDetailPage() {
     if (!chantier) return
 
     const chantierName = chantier.nom
-    // Navigate immediately for better UX
     navigate('/chantiers')
 
-    // Show undo toast - delete only happens after timeout
     showUndoToast(
       `Chantier "${chantierName}" supprime`,
-      // onUndo - user clicked "Annuler"
       () => {
         navigate(`/chantiers/${id}`)
         addToast({ message: 'Suppression annulee', type: 'success', duration: 3000 })
       },
-      // onConfirm - timeout elapsed, actually delete
       async () => {
         try {
           await chantiersService.delete(id!)
@@ -128,7 +130,7 @@ export default function ChantierDetailPage() {
           addToast({ message: 'Erreur lors de la suppression', type: 'error', duration: 5000 })
         }
       },
-      5000 // 5 seconds to undo
+      5000
     )
   }
 
@@ -147,8 +149,10 @@ export default function ChantierDetailPage() {
           break
       }
       setChantier(updated)
+      addToast({ message: 'Statut mis a jour', type: 'success' })
     } catch (error) {
       console.error('Error changing statut:', error)
+      addToast({ message: 'Erreur lors du changement de statut', type: 'error' })
     }
   }
 
@@ -164,20 +168,20 @@ export default function ChantierDetailPage() {
       }
       setChantier(updated)
       setShowAddUserModal(null)
+      addToast({ message: 'Utilisateur ajoute', type: 'success' })
     } catch (error) {
       console.error('Error adding user:', error)
+      addToast({ message: "Erreur lors de l'ajout", type: 'error' })
     }
   }
 
   const handleRemoveUser = (userId: string, type: 'conducteur' | 'chef') => {
     if (!chantier) return
 
-    // Find the user being removed
     const userList = type === 'conducteur' ? chantier.conducteurs : chantier.chefs
     const removedUser = userList.find((u) => u.id === userId)
     if (!removedUser) return
 
-    // Optimistic update - remove immediately from UI
     const updatedChantier = {
       ...chantier,
       conducteurs: type === 'conducteur'
@@ -189,15 +193,12 @@ export default function ChantierDetailPage() {
     }
     setChantier(updatedChantier)
 
-    // Show undo toast
     showUndoToast(
       `${removedUser.prenom} ${removedUser.nom} retire`,
-      // onUndo - restore user
       () => {
-        setChantier(chantier) // Restore original state
+        setChantier(chantier)
         addToast({ message: 'Retrait annule', type: 'success', duration: 3000 })
       },
-      // onConfirm - actually call API
       async () => {
         try {
           if (type === 'conducteur') {
@@ -207,7 +208,7 @@ export default function ChantierDetailPage() {
           }
         } catch (error) {
           console.error('Error removing user:', error)
-          setChantier(chantier) // Restore on error
+          setChantier(chantier)
           addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
         }
       },
@@ -230,7 +231,7 @@ export default function ChantierDetailPage() {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto">
-        {/* Back button + Navigation (CHT-14) */}
+        {/* Back button + Navigation */}
         <div className="flex items-center justify-between mb-4">
           <Link
             to="/chantiers"
@@ -334,8 +335,8 @@ export default function ChantierDetailPage() {
           )}
         </div>
 
-        {/* Onglets (TAC-01) */}
-        <div className="flex border-b mb-6 overflow-x-auto">
+        {/* Onglets */}
+        <div className="flex border-b mb-6 overflow-x-auto" role="tablist">
           <button
             onClick={() => setActiveTab('infos')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
@@ -343,6 +344,8 @@ export default function ChantierDetailPage() {
                 ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
+            role="tab"
+            aria-selected={activeTab === 'infos'}
           >
             <Info className="w-4 h-4" />
             Informations
@@ -354,6 +357,8 @@ export default function ChantierDetailPage() {
                 ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
+            role="tab"
+            aria-selected={activeTab === 'taches'}
           >
             <ListTodo className="w-4 h-4" />
             Taches
@@ -365,6 +370,8 @@ export default function ChantierDetailPage() {
                 ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
+            role="tab"
+            aria-selected={activeTab === 'equipe'}
           >
             <Users className="w-4 h-4" />
             Equipe
@@ -373,10 +380,8 @@ export default function ChantierDetailPage() {
 
         {/* Contenu selon l'onglet actif */}
         {activeTab === 'taches' ? (
-          /* Onglet Taches (TAC-01 à TAC-20) */
           <TaskList chantierId={parseInt(id!)} chantierNom={chantier.nom} />
         ) : activeTab === 'equipe' ? (
-          /* Onglet Equipe */
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-gray-900">Equipe</h2>
@@ -480,7 +485,7 @@ export default function ChantierDetailPage() {
                       <div>
                         <p className="text-gray-500">Date de debut</p>
                         <p className="font-medium">
-                          {format(new Date(chantier.date_debut_prevue), 'dd MMMM yyyy', { locale: fr })}
+                          {formatDateFull(chantier.date_debut_prevue)}
                         </p>
                       </div>
                     </div>
@@ -491,7 +496,7 @@ export default function ChantierDetailPage() {
                       <div>
                         <p className="text-gray-500">Date de fin prevue</p>
                         <p className="font-medium">
-                          {format(new Date(chantier.date_fin_prevue), 'dd MMMM yyyy', { locale: fr })}
+                          {formatDateFull(chantier.date_fin_prevue)}
                         </p>
                       </div>
                     </div>
@@ -521,18 +526,16 @@ export default function ChantierDetailPage() {
                 </div>
               )}
 
-              {/* Map / Navigation (CHT-08, CHT-09) */}
+              {/* Map / Navigation */}
               {chantier.latitude && chantier.longitude && (
                 <div className="card">
                   <h2 className="font-semibold text-gray-900 mb-4">Localisation</h2>
-                  {/* Mini carte interactive (CHT-09) */}
                   <MiniMap
                     latitude={chantier.latitude}
                     longitude={chantier.longitude}
                     height="h-40"
                     locationName={chantier.nom}
                   />
-                  {/* Boutons navigation GPS (CHT-08) */}
                   <div className="flex gap-2 mt-3">
                     <a
                       href={chantiersService.getGoogleMapsUrl(chantier.latitude, chantier.longitude)}
@@ -579,371 +582,5 @@ export default function ChantierDetailPage() {
         )}
       </div>
     </Layout>
-  )
-}
-
-interface UserRowProps {
-  user: User
-  canRemove: boolean
-  onRemove: () => void
-}
-
-function UserRow({ user, canRemove, onRemove }: UserRowProps) {
-  const roleInfo = ROLES[user.role as UserRole]
-
-  return (
-    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-      <div className="flex items-center gap-3">
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-          style={{ backgroundColor: user.couleur || '#3498DB' }}
-        >
-          {user.prenom?.[0]}
-          {user.nom?.[0]}
-        </div>
-        <div>
-          <p className="font-medium text-sm">
-            {user.prenom} {user.nom}
-          </p>
-          {roleInfo && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: roleInfo.color + '20', color: roleInfo.color }}
-            >
-              {roleInfo.label}
-            </span>
-          )}
-        </div>
-      </div>
-      {canRemove && (
-        <button
-          onClick={onRemove}
-          className="p-1 text-gray-400 hover:text-red-500"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  )
-}
-
-interface EditChantierModalProps {
-  chantier: Chantier
-  onClose: () => void
-  onSubmit: (data: ChantierUpdate) => void
-}
-
-function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalProps) {
-  const [formData, setFormData] = useState<ChantierUpdate>({
-    nom: chantier.nom,
-    adresse: chantier.adresse,
-    couleur: chantier.couleur,
-    statut: chantier.statut,
-    heures_estimees: chantier.heures_estimees,
-    date_debut_prevue: chantier.date_debut_prevue,
-    date_fin_prevue: chantier.date_fin_prevue,
-    description: chantier.description,
-  })
-
-  // Initialiser les contacts depuis les données existantes
-  const initialContacts: ContactChantier[] = chantier.contacts?.length
-    ? chantier.contacts
-    : chantier.contact_nom
-      ? [{ nom: chantier.contact_nom, profession: '', telephone: chantier.contact_telephone || '' }]
-      : [{ nom: '', profession: '', telephone: '' }]
-
-  const [contacts, setContacts] = useState<ContactChantier[]>(initialContacts)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const addContact = () => {
-    setContacts([...contacts, { nom: '', profession: '', telephone: '' }])
-  }
-
-  const removeContact = (index: number) => {
-    if (contacts.length > 1) {
-      setContacts(contacts.filter((_, i) => i !== index))
-    }
-  }
-
-  const updateContact = (index: number, field: keyof ContactChantier, value: string) => {
-    const updated = [...contacts]
-    updated[index] = { ...updated[index], [field]: value }
-    setContacts(updated)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      // Filtrer les contacts vides
-      const validContacts = contacts.filter(c => c.nom.trim())
-      const dataToSubmit = {
-        ...formData,
-        contacts: validContacts.length > 0 ? validContacts : undefined,
-        // Pour compatibilité avec l'ancien format
-        contact_nom: validContacts[0]?.nom || undefined,
-        contact_telephone: validContacts[0]?.telephone || undefined,
-      }
-      await onSubmit(dataToSubmit)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Modifier le chantier</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom du chantier
-            </label>
-            <input
-              type="text"
-              value={formData.nom || ''}
-              onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-              className="input"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Adresse
-            </label>
-            <textarea
-              value={formData.adresse || ''}
-              onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-              className="input"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Couleur
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {USER_COLORS.map((color) => (
-                <button
-                  key={color.code}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, couleur: color.code })}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    formData.couleur === color.code
-                      ? 'border-gray-900 scale-110'
-                      : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color.code }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Statut
-            </label>
-            <select
-              value={formData.statut || chantier.statut}
-              onChange={(e) => setFormData({ ...formData, statut: e.target.value as any })}
-              className="input"
-            >
-              {Object.entries(CHANTIER_STATUTS).map(([key, info]) => (
-                <option key={key} value={key}>
-                  {info.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Contacts dynamiques */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Contacts sur place
-              </label>
-              <button
-                type="button"
-                onClick={addContact}
-                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Ajouter
-              </button>
-            </div>
-            <div className="space-y-3">
-              {contacts.map((contact, index) => (
-                <div key={index} className="flex gap-2 items-start bg-gray-50 p-3 rounded-lg">
-                  <div className="flex-1 grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      value={contact.nom}
-                      onChange={(e) => updateContact(index, 'nom', e.target.value)}
-                      className="input"
-                      placeholder="Nom"
-                    />
-                    <input
-                      type="text"
-                      value={contact.profession || ''}
-                      onChange={(e) => updateContact(index, 'profession', e.target.value)}
-                      className="input"
-                      placeholder="Profession"
-                    />
-                    <input
-                      type="tel"
-                      value={contact.telephone || ''}
-                      onChange={(e) => updateContact(index, 'telephone', e.target.value)}
-                      className="input"
-                      placeholder="Telephone"
-                    />
-                  </div>
-                  {contacts.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeContact(index)}
-                      className="p-2 text-gray-400 hover:text-red-500"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date debut prevue
-              </label>
-              <input
-                type="date"
-                value={formData.date_debut_prevue || ''}
-                onChange={(e) => setFormData({ ...formData, date_debut_prevue: e.target.value })}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date fin prevue
-              </label>
-              <input
-                type="date"
-                value={formData.date_fin_prevue || ''}
-                onChange={(e) => setFormData({ ...formData, date_fin_prevue: e.target.value })}
-                className="input"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Heures estimees
-            </label>
-            <input
-              type="number"
-              value={formData.heures_estimees || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, heures_estimees: parseInt(e.target.value) || undefined })
-              }
-              className="input"
-              min={0}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="input"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 btn btn-outline">
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 btn btn-primary flex items-center justify-center gap-2"
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-interface AddUserModalProps {
-  type: 'conducteur' | 'chef'
-  users: User[]
-  onClose: () => void
-  onSelect: (userId: string) => void
-}
-
-function AddUserModal({ type, users, onClose, onSelect }: AddUserModalProps) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            Ajouter un {type === 'conducteur' ? 'conducteur' : 'chef de chantier'}
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-4">
-          {users.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              Aucun utilisateur disponible
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {users.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => onSelect(user.id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 text-left"
-                >
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                    style={{ backgroundColor: user.couleur || '#3498DB' }}
-                  >
-                    {user.prenom?.[0]}
-                    {user.nom?.[0]}
-                  </div>
-                  <div>
-                    <p className="font-medium">
-                      {user.prenom} {user.nom}
-                    </p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
   )
 }

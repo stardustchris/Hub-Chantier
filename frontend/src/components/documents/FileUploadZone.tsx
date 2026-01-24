@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { MAX_FILE_SIZE, MAX_FILES_UPLOAD, ACCEPTED_EXTENSIONS } from '../../types/documents';
-import { formatFileSize } from '../../api/documents';
+import { formatFileSize } from '../../services/documents';
 
 interface FileUploadZoneProps {
   onFilesSelected: (files: File[]) => void;

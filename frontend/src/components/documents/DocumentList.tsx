@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from 'react';
 import type { Document, TypeDocument } from '../../types/documents';
 import { TYPE_DOCUMENT_LABELS } from '../../types/documents';
-import { getDocumentIcon, downloadAndSaveZip } from '../../api/documents';
+import { getDocumentIcon, downloadAndSaveZip } from '../../services/documents';
 
 interface DocumentListProps {
   documents: Document[];

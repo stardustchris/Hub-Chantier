@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Document } from '../../types/documents';
-import { getDocumentPreviewUrl, getDocumentPreview, type DocumentPreview } from '../../api/documents';
+import { getDocumentPreviewUrl, getDocumentPreview, type DocumentPreview } from '../../services/documents';
 
 interface DocumentPreviewModalProps {
   document: Document | null;

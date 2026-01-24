@@ -17,14 +17,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Vérifier si un token existe au chargement
+    // sessionStorage est plus sécurisé que localStorage (non accessible après fermeture navigateur)
     const checkAuth = async () => {
-      const token = localStorage.getItem('access_token')
+      const token = sessionStorage.getItem('access_token')
       if (token) {
         try {
           const currentUser = await authService.getCurrentUser()
           setUser(currentUser)
         } catch {
-          localStorage.removeItem('access_token')
+          sessionStorage.removeItem('access_token')
         }
       }
       setIsLoading(false)
@@ -34,12 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await authService.login(email, password)
-    localStorage.setItem('access_token', response.access_token)
+    // sessionStorage: token supprimé à la fermeture du navigateur (plus sécurisé)
+    sessionStorage.setItem('access_token', response.access_token)
     setUser(response.user)
   }
 
   const logout = () => {
-    localStorage.removeItem('access_token')
+    sessionStorage.removeItem('access_token')
     setUser(null)
   }
 
