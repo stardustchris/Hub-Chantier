@@ -379,25 +379,25 @@ Le Planning de Charge est un tableau de bord strategique permettant de visualise
 
 ### 6.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| PDC-01 | Vue tabulaire | Chantiers en lignes, semaines en colonnes |
-| PDC-02 | Compteur chantiers | Badge indiquant le nombre total (ex: 107 Chantiers) |
-| PDC-03 | Barre de recherche | Filtrage dynamique par nom de chantier |
-| PDC-04 | Toggle mode Avance | Affichage des options avancees |
-| PDC-05 | Toggle Hrs / J/H | Basculer entre Heures et Jours/Homme |
-| PDC-06 | Navigation temporelle | < Aujourd'hui > pour defiler les semaines |
-| PDC-07 | Colonnes semaines | Format SXX - YYYY (ex: S30 - 2025) |
-| PDC-08 | Colonne Charge | Budget total d'heures prevu par chantier |
-| PDC-09 | Double colonne par semaine | Planifie (affecte) + Besoin (a couvrir) |
-| PDC-10 | Cellules Besoin colorees | Violet pour les besoins non couverts |
-| PDC-11 | Footer repliable | Indicateurs agreges en bas du tableau |
-| PDC-12 | Taux d'occupation | Pourcentage par semaine avec code couleur |
-| PDC-13 | Alerte surcharge | ⚠️ si taux >= 100% |
-| PDC-14 | A recruter | Nombre de personnes a embaucher par semaine |
-| PDC-15 | A placer | Personnes disponibles a affecter |
-| PDC-16 | Modal Planification besoins | Saisie detaillee par type/metier |
-| PDC-17 | Modal Details occupation | Taux par type avec code couleur |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| PDC-01 | Vue tabulaire | Chantiers en lignes, semaines en colonnes | ✅ |
+| PDC-02 | Compteur chantiers | Badge indiquant le nombre total (ex: 107 Chantiers) | ✅ |
+| PDC-03 | Barre de recherche | Filtrage dynamique par nom de chantier | ✅ |
+| PDC-04 | Toggle mode Avance | Affichage des options avancees | ✅ |
+| PDC-05 | Toggle Hrs / J/H | Basculer entre Heures et Jours/Homme | ✅ |
+| PDC-06 | Navigation temporelle | < Aujourd'hui > pour defiler les semaines | ✅ |
+| PDC-07 | Colonnes semaines | Format SXX - YYYY (ex: S30 - 2025) | ✅ |
+| PDC-08 | Colonne Charge | Budget total d'heures prevu par chantier | ✅ |
+| PDC-09 | Double colonne par semaine | Planifie (affecte) + Besoin (a couvrir) | ✅ |
+| PDC-10 | Cellules Besoin colorees | Violet pour les besoins non couverts | ✅ |
+| PDC-11 | Footer repliable | Indicateurs agreges en bas du tableau | ✅ |
+| PDC-12 | Taux d'occupation | Pourcentage par semaine avec code couleur | ✅ |
+| PDC-13 | Alerte surcharge | ⚠️ si taux >= 100% | ✅ |
+| PDC-14 | A recruter | Nombre de personnes a embaucher par semaine | ✅ |
+| PDC-15 | A placer | Personnes disponibles a affecter | ✅ |
+| PDC-16 | Modal Planification besoins | Saisie detaillee par type/metier | ✅ |
+| PDC-17 | Modal Details occupation | Taux par type avec code couleur | ✅ |
 
 ### 6.3 Modal - Planification des besoins
 
