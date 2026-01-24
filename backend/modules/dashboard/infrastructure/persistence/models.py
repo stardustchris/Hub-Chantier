@@ -32,7 +32,7 @@ class PostModel(Base):
     # Identifiant
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Auteur (référence vers users)
+    # Auteur (référence vers users - pas de FK pour découplage modules Clean Arch)
     author_id = Column(Integer, nullable=False, index=True)
 
     # Contenu
@@ -67,6 +67,18 @@ class PostModel(Base):
     likes = relationship("LikeModel", back_populates="post", cascade="all, delete-orphan")
     medias = relationship("PostMediaModel", back_populates="post", cascade="all, delete-orphan")
 
+    # Relations de ciblage (remplacent les colonnes CSV)
+    target_chantiers = relationship(
+        "PostTargetChantierModel",
+        cascade="all, delete-orphan",
+        lazy="selectin",  # Évite N+1 queries
+    )
+    target_users = relationship(
+        "PostTargetUserModel",
+        cascade="all, delete-orphan",
+        lazy="selectin",  # Évite N+1 queries
+    )
+
     # Index pour la recherche du feed
     __table_args__ = (
         Index("ix_posts_feed", "status", "created_at"),
@@ -86,8 +98,8 @@ class CommentModel(Base):
     __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False, index=True)
-    author_id = Column(Integer, nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_id = Column(Integer, nullable=False, index=True)  # Pas de FK - découplage modules
     content = Column(Text, nullable=False)
     is_deleted = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
@@ -112,8 +124,8 @@ class LikeModel(Base):
     __tablename__ = "likes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, nullable=False, index=True)  # Pas de FK - découplage modules
     created_at = Column(DateTime, nullable=False, default=datetime.now)
 
     # Relations
@@ -128,6 +140,54 @@ class LikeModel(Base):
         return f"<LikeModel(id={self.id}, post_id={self.post_id}, user_id={self.user_id})>"
 
 
+class PostTargetChantierModel(Base):
+    """
+    Table de jointure Post <-> Chantier pour le ciblage (FEED-03).
+
+    Remplace l'ancienne colonne CSV target_chantier_ids pour permettre
+    des requêtes SQL indexées et éviter les full table scans.
+    """
+
+    __tablename__ = "post_target_chantiers"
+    __table_args__ = (
+        UniqueConstraint("post_id", "chantier_id", name="uq_post_target_chantier"),
+        Index("ix_post_target_chantiers_chantier_id", "chantier_id"),
+        Index("ix_post_target_chantiers_post_id", "post_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(
+        Integer,
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    chantier_id = Column(Integer, nullable=False)  # Pas de FK pour découplage modules
+
+
+class PostTargetUserModel(Base):
+    """
+    Table de jointure Post <-> User pour le ciblage (FEED-03).
+
+    Remplace l'ancienne colonne CSV target_user_ids pour permettre
+    des requêtes SQL indexées et éviter les full table scans.
+    """
+
+    __tablename__ = "post_target_users"
+    __table_args__ = (
+        UniqueConstraint("post_id", "user_id", name="uq_post_target_user"),
+        Index("ix_post_target_users_user_id", "user_id"),
+        Index("ix_post_target_users_post_id", "post_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(
+        Integer,
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id = Column(Integer, nullable=False)  # Pas de FK pour découplage modules
+
+
 class PostMediaModel(Base):
     """
     Modèle SQLAlchemy pour les médias de posts.
@@ -138,7 +198,7 @@ class PostMediaModel(Base):
     __tablename__ = "post_medias"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
     media_type = Column(String(20), nullable=False, default=MediaType.IMAGE.value)
     file_url = Column(String(500), nullable=False)
     thumbnail_url = Column(String(500), nullable=True)  # FEED-13

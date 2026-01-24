@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from io import BytesIO
-from typing import Optional
 
 from ...domain.repositories import TacheRepository
 from ...domain.value_objects import CouleurProgression

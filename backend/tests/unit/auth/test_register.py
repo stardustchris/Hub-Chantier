@@ -2,10 +2,9 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import datetime
 
 from modules.auth.domain.entities import User
-from modules.auth.domain.value_objects import Email, PasswordHash, Role, TypeUtilisateur, Couleur
+from modules.auth.domain.value_objects import PasswordHash
 from modules.auth.domain.repositories import UserRepository
 from modules.auth.domain.services import PasswordService
 from modules.auth.application.ports import TokenService

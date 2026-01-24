@@ -2,9 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional
 
-from ..value_objects import StatutPointage
 
 
 @dataclass(frozen=True)

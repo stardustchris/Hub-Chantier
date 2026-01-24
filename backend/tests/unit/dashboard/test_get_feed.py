@@ -1,12 +1,11 @@
 """Tests unitaires pour GetFeedUseCase."""
 
-import pytest
 from unittest.mock import Mock
 from datetime import datetime
 
 from modules.dashboard.domain.entities import Post
 from modules.dashboard.domain.repositories import PostRepository, LikeRepository, CommentRepository
-from modules.dashboard.domain.value_objects import PostTargeting, PostStatus
+from modules.dashboard.domain.value_objects import PostTargeting
 from modules.dashboard.application.use_cases import GetFeedUseCase
 
 
@@ -81,7 +80,7 @@ class TestGetFeedUseCase:
         self.mock_post_repo.find_feed.return_value = self.test_posts
 
         # Act
-        result = self.use_case.execute(
+        self.use_case.execute(
             user_id=1,
             user_chantier_ids=[1, 2],
         )
@@ -124,7 +123,7 @@ class TestGetFeedUseCase:
         self.mock_post_repo.find_feed.return_value = []
 
         # Act
-        result = self.use_case.execute(
+        self.use_case.execute(
             user_id=1,
             include_archived=True,
         )

@@ -2,7 +2,6 @@
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -17,7 +16,7 @@ class Settings:
     # Application
     APP_NAME: str = "Hub Chantier"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False  # P2-1: False par défaut (sécurité)
 
     # Database
     DATABASE_URL: str = "sqlite:///./data/hub_chantier.db"
@@ -35,7 +34,7 @@ class Settings:
     def __post_init__(self):
         """Charge les variables d'environnement."""
         self.APP_NAME = os.getenv("APP_NAME", self.APP_NAME)
-        self.DEBUG = os.getenv("DEBUG", "true").lower() == "true"
+        self.DEBUG = os.getenv("DEBUG", "false").lower() == "true"  # P2-1: false par défaut
         self.DATABASE_URL = os.getenv("DATABASE_URL", self.DATABASE_URL)
         self.SECRET_KEY = os.getenv("SECRET_KEY", self.SECRET_KEY)
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(

@@ -1,10 +1,12 @@
 """Routes FastAPI pour l'authentification et gestion des utilisateurs."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
+
+from shared.infrastructure.rate_limiter import limiter
 
 from ...adapters.controllers import AuthController
 from ...application.use_cases import (
@@ -13,7 +15,6 @@ from ...application.use_cases import (
     EmailAlreadyExistsError,
     CodeAlreadyExistsError,
     WeakPasswordError,
-    InvalidTokenError,
     UserNotFoundError,
 )
 from .dependencies import get_auth_controller, get_current_user_id
@@ -31,14 +32,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 class RegisterRequest(BaseModel):
-    """Requête d'inscription avec tous les champs CDC."""
+    """Requête d'inscription avec tous les champs CDC.
+
+    Note: Le rôle par défaut est 'compagnon' (niveau le plus bas).
+    Les rôles supérieurs (chef_chantier, conducteur, admin) nécessitent
+    une création par un admin via l'endpoint /users.
+    """
 
     email: EmailStr
     password: str
     nom: str
     prenom: str
-    role: Optional[str] = None
-    type_utilisateur: Optional[str] = None
+    role: Optional[str] = "compagnon"  # Sécurité: rôle le plus bas par défaut
+    type_utilisateur: Optional[str] = "salarie"
     telephone: Optional[str] = None
     metier: Optional[str] = None
     code_utilisateur: Optional[str] = None
@@ -108,14 +114,19 @@ class AuthResponse(BaseModel):
 
 
 @router.post("/login", response_model=AuthResponse)
+@limiter.limit("5/minute")  # Protection brute force: 5 tentatives/minute par IP
 def login(
+    request: Request,  # Requis par slowapi
     form_data: OAuth2PasswordRequestForm = Depends(),
     controller: AuthController = Depends(get_auth_controller),
 ):
     """
     Authentifie un utilisateur et retourne un token JWT.
 
+    Rate limited: 5 requêtes par minute par IP pour protection brute force.
+
     Args:
+        request: Requête HTTP (pour rate limiting).
         form_data: Email (username) et mot de passe.
         controller: Controller d'authentification.
 
@@ -124,6 +135,7 @@ def login(
 
     Raises:
         HTTPException 401: Identifiants invalides ou compte désactivé.
+        HTTPException 429: Trop de tentatives (rate limited).
     """
     try:
         result = controller.login(form_data.username, form_data.password)

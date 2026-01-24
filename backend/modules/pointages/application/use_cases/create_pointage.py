@@ -1,11 +1,10 @@
 """Use Case: Créer un pointage."""
 
-from datetime import datetime
 from typing import Optional
 
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository, FeuilleHeuresRepository
-from ...domain.value_objects import Duree, StatutPointage
+from ...domain.value_objects import Duree
 from ...domain.events import PointageCreatedEvent
 from ..dtos import CreatePointageDTO, PointageDTO
 from ..ports import EventBus, NullEventBus

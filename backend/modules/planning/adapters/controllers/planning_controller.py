@@ -25,7 +25,6 @@ from .planning_schemas import (
     UpdateAffectationRequest,
     PlanningFiltersRequest,
     DuplicateAffectationsRequest,
-    AffectationResponse,
 )
 from ..presenters import AffectationPresenter
 

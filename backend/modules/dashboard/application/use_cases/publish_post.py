@@ -1,6 +1,6 @@
 """Use Case PublishPost - Publication d'un nouveau post."""
 
-from typing import Callable, Optional, List
+from typing import Callable, Optional
 
 from ...domain.entities import Post
 from ...domain.repositories import PostRepository, PostMediaRepository

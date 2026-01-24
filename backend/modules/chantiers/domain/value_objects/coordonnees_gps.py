@@ -1,7 +1,6 @@
 """Value Object CoordonneesGPS - Coordonnées géographiques d'un chantier."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)

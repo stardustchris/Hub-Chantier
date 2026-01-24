@@ -5,6 +5,17 @@ import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
 import LoggerToastBridge from './components/LoggerToastBridge'
+import LoginPage from './pages/LoginPage'
+import DashboardPage from './pages/DashboardPage'
+import ChantiersListPage from './pages/ChantiersListPage'
+import ChantierDetailPage from './pages/ChantierDetailPage'
+import UsersListPage from './pages/UsersListPage'
+import UserDetailPage from './pages/UserDetailPage'
+import PlanningPage from './pages/PlanningPage'
+import FeuillesHeuresPage from './pages/FeuillesHeuresPage'
+import FormulairesPage from './pages/FormulairesPage'
+import DocumentsPage from './pages/DocumentsPage'
+import LogistiquePage from './pages/LogistiquePage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Lazy load pages for code splitting
@@ -109,6 +120,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DocumentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/logistique"
+            element={
+              <ProtectedRoute>
+                <LogistiquePage />
               </ProtectedRoute>
             }
           />

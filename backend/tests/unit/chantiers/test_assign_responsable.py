@@ -37,7 +37,7 @@ class TestAssignResponsableUseCase:
 
         dto = AssignResponsableDTO(user_id=10, role_type="conducteur")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -48,7 +48,7 @@ class TestAssignResponsableUseCase:
 
         dto = AssignResponsableDTO(user_id=20, role_type="chef_chantier")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -59,7 +59,7 @@ class TestAssignResponsableUseCase:
 
         dto = AssignResponsableDTO(user_id=20, role_type="chef")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -88,7 +88,7 @@ class TestAssignResponsableUseCase:
         self.mock_chantier_repo.find_by_id.return_value = self.chantier
         self.mock_chantier_repo.save.return_value = self.chantier
 
-        result = self.use_case.assigner_conducteur(1, user_id=10)
+        self.use_case.assigner_conducteur(1, user_id=10)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -97,7 +97,7 @@ class TestAssignResponsableUseCase:
         self.mock_chantier_repo.find_by_id.return_value = self.chantier
         self.mock_chantier_repo.save.return_value = self.chantier
 
-        result = self.use_case.assigner_chef_chantier(1, user_id=20)
+        self.use_case.assigner_chef_chantier(1, user_id=20)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -106,7 +106,7 @@ class TestAssignResponsableUseCase:
         self.mock_chantier_repo.find_by_id.return_value = self.chantier
         self.mock_chantier_repo.save.return_value = self.chantier
 
-        result = self.use_case.retirer_conducteur(1, user_id=10)
+        self.use_case.retirer_conducteur(1, user_id=10)
 
         self.mock_chantier_repo.save.assert_called_once()
 
@@ -122,7 +122,7 @@ class TestAssignResponsableUseCase:
         self.mock_chantier_repo.find_by_id.return_value = self.chantier
         self.mock_chantier_repo.save.return_value = self.chantier
 
-        result = self.use_case.retirer_chef_chantier(1, user_id=20)
+        self.use_case.retirer_chef_chantier(1, user_id=20)
 
         self.mock_chantier_repo.save.assert_called_once()
 

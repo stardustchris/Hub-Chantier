@@ -1,6 +1,6 @@
 """DTO pour la creation d'une affectation."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from typing import Optional, List
 

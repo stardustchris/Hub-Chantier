@@ -15,8 +15,6 @@ from ...application.dtos import (
     CreateChantierDTO,
     UpdateChantierDTO,
     ChangeStatutDTO,
-    AssignResponsableDTO,
-    ContactDTO,
 )
 
 

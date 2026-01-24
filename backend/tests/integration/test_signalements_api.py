@@ -4,7 +4,6 @@ Ces tests verifient les endpoints FastAPI avec une vraie DB SQLite.
 Selon CDC Section 10 - Signalements (SIG-01 a SIG-20).
 """
 
-import pytest
 from datetime import datetime, timedelta
 
 

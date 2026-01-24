@@ -1,13 +1,11 @@
 """Tests des Entites du module Formulaires."""
 
 import pytest
-from datetime import datetime
 
 from modules.formulaires.domain.entities import (
     TemplateFormulaire,
     ChampTemplate,
     FormulaireRempli,
-    ChampRempli,
     PhotoFormulaire,
 )
 from modules.formulaires.domain.value_objects import (

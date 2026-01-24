@@ -1,7 +1,7 @@
 """Modèles SQLAlchemy pour le module Documents."""
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base

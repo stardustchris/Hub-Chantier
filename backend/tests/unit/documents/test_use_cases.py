@@ -1,8 +1,7 @@
 """Tests des Use Cases du module Documents."""
 
 import pytest
-from unittest.mock import Mock, MagicMock
-from datetime import datetime
+from unittest.mock import Mock
 from io import BytesIO
 
 from modules.documents.domain.entities import (

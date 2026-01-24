@@ -9,6 +9,7 @@ import {
   Clock,
   FileText,
   FolderOpen,
+  Truck,
   Settings,
   LogOut,
   Menu,
@@ -38,6 +39,7 @@ const navigation: NavItem[] = [
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
+  { name: 'Logistique', href: '/logistique', icon: Truck },
 ]
 
 export default function Layout({ children }: LayoutProps) {

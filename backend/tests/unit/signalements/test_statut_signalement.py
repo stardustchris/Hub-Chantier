@@ -62,11 +62,11 @@ class TestStatutSignalement:
             StatutSignalement.TRAITE
         ) is True
 
-    def test_transition_ouvert_vers_cloture(self):
-        """Test: OUVERT peut passer directement à CLOTURE."""
+    def test_transition_ouvert_vers_cloture_interdit(self):
+        """Test: OUVERT ne peut PAS passer directement à CLOTURE (doit passer par TRAITE)."""
         assert StatutSignalement.OUVERT.peut_transitionner_vers(
             StatutSignalement.CLOTURE
-        ) is True
+        ) is False
 
     def test_transition_en_cours_vers_traite(self):
         """Test: EN_COURS peut passer à TRAITE."""
@@ -74,11 +74,11 @@ class TestStatutSignalement:
             StatutSignalement.TRAITE
         ) is True
 
-    def test_transition_en_cours_vers_cloture(self):
-        """Test: EN_COURS peut passer à CLOTURE."""
+    def test_transition_en_cours_vers_cloture_interdit(self):
+        """Test: EN_COURS ne peut PAS passer directement à CLOTURE (doit passer par TRAITE)."""
         assert StatutSignalement.EN_COURS.peut_transitionner_vers(
             StatutSignalement.CLOTURE
-        ) is True
+        ) is False
 
     def test_transition_en_cours_vers_ouvert_reouverture(self):
         """Test: EN_COURS peut revenir à OUVERT (réouverture)."""

@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Optional, List, Tuple
 
 from ...domain.entities import Post
-from ...domain.value_objects import TargetType
 
 
 @dataclass(frozen=True)

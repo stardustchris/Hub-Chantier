@@ -17,7 +17,6 @@ from ...application.use_cases import (
     GetFeedUseCase,
     GetPostUseCase,
     DeletePostUseCase,
-    PinPostUseCase,
     AddCommentUseCase,
     AddLikeUseCase,
     RemoveLikeUseCase,

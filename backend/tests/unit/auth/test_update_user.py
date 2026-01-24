@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from datetime import datetime
 
 from modules.auth.domain.entities import User
-from modules.auth.domain.value_objects import Email, PasswordHash, Role, TypeUtilisateur
+from modules.auth.domain.value_objects import Email, PasswordHash, Role
 from modules.auth.domain.repositories import UserRepository
 from modules.auth.application.use_cases.update_user import (
     UpdateUserUseCase,
@@ -80,7 +80,7 @@ class TestUpdateUserUseCase:
 
         dto = UpdateUserDTO(code_utilisateur="U999")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_user_repo.exists_by_code.assert_called_once_with("U999")
         self.mock_user_repo.save.assert_called_once()
@@ -92,7 +92,7 @@ class TestUpdateUserUseCase:
 
         dto = UpdateUserDTO(role="chef_chantier")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_user_repo.save.assert_called_once()
 
@@ -103,7 +103,7 @@ class TestUpdateUserUseCase:
 
         dto = UpdateUserDTO(type_utilisateur="sous_traitant")
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_user_repo.save.assert_called_once()
 
@@ -117,7 +117,7 @@ class TestUpdateUserUseCase:
             contact_urgence_tel="0612345678",
         )
 
-        result = self.use_case.execute(1, dto)
+        self.use_case.execute(1, dto)
 
         self.mock_user_repo.save.assert_called_once()
 

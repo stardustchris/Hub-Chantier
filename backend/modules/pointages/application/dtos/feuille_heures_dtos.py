@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional, List, Dict
-from decimal import Decimal
 
 
 @dataclass

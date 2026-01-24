@@ -1,8 +1,6 @@
 """Tests unitaires pour ListUsersUseCase et GetUserByIdUseCase."""
 
-import pytest
 from unittest.mock import Mock
-from datetime import datetime
 
 from modules.auth.domain.entities import User
 from modules.auth.domain.value_objects import Email, PasswordHash, Role, TypeUtilisateur
@@ -68,7 +66,7 @@ class TestListUsersUseCase:
         """Test: filtre par type utilisateur."""
         self.mock_user_repo.search.return_value = ([], 0)
 
-        result = self.use_case.execute(type_utilisateur="sous_traitant")
+        self.use_case.execute(type_utilisateur="sous_traitant")
 
         call_kwargs = self.mock_user_repo.search.call_args[1]
         assert call_kwargs["type_utilisateur"] == TypeUtilisateur.SOUS_TRAITANT
@@ -77,7 +75,7 @@ class TestListUsersUseCase:
         """Test: filtre actifs uniquement."""
         self.mock_user_repo.search.return_value = (self.users, 2)
 
-        result = self.use_case.execute(active_only=True)
+        self.use_case.execute(active_only=True)
 
         call_kwargs = self.mock_user_repo.search.call_args[1]
         assert call_kwargs["active_only"] is True
@@ -86,7 +84,7 @@ class TestListUsersUseCase:
         """Test: recherche textuelle."""
         self.mock_user_repo.search.return_value = ([self.users[0]], 1)
 
-        result = self.use_case.execute(search="DUPONT")
+        self.use_case.execute(search="DUPONT")
 
         call_kwargs = self.mock_user_repo.search.call_args[1]
         assert call_kwargs["query"] == "DUPONT"

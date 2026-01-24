@@ -1,7 +1,7 @@
 """DTOs pour les feuilles de taches."""
 
-from dataclasses import dataclass, field
-from datetime import datetime, date
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional, List
 
 from ...domain.entities import FeuilleTache

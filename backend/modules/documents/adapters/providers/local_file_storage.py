@@ -2,7 +2,6 @@
 
 import io
 import logging
-import os
 import shutil
 import zipfile
 from typing import BinaryIO, Optional

@@ -1,7 +1,6 @@
 """SQLAlchemy Model pour les taches."""
 
-from datetime import datetime, date
-from typing import Optional, List
+from datetime import datetime
 
 from sqlalchemy import (
     Column,
@@ -9,16 +8,14 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-    Boolean,
     DateTime,
     Date,
-    Enum,
     ForeignKey,
 )
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
-from ...domain.value_objects import StatutTache, UniteMesure
+from ...domain.value_objects import StatutTache
 
 
 class TacheModel(Base):
@@ -33,10 +30,11 @@ class TacheModel(Base):
     __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    # Pas de FK vers chantiers - découplage modules Clean Architecture
     chantier_id = Column(Integer, nullable=False, index=True)
     titre = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    parent_id = Column(Integer, ForeignKey("taches.id"), nullable=True, index=True)
+    parent_id = Column(Integer, ForeignKey("taches.id", ondelete="SET NULL"), nullable=True, index=True)
     ordre = Column(Integer, nullable=False, default=0)
     statut = Column(String(20), nullable=False, default=StatutTache.A_FAIRE.value)
     date_echeance = Column(Date, nullable=True)

@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from datetime import datetime
 
 from modules.signalements.domain.entities import Signalement
-from modules.signalements.domain.value_objects import Priorite, StatutSignalement
+from modules.signalements.domain.value_objects import Priorite
 from modules.signalements.domain.repositories import SignalementRepository, ReponseRepository
 from modules.signalements.application.use_cases import (
     GetSignalementUseCase,

@@ -10,8 +10,6 @@ from sqlalchemy.orm import Session
 from shared.infrastructure.database import get_db
 from shared.infrastructure.web.dependencies import (
     get_current_user_id,
-    require_conducteur_or_admin,
-    require_chef_or_above,
 )
 from ..persistence import (
     SQLAlchemyPointageRepository,

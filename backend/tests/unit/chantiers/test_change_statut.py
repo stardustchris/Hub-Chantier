@@ -2,7 +2,6 @@
 
 import pytest
 from unittest.mock import Mock
-from datetime import datetime
 
 from modules.chantiers.domain.entities import Chantier
 from modules.chantiers.domain.value_objects import CodeChantier, StatutChantier
