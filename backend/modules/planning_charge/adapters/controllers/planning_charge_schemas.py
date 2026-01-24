@@ -144,7 +144,10 @@ class OccupationDetailsResponse(BaseModel):
 
 
 class ListeBesoinResponse(BaseModel):
-    """Schema pour la liste des besoins."""
+    """Schema pour la liste des besoins avec pagination."""
 
     items: List[BesoinChargeResponse]
     total: int
+    page: int = Field(1, description="Page courante")
+    page_size: int = Field(50, description="Nombre d'elements par page")
+    total_pages: int = Field(1, description="Nombre total de pages")
