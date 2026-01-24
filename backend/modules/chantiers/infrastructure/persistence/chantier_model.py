@@ -54,10 +54,10 @@ class ChantierModel(Base):
     contact_nom = Column(String(200), nullable=True)
     contact_telephone = Column(String(20), nullable=True)
 
-    # Relation avec les phases (chantiers en plusieurs étapes)
+    # Relation avec les phases (chantiers en plusieurs étapes) - utilise backref
     phases = relationship(
-        "modules.chantiers.infrastructure.persistence.phase_chantier_model.PhaseChantierModel",
-        back_populates="chantier",
+        "PhaseChantierModel",
+        backref="chantier",
         cascade="all, delete-orphan"
     )
 
@@ -78,10 +78,10 @@ class ChantierModel(Base):
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
 
-    # Relations avec les contacts
+    # Relations avec les contacts - utilise backref pour éviter la résolution bidirectionnelle
     contacts = relationship(
-        "modules.chantiers.infrastructure.persistence.contact_chantier_model.ContactChantierModel",
-        back_populates="chantier",
+        "ContactChantierModel",
+        backref="chantier",
         cascade="all, delete-orphan"
     )
 
