@@ -60,7 +60,7 @@ def init_db() -> None:
     # Import des modèles pour les enregistrer dans la Base partagée
     from modules.auth.infrastructure.persistence import UserModel  # noqa: F401
     from modules.dashboard.infrastructure.persistence import PostModel, CommentModel, LikeModel, PostMediaModel  # noqa: F401
-    from modules.chantiers.infrastructure.persistence import ChantierModel  # noqa: F401
+    from modules.chantiers.infrastructure.persistence import ChantierModel, ContactChantierModel, PhaseChantierModel  # noqa: F401
     from modules.pointages.infrastructure.persistence import PointageModel, FeuilleHeuresModel, VariablePaieModel  # noqa: F401
     from modules.taches.infrastructure.persistence import TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel  # noqa: F401
     from modules.formulaires.infrastructure.persistence import TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel, ChampRempliModel, PhotoFormulaireModel  # noqa: F401
