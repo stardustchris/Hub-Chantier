@@ -58,8 +58,7 @@ class ChantierModel(Base):
     phases = relationship(
         "modules.chantiers.infrastructure.persistence.phase_chantier_model.PhaseChantierModel",
         back_populates="chantier",
-        cascade="all, delete-orphan",
-        order_by="PhaseChantierModel.ordre"
+        cascade="all, delete-orphan"
     )
 
     # Budget temps (CHT-18)
@@ -83,8 +82,7 @@ class ChantierModel(Base):
     contacts = relationship(
         "modules.chantiers.infrastructure.persistence.contact_chantier_model.ContactChantierModel",
         back_populates="chantier",
-        cascade="all, delete-orphan",
-        order_by="ContactChantierModel.ordre"
+        cascade="all, delete-orphan"
     )
 
     # Relations avec le module Documents (GED)
