@@ -22,6 +22,7 @@ import {
   getPrioriteIcon,
   getStatutIcon,
 } from '../../services/signalements';
+import { formatDateDayMonthYearTime } from '../../utils/dates';
 
 interface SignalementDetailProps {
   signalementId: number;
@@ -72,17 +73,6 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const handleAddReponse = async () => {
     if (!newReponse.trim() || !signalement) return;
@@ -263,18 +253,18 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
           )}
           <div>
             <span className="text-gray-500">Créé le:</span>{' '}
-            <span className="text-gray-900">{formatDate(signalement.created_at)}</span>
+            <span className="text-gray-900">{formatDateDayMonthYearTime(signalement.created_at)}</span>
           </div>
           {signalement.date_traitement && (
             <div>
               <span className="text-gray-500">Traité le:</span>{' '}
-              <span className="text-gray-900">{formatDate(signalement.date_traitement)}</span>
+              <span className="text-gray-900">{formatDateDayMonthYearTime(signalement.date_traitement)}</span>
             </div>
           )}
           {signalement.date_cloture && (
             <div>
               <span className="text-gray-500">Clôturé le:</span>{' '}
-              <span className="text-gray-900">{formatDate(signalement.date_cloture)}</span>
+              <span className="text-gray-900">{formatDateDayMonthYearTime(signalement.date_cloture)}</span>
             </div>
           )}
         </div>
@@ -363,7 +353,7 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
                     <span className="text-sm font-medium text-gray-900">
                       {reponse.auteur_nom || `Utilisateur #${reponse.auteur_id}`}
                     </span>
-                    <span className="text-xs text-gray-500">{formatDate(reponse.created_at)}</span>
+                    <span className="text-xs text-gray-500">{formatDateDayMonthYearTime(reponse.created_at)}</span>
                   </div>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{reponse.contenu}</p>
                   {reponse.photo_url && (

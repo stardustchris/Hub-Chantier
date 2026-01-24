@@ -160,3 +160,26 @@ export function minutesToTime(totalMinutes: number): string {
   const minutes = totalMinutes % 60
   return formatDuration(hours, minutes)
 }
+
+/**
+ * Formate une date relative courte pour les feeds/posts
+ * - < 1 min: "A l'instant"
+ * - < 1h: "Il y a X min"
+ * - < 24h: "Il y a Xh"
+ * - < 7j: "Il y a Xj"
+ * - Plus ancien: date courte (ex: "24/01/2026")
+ */
+export function formatRelativeShort(date: Date | string): string {
+  const d = typeof date === 'string' ? parseISO(date) : date
+  const now = new Date()
+  const diffMs = now.getTime() - d.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMins < 1) return "A l'instant"
+  if (diffMins < 60) return `Il y a ${diffMins} min`
+  if (diffHours < 24) return `Il y a ${diffHours}h`
+  if (diffDays < 7) return `Il y a ${diffDays}j`
+  return formatDateShort(d)
+}
