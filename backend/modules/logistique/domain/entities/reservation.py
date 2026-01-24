@@ -63,6 +63,9 @@ class Reservation:
     validated_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    # H10: Soft delete fields
+    deleted_at: Optional[datetime] = None
+    deleted_by: Optional[int] = None
 
     def __post_init__(self) -> None:
         """Validation à la création."""
@@ -97,7 +100,17 @@ class Reservation:
     @property
     def est_active(self) -> bool:
         """Vérifie si la réservation occupe le créneau."""
-        return self.statut.est_active
+        return self.statut.est_active and not self.est_supprimee
+
+    @property
+    def est_supprimee(self) -> bool:
+        """Vérifie si la réservation a été supprimée (soft delete)."""
+        return self.deleted_at is not None
+
+    def supprimer(self, deleted_by: int) -> None:
+        """Marque la réservation comme supprimée (soft delete)."""
+        self.deleted_at = datetime.utcnow()
+        self.deleted_by = deleted_by
 
     @property
     def est_passee(self) -> bool:

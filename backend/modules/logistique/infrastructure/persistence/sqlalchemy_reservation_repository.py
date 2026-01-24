@@ -35,6 +35,9 @@ class SQLAlchemyReservationRepository(ReservationRepository):
             validated_at=model.validated_at,
             created_at=model.created_at,
             updated_at=model.updated_at,
+            # H10: Soft delete fields
+            deleted_at=model.deleted_at,
+            deleted_by=model.deleted_by,
         )
 
     def _to_model(self, entity: Reservation) -> ReservationModel:
@@ -84,10 +87,11 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         return self._to_entity(model)
 
     def find_by_id(self, reservation_id: int) -> Optional[Reservation]:
-        """Recherche une réservation par son ID."""
+        """Recherche une réservation par son ID (exclut les supprimées)."""
         model = (
             self._session.query(ReservationModel)
             .filter(ReservationModel.id == reservation_id)
+            .filter(ReservationModel.deleted_at.is_(None))
             .first()
         )
         return self._to_entity(model) if model else None
@@ -99,11 +103,12 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         date_fin: date,
         statuts: Optional[List[StatutReservation]] = None,
     ) -> List[Reservation]:
-        """Liste les réservations d'une ressource sur une période."""
+        """Liste les réservations d'une ressource sur une période (exclut les supprimées)."""
         query = self._session.query(ReservationModel).filter(
             ReservationModel.ressource_id == ressource_id,
             ReservationModel.date_reservation >= date_debut,
             ReservationModel.date_reservation <= date_fin,
+            ReservationModel.deleted_at.is_(None),  # H10
         )
 
         if statuts:
@@ -123,9 +128,10 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> List[Reservation]:
-        """Liste les réservations d'un chantier."""
+        """Liste les réservations d'un chantier (exclut les supprimées)."""
         query = self._session.query(ReservationModel).filter(
-            ReservationModel.chantier_id == chantier_id
+            ReservationModel.chantier_id == chantier_id,
+            ReservationModel.deleted_at.is_(None),  # H10
         )
 
         if statuts:
@@ -146,9 +152,10 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> List[Reservation]:
-        """Liste les réservations d'un demandeur."""
+        """Liste les réservations d'un demandeur (exclut les supprimées)."""
         query = self._session.query(ReservationModel).filter(
-            ReservationModel.demandeur_id == demandeur_id
+            ReservationModel.demandeur_id == demandeur_id,
+            ReservationModel.deleted_at.is_(None),  # H10
         )
 
         if statuts:
@@ -167,10 +174,13 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> List[Reservation]:
-        """Liste les réservations en attente de validation."""
+        """Liste les réservations en attente de validation (exclut les supprimées)."""
         query = (
             self._session.query(ReservationModel)
-            .filter(ReservationModel.statut == StatutReservation.EN_ATTENTE)
+            .filter(
+                ReservationModel.statut == StatutReservation.EN_ATTENTE,
+                ReservationModel.deleted_at.is_(None),  # H10
+            )
             .order_by(
                 ReservationModel.date_reservation,
                 ReservationModel.heure_debut,
@@ -182,7 +192,7 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         return [self._to_entity(model) for model in query.all()]
 
     def find_conflits(self, reservation: Reservation) -> List[Reservation]:
-        """Recherche les réservations en conflit.
+        """Recherche les réservations en conflit (exclut les supprimées).
 
         LOG-17: Conflit de réservation - Alerte si créneau déjà occupé.
 
@@ -198,6 +208,7 @@ class SQLAlchemyReservationRepository(ReservationRepository):
             ReservationModel.statut.in_(
                 [StatutReservation.EN_ATTENTE, StatutReservation.VALIDEE]
             ),
+            ReservationModel.deleted_at.is_(None),  # H10
         )
 
         # Exclure la réservation elle-même si elle a un ID
@@ -214,7 +225,7 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         return [self._to_entity(model) for model in query.all()]
 
     def find_a_rappeler_demain(self) -> List[Reservation]:
-        """Liste les réservations pour demain (pour rappel J-1).
+        """Liste les réservations pour demain (pour rappel J-1, exclut les supprimées).
 
         LOG-15: Rappel J-1 - Notification veille de réservation.
         """
@@ -225,6 +236,7 @@ class SQLAlchemyReservationRepository(ReservationRepository):
             .filter(
                 ReservationModel.date_reservation == demain,
                 ReservationModel.statut == StatutReservation.VALIDEE,
+                ReservationModel.deleted_at.is_(None),  # H10
             )
             .order_by(ReservationModel.heure_debut)
         )
@@ -237,13 +249,16 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> List[Reservation]:
-        """Retourne l'historique des réservations d'une ressource.
+        """Retourne l'historique des réservations d'une ressource (exclut les supprimées).
 
         LOG-18: Historique par ressource - Journal complet.
         """
         query = (
             self._session.query(ReservationModel)
-            .filter(ReservationModel.ressource_id == ressource_id)
+            .filter(
+                ReservationModel.ressource_id == ressource_id,
+                ReservationModel.deleted_at.is_(None),  # H10
+            )
             .order_by(
                 ReservationModel.date_reservation.desc(),
                 ReservationModel.heure_debut.desc(),
@@ -259,9 +274,10 @@ class SQLAlchemyReservationRepository(ReservationRepository):
         ressource_id: int,
         statuts: Optional[List[StatutReservation]] = None,
     ) -> int:
-        """Compte les réservations d'une ressource."""
+        """Compte les réservations d'une ressource (exclut les supprimées)."""
         query = self._session.query(ReservationModel).filter(
-            ReservationModel.ressource_id == ressource_id
+            ReservationModel.ressource_id == ressource_id,
+            ReservationModel.deleted_at.is_(None),  # H10
         )
 
         if statuts:
@@ -269,12 +285,29 @@ class SQLAlchemyReservationRepository(ReservationRepository):
 
         return query.count()
 
-    def delete(self, reservation_id: int) -> bool:
-        """Supprime une réservation."""
-        result = (
+    def count_en_attente(self) -> int:
+        """Compte le nombre total de réservations en attente (H11)."""
+        return (
+            self._session.query(ReservationModel)
+            .filter(
+                ReservationModel.statut == StatutReservation.EN_ATTENTE,
+                ReservationModel.deleted_at.is_(None),
+            )
+            .count()
+        )
+
+    def delete(self, reservation_id: int, deleted_by: Optional[int] = None) -> bool:
+        """Supprime une réservation (soft delete - H10)."""
+        model = (
             self._session.query(ReservationModel)
             .filter(ReservationModel.id == reservation_id)
-            .delete()
+            .filter(ReservationModel.deleted_at.is_(None))
+            .first()
         )
+        if not model:
+            return False
+
+        model.deleted_at = datetime.utcnow()
+        model.deleted_by = deleted_by
         self._session.flush()
-        return result > 0
+        return True

@@ -576,9 +576,12 @@ class ListReservationsEnAttenteUseCase:
                 )
             )
 
+        # H11: Use proper count instead of approximation
+        total = self._reservation_repository.count_en_attente()
+
         return ReservationListDTO(
             items=items,
-            total=len(items),  # Approximation, devrait compter séparément
+            total=total,
             limit=limit,
             offset=offset,
         )
