@@ -247,7 +247,11 @@ class SQLAlchemyUserRepository(UserRepository):
 
 ## Communication Inter-Modules
 
-**JAMAIS d'import direct entre modules.** Utiliser les **Domain Events**.
+**JAMAIS d'import direct entre modules.** Utiliser les **Domain Events** ou le **Service Partage EntityInfoService**.
+
+### Option 1 : Domain Events (communication asynchrone)
+
+Pour reagir a des evenements d'autres modules :
 
 ```python
 # ❌ INTERDIT - Couplage direct
@@ -267,6 +271,116 @@ def on_employe_cree(event: EmployeCreeEvent):
 
 EventBus.subscribe(EmployeCreeEvent, on_employe_cree)
 ```
+
+### Option 2 : EntityInfoService (lecture d'informations)
+
+Pour recuperer des informations de base d'autres modules (nom, couleur, etc.) :
+
+```python
+# ❌ INTERDIT - Import direct du repository d'un autre module
+from modules.auth.infrastructure.persistence import SQLAlchemyUserRepository
+from modules.chantiers.infrastructure.persistence import ChantierModel
+
+# ✅ CORRECT - Via le service partage EntityInfoService
+from shared.application.ports import EntityInfoService
+
+class GetPlanningUseCase:
+    def __init__(self, entity_info: EntityInfoService):
+        self.entity_info = entity_info
+
+    def execute(self, user_id: int):
+        # Recupere les infos sans import direct
+        user_info = self.entity_info.get_user_info(user_id)
+        if user_info:
+            print(f"Utilisateur: {user_info.nom}")
+```
+
+#### Structure du Service Partage
+
+```
+shared/
+├── application/
+│   ├── __init__.py
+│   └── ports/
+│       ├── __init__.py
+│       └── entity_info_service.py  # Interface abstraite
+└── infrastructure/
+    ├── __init__.py
+    └── entity_info_impl.py         # Implementation (imports centralises)
+```
+
+#### Interface EntityInfoService
+
+```python
+# shared/application/ports/entity_info_service.py
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Optional, List
+
+@dataclass(frozen=True)
+class UserBasicInfo:
+    id: int
+    nom: str
+    couleur: Optional[str] = None
+    metier: Optional[str] = None
+
+@dataclass(frozen=True)
+class ChantierBasicInfo:
+    id: int
+    nom: str
+    couleur: Optional[str] = None
+
+class EntityInfoService(ABC):
+    @abstractmethod
+    def get_user_info(self, user_id: int) -> Optional[UserBasicInfo]:
+        pass
+
+    @abstractmethod
+    def get_chantier_info(self, chantier_id: int) -> Optional[ChantierBasicInfo]:
+        pass
+
+    @abstractmethod
+    def get_active_user_ids(self) -> List[int]:
+        pass
+```
+
+#### Implementation (imports centralises)
+
+```python
+# shared/infrastructure/entity_info_impl.py
+# SEUL ENDROIT ou les imports inter-modules sont autorises
+
+class SQLAlchemyEntityInfoService(EntityInfoService):
+    def get_user_info(self, user_id: int) -> Optional[UserBasicInfo]:
+        # Import LAZY pour eviter les imports circulaires
+        from modules.auth.infrastructure.persistence import UserModel
+
+        user = self._session.query(UserModel).filter_by(id=user_id).first()
+        if user:
+            return UserBasicInfo(
+                id=user.id,
+                nom=f"{user.prenom} {user.nom}".strip(),
+                couleur=user.couleur,
+                metier=user.metier,
+            )
+        return None
+```
+
+### Quand utiliser quoi ?
+
+| Scenario | Solution |
+|----------|----------|
+| Notifier un autre module | Domain Events via EventBus |
+| Lire des infos de base (nom, couleur) | EntityInfoService |
+| Operation complexe cross-module | Creer un nouveau Use Case dans shared |
+
+### Compromis acceptes dans ce projet
+
+1. **ForeignKey inter-modules** : Les FK vers `users.id` et `chantiers.id` sont conservees pour l'integrite referentielle. C'est acceptable dans un monolithe.
+
+2. **Lazy imports** : Les imports dans `entity_info_impl.py` sont faits dans les methodes pour eviter les imports circulaires au demarrage.
+
+3. **Enrichissement dans Use Case** : Si un filtre metier necessite des infos d'autres modules (ex: filtre par metier), l'enrichissement peut rester dans le Use Case plutot que dans le Presenter.
 
 ## Testing
 
