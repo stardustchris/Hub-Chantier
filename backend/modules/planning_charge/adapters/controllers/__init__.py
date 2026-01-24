@@ -8,6 +8,7 @@ from .planning_charge_schemas import (
     PlanningChargeFiltersRequest,
     PlanningChargeResponse,
     OccupationDetailsResponse,
+    ListeBesoinResponse,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "PlanningChargeFiltersRequest",
     "PlanningChargeResponse",
     "OccupationDetailsResponse",
+    "ListeBesoinResponse",
 ]

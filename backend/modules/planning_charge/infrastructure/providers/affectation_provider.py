@@ -1,6 +1,6 @@
 """Provider pour integration avec le module planning."""
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
@@ -20,6 +20,8 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
 
     # Heures par jour de travail
     HEURES_PAR_JOUR = 7.0
+    # Heures par semaine
+    HEURES_PAR_SEMAINE = 35.0
 
     def __init__(self, session: Session):
         """
@@ -30,67 +32,137 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
         """
         self.session = session
 
-    def get_heures_planifiees_by_chantier_and_semaine(
+    # =========================================================================
+    # Implementation AffectationProvider (get_planning_charge)
+    # =========================================================================
+
+    def get_heures_planifiees_par_chantier_et_semaine(
         self,
-        chantier_id: int,
-        semaine: Semaine,
-    ) -> float:
+        chantier_ids: List[int],
+        semaine_debut: Semaine,
+        semaine_fin: Semaine,
+    ) -> Dict[Tuple[int, str], float]:
         """
-        Recupere les heures planifiees pour un chantier et une semaine.
+        Recupere les heures planifiees par chantier et semaine.
 
         Args:
-            chantier_id: ID du chantier.
-            semaine: La semaine.
+            chantier_ids: Liste des IDs de chantiers.
+            semaine_debut: Premiere semaine.
+            semaine_fin: Derniere semaine.
 
         Returns:
-            Total des heures planifiees.
+            Dict {(chantier_id, semaine_code): heures_planifiees}.
         """
+        if not chantier_ids:
+            return {}
+
         from modules.planning.infrastructure.persistence import AffectationModel
 
-        # Calculer les dates de debut et fin de semaine
-        date_debut, date_fin = semaine.dates_debut_fin()
+        date_debut, _ = semaine_debut.date_range()
+        _, date_fin = semaine_fin.date_range()
 
-        # Compter les affectations
-        count = self.session.query(func.count(AffectationModel.id)).filter(
-            AffectationModel.chantier_id == chantier_id,
-            AffectationModel.date >= date_debut,
-            AffectationModel.date <= date_fin,
-        ).scalar() or 0
-
-        # Chaque affectation = 1 jour = 7h par defaut
-        # TODO: Utiliser heure_debut/heure_fin si disponibles
-        return count * self.HEURES_PAR_JOUR
-
-    def get_heures_planifiees_by_semaine(
-        self,
-        semaine: Semaine,
-    ) -> Dict[int, float]:
-        """
-        Recupere les heures planifiees par chantier pour une semaine.
-
-        Args:
-            semaine: La semaine.
-
-        Returns:
-            Dict {chantier_id: heures_planifiees}.
-        """
-        from modules.planning.infrastructure.persistence import AffectationModel
-
-        date_debut, date_fin = semaine.dates_debut_fin()
-
-        # Grouper par chantier
+        # Grouper par chantier et date
         results = self.session.query(
             AffectationModel.chantier_id,
+            AffectationModel.date,
             func.count(AffectationModel.id),
         ).filter(
+            AffectationModel.chantier_id.in_(chantier_ids),
             AffectationModel.date >= date_debut,
             AffectationModel.date <= date_fin,
-        ).group_by(AffectationModel.chantier_id).all()
+        ).group_by(
+            AffectationModel.chantier_id,
+            AffectationModel.date,
+        ).all()
 
-        return {
-            chantier_id: count * self.HEURES_PAR_JOUR
-            for chantier_id, count in results
-        }
+        # Aggreger par semaine
+        heures_index: Dict[Tuple[int, str], float] = {}
+        for chantier_id, affectation_date, count in results:
+            semaine = Semaine.from_date(affectation_date)
+            key = (chantier_id, semaine.code)
+            heures = count * self.HEURES_PAR_JOUR
+            heures_index[key] = heures_index.get(key, 0.0) + heures
+
+        return heures_index
+
+    def get_capacite_par_semaine(
+        self,
+        semaine_debut: Semaine,
+        semaine_fin: Semaine,
+    ) -> Dict[str, float]:
+        """
+        Calcule la capacite disponible par semaine.
+
+        La capacite = nombre_utilisateurs_actifs * heures_travail_semaine.
+
+        Args:
+            semaine_debut: Premiere semaine.
+            semaine_fin: Derniere semaine.
+
+        Returns:
+            Dict {semaine_code: capacite_heures}.
+        """
+        from modules.auth.infrastructure.persistence import UserModel
+
+        # Compter les utilisateurs actifs
+        count_actifs = self.session.query(func.count(UserModel.id)).filter(
+            UserModel.is_active == True,
+        ).scalar() or 0
+
+        # Generer les semaines
+        semaines = self._generate_semaines(semaine_debut, semaine_fin)
+
+        # Capacite = nb utilisateurs * 35h pour chaque semaine
+        capacite = count_actifs * self.HEURES_PAR_SEMAINE
+
+        return {s.code: capacite for s in semaines}
+
+    def get_utilisateurs_non_planifies_par_semaine(
+        self,
+        semaine_debut: Semaine,
+        semaine_fin: Semaine,
+    ) -> Dict[str, int]:
+        """
+        Compte les utilisateurs non planifies par semaine (PDC-15).
+
+        Args:
+            semaine_debut: Premiere semaine.
+            semaine_fin: Derniere semaine.
+
+        Returns:
+            Dict {semaine_code: nombre_non_planifies}.
+        """
+        from modules.auth.infrastructure.persistence import UserModel
+        from modules.planning.infrastructure.persistence import AffectationModel
+
+        semaines = self._generate_semaines(semaine_debut, semaine_fin)
+
+        # Compter le total d'utilisateurs actifs
+        total_actifs = self.session.query(func.count(UserModel.id)).filter(
+            UserModel.is_active == True,
+        ).scalar() or 0
+
+        result = {}
+        for semaine in semaines:
+            date_debut, date_fin = semaine.date_range()
+
+            # Compter les utilisateurs ayant au moins une affectation cette semaine
+            utilisateurs_planifies = self.session.query(
+                func.count(func.distinct(AffectationModel.utilisateur_id))
+            ).filter(
+                AffectationModel.date >= date_debut,
+                AffectationModel.date <= date_fin,
+            ).scalar() or 0
+
+            # Non planifies = total - planifies
+            non_planifies = max(total_actifs - utilisateurs_planifies, 0)
+            result[semaine.code] = non_planifies
+
+        return result
+
+    # =========================================================================
+    # Implementation AffectationProviderForOccupation (get_occupation_details)
+    # =========================================================================
 
     def get_heures_planifiees_par_type_metier(
         self,
@@ -108,7 +180,7 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
         from modules.planning.infrastructure.persistence import AffectationModel
         from modules.auth.infrastructure.persistence import UserModel
 
-        date_debut, date_fin = semaine.dates_debut_fin()
+        date_debut, date_fin = semaine.date_range()
 
         # Joindre affectations avec users pour avoir le metier
         results = self.session.query(
@@ -122,7 +194,7 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
             AffectationModel.date <= date_fin,
         ).group_by(UserModel.metier).all()
 
-        heures_par_type = {}
+        heures_par_type: Dict[str, float] = {}
         for metier, count in results:
             # Mapper le metier vers le type_metier
             type_metier = self._map_metier_to_type(metier)
@@ -131,26 +203,22 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
 
         return heures_par_type
 
-    def get_heures_planifiees_total_semaine(self, semaine: Semaine) -> float:
-        """
-        Recupere le total des heures planifiees pour une semaine.
+    # =========================================================================
+    # Methodes utilitaires
+    # =========================================================================
 
-        Args:
-            semaine: La semaine.
-
-        Returns:
-            Total des heures.
-        """
-        from modules.planning.infrastructure.persistence import AffectationModel
-
-        date_debut, date_fin = semaine.dates_debut_fin()
-
-        count = self.session.query(func.count(AffectationModel.id)).filter(
-            AffectationModel.date >= date_debut,
-            AffectationModel.date <= date_fin,
-        ).scalar() or 0
-
-        return count * self.HEURES_PAR_JOUR
+    def _generate_semaines(
+        self,
+        debut: Semaine,
+        fin: Semaine,
+    ) -> List[Semaine]:
+        """Genere la liste des semaines entre debut et fin."""
+        semaines = []
+        current = debut
+        while current <= fin:
+            semaines.append(current)
+            current = current.next()
+        return semaines
 
     def _map_metier_to_type(self, metier: str) -> str:
         """
