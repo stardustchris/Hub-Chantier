@@ -198,8 +198,12 @@ class TestRegisterUseCase:
         with pytest.raises(ValueError):
             self.use_case.execute(dto)
 
-    def test_register_invalid_couleur(self):
-        """Test: échec si couleur non autorisée (hors palette 16 couleurs)."""
+    def test_register_any_valid_hex_couleur(self):
+        """Test: accepte toute couleur hexadécimale valide.
+
+        Note: La validation stricte de palette a été retirée de shared.Couleur
+        pour compatibilité inter-modules. Toute couleur hex valide est acceptée.
+        """
         self.mock_user_repo.save.side_effect = self._create_saved_user
 
         dto = RegisterDTO(
@@ -207,11 +211,12 @@ class TestRegisterUseCase:
             password="Password123!",
             nom="Dupont",
             prenom="Jean",
-            couleur="#000000",  # Noir - pas dans la palette
+            couleur="#000000",  # Noir - accepté car hex valide
         )
 
-        with pytest.raises(ValueError):
-            self.use_case.execute(dto)
+        # Ne doit plus lever d'exception - toute couleur hex valide est acceptée
+        result = self.use_case.execute(dto)
+        assert result.user.couleur == "#000000"
 
     def test_register_publishes_event(self):
         """Test: publication d'un event après inscription réussie."""
