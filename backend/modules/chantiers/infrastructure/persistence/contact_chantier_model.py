@@ -34,8 +34,7 @@ class ContactChantierModel(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
-    # Relation avec le chantier
-    chantier = relationship("ChantierModel", back_populates="contacts")
+    # Note: La relation avec ChantierModel est définie dans chantier_model.py via backref
 
     def __repr__(self) -> str:
         return f"<ContactChantierModel(id={self.id}, nom={self.nom}, profession={self.profession})>"

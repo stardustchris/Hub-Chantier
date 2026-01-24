@@ -54,8 +54,12 @@ class ChantierModel(Base):
     contact_nom = Column(String(200), nullable=True)
     contact_telephone = Column(String(20), nullable=True)
 
-    # Relation avec les phases (chantiers en plusieurs étapes)
-    phases = relationship("PhaseChantierModel", back_populates="chantier", cascade="all, delete-orphan", order_by="PhaseChantierModel.ordre")
+    # Relation avec les phases (chantiers en plusieurs étapes) - utilise backref
+    phases = relationship(
+        "PhaseChantierModel",
+        backref="chantier",
+        cascade="all, delete-orphan"
+    )
 
     # Budget temps (CHT-18)
     heures_estimees = Column(Float, nullable=True)
@@ -74,12 +78,11 @@ class ChantierModel(Base):
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
 
-    # Relations avec les contacts
+    # Relations avec les contacts - utilise backref pour éviter la résolution bidirectionnelle
     contacts = relationship(
         "ContactChantierModel",
-        back_populates="chantier",
-        cascade="all, delete-orphan",
-        order_by="ContactChantierModel.ordre"
+        backref="chantier",
+        cascade="all, delete-orphan"
     )
 
     # Relations avec le module Documents (GED)

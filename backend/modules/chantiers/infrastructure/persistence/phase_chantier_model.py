@@ -38,8 +38,7 @@ class PhaseChantierModel(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
-    # Relation avec le chantier
-    chantier = relationship("ChantierModel", back_populates="phases")
+    # Note: La relation avec ChantierModel est définie dans chantier_model.py via backref
 
     def __repr__(self) -> str:
         return f"<PhaseChantierModel(id={self.id}, nom={self.nom}, ordre={self.ordre})>"
