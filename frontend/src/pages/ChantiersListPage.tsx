@@ -13,6 +13,7 @@ import {
   Loader2,
   X,
   Calendar,
+  Trash2,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -74,8 +75,36 @@ export default function ChantiersListPage() {
     loadChantiers()
   }, [page, search, statutFilter])
 
-  const handleCreateChantier = async (data: ChantierCreate) => {
-    await chantiersService.create(data)
+  const handleCreateChantier = async (
+    data: ChantierCreate,
+    contacts: { nom: string; telephone: string; profession: string }[],
+    phases: { nom: string; date_debut: string; date_fin: string }[]
+  ) => {
+    // Créer le chantier
+    const chantier = await chantiersService.create(data)
+
+    // Créer les contacts (ignorer les contacts vides)
+    for (const contact of contacts) {
+      if (contact.nom && contact.telephone) {
+        await chantiersService.addContact(chantier.id, {
+          nom: contact.nom,
+          telephone: contact.telephone,
+          profession: contact.profession || undefined,
+        })
+      }
+    }
+
+    // Créer les phases (ignorer les phases vides)
+    for (const phase of phases) {
+      if (phase.nom) {
+        await chantiersService.addPhase(chantier.id, {
+          nom: phase.nom,
+          date_debut: phase.date_debut || undefined,
+          date_fin: phase.date_fin || undefined,
+        })
+      }
+    }
+
     setShowCreateModal(false)
     await loadAllChantiers()  // Recharger les compteurs
     await loadChantiers()
@@ -357,7 +386,11 @@ function ChantierCard({ chantier }: ChantierCardProps) {
 
 interface CreateChantierModalProps {
   onClose: () => void
-  onSubmit: (data: ChantierCreate) => void
+  onSubmit: (
+    data: ChantierCreate,
+    contacts: { nom: string; telephone: string; profession: string }[],
+    phases: { nom: string; date_debut: string; date_fin: string }[]
+  ) => void
 }
 
 // Génère une couleur aléatoire parmi la palette
@@ -366,14 +399,61 @@ const getRandomColor = () => {
   return USER_COLORS[index].code
 }
 
+// Types pour les contacts et phases temporaires
+interface TempContact {
+  nom: string
+  telephone: string
+  profession: string
+}
+
+interface TempPhase {
+  nom: string
+  date_debut: string
+  date_fin: string
+}
+
 function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
   const [formData, setFormData] = useState<ChantierCreate>({
     nom: '',
     adresse: '',
     couleur: getRandomColor(),
   })
+  const [contacts, setContacts] = useState<TempContact[]>([{ nom: '', telephone: '', profession: '' }])
+  const [phases, setPhases] = useState<TempPhase[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Gestion des contacts
+  const addContact = () => {
+    setContacts([...contacts, { nom: '', telephone: '', profession: '' }])
+  }
+
+  const removeContact = (index: number) => {
+    if (contacts.length > 1) {
+      setContacts(contacts.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateContact = (index: number, field: keyof TempContact, value: string) => {
+    const newContacts = [...contacts]
+    newContacts[index][field] = value
+    setContacts(newContacts)
+  }
+
+  // Gestion des phases
+  const addPhase = () => {
+    setPhases([...phases, { nom: '', date_debut: '', date_fin: '' }])
+  }
+
+  const removePhase = (index: number) => {
+    setPhases(phases.filter((_, i) => i !== index))
+  }
+
+  const updatePhase = (index: number, field: keyof TempPhase, value: string) => {
+    const newPhases = [...phases]
+    newPhases[index][field] = value
+    setPhases(newPhases)
+  }
 
   // Validation des dates
   const validateDates = (): boolean => {
@@ -397,7 +477,7 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
     setIsSubmitting(true)
     setError(null)
     try {
-      await onSubmit(formData)
+      await onSubmit(formData, contacts, phases)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Erreur lors de la création du chantier')
     } finally {
@@ -451,63 +531,152 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact nom
+          {/* Section Contacts */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Contacts sur le chantier
               </label>
-              <input
-                type="text"
-                value={formData.contact_nom || ''}
-                onChange={(e) => setFormData({ ...formData, contact_nom: e.target.value })}
-                className="input"
-                placeholder="Nom du contact"
-              />
+              <button
+                type="button"
+                onClick={addContact}
+                className="text-primary-600 hover:text-primary-700 text-sm flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact telephone
-              </label>
-              <input
-                type="tel"
-                value={formData.contact_telephone || ''}
-                onChange={(e) => setFormData({ ...formData, contact_telephone: e.target.value })}
-                className="input"
-                placeholder="06 12 34 56 78"
-              />
-            </div>
+            {contacts.map((contact, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={contact.nom}
+                  onChange={(e) => updateContact(index, 'nom', e.target.value)}
+                  className="input flex-1"
+                  placeholder="Nom"
+                />
+                <input
+                  type="tel"
+                  value={contact.telephone}
+                  onChange={(e) => updateContact(index, 'telephone', e.target.value)}
+                  className="input flex-1"
+                  placeholder="Téléphone"
+                />
+                <input
+                  type="text"
+                  value={contact.profession}
+                  onChange={(e) => updateContact(index, 'profession', e.target.value)}
+                  className="input flex-1"
+                  placeholder="Profession"
+                />
+                {contacts.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeContact(index)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date debut prevue
+          {/* Section Phases/Dates */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Phases du chantier (optionnel)
               </label>
-              <input
-                type="date"
-                value={formData.date_debut_prevue || ''}
-                onChange={(e) => {
-                  setFormData({ ...formData, date_debut_prevue: e.target.value })
-                  setError(null)
-                }}
-                className="input"
-              />
+              <button
+                type="button"
+                onClick={addPhase}
+                className="text-primary-600 hover:text-primary-700 text-sm flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter une phase
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date fin prevue
-              </label>
-              <input
-                type="date"
-                value={formData.date_fin_prevue || ''}
-                onChange={(e) => {
-                  setFormData({ ...formData, date_fin_prevue: e.target.value })
-                  setError(null)
-                }}
-                className="input"
-              />
-            </div>
+            {phases.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">Aucune phase définie. Ajoutez des phases si le chantier se fait en plusieurs étapes.</p>
+            ) : (
+              phases.map((phase, index) => (
+                <div key={index} className="border rounded-lg p-3 mb-2 bg-gray-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Phase {index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removePhase(index)}
+                      className="p-1 text-red-500 hover:bg-red-100 rounded"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={phase.nom}
+                    onChange={(e) => updatePhase(index, 'nom', e.target.value)}
+                    className="input w-full mb-2"
+                    placeholder="Nom de la phase (ex: Gros oeuvre)"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500">Début</label>
+                      <input
+                        type="date"
+                        value={phase.date_debut}
+                        onChange={(e) => updatePhase(index, 'date_debut', e.target.value)}
+                        className="input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Fin</label>
+                      <input
+                        type="date"
+                        value={phase.date_fin}
+                        onChange={(e) => updatePhase(index, 'date_fin', e.target.value)}
+                        className="input w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
+
+          {/* Dates globales du chantier (si pas de phases) */}
+          {phases.length === 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date debut prevue
+                </label>
+                <input
+                  type="date"
+                  value={formData.date_debut_prevue || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, date_debut_prevue: e.target.value })
+                    setError(null)
+                  }}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date fin prevue
+                </label>
+                <input
+                  type="date"
+                  value={formData.date_fin_prevue || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, date_fin_prevue: e.target.value })
+                    setError(null)
+                  }}
+                  className="input"
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
