@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import type { Post, Author } from '../../types/dashboard'
+import { formatRelativeShort } from '../../utils/dates'
 
 interface PostCardProps {
   post: Post
@@ -48,21 +49,6 @@ export default function PostCard({
       setLiked(true)
       setLikesCount((c) => c + 1)
     }
-  }
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMins / 60)
-    const diffDays = Math.floor(diffHours / 24)
-
-    if (diffMins < 1) return "A l'instant"
-    if (diffMins < 60) return `Il y a ${diffMins} min`
-    if (diffHours < 24) return `Il y a ${diffHours}h`
-    if (diffDays < 7) return `Il y a ${diffDays}j`
-    return date.toLocaleDateString('fr-FR')
   }
 
   const isAuthor = post.author_id === currentUserId
@@ -109,7 +95,7 @@ export default function PostCard({
             </div>
             {/* Ciblage (FEED-07) */}
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>{formatDate(post.created_at)}</span>
+              <span>{formatRelativeShort(post.created_at)}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 {post.target_type === 'everyone' && '📢'}

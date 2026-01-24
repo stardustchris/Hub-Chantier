@@ -21,6 +21,7 @@ import {
   formatDateWeekdayFull,
   parseTimeToMinutes,
   minutesToTime,
+  formatRelativeShort,
 } from './dates'
 
 describe('dates utilities', () => {
@@ -208,6 +209,47 @@ describe('dates utilities', () => {
       const oldDate = new Date('2026-01-10T14:30:00')
       const result = formatDateSmart(oldDate)
       expect(result).toBe('10 janvier 2026')
+    })
+  })
+
+  describe('formatRelativeShort', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-01-24T16:00:00'))
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('affiche "A l\'instant" pour une date tres recente', () => {
+      const justNow = new Date('2026-01-24T15:59:30')
+      const result = formatRelativeShort(justNow)
+      expect(result).toBe("A l'instant")
+    })
+
+    it('affiche "Il y a X min" pour moins d\'une heure', () => {
+      const thirtyMinsAgo = new Date('2026-01-24T15:30:00')
+      const result = formatRelativeShort(thirtyMinsAgo)
+      expect(result).toBe('Il y a 30 min')
+    })
+
+    it('affiche "Il y a Xh" pour moins de 24 heures', () => {
+      const fiveHoursAgo = new Date('2026-01-24T11:00:00')
+      const result = formatRelativeShort(fiveHoursAgo)
+      expect(result).toBe('Il y a 5h')
+    })
+
+    it('affiche "Il y a Xj" pour moins de 7 jours', () => {
+      const threeDaysAgo = new Date('2026-01-21T16:00:00')
+      const result = formatRelativeShort(threeDaysAgo)
+      expect(result).toBe('Il y a 3j')
+    })
+
+    it('affiche la date courte pour plus de 7 jours', () => {
+      const twoWeeksAgo = new Date('2026-01-10T16:00:00')
+      const result = formatRelativeShort(twoWeeksAgo)
+      expect(result).toBe('10/01/2026')
     })
   })
 })

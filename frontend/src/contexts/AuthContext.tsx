@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { authService, User } from '../services/auth'
+import { onSessionExpired, emitLogout } from '../services/authEvents'
 
 interface AuthContextType {
   user: User | null
@@ -14,6 +15,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Fonction logout mémorisée pour être utilisée comme callback
+  const logout = useCallback(() => {
+    sessionStorage.removeItem('access_token')
+    setUser(null)
+    // Notifier les autres onglets du logout
+    emitLogout()
+  }, [])
 
   useEffect(() => {
     // Vérifier si un token existe au chargement
@@ -33,16 +42,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
+  // Écouter les événements de session expirée (401 de api.ts)
+  useEffect(() => {
+    const unsubscribe = onSessionExpired(() => {
+      setUser(null)
+      // Rediriger vers login après mise à jour de l'état
+      window.location.href = '/login'
+    })
+    return unsubscribe
+  }, [])
+
   const login = async (email: string, password: string) => {
     const response = await authService.login(email, password)
     // sessionStorage: token supprimé à la fermeture du navigateur (plus sécurisé)
     sessionStorage.setItem('access_token', response.access_token)
     setUser(response.user)
-  }
-
-  const logout = () => {
-    sessionStorage.removeItem('access_token')
-    setUser(null)
   }
 
   return (

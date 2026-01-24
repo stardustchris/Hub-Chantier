@@ -6,6 +6,7 @@ import React from 'react';
 import type { Signalement } from '../../types/signalements';
 import { PRIORITE_BG_COLORS, STATUT_BG_COLORS } from '../../types/signalements';
 import { getPrioriteIcon, getStatutIcon } from '../../services/signalements';
+import { formatDateDayMonthYearTime } from '../../utils/dates';
 
 interface SignalementCardProps {
   signalement: Signalement;
@@ -22,17 +23,6 @@ const SignalementCard: React.FC<SignalementCardProps> = ({
   onCloturer,
   compact = false,
 }) => {
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   const prioriteClass = PRIORITE_BG_COLORS[signalement.priorite] || 'bg-gray-100 text-gray-800';
   const statutClass = STATUT_BG_COLORS[signalement.statut] || 'bg-gray-100 text-gray-800';
 
@@ -108,7 +98,7 @@ const SignalementCard: React.FC<SignalementCardProps> = ({
           </div>
         )}
         <div>
-          <span className="font-medium">Créé le:</span> {formatDate(signalement.created_at)}
+          <span className="font-medium">Créé le:</span> {formatDateDayMonthYearTime(signalement.created_at)}
         </div>
       </div>
 

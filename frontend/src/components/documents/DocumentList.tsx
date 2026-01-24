@@ -8,6 +8,7 @@ import React, { useState, useCallback } from 'react';
 import type { Document, TypeDocument } from '../../types/documents';
 import { TYPE_DOCUMENT_LABELS } from '../../types/documents';
 import { getDocumentIcon, downloadAndSaveZip } from '../../services/documents';
+import { formatDateDayMonthYearTime } from '../../utils/dates';
 
 interface DocumentListProps {
   documents: Document[];
@@ -84,17 +85,6 @@ const DocumentList: React.FC<DocumentListProps> = ({
       autre: 'text-gray-500',
     };
     return colors[type] || 'text-gray-500';
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   if (loading) {
@@ -246,7 +236,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
                 {doc.uploaded_by_nom || `Utilisateur #${doc.uploaded_by}`}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(doc.uploaded_at)}
+                {formatDateDayMonthYearTime(doc.uploaded_at)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                 <div className="flex justify-end gap-2">
