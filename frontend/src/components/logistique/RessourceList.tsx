@@ -1,7 +1,17 @@
 /**
- * Composant RessourceList - Liste des ressources avec filtres
+ * Composant RessourceList - Liste des ressources avec filtres.
  *
- * LOG-01: Référentiel matériel
+ * Fonctionnalités:
+ * - LOG-01: Référentiel matériel - Consultation du parc
+ *
+ * Ce composant affiche une grille de ressources avec:
+ * - Recherche textuelle (nom, code, description)
+ * - Filtre par catégorie
+ * - Toggle pour afficher/masquer les ressources inactives (admin)
+ * - Bouton de création (admin)
+ * - Sélection d'une ressource pour voir son planning
+ *
+ * @module components/logistique/RessourceList
  */
 
 import React, { useState, useEffect } from 'react'
@@ -11,14 +21,38 @@ import { CATEGORIES_RESSOURCES } from '../../types/logistique'
 import { listRessources } from '../../api/logistique'
 import RessourceCard from './RessourceCard'
 
-interface RessourceListProps {
+/**
+ * Props du composant RessourceList.
+ */
+export interface RessourceListProps {
+  /** Callback appelé lors de la sélection d'une ressource */
   onSelectRessource?: (ressource: Ressource) => void
+  /** Callback pour ouvrir le formulaire de création (admin) */
   onCreateRessource?: () => void
+  /** Callback pour ouvrir le formulaire d'édition (admin) */
   onEditRessource?: (ressource: Ressource) => void
+  /** ID de la ressource actuellement sélectionnée */
   selectedRessourceId?: number
+  /** Indique si l'utilisateur est admin (affiche les contrôles admin) */
   isAdmin?: boolean
 }
 
+/**
+ * Liste filtrable des ressources du parc matériel.
+ *
+ * @example
+ * ```tsx
+ * <RessourceList
+ *   selectedRessourceId={selectedId}
+ *   onSelectRessource={(r) => setSelectedId(r.id)}
+ *   onCreateRessource={() => setShowCreateModal(true)}
+ *   onEditRessource={(r) => { setEditingRessource(r); setShowEditModal(true); }}
+ *   isAdmin={user.role === 'admin'}
+ * />
+ * ```
+ *
+ * @param props - Props du composant
+ */
 const RessourceList: React.FC<RessourceListProps> = ({
   onSelectRessource,
   onCreateRessource,

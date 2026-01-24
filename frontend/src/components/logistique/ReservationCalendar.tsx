@@ -1,10 +1,20 @@
 /**
- * Composant ReservationCalendar - Calendrier des réservations d'une ressource
+ * Composant ReservationCalendar - Calendrier des réservations d'une ressource.
  *
- * LOG-03: Planning par ressource - Vue calendrier hebdomadaire 7 jours
- * LOG-04: Navigation semaine
- * LOG-05: Axe horaire vertical 08:00 → 18:00
- * LOG-06: Blocs réservation colorés
+ * Fonctionnalités:
+ * - LOG-03: Planning par ressource - Vue calendrier hebdomadaire 7 jours
+ * - LOG-04: Navigation semaine - Boutons précédent/suivant et "Aujourd'hui"
+ * - LOG-05: Axe horaire vertical 08:00 → 18:00
+ * - LOG-06: Blocs réservation colorés avec indicateur de statut
+ *
+ * Ce composant affiche une grille hebdomadaire avec:
+ * - En-têtes de colonnes: jours de la semaine avec date
+ * - En-têtes de lignes: heures de 08:00 à 18:00
+ * - Cellules cliquables pour créer une réservation
+ * - Blocs colorés pour les réservations existantes
+ * - Légende des statuts en bas
+ *
+ * @module components/logistique/ReservationCalendar
  */
 
 import React, { useState, useEffect } from 'react'
@@ -13,15 +23,46 @@ import type { Ressource, Reservation, PlanningRessource } from '../../types/logi
 import { STATUTS_RESERVATION } from '../../types/logistique'
 import { getPlanningRessource, getLundiSemaine, formatDateISO } from '../../api/logistique'
 
-interface ReservationCalendarProps {
+/**
+ * Props du composant ReservationCalendar.
+ */
+export interface ReservationCalendarProps {
+  /** Ressource dont on affiche le planning */
   ressource: Ressource
+  /** Callback appelé lors du clic sur une cellule vide pour créer une réservation */
   onCreateReservation?: (date: string, heureDebut: string, heureFin: string) => void
+  /** Callback appelé lors du clic sur une réservation existante */
   onSelectReservation?: (reservation: Reservation) => void
 }
 
+/** Heures affichées sur l'axe vertical (08:00 à 18:00) */
 const HEURES = Array.from({ length: 11 }, (_, i) => `${String(8 + i).padStart(2, '0')}:00`)
+
+/** Jours de la semaine (lundi à dimanche) */
 const JOURS_SEMAINE = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
+/**
+ * Calendrier hebdomadaire affichant les réservations d'une ressource.
+ *
+ * @example
+ * ```tsx
+ * <ReservationCalendar
+ *   ressource={selectedRessource}
+ *   onCreateReservation={(date, debut, fin) => {
+ *     setInitialDate(date)
+ *     setInitialHeureDebut(debut)
+ *     setInitialHeureFin(fin)
+ *     setShowReservationModal(true)
+ *   }}
+ *   onSelectReservation={(r) => {
+ *     setSelectedReservation(r)
+ *     setShowReservationModal(true)
+ *   }}
+ * />
+ * ```
+ *
+ * @param props - Props du composant
+ */
 const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   ressource,
   onCreateReservation,

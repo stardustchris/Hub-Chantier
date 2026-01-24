@@ -1,32 +1,88 @@
 /**
- * Composant ReservationModal - Modal pour créer/voir une réservation
+ * Composant ReservationModal - Modal pour créer/voir une réservation.
  *
- * LOG-07: Demande de réservation
- * LOG-08: Sélection chantier
- * LOG-09: Sélection créneau
- * LOG-16: Motif de refus
+ * M13: Refactoré pour extraire la logique dans useReservationModal
+ * et les sous-composants ReservationFormFields et ReservationActions.
+ *
+ * Fonctionnalités:
+ * - LOG-07: Demande de réservation - Création depuis mobile ou web
+ * - LOG-08: Sélection chantier - Association obligatoire au projet
+ * - LOG-09: Sélection créneau - Date + heure début / heure fin
+ * - LOG-11: Workflow validation - Valider ou refuser une demande
+ * - LOG-16: Motif de refus - Champ texte optionnel
+ *
+ * @module components/logistique/ReservationModal
  */
 
-import React, { useState, useEffect } from 'react'
-import { X, Calendar, Clock, Building2, MessageSquare, Check, XCircle } from 'lucide-react'
-import type { Ressource, Reservation, ReservationCreate } from '../../types/logistique'
+import React from 'react'
+import { X } from 'lucide-react'
+import type { Ressource, Reservation } from '../../types/logistique'
 import { STATUTS_RESERVATION } from '../../types/logistique'
-import { createReservation, validerReservation, refuserReservation, annulerReservation } from '../../api/logistique'
 import type { Chantier } from '../../types'
+import { useReservationModal } from '../../hooks/useReservationModal'
+import ReservationFormFields from './ReservationFormFields'
+import ReservationActions from './ReservationActions'
 
-interface ReservationModalProps {
+/**
+ * Props du composant ReservationModal.
+ */
+export interface ReservationModalProps {
+  /** Indique si le modal est ouvert */
   isOpen: boolean
+  /** Callback pour fermer le modal */
   onClose: () => void
+  /** Ressource concernée par la réservation */
   ressource: Ressource
+  /** Réservation existante (mode vue) ou null/undefined (mode création) */
   reservation?: Reservation | null
+  /** Liste des chantiers disponibles */
   chantiers: Chantier[]
+  /** Date initiale pour le formulaire (format YYYY-MM-DD) */
   initialDate?: string
+  /** Heure de début initiale (format HH:MM) */
   initialHeureDebut?: string
+  /** Heure de fin initiale (format HH:MM) */
   initialHeureFin?: string
+  /** Indique si l'utilisateur peut valider/refuser les demandes */
   canValidate?: boolean
+  /** Callback appelé après une action réussie */
   onSuccess?: () => void
 }
 
+/**
+ * Modal pour créer une nouvelle réservation ou visualiser une réservation existante.
+ *
+ * Deux modes d'utilisation:
+ * 1. **Mode création**: Sans `reservation` prop, affiche un formulaire éditable
+ * 2. **Mode vue**: Avec `reservation` prop, affiche les détails en lecture seule
+ *    avec possibilité de valider/refuser/annuler selon les permissions
+ *
+ * @example
+ * ```tsx
+ * // Mode création
+ * <ReservationModal
+ *   isOpen={isOpen}
+ *   onClose={() => setIsOpen(false)}
+ *   ressource={selectedRessource}
+ *   chantiers={chantiersList}
+ *   initialDate="2026-01-25"
+ *   onSuccess={() => refetchReservations()}
+ * />
+ *
+ * // Mode vue avec validation
+ * <ReservationModal
+ *   isOpen={isOpen}
+ *   onClose={() => setIsOpen(false)}
+ *   ressource={selectedRessource}
+ *   reservation={selectedReservation}
+ *   chantiers={chantiersList}
+ *   canValidate={userCanValidate}
+ *   onSuccess={() => refetchReservations()}
+ * />
+ * ```
+ *
+ * @param props - Props du composant
+ */
 const ReservationModal: React.FC<ReservationModalProps> = ({
   isOpen,
   onClose,
@@ -39,106 +95,34 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   canValidate = false,
   onSuccess,
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [motifRefus, setMotifRefus] = useState('')
-  const [showMotifRefus, setShowMotifRefus] = useState(false)
-
-  const [formData, setFormData] = useState<Partial<ReservationCreate>>({
-    ressource_id: ressource.id,
-    chantier_id: 0,
-    date_reservation: initialDate || new Date().toISOString().split('T')[0],
-    heure_debut: initialHeureDebut || ressource.heure_debut_defaut.substring(0, 5),
-    heure_fin: initialHeureFin || ressource.heure_fin_defaut.substring(0, 5),
-    commentaire: '',
+  const {
+    loading,
+    error,
+    formData,
+    motifRefus,
+    showMotifRefus,
+    setFormData,
+    setMotifRefus,
+    setShowMotifRefus,
+    handleSubmit,
+    handleValider,
+    handleRefuser,
+    handleAnnuler,
+    isViewMode,
+  } = useReservationModal({
+    isOpen,
+    ressource,
+    reservation,
+    initialDate,
+    initialHeureDebut,
+    initialHeureFin,
+    onSuccess,
+    onClose,
   })
-
-  useEffect(() => {
-    if (isOpen && !reservation) {
-      setFormData({
-        ressource_id: ressource.id,
-        chantier_id: 0,
-        date_reservation: initialDate || new Date().toISOString().split('T')[0],
-        heure_debut: initialHeureDebut || ressource.heure_debut_defaut.substring(0, 5),
-        heure_fin: initialHeureFin || ressource.heure_fin_defaut.substring(0, 5),
-        commentaire: '',
-      })
-      setError(null)
-      setShowMotifRefus(false)
-      setMotifRefus('')
-    }
-  }, [isOpen, reservation, ressource, initialDate, initialHeureDebut, initialHeureFin])
 
   if (!isOpen) return null
 
-  const isViewMode = !!reservation
   const statutInfo = reservation ? STATUTS_RESERVATION[reservation.statut] : null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.chantier_id) {
-      setError('Veuillez sélectionner un chantier')
-      return
-    }
-
-    try {
-      setLoading(true)
-      setError(null)
-      await createReservation(formData as ReservationCreate)
-      onSuccess?.()
-      onClose()
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError('Conflit: ce créneau est déjà réservé')
-      } else {
-        setError(err.response?.data?.detail || 'Erreur lors de la création')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleValider = async () => {
-    if (!reservation) return
-    try {
-      setLoading(true)
-      await validerReservation(reservation.id)
-      onSuccess?.()
-      onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la validation')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleRefuser = async () => {
-    if (!reservation) return
-    try {
-      setLoading(true)
-      await refuserReservation(reservation.id, motifRefus || undefined)
-      onSuccess?.()
-      onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors du refus')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAnnuler = async () => {
-    if (!reservation) return
-    try {
-      setLoading(true)
-      await annulerReservation(reservation.id)
-      onSuccess?.()
-      onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de l\'annulation')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -162,6 +146,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Fermer"
           >
             <X size={20} className="text-gray-500" />
           </button>
@@ -177,7 +162,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             <span style={{ color: statutInfo.color }} className="font-medium">
               {statutInfo.label}
             </span>
-            {reservation.motif_refus && (
+            {reservation?.motif_refus && (
               <span className="text-sm text-gray-600 ml-2">
                 - {reservation.motif_refus}
               </span>
@@ -187,151 +172,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
 
         {/* Formulaire */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Chantier */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              <Building2 size={16} />
-              Chantier *
-            </label>
-            {isViewMode ? (
-              <p className="px-3 py-2 bg-gray-50 rounded-lg">
-                {reservation?.chantier_nom || `Chantier #${reservation?.chantier_id}`}
-              </p>
-            ) : (
-              <select
-                value={formData.chantier_id}
-                onChange={(e) => setFormData({ ...formData, chantier_id: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value={0}>Sélectionner un chantier</option>
-                {chantiers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    [{c.code}] {c.nom}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* Date */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              <Calendar size={16} />
-              Date *
-            </label>
-            {isViewMode ? (
-              <p className="px-3 py-2 bg-gray-50 rounded-lg">
-                {new Date(reservation!.date_reservation).toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            ) : (
-              <input
-                type="date"
-                value={formData.date_reservation}
-                onChange={(e) => setFormData({ ...formData, date_reservation: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            )}
-          </div>
-
-          {/* Horaires */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                <Clock size={16} />
-                Début *
-              </label>
-              {isViewMode ? (
-                <p className="px-3 py-2 bg-gray-50 rounded-lg">
-                  {reservation!.heure_debut.substring(0, 5)}
-                </p>
-              ) : (
-                <input
-                  type="time"
-                  value={formData.heure_debut}
-                  onChange={(e) => setFormData({ ...formData, heure_debut: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              )}
-            </div>
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                <Clock size={16} />
-                Fin *
-              </label>
-              {isViewMode ? (
-                <p className="px-3 py-2 bg-gray-50 rounded-lg">
-                  {reservation!.heure_fin.substring(0, 5)}
-                </p>
-              ) : (
-                <input
-                  type="time"
-                  value={formData.heure_fin}
-                  onChange={(e) => setFormData({ ...formData, heure_fin: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Commentaire */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              <MessageSquare size={16} />
-              Commentaire
-            </label>
-            {isViewMode ? (
-              <p className="px-3 py-2 bg-gray-50 rounded-lg min-h-[60px]">
-                {reservation!.commentaire || '-'}
-              </p>
-            ) : (
-              <textarea
-                value={formData.commentaire}
-                onChange={(e) => setFormData({ ...formData, commentaire: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={2}
-                placeholder="Commentaire optionnel..."
-              />
-            )}
-          </div>
-
-          {/* Demandeur (mode vue) */}
-          {isViewMode && (
-            <div className="text-sm text-gray-500 pt-2 border-t border-gray-200">
-              <p>Demandé par: {reservation?.demandeur_nom || `User #${reservation?.demandeur_id}`}</p>
-              {reservation?.validated_at && (
-                <p>
-                  Traité par: {reservation.valideur_nom || `User #${reservation.valideur_id}`}
-                  {' le '}
-                  {new Date(reservation.validated_at).toLocaleDateString('fr-FR')}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Motif refus */}
-          {showMotifRefus && (
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Motif du refus
-              </label>
-              <textarea
-                value={motifRefus}
-                onChange={(e) => setMotifRefus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                rows={2}
-                placeholder="Motif optionnel..."
-              />
-            </div>
-          )}
+          <ReservationFormFields
+            isViewMode={isViewMode}
+            reservation={reservation}
+            formData={formData}
+            chantiers={chantiers}
+            onFormDataChange={setFormData}
+          />
 
           {/* Erreur */}
           {error && (
@@ -341,91 +188,20 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            {isViewMode ? (
-              <>
-                {canValidate && reservation?.statut === 'en_attente' && (
-                  <>
-                    {showMotifRefus ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setShowMotifRefus(false)}
-                          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                        >
-                          Annuler
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleRefuser}
-                          disabled={loading}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-                        >
-                          <XCircle size={18} />
-                          Confirmer refus
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleValider}
-                          disabled={loading}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                        >
-                          <Check size={18} />
-                          Valider
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowMotifRefus(true)}
-                          disabled={loading}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-                        >
-                          <XCircle size={18} />
-                          Refuser
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-                {reservation?.statut === 'validee' && (
-                  <button
-                    type="button"
-                    onClick={handleAnnuler}
-                    disabled={loading}
-                    className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
-                  >
-                    Annuler la réservation
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Fermer
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {loading ? 'Création...' : 'Réserver'}
-                </button>
-              </>
-            )}
-          </div>
+          <ReservationActions
+            isViewMode={isViewMode}
+            reservation={reservation}
+            canValidate={canValidate}
+            loading={loading}
+            motifRefus={motifRefus}
+            showMotifRefus={showMotifRefus}
+            onValider={handleValider}
+            onRefuser={handleRefuser}
+            onAnnuler={handleAnnuler}
+            onClose={onClose}
+            onShowMotifRefus={setShowMotifRefus}
+            onMotifRefusChange={setMotifRefus}
+          />
 
           {/* Info validation */}
           {!isViewMode && ressource.validation_requise && (
