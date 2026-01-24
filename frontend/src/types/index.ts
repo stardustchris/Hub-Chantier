@@ -53,6 +53,38 @@ export interface UserUpdate {
 // ===== CHANTIERS =====
 export type ChantierStatut = 'ouvert' | 'en_cours' | 'receptionne' | 'ferme'
 
+// Contact de chantier (multi-contacts avec profession)
+export interface ContactChantier {
+  id: number
+  nom: string
+  telephone: string
+  profession?: string
+}
+
+export interface ContactChantierCreate {
+  nom: string
+  telephone: string
+  profession?: string
+}
+
+// Phase de chantier (chantiers en plusieurs étapes)
+export interface PhaseChantier {
+  id: number
+  nom: string
+  description?: string
+  ordre: number
+  date_debut?: string
+  date_fin?: string
+}
+
+export interface PhaseChantierCreate {
+  nom: string
+  description?: string
+  ordre?: number
+  date_debut?: string
+  date_fin?: string
+}
+
 export interface Chantier {
   id: string
   code: string
@@ -62,8 +94,10 @@ export interface Chantier {
   couleur?: string
   latitude?: number
   longitude?: number
-  contact_nom?: string
-  contact_telephone?: string
+  contact_nom?: string  // Legacy
+  contact_telephone?: string  // Legacy
+  contacts?: ContactChantier[]  // Multi-contacts
+  phases?: PhaseChantier[]  // Phases du chantier
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string

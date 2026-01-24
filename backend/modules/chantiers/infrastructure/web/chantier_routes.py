@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from ...adapters.controllers import ChantierController
+from ..persistence import ContactChantierModel, PhaseChantierModel
+from shared.infrastructure.database import get_db
 from ...application.use_cases import (
     CodeChantierAlreadyExistsError,
     InvalidDatesError,
@@ -40,6 +43,62 @@ class ContactResponse(BaseModel):
 
     nom: str
     telephone: str
+
+
+class ContactChantierResponse(BaseModel):
+    """Contact complet d'un chantier avec profession."""
+
+    id: int
+    nom: str
+    telephone: str
+    profession: Optional[str] = None
+
+
+class ContactChantierCreate(BaseModel):
+    """Requête de création d'un contact chantier."""
+
+    nom: str
+    telephone: str
+    profession: Optional[str] = None
+
+
+class ContactChantierUpdate(BaseModel):
+    """Requête de mise à jour d'un contact chantier."""
+
+    nom: Optional[str] = None
+    telephone: Optional[str] = None
+    profession: Optional[str] = None
+
+
+class PhaseChantierResponse(BaseModel):
+    """Phase/étape d'un chantier."""
+
+    id: int
+    nom: str
+    description: Optional[str] = None
+    ordre: int
+    date_debut: Optional[str] = None
+    date_fin: Optional[str] = None
+
+
+class PhaseChantierCreate(BaseModel):
+    """Requête de création d'une phase de chantier."""
+
+    nom: str
+    description: Optional[str] = None
+    ordre: Optional[int] = 1
+    date_debut: Optional[str] = None
+    date_fin: Optional[str] = None
+
+
+class PhaseChantierUpdate(BaseModel):
+    """Requête de mise à jour d'une phase de chantier."""
+
+    nom: Optional[str] = None
+    description: Optional[str] = None
+    ordre: Optional[int] = None
+    date_debut: Optional[str] = None
+    date_fin: Optional[str] = None
 
 
 class CreateChantierRequest(BaseModel):
@@ -115,8 +174,10 @@ class ChantierResponse(BaseModel):
     couleur: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    contact_nom: Optional[str] = None
-    contact_telephone: Optional[str] = None
+    contact_nom: Optional[str] = None  # Legacy field
+    contact_telephone: Optional[str] = None  # Legacy field
+    contacts: List[ContactChantierResponse] = []  # Multi-contacts avec profession
+    phases: List[PhaseChantierResponse] = []  # Phases/étapes du chantier
     heures_estimees: Optional[float] = None
     date_debut_prevue: Optional[str] = None  # Renommé pour frontend
     date_fin_prevue: Optional[str] = None  # Renommé pour frontend
@@ -646,6 +707,359 @@ def retirer_chef_chantier(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=e.message,
         )
+
+
+# =============================================================================
+# Routes de gestion des contacts (CHT-07 - Multi-contacts)
+# =============================================================================
+
+
+@router.get("/{chantier_id}/contacts", response_model=List[ContactChantierResponse])
+def list_contacts(
+    chantier_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Liste tous les contacts d'un chantier.
+
+    Args:
+        chantier_id: ID du chantier.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Liste des contacts du chantier.
+    """
+    contacts = db.query(ContactChantierModel).filter(
+        ContactChantierModel.chantier_id == chantier_id
+    ).all()
+
+    return [
+        ContactChantierResponse(
+            id=c.id,
+            nom=c.nom,
+            telephone=c.telephone,
+            profession=c.profession,
+        )
+        for c in contacts
+    ]
+
+
+@router.post("/{chantier_id}/contacts", response_model=ContactChantierResponse, status_code=status.HTTP_201_CREATED)
+def create_contact(
+    chantier_id: int,
+    request: ContactChantierCreate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Crée un nouveau contact pour un chantier.
+
+    Args:
+        chantier_id: ID du chantier.
+        request: Données du contact.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Le contact créé.
+    """
+    contact = ContactChantierModel(
+        chantier_id=chantier_id,
+        nom=request.nom,
+        telephone=request.telephone,
+        profession=request.profession,
+    )
+    db.add(contact)
+    db.commit()
+    db.refresh(contact)
+
+    return ContactChantierResponse(
+        id=contact.id,
+        nom=contact.nom,
+        telephone=contact.telephone,
+        profession=contact.profession,
+    )
+
+
+@router.put("/{chantier_id}/contacts/{contact_id}", response_model=ContactChantierResponse)
+def update_contact(
+    chantier_id: int,
+    contact_id: int,
+    request: ContactChantierUpdate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Met à jour un contact.
+
+    Args:
+        chantier_id: ID du chantier.
+        contact_id: ID du contact.
+        request: Données de mise à jour.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Le contact mis à jour.
+    """
+    contact = db.query(ContactChantierModel).filter(
+        ContactChantierModel.id == contact_id,
+        ContactChantierModel.chantier_id == chantier_id,
+    ).first()
+
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Contact {contact_id} non trouvé pour le chantier {chantier_id}",
+        )
+
+    if request.nom is not None:
+        contact.nom = request.nom
+    if request.telephone is not None:
+        contact.telephone = request.telephone
+    if request.profession is not None:
+        contact.profession = request.profession
+
+    db.commit()
+    db.refresh(contact)
+
+    return ContactChantierResponse(
+        id=contact.id,
+        nom=contact.nom,
+        telephone=contact.telephone,
+        profession=contact.profession,
+    )
+
+
+@router.delete("/{chantier_id}/contacts/{contact_id}")
+def delete_contact(
+    chantier_id: int,
+    contact_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Supprime un contact.
+
+    Args:
+        chantier_id: ID du chantier.
+        contact_id: ID du contact.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Confirmation de suppression.
+    """
+    contact = db.query(ContactChantierModel).filter(
+        ContactChantierModel.id == contact_id,
+        ContactChantierModel.chantier_id == chantier_id,
+    ).first()
+
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Contact {contact_id} non trouvé pour le chantier {chantier_id}",
+        )
+
+    db.delete(contact)
+    db.commit()
+
+    return {"deleted": True, "id": contact_id}
+
+
+# =============================================================================
+# Routes de gestion des phases (Chantiers en plusieurs étapes)
+# =============================================================================
+
+
+@router.get("/{chantier_id}/phases", response_model=List[PhaseChantierResponse])
+def list_phases(
+    chantier_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Liste toutes les phases d'un chantier.
+
+    Args:
+        chantier_id: ID du chantier.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Liste des phases du chantier ordonnées.
+    """
+    phases = db.query(PhaseChantierModel).filter(
+        PhaseChantierModel.chantier_id == chantier_id
+    ).order_by(PhaseChantierModel.ordre).all()
+
+    return [
+        PhaseChantierResponse(
+            id=p.id,
+            nom=p.nom,
+            description=p.description,
+            ordre=p.ordre,
+            date_debut=p.date_debut.isoformat() if p.date_debut else None,
+            date_fin=p.date_fin.isoformat() if p.date_fin else None,
+        )
+        for p in phases
+    ]
+
+
+@router.post("/{chantier_id}/phases", response_model=PhaseChantierResponse, status_code=status.HTTP_201_CREATED)
+def create_phase(
+    chantier_id: int,
+    request: PhaseChantierCreate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Crée une nouvelle phase pour un chantier.
+
+    Args:
+        chantier_id: ID du chantier.
+        request: Données de la phase.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        La phase créée.
+    """
+    from datetime import date as date_type
+
+    # Calculer l'ordre si non fourni (dernier + 1)
+    if request.ordre is None or request.ordre == 1:
+        max_ordre = db.query(PhaseChantierModel).filter(
+            PhaseChantierModel.chantier_id == chantier_id
+        ).count()
+        ordre = max_ordre + 1
+    else:
+        ordre = request.ordre
+
+    # Parser les dates si fournies
+    date_debut = None
+    date_fin = None
+    if request.date_debut:
+        date_debut = date_type.fromisoformat(request.date_debut)
+    if request.date_fin:
+        date_fin = date_type.fromisoformat(request.date_fin)
+
+    phase = PhaseChantierModel(
+        chantier_id=chantier_id,
+        nom=request.nom,
+        description=request.description,
+        ordre=ordre,
+        date_debut=date_debut,
+        date_fin=date_fin,
+    )
+    db.add(phase)
+    db.commit()
+    db.refresh(phase)
+
+    return PhaseChantierResponse(
+        id=phase.id,
+        nom=phase.nom,
+        description=phase.description,
+        ordre=phase.ordre,
+        date_debut=phase.date_debut.isoformat() if phase.date_debut else None,
+        date_fin=phase.date_fin.isoformat() if phase.date_fin else None,
+    )
+
+
+@router.put("/{chantier_id}/phases/{phase_id}", response_model=PhaseChantierResponse)
+def update_phase(
+    chantier_id: int,
+    phase_id: int,
+    request: PhaseChantierUpdate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Met à jour une phase.
+
+    Args:
+        chantier_id: ID du chantier.
+        phase_id: ID de la phase.
+        request: Données de mise à jour.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        La phase mise à jour.
+    """
+    from datetime import date as date_type
+
+    phase = db.query(PhaseChantierModel).filter(
+        PhaseChantierModel.id == phase_id,
+        PhaseChantierModel.chantier_id == chantier_id,
+    ).first()
+
+    if not phase:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Phase {phase_id} non trouvée pour le chantier {chantier_id}",
+        )
+
+    if request.nom is not None:
+        phase.nom = request.nom
+    if request.description is not None:
+        phase.description = request.description
+    if request.ordre is not None:
+        phase.ordre = request.ordre
+    if request.date_debut is not None:
+        phase.date_debut = date_type.fromisoformat(request.date_debut) if request.date_debut else None
+    if request.date_fin is not None:
+        phase.date_fin = date_type.fromisoformat(request.date_fin) if request.date_fin else None
+
+    db.commit()
+    db.refresh(phase)
+
+    return PhaseChantierResponse(
+        id=phase.id,
+        nom=phase.nom,
+        description=phase.description,
+        ordre=phase.ordre,
+        date_debut=phase.date_debut.isoformat() if phase.date_debut else None,
+        date_fin=phase.date_fin.isoformat() if phase.date_fin else None,
+    )
+
+
+@router.delete("/{chantier_id}/phases/{phase_id}")
+def delete_phase(
+    chantier_id: int,
+    phase_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """
+    Supprime une phase.
+
+    Args:
+        chantier_id: ID du chantier.
+        phase_id: ID de la phase.
+        db: Session base de données.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Confirmation de suppression.
+    """
+    phase = db.query(PhaseChantierModel).filter(
+        PhaseChantierModel.id == phase_id,
+        PhaseChantierModel.chantier_id == chantier_id,
+    ).first()
+
+    if not phase:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Phase {phase_id} non trouvée pour le chantier {chantier_id}",
+        )
+
+    db.delete(phase)
+    db.commit()
+
+    return {"deleted": True, "id": phase_id}
 
 
 # =============================================================================

@@ -49,9 +49,15 @@ class ChantierModel(Base):
     # Photo de couverture (CHT-01)
     photo_couverture = Column(String(500), nullable=True)
 
-    # Contact sur place (CHT-07)
+    # Contact sur place (CHT-07) - Legacy fields (kept for backward compatibility)
     contact_nom = Column(String(200), nullable=True)
     contact_telephone = Column(String(20), nullable=True)
+
+    # Relation avec les contacts (nouvelle structure multi-contacts)
+    contacts = relationship("ContactChantierModel", back_populates="chantier", cascade="all, delete-orphan")
+
+    # Relation avec les phases (chantiers en plusieurs étapes)
+    phases = relationship("PhaseChantierModel", back_populates="chantier", cascade="all, delete-orphan", order_by="PhaseChantierModel.ordre")
 
     # Budget temps (CHT-18)
     heures_estimees = Column(Float, nullable=True)

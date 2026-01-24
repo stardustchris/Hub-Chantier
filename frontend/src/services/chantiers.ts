@@ -1,5 +1,15 @@
 import api from './api'
-import type { Chantier, ChantierCreate, ChantierUpdate, ChantierStatut, PaginatedResponse } from '../types'
+import type {
+  Chantier,
+  ChantierCreate,
+  ChantierUpdate,
+  ChantierStatut,
+  PaginatedResponse,
+  ContactChantier,
+  ContactChantierCreate,
+  PhaseChantier,
+  PhaseChantierCreate,
+} from '../types'
 
 export interface ChantiersListParams {
   page?: number
@@ -118,5 +128,45 @@ export const chantiersService = {
   async removeChef(chantierId: string, userId: string): Promise<Chantier> {
     const response = await api.delete<Chantier>(`/api/chantiers/${chantierId}/chefs/${userId}`)
     return response.data
+  },
+
+  // ===== Gestion des contacts (multi-contacts avec profession) =====
+  async listContacts(chantierId: string): Promise<ContactChantier[]> {
+    const response = await api.get<ContactChantier[]>(`/api/chantiers/${chantierId}/contacts`)
+    return response.data
+  },
+
+  async addContact(chantierId: string, data: ContactChantierCreate): Promise<ContactChantier> {
+    const response = await api.post<ContactChantier>(`/api/chantiers/${chantierId}/contacts`, data)
+    return response.data
+  },
+
+  async updateContact(chantierId: string, contactId: number, data: Partial<ContactChantierCreate>): Promise<ContactChantier> {
+    const response = await api.put<ContactChantier>(`/api/chantiers/${chantierId}/contacts/${contactId}`, data)
+    return response.data
+  },
+
+  async removeContact(chantierId: string, contactId: number): Promise<void> {
+    await api.delete(`/api/chantiers/${chantierId}/contacts/${contactId}`)
+  },
+
+  // ===== Gestion des phases (chantiers en plusieurs étapes) =====
+  async listPhases(chantierId: string): Promise<PhaseChantier[]> {
+    const response = await api.get<PhaseChantier[]>(`/api/chantiers/${chantierId}/phases`)
+    return response.data
+  },
+
+  async addPhase(chantierId: string, data: PhaseChantierCreate): Promise<PhaseChantier> {
+    const response = await api.post<PhaseChantier>(`/api/chantiers/${chantierId}/phases`, data)
+    return response.data
+  },
+
+  async updatePhase(chantierId: string, phaseId: number, data: Partial<PhaseChantierCreate>): Promise<PhaseChantier> {
+    const response = await api.put<PhaseChantier>(`/api/chantiers/${chantierId}/phases/${phaseId}`, data)
+    return response.data
+  },
+
+  async removePhase(chantierId: string, phaseId: number): Promise<void> {
+    await api.delete(`/api/chantiers/${chantierId}/phases/${phaseId}`)
   },
 }

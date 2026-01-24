@@ -21,12 +21,27 @@ import { CHANTIER_STATUTS, USER_COLORS } from '../types'
 
 export default function ChantiersListPage() {
   const [chantiers, setChantiers] = useState<Chantier[]>([])
+  const [allChantiers, setAllChantiers] = useState<Chantier[]>([])  // Pour les compteurs
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statutFilter, setStatutFilter] = useState<ChantierStatut | ''>('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  // Charger tous les chantiers pour les compteurs (une seule fois ou lors d'un changement)
+  const loadAllChantiers = async () => {
+    try {
+      const response = await chantiersService.list({ size: 500 })
+      setAllChantiers(response.items)
+    } catch (error) {
+      console.error('Error loading all chantiers:', error)
+    }
+  }
+
+  useEffect(() => {
+    loadAllChantiers()
+  }, [])
 
   useEffect(() => {
     loadChantiers()
@@ -54,12 +69,14 @@ export default function ChantiersListPage() {
     await chantiersService.create(data)
     setShowCreateModal(false)
     loadChantiers()
+    loadAllChantiers()  // Recharger les compteurs aussi
   }
 
   const filteredChantiers = chantiers
 
+  // Utiliser allChantiers pour les compteurs (pas les chantiers filtrés)
   const getStatutCount = (statut: ChantierStatut) => {
-    return chantiers.filter((c) => c.statut === statut).length
+    return allChantiers.filter((c) => c.statut === statut).length
   }
 
   return (
@@ -316,11 +333,17 @@ interface CreateChantierModalProps {
   onSubmit: (data: ChantierCreate) => void
 }
 
+// Génère une couleur aléatoire parmi la palette
+const getRandomColor = () => {
+  const index = Math.floor(Math.random() * USER_COLORS.length)
+  return USER_COLORS[index].code
+}
+
 function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
   const [formData, setFormData] = useState<ChantierCreate>({
     nom: '',
     adresse: '',
-    couleur: USER_COLORS[0].code,
+    couleur: getRandomColor(),
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -399,28 +422,6 @@ function CreateChantierModal({ onClose, onSubmit }: CreateChantierModalProps) {
               rows={2}
               placeholder="Ex: 12 rue des Lilas, 69003 Lyon"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Couleur
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {USER_COLORS.map((color) => (
-                <button
-                  key={color.code}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, couleur: color.code })}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    formData.couleur === color.code
-                      ? 'border-gray-900 scale-110'
-                      : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color.code }}
-                  title={color.name}
-                />
-              ))}
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
