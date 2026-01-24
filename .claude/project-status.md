@@ -11,7 +11,7 @@
 | dashboard | 2 | FEED-01 a FEED-20 | **COMPLET** |
 | chantiers | 4 | CHT-01 a CHT-20 | **COMPLET** |
 | planning | 5 | PLN-01 a PLN-28 | **COMPLET** |
-| planning_charge | 6 | PDC-01 a PDC-17 | Structure only |
+| planning_charge | 6 | PDC-01 a PDC-17 | **COMPLET** |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | **COMPLET** |
 | formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
@@ -22,9 +22,9 @@
 
 ## Statistiques
 
-- **Modules complets** : 9/12
-- **Fonctionnalites totales** : 186 (incluant GED-16, GED-17, SIG-14 a SIG-20)
-- **Tests unitaires** : 930+ (827 + 103 signalements)
+- **Modules complets** : 10/12
+- **Fonctionnalites totales** : 203 (incluant PDC-01 a PDC-17)
+- **Tests unitaires** : 1055+ (930 + 125 planning_charge)
 - **Tests integration** : 17+ (formulaires)
 
 ## Prochaine tache prioritaire
@@ -40,7 +40,6 @@
 |--------|----------|-------------|
 | logistique | Haute | chantiers (OK) |
 | interventions | Moyenne | planning (OK), taches (OK) |
-| planning_charge | Basse | planning (OK) |
 
 ## Fonctionnalites en attente infrastructure
 
@@ -54,4 +53,10 @@
 
 ## Derniere mise a jour
 
-Session 2026-01-24 - Audit securite module Chantiers (RBAC, Soft Delete, Audit Trail, 109 tests)
+Session 2026-01-24 - Module Planning de Charge COMPLET (PDC-01 a PDC-17)
+- Migration Alembic avec ForeignKeys
+- RBAC (Chef+ lecture, Conducteur+ modification)
+- Audit Trail sur CREATE/UPDATE/DELETE
+- Providers integration (Chantiers, Affectations, Utilisateurs)
+- Soft delete avec historique
+- 125 tests unitaires

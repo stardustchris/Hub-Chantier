@@ -3,6 +3,106 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-24 (Module Planning de Charge - PDC-01 a PDC-17)
+
+Implementation complete du module Planning de Charge avec corrections suite a audit agents.md.
+
+### Fonctionnalites implementees (17/17)
+
+| ID | Fonctionnalite | Status |
+|----|----------------|--------|
+| PDC-01 | Vue tabulaire chantiers x semaines | ✅ |
+| PDC-02 | Compteur total chantiers | ✅ |
+| PDC-03 | Barre de recherche | ✅ |
+| PDC-04 | Toggle mode avance | ✅ |
+| PDC-05 | Toggle Hrs / J/H | ✅ |
+| PDC-06 | Navigation temporelle | ✅ |
+| PDC-07 | Colonnes semaines SXX-YYYY | ✅ |
+| PDC-08 | Colonne Charge totale | ✅ |
+| PDC-09 | Double colonne Planifie/Besoin | ✅ |
+| PDC-10 | Cellules Besoin colorees | ✅ |
+| PDC-11 | Footer repliable | ✅ |
+| PDC-12 | Taux d'occupation avec couleurs | ✅ |
+| PDC-13 | Alerte surcharge (>= 100%) | ✅ |
+| PDC-14 | A recruter | ✅ |
+| PDC-15 | A placer | ✅ |
+| PDC-16 | Modal Planification besoins | ✅ |
+| PDC-17 | Modal Details occupation | ✅ |
+
+### Audit et corrections (P0, P1, P2)
+
+| Priorite | Probleme | Correction |
+|----------|----------|------------|
+| P0.1 | Migration manquante | `20260124_0002_create_besoins_charge.py` |
+| P0.2 | RBAC manquant | `require_chef_or_above` (lecture), `require_conducteur_or_admin` (modif) |
+| P0.3 | Audit Trail manquant | Integration `AuditService` sur CREATE/UPDATE/DELETE |
+| P1.1-3 | Providers non implementes | `SQLAlchemyChantierProvider`, `SQLAlchemyAffectationProvider`, `SQLAlchemyUtilisateurProvider` |
+| P2.1 | Soft delete manquant | `is_deleted`, `deleted_at`, `deleted_by` + filtrage repository |
+| P2.2 | ForeignKeys manquantes | `chantier_id → chantiers.id`, `created_by → users.id` |
+
+### Fichiers crees/modifies
+
+**Domain (9 fichiers)**
+- `domain/entities/besoin_charge.py`
+- `domain/value_objects/semaine.py`
+- `domain/value_objects/type_metier.py`
+- `domain/value_objects/taux_occupation.py`
+- `domain/value_objects/unite_charge.py`
+- `domain/events/besoin_events.py`
+- `domain/repositories/besoin_charge_repository.py`
+
+**Application (11 fichiers)**
+- `application/dtos/besoin_charge_dto.py`
+- `application/dtos/planning_charge_dto.py`
+- `application/dtos/occupation_dto.py`
+- `application/use_cases/create_besoin.py`
+- `application/use_cases/update_besoin.py`
+- `application/use_cases/delete_besoin.py`
+- `application/use_cases/get_planning_charge.py`
+- `application/use_cases/get_besoins_by_chantier.py`
+- `application/use_cases/get_occupation_details.py`
+- `application/use_cases/exceptions.py`
+- `application/ports/event_bus.py`
+
+**Adapters (3 fichiers)**
+- `adapters/controllers/planning_charge_controller.py`
+- `adapters/controllers/planning_charge_schemas.py`
+
+**Infrastructure (7 fichiers)**
+- `infrastructure/routes.py`
+- `infrastructure/persistence/models.py`
+- `infrastructure/persistence/sqlalchemy_besoin_repository.py`
+- `infrastructure/providers/chantier_provider.py`
+- `infrastructure/providers/affectation_provider.py`
+- `infrastructure/providers/utilisateur_provider.py`
+
+**Migration**
+- `migrations/versions/20260124_0002_create_besoins_charge.py`
+
+**Tests (9 fichiers, 125 tests)**
+- `tests/unit/planning_charge/test_besoin_charge.py`
+- `tests/unit/planning_charge/test_semaine.py`
+- `tests/unit/planning_charge/test_type_metier.py`
+- `tests/unit/planning_charge/test_taux_occupation.py`
+- `tests/unit/planning_charge/test_unite_charge.py`
+- `tests/unit/planning_charge/test_create_besoin.py`
+- `tests/unit/planning_charge/test_update_besoin.py`
+- `tests/unit/planning_charge/test_delete_besoin.py`
+- `tests/unit/planning_charge/test_get_besoins.py`
+
+### Notes post-audit
+
+| Agent | Note initiale | Note finale |
+|-------|---------------|-------------|
+| sql-pro | 5/10 | 9/10 |
+| python-pro | 6/10 | 9/10 |
+| architect-reviewer | 8/10 | 9/10 |
+| test-automator | 6/10 | 8/10 |
+| code-reviewer | 8/10 | 9/10 |
+| security-auditor | 4/10 | 9/10 |
+
+---
+
 ## Session 2026-01-24 (Audit sécurité module Chantiers)
 
 Analyse complète et remédiation du module Chantiers avec 7 agents (workflow agents.md).
