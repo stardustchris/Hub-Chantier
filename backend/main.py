@@ -2,8 +2,11 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from shared.infrastructure import settings, init_db
+from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.web.security_middleware import SecurityHeadersMiddleware
 from modules.auth.infrastructure.web import router as auth_router, users_router
 from modules.chantiers.infrastructure.web import router as chantiers_router
@@ -27,13 +30,17 @@ app = FastAPI(
     redoc_url="/redoc" if settings.DEBUG else None,
 )
 
-# Configuration CORS
+# Configurer le rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Configuration CORS - restrictive (pas de wildcards)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 # Middleware de securite HTTP (OWASP headers)

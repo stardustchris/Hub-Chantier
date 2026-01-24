@@ -32,7 +32,7 @@ class PostModel(Base):
     # Identifiant
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Auteur (référence vers users)
+    # Auteur (référence vers users - pas de FK pour découplage modules Clean Arch)
     author_id = Column(Integer, nullable=False, index=True)
 
     # Contenu
@@ -98,8 +98,8 @@ class CommentModel(Base):
     __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False, index=True)
-    author_id = Column(Integer, nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_id = Column(Integer, nullable=False, index=True)  # Pas de FK - découplage modules
     content = Column(Text, nullable=False)
     is_deleted = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
@@ -124,8 +124,8 @@ class LikeModel(Base):
     __tablename__ = "likes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, nullable=False, index=True)  # Pas de FK - découplage modules
     created_at = Column(DateTime, nullable=False, default=datetime.now)
 
     # Relations
@@ -198,7 +198,7 @@ class PostMediaModel(Base):
     __tablename__ = "post_medias"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
     media_type = Column(String(20), nullable=False, default=MediaType.IMAGE.value)
     file_url = Column(String(500), nullable=False)
     thumbnail_url = Column(String(500), nullable=True)  # FEED-13
