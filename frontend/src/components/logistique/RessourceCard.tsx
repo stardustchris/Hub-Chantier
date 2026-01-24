@@ -1,7 +1,18 @@
 /**
- * Composant RessourceCard - Affiche une ressource dans une carte
+ * Composant RessourceCard - Affiche une ressource dans une carte.
  *
- * LOG-02: Fiche ressource - Nom, code, photo, couleur, plage horaire par défaut
+ * Fonctionnalités:
+ * - LOG-02: Fiche ressource - Nom, code, photo, couleur, plage horaire par défaut
+ *
+ * Affiche les informations clés d'une ressource:
+ * - Photo ou avatar avec couleur
+ * - Code et nom de la ressource
+ * - Catégorie avec badge coloré
+ * - Description tronquée
+ * - Plage horaire par défaut
+ * - Indicateur de validation requise
+ *
+ * @module components/logistique/RessourceCard
  */
 
 import React from 'react'
@@ -10,13 +21,35 @@ import type { Ressource } from '../../types/logistique'
 import { CATEGORIES_RESSOURCES } from '../../types/logistique'
 import { formatPlageHoraire } from '../../api/logistique'
 
-interface RessourceCardProps {
+/**
+ * Props du composant RessourceCard.
+ */
+export interface RessourceCardProps {
+  /** Données de la ressource à afficher */
   ressource: Ressource
+  /** Callback appelé lors de la sélection de la carte */
   onSelect?: (ressource: Ressource) => void
+  /** Callback appelé lors du clic sur le bouton d'édition (admin) */
   onEdit?: (ressource: Ressource) => void
+  /** Indique si la carte est sélectionnée (affiche une bordure bleue) */
   selected?: boolean
 }
 
+/**
+ * Carte affichant les informations d'une ressource du parc matériel.
+ *
+ * @example
+ * ```tsx
+ * <RessourceCard
+ *   ressource={grue}
+ *   selected={selectedId === grue.id}
+ *   onSelect={(r) => setSelectedId(r.id)}
+ *   onEdit={isAdmin ? handleEdit : undefined}
+ * />
+ * ```
+ *
+ * @param props - Props du composant
+ */
 const RessourceCard: React.FC<RessourceCardProps> = ({
   ressource,
   onSelect,
