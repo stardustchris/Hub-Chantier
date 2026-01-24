@@ -496,6 +496,17 @@ class SQLAlchemyChantierRepository(ChantierRepository):
                 telephone=model.contact_telephone,
             )
 
+        # Lire depuis les tables de jointure (source de vérité)
+        # Fallback sur JSON si tables vides (données legacy)
+        conducteur_ids = [r.user_id for r in model.conducteurs_rel] if model.conducteurs_rel else []
+        chef_ids = [r.user_id for r in model.chefs_rel] if model.chefs_rel else []
+
+        # Fallback sur colonnes JSON si tables de jointure vides
+        if not conducteur_ids and model.conducteur_ids:
+            conducteur_ids = list(model.conducteur_ids)
+        if not chef_ids and model.chef_chantier_ids:
+            chef_ids = list(model.chef_chantier_ids)
+
         return Chantier(
             id=model.id,
             code=CodeChantier(model.code),
@@ -510,8 +521,8 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             heures_estimees=model.heures_estimees,
             date_debut=model.date_debut,
             date_fin=model.date_fin,
-            conducteur_ids=list(model.conducteur_ids or []),
-            chef_chantier_ids=list(model.chef_chantier_ids or []),
+            conducteur_ids=conducteur_ids,
+            chef_chantier_ids=chef_ids,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
