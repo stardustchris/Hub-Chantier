@@ -5,8 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Clock, Plus } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateWeekdayFull, formatTime } from '../../utils/dates'
 
 interface ClockCardProps {
   lastClockIn?: string
@@ -27,10 +26,10 @@ export default function ClockCard({ lastClockIn = 'Hier 17:32', onClockIn }: Clo
         <Clock className="w-16 h-16" />
       </div>
       <p className="text-sm text-white/80">
-        {format(currentTime, "EEEE d MMMM yyyy", { locale: fr })}
+        {formatDateWeekdayFull(currentTime)}
       </p>
       <p className="text-4xl font-bold mt-1 mb-4">
-        {format(currentTime, "HH:mm")}
+        {formatTime(currentTime)}
       </p>
       <button
         onClick={onClockIn}

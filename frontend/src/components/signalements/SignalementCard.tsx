@@ -5,7 +5,7 @@
 import React from 'react';
 import type { Signalement } from '../../types/signalements';
 import { PRIORITE_BG_COLORS, STATUT_BG_COLORS } from '../../types/signalements';
-import { getPrioriteIcon, getStatutIcon } from '../../api/signalements';
+import { getPrioriteIcon, getStatutIcon } from '../../services/signalements';
 
 interface SignalementCardProps {
   signalement: Signalement;

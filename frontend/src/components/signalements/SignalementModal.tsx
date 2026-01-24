@@ -10,7 +10,7 @@ import type {
   Priorite,
 } from '../../types/signalements';
 import { PRIORITE_OPTIONS } from '../../types/signalements';
-import { createSignalement, updateSignalement } from '../../api/signalements';
+import { createSignalement, updateSignalement } from '../../services/signalements';
 
 interface SignalementModalProps {
   isOpen: boolean;

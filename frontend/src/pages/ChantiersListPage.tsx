@@ -15,8 +15,7 @@ import {
   Calendar,
   Trash2,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatDateDayMonth } from '../utils/dates'
 import type { Chantier, ChantierStatut, ChantierCreate } from '../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../types'
 
@@ -347,7 +346,7 @@ function ChantierCard({ chantier }: ChantierCardProps) {
         {chantier.date_debut_prevue && (
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            {format(new Date(chantier.date_debut_prevue), 'dd MMM', { locale: fr })}
+            {formatDateDayMonth(chantier.date_debut_prevue)}
           </span>
         )}
       </div>
