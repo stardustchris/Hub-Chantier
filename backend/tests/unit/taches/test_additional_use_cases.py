@@ -4,13 +4,15 @@ import pytest
 from datetime import date
 from unittest.mock import Mock
 
-from modules.taches.domain.entities import Tache
-from modules.taches.domain.value_objects import StatutTache, UniteMesure
-from modules.taches.domain.repositories import TacheRepository
+# Imports directs pour éviter le chargement de l'infrastructure via __init__.py
+from modules.taches.domain.entities.tache import Tache
+from modules.taches.domain.value_objects.statut_tache import StatutTache
+from modules.taches.domain.value_objects.unite_mesure import UniteMesure
+from modules.taches.domain.repositories.tache_repository import TacheRepository
 from modules.taches.application.use_cases.delete_tache import DeleteTacheUseCase
 from modules.taches.application.use_cases.update_tache import UpdateTacheUseCase
 from modules.taches.application.use_cases.get_tache import TacheNotFoundError
-from modules.taches.application.dtos import UpdateTacheDTO
+from modules.taches.application.dtos.tache_dto import UpdateTacheDTO
 
 
 class TestDeleteTacheUseCase:
