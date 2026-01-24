@@ -14,6 +14,35 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from ..config import settings
+
+
+# CSP stricte pour production (pas de 'unsafe-inline' ni 'unsafe-eval')
+CSP_PRODUCTION = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self'; "
+    "img-src 'self' data: blob: https:; "
+    "font-src 'self' data:; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; "
+    "form-action 'self'; "
+    "base-uri 'self'"
+)
+
+# CSP permissive pour developpement (React HMR, inline styles)
+CSP_DEVELOPMENT = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob: https:; "
+    "font-src 'self' data:; "
+    "connect-src 'self' ws: wss:; "
+    "frame-ancestors 'none'; "
+    "form-action 'self'; "
+    "base-uri 'self'"
+)
+
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
@@ -53,18 +82,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "max-age=31536000; includeSubDomains; preload"
         )
 
-        # Politique de securite du contenu
-        # Autorise uniquement les ressources du meme domaine + inline styles pour React
+        # Politique de securite du contenu (env-specific)
+        # Production: CSP stricte sans unsafe-inline/eval
+        # Developpement: CSP permissive pour React HMR
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "  # Pour React dev
-            "style-src 'self' 'unsafe-inline'; "  # Pour styles inline
-            "img-src 'self' data: blob: https:; "  # Images locales + data URIs + externes
-            "font-src 'self' data:; "  # Fonts locales
-            "connect-src 'self' ws: wss:; "  # API + WebSocket pour HMR
-            "frame-ancestors 'none'; "  # Empeche embedding
-            "form-action 'self'; "  # Formulaires vers meme domaine
-            "base-uri 'self'"  # Empeche injection de base href
+            CSP_DEVELOPMENT if settings.DEBUG else CSP_PRODUCTION
         )
 
         # Politique de referrer
