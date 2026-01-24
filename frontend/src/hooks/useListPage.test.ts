@@ -2,7 +2,7 @@
  * Tests unitaires pour useListPage hook
  */
 
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useListPage, type PaginatedResponse, type ListParams } from './useListPage'
 
@@ -15,9 +15,12 @@ type FetchItemsFn = (params: ListParams) => Promise<PaginatedResponse<TestItem>>
 
 describe('useListPage', () => {
   let mockFetchItems: Mock<FetchItemsFn>
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Supprime les console.error pour les tests d'erreur attendus
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockFetchItems = vi.fn().mockResolvedValue({
       items: [{ id: '1', name: 'Item 1' }],
       total: 1,
@@ -25,6 +28,10 @@ describe('useListPage', () => {
       size: 12,
       pages: 1,
     })
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('charge les items automatiquement au mount', async () => {
@@ -125,12 +132,17 @@ describe('useListPage', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    act(() => {
+    await act(async () => {
       result.current.setPage(3)
     })
 
-    act(() => {
+    await act(async () => {
       result.current.setSearch('test')
+    })
+
+    // Attendre que le reload soit termine
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
     expect(result.current.page).toBe(1)
@@ -148,12 +160,17 @@ describe('useListPage', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    act(() => {
+    await act(async () => {
       result.current.setPage(3)
     })
 
-    act(() => {
+    await act(async () => {
       result.current.setFilter('status', 'active')
+    })
+
+    // Attendre que le reload soit termine
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
     expect(result.current.page).toBe(1)
@@ -171,14 +188,19 @@ describe('useListPage', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    act(() => {
+    await act(async () => {
       result.current.setSearch('test')
       result.current.setFilter('status', 'active')
       result.current.setPage(3)
     })
 
-    act(() => {
+    await act(async () => {
       result.current.clearFilters()
+    })
+
+    // Attendre que le reload soit termine
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
     expect(result.current.search).toBe('')
@@ -270,11 +292,12 @@ describe('useListPage', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
+    let success: boolean
     await act(async () => {
-      const success = await result.current.remove('1')
-      expect(success).toBe(false)
+      success = await result.current.remove('1')
     })
 
+    expect(success!).toBe(false)
     expect(result.current.error).toBe('Delete failed')
   })
 
