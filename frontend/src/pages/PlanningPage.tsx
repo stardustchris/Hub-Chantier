@@ -6,6 +6,7 @@ import { PlanningGrid, PlanningChantierGrid, WeekNavigation, AffectationModal } 
 import { planningService } from '../services/planning'
 import { usersService } from '../services/users'
 import { chantiersService } from '../services/chantiers'
+import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
 import type { Affectation, AffectationCreate, AffectationUpdate, User, Chantier } from '../types'
 import { METIERS } from '../types'
@@ -90,7 +91,7 @@ export default function PlanningPage() {
       setChantiers(chantiersData.items.filter(c => c.statut !== 'ferme'))
       setNonPlanifiesCount(nonPlanifiesData.count)
     } catch (err) {
-      console.error('Erreur chargement planning:', err)
+      logger.error('Erreur chargement planning', err, { context: 'PlanningPage' })
       setError('Erreur lors du chargement du planning')
     } finally {
       setLoading(false)
@@ -161,7 +162,7 @@ export default function PlanningPage() {
       await planningService.delete(affectation.id)
       await loadData()
     } catch (err) {
-      console.error('Erreur suppression:', err)
+      logger.error('Erreur suppression', err, { context: 'PlanningPage' })
       setError('Erreur lors de la suppression')
     }
   }
@@ -193,7 +194,7 @@ export default function PlanningPage() {
       })
       await loadData()
     } catch (err) {
-      console.error('Erreur duplication:', err)
+      logger.error('Erreur duplication', err, { context: 'PlanningPage' })
       setError('Erreur lors de la duplication')
     }
   }
@@ -214,7 +215,7 @@ export default function PlanningPage() {
       await planningService.move(affectationId, newDate, newUserId)
       await loadData()
     } catch (err) {
-      console.error('Erreur déplacement:', err)
+      logger.error('Erreur deplacement', err, { context: 'PlanningPage' })
       setError('Erreur lors du déplacement de l\'affectation')
     }
   }
@@ -265,7 +266,7 @@ export default function PlanningPage() {
       )
       await loadData()
     } catch (err) {
-      console.error('Erreur duplication chantier:', err)
+      logger.error('Erreur duplication chantier', err, { context: 'PlanningPage' })
       setError('Erreur lors de la duplication')
     }
   }

@@ -11,6 +11,7 @@ import {
 import { pointagesService } from '../services/pointages'
 import { usersService } from '../services/users'
 import { chantiersService } from '../services/chantiers'
+import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
 import type {
   Pointage,
@@ -103,7 +104,7 @@ export default function FeuillesHeuresPage() {
         setVueChantiers(vueData)
       }
     } catch (err) {
-      console.error('Erreur chargement feuilles heures:', err)
+      logger.error('Erreur chargement feuilles heures', err, { context: 'FeuillesHeuresPage' })
       setError('Erreur lors du chargement des donnees')
     } finally {
       setLoading(false)
@@ -217,7 +218,7 @@ export default function FeuillesHeuresPage() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (err) {
-      console.error('Erreur export:', err)
+      logger.error('Erreur export', err, { context: 'FeuillesHeuresPage' })
       setError('Erreur lors de l\'export')
     } finally {
       setIsExporting(false)

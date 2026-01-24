@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { DossierTree, DocumentList, FileUploadZone, DossierModal, DocumentPreviewModal } from '../components/documents'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
+import { logger } from '../services/logger'
 import { chantiersService } from '../services/chantiers'
 import * as documentsApi from '../services/documents'
 import type { Chantier } from '../types'
@@ -83,7 +84,7 @@ export default function DocumentsPage() {
       const response = await chantiersService.list({ size: 100 })
       setChantiers(response.items)
     } catch (error) {
-      console.error('Error loading chantiers:', error)
+      logger.error('Error loading chantiers', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du chargement des chantiers', type: 'error' })
     } finally {
       setIsLoadingChantiers(false)
@@ -102,7 +103,7 @@ export default function DocumentsPage() {
       if (error.response?.status === 404) {
         setArborescence({ chantier_id: parseInt(chantierId), dossiers: [], total_documents: 0, total_taille: 0 })
       } else {
-        console.error('Error loading arborescence:', error)
+        logger.error('Error loading arborescence', error, { context: 'DocumentsPage' })
         addToast({ message: 'Erreur lors du chargement des dossiers', type: 'error' })
       }
     } finally {
@@ -116,7 +117,7 @@ export default function DocumentsPage() {
       const response = await documentsApi.listDocuments(dossierId)
       setDocuments(response.documents)
     } catch (error) {
-      console.error('Error loading documents:', error)
+      logger.error('Error loading documents', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du chargement des documents', type: 'error' })
     } finally {
       setIsLoadingDocuments(false)
@@ -132,7 +133,7 @@ export default function DocumentsPage() {
       await loadArborescence(selectedChantier.id)
       addToast({ message: 'Arborescence initialisee', type: 'success' })
     } catch (error) {
-      console.error('Error initializing arborescence:', error)
+      logger.error('Error initializing arborescence', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors de l\'initialisation', type: 'error' })
     } finally {
       setIsLoadingArborescence(false)
@@ -168,7 +169,7 @@ export default function DocumentsPage() {
       }
       addToast({ message: 'Dossier supprime', type: 'success' })
     } catch (error) {
-      console.error('Error deleting dossier:', error)
+      logger.error('Error deleting dossier', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors de la suppression', type: 'error' })
     }
   }
@@ -187,7 +188,7 @@ export default function DocumentsPage() {
         await loadArborescence(selectedChantier.id)
       }
     } catch (error) {
-      console.error('Error saving dossier:', error)
+      logger.error('Error saving dossier', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors de l\'enregistrement', type: 'error' })
     }
   }
@@ -208,7 +209,7 @@ export default function DocumentsPage() {
       await loadDocuments(selectedDossier.id)
       addToast({ message: `${files.length} document(s) telecharge(s)`, type: 'success' })
     } catch (error) {
-      console.error('Error uploading files:', error)
+      logger.error('Error uploading files', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du telechargement', type: 'error' })
     } finally {
       setIsUploading(false)
@@ -220,7 +221,7 @@ export default function DocumentsPage() {
       const { url } = await documentsApi.downloadDocument(document.id)
       window.open(url, '_blank')
     } catch (error) {
-      console.error('Error downloading document:', error)
+      logger.error('Error downloading document', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du telechargement', type: 'error' })
     }
   }
@@ -235,7 +236,7 @@ export default function DocumentsPage() {
       }
       addToast({ message: 'Document supprime', type: 'success' })
     } catch (error) {
-      console.error('Error deleting document:', error)
+      logger.error('Error deleting document', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors de la suppression', type: 'error' })
     }
   }
@@ -252,7 +253,7 @@ export default function DocumentsPage() {
       setDocuments(response.documents)
       setSelectedDossier(null)
     } catch (error) {
-      console.error('Error searching documents:', error)
+      logger.error('Error searching documents', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors de la recherche', type: 'error' })
     } finally {
       setIsLoadingDocuments(false)

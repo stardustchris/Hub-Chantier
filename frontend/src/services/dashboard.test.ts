@@ -117,7 +117,7 @@ describe('dashboardService', () => {
         '/api/dashboard/posts/123/comments',
         comment
       )
-      expect(result.comments).toHaveLength(1)
+      expect((result as any).comments).toHaveLength(1)
     })
   })
 
@@ -129,7 +129,7 @@ describe('dashboardService', () => {
       const result = await dashboardService.likePost('123')
 
       expect(api.post).toHaveBeenCalledWith('/api/dashboard/posts/123/like')
-      expect(result.is_liked).toBe(true)
+      expect((result as any).is_liked).toBe(true)
     })
   })
 
@@ -141,7 +141,7 @@ describe('dashboardService', () => {
       const result = await dashboardService.unlikePost('123')
 
       expect(api.delete).toHaveBeenCalledWith('/api/dashboard/posts/123/like')
-      expect(result.is_liked).toBe(false)
+      expect((result as any).is_liked).toBe(false)
     })
   })
 })

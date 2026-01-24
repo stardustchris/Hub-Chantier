@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render } from '@testing-library/react'
 import { LoggerToastBridge } from './LoggerToastBridge'
-import { ToastProvider, useToast } from '../contexts/ToastContext'
-import { logger, onLog } from '../services/logger'
+import { onLog } from '../services/logger'
 
 // Mock the logger module
 vi.mock('../services/logger', () => ({
