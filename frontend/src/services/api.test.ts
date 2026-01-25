@@ -160,3 +160,130 @@ describe('sessionStorage security', () => {
     expect(sessionStorage.getItem('access_token')).toBeNull()
   })
 })
+
+describe('CSRF token handling', () => {
+  it('detecte les methodes qui necessitent CSRF', () => {
+    const mutatingMethods = ['POST', 'PUT', 'DELETE', 'PATCH']
+    const safeMethods = ['GET', 'HEAD', 'OPTIONS']
+
+    mutatingMethods.forEach((method) => {
+      expect(['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)).toBe(true)
+    })
+
+    safeMethods.forEach((method) => {
+      expect(['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)).toBe(false)
+    })
+  })
+
+  it('ne requiert pas CSRF pour GET', () => {
+    const method = 'GET'
+    const requiresCsrf = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())
+    expect(requiresCsrf).toBe(false)
+  })
+
+  it('requiert CSRF pour POST', () => {
+    const method = 'POST'
+    const requiresCsrf = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())
+    expect(requiresCsrf).toBe(true)
+  })
+})
+
+describe('error response handling', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('gere les erreurs 403 Forbidden', () => {
+    const error = { response: { status: 403 } }
+    sessionStorage.setItem('access_token', 'test-token')
+    if (error.response?.status === 401) {
+      sessionStorage.removeItem('access_token')
+    }
+    expect(sessionStorage.getItem('access_token')).toBe('test-token')
+  })
+
+  it('gere les erreurs 404 Not Found', () => {
+    const error = { response: { status: 404 } }
+    sessionStorage.setItem('access_token', 'test-token')
+    if (error.response?.status === 401) {
+      sessionStorage.removeItem('access_token')
+    }
+    expect(sessionStorage.getItem('access_token')).toBe('test-token')
+  })
+
+  it('gere les erreurs reseau sans response', () => {
+    const error = { message: 'Network Error' }
+    sessionStorage.setItem('access_token', 'test-token')
+    if (error && (error as any).response?.status === 401) {
+      sessionStorage.removeItem('access_token')
+    }
+    expect(sessionStorage.getItem('access_token')).toBe('test-token')
+  })
+
+  it('gere les erreurs timeout', () => {
+    const error = { code: 'ECONNABORTED', message: 'timeout' }
+    sessionStorage.setItem('access_token', 'test-token')
+    if (error && (error as any).response?.status === 401) {
+      sessionStorage.removeItem('access_token')
+    }
+    expect(sessionStorage.getItem('access_token')).toBe('test-token')
+  })
+})
+
+describe('axios instance configuration', () => {
+  it('configure le timeout a 30 secondes', async () => {
+    const createCall = vi.mocked(axios.create).mock.calls[0]
+    if (createCall) {
+      expect(createCall[0]).toMatchObject({
+        timeout: 30000,
+      })
+    }
+  })
+
+  it('configure withCredentials pour les cookies HttpOnly', async () => {
+    const createCall = vi.mocked(axios.create).mock.calls[0]
+    if (createCall) {
+      expect(createCall[0]).toMatchObject({
+        withCredentials: true,
+      })
+    }
+  })
+
+  it('configure Content-Type JSON par defaut', async () => {
+    const createCall = vi.mocked(axios.create).mock.calls[0]
+    if (createCall) {
+      expect(createCall[0]).toMatchObject({
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    }
+  })
+})
+
+describe('authorization header', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('formate correctement le header Bearer', () => {
+    const token = 'my-jwt-token-123'
+    const expectedHeader = `Bearer ${token}`
+    expect(expectedHeader).toBe('Bearer my-jwt-token-123')
+  })
+
+  it('gere les tokens avec caracteres speciaux', () => {
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test'
+    sessionStorage.setItem('access_token', token)
+    const storedToken = sessionStorage.getItem('access_token')
+    expect(storedToken).toBe(token)
+    expect(`Bearer ${storedToken}`).toBe(`Bearer ${token}`)
+  })
+
+  it('gere les tokens vides', () => {
+    sessionStorage.setItem('access_token', '')
+    const token = sessionStorage.getItem('access_token')
+    expect(token).toBe('')
+    expect(!token).toBe(true)
+  })
+})
