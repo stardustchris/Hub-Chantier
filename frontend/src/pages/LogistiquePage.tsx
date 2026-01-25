@@ -1,102 +1,35 @@
 /**
- * Page Logistique - Gestion du matériel et réservations
+ * Page Logistique - Gestion du materiel et reservations
  *
- * LOG-01 à LOG-18: Module complet de gestion logistique
+ * LOG-01 a LOG-18: Module complet de gestion logistique
  */
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Truck, Calendar, Clock, AlertCircle } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useLogistique } from '../hooks'
 import { RessourceList, ReservationCalendar, ReservationModal } from '../components/logistique'
-import type { Ressource, Reservation } from '../types/logistique'
-import type { Chantier } from '../types'
-import { listRessources, listReservationsEnAttente } from '../api/logistique'
-import { chantiersService } from '../services/chantiers'
-import { logger } from '../services/logger'
-
-type TabType = 'ressources' | 'planning' | 'en-attente'
 
 const LogistiquePage: React.FC = () => {
-  const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<TabType>('ressources')
-  const [selectedRessource, setSelectedRessource] = useState<Ressource | null>(null)
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
-  const [chantiers, setChantiers] = useState<Chantier[]>([])
-  const [reservationsEnAttente, setReservationsEnAttente] = useState<Reservation[]>([])
-  const [showModal, setShowModal] = useState(false)
-  const [modalInitialData, setModalInitialData] = useState<{
-    date?: string
-    heureDebut?: string
-    heureFin?: string
-  }>({})
-
-  const isAdmin = user?.role === 'admin'
-  const canValidate = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
-
-  useEffect(() => {
-    loadChantiers()
-    if (canValidate) {
-      loadReservationsEnAttente()
-    }
-  }, [canValidate])
-
-  const loadChantiers = async () => {
-    try {
-      const data = await chantiersService.list({ size: 500 })
-      setChantiers(data?.items || [])
-    } catch (err) {
-      logger.error('Erreur chargement chantiers', err, { context: 'LogistiquePage' })
-    }
-  }
-
-  const loadReservationsEnAttente = async () => {
-    try {
-      const data = await listReservationsEnAttente()
-      setReservationsEnAttente(data?.items || [])
-    } catch (err) {
-      logger.error('Erreur chargement réservations en attente', err, { context: 'LogistiquePage' })
-    }
-  }
-
-  const handleSelectRessource = (ressource: Ressource) => {
-    setSelectedRessource(ressource)
-    setActiveTab('planning')
-  }
-
-  const handleCreateReservation = (date: string, heureDebut: string, heureFin: string) => {
-    setModalInitialData({ date, heureDebut, heureFin })
-    setSelectedReservation(null)
-    setShowModal(true)
-  }
-
-  const handleSelectReservation = (reservation: Reservation) => {
-    setSelectedReservation(reservation)
-    setShowModal(true)
-  }
-
-  const handleModalSuccess = () => {
-    // Recharger les données
-    if (selectedRessource) {
-      // Le calendrier se rechargera automatiquement
-    }
-    if (canValidate) {
-      loadReservationsEnAttente()
-    }
-  }
-
-  const tabs: { id: TabType; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { id: 'ressources', label: 'Ressources', icon: <Truck size={18} /> },
-    { id: 'planning', label: 'Planning', icon: <Calendar size={18} /> },
-  ]
-
-  if (canValidate) {
-    tabs.push({
-      id: 'en-attente',
-      label: 'En attente',
-      icon: <Clock size={18} />,
-      badge: reservationsEnAttente.length,
-    })
-  }
+  const {
+    isAdmin,
+    canValidate,
+    activeTab,
+    setActiveTab,
+    chantiers,
+    reservationsEnAttente,
+    selectedRessource,
+    setSelectedRessource,
+    showModal,
+    modalInitialData,
+    selectedReservation,
+    handleSelectRessource,
+    handleCreateReservation,
+    handleSelectReservation,
+    handleSelectPendingReservation,
+    handleModalClose,
+    handleModalSuccess,
+    tabs,
+  } = useLogistique()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,7 +44,7 @@ const LogistiquePage: React.FC = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Logistique</h1>
                 <p className="text-sm text-gray-500">
-                  Gestion du matériel et réservations
+                  Gestion du materiel et reservations
                 </p>
               </div>
             </div>
@@ -129,7 +62,9 @@ const LogistiquePage: React.FC = () => {
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {tab.icon}
+                {tab.id === 'ressources' && <Truck size={18} />}
+                {tab.id === 'planning' && <Calendar size={18} />}
+                {tab.id === 'en-attente' && <Clock size={18} />}
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className="px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
@@ -174,10 +109,10 @@ const LogistiquePage: React.FC = () => {
               <div className="text-center py-12">
                 <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Sélectionnez une ressource
+                  Selectionnez une ressource
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  Choisissez une ressource pour voir son planning de réservations
+                  Choisissez une ressource pour voir son planning de reservations
                 </p>
                 <button
                   onClick={() => setActiveTab('ressources')}
@@ -195,14 +130,14 @@ const LogistiquePage: React.FC = () => {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <AlertCircle className="text-orange-500" size={20} />
-              Réservations en attente de validation
+              Reservations en attente de validation
             </h2>
 
             {reservationsEnAttente.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
                 <Clock size={48} className="mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-500">
-                  Aucune réservation en attente
+                  Aucune reservation en attente
                 </p>
               </div>
             ) : (
@@ -211,17 +146,7 @@ const LogistiquePage: React.FC = () => {
                   <div
                     key={reservation.id}
                     className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      // Charger la ressource puis afficher le modal
-                      listRessources({ limit: 1000 }).then((data) => {
-                        const ressource = (data?.items || []).find((r) => r.id === reservation.ressource_id)
-                        if (ressource) {
-                          setSelectedRessource(ressource)
-                          setSelectedReservation(reservation)
-                          setShowModal(true)
-                        }
-                      })
-                    }}
+                    onClick={() => handleSelectPendingReservation(reservation)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -260,15 +185,11 @@ const LogistiquePage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de réservation */}
+      {/* Modal de reservation */}
       {selectedRessource && (
         <ReservationModal
           isOpen={showModal}
-          onClose={() => {
-            setShowModal(false)
-            setSelectedReservation(null)
-            setModalInitialData({})
-          }}
+          onClose={handleModalClose}
           ressource={selectedRessource}
           reservation={selectedReservation}
           chantiers={chantiers}

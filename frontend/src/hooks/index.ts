@@ -23,3 +23,7 @@ export type { ClockState, UseClockCardReturn } from './useClockCard'
 
 export { useDashboardFeed } from './useDashboardFeed'
 export type { UseDashboardFeedReturn } from './useDashboardFeed'
+
+export { useChantierDetail } from './useChantierDetail'
+export { useLogistique } from './useLogistique'
+export { useFormulaires } from './useFormulaires'
