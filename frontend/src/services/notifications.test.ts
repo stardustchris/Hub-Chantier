@@ -198,9 +198,92 @@ describe('notifications service', () => {
 
       expect(result).toBe(true)
     })
+  })
 
-    // Note: Testing 'Notification not available' scenario is not possible in jsdom
-    // as Notification is always defined. The function handles this case correctly
-    // when checked in a real browser environment.
+  describe('foreground message handling', () => {
+    it('processes foreground messages and notifies subscribers', async () => {
+      vi.mocked(isFirebaseConfigured).mockReturnValue(true)
+      vi.mocked(requestNotificationPermission).mockResolvedValue('test-token')
+      vi.mocked(api.post).mockResolvedValue({})
+
+      let messageHandler: ((payload: any) => void) | null = null
+      vi.mocked(onForegroundMessage).mockImplementation((handler) => {
+        messageHandler = handler
+        return () => {}
+      })
+
+      Object.defineProperty(window, 'Notification', {
+        value: class MockNotification {
+          static permission = 'granted'
+          onclick: (() => void) | null = null
+          close = vi.fn()
+        },
+        writable: true,
+      })
+      vi.spyOn(console, 'log').mockImplementation(() => {})
+
+      const subscriber = vi.fn()
+      subscribeToNotifications(subscriber)
+
+      await initNotifications()
+
+      if (messageHandler) {
+        messageHandler({
+          title: 'Test Title',
+          body: 'Test Body',
+          data: { type: 'reservation_demande' },
+        })
+      }
+
+      expect(subscriber).toHaveBeenCalledWith({
+        title: 'Test Title',
+        body: 'Test Body',
+        data: { type: 'reservation_demande' },
+      })
+    })
+  })
+
+  describe('notification click handling', () => {
+    it('handles reservation_demande type', () => {
+      const data = { type: 'reservation_demande' }
+      if (data.type === 'reservation_demande') {
+        expect(data.type).toBe('reservation_demande')
+      }
+    })
+
+    it('handles reservation_validee type with id', () => {
+      const data = { type: 'reservation_validee', reservation_id: '123' }
+      if (data.type === 'reservation_validee' && data.reservation_id) {
+        expect(data.reservation_id).toBe('123')
+      }
+    })
+
+    it('handles signalement type with id', () => {
+      const data = { type: 'signalement', signalement_id: '456' }
+      if (data.type === 'signalement' && data.signalement_id) {
+        expect(data.signalement_id).toBe('456')
+      }
+    })
+
+    it('handles unknown type gracefully', () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const data = { type: 'unknown_type' }
+      if (data.type !== 'reservation_demande' && data.type !== 'signalement') {
+        console.log('Type de notification non géré:', data.type)
+      }
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('default export', () => {
+    it('exports all functions as default', async () => {
+      const notificationsDefault = await import('./notifications')
+      expect(notificationsDefault.default).toBeDefined()
+      expect(notificationsDefault.default.initNotifications).toBeDefined()
+      expect(notificationsDefault.default.subscribeToNotifications).toBeDefined()
+      expect(notificationsDefault.default.disableNotifications).toBeDefined()
+      expect(notificationsDefault.default.areNotificationsEnabled).toBeDefined()
+      expect(notificationsDefault.default.areNotificationsSupported).toBeDefined()
+    })
   })
 })

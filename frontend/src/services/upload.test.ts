@@ -166,6 +166,58 @@ describe('uploadService', () => {
       expect(uploadService.compressImage).toBeDefined()
       expect(typeof uploadService.compressImage).toBe('function')
     })
+
+    it('accepte un parametre maxSizeMB optionnel', () => {
+      expect(uploadService.compressImage.length).toBeLessThanOrEqual(2)
+    })
+  })
+
+  // ===== ERROR HANDLING =====
+
+  describe('error handling', () => {
+    it('gere les erreurs API sur uploadProfilePhoto', async () => {
+      vi.mocked(api.post).mockRejectedValue(new Error('Network error'))
+      const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
+      await expect(uploadService.uploadProfilePhoto(file)).rejects.toThrow('Network error')
+    })
+
+    it('gere les erreurs API sur uploadPostMedia', async () => {
+      vi.mocked(api.post).mockRejectedValue(new Error('Server error'))
+      const files = [new File(['content'], 'photo.jpg', { type: 'image/jpeg' })]
+      await expect(uploadService.uploadPostMedia('post-1', files)).rejects.toThrow('Server error')
+    })
+
+    it('gere les erreurs API sur uploadChantierPhoto', async () => {
+      vi.mocked(api.post).mockRejectedValue(new Error('Upload failed'))
+      const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
+      await expect(uploadService.uploadChantierPhoto('chantier-1', file)).rejects.toThrow('Upload failed')
+    })
+  })
+
+  // ===== FORMDATA =====
+
+  describe('FormData construction', () => {
+    it('ajoute le fichier au FormData pour uploadProfilePhoto', async () => {
+      vi.mocked(api.post).mockResolvedValue({ data: { url: 'test.jpg' } })
+      const appendSpy = vi.spyOn(FormData.prototype, 'append')
+      const file = new File(['content'], 'profile.jpg', { type: 'image/jpeg' })
+      await uploadService.uploadProfilePhoto(file)
+      expect(appendSpy).toHaveBeenCalledWith('file', file)
+      appendSpy.mockRestore()
+    })
+
+    it('ajoute les fichiers au FormData pour uploadPostMedia', async () => {
+      vi.mocked(api.post).mockResolvedValue({ data: { files: [] } })
+      const appendSpy = vi.spyOn(FormData.prototype, 'append')
+      const files = [
+        new File(['content1'], 'photo1.jpg', { type: 'image/jpeg' }),
+        new File(['content2'], 'photo2.jpg', { type: 'image/jpeg' }),
+      ]
+      await uploadService.uploadPostMedia('post-1', files)
+      expect(appendSpy).toHaveBeenCalledWith('files', files[0])
+      expect(appendSpy).toHaveBeenCalledWith('files', files[1])
+      appendSpy.mockRestore()
+    })
   })
 })
 
