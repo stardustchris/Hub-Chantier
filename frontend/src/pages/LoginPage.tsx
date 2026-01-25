@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { loginSchema, validateForm } from '../schemas'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
 
   const { login } = useAuth()
@@ -14,6 +16,15 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setFieldErrors({})
+
+    // Validation client avec Zod
+    const validation = validateForm(loginSchema, { email, password })
+    if (!validation.success) {
+      setFieldErrors(validation.errors)
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -57,12 +68,18 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input mt-1"
+                className={`input mt-1 ${fieldErrors.email ? 'border-red-500' : ''}`}
                 placeholder="votre@email.com"
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
               />
+              {fieldErrors.email && (
+                <p id="email-error" className="mt-1 text-sm text-red-600">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             <div>
@@ -72,12 +89,18 @@ export default function LoginPage() {
               <input
                 id="password"
                 type="password"
-                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input mt-1"
+                className={`input mt-1 ${fieldErrors.password ? 'border-red-500' : ''}`}
                 placeholder="********"
+                aria-invalid={!!fieldErrors.password}
+                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
               />
+              {fieldErrors.password && (
+                <p id="password-error" className="mt-1 text-sm text-red-600">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
           </div>
 
