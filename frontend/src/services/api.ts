@@ -57,8 +57,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       sessionStorage.removeItem('access_token')
-      // Notifie AuthContext pour mettre à jour l'état user
-      emitSessionExpired()
+      // Ne pas émettre sessionExpired pour /api/auth/me car c'est normal
+      // quand l'utilisateur n'est pas connecté (checkAuth initial)
+      const url = error.config?.url || ''
+      if (!url.includes('/api/auth/me')) {
+        // Notifie AuthContext pour mettre à jour l'état user
+        emitSessionExpired()
+      }
     }
     return Promise.reject(error)
   }
