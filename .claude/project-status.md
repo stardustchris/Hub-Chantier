@@ -16,30 +16,29 @@
 | formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
 | signalements | 10 | SIG-01 a SIG-20 | **COMPLET** (18/20, 2 infra) |
-| logistique | 11 | LOG-01 a LOG-18 | Structure only |
+| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** (15/18, 3 infra) |
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
 
 ## Statistiques
 
-- **Modules complets** : 10/12
+- **Modules complets** : 11/12
 - **Fonctionnalites totales** : 203 (incluant PDC-01 a PDC-17)
-- **Tests unitaires** : 1055+ (930 + 125 planning_charge)
+- **Tests unitaires** : 1100+ (1055 + 45 logistique)
 - **Tests integration** : 17+ (formulaires)
 
 ## Prochaine tache prioritaire
 
-**Module Logistique (LOG)** (CDC Section 11)
-- Gestion des commandes (LOG-01 a LOG-08)
-- Suivi des livraisons (LOG-09 a LOG-12)
-- Gestion du materiel (LOG-13 a LOG-18)
+**Module Interventions (INT)** (CDC Section 12)
+- Suivi interventions (INT-01 a INT-08)
+- Workflow interventions (INT-09 a INT-12)
+- Rapports et historique (INT-13 a INT-17)
 
 ## Modules en attente
 
 | Module | Priorite | Dependances |
 |--------|----------|-------------|
-| logistique | Haute | chantiers (OK) |
-| interventions | Moyenne | planning (OK), taches (OK) |
+| interventions | Haute | planning (OK), taches (OK) |
 
 ## Fonctionnalites en attente infrastructure
 
@@ -50,13 +49,14 @@
 - FEED-17 : Notifications push
 - SIG-13 : Notifications push signalements (partiel - backend OK)
 - SIG-16/17 : Escalade auto temps reel (job scheduler requis)
+- LOG-13/14 : Notifications push reservations (events publies, service push requis)
+- LOG-15 : Rappel J-1 reservations (job scheduler requis)
 
 ## Derniere mise a jour
 
-Session 2026-01-24 - Module Planning de Charge COMPLET (PDC-01 a PDC-17)
-- Migration Alembic avec ForeignKeys
-- RBAC (Chef+ lecture, Conducteur+ modification)
-- Audit Trail sur CREATE/UPDATE/DELETE
-- Providers integration (Chantiers, Affectations, Utilisateurs)
-- Soft delete avec historique
-- 125 tests unitaires
+Session 2026-01-25 - Verification et documentation module Logistique (LOG-01 a LOG-18)
+- Backend Clean Architecture complet (domain, application, infrastructure)
+- Frontend React complet (composants, API, types)
+- 15/18 fonctionnalites implementees (3 infra: notifications push + rappel J-1)
+- 45 tests unitaires (entities, value objects, use cases)
+- Migration Alembic pour schema logistique

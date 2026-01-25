@@ -662,26 +662,26 @@ Le module Logistique permet de gerer les engins et gros materiel de l'entreprise
 
 ### 11.2 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| LOG-01 | Referentiel materiel | Liste des engins disponibles (Admin uniquement) |
-| LOG-02 | Fiche ressource | Nom, code, photo, couleur, plage horaire par defaut |
-| LOG-03 | Planning par ressource | Vue calendrier hebdomadaire 7 jours |
-| LOG-04 | Navigation semaine | < [Semaine X] > avec 3 semaines visibles |
-| LOG-05 | Axe horaire vertical | 08:00 → 18:00 (configurable) |
-| LOG-06 | Blocs reservation colores | Par demandeur avec nom + bouton ✕ |
-| LOG-07 | Demande de reservation | Depuis mobile ou web |
-| LOG-08 | Selection chantier | Association obligatoire au projet |
-| LOG-09 | Selection creneau | Date + heure debut / heure fin |
-| LOG-10 | Option validation N+1 | Activation/desactivation par ressource |
-| LOG-11 | Workflow validation | Demande 🟡 → Chef valide → Confirme 🟢 |
-| LOG-12 | Statuts reservation | En attente 🟡 / Validee 🟢 / Refusee 🔴 |
-| LOG-13 | Notification demande | Push au valideur (chef/conducteur) |
-| LOG-14 | Notification decision | Push au demandeur |
-| LOG-15 | Rappel J-1 | Notification veille de reservation |
-| LOG-16 | Motif de refus | Champ texte optionnel |
-| LOG-17 | Conflit de reservation | Alerte si creneau deja occupe |
-| LOG-18 | Historique par ressource | Journal complet des reservations |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| LOG-01 | Referentiel materiel | Liste des engins disponibles (Admin uniquement) | ✅ Backend + Frontend |
+| LOG-02 | Fiche ressource | Nom, code, photo, couleur, plage horaire par defaut | ✅ Backend + Frontend |
+| LOG-03 | Planning par ressource | Vue calendrier hebdomadaire 7 jours | ✅ Backend + Frontend |
+| LOG-04 | Navigation semaine | < [Semaine X] > avec 3 semaines visibles | ✅ Backend + Frontend |
+| LOG-05 | Axe horaire vertical | 08:00 → 18:00 (configurable) | ✅ Frontend |
+| LOG-06 | Blocs reservation colores | Par demandeur avec nom + bouton ✕ | ✅ Frontend |
+| LOG-07 | Demande de reservation | Depuis mobile ou web | ✅ Backend + Frontend |
+| LOG-08 | Selection chantier | Association obligatoire au projet | ✅ Backend |
+| LOG-09 | Selection creneau | Date + heure debut / heure fin | ✅ Backend + Frontend |
+| LOG-10 | Option validation N+1 | Activation/desactivation par ressource | ✅ Backend |
+| LOG-11 | Workflow validation | Demande 🟡 → Chef valide → Confirme 🟢 | ✅ Backend + Frontend |
+| LOG-12 | Statuts reservation | En attente 🟡 / Validee 🟢 / Refusee 🔴 | ✅ Backend + Frontend |
+| LOG-13 | Notification demande | Push au valideur (chef/conducteur) | ⏳ Infra (event publie) |
+| LOG-14 | Notification decision | Push au demandeur | ⏳ Infra (event publie) |
+| LOG-15 | Rappel J-1 | Notification veille de reservation | ⏳ Infra (job scheduler) |
+| LOG-16 | Motif de refus | Champ texte optionnel | ✅ Backend + Frontend |
+| LOG-17 | Conflit de reservation | Alerte si creneau deja occupe | ✅ Backend |
+| LOG-18 | Historique par ressource | Journal complet des reservations | ✅ Backend + Frontend |
 
 ### 11.3 Types de ressources (Greg Constructions)
 
