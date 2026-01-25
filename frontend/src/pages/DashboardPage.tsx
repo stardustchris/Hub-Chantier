@@ -28,10 +28,16 @@ import {
 } from 'lucide-react'
 import type { Post, Chantier, TargetType } from '../types'
 
-// Mock posts pour démonstration
+// Helper pour détecter les posts mock (IDs négatifs)
+const isMockPost = (postId: string | number): boolean => {
+  const numId = typeof postId === 'string' ? parseInt(postId, 10) : postId
+  return numId < 0 || isNaN(numId)
+}
+
+// Mock posts pour démonstration (IDs négatifs pour éviter conflits avec API)
 const MOCK_POSTS: Post[] = [
   {
-    id: 'mock-1',
+    id: -1,
     contenu: 'Dalle coulée avec succès sur le chantier Villa Moderne ! Beau travail de toute l\'équipe malgré la météo difficile ce matin.',
     type: 'message',
     auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB', role: 'chef_chantier' } as Post['auteur'],
@@ -48,7 +54,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 7200000).toISOString(),
   },
   {
-    id: 'mock-2',
+    id: -2,
     contenu: '⚠️ URGENT: Livraison de béton décalée à 14h au lieu de 10h sur Résidence Les Pins. Merci de réorganiser les équipes.',
     type: 'urgent',
     auteur: { id: '3', prenom: 'Jean', nom: 'Conducteur', couleur: '#9B59B6', role: 'conducteur' } as Post['auteur'],
@@ -64,7 +70,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 1800000).toISOString(),
   },
   {
-    id: 'mock-3',
+    id: -3,
     contenu: 'Formation sécurité effectuée ce matin. Rappel: port du casque OBLIGATOIRE sur tous les chantiers. Bonne journée à tous !',
     type: 'message',
     auteur: { id: '4', prenom: 'Admin', nom: 'Greg', couleur: '#27AE60', role: 'admin' } as Post['auteur'],
@@ -79,7 +85,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 86400000).toISOString(),
   },
   {
-    id: 'mock-4',
+    id: -4,
     contenu: 'Nouvelle machine arrivée sur le chantier École Pasteur. Formation d\'utilisation demain à 8h pour les volontaires.',
     type: 'message',
     auteur: { id: '5', prenom: 'Sophie', nom: 'Technique', couleur: '#F39C12', role: 'chef_chantier' } as Post['auteur'],
@@ -94,7 +100,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 172800000).toISOString(),
   },
   {
-    id: 'mock-5',
+    id: -5,
     contenu: 'Félicitations à l\'équipe du chantier Maison Durand pour la livraison en avance ! Client très satisfait.',
     type: 'message',
     auteur: { id: '4', prenom: 'Admin', nom: 'Greg', couleur: '#27AE60', role: 'admin' } as Post['auteur'],
@@ -227,26 +233,53 @@ export default function DashboardPage() {
   }
 
   // P1-7: Memoize handlers pour éviter re-renders des PostCards
-  const handleLike = useCallback(async (postId: string, isLiked: boolean) => {
+  const handleLike = useCallback(async (postId: string | number, isLiked: boolean) => {
+    // Pour les mocks (IDs négatifs), mettre à jour localement avec feedback visuel
+    if (isMockPost(postId)) {
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p
+          const currentLikes = p.likes || []
+          const newLikes = isLiked
+            ? currentLikes.filter((l) => l.user_id !== user?.id)
+            : [...currentLikes, { user_id: user?.id || '', created_at: new Date().toISOString() }]
+          return {
+            ...p,
+            likes_count: (p.likes_count || 0) + (isLiked ? -1 : 1),
+            likes: newLikes,
+          }
+        })
+      )
+      return
+    }
+
     try {
       if (isLiked) {
-        await dashboardService.unlikePost(postId)
+        await dashboardService.unlikePost(String(postId))
       } else {
-        await dashboardService.likePost(postId)
+        await dashboardService.likePost(String(postId))
       }
-      const updatedPost = await dashboardService.getPost(postId)
+      const updatedPost = await dashboardService.getPost(String(postId))
       setPosts((prev) => prev.map((p) => (p.id === postId ? updatedPost : p)))
     } catch (error) {
       logger.error('Erreur lors du like', error, { context: 'DashboardPage', showToast: true })
     }
-  }, [])
+  }, [user?.id])
 
-  const handlePin = useCallback(async (postId: string, isPinned: boolean) => {
+  const handlePin = useCallback(async (postId: string | number, isPinned: boolean) => {
+    // Pour les mocks (IDs négatifs), mettre à jour localement
+    if (isMockPost(postId)) {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, is_pinned: !isPinned } : p))
+      )
+      return
+    }
+
     try {
       if (isPinned) {
-        await dashboardService.unpinPost(postId)
+        await dashboardService.unpinPost(String(postId))
       } else {
-        await dashboardService.pinPost(postId)
+        await dashboardService.pinPost(String(postId))
       }
       loadFeed(1)
     } catch (error) {
@@ -254,11 +287,17 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const handleDelete = useCallback(async (postId: string) => {
+  const handleDelete = useCallback(async (postId: string | number) => {
     if (!confirm('Supprimer cette publication ?')) return
 
+    // Pour les mocks (IDs négatifs), supprimer localement
+    if (isMockPost(postId)) {
+      setPosts((prev) => prev.filter((p) => p.id !== postId))
+      return
+    }
+
     try {
-      await dashboardService.deletePost(postId)
+      await dashboardService.deletePost(String(postId))
       setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch (error) {
       logger.error('Erreur lors de la suppression', error, { context: 'DashboardPage', showToast: true })
@@ -378,7 +417,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Posts - Fixed height with scroll */}
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
                   {sortedPosts.length === 0 && !isLoading ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
