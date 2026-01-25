@@ -2,7 +2,7 @@
 
 // ===== UTILISATEURS =====
 export type UserRole = 'admin' | 'conducteur' | 'chef_chantier' | 'compagnon'
-export type UserType = 'employe' | 'sous_traitant'
+export type UserType = 'employe' | 'interimaire' | 'sous_traitant'
 export type Metier = 'macon' | 'coffreur' | 'ferrailleur' | 'grutier' | 'charpentier' | 'couvreur' | 'electricien' | 'plombier' | 'autre'
 
 export interface User {

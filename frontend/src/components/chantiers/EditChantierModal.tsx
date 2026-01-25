@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { X, Plus, Trash2, Loader2, Calendar } from 'lucide-react'
+import { X, Plus, Trash2, Loader2, Calendar, MapPin } from 'lucide-react'
 import type { Chantier, ChantierUpdate, ContactChantier, PhaseChantierCreate } from '../../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../../types'
 import { chantiersService } from '../../services/chantiers'
+import { geocodeAddress } from '../../services/geocoding'
 
 // Phase locale avec ID optionnel (pour nouvelles phases)
 interface LocalPhase extends PhaseChantierCreate {
@@ -37,6 +38,8 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
 
   const [contacts, setContacts] = useState<ContactChantier[]>(initialContacts)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGeocoding, setIsGeocoding] = useState(false)
+  const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   // Phases gérées via l'API dédiée
   const [phases, setPhases] = useState<LocalPhase[]>([])
@@ -64,6 +67,39 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
     }
     loadPhases()
   }, [chantier.id])
+
+  // Geocoder automatiquement l'adresse quand elle change (avec debounce)
+  useEffect(() => {
+    if (!formData.adresse || formData.adresse === chantier.adresse) {
+      return
+    }
+
+    // Debounce de 800ms pour éviter trop de requêtes
+    const timeoutId = setTimeout(async () => {
+      setIsGeocoding(true)
+      setGeocodingStatus('idle')
+
+      try {
+        const result = await geocodeAddress(formData.adresse!)
+        if (result) {
+          setFormData(prev => ({
+            ...prev,
+            latitude: result.latitude,
+            longitude: result.longitude,
+          }))
+          setGeocodingStatus('success')
+        } else {
+          setGeocodingStatus('error')
+        }
+      } catch {
+        setGeocodingStatus('error')
+      } finally {
+        setIsGeocoding(false)
+      }
+    }, 800)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.adresse, chantier.adresse])
 
   const addContact = () => {
     setContacts([...contacts, { nom: '', profession: '', telephone: '' }])
@@ -200,12 +236,39 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Adresse
             </label>
-            <textarea
-              value={formData.adresse || ''}
-              onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-              className="input"
-              rows={2}
-            />
+            <div className="space-y-2">
+              <textarea
+                value={formData.adresse || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, adresse: e.target.value })
+                  setGeocodingStatus('idle')
+                }}
+                className="input"
+                rows={2}
+              />
+              {formData.adresse && formData.adresse !== chantier.adresse && (
+                <div className="flex items-center gap-2 text-sm">
+                  {isGeocoding && (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-primary-600" />
+                      <span className="text-gray-500">Mise a jour de la localisation...</span>
+                    </>
+                  )}
+                  {geocodingStatus === 'success' && (
+                    <>
+                      <MapPin className="w-4 h-4 text-green-600" />
+                      <span className="text-green-600">Localisation mise a jour</span>
+                    </>
+                  )}
+                  {geocodingStatus === 'error' && (
+                    <>
+                      <MapPin className="w-4 h-4 text-red-500" />
+                      <span className="text-red-500">Adresse non trouvee</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

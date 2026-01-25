@@ -9,10 +9,12 @@ class TypeUtilisateur(str, Enum):
 
     Selon CDC USR-05:
     - EMPLOYE: Salarié de l'entreprise Greg Constructions
+    - INTERIMAIRE: Travailleur temporaire via agence d'intérim
     - SOUS_TRAITANT: Prestataire externe intervenant sur chantier
     """
 
     EMPLOYE = "employe"
+    INTERIMAIRE = "interimaire"
     SOUS_TRAITANT = "sous_traitant"
 
     def __str__(self) -> str:
@@ -57,6 +59,10 @@ class TypeUtilisateur(str, Enum):
     def is_internal(self) -> bool:
         """Vérifie si l'utilisateur est interne à l'entreprise."""
         return self == TypeUtilisateur.EMPLOYE
+
+    def is_interimaire(self) -> bool:
+        """Vérifie si l'utilisateur est intérimaire."""
+        return self == TypeUtilisateur.INTERIMAIRE
 
     def is_external(self) -> bool:
         """Vérifie si l'utilisateur est externe (sous-traitant)."""
