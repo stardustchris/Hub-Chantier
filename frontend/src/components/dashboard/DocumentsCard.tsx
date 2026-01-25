@@ -20,9 +20,12 @@ interface DocumentsCardProps {
 }
 
 const defaultDocuments: Document[] = [
-  { id: '1', name: 'Plan etage 1.pdf', siteName: 'Villa Lyon', type: 'pdf' },
-  { id: '2', name: 'Consignes securite', siteName: 'General', type: 'doc' },
-  { id: '3', name: 'Checklist qualite', siteName: 'Villa Lyon', type: 'doc' },
+  { id: '1', name: 'Plan étage 1 - Villa Moderne.pdf', siteName: 'Villa Moderne Lyon', type: 'pdf' },
+  { id: '2', name: 'Consignes de sécurité 2026.pdf', siteName: 'Général', type: 'pdf' },
+  { id: '3', name: 'Checklist qualité béton.doc', siteName: 'Villa Moderne Lyon', type: 'doc' },
+  { id: '4', name: 'Planning semaine 4.pdf', siteName: 'Résidence Les Pins', type: 'pdf' },
+  { id: '5', name: 'Photo façade nord.jpg', siteName: 'École Pasteur', type: 'image' },
+  { id: '6', name: 'Devis sous-traitant électricité.pdf', siteName: 'Villa Moderne Lyon', type: 'pdf' },
 ]
 
 const typeColors = {
@@ -51,7 +54,7 @@ export default function DocumentsCard({
           Voir tout
         </button>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[280px] overflow-y-auto">
         {documents.map((doc) => {
           const colors = typeColors[doc.type]
           return (
