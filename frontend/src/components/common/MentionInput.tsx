@@ -5,7 +5,7 @@
  * Affiche une liste filtree des utilisateurs au fur et a mesure de la saisie.
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { AtSign, Loader2 } from 'lucide-react'
 import { usersService } from '../../services/users'
 import type { User } from '../../types'
@@ -30,7 +30,7 @@ interface MentionSuggestion {
 export default function MentionInput({
   value,
   onChange,
-  placeholder = 'Ecrivez votre commentaire... Utilisez @ pour mentionner quelqu\'un',
+  placeholder = "Ecrivez votre commentaire... Utilisez @ pour mentionner quelqu'un",
   className = '',
   rows = 3,
   disabled = false,
@@ -45,48 +45,54 @@ export default function MentionInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  // Detecter le @ et charger les suggestions
-  const handleInputChange = useCallback(async (newValue: string) => {
+  // Charger tous les utilisateurs au premier @
+  const loadUsers = async () => {
+    setLoading(true)
+    try {
+      // Charger tous les utilisateurs (la recherche se fait cote client pour la reactivite)
+      const response = await usersService.list({ size: 50 })
+      const users = response.items.map((u: User) => ({
+        id: u.id,
+        prenom: u.prenom,
+        nom: u.nom,
+        role: u.role,
+        couleur: u.couleur || '#3498DB',
+      }))
+      setSuggestions(users)
+    } catch (error) {
+      console.error('Erreur chargement utilisateurs:', error)
+      setSuggestions([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Detecter le @ lors de la saisie
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value
+    const newCursorPos = e.target.selectionStart
+
     onChange(newValue)
 
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const cursorPos = textarea.selectionStart
-    const textBeforeCursor = newValue.slice(0, cursorPos)
-
-    // Chercher le dernier @ avant le curseur
+    // Analyser le texte avant le curseur
+    const textBeforeCursor = newValue.slice(0, newCursorPos)
     const lastAtIndex = textBeforeCursor.lastIndexOf('@')
 
     if (lastAtIndex !== -1) {
-      // Verifier qu'il n'y a pas d'espace entre @ et le curseur (sinon la mention est finie)
       const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1)
 
-      // Si on est juste apres le @ ou en train de taper un nom (sans espace)
-      if (textAfterAt === '' || /^[a-zA-ZÀ-ÿ0-9_-]*$/.test(textAfterAt)) {
+      // Verifier que c'est une mention valide (pas d'espace, debut de mot)
+      const isStartOfWord = lastAtIndex === 0 || /\s/.test(newValue[lastAtIndex - 1])
+      const isValidMention = isStartOfWord && /^[a-zA-ZÀ-ÿ0-9_-]*$/.test(textAfterAt)
+
+      if (isValidMention) {
         setMentionQuery(textAfterAt.toLowerCase())
         setMentionStartPos(lastAtIndex)
-        setShowSuggestions(true)
         setSelectedIndex(0)
 
-        // Charger les utilisateurs
-        setLoading(true)
-        try {
-          const response = await usersService.list({ search: textAfterAt, size: 10 })
-          setSuggestions(
-            response.items.map((u: User) => ({
-              id: u.id,
-              prenom: u.prenom,
-              nom: u.nom,
-              role: u.role,
-              couleur: u.couleur || '#3498DB',
-            }))
-          )
-        } catch (error) {
-          console.error('Erreur chargement utilisateurs:', error)
-          setSuggestions([])
-        } finally {
-          setLoading(false)
+        if (!showSuggestions) {
+          setShowSuggestions(true)
+          loadUsers()
         }
         return
       }
@@ -96,10 +102,10 @@ export default function MentionInput({
     setShowSuggestions(false)
     setMentionQuery('')
     setMentionStartPos(-1)
-  }, [onChange])
+  }
 
   // Inserer une mention
-  const insertMention = useCallback((user: MentionSuggestion) => {
+  const insertMention = (user: MentionSuggestion) => {
     if (mentionStartPos === -1) return
 
     const beforeMention = value.slice(0, mentionStartPos)
@@ -121,38 +127,38 @@ export default function MentionInput({
         textareaRef.current.setSelectionRange(newPos, newPos)
       }
     }, 0)
-  }, [value, onChange, mentionStartPos, mentionQuery])
+  }
 
   // Navigation clavier dans les suggestions
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) return
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return
+
+    const filtered = filteredSuggestions
+    if (filtered.length === 0) return
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setSelectedIndex((prev) => (prev + 1) % suggestions.length)
+        setSelectedIndex((prev) => (prev + 1) % filtered.length)
         break
       case 'ArrowUp':
         e.preventDefault()
-        setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length)
+        setSelectedIndex((prev) => (prev - 1 + filtered.length) % filtered.length)
         break
       case 'Enter':
-        if (showSuggestions) {
-          e.preventDefault()
-          insertMention(suggestions[selectedIndex])
-        }
+        e.preventDefault()
+        insertMention(filtered[selectedIndex])
         break
       case 'Escape':
+        e.preventDefault()
         setShowSuggestions(false)
         break
       case 'Tab':
-        if (showSuggestions) {
-          e.preventDefault()
-          insertMention(suggestions[selectedIndex])
-        }
+        e.preventDefault()
+        insertMention(filtered[selectedIndex])
         break
     }
-  }, [showSuggestions, suggestions, selectedIndex, insertMention])
+  }
 
   // Fermer les suggestions au clic externe
   useEffect(() => {
@@ -175,10 +181,11 @@ export default function MentionInput({
   const filteredSuggestions = suggestions.filter((s) => {
     if (!mentionQuery) return true
     const fullName = `${s.prenom} ${s.nom}`.toLowerCase()
+    const query = mentionQuery.toLowerCase()
     return (
-      s.prenom.toLowerCase().startsWith(mentionQuery) ||
-      s.nom.toLowerCase().startsWith(mentionQuery) ||
-      fullName.includes(mentionQuery)
+      s.prenom.toLowerCase().startsWith(query) ||
+      s.nom.toLowerCase().startsWith(query) ||
+      fullName.includes(query)
     )
   })
 
@@ -187,7 +194,7 @@ export default function MentionInput({
       <textarea
         ref={textareaRef}
         value={value}
-        onChange={(e) => handleInputChange(e.target.value)}
+        onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         rows={rows}
@@ -210,11 +217,13 @@ export default function MentionInput({
           {loading ? (
             <div className="px-4 py-3 text-center text-gray-500">
               <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-              Chargement...
+              Chargement des utilisateurs...
             </div>
           ) : filteredSuggestions.length === 0 ? (
             <div className="px-4 py-3 text-center text-gray-500">
-              Aucun utilisateur trouve
+              {suggestions.length === 0
+                ? 'Aucun utilisateur disponible'
+                : `Aucun utilisateur ne correspond a "${mentionQuery}"`}
             </div>
           ) : (
             filteredSuggestions.map((user, index) => (
@@ -229,8 +238,8 @@ export default function MentionInput({
                   className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
                   style={{ backgroundColor: user.couleur }}
                 >
-                  {user.prenom[0]}
-                  {user.nom[0]}
+                  {user.prenom?.[0] || '?'}
+                  {user.nom?.[0] || '?'}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">

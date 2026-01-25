@@ -1,10 +1,12 @@
 /**
  * Composant PostComposer - Zone de publication
  * Selon CDC Section 2.2.1 - Zone de publication avec ciblage
+ * Supporte les mentions @ pour taguer des utilisateurs
  */
 
 import { useState } from 'react'
 import type { TargetType, CreatePostData } from '../../types/dashboard'
+import MentionInput from '../common/MentionInput'
 
 interface PostComposerProps {
   onSubmit: (data: CreatePostData) => Promise<void>
@@ -45,22 +47,22 @@ export default function PostComposer({
 
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-6">
-      {/* Zone de saisie */}
+      {/* Zone de saisie avec mentions @ */}
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold">
+        <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
           👤
         </div>
         <div className="flex-1">
-          <textarea
+          <MentionInput
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             placeholder={
               isCompagnon
-                ? 'Partager une photo, signaler un problème...'
-                : "Quoi de neuf ? Partagez une info avec l'équipe..."
+                ? 'Partager une photo, signaler un problème... Utilisez @ pour mentionner'
+                : "Quoi de neuf ? Utilisez @ pour mentionner quelqu'un..."
             }
-            className="w-full resize-none border-0 focus:ring-0 text-gray-800 placeholder-gray-400 text-base"
             rows={3}
+            className="border-0 focus:ring-0"
           />
         </div>
       </div>

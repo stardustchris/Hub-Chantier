@@ -1,8 +1,12 @@
 /**
  * Dropdown des notifications avec support du detail et actions.
+ *
+ * - Le dropdown reste ouvert jusqu'a clic externe
+ * - Chaque notification ouvre un popup de detail
+ * - Les documents sont previsualises/telechargeables
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Bell,
@@ -16,13 +20,24 @@ import {
   X,
   Loader2,
   ExternalLink,
+  Download,
+  Eye,
 } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { formatRelativeTime, type Notification } from '../../services/notificationsApi'
+import { getDocument, downloadDocument, getDocumentPreviewUrl, formatFileSize } from '../../services/documents'
+import type { Document } from '../../types/documents'
 
 interface NotificationDropdownProps {
   isOpen: boolean
   onClose: () => void
+}
+
+interface DocumentInfo {
+  loading: boolean
+  error: string | null
+  document: Document | null
+  downloadUrl: string | null
 }
 
 function getNotificationIcon(type: string) {
@@ -60,44 +75,93 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
   } = useNotifications()
 
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
+  const [documentInfo, setDocumentInfo] = useState<DocumentInfo>({
+    loading: false,
+    error: null,
+    document: null,
+    downloadUrl: null,
+  })
 
+  // Charger les infos document quand on selectionne une notification document
+  useEffect(() => {
+    if (selectedNotification?.related_document_id) {
+      setDocumentInfo({ loading: true, error: null, document: null, downloadUrl: null })
+
+      Promise.all([
+        getDocument(selectedNotification.related_document_id),
+        downloadDocument(selectedNotification.related_document_id),
+      ])
+        .then(([doc, downloadData]) => {
+          setDocumentInfo({
+            loading: false,
+            error: null,
+            document: doc,
+            downloadUrl: downloadData.url,
+          })
+        })
+        .catch((err) => {
+          console.error('Erreur chargement document:', err)
+          setDocumentInfo({
+            loading: false,
+            error: 'Impossible de charger le document',
+            document: null,
+            downloadUrl: null,
+          })
+        })
+    } else {
+      setDocumentInfo({ loading: false, error: null, document: null, downloadUrl: null })
+    }
+  }, [selectedNotification?.related_document_id])
+
+  // Toujours afficher le popup de detail au clic
   const handleNotificationClick = async (notification: Notification) => {
     // Marquer comme lue
     if (!notification.is_read) {
       await markAsRead(notification.id)
     }
 
-    // Afficher le detail ou naviguer selon le type
-    if (notification.related_document_id || notification.type === 'document_added') {
-      // Ouvrir le popup de detail pour les documents
-      setSelectedNotification(notification)
-    } else if (notification.related_post_id) {
-      // Naviguer vers le dashboard (le post)
-      onClose()
-      navigate('/')
-    } else if (notification.related_chantier_id) {
-      // Naviguer vers le chantier
-      onClose()
-      navigate(`/chantiers/${notification.related_chantier_id}`)
-    } else {
-      // Afficher le popup de detail
-      setSelectedNotification(notification)
-    }
+    // Toujours ouvrir le popup de detail
+    setSelectedNotification(notification)
   }
 
   const handleViewDocument = () => {
     if (selectedNotification?.related_document_id) {
+      setSelectedNotification(null)
       onClose()
       navigate(`/documents?id=${selectedNotification.related_document_id}`)
     }
-    setSelectedNotification(null)
+  }
+
+  const handleDownloadDocument = () => {
+    if (documentInfo.downloadUrl) {
+      window.open(documentInfo.downloadUrl, '_blank')
+    }
+  }
+
+  const handlePreviewDocument = () => {
+    if (selectedNotification?.related_document_id) {
+      const previewUrl = getDocumentPreviewUrl(selectedNotification.related_document_id)
+      window.open(previewUrl, '_blank')
+    }
   }
 
   const handleViewChantier = () => {
     if (selectedNotification?.related_chantier_id) {
+      setSelectedNotification(null)
       onClose()
       navigate(`/chantiers/${selectedNotification.related_chantier_id}`)
     }
+  }
+
+  const handleViewPost = () => {
+    if (selectedNotification?.related_post_id) {
+      setSelectedNotification(null)
+      onClose()
+      navigate('/')
+    }
+  }
+
+  const handleCloseDetail = () => {
     setSelectedNotification(null)
   }
 
@@ -193,11 +257,11 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
         <>
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-50"
-            onClick={() => setSelectedNotification(null)}
+            onClick={handleCloseDetail}
           />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-              className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto"
+              className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 py-3 border-b flex items-center justify-between">
@@ -208,7 +272,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
                   </h3>
                 </div>
                 <button
-                  onClick={() => setSelectedNotification(null)}
+                  onClick={handleCloseDetail}
                   className="p-1 hover:bg-gray-100 rounded"
                 >
                   <X className="w-5 h-5" />
@@ -227,35 +291,95 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
                   </div>
                 )}
 
+                {/* Section Document avec preview/download */}
+                {selectedNotification.related_document_id && (
+                  <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700 font-medium mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Document joint
+                    </p>
+
+                    {documentInfo.loading ? (
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Chargement du document...
+                      </div>
+                    ) : documentInfo.error ? (
+                      <p className="text-red-600 text-sm">{documentInfo.error}</p>
+                    ) : documentInfo.document ? (
+                      <div>
+                        <p className="font-medium text-gray-900 mb-1">
+                          {documentInfo.document.nom_original || documentInfo.document.nom}
+                        </p>
+                        <p className="text-sm text-gray-500 mb-3">
+                          {documentInfo.document.type_document.toUpperCase()} - {formatFileSize(documentInfo.document.taille)}
+                        </p>
+
+                        <div className="flex gap-2">
+                          {/* Preview pour PDF/images */}
+                          {['pdf', 'image'].includes(documentInfo.document.type_document) && (
+                            <button
+                              onClick={handlePreviewDocument}
+                              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Visualiser
+                            </button>
+                          )}
+
+                          {/* Download */}
+                          <button
+                            onClick={handleDownloadDocument}
+                            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                          >
+                            <Download className="w-4 h-4" />
+                            Telecharger
+                          </button>
+
+                          {/* Voir dans GED */}
+                          <button
+                            onClick={handleViewDocument}
+                            className="flex items-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Ouvrir dans la GED
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
                 <p className="text-xs text-gray-400 mb-4">
                   {formatRelativeTime(selectedNotification.created_at)}
                 </p>
 
-                <div className="flex gap-2">
-                  {selectedNotification.related_document_id && (
+                {/* Actions selon le type de notification */}
+                <div className="flex flex-wrap gap-2">
+                  {/* Voir le post (pour commentaires, likes, mentions) */}
+                  {selectedNotification.related_post_id && (
                     <button
-                      onClick={handleViewDocument}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                      onClick={handleViewPost}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                     >
-                      <FileText className="w-4 h-4" />
-                      Voir le document
-                      <ExternalLink className="w-3 h-3" />
+                      <MessageCircle className="w-4 h-4" />
+                      Voir le post
                     </button>
                   )}
 
-                  {selectedNotification.related_chantier_id && !selectedNotification.related_document_id && (
+                  {/* Voir le chantier (si pas de document) */}
+                  {selectedNotification.related_chantier_id && !selectedNotification.related_document_id && !selectedNotification.related_post_id && (
                     <button
                       onClick={handleViewChantier}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                     >
                       <Building2 className="w-4 h-4" />
                       Voir le chantier
-                      <ExternalLink className="w-3 h-3" />
                     </button>
                   )}
 
                   <button
-                    onClick={() => setSelectedNotification(null)}
+                    onClick={handleCloseDetail}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                   >
                     Fermer

@@ -42,7 +42,7 @@ export default function CommentModal({
     setError(null)
 
     try {
-      await dashboardService.addComment(String(postId), { content: content.trim() })
+      await dashboardService.addComment(String(postId), { contenu: content.trim() })
       setContent('')
       onCommentAdded?.()
       onClose()
