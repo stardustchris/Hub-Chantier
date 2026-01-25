@@ -260,4 +260,176 @@ describe('chantiersService', () => {
       )
     })
   })
+
+  describe('getByCode', () => {
+    it('charge un chantier par son code', async () => {
+      const mockChantier = { id: '123', code: 'CHT-001', nom: 'Test' }
+      mockApi.get.mockResolvedValue({ data: mockChantier })
+
+      const result = await chantiersService.getByCode('CHT-001')
+
+      expect(mockApi.get).toHaveBeenCalledWith('/api/chantiers/code/CHT-001')
+      expect(result.code).toBe('CHT-001')
+    })
+  })
+
+  describe('workflow statut', () => {
+    it('demarrer appelle POST /demarrer', async () => {
+      const mockResponse = { id: '123', statut: 'en_cours' }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.demarrer('123')
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/demarrer')
+      expect(result.statut).toBe('en_cours')
+    })
+
+    it('receptionner appelle POST /receptionner', async () => {
+      const mockResponse = { id: '123', statut: 'receptionne' }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.receptionner('123')
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/receptionner')
+      expect(result.statut).toBe('receptionne')
+    })
+
+    it('fermer appelle POST /fermer', async () => {
+      const mockResponse = { id: '123', statut: 'ferme' }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.fermer('123')
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/fermer')
+      expect(result.statut).toBe('ferme')
+    })
+  })
+
+  describe('gestion conducteurs', () => {
+    it('addConducteur ajoute un conducteur', async () => {
+      const mockResponse = { id: '123', conducteurs: [{ id: 'u1' }] }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.addConducteur('123', 'u1')
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/conducteurs', { user_id: 'u1' })
+      expect(result.conducteurs).toHaveLength(1)
+    })
+
+    it('removeConducteur retire un conducteur', async () => {
+      const mockResponse = { id: '123', conducteurs: [] }
+      mockApi.delete.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.removeConducteur('123', 'u1')
+
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/chantiers/123/conducteurs/u1')
+      expect(result.conducteurs).toHaveLength(0)
+    })
+  })
+
+  describe('gestion chefs', () => {
+    it('addChef ajoute un chef', async () => {
+      const mockResponse = { id: '123', chefs: [{ id: 'u2' }] }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.addChef('123', 'u2')
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/chefs', { user_id: 'u2' })
+      expect(result.chefs).toHaveLength(1)
+    })
+
+    it('removeChef retire un chef', async () => {
+      const mockResponse = { id: '123', chefs: [] }
+      mockApi.delete.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.removeChef('123', 'u2')
+
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/chantiers/123/chefs/u2')
+      expect(result.chefs).toHaveLength(0)
+    })
+  })
+
+  describe('gestion contacts', () => {
+    it('listContacts charge les contacts', async () => {
+      const mockContacts = [{ id: 1, nom: 'Contact 1' }]
+      mockApi.get.mockResolvedValue({ data: mockContacts })
+
+      const result = await chantiersService.listContacts('123')
+
+      expect(mockApi.get).toHaveBeenCalledWith('/api/chantiers/123/contacts')
+      expect(result).toHaveLength(1)
+    })
+
+    it('addContact ajoute un contact', async () => {
+      const contactData = { nom: 'Nouveau Contact', telephone: '0600000000' }
+      const mockResponse = { id: 1, ...contactData }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.addContact('123', contactData as any)
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/contacts', contactData)
+      expect(result.nom).toBe('Nouveau Contact')
+    })
+
+    it('updateContact met a jour un contact', async () => {
+      const updateData = { nom: 'Contact Modifie' }
+      const mockResponse = { id: 1, nom: 'Contact Modifie' }
+      mockApi.put.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.updateContact('123', 1, updateData)
+
+      expect(mockApi.put).toHaveBeenCalledWith('/api/chantiers/123/contacts/1', updateData)
+      expect(result.nom).toBe('Contact Modifie')
+    })
+
+    it('removeContact supprime un contact', async () => {
+      mockApi.delete.mockResolvedValue({})
+
+      await chantiersService.removeContact('123', 1)
+
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/chantiers/123/contacts/1')
+    })
+  })
+
+  describe('gestion phases', () => {
+    it('listPhases charge les phases', async () => {
+      const mockPhases = [{ id: 1, nom: 'Phase 1' }]
+      mockApi.get.mockResolvedValue({ data: mockPhases })
+
+      const result = await chantiersService.listPhases('123')
+
+      expect(mockApi.get).toHaveBeenCalledWith('/api/chantiers/123/phases')
+      expect(result).toHaveLength(1)
+    })
+
+    it('addPhase ajoute une phase', async () => {
+      const phaseData = { nom: 'Nouvelle Phase', date_debut: '2024-01-01' }
+      const mockResponse = { id: 1, ...phaseData }
+      mockApi.post.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.addPhase('123', phaseData as any)
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/chantiers/123/phases', phaseData)
+      expect(result.nom).toBe('Nouvelle Phase')
+    })
+
+    it('updatePhase met a jour une phase', async () => {
+      const updateData = { nom: 'Phase Modifiee' }
+      const mockResponse = { id: 1, nom: 'Phase Modifiee' }
+      mockApi.put.mockResolvedValue({ data: mockResponse })
+
+      const result = await chantiersService.updatePhase('123', 1, updateData)
+
+      expect(mockApi.put).toHaveBeenCalledWith('/api/chantiers/123/phases/1', updateData)
+      expect(result.nom).toBe('Phase Modifiee')
+    })
+
+    it('removePhase supprime une phase', async () => {
+      mockApi.delete.mockResolvedValue({})
+
+      await chantiersService.removePhase('123', 1)
+
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/chantiers/123/phases/1')
+    })
+  })
 })

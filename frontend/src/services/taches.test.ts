@@ -237,4 +237,158 @@ describe('tachesService', () => {
       expect(result).toEqual(mockTaches)
     })
   })
+
+  describe('listFeuillesByTache', () => {
+    it('récupère les feuilles d\'une tache', async () => {
+      const mockResponse = {
+        data: {
+          items: [{ id: 1, tache_id: 1, heures: 8 }],
+          page: 1,
+          pages: 1,
+          total: 1,
+          total_heures: 8,
+          total_quantite: 1,
+        },
+      }
+      vi.mocked(api.get).mockResolvedValue(mockResponse)
+
+      const result = await tachesService.listFeuillesByTache(1)
+
+      expect(api.get).toHaveBeenCalledWith('/api/feuilles-taches/tache/1', {
+        params: { page: 1, size: 50 },
+      })
+      expect(result).toEqual(mockResponse.data)
+    })
+
+    it('récupère les feuilles avec pagination', async () => {
+      const mockResponse = { data: { items: [], page: 2, pages: 3, total: 100 } }
+      vi.mocked(api.get).mockResolvedValue(mockResponse)
+
+      await tachesService.listFeuillesByTache(1, { page: 2, size: 20 })
+
+      expect(api.get).toHaveBeenCalledWith('/api/feuilles-taches/tache/1', {
+        params: { page: 2, size: 20 },
+      })
+    })
+  })
+
+  describe('listFeuillesEnAttente', () => {
+    it('récupère les feuilles en attente de validation', async () => {
+      const mockResponse = {
+        data: {
+          items: [{ id: 1, statut: 'en_attente' }],
+          page: 1,
+          pages: 1,
+          total: 1,
+          total_heures: 8,
+          total_quantite: 1,
+        },
+      }
+      vi.mocked(api.get).mockResolvedValue(mockResponse)
+
+      const result = await tachesService.listFeuillesEnAttente()
+
+      expect(api.get).toHaveBeenCalledWith('/api/feuilles-taches/en-attente', {
+        params: { chantier_id: undefined, page: 1, size: 50 },
+      })
+      expect(result).toEqual(mockResponse.data)
+    })
+
+    it('récupère les feuilles en attente d\'un chantier spécifique', async () => {
+      const mockResponse = { data: { items: [], page: 1, pages: 1, total: 0 } }
+      vi.mocked(api.get).mockResolvedValue(mockResponse)
+
+      await tachesService.listFeuillesEnAttente(5, { page: 2, size: 10 })
+
+      expect(api.get).toHaveBeenCalledWith('/api/feuilles-taches/en-attente', {
+        params: { chantier_id: 5, page: 2, size: 10 },
+      })
+    })
+  })
+
+  describe('createFeuille', () => {
+    it('crée une feuille de tache', async () => {
+      const newFeuille = {
+        tache_id: 1,
+        utilisateur_id: 1,
+        date: '2024-01-15',
+        heures: 8,
+      }
+      const mockResponse = { id: 1, ...newFeuille }
+      vi.mocked(api.post).mockResolvedValue({ data: mockResponse })
+
+      const result = await tachesService.createFeuille(newFeuille as any)
+
+      expect(api.post).toHaveBeenCalledWith('/api/feuilles-taches', newFeuille)
+      expect(result).toEqual(mockResponse)
+    })
+  })
+
+  describe('validateFeuille', () => {
+    it('valide une feuille de tache', async () => {
+      const mockFeuille = { id: 1, statut: 'validee' }
+      vi.mocked(api.post).mockResolvedValue({ data: mockFeuille })
+
+      const result = await tachesService.validateFeuille(1, true)
+
+      expect(api.post).toHaveBeenCalledWith('/api/feuilles-taches/1/validate', {
+        valider: true,
+        motif_rejet: undefined,
+      })
+      expect(result).toEqual(mockFeuille)
+    })
+
+    it('rejette une feuille avec motif', async () => {
+      const mockFeuille = { id: 1, statut: 'rejetee' }
+      vi.mocked(api.post).mockResolvedValue({ data: mockFeuille })
+
+      const result = await tachesService.validateFeuille(1, false, 'Heures incorrectes')
+
+      expect(api.post).toHaveBeenCalledWith('/api/feuilles-taches/1/validate', {
+        valider: false,
+        motif_rejet: 'Heures incorrectes',
+      })
+      expect(result).toEqual(mockFeuille)
+    })
+  })
+
+  describe('exportPDF', () => {
+    it('génère un export PDF', async () => {
+      const mockBlob = new Blob(['PDF content'], { type: 'application/pdf' })
+      vi.mocked(api.get).mockResolvedValue({ data: mockBlob })
+
+      const result = await tachesService.exportPDF(1)
+
+      expect(api.get).toHaveBeenCalledWith('/api/taches/chantier/1/export-pdf', {
+        responseType: 'blob',
+      })
+      expect(result).toEqual(mockBlob)
+    })
+  })
+
+  describe('downloadPDF', () => {
+    it('télécharge le PDF', () => {
+      const mockBlob = new Blob(['PDF content'], { type: 'application/pdf' })
+      const mockCreateObjectURL = vi.fn().mockReturnValue('blob:url')
+      const mockRevokeObjectURL = vi.fn()
+      global.URL.createObjectURL = mockCreateObjectURL
+      global.URL.revokeObjectURL = mockRevokeObjectURL
+
+      const mockLink = {
+        href: '',
+        setAttribute: vi.fn(),
+        click: vi.fn(),
+        remove: vi.fn(),
+      }
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any)
+      vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink as any)
+
+      tachesService.downloadPDF(mockBlob, 'taches-chantier-1.pdf')
+
+      expect(mockCreateObjectURL).toHaveBeenCalledWith(mockBlob)
+      expect(mockLink.setAttribute).toHaveBeenCalledWith('download', 'taches-chantier-1.pdf')
+      expect(mockLink.click).toHaveBeenCalled()
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:url')
+    })
+  })
 })
