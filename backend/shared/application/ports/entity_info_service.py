@@ -24,11 +24,15 @@ class UserBasicInfo:
         nom: Nom complet (prenom + nom).
         couleur: Couleur hex pour l'affichage.
         metier: Type de metier/role.
+        role: Role de l'utilisateur (admin, conducteur, etc.).
+        type_utilisateur: Type d'utilisateur (employe, interimaire, sous_traitant).
     """
     id: int
     nom: str
     couleur: Optional[str] = None
     metier: Optional[str] = None
+    role: Optional[str] = None
+    type_utilisateur: Optional[str] = None
 
 
 @dataclass(frozen=True)

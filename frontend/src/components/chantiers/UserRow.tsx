@@ -7,9 +7,10 @@ interface UserRowProps {
   user: User
   canRemove: boolean
   onRemove: () => void
+  badge?: { label: string; color: string }
 }
 
-export default function UserRow({ user, canRemove, onRemove }: UserRowProps) {
+export default function UserRow({ user, canRemove, onRemove, badge }: UserRowProps) {
   const roleInfo = ROLES[user.role as UserRole]
 
   return (
@@ -27,14 +28,21 @@ export default function UserRow({ user, canRemove, onRemove }: UserRowProps) {
           <p className="font-medium text-sm">
             {user.prenom} {user.nom}
           </p>
-          {roleInfo && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: roleInfo.color + '20', color: roleInfo.color }}
-            >
-              {roleInfo.label}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {roleInfo && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: roleInfo.color + '20', color: roleInfo.color }}
+              >
+                {roleInfo.label}
+              </span>
+            )}
+            {badge && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${badge.color}`}>
+                {badge.label}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       {canRemove && (

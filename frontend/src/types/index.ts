@@ -247,6 +247,24 @@ export const ROLES: Record<UserRole, { label: string; color: string }> = {
   compagnon: { label: 'Compagnon', color: '#607D8B' },
 }
 
+// ===== TYPES UTILISATEUR =====
+export const TYPES_UTILISATEUR: Record<UserType, { label: string; color: string }> = {
+  employe: { label: 'Employe', color: '#3498DB' },
+  interimaire: { label: 'Interimaire', color: '#FF9800' },
+  sous_traitant: { label: 'Sous-traitant', color: '#9C27B0' },
+}
+
+// ===== CATEGORIES PLANNING (pour groupement) =====
+export type PlanningCategory = 'conducteur' | 'chef_chantier' | 'compagnon' | 'interimaire' | 'sous_traitant'
+
+export const PLANNING_CATEGORIES: Record<PlanningCategory, { label: string; color: string; order: number }> = {
+  conducteur: { label: 'Conducteurs de travaux', color: '#3498DB', order: 1 },
+  chef_chantier: { label: 'Chefs de chantier', color: '#27AE60', order: 2 },
+  compagnon: { label: 'Compagnons', color: '#607D8B', order: 3 },
+  interimaire: { label: 'Interimaires', color: '#FF9800', order: 4 },
+  sous_traitant: { label: 'Sous-traitants', color: '#9C27B0', order: 5 },
+}
+
 // ===== STATUTS CHANTIER =====
 export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: string; icon: string }> = {
   ouvert: { label: 'Ouvert', color: '#3498DB', icon: 'circle' },
@@ -276,6 +294,8 @@ export interface Affectation {
   utilisateur_nom?: string
   utilisateur_couleur?: string
   utilisateur_metier?: string
+  utilisateur_role?: string
+  utilisateur_type?: string
   chantier_nom?: string
   chantier_couleur?: string
 }

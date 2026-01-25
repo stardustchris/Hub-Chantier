@@ -67,6 +67,8 @@ class SQLAlchemyEntityInfoService(EntityInfoService):
                     nom=nom or f"User {user.id}",
                     couleur=user.couleur,
                     metier=user.metier,
+                    role=user.role,
+                    type_utilisateur=user.type_utilisateur,
                 )
         except Exception as e:
             logger.warning(f"Erreur recuperation user {user_id}: {e}")

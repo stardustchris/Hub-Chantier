@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
+import { planningService } from '../services/planning'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { logger } from '../services/logger'
@@ -29,7 +30,7 @@ import {
   Users,
 } from 'lucide-react'
 import { formatDateFull } from '../utils/dates'
-import type { Chantier, ChantierUpdate, User } from '../types'
+import type { Chantier, ChantierUpdate, User, Affectation } from '../types'
 import { CHANTIER_STATUTS } from '../types'
 
 type TabType = 'infos' | 'taches' | 'equipe'
@@ -46,15 +47,60 @@ export default function ChantierDetailPage() {
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [activeTab, setActiveTab] = useState<TabType>('infos')
+  const [planningAffectations, setPlanningAffectations] = useState<Affectation[]>([])
 
   const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
   const canEdit = isAdmin || isConducteur
 
+  // Fusionner les ouvriers directement assignés avec ceux des affectations planning
+  const allOuvriers = useMemo(() => {
+    if (!chantier) return []
+
+    const directOuvriers = chantier.ouvriers || []
+    const directIds = new Set(directOuvriers.map(u => u.id))
+
+    // Extraire les utilisateurs uniques des affectations (seulement compagnons/ouvriers)
+    const planningUsersMap = new Map<string, Partial<User>>()
+
+    planningAffectations.forEach(aff => {
+      // Ignorer si déjà dans les ouvriers directs ou déjà ajouté
+      if (directIds.has(aff.utilisateur_id) || planningUsersMap.has(aff.utilisateur_id)) {
+        return
+      }
+      // Ignorer les conducteurs et chefs de chantier (ils sont dans leurs propres listes)
+      const role = aff.utilisateur_role || 'compagnon'
+      if (role === 'conducteur' || role === 'admin') {
+        return
+      }
+
+      // Créer un objet User à partir des données de l'affectation
+      planningUsersMap.set(aff.utilisateur_id, {
+        id: aff.utilisateur_id,
+        nom: aff.utilisateur_nom?.split(' ').slice(1).join(' ') || '',
+        prenom: aff.utilisateur_nom?.split(' ')[0] || '',
+        couleur: aff.utilisateur_couleur,
+        metier: aff.utilisateur_metier as User['metier'],
+        email: '',
+        role: (role as User['role']) || 'compagnon',
+        type_utilisateur: (aff.utilisateur_type as User['type_utilisateur']) || 'employe',
+        is_active: true,
+        created_at: '',
+      })
+    })
+
+    // Combiner les deux listes
+    return [
+      ...directOuvriers,
+      ...Array.from(planningUsersMap.values()) as User[],
+    ]
+  }, [chantier, planningAffectations])
+
   useEffect(() => {
     if (id) {
       loadChantier()
       loadNavigation()
+      loadPlanningUsers()
     }
   }, [id])
 
@@ -64,6 +110,25 @@ export default function ChantierDetailPage() {
       setNavIds(ids)
     } catch (error) {
       logger.error('Error loading navigation', error, { context: 'ChantierDetailPage' })
+    }
+  }
+
+  const loadPlanningUsers = async () => {
+    try {
+      // Charger les affectations des 30 derniers jours + 30 prochains jours
+      const today = new Date()
+      const startDate = new Date()
+      startDate.setDate(today.getDate() - 30)
+      const endDate = new Date()
+      endDate.setDate(today.getDate() + 30)
+
+      const dateDebut = startDate.toISOString().split('T')[0]
+      const dateFin = endDate.toISOString().split('T')[0]
+
+      const affectations = await planningService.getByChantier(id!, dateDebut, dateFin)
+      setPlanningAffectations(affectations)
+    } catch (error) {
+      logger.error('Error loading planning users', error, { context: 'ChantierDetailPage' })
     }
   }
 
@@ -406,7 +471,7 @@ export default function ChantierDetailPage() {
           <ChantierEquipeTab
             conducteurs={chantier.conducteurs}
             chefs={chantier.chefs}
-            ouvriers={chantier.ouvriers || []}
+            ouvriers={allOuvriers}
             canEdit={canEdit}
             onAddUser={(type) => {
               loadAvailableUsers(type)

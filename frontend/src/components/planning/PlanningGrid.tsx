@@ -2,8 +2,8 @@ import { useMemo, useState, useCallback } from 'react'
 import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isWeekend } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { ChevronDown, ChevronRight, Copy, Phone } from 'lucide-react'
-import type { Affectation, User, Metier } from '../../types'
-import { METIERS } from '../../types'
+import type { Affectation, User, PlanningCategory } from '../../types'
+import { PLANNING_CATEGORIES } from '../../types'
 import AffectationBlock from './AffectationBlock'
 
 interface PlanningGridProps {
@@ -21,19 +21,36 @@ interface PlanningGridProps {
   viewMode?: 'semaine' | 'mois' // PLN-05: Vue semaine ou mois
 }
 
-// Grouper les utilisateurs par métier
-function groupByMetier(utilisateurs: User[]): Record<string, User[]> {
-  const groups: Record<string, User[]> = {}
+// Grouper les utilisateurs par catégorie (role/type_utilisateur)
+function groupByCategory(utilisateurs: User[]): Record<PlanningCategory, User[]> {
+  const groups: Record<string, User[]> = {
+    conducteur: [],
+    chef_chantier: [],
+    compagnon: [],
+    interimaire: [],
+    sous_traitant: [],
+  }
 
   utilisateurs.forEach(user => {
-    const metier = user.metier || 'autre'
-    if (!groups[metier]) {
-      groups[metier] = []
+    // Déterminer la catégorie basée sur role et type_utilisateur
+    if (user.role === 'conducteur') {
+      groups.conducteur.push(user)
+    } else if (user.role === 'chef_chantier') {
+      groups.chef_chantier.push(user)
+    } else if (user.type_utilisateur === 'interimaire') {
+      groups.interimaire.push(user)
+    } else if (user.type_utilisateur === 'sous_traitant') {
+      groups.sous_traitant.push(user)
+    } else {
+      // Compagnon par défaut (employés avec role compagnon)
+      groups.compagnon.push(user)
     }
-    groups[metier].push(user)
   })
 
-  return groups
+  // Retourner seulement les groupes non vides
+  return Object.fromEntries(
+    Object.entries(groups).filter(([_, users]) => users.length > 0)
+  ) as Record<PlanningCategory, User[]>
 }
 
 export default function PlanningGrid({
@@ -105,8 +122,17 @@ export default function PlanningGrid({
     setDragOverCell(null)
   }, [])
 
-  // Grouper les utilisateurs par métier
-  const groupedUsers = useMemo(() => groupByMetier(utilisateurs), [utilisateurs])
+  // Grouper les utilisateurs par catégorie (role/type)
+  const groupedUsers = useMemo(() => groupByCategory(utilisateurs), [utilisateurs])
+
+  // Trier les catégories par ordre défini
+  const sortedCategories = useMemo(() => {
+    return Object.entries(groupedUsers).sort(([catA], [catB]) => {
+      const orderA = PLANNING_CATEGORIES[catA as PlanningCategory]?.order || 99
+      const orderB = PLANNING_CATEGORIES[catB as PlanningCategory]?.order || 99
+      return orderA - orderB
+    })
+  }, [groupedUsers])
 
   // Indexer les affectations par utilisateur et date
   const affectationsByUserAndDate = useMemo(() => {
@@ -168,17 +194,17 @@ export default function PlanningGrid({
         ))}
       </div>
 
-      {/* Corps - Groupes de métiers */}
+      {/* Corps - Groupes par catégorie */}
       <div className="divide-y">
-        {Object.entries(groupedUsers).map(([metier, users]) => {
-          const metierInfo = METIERS[metier as Metier] || { label: metier, color: '#607D8B' }
-          const isExpanded = expandedMetiers.includes(metier)
+        {sortedCategories.map(([category, users]) => {
+          const categoryInfo = PLANNING_CATEGORIES[category as PlanningCategory] || { label: category, color: '#607D8B' }
+          const isExpanded = expandedMetiers.includes(category)
 
           return (
-            <div key={metier}>
-              {/* Header du groupe (métier) */}
+            <div key={category}>
+              {/* Header du groupe (catégorie) */}
               <button
-                onClick={() => onToggleMetier(metier)}
+                onClick={() => onToggleMetier(category)}
                 className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors" style={gridStyle}
               >
                 <div className="px-4 py-2 flex items-center gap-2 border-r">
@@ -189,9 +215,9 @@ export default function PlanningGrid({
                   )}
                   <span
                     className="px-2 py-0.5 rounded text-xs font-medium text-white"
-                    style={{ backgroundColor: metierInfo.color }}
+                    style={{ backgroundColor: categoryInfo.color }}
                   >
-                    {metierInfo.label}
+                    {categoryInfo.label}
                   </span>
                   <span className="text-sm text-gray-500">({users.length})</span>
                 </div>

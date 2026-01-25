@@ -189,6 +189,8 @@ class AffectationResponse(BaseModel):
     utilisateur_nom: Optional[str] = None
     utilisateur_couleur: Optional[str] = None
     utilisateur_metier: Optional[str] = None
+    utilisateur_role: Optional[str] = None
+    utilisateur_type: Optional[str] = None
     chantier_nom: Optional[str] = None
     chantier_couleur: Optional[str] = None
 

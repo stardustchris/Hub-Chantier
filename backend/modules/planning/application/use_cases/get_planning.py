@@ -201,6 +201,8 @@ class GetPlanningUseCase:
                 utilisateur_nom=user_info.get("nom"),
                 utilisateur_couleur=user_info.get("couleur"),
                 utilisateur_metier=user_info.get("metier"),
+                utilisateur_role=user_info.get("role"),
+                utilisateur_type=user_info.get("type_utilisateur"),
                 chantier_nom=chantier_info.get("nom"),
                 chantier_couleur=chantier_info.get("couleur"),
             )

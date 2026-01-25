@@ -129,7 +129,13 @@ def _wrap_user_info(entity_info: EntityInfoService):
     def get_user_info(user_id: int):
         info = entity_info.get_user_info(user_id)
         if info:
-            return {"nom": info.nom, "couleur": info.couleur, "metier": info.metier}
+            return {
+                "nom": info.nom,
+                "couleur": info.couleur,
+                "metier": info.metier,
+                "role": info.role,
+                "type_utilisateur": info.type_utilisateur,
+            }
         return {}
     return get_user_info
 

@@ -107,6 +107,8 @@ class PlanningController:
             "utilisateur_nom": dto.utilisateur_nom,
             "utilisateur_couleur": dto.utilisateur_couleur,
             "utilisateur_metier": dto.utilisateur_metier,
+            "utilisateur_role": dto.utilisateur_role,
+            "utilisateur_type": dto.utilisateur_type,
             "chantier_nom": dto.chantier_nom,
             "chantier_couleur": dto.chantier_couleur,
         }
@@ -114,6 +116,9 @@ class PlanningController:
     def _entity_to_response(self, entity: Affectation) -> Dict[str, Any]:
         """
         Convertit une entite Affectation en dictionnaire de reponse.
+
+        Utilise le presenter si disponible pour enrichir les donnees
+        avec les infos utilisateur/chantier (nom, couleur).
 
         Args:
             entity: L'entite Affectation a convertir.
@@ -126,7 +131,8 @@ class PlanningController:
         if entity.jours_recurrence:
             jours_recurrence = [jour.value for jour in entity.jours_recurrence]
 
-        return {
+        # Donnees de base
+        response = {
             "id": entity.id,
             "utilisateur_id": entity.utilisateur_id,
             "chantier_id": entity.chantier_id,
@@ -145,6 +151,19 @@ class PlanningController:
             "chantier_nom": None,
             "chantier_couleur": None,
         }
+
+        # Enrichir avec le presenter si disponible
+        if self.presenter:
+            # Creer un DTO temporaire pour utiliser le presenter
+            dto = AffectationDTO.from_entity(entity)
+            enriched = self.presenter.present(dto)
+            response["utilisateur_nom"] = enriched.get("utilisateur_nom")
+            response["utilisateur_couleur"] = enriched.get("utilisateur_couleur")
+            response["utilisateur_metier"] = enriched.get("utilisateur_metier")
+            response["chantier_nom"] = enriched.get("chantier_nom")
+            response["chantier_couleur"] = enriched.get("chantier_couleur")
+
+        return response
 
     def create(
         self,
