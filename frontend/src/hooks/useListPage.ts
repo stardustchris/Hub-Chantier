@@ -90,12 +90,19 @@ export function useListPage<T, TCreate = Partial<T>>(
   // Filters
   const [filters, setFilters] = useState<Record<string, string | number | boolean | undefined>>({})
 
-  // Ref pour eviter les double calls
+  // Refs pour eviter les double calls et appels concurrents
   const isMounted = useRef(true)
+  const isLoadingRef = useRef(false)
+
+  // Ref pour stocker fetchItems (evite les re-renders infinies)
+  const fetchItemsRef = useRef(fetchItems)
+  fetchItemsRef.current = fetchItems
 
   // Load items
   const reload = useCallback(async () => {
-    if (!isMounted.current) return
+    // Eviter les appels concurrents
+    if (!isMounted.current || isLoadingRef.current) return
+    isLoadingRef.current = true
 
     setIsLoading(true)
     setError(null)
@@ -108,7 +115,7 @@ export function useListPage<T, TCreate = Partial<T>>(
         ...filters,
       }
 
-      const response = await fetchItems(params)
+      const response = await fetchItemsRef.current(params)
 
       if (isMounted.current) {
         setItems(response.items)
@@ -122,11 +129,12 @@ export function useListPage<T, TCreate = Partial<T>>(
         logger.error('useListPage error', err, { context: 'useListPage' })
       }
     } finally {
+      isLoadingRef.current = false
       if (isMounted.current) {
         setIsLoading(false)
       }
     }
-  }, [fetchItems, page, pageSize, search, filters])
+  }, [page, pageSize, search, filters])
 
   // Create item
   const create = useCallback(async (data: TCreate): Promise<T | null> => {
@@ -188,12 +196,13 @@ export function useListPage<T, TCreate = Partial<T>>(
     setPage(1)
   }, [])
 
-  // Auto load on mount and when params change
+  // Charger quand les params changent
   useEffect(() => {
     if (autoLoad) {
       reload()
     }
-  }, [reload, autoLoad])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, search, filters, autoLoad])
 
   // Cleanup
   useEffect(() => {

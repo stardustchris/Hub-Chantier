@@ -42,7 +42,7 @@ const LogistiquePage: React.FC = () => {
   const loadChantiers = async () => {
     try {
       const data = await chantiersService.list({ size: 500 })
-      setChantiers(data.items)
+      setChantiers(data?.items || [])
     } catch (err) {
       console.error('Erreur chargement chantiers:', err)
     }
@@ -51,7 +51,7 @@ const LogistiquePage: React.FC = () => {
   const loadReservationsEnAttente = async () => {
     try {
       const data = await listReservationsEnAttente()
-      setReservationsEnAttente(data.items)
+      setReservationsEnAttente(data?.items || [])
     } catch (err) {
       console.error('Erreur chargement réservations en attente:', err)
     }
@@ -213,7 +213,7 @@ const LogistiquePage: React.FC = () => {
                     onClick={() => {
                       // Charger la ressource puis afficher le modal
                       listRessources({ limit: 1000 }).then((data) => {
-                        const ressource = data.items.find((r) => r.id === reservation.ressource_id)
+                        const ressource = (data?.items || []).find((r) => r.id === reservation.ressource_id)
                         if (ressource) {
                           setSelectedRessource(ressource)
                           setSelectedReservation(reservation)
