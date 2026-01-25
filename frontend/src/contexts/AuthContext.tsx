@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { authService, User } from '../services/auth'
 import { onSessionExpired, emitLogout } from '../services/authEvents'
+import { clearCsrfToken } from '../services/csrf'
 
 interface AuthContextType {
   user: User | null
@@ -19,6 +20,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fonction logout mémorisée pour être utilisée comme callback
   const logout = useCallback(() => {
     sessionStorage.removeItem('access_token')
+    // Nettoyer le token CSRF pour éviter sa réutilisation
+    clearCsrfToken()
     setUser(null)
     // Notifier les autres onglets du logout
     emitLogout()

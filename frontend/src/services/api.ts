@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { emitSessionExpired } from './authEvents'
+import { getCsrfToken, requiresCsrf, CSRF_HEADER, fetchCsrfToken } from './csrf'
 
 // En dev, Vite proxy les requêtes /api vers le backend
 // En prod, VITE_API_URL doit être configuré dans l'environnement
@@ -20,13 +21,31 @@ const api = axios.create({
   timeout: 30000, // 30 secondes
 })
 
-// Intercepteur pour ajouter le token
-api.interceptors.request.use((config) => {
+// Intercepteur pour ajouter le token d'authentification et CSRF
+api.interceptors.request.use(async (config) => {
+  // Token d'authentification
   // sessionStorage: plus sécurisé que localStorage (non accessible après fermeture navigateur)
   const token = sessionStorage.getItem('access_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  // Token CSRF pour les méthodes mutables (POST, PUT, DELETE, PATCH)
+  if (config.method && requiresCsrf(config.method)) {
+    let csrfToken = getCsrfToken()
+    // Si pas de token CSRF, en récupérer un
+    if (!csrfToken) {
+      try {
+        csrfToken = await fetchCsrfToken()
+      } catch {
+        // Continuer sans token CSRF si impossible de le récupérer
+      }
+    }
+    if (csrfToken) {
+      config.headers[CSRF_HEADER] = csrfToken
+    }
+  }
+
   return config
 })
 

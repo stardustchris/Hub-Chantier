@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import DashboardPage from './DashboardPage'
+import { ToastProvider } from '../contexts/ToastContext'
 import type { User } from '../types'
 
 // Mock user pour les tests
@@ -128,7 +129,9 @@ const renderWithProviders = (user: any = mockUser) => {
   currentMockUser = user
   return render(
     <MemoryRouter>
-      <DashboardPage />
+      <ToastProvider>
+        <DashboardPage />
+      </ToastProvider>
     </MemoryRouter>
   )
 }
@@ -454,7 +457,7 @@ describe('DashboardPage', () => {
         expect(logger.error).toHaveBeenCalledWith(
           'Error loading feed',
           expect.any(Error),
-          { context: 'DashboardPage' }
+          { context: 'DashboardFeed' }
         )
       })
     })
@@ -476,7 +479,7 @@ describe('DashboardPage', () => {
         expect(logger.error).toHaveBeenCalledWith(
           'Erreur lors de la publication',
           expect.any(Error),
-          { context: 'DashboardPage', showToast: true }
+          { context: 'DashboardFeed', showToast: true }
         )
       })
     })
