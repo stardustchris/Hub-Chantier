@@ -9,7 +9,7 @@ import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
 import { TaskList } from '../components/taches'
-import { EditChantierModal, AddUserModal, ChantierEquipeTab } from '../components/chantiers'
+import { EditChantierModal, AddUserModal, ChantierEquipeTab, MesInterventions } from '../components/chantiers'
 import {
   ArrowLeft,
   MapPin,
@@ -446,6 +446,9 @@ export default function ChantierDetailPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Mes interventions planifiees */}
+              <MesInterventions chantierId={id!} />
+
               {/* Contact */}
               {(chantier.contact_nom || chantier.contact_telephone) && (
                 <div className="card">

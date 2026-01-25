@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import PostCard from './PostCard'
 import PostComposer from './PostComposer'
+import CommentModal from './CommentModal'
 import type { Post, Author, CreatePostData } from '../../types/dashboard'
 
 interface FeedProps {
@@ -108,6 +109,7 @@ export default function Feed({
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set([1, 5]))
+  const [commentModalPostId, setCommentModalPostId] = useState<number | null>(null)
 
   // Trier les posts : épinglés en premier, puis par date
   const sortedPosts = [...posts].sort((a, b) => {
@@ -148,9 +150,9 @@ export default function Feed({
     })
   }
 
-  // Commenter (ouvre modal - TODO: implémenter CommentModal)
-  const handleComment = (_postId: number) => {
-    // TODO: Ouvrir CommentModal avec postId
+  // Commenter (ouvre modal)
+  const handleComment = (postId: number) => {
+    setCommentModalPostId(postId)
   }
 
   // Supprimer
@@ -223,6 +225,30 @@ export default function Feed({
         <div className="text-center py-8 text-gray-500">
           Vous avez atteint la fin du fil d'actualités
         </div>
+      )}
+
+      {/* Modal de commentaire avec mentions @ */}
+      {commentModalPostId !== null && (
+        <CommentModal
+          isOpen={true}
+          onClose={() => setCommentModalPostId(null)}
+          postId={commentModalPostId}
+          postAuthor={
+            mockAuthors[
+              sortedPosts.find((p) => p.id === commentModalPostId)?.author_id ?? 0
+            ]?.prenom ?? 'Auteur'
+          }
+          onCommentAdded={() => {
+            // Rafraichir le compteur de commentaires
+            setPosts((prev) =>
+              prev.map((p) =>
+                p.id === commentModalPostId
+                  ? { ...p, comments_count: p.comments_count + 1 }
+                  : p
+              )
+            )
+          }}
+        />
       )}
     </div>
   )
