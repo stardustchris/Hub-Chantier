@@ -72,3 +72,36 @@ class ChantierChefModel(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
+
+
+class ChantierOuvrierModel(Base):
+    """
+    Table de jointure Chantier <-> Ouvrier (interimaires, sous-traitants).
+
+    Permet de recuperer efficacement les chantiers d'un ouvrier
+    via une requete SQL avec JOIN au lieu de charger tous les chantiers.
+
+    Attributes:
+        chantier_id: FK vers le chantier.
+        user_id: FK vers l'utilisateur (ouvrier/interimaire/sous-traitant).
+    """
+
+    __tablename__ = "chantier_ouvriers"
+    __table_args__ = (
+        UniqueConstraint("chantier_id", "user_id", name="uq_chantier_ouvrier"),
+        Index("ix_chantier_ouvriers_user_id", "user_id"),
+        Index("ix_chantier_ouvriers_chantier_id", "chantier_id"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chantier_id = Column(
+        Integer,
+        ForeignKey("chantiers.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )

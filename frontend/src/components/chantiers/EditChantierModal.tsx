@@ -1,7 +1,14 @@
-import { useState } from 'react'
-import { X, Plus, Trash2, Loader2 } from 'lucide-react'
-import type { Chantier, ChantierUpdate, ContactChantier } from '../../types'
+import { useState, useEffect } from 'react'
+import { X, Plus, Trash2, Loader2, Calendar } from 'lucide-react'
+import type { Chantier, ChantierUpdate, ContactChantier, PhaseChantierCreate } from '../../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../../types'
+import { chantiersService } from '../../services/chantiers'
+
+// Phase locale avec ID optionnel (pour nouvelles phases)
+interface LocalPhase extends PhaseChantierCreate {
+  id?: number
+  _deleted?: boolean  // Marqué pour suppression
+}
 
 interface EditChantierModalProps {
   chantier: Chantier
@@ -31,6 +38,33 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
   const [contacts, setContacts] = useState<ContactChantier[]>(initialContacts)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Phases gérées via l'API dédiée
+  const [phases, setPhases] = useState<LocalPhase[]>([])
+  const [deletedPhaseIds, setDeletedPhaseIds] = useState<number[]>([])
+  const [_loadingPhases, setLoadingPhases] = useState(true)
+
+  // Charger les phases existantes depuis l'API
+  useEffect(() => {
+    const loadPhases = async () => {
+      try {
+        const existingPhases = await chantiersService.listPhases(String(chantier.id))
+        setPhases(existingPhases.map(p => ({
+          id: p.id,
+          nom: p.nom,
+          description: p.description,
+          ordre: p.ordre,
+          date_debut: p.date_debut || '',
+          date_fin: p.date_fin || '',
+        })))
+      } catch (error) {
+        console.error('Erreur chargement phases:', error)
+      } finally {
+        setLoadingPhases(false)
+      }
+    }
+    loadPhases()
+  }, [chantier.id])
+
   const addContact = () => {
     setContacts([...contacts, { nom: '', profession: '', telephone: '' }])
   }
@@ -47,12 +81,80 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
     setContacts(updated)
   }
 
+  // Gestion des phases
+  const addPhase = () => {
+    // Calculer le prochain numéro de phase (basé sur le max existant + 1)
+    const maxPhaseNum = phases.reduce((max, p) => {
+      const match = p.nom.match(/Phase (\d+)/)
+      return match ? Math.max(max, parseInt(match[1])) : max
+    }, 0)
+    setPhases([...phases, { nom: `Phase ${maxPhaseNum + 1}`, ordre: phases.length + 1, date_debut: '', date_fin: '' }])
+  }
+
+  const removePhase = (index: number) => {
+    const phaseToRemove = phases[index]
+    // Si la phase a un ID, la marquer pour suppression
+    if (phaseToRemove.id) {
+      setDeletedPhaseIds([...deletedPhaseIds, phaseToRemove.id])
+    }
+    setPhases(phases.filter((_, i) => i !== index))
+  }
+
+  const updatePhase = (index: number, field: keyof LocalPhase, value: string | number) => {
+    const updated = [...phases]
+    updated[index] = { ...updated[index], [field]: value }
+    setPhases(updated)
+  }
+
+  // Synchroniser les phases avec l'API
+  const syncPhases = async () => {
+    const chantierId = chantier.id
+
+    // 1. Supprimer les phases marquées pour suppression
+    for (const phaseId of deletedPhaseIds) {
+      try {
+        await chantiersService.removePhase(chantierId, phaseId)
+      } catch (error) {
+        console.error(`Erreur suppression phase ${phaseId}:`, error)
+      }
+    }
+
+    // 2. Créer ou mettre à jour les phases
+    for (let i = 0; i < phases.length; i++) {
+      const phase = phases[i]
+      // Ignorer les phases sans nom ou sans dates
+      if (!phase.nom.trim() || (!phase.date_debut && !phase.date_fin)) continue
+
+      const phaseData: PhaseChantierCreate = {
+        nom: phase.nom,
+        description: phase.description,
+        ordre: i + 1,
+        date_debut: phase.date_debut || undefined,
+        date_fin: phase.date_fin || undefined,
+      }
+
+      try {
+        if (phase.id) {
+          // Mise à jour d'une phase existante
+          await chantiersService.updatePhase(chantierId, phase.id, phaseData)
+        } else {
+          // Création d'une nouvelle phase
+          await chantiersService.addPhase(chantierId, phaseData)
+        }
+      } catch (error) {
+        console.error(`Erreur sync phase ${phase.nom}:`, error)
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      // Filtrer les contacts vides
-      const validContacts = contacts.filter(c => c.nom.trim())
+      // Filtrer les contacts vides et retirer les IDs (non acceptés par le backend)
+      const validContacts = contacts
+        .filter(c => c.nom.trim())
+        .map(({ nom, telephone, profession }) => ({ nom, telephone, profession }))
       const dataToSubmit = {
         ...formData,
         contacts: validContacts.length > 0 ? validContacts : undefined,
@@ -61,6 +163,9 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         contact_telephone: validContacts[0]?.telephone || undefined,
       }
       await onSubmit(dataToSubmit)
+
+      // Synchroniser les phases via l'API dédiée
+      await syncPhases()
     } finally {
       setIsSubmitting(false)
     }
@@ -226,6 +331,76 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
                 className="input"
               />
             </div>
+          </div>
+
+          {/* Phases / Périodes fractionnées */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Periodes fractionnees
+              </label>
+              <button
+                type="button"
+                onClick={addPhase}
+                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter une periode
+              </button>
+            </div>
+            {phases.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">
+                Aucune periode definie. Utilisez les dates ci-dessus pour un chantier continu.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {phases.map((phase, index) => (
+                  <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={phase.nom}
+                        onChange={(e) => updatePhase(index, 'nom', e.target.value)}
+                        className="input flex-1"
+                        placeholder="Nom de la periode"
+                        aria-label={`Nom de la periode ${index + 1}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhase(index)}
+                        className="p-2 text-gray-400 hover:text-red-500"
+                        aria-label={`Supprimer la periode ${index + 1}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Debut</label>
+                        <input
+                          type="date"
+                          value={phase.date_debut || ''}
+                          onChange={(e) => updatePhase(index, 'date_debut', e.target.value)}
+                          className="input text-sm"
+                          aria-label={`Date debut periode ${index + 1}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Fin</label>
+                        <input
+                          type="date"
+                          value={phase.date_fin || ''}
+                          onChange={(e) => updatePhase(index, 'date_fin', e.target.value)}
+                          className="input text-sm"
+                          aria-label={`Date fin periode ${index + 1}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

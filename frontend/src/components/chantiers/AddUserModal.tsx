@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import type { User } from '../../types'
 
 interface AddUserModalProps {
-  type: 'conducteur' | 'chef'
+  type: 'conducteur' | 'chef' | 'ouvrier'
   users: User[]
   onClose: () => void
   onSelect: (userId: string) => void
@@ -15,7 +15,7 @@ export default function AddUserModal({ type, users, onClose, onSelect }: AddUser
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <h2 id="add-user-title" className="text-lg font-semibold">
-            Ajouter un {type === 'conducteur' ? 'conducteur' : 'chef de chantier'}
+            Ajouter un {type === 'conducteur' ? 'conducteur' : type === 'chef' ? 'chef de chantier' : 'ouvrier'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg" aria-label="Fermer">
             <X className="w-5 h-5" />

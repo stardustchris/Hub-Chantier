@@ -42,7 +42,7 @@ export default function ChantierDetailPage() {
   const [chantier, setChantier] = useState<Chantier | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | null>(null)
+  const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | 'ouvrier' | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [activeTab, setActiveTab] = useState<TabType>('infos')
@@ -81,16 +81,23 @@ export default function ChantierDetailPage() {
     }
   }
 
-  const loadAvailableUsers = async (role: 'conducteur' | 'chef') => {
+  const loadAvailableUsers = async (role: 'conducteur' | 'chef' | 'ouvrier') => {
     try {
+      // Pour les ouvriers, on charge tous les utilisateurs actifs (intérimaires, sous-traitants, ouvriers)
+      const roleFilter = role === 'conducteur' ? 'conducteur' : role === 'chef' ? 'chef_chantier' : 'ouvrier'
       const response = await usersService.list({
         size: 100,
-        role: role === 'conducteur' ? 'conducteur' : 'chef_chantier',
+        role: roleFilter,
         is_active: true,
       })
-      const existingIds = role === 'conducteur'
-        ? chantier?.conducteurs.map((u) => u.id) || []
-        : chantier?.chefs.map((u) => u.id) || []
+      let existingIds: string[] = []
+      if (role === 'conducteur') {
+        existingIds = chantier?.conducteurs.map((u) => u.id) || []
+      } else if (role === 'chef') {
+        existingIds = chantier?.chefs.map((u) => u.id) || []
+      } else {
+        existingIds = chantier?.ouvriers?.map((u) => u.id) || []
+      }
       setAvailableUsers(response.items.filter((u) => !existingIds.includes(u.id)))
     } catch (error) {
       logger.error('Error loading users', error, { context: 'ChantierDetailPage' })
@@ -163,8 +170,10 @@ export default function ChantierDetailPage() {
       let updated: Chantier
       if (showAddUserModal === 'conducteur') {
         updated = await chantiersService.addConducteur(id!, userId)
-      } else {
+      } else if (showAddUserModal === 'chef') {
         updated = await chantiersService.addChef(id!, userId)
+      } else {
+        updated = await chantiersService.addOuvrier(id!, userId)
       }
       setChantier(updated)
       setShowAddUserModal(null)
@@ -175,10 +184,17 @@ export default function ChantierDetailPage() {
     }
   }
 
-  const handleRemoveUser = (userId: string, type: 'conducteur' | 'chef') => {
+  const handleRemoveUser = (userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => {
     if (!chantier) return
 
-    const userList = type === 'conducteur' ? chantier.conducteurs : chantier.chefs
+    let userList: User[]
+    if (type === 'conducteur') {
+      userList = chantier.conducteurs
+    } else if (type === 'chef') {
+      userList = chantier.chefs
+    } else {
+      userList = chantier.ouvriers || []
+    }
     const removedUser = userList.find((u) => u.id === userId)
     if (!removedUser) return
 
@@ -190,6 +206,9 @@ export default function ChantierDetailPage() {
       chefs: type === 'chef'
         ? chantier.chefs.filter((u) => u.id !== userId)
         : chantier.chefs,
+      ouvriers: type === 'ouvrier'
+        ? (chantier.ouvriers || []).filter((u) => u.id !== userId)
+        : chantier.ouvriers,
     }
     setChantier(updatedChantier)
 
@@ -203,8 +222,10 @@ export default function ChantierDetailPage() {
         try {
           if (type === 'conducteur') {
             await chantiersService.removeConducteur(id!, userId)
-          } else {
+          } else if (type === 'chef') {
             await chantiersService.removeChef(id!, userId)
+          } else {
+            await chantiersService.removeOuvrier(id!, userId)
           }
         } catch (error) {
           logger.error('Error removing user', error, { context: 'ChantierDetailPage' })
@@ -385,6 +406,7 @@ export default function ChantierDetailPage() {
           <ChantierEquipeTab
             conducteurs={chantier.conducteurs}
             chefs={chantier.chefs}
+            ouvriers={chantier.ouvriers || []}
             canEdit={canEdit}
             onAddUser={(type) => {
               loadAvailableUsers(type)
@@ -407,7 +429,7 @@ export default function ChantierDetailPage() {
 
               {/* Dates et heures */}
               <div className="card">
-                <h2 className="font-semibold text-gray-900 mb-4">Planning</h2>
+                <h2 className="font-semibold text-gray-900 mb-4">Planning du chantier</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {chantier.heures_estimees && (
                     <div className="flex items-center gap-3 text-sm">
@@ -442,12 +464,13 @@ export default function ChantierDetailPage() {
                   )}
                 </div>
               </div>
+
+              {/* Mes interventions planifiees - visible pour tous les utilisateurs */}
+              <MesInterventions chantierId={id!} />
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Mes interventions planifiees */}
-              <MesInterventions chantierId={id!} />
 
               {/* Contact */}
               {(chantier.contact_nom || chantier.contact_telephone) && (

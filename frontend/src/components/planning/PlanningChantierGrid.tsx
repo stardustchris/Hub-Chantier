@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isWeekend } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MapPin, Copy, Users } from 'lucide-react'
+import { MapPin, Copy, Users, Calendar } from 'lucide-react'
 import type { Affectation, Chantier } from '../../types'
 import { CHANTIER_STATUTS } from '../../types'
 
@@ -211,6 +211,21 @@ export default function PlanningChantierGrid({
                       </span>
                     )}
                   </div>
+                  {/* Dates du chantier */}
+                  {(chantier.date_debut_prevue || chantier.date_fin_prevue) && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                      <Calendar className="w-3 h-3 flex-shrink-0" />
+                      <span>
+                        {chantier.date_debut_prevue
+                          ? format(new Date(chantier.date_debut_prevue), 'dd/MM', { locale: fr })
+                          : '?'}
+                        {' → '}
+                        {chantier.date_fin_prevue
+                          ? format(new Date(chantier.date_fin_prevue), 'dd/MM', { locale: fr })
+                          : '?'}
+                      </span>
+                    </div>
+                  )}
                   {chantier.adresse && (
                     <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 truncate">
                       <MapPin className="w-3 h-3 flex-shrink-0" />

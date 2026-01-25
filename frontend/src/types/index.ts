@@ -104,6 +104,7 @@ export interface Chantier {
   description?: string
   conducteurs: User[]
   chefs: User[]
+  ouvriers?: User[]  // Ouvriers, intérimaires, sous-traitants assignés
   created_at: string
   updated_at?: string
 }
@@ -133,6 +134,7 @@ export interface ChantierUpdate {
   contact_nom?: string
   contact_telephone?: string
   contacts?: ContactChantier[]
+  // Note: phases sont gérées via l'API dédiée /api/chantiers/{id}/phases
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string

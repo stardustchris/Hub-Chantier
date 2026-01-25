@@ -130,6 +130,17 @@ export const chantiersService = {
     return response.data
   },
 
+  // Gestion des ouvriers
+  async addOuvrier(chantierId: string, userId: string): Promise<Chantier> {
+    const response = await api.post<Chantier>(`/api/chantiers/${chantierId}/ouvriers`, { user_id: userId })
+    return response.data
+  },
+
+  async removeOuvrier(chantierId: string, userId: string): Promise<Chantier> {
+    const response = await api.delete<Chantier>(`/api/chantiers/${chantierId}/ouvriers/${userId}`)
+    return response.data
+  },
+
   // ===== Gestion des contacts (multi-contacts avec profession) =====
   async listContacts(chantierId: string): Promise<ContactChantier[]> {
     const response = await api.get<ContactChantier[]>(`/api/chantiers/${chantierId}/contacts`)

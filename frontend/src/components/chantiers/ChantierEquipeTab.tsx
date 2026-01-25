@@ -10,14 +10,16 @@ import type { User } from '../../types'
 interface ChantierEquipeTabProps {
   conducteurs: User[]
   chefs: User[]
+  ouvriers: User[]
   canEdit: boolean
-  onAddUser: (type: 'conducteur' | 'chef') => void
-  onRemoveUser: (userId: string, type: 'conducteur' | 'chef') => void
+  onAddUser: (type: 'conducteur' | 'chef' | 'ouvrier') => void
+  onRemoveUser: (userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => void
 }
 
 export default function ChantierEquipeTab({
   conducteurs,
   chefs,
+  ouvriers,
   canEdit,
   onAddUser,
   onRemoveUser,
@@ -84,6 +86,37 @@ export default function ChantierEquipeTab({
                 user={user}
                 canRemove={canEdit}
                 onRemove={() => onRemoveUser(user.id, 'chef')}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Ouvriers */}
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-gray-700">Ouvriers / Intérimaires / Sous-traitants</h3>
+          {canEdit && (
+            <button
+              onClick={() => onAddUser('ouvrier')}
+              className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+              aria-label="Ajouter un ouvrier"
+            >
+              <Plus className="w-4 h-4" />
+              Ajouter
+            </button>
+          )}
+        </div>
+        {ouvriers.length === 0 ? (
+          <p className="text-sm text-gray-500">Aucun ouvrier assigne</p>
+        ) : (
+          <div className="space-y-2">
+            {ouvriers.map((user) => (
+              <UserRow
+                key={user.id}
+                user={user}
+                canRemove={canEdit}
+                onRemove={() => onRemoveUser(user.id, 'ouvrier')}
               />
             ))}
           </div>
