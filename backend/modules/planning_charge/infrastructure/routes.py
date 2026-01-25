@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from shared.infrastructure.database import get_db
+from shared.infrastructure.cache import cache_manager
 from shared.infrastructure.web.dependencies import (
     get_current_user_id,
     get_current_user_role,
@@ -12,6 +13,14 @@ from shared.infrastructure.web.dependencies import (
     require_chef_or_above,
 )
 from shared.infrastructure.audit import AuditService
+
+# Cache key prefix for planning charge
+CACHE_PREFIX = "planning_charge"
+
+
+def _invalidate_planning_cache():
+    """Invalidate all planning charge cache entries."""
+    cache_manager.invalidate_pattern(CACHE_PREFIX)
 
 from ..application.use_cases import (
     CreateBesoinUseCase,
@@ -167,6 +176,8 @@ def get_besoins_by_chantier(
     chantier_id: int,
     semaine_debut: str = Query(..., description="Semaine de debut"),
     semaine_fin: str = Query(..., description="Semaine de fin"),
+    page: int = Query(1, ge=1, description="Numero de page"),
+    page_size: int = Query(50, ge=1, le=100, description="Taille de la page"),
     _role: str = Depends(require_chef_or_above),  # RBAC: Chef+ peut voir
     controller: PlanningChargeController = Depends(get_controller),
 ):
@@ -174,12 +185,15 @@ def get_besoins_by_chantier(
     Recupere les besoins pour un chantier specifique.
 
     RBAC: Accessible aux chefs de chantier, conducteurs et admins.
+    Supporte la pagination avec les parametres page et page_size.
     """
     try:
         return controller.get_besoins_by_chantier(
             chantier_id=chantier_id,
             semaine_debut=semaine_debut,
             semaine_fin=semaine_fin,
+            page=page,
+            page_size=page_size,
         )
     except InvalidSemaineRangeError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -217,6 +231,9 @@ def create_besoin(
     """
     try:
         result = controller.create_besoin(request_data, current_user_id)
+
+        # Invalidate cache after data modification
+        _invalidate_planning_cache()
 
         # Audit Trail
         audit.log_action(
@@ -273,6 +290,9 @@ def update_besoin(
 
         result = controller.update_besoin(besoin_id, request_data, current_user_id)
 
+        # Invalidate cache after data modification
+        _invalidate_planning_cache()
+
         # Audit Trail
         audit.log_action(
             entity_type="besoin_charge",
@@ -327,6 +347,9 @@ def delete_besoin(
             }
 
         controller.delete_besoin(besoin_id, current_user_id)
+
+        # Invalidate cache after data modification
+        _invalidate_planning_cache()
 
         # Audit Trail
         audit.log_action(

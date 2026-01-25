@@ -138,16 +138,31 @@ class PlanningChargeController:
         chantier_id: int,
         semaine_debut: str,
         semaine_fin: str,
+        page: int = 1,
+        page_size: int = 50,
     ) -> ListeBesoinResponse:
-        """Recupere les besoins d'un chantier."""
+        """Recupere les besoins d'un chantier avec pagination."""
         result = self.get_besoins_uc.execute(
             chantier_id=chantier_id,
             semaine_debut=semaine_debut,
             semaine_fin=semaine_fin,
         )
 
-        items = [self._to_besoin_response(b) for b in result]
-        return ListeBesoinResponse(items=items, total=len(items))
+        # Pagination
+        total = len(result)
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        paginated_result = result[start_idx:end_idx]
+
+        items = [self._to_besoin_response(b) for b in paginated_result]
+        return ListeBesoinResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
 
     def get_occupation_details(
         self,
