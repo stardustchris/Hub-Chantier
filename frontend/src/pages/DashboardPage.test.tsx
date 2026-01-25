@@ -195,7 +195,7 @@ describe('DashboardPage', () => {
       })
     })
 
-    it('affiche message vide quand pas de posts', async () => {
+    it('affiche les posts mock quand API retourne vide', async () => {
       vi.mocked(dashboardService.getFeed).mockResolvedValue({
         items: [],
         total: 0,
@@ -206,8 +206,9 @@ describe('DashboardPage', () => {
 
       renderWithProviders()
 
+      // Quand l'API retourne vide, on affiche les mocks de démonstration
       await waitFor(() => {
-        expect(screen.getByText('Aucune publication pour le moment')).toBeInTheDocument()
+        expect(screen.getByText(/Dalle coulée avec succès/i)).toBeInTheDocument()
       })
     })
   })
