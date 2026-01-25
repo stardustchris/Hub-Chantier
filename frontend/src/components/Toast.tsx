@@ -109,6 +109,7 @@ function ToastItem({ toast, duration = 5000 }: { toast: ToastType; duration?: nu
       <button
         onClick={() => removeToast(toast.id)}
         className={`p-1 rounded hover:bg-black/5 ${colors.text}`}
+        aria-label="Fermer la notification"
       >
         <CloseIcon className="w-4 h-4" />
       </button>

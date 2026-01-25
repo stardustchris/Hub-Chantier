@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { PenTool, Trash2, Check, X } from 'lucide-react'
+import { logger } from '../../services/logger'
 
 interface SignaturePadProps {
   value?: string // URL ou base64
@@ -136,7 +137,7 @@ export default function SignaturePad({
 
       setShowModal(false)
     } catch (err) {
-      console.error('Error exporting signature:', err)
+      logger.error('Error exporting signature', err, { context: 'SignaturePad' })
       alert('Erreur lors de l\'export de la signature')
     }
   }

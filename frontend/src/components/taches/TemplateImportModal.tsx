@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { X, Loader2, Search, FileText, ChevronRight } from 'lucide-react'
 import { tachesService } from '../../services/taches'
+import { logger } from '../../services/logger'
 import type { TemplateModele } from '../../types'
 import { UNITES_MESURE, UniteMesure } from '../../types'
 
@@ -42,7 +43,7 @@ export default function TemplateImportModal({
         setCategories(response.categories)
       }
     } catch (error) {
-      console.error('Erreur chargement templates:', error)
+      logger.error('Erreur chargement templates', error, { context: 'TemplateImportModal' })
     } finally {
       setIsLoading(false)
     }

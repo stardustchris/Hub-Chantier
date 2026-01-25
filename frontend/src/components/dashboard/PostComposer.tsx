@@ -71,6 +71,7 @@ export default function PostComposer({
           {/* Bouton photo (FEED-02) */}
           <button
             type="button"
+            aria-label={isCompagnon ? 'Prendre une photo' : 'Ajouter une photo'}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
               isCompagnon
                 ? 'bg-orange-500 text-white hover:bg-orange-600'
@@ -90,6 +91,8 @@ export default function PostComposer({
                 type="button"
                 onClick={() => setShowTargeting(!showTargeting)}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
+                aria-label="Choisir le ciblage"
+                aria-expanded={showTargeting}
               >
                 {targetType === 'everyone' && '📢'}
                 {targetType === 'specific_chantiers' && '🏗️'}
@@ -141,6 +144,8 @@ export default function PostComposer({
             <button
               type="button"
               onClick={() => setIsUrgent(!isUrgent)}
+              aria-label={isUrgent ? 'Retirer le marquage urgent' : 'Marquer comme urgent'}
+              aria-pressed={isUrgent}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
                 isUrgent
                   ? 'bg-red-100 text-red-700'

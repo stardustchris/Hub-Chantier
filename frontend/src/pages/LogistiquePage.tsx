@@ -12,6 +12,7 @@ import type { Ressource, Reservation } from '../types/logistique'
 import type { Chantier } from '../types'
 import { listRessources, listReservationsEnAttente } from '../api/logistique'
 import { chantiersService } from '../services/chantiers'
+import { logger } from '../services/logger'
 
 type TabType = 'ressources' | 'planning' | 'en-attente'
 
@@ -44,7 +45,7 @@ const LogistiquePage: React.FC = () => {
       const data = await chantiersService.list({ size: 500 })
       setChantiers(data.items)
     } catch (err) {
-      console.error('Erreur chargement chantiers:', err)
+      logger.error('Erreur chargement chantiers', err, { context: 'LogistiquePage' })
     }
   }
 
@@ -53,7 +54,7 @@ const LogistiquePage: React.FC = () => {
       const data = await listReservationsEnAttente()
       setReservationsEnAttente(data.items)
     } catch (err) {
-      console.error('Erreur chargement réservations en attente:', err)
+      logger.error('Erreur chargement réservations en attente', err, { context: 'LogistiquePage' })
     }
   }
 

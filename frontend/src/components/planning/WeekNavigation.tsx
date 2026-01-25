@@ -70,6 +70,7 @@ export default function WeekNavigation({
         <button
           onClick={handlePrev}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          aria-label={viewMode === 'mois' ? 'Mois précédent' : 'Semaine précédente'}
         >
           <ChevronLeft className="w-5 h-5 text-gray-600" />
         </button>
@@ -96,6 +97,7 @@ export default function WeekNavigation({
         <button
           onClick={handleNext}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          aria-label={viewMode === 'mois' ? 'Mois suivant' : 'Semaine suivante'}
         >
           <ChevronRight className="w-5 h-5 text-gray-600" />
         </button>

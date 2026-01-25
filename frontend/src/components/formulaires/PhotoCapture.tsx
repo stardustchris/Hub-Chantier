@@ -5,6 +5,7 @@
 
 import { useState, useRef } from 'react'
 import { Camera, X, Upload, Image as ImageIcon } from 'lucide-react'
+import { logger } from '../../services/logger'
 
 interface PhotoCaptureProps {
   value?: string // URL ou base64
@@ -48,7 +49,7 @@ export default function PhotoCapture({
       setPreview(base64)
       onChange(base64)
     } catch (err) {
-      console.error('Error converting file:', err)
+      logger.error('Error converting file', err, { context: 'PhotoCapture' })
       alert('Erreur lors du traitement de l\'image')
     } finally {
       setIsLoading(false)

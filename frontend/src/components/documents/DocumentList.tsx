@@ -9,6 +9,7 @@ import type { Document, TypeDocument } from '../../types/documents';
 import { TYPE_DOCUMENT_LABELS } from '../../types/documents';
 import { getDocumentIcon, downloadAndSaveZip } from '../../services/documents';
 import { formatDateDayMonthYearTime } from '../../utils/dates';
+import { logger } from '../../services/logger';
 
 interface DocumentListProps {
   documents: Document[];
@@ -65,7 +66,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
       await downloadAndSaveZip(Array.from(selectedIds));
       setSelectedIds(new Set());
     } catch (error) {
-      console.error('Erreur lors du téléchargement ZIP:', error);
+      logger.error('Erreur téléchargement ZIP', error, { context: 'DocumentList' });
     } finally {
       setIsDownloadingZip(false);
     }

@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Signalement, Priorite, StatutSignalement } from '../../types/signalements';
 import { listSignalementsByChantier, searchSignalements } from '../../services/signalements';
+import { logger } from '../../services/logger';
 import SignalementCard from './SignalementCard';
 import SignalementFilters from './SignalementFilters';
 
@@ -73,7 +74,7 @@ const SignalementList: React.FC<SignalementListProps> = ({
       setSignalements(response.signalements);
       setTotal(response.total);
     } catch (err) {
-      console.error('Erreur lors du chargement des signalements:', err);
+      logger.error('Erreur chargement signalements', err, { context: 'SignalementList' });
       setError('Impossible de charger les signalements');
     } finally {
       setLoading(false);
