@@ -81,4 +81,30 @@ describe('consentService', () => {
       expect(consentService.getConsentTimestamp('geolocation')).toBeNull()
     })
   })
+
+  describe('revokeConsent', () => {
+    it('appelle setConsent avec false', () => {
+      // Vérifie que revokeConsent ne lève pas d'erreur
+      expect(() => consentService.revokeConsent('geolocation')).not.toThrow()
+    })
+  })
+
+  describe('gestion des données corrompues', () => {
+    it('gère gracieusement les données localStorage corrompues', () => {
+      // Simuler des données corrompues
+      localStorage.setItem('hub_chantier_rgpd_consents', 'invalid json{')
+
+      // Ne devrait pas lever d'erreur
+      expect(consentService.hasConsent('geolocation')).toBe(false)
+      expect(consentService.getAllConsents()).toEqual([])
+    })
+
+    it('gère les données avec un schéma invalide', () => {
+      // Données sans tableau consents
+      localStorage.setItem('hub_chantier_rgpd_consents', JSON.stringify({ invalid: 'schema' }))
+
+      expect(consentService.hasConsent('geolocation')).toBe(false)
+      expect(consentService.getAllConsents()).toEqual([])
+    })
+  })
 })

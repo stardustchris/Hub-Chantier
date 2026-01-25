@@ -92,4 +92,65 @@ describe('csrf service', () => {
       expect(getCsrfToken()).toBeNull()
     })
   })
+
+  describe('fetchCsrfToken', () => {
+    it('récupère le token depuis le backend', async () => {
+      const { fetchCsrfToken } = await import('./csrf')
+      const api = await import('./api')
+
+      vi.mocked(api.default.get).mockResolvedValue({
+        data: { csrf_token: 'test-csrf-token-123' },
+      })
+
+      clearCsrfToken()
+      const token = await fetchCsrfToken()
+
+      expect(token).toBe('test-csrf-token-123')
+      expect(api.default.get).toHaveBeenCalledWith('/api/csrf-token')
+    })
+
+    it('retourne le token en cache si déjà récupéré', async () => {
+      const { fetchCsrfToken } = await import('./csrf')
+      const api = await import('./api')
+
+      vi.mocked(api.default.get).mockResolvedValue({
+        data: { csrf_token: 'cached-token' },
+      })
+
+      clearCsrfToken()
+      const token1 = await fetchCsrfToken()
+      const token2 = await fetchCsrfToken()
+
+      expect(token1).toBe('cached-token')
+      expect(token2).toBe('cached-token')
+      // API should only be called once due to caching
+      expect(api.default.get).toHaveBeenCalledTimes(1)
+    })
+
+    it('génère un token client si l\'endpoint échoue', async () => {
+      const { fetchCsrfToken } = await import('./csrf')
+      const api = await import('./api')
+
+      vi.mocked(api.default.get).mockRejectedValue(new Error('Network error'))
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      clearCsrfToken()
+      const token = await fetchCsrfToken()
+
+      // Le token généré doit être une chaîne hexadécimale de 64 caractères (32 bytes)
+      expect(token).toMatch(/^[0-9a-f]{64}$/)
+    })
+  })
+
+  describe('csrfService', () => {
+    it('exporte les bonnes fonctions', async () => {
+      const { csrfService } = await import('./csrf')
+
+      expect(csrfService.fetchToken).toBeDefined()
+      expect(csrfService.getToken).toBeDefined()
+      expect(csrfService.clear).toBeDefined()
+      expect(csrfService.requiresCsrf).toBeDefined()
+      expect(csrfService.CSRF_HEADER).toBe('X-CSRF-Token')
+    })
+  })
 })
