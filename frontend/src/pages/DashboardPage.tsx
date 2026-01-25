@@ -368,8 +368,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Posts */}
-                <div className="space-y-4">
+                {/* Posts - Fixed height with scroll */}
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                   {sortedPosts.length === 0 && !isLoading ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
