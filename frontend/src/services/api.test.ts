@@ -42,6 +42,7 @@ describe('api service', () => {
         'Content-Type': 'application/json',
       },
       timeout: 30000,
+      withCredentials: true, // HttpOnly cookies support
     })
   })
 
