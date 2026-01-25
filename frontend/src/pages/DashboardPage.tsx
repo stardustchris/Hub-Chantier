@@ -20,11 +20,13 @@ import {
   DocumentsCard,
   DashboardPostCard,
 } from '../components/dashboard'
+import MentionInput from '../components/common/MentionInput'
 import {
   MessageCircle,
   AlertTriangle,
   Loader2,
   Camera,
+  X,
 } from 'lucide-react'
 import type { Post, Chantier, TargetType } from '../types'
 
@@ -131,6 +133,15 @@ const MOCK_POSTS: Post[] = [
   },
 ]
 
+// Cle localStorage pour le pointage du jour
+const CLOCK_STORAGE_KEY = 'hub_chantier_clock_today'
+
+interface ClockState {
+  date: string
+  clockInTime?: string
+  clockOutTime?: string
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -145,17 +156,95 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
 
+  // Etat du pointage
+  const [clockState, setClockState] = useState<ClockState | null>(null)
+  const [showEditTimeModal, setShowEditTimeModal] = useState(false)
+  const [editTimeType, setEditTimeType] = useState<'arrival' | 'departure'>('arrival')
+  const [editTimeValue, setEditTimeValue] = useState('')
+
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
+  const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
 
   useEffect(() => {
     loadFeed()
     loadChantiers()
   }, [])
 
+  // Charger l'etat du pointage depuis localStorage
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    const stored = localStorage.getItem(CLOCK_STORAGE_KEY)
+    if (stored) {
+      const state = JSON.parse(stored) as ClockState
+      // Reinitialiser si c'est un nouveau jour
+      if (state.date === today) {
+        setClockState(state)
+      } else {
+        localStorage.removeItem(CLOCK_STORAGE_KEY)
+      }
+    }
+  }, [])
+
   // Handlers pour les actions
   const handleClockIn = useCallback(() => {
-    alert('Pointage enregistré ! Bonne journée de travail.')
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+    const newState: ClockState = {
+      date: today,
+      clockInTime: timeStr,
+    }
+    setClockState(newState)
+    localStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(newState))
+    alert(`Arrivee pointee a ${timeStr}. Bonne journee de travail !`)
   }, [])
+
+  const handleClockOut = useCallback(() => {
+    const now = new Date()
+    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+    setClockState(prev => {
+      if (!prev) return null
+      const newState = { ...prev, clockOutTime: timeStr }
+      localStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(newState))
+      return newState
+    })
+    alert(`Depart pointe a ${timeStr}. A demain !`)
+  }, [])
+
+  const handleEditTime = useCallback((type: 'arrival' | 'departure', currentTime?: string) => {
+    setEditTimeType(type)
+    setEditTimeValue(currentTime || '')
+    setShowEditTimeModal(true)
+  }, [])
+
+  const handleSaveEditedTime = useCallback(() => {
+    if (!editTimeValue) return
+
+    setClockState(prev => {
+      if (!prev) {
+        const today = new Date().toISOString().split('T')[0]
+        const newState: ClockState = {
+          date: today,
+          clockInTime: editTimeType === 'arrival' ? editTimeValue : undefined,
+          clockOutTime: editTimeType === 'departure' ? editTimeValue : undefined,
+        }
+        localStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(newState))
+        return newState
+      }
+
+      const newState = {
+        ...prev,
+        [editTimeType === 'arrival' ? 'clockInTime' : 'clockOutTime']: editTimeValue,
+      }
+      localStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(newState))
+      return newState
+    })
+
+    setShowEditTimeModal(false)
+    alert(`Heure modifiee: ${editTimeValue}`)
+  }, [editTimeType, editTimeValue])
 
   const handleQuickAction = useCallback((actionId: string) => {
     switch (actionId) {
@@ -375,7 +464,15 @@ export default function DashboardPage() {
         <div className="p-4 space-y-4">
           {/* Top Cards - Extracted Components */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ClockCard onClockIn={handleClockIn} />
+            <ClockCard
+              isClockedIn={!!clockState?.clockInTime && !clockState?.clockOutTime}
+              clockInTime={clockState?.clockInTime}
+              lastClockIn={clockState?.clockOutTime ? `Aujourd'hui ${clockState.clockOutTime}` : 'Hier 17:32'}
+              canEdit={canEditTime}
+              onClockIn={handleClockIn}
+              onClockOut={handleClockOut}
+              onEditTime={handleEditTime}
+            />
             <WeatherCard />
             <StatsCard />
           </div>
@@ -408,12 +505,12 @@ export default function DashboardPage() {
                       {user?.prenom?.[0]}{user?.nom?.[0]}
                     </div>
                     <div className="flex-1">
-                      <input
-                        type="text"
+                      <MentionInput
                         value={newPostContent}
-                        onChange={(e) => setNewPostContent(e.target.value)}
-                        placeholder="Partager une photo, signaler un probleme..."
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        onChange={setNewPostContent}
+                        placeholder="Partager une photo, signaler un probleme... Utilisez @ pour mentionner"
+                        rows={2}
+                        className="border-gray-200 rounded-xl focus:ring-green-500"
                       />
                     </div>
                   </div>
@@ -516,6 +613,49 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal pour modifier l'heure de pointage */}
+      {showEditTimeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">
+                Modifier l'heure {editTimeType === 'arrival' ? "d'arrivee" : 'de depart'}
+              </h3>
+              <button
+                onClick={() => setShowEditTimeModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm text-gray-600 mb-1">Heure</label>
+              <input
+                type="time"
+                value={editTimeValue}
+                onChange={(e) => setEditTimeValue(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEditTimeModal(false)}
+                className="flex-1 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveEditedTime}
+                disabled={!editTimeValue}
+                className="flex-1 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 disabled:opacity-50"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }
