@@ -676,9 +676,9 @@ Le module Logistique permet de gerer les engins et gros materiel de l'entreprise
 | LOG-10 | Option validation N+1 | Activation/desactivation par ressource | ✅ Backend |
 | LOG-11 | Workflow validation | Demande 🟡 → Chef valide → Confirme 🟢 | ✅ Backend + Frontend |
 | LOG-12 | Statuts reservation | En attente 🟡 / Validee 🟢 / Refusee 🔴 | ✅ Backend + Frontend |
-| LOG-13 | Notification demande | Push au valideur (chef/conducteur) | ⏳ Infra (event publie) |
-| LOG-14 | Notification decision | Push au demandeur | ⏳ Infra (event publie) |
-| LOG-15 | Rappel J-1 | Notification veille de reservation | ⏳ Infra (job scheduler) |
+| LOG-13 | Notification demande | Push au valideur (chef/conducteur) | ✅ Firebase FCM |
+| LOG-14 | Notification decision | Push au demandeur | ✅ Firebase FCM |
+| LOG-15 | Rappel J-1 | Notification veille de reservation | ✅ APScheduler |
 | LOG-16 | Motif de refus | Champ texte optionnel | ✅ Backend + Frontend |
 | LOG-17 | Conflit de reservation | Alerte si creneau deja occupe | ✅ Backend |
 | LOG-18 | Historique par ressource | Journal complet des reservations | ✅ Backend + Frontend |

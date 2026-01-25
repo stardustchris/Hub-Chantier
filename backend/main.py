@@ -21,6 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.web.security_middleware import SecurityHeadersMiddleware
+from shared.infrastructure.scheduler import get_scheduler
+from shared.infrastructure.scheduler.jobs import RappelReservationJob
 from modules.auth.infrastructure.web import router as auth_router, users_router
 from modules.chantiers.infrastructure.web import router as chantiers_router
 from modules.dashboard.infrastructure.web import dashboard_router
@@ -105,10 +107,20 @@ async def startup_event():
     init_db()
     logger.info("Base de données initialisée")
 
+    # Démarrer le scheduler et enregistrer les jobs
+    scheduler = get_scheduler()
+    RappelReservationJob.register(scheduler, SessionLocal)
+    scheduler.start()
+    logger.info("Scheduler démarré avec jobs planifiés")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Nettoyage à l'arrêt."""
+    # Arrêter le scheduler
+    scheduler = get_scheduler()
+    scheduler.shutdown(wait=True)
+    logger.info("Scheduler arrêté")
     logger.info("Arrêt de l'application")
 
 

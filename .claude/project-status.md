@@ -16,7 +16,7 @@
 | formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
 | signalements | 10 | SIG-01 a SIG-20 | **COMPLET** (18/20, 2 infra) |
-| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** (15/18, 3 infra) |
+| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
 
@@ -40,23 +40,24 @@
 |--------|----------|-------------|
 | interventions | Haute | planning (OK), taches (OK) |
 
+## Infrastructure disponible
+
+- **APScheduler** : Jobs planifies (job scheduler)
+- **Firebase Cloud Messaging** : Notifications push
+
 ## Fonctionnalites en attente infrastructure
 
 - GED-11 : Transfert auto depuis ERP (Costructor/Graneet)
 - GED-15 : Synchronisation Offline
-- PLN-23/24 : Notifications push / Mode Offline
+- PLN-23/24 : Mode Offline (PWA)
 - FDH-16 : Import ERP auto
-- FEED-17 : Notifications push
-- SIG-13 : Notifications push signalements (partiel - backend OK)
-- SIG-16/17 : Escalade auto temps reel (job scheduler requis)
-- LOG-13/14 : Notifications push reservations (events publies, service push requis)
-- LOG-15 : Rappel J-1 reservations (job scheduler requis)
 
 ## Derniere mise a jour
 
-Session 2026-01-25 - Verification et documentation module Logistique (LOG-01 a LOG-18)
-- Backend Clean Architecture complet (domain, application, infrastructure)
-- Frontend React complet (composants, API, types)
-- 15/18 fonctionnalites implementees (3 infra: notifications push + rappel J-1)
-- 45 tests unitaires (entities, value objects, use cases)
-- Migration Alembic pour schema logistique
+Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
+- APScheduler integre dans FastAPI (jobs planifies)
+- Firebase Cloud Messaging (notifications push backend + frontend)
+- Job rappel J-1 reservations (LOG-15)
+- Handlers notifications LOG-13/14 + SIG-13 + FEED-17
+- Service notifications frontend avec Firebase SDK
+- Module Logistique maintenant 100% COMPLET (18/18)
