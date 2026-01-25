@@ -34,7 +34,7 @@ interface TodayPlanningCardProps {
 const defaultSlots: PlanningSlot[] = [
   {
     id: '1',
-    chantierId: '2',
+    chantierId: '4',
     startTime: '08:00',
     endTime: '12:00',
     period: 'morning',
@@ -51,7 +51,7 @@ const defaultSlots: PlanningSlot[] = [
   },
   {
     id: '3',
-    chantierId: '2',
+    chantierId: '4',
     startTime: '13:30',
     endTime: '17:00',
     period: 'afternoon',
@@ -130,7 +130,10 @@ export default function TodayPlanningCard({
             <div key={slot.id} className={`border-l-4 ${period.border} rounded-xl ${period.bg} p-4`}>
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <span className={`text-xs px-2 py-1 rounded-md font-semibold ${period.badge} text-white`}>
+                  <span
+                    onClick={() => handleChantierClick(slot)}
+                    className={`text-xs px-2 py-1 rounded-md font-semibold ${period.badge} text-white cursor-pointer hover:opacity-80 transition-opacity`}
+                  >
                     {slot.startTime} - {slot.endTime}
                   </span>
                   <span className="ml-2 text-sm text-gray-600">
