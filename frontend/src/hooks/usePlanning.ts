@@ -6,7 +6,7 @@ import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
 import type { Affectation, AffectationCreate, AffectationUpdate, User, Chantier } from '../types'
-import { METIERS } from '../types'
+import { METIERS, PLANNING_CATEGORIES } from '../types'
 
 export type ViewMode = 'semaine' | 'mois'
 export type ViewTab = 'utilisateurs' | 'chantiers'
@@ -29,7 +29,7 @@ export function usePlanning() {
   // UI
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [expandedMetiers, setExpandedMetiers] = useState<string[]>(Object.keys(METIERS))
+  const [expandedMetiers, setExpandedMetiers] = useState<string[]>(Object.keys(PLANNING_CATEGORIES))
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false)
