@@ -93,6 +93,10 @@ export function useListPage<T, TCreate = Partial<T>>(
   // Ref pour eviter les double calls
   const isMounted = useRef(true)
 
+  // Ref pour stocker fetchItems (evite les re-renders infinies)
+  const fetchItemsRef = useRef(fetchItems)
+  fetchItemsRef.current = fetchItems
+
   // Load items
   const reload = useCallback(async () => {
     if (!isMounted.current) return
@@ -108,7 +112,7 @@ export function useListPage<T, TCreate = Partial<T>>(
         ...filters,
       }
 
-      const response = await fetchItems(params)
+      const response = await fetchItemsRef.current(params)
 
       if (isMounted.current) {
         setItems(response.items)
@@ -126,7 +130,7 @@ export function useListPage<T, TCreate = Partial<T>>(
         setIsLoading(false)
       }
     }
-  }, [fetchItems, page, pageSize, search, filters])
+  }, [page, pageSize, search, filters])
 
   // Create item
   const create = useCallback(async (data: TCreate): Promise<T | null> => {
