@@ -18,11 +18,12 @@ from ..config import settings
 
 
 # CSP stricte pour production (pas de 'unsafe-inline' ni 'unsafe-eval')
+# Note: img-src restreint pour eviter l'exfiltration de donnees via tracking pixels
 CSP_PRODUCTION = (
     "default-src 'self'; "
     "script-src 'self'; "
     "style-src 'self'; "
-    "img-src 'self' data: blob: https:; "
+    "img-src 'self' data: blob:; "  # Suppression de https: pour securite
     "font-src 'self' data:; "
     "connect-src 'self'; "
     "frame-ancestors 'none'; "
@@ -31,11 +32,12 @@ CSP_PRODUCTION = (
 )
 
 # CSP permissive pour developpement (React HMR, inline styles)
+# Note: img-src restreint meme en dev pour coherence
 CSP_DEVELOPMENT = (
     "default-src 'self'; "
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
     "style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: blob: https:; "
+    "img-src 'self' data: blob:; "  # Suppression de https: pour securite
     "font-src 'self' data:; "
     "connect-src 'self' ws: wss:; "
     "frame-ancestors 'none'; "

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import type { UserRole, UserCreate } from '../../types'
 import { ROLES, METIERS, USER_COLORS } from '../../types'
@@ -21,6 +21,22 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const modalRef = useRef<HTMLDivElement>(null)
+  const firstInputRef = useRef<HTMLInputElement>(null)
+
+  // Focus le premier input a l'ouverture du modal
+  useEffect(() => {
+    firstInputRef.current?.focus()
+  }, [])
+
+  // Fermer avec Echap
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,11 +54,21 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-user-title"
+        className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+      >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Nouvel utilisateur</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+          <h2 id="create-user-title" className="text-lg font-semibold">Nouvel utilisateur</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+            aria-label="Fermer le formulaire"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -58,12 +84,14 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
                 Prenom *
               </label>
               <input
+                ref={firstInputRef}
                 type="text"
                 required
                 value={formData.prenom}
                 onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
                 className="input"
                 placeholder="Jean"
+                autoComplete="given-name"
               />
             </div>
             <div>
@@ -197,7 +225,8 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
                       : 'border-transparent'
                   }`}
                   style={{ backgroundColor: color.code }}
-                  title={color.name}
+                  aria-label={`Couleur ${color.name}${formData.couleur === color.code ? ' (selectionnee)' : ''}`}
+                  aria-pressed={formData.couleur === color.code}
                 />
               ))}
             </div>

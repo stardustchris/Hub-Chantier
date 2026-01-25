@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { DURATIONS } from '../constants'
 
 export interface Toast {
   id: string
@@ -30,8 +31,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     setToasts((prev) => [...prev, newToast])
 
-    // Auto-remove after duration (default 5 seconds)
-    const duration = toast.duration ?? 5000
+    // Auto-remove after duration
+    const duration = toast.duration ?? DURATIONS.TOAST_DEFAULT
     if (duration > 0) {
       setTimeout(() => {
         removeToast(id)
@@ -60,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     message: string,
     onUndo: () => void,
     onConfirm: () => void,
-    duration = 5000
+    duration = DURATIONS.TOAST_UNDO
   ) => {
     const id = Math.random().toString(36).substring(2, 9)
 
