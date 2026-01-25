@@ -24,7 +24,7 @@ class CreateInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, dto: CreateInterventionDTO, created_by: int
     ) -> Intervention:
         """Cree une nouvelle intervention."""
@@ -41,7 +41,7 @@ class CreateInterventionUseCase:
             created_by=created_by,
         )
 
-        return await self._repository.save(intervention)
+        return self._repository.save(intervention)
 
 
 class GetInterventionUseCase:
@@ -50,13 +50,13 @@ class GetInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(self, intervention_id: int) -> Optional[Intervention]:
+    def execute(self, intervention_id: int) -> Optional[Intervention]:
         """Recupere une intervention par son ID."""
-        return await self._repository.get_by_id(intervention_id)
+        return self._repository.get_by_id(intervention_id)
 
-    async def by_code(self, code: str) -> Optional[Intervention]:
+    def by_code(self, code: str) -> Optional[Intervention]:
         """Recupere une intervention par son code."""
-        return await self._repository.get_by_code(code)
+        return self._repository.get_by_code(code)
 
 
 class ListInterventionsUseCase:
@@ -68,11 +68,11 @@ class ListInterventionsUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, filters: InterventionFiltersDTO
     ) -> tuple[List[Intervention], int]:
         """Liste les interventions avec filtres et pagination."""
-        interventions = await self._repository.list_all(
+        interventions = self._repository.list_all(
             statut=filters.statut,
             priorite=filters.priorite,
             type_intervention=filters.type_intervention,
@@ -83,7 +83,7 @@ class ListInterventionsUseCase:
             offset=filters.offset,
         )
 
-        total = await self._repository.count(
+        total = self._repository.count(
             statut=filters.statut,
             priorite=filters.priorite,
             type_intervention=filters.type_intervention,
@@ -98,11 +98,11 @@ class UpdateInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, intervention_id: int, dto: UpdateInterventionDTO
     ) -> Optional[Intervention]:
         """Met a jour une intervention."""
-        intervention = await self._repository.get_by_id(intervention_id)
+        intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
 
@@ -135,7 +135,7 @@ class UpdateInterventionUseCase:
         if dto.anomalies is not None:
             intervention.anomalies = dto.anomalies
 
-        return await self._repository.save(intervention)
+        return self._repository.save(intervention)
 
 
 class PlanifierInterventionUseCase:
@@ -153,11 +153,11 @@ class PlanifierInterventionUseCase:
         self._repository = repository
         self._affectation_repository = affectation_repository
 
-    async def execute(
+    def execute(
         self, intervention_id: int, dto: PlanifierInterventionDTO, planned_by: int
     ) -> Optional[Intervention]:
         """Planifie une intervention avec date et techniciens."""
-        intervention = await self._repository.get_by_id(intervention_id)
+        intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
 
@@ -172,7 +172,7 @@ class PlanifierInterventionUseCase:
 
         for i, tech_id in enumerate(dto.techniciens_ids):
             # Verifier si deja affecte
-            exists = await self._affectation_repository.exists(
+            exists = self._affectation_repository.exists(
                 intervention_id, tech_id
             )
             if not exists:
@@ -182,9 +182,9 @@ class PlanifierInterventionUseCase:
                     est_principal=(i == 0),  # Premier = principal
                     created_by=planned_by,
                 )
-                await self._affectation_repository.save(affectation)
+                self._affectation_repository.save(affectation)
 
-        return await self._repository.save(intervention)
+        return self._repository.save(intervention)
 
 
 class DemarrerInterventionUseCase:
@@ -193,17 +193,17 @@ class DemarrerInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, intervention_id: int, dto: DemarrerInterventionDTO
     ) -> Optional[Intervention]:
         """Demarre une intervention."""
-        intervention = await self._repository.get_by_id(intervention_id)
+        intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
 
         intervention.demarrer(dto.heure_debut_reelle)
 
-        return await self._repository.save(intervention)
+        return self._repository.save(intervention)
 
 
 class TerminerInterventionUseCase:
@@ -212,11 +212,11 @@ class TerminerInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, intervention_id: int, dto: TerminerInterventionDTO
     ) -> Optional[Intervention]:
         """Termine une intervention."""
-        intervention = await self._repository.get_by_id(intervention_id)
+        intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
 
@@ -226,7 +226,7 @@ class TerminerInterventionUseCase:
             anomalies=dto.anomalies,
         )
 
-        return await self._repository.save(intervention)
+        return self._repository.save(intervention)
 
 
 class AnnulerInterventionUseCase:
@@ -235,15 +235,15 @@ class AnnulerInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(self, intervention_id: int) -> Optional[Intervention]:
+    def execute(self, intervention_id: int) -> Optional[Intervention]:
         """Annule une intervention."""
-        intervention = await self._repository.get_by_id(intervention_id)
+        intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
 
         intervention.annuler()
 
-        return await self._repository.save(intervention)
+        return self._repository.save(intervention)
 
 
 class DeleteInterventionUseCase:
@@ -252,6 +252,6 @@ class DeleteInterventionUseCase:
     def __init__(self, repository: InterventionRepository):
         self._repository = repository
 
-    async def execute(self, intervention_id: int, deleted_by: int) -> bool:
+    def execute(self, intervention_id: int, deleted_by: int) -> bool:
         """Supprime une intervention."""
-        return await self._repository.delete(intervention_id, deleted_by)
+        return self._repository.delete(intervention_id, deleted_by)

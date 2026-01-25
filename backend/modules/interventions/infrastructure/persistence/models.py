@@ -250,7 +250,7 @@ class InterventionMessageModel(Base):
     )
     contenu = Column(Text, nullable=False)
     photos_urls = Column(JSON, nullable=True, default=list)
-    metadata = Column(JSON, nullable=True)
+    extra_data = Column(JSON, nullable=True)  # metadata is reserved in SQLAlchemy
     inclure_rapport = Column(Boolean, nullable=False, default=True)
 
     # Timestamps

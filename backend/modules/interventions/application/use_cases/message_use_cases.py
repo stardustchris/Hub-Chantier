@@ -17,7 +17,7 @@ class AddMessageUseCase:
     def __init__(self, repository: InterventionMessageRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self,
         intervention_id: int,
         dto: CreateMessageDTO,
@@ -46,7 +46,7 @@ class AddMessageUseCase:
                 contenu=dto.contenu,
             )
 
-        return await self._repository.save(message)
+        return self._repository.save(message)
 
 
 class ListMessagesUseCase:
@@ -55,7 +55,7 @@ class ListMessagesUseCase:
     def __init__(self, repository: InterventionMessageRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self,
         intervention_id: int,
         type_message: str = None,
@@ -65,14 +65,14 @@ class ListMessagesUseCase:
         """Liste les messages d'une intervention."""
         type_filter = TypeMessage(type_message) if type_message else None
 
-        messages = await self._repository.list_by_intervention(
+        messages = self._repository.list_by_intervention(
             intervention_id=intervention_id,
             type_message=type_filter,
             limit=limit,
             offset=offset,
         )
 
-        count = await self._repository.count_by_intervention(intervention_id)
+        count = self._repository.count_by_intervention(intervention_id)
 
         return messages, count
 
@@ -86,6 +86,6 @@ class ToggleRapportInclusionUseCase:
     def __init__(self, repository: InterventionMessageRepository):
         self._repository = repository
 
-    async def execute(self, message_id: int, inclure: bool) -> bool:
+    def execute(self, message_id: int, inclure: bool) -> bool:
         """Active/desactive l'inclusion dans le rapport."""
-        return await self._repository.toggle_inclure_rapport(message_id, inclure)
+        return self._repository.toggle_inclure_rapport(message_id, inclure)

@@ -17,7 +17,7 @@ class AffecterTechnicienUseCase:
     def __init__(self, repository: AffectationInterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self,
         intervention_id: int,
         dto: AffecterTechnicienDTO,
@@ -25,16 +25,16 @@ class AffecterTechnicienUseCase:
     ) -> AffectationIntervention:
         """Affecte un technicien a une intervention."""
         # Verifier si deja affecte
-        exists = await self._repository.exists(intervention_id, dto.utilisateur_id)
+        exists = self._repository.exists(intervention_id, dto.utilisateur_id)
         if exists:
             raise ValueError("Ce technicien est deja affecte a cette intervention")
 
         # Si principal demande, retirer le principal actuel
         if dto.est_principal:
-            principal = await self._repository.get_principal(intervention_id)
+            principal = self._repository.get_principal(intervention_id)
             if principal:
                 principal.retirer_principal()
-                await self._repository.save(principal)
+                self._repository.save(principal)
 
         affectation = AffectationIntervention(
             intervention_id=intervention_id,
@@ -44,7 +44,7 @@ class AffecterTechnicienUseCase:
             created_by=created_by,
         )
 
-        return await self._repository.save(affectation)
+        return self._repository.save(affectation)
 
 
 class DesaffecterTechnicienUseCase:
@@ -53,11 +53,11 @@ class DesaffecterTechnicienUseCase:
     def __init__(self, repository: AffectationInterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, affectation_id: int, deleted_by: int
     ) -> bool:
         """Desaffecte un technicien d'une intervention."""
-        return await self._repository.delete(affectation_id, deleted_by)
+        return self._repository.delete(affectation_id, deleted_by)
 
 
 class ListTechniciensInterventionUseCase:
@@ -66,8 +66,8 @@ class ListTechniciensInterventionUseCase:
     def __init__(self, repository: AffectationInterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, intervention_id: int
     ) -> List[AffectationIntervention]:
         """Liste les techniciens affectes a une intervention."""
-        return await self._repository.list_by_intervention(intervention_id)
+        return self._repository.list_by_intervention(intervention_id)

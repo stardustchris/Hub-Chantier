@@ -3,8 +3,8 @@
 from datetime import datetime
 from typing import Optional, List
 
-from sqlalchemy import select, func, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, and_
+from sqlalchemy.orm import Session
 
 from ...domain.entities import SignatureIntervention, TypeSignataire
 from ...domain.repositories import SignatureInterventionRepository
@@ -14,11 +14,11 @@ from .models import SignatureInterventionModel, AffectationInterventionModel
 class SQLAlchemySignatureInterventionRepository(SignatureInterventionRepository):
     """Implementation SQLAlchemy du repository des signatures."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: Session):
         """Initialise le repository."""
         self._session = session
 
-    async def save(self, signature: SignatureIntervention) -> SignatureIntervention:
+    def save(self, signature: SignatureIntervention) -> SignatureIntervention:
         """Sauvegarde une signature."""
         if signature.id is None:
             model = SignatureInterventionModel(
@@ -34,14 +34,12 @@ class SQLAlchemySignatureInterventionRepository(SignatureInterventionRepository)
                 signed_at=signature.signed_at,
             )
             self._session.add(model)
-            await self._session.flush()
+            self._session.flush()
             signature.id = model.id
         else:
-            stmt = select(SignatureInterventionModel).where(
+            model = self._session.query(SignatureInterventionModel).filter(
                 SignatureInterventionModel.id == signature.id
-            )
-            result = await self._session.execute(stmt)
-            model = result.scalar_one_or_none()
+            ).first()
 
             if model:
                 model.nom_signataire = signature.nom_signataire
@@ -51,147 +49,132 @@ class SQLAlchemySignatureInterventionRepository(SignatureInterventionRepository)
                     model.deleted_at = signature.deleted_at
                     model.deleted_by = signature.deleted_by
 
-                await self._session.flush()
+                self._session.flush()
 
         return signature
 
-    async def get_by_id(self, signature_id: int) -> Optional[SignatureIntervention]:
+    def get_by_id(self, signature_id: int) -> Optional[SignatureIntervention]:
         """Recupere une signature par son ID."""
-        stmt = select(SignatureInterventionModel).where(
+        model = self._session.query(SignatureInterventionModel).filter(
             SignatureInterventionModel.id == signature_id
-        )
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        ).first()
 
         if not model:
             return None
 
         return self._model_to_entity(model)
 
-    async def list_by_intervention(
+    def list_by_intervention(
         self,
         intervention_id: int,
         include_deleted: bool = False,
     ) -> List[SignatureIntervention]:
         """Liste les signatures d'une intervention."""
-        stmt = select(SignatureInterventionModel).where(
+        query = self._session.query(SignatureInterventionModel).filter(
             SignatureInterventionModel.intervention_id == intervention_id
         )
 
         if not include_deleted:
-            stmt = stmt.where(SignatureInterventionModel.deleted_at.is_(None))
+            query = query.filter(SignatureInterventionModel.deleted_at.is_(None))
 
-        stmt = stmt.order_by(SignatureInterventionModel.signed_at.asc())
+        query = query.order_by(SignatureInterventionModel.signed_at.asc())
 
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
+        models = query.all()
 
         return [self._model_to_entity(m) for m in models]
 
-    async def get_signature_client(
+    def get_signature_client(
         self, intervention_id: int
     ) -> Optional[SignatureIntervention]:
         """Recupere la signature client d'une intervention."""
-        stmt = select(SignatureInterventionModel).where(
+        model = self._session.query(SignatureInterventionModel).filter(
             and_(
                 SignatureInterventionModel.intervention_id == intervention_id,
                 SignatureInterventionModel.type_signataire == TypeSignataire.CLIENT,
                 SignatureInterventionModel.deleted_at.is_(None),
             )
-        )
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        ).first()
 
         if not model:
             return None
 
         return self._model_to_entity(model)
 
-    async def get_signature_technicien(
+    def get_signature_technicien(
         self, intervention_id: int, utilisateur_id: int
     ) -> Optional[SignatureIntervention]:
         """Recupere la signature d'un technicien."""
-        stmt = select(SignatureInterventionModel).where(
+        model = self._session.query(SignatureInterventionModel).filter(
             and_(
                 SignatureInterventionModel.intervention_id == intervention_id,
                 SignatureInterventionModel.type_signataire == TypeSignataire.TECHNICIEN,
                 SignatureInterventionModel.utilisateur_id == utilisateur_id,
                 SignatureInterventionModel.deleted_at.is_(None),
             )
-        )
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        ).first()
 
         if not model:
             return None
 
         return self._model_to_entity(model)
 
-    async def has_signature_client(self, intervention_id: int) -> bool:
+    def has_signature_client(self, intervention_id: int) -> bool:
         """Verifie si l'intervention a une signature client."""
-        stmt = select(func.count(SignatureInterventionModel.id)).where(
+        count = self._session.query(func.count(SignatureInterventionModel.id)).filter(
             and_(
                 SignatureInterventionModel.intervention_id == intervention_id,
                 SignatureInterventionModel.type_signataire == TypeSignataire.CLIENT,
                 SignatureInterventionModel.deleted_at.is_(None),
             )
-        )
-        result = await self._session.execute(stmt)
-        count = result.scalar() or 0
+        ).scalar() or 0
 
         return count > 0
 
-    async def has_all_signatures_techniciens(
+    def has_all_signatures_techniciens(
         self, intervention_id: int
     ) -> bool:
         """Verifie si tous les techniciens ont signe."""
         # Compte les techniciens affectes
-        affectations_stmt = select(
+        nb_techniciens = self._session.query(
             func.count(AffectationInterventionModel.id)
-        ).where(
+        ).filter(
             and_(
                 AffectationInterventionModel.intervention_id == intervention_id,
                 AffectationInterventionModel.deleted_at.is_(None),
             )
-        )
-        affectations_result = await self._session.execute(affectations_stmt)
-        nb_techniciens = affectations_result.scalar() or 0
+        ).scalar() or 0
 
         if nb_techniciens == 0:
             return True  # Pas de technicien = tous ont signe (trivial)
 
         # Compte les signatures techniciens
-        signatures_stmt = select(
+        nb_signatures = self._session.query(
             func.count(SignatureInterventionModel.id)
-        ).where(
+        ).filter(
             and_(
                 SignatureInterventionModel.intervention_id == intervention_id,
                 SignatureInterventionModel.type_signataire == TypeSignataire.TECHNICIEN,
                 SignatureInterventionModel.deleted_at.is_(None),
             )
-        )
-        signatures_result = await self._session.execute(signatures_stmt)
-        nb_signatures = signatures_result.scalar() or 0
+        ).scalar() or 0
 
         return nb_signatures >= nb_techniciens
 
-    async def delete(self, signature_id: int, deleted_by: int) -> bool:
+    def delete(self, signature_id: int, deleted_by: int) -> bool:
         """Supprime une signature (soft delete)."""
-        stmt = select(SignatureInterventionModel).where(
+        model = self._session.query(SignatureInterventionModel).filter(
             and_(
                 SignatureInterventionModel.id == signature_id,
                 SignatureInterventionModel.deleted_at.is_(None),
             )
-        )
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        ).first()
 
         if not model:
             return False
 
         model.deleted_at = datetime.utcnow()
         model.deleted_by = deleted_by
-        await self._session.flush()
+        self._session.flush()
 
         return True
 

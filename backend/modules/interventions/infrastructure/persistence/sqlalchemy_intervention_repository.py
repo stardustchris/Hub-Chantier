@@ -3,8 +3,8 @@
 from datetime import date, datetime
 from typing import Optional, List
 
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, and_
+from sqlalchemy.orm import Session
 
 from ...domain.entities import Intervention
 from ...domain.repositories import InterventionRepository
@@ -19,20 +19,20 @@ from .models import InterventionModel
 class SQLAlchemyInterventionRepository(InterventionRepository):
     """Implementation SQLAlchemy du repository des interventions."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: Session):
         """Initialise le repository.
 
         Args:
-            session: Session SQLAlchemy async.
+            session: Session SQLAlchemy.
         """
         self._session = session
 
-    async def save(self, intervention: Intervention) -> Intervention:
+    def save(self, intervention: Intervention) -> Intervention:
         """Sauvegarde une intervention."""
         if intervention.id is None:
             # Creation
             if not intervention.code:
-                intervention.code = await self.generate_code()
+                intervention.code = self.generate_code()
 
             model = InterventionModel(
                 code=intervention.code,
@@ -59,16 +59,14 @@ class SQLAlchemyInterventionRepository(InterventionRepository):
                 created_at=intervention.created_at,
             )
             self._session.add(model)
-            await self._session.flush()
+            self._session.flush()
             intervention.id = model.id
             intervention.code = model.code
         else:
             # Mise a jour
-            stmt = select(InterventionModel).where(
+            model = self._session.query(InterventionModel).filter(
                 InterventionModel.id == intervention.id
-            )
-            result = await self._session.execute(stmt)
-            model = result.scalar_one_or_none()
+            ).first()
 
             if model:
                 model.type_intervention = intervention.type_intervention
@@ -96,33 +94,33 @@ class SQLAlchemyInterventionRepository(InterventionRepository):
                     model.deleted_at = intervention.deleted_at
                     model.deleted_by = intervention.deleted_by
 
-                await self._session.flush()
+                self._session.flush()
 
         return intervention
 
-    async def get_by_id(self, intervention_id: int) -> Optional[Intervention]:
+    def get_by_id(self, intervention_id: int) -> Optional[Intervention]:
         """Recupere une intervention par son ID."""
-        stmt = select(InterventionModel).where(InterventionModel.id == intervention_id)
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        model = self._session.query(InterventionModel).filter(
+            InterventionModel.id == intervention_id
+        ).first()
 
         if not model:
             return None
 
         return self._model_to_entity(model)
 
-    async def get_by_code(self, code: str) -> Optional[Intervention]:
+    def get_by_code(self, code: str) -> Optional[Intervention]:
         """Recupere une intervention par son code."""
-        stmt = select(InterventionModel).where(InterventionModel.code == code)
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        model = self._session.query(InterventionModel).filter(
+            InterventionModel.code == code
+        ).first()
 
         if not model:
             return None
 
         return self._model_to_entity(model)
 
-    async def list_all(
+    def list_all(
         self,
         statut: Optional[StatutIntervention] = None,
         priorite: Optional[PrioriteIntervention] = None,
@@ -135,49 +133,43 @@ class SQLAlchemyInterventionRepository(InterventionRepository):
         offset: int = 0,
     ) -> List[Intervention]:
         """Liste les interventions avec filtres."""
-        stmt = select(InterventionModel)
-
-        conditions = []
+        query = self._session.query(InterventionModel)
 
         if not include_deleted:
-            conditions.append(InterventionModel.deleted_at.is_(None))
+            query = query.filter(InterventionModel.deleted_at.is_(None))
 
         if statut:
-            conditions.append(InterventionModel.statut == statut)
+            query = query.filter(InterventionModel.statut == statut)
 
         if priorite:
-            conditions.append(InterventionModel.priorite == priorite)
+            query = query.filter(InterventionModel.priorite == priorite)
 
         if type_intervention:
-            conditions.append(InterventionModel.type_intervention == type_intervention)
+            query = query.filter(InterventionModel.type_intervention == type_intervention)
 
         if date_debut:
-            conditions.append(InterventionModel.date_planifiee >= date_debut)
+            query = query.filter(InterventionModel.date_planifiee >= date_debut)
 
         if date_fin:
-            conditions.append(InterventionModel.date_planifiee <= date_fin)
+            query = query.filter(InterventionModel.date_planifiee <= date_fin)
 
         if chantier_origine_id:
-            conditions.append(
+            query = query.filter(
                 InterventionModel.chantier_origine_id == chantier_origine_id
             )
 
-        if conditions:
-            stmt = stmt.where(and_(*conditions))
-
-        stmt = stmt.order_by(
+        query = query.order_by(
             InterventionModel.priorite.desc(),
             InterventionModel.date_planifiee.asc(),
             InterventionModel.created_at.desc(),
         )
-        stmt = stmt.limit(limit).offset(offset)
+        query = query.limit(limit).offset(offset)
 
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
+        models = query.all()
 
         return [self._model_to_entity(m) for m in models]
 
-    async def count(
+    def count(
         self,
         statut: Optional[StatutIntervention] = None,
         priorite: Optional[PrioriteIntervention] = None,
@@ -185,29 +177,23 @@ class SQLAlchemyInterventionRepository(InterventionRepository):
         include_deleted: bool = False,
     ) -> int:
         """Compte les interventions."""
-        stmt = select(func.count(InterventionModel.id))
-
-        conditions = []
+        query = self._session.query(func.count(InterventionModel.id))
 
         if not include_deleted:
-            conditions.append(InterventionModel.deleted_at.is_(None))
+            query = query.filter(InterventionModel.deleted_at.is_(None))
 
         if statut:
-            conditions.append(InterventionModel.statut == statut)
+            query = query.filter(InterventionModel.statut == statut)
 
         if priorite:
-            conditions.append(InterventionModel.priorite == priorite)
+            query = query.filter(InterventionModel.priorite == priorite)
 
         if type_intervention:
-            conditions.append(InterventionModel.type_intervention == type_intervention)
+            query = query.filter(InterventionModel.type_intervention == type_intervention)
 
-        if conditions:
-            stmt = stmt.where(and_(*conditions))
+        return query.scalar() or 0
 
-        result = await self._session.execute(stmt)
-        return result.scalar() or 0
-
-    async def list_by_utilisateur(
+    def list_by_utilisateur(
         self,
         utilisateur_id: int,
         date_debut: Optional[date] = None,
@@ -219,47 +205,43 @@ class SQLAlchemyInterventionRepository(InterventionRepository):
 
         # Sous-requete pour les IDs d'interventions du technicien
         subq = (
-            select(AffectationInterventionModel.intervention_id)
-            .where(
+            self._session.query(AffectationInterventionModel.intervention_id)
+            .filter(
                 and_(
                     AffectationInterventionModel.utilisateur_id == utilisateur_id,
                     AffectationInterventionModel.deleted_at.is_(None),
                 )
             )
-            .scalar_subquery()
+            .subquery()
         )
 
-        stmt = select(InterventionModel).where(InterventionModel.id.in_(subq))
-
-        conditions = []
+        query = self._session.query(InterventionModel).filter(
+            InterventionModel.id.in_(subq)
+        )
 
         if not include_deleted:
-            conditions.append(InterventionModel.deleted_at.is_(None))
+            query = query.filter(InterventionModel.deleted_at.is_(None))
 
         if date_debut:
-            conditions.append(InterventionModel.date_planifiee >= date_debut)
+            query = query.filter(InterventionModel.date_planifiee >= date_debut)
 
         if date_fin:
-            conditions.append(InterventionModel.date_planifiee <= date_fin)
+            query = query.filter(InterventionModel.date_planifiee <= date_fin)
 
-        if conditions:
-            stmt = stmt.where(and_(*conditions))
+        query = query.order_by(InterventionModel.date_planifiee.asc())
 
-        stmt = stmt.order_by(InterventionModel.date_planifiee.asc())
-
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
+        models = query.all()
 
         return [self._model_to_entity(m) for m in models]
 
-    async def list_by_date_range(
+    def list_by_date_range(
         self,
         date_debut: date,
         date_fin: date,
         include_deleted: bool = False,
     ) -> List[Intervention]:
         """Liste les interventions pour une periode."""
-        stmt = select(InterventionModel).where(
+        query = self._session.query(InterventionModel).filter(
             and_(
                 InterventionModel.date_planifiee >= date_debut,
                 InterventionModel.date_planifiee <= date_fin,
@@ -267,48 +249,43 @@ class SQLAlchemyInterventionRepository(InterventionRepository):
         )
 
         if not include_deleted:
-            stmt = stmt.where(InterventionModel.deleted_at.is_(None))
+            query = query.filter(InterventionModel.deleted_at.is_(None))
 
-        stmt = stmt.order_by(
+        query = query.order_by(
             InterventionModel.date_planifiee.asc(),
             InterventionModel.heure_debut.asc(),
         )
 
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
+        models = query.all()
 
         return [self._model_to_entity(m) for m in models]
 
-    async def delete(self, intervention_id: int, deleted_by: int) -> bool:
+    def delete(self, intervention_id: int, deleted_by: int) -> bool:
         """Supprime une intervention (soft delete)."""
-        stmt = select(InterventionModel).where(
+        model = self._session.query(InterventionModel).filter(
             and_(
                 InterventionModel.id == intervention_id,
                 InterventionModel.deleted_at.is_(None),
             )
-        )
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        ).first()
 
         if not model:
             return False
 
         model.deleted_at = datetime.utcnow()
         model.deleted_by = deleted_by
-        await self._session.flush()
+        self._session.flush()
 
         return True
 
-    async def generate_code(self) -> str:
+    def generate_code(self) -> str:
         """Genere un nouveau code unique."""
         year = datetime.utcnow().year
 
         # Compte les interventions de l'annee
-        stmt = select(func.count(InterventionModel.id)).where(
+        count = self._session.query(func.count(InterventionModel.id)).filter(
             InterventionModel.code.like(f"INT-{year}-%")
-        )
-        result = await self._session.execute(stmt)
-        count = result.scalar() or 0
+        ).scalar() or 0
 
         return f"INT-{year}-{count + 1:04d}"
 
