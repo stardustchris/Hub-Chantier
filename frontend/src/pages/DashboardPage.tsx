@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardService } from '../services/dashboard'
 import { chantiersService } from '../services/chantiers'
@@ -27,18 +28,101 @@ import {
 } from 'lucide-react'
 import type { Post, Chantier, TargetType } from '../types'
 
+// Mock posts pour démonstration
+const MOCK_POSTS: Post[] = [
+  {
+    id: 'mock-1',
+    contenu: 'Dalle coulée avec succès sur le chantier Villa Moderne ! Beau travail de toute l\'équipe malgré la météo difficile ce matin.',
+    type: 'message',
+    auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB', role: 'chef_chantier' } as Post['auteur'],
+    target_type: 'tous',
+    is_pinned: true,
+    is_urgent: false,
+    likes_count: 12,
+    commentaires_count: 3,
+    likes: [],
+    medias: [],
+    commentaires: [
+      { id: 'c1', contenu: 'Bravo à tous !', auteur: { id: '2', prenom: 'Marie', nom: 'Dupont', couleur: '#E74C3C' } as Post['auteur'], created_at: new Date(Date.now() - 3600000).toISOString() },
+    ],
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+  },
+  {
+    id: 'mock-2',
+    contenu: '⚠️ URGENT: Livraison de béton décalée à 14h au lieu de 10h sur Résidence Les Pins. Merci de réorganiser les équipes.',
+    type: 'urgent',
+    auteur: { id: '3', prenom: 'Jean', nom: 'Conducteur', couleur: '#9B59B6', role: 'conducteur' } as Post['auteur'],
+    target_type: 'chantiers',
+    target_chantiers: [{ id: 'ch1', nom: 'Résidence Les Pins' }] as Post['target_chantiers'],
+    is_pinned: false,
+    is_urgent: true,
+    likes_count: 5,
+    commentaires_count: 8,
+    likes: [],
+    medias: [],
+    commentaires: [],
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+  },
+  {
+    id: 'mock-3',
+    contenu: 'Formation sécurité effectuée ce matin. Rappel: port du casque OBLIGATOIRE sur tous les chantiers. Bonne journée à tous !',
+    type: 'message',
+    auteur: { id: '4', prenom: 'Admin', nom: 'Greg', couleur: '#27AE60', role: 'admin' } as Post['auteur'],
+    target_type: 'tous',
+    is_pinned: false,
+    is_urgent: false,
+    likes_count: 24,
+    commentaires_count: 2,
+    likes: [],
+    medias: [],
+    commentaires: [],
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'mock-4',
+    contenu: 'Nouvelle machine arrivée sur le chantier École Pasteur. Formation d\'utilisation demain à 8h pour les volontaires.',
+    type: 'message',
+    auteur: { id: '5', prenom: 'Sophie', nom: 'Technique', couleur: '#F39C12', role: 'chef_chantier' } as Post['auteur'],
+    target_type: 'tous',
+    is_pinned: false,
+    is_urgent: false,
+    likes_count: 8,
+    commentaires_count: 5,
+    likes: [],
+    medias: [],
+    commentaires: [],
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    id: 'mock-5',
+    contenu: 'Félicitations à l\'équipe du chantier Maison Durand pour la livraison en avance ! Client très satisfait.',
+    type: 'message',
+    auteur: { id: '4', prenom: 'Admin', nom: 'Greg', couleur: '#27AE60', role: 'admin' } as Post['auteur'],
+    target_type: 'tous',
+    is_pinned: false,
+    is_urgent: false,
+    likes_count: 45,
+    commentaires_count: 12,
+    likes: [],
+    medias: [],
+    commentaires: [],
+    created_at: new Date(Date.now() - 259200000).toISOString(),
+  },
+]
+
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [posts, setPosts] = useState<Post[]>([])
+  const navigate = useNavigate()
+  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS)
   const [chantiers, setChantiers] = useState<Chantier[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [newPostContent, setNewPostContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
   const [targetType, setTargetType] = useState<TargetType>('tous')
   const [selectedChantiers, setSelectedChantiers] = useState<string[]>([])
   const [isUrgent, setIsUrgent] = useState(false)
   const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(false)
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
 
@@ -47,19 +131,55 @@ export default function DashboardPage() {
     loadChantiers()
   }, [])
 
+  // Handlers pour les actions
+  const handleClockIn = useCallback(() => {
+    alert('Pointage enregistré ! Bonne journée de travail.')
+  }, [])
+
+  const handleQuickAction = useCallback((actionId: string) => {
+    switch (actionId) {
+      case 'hours':
+        navigate('/feuilles-heures')
+        break
+      case 'tasks':
+        navigate('/chantiers')
+        break
+      case 'docs':
+        navigate('/documents')
+        break
+      case 'photo':
+        alert('Ouverture de la caméra...')
+        break
+    }
+  }, [navigate])
+
+  const handleNavigate = useCallback((_slotId: string) => {
+    alert('Ouverture de l\'itinéraire dans Google Maps...')
+    // En prod: window.open(`https://maps.google.com/?q=45+rue+de+la+Republique+Lyon`)
+  }, [])
+
+  const handleCall = useCallback((_slotId: string) => {
+    alert('Appel du chef de chantier...')
+    // En prod: window.location.href = 'tel:+33612345678'
+  }, [])
+
   const loadFeed = async (pageNum = 1) => {
     try {
       setIsLoading(true)
       const response = await dashboardService.getFeed({ page: pageNum, size: 20 })
+      const items = response?.items || []
       if (pageNum === 1) {
-        setPosts(response.items)
+        // Utilise les mocks si l'API retourne vide
+        setPosts(items.length > 0 ? items : MOCK_POSTS)
       } else {
-        setPosts((prev) => [...prev, ...response.items])
+        setPosts((prev) => [...prev, ...items])
       }
-      setHasMore(response.page < response.pages)
+      setHasMore((response?.page || 1) < (response?.pages || 1))
       setPage(pageNum)
     } catch (error) {
       logger.error('Error loading feed', error, { context: 'DashboardPage' })
+      // En cas d'erreur, affiche les mocks
+      setPosts(MOCK_POSTS)
     } finally {
       setIsLoading(false)
     }
@@ -68,7 +188,7 @@ export default function DashboardPage() {
   const loadChantiers = async () => {
     try {
       const response = await chantiersService.list({ size: 100, statut: 'en_cours' })
-      setChantiers(response.items)
+      setChantiers(response?.items || [])
     } catch (error) {
       logger.error('Error loading chantiers', error, { context: 'DashboardPage' })
     }
@@ -149,20 +269,20 @@ export default function DashboardPage() {
         <div className="p-4 space-y-4">
           {/* Top Cards - Extracted Components */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ClockCard />
+            <ClockCard onClockIn={handleClockIn} />
             <WeatherCard />
             <StatsCard />
           </div>
 
           {/* Quick Actions - Extracted Component */}
-          <QuickActions />
+          <QuickActions onActionClick={handleQuickAction} />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Column - Planning & Feed */}
             <div className="lg:col-span-2 space-y-4">
               {/* Today's Planning - Extracted Component */}
-              <TodayPlanningCard />
+              <TodayPlanningCard onNavigate={handleNavigate} onCall={handleCall} />
 
               {/* Actualites Section */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
