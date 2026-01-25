@@ -10,7 +10,7 @@ import logging
 from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
-from ..notifications import NotificationPayload, get_notification_service
+from shared.infrastructure.notifications import NotificationPayload, get_notification_service
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
