@@ -282,6 +282,8 @@ class PlanningController:
         )
 
         dto = UpdateAffectationDTO(
+            date=request.date,
+            utilisateur_id=request.utilisateur_id,
             heure_debut=request.heure_debut,
             heure_fin=request.heure_fin,
             note=request.note,

@@ -73,6 +73,16 @@ class UpdateAffectationUseCase:
         # Tracker les modifications pour l'evenement
         changes: Dict[str, Any] = {}
 
+        # PLN-27: Modifier la date si fournie (drag & drop)
+        if dto.date is not None:
+            affectation.changer_date(dto.date)
+            changes["date"] = dto.date.isoformat()
+
+        # PLN-27: Modifier l'utilisateur si fourni (drag & drop)
+        if dto.utilisateur_id is not None:
+            affectation.changer_utilisateur(dto.utilisateur_id)
+            changes["utilisateur_id"] = dto.utilisateur_id
+
         # Modifier les horaires si fournis
         if dto.heure_debut is not None or dto.heure_fin is not None:
             # Determiner les nouvelles valeurs

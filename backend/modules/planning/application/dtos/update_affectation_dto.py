@@ -1,6 +1,7 @@
 """DTO pour la mise a jour d'une affectation."""
 
 from dataclasses import dataclass
+from datetime import date as date_type
 from typing import Optional
 
 
@@ -14,6 +15,8 @@ class UpdateAffectationDTO:
     Selon CDC Section 5 - Planning Operationnel (PLN-01 a PLN-28).
 
     Attributes:
+        date: Nouvelle date de l'affectation (pour drag & drop PLN-27).
+        utilisateur_id: Nouvel ID utilisateur (pour drag & drop PLN-27).
         heure_debut: Nouvelle heure de debut au format "HH:MM" (optionnel).
         heure_fin: Nouvelle heure de fin au format "HH:MM" (optionnel).
         note: Nouveau commentaire prive (optionnel).
@@ -26,6 +29,8 @@ class UpdateAffectationDTO:
         ... )
     """
 
+    date: Optional[date_type] = None
+    utilisateur_id: Optional[int] = None
     heure_debut: Optional[str] = None  # Format "HH:MM"
     heure_fin: Optional[str] = None  # Format "HH:MM"
     note: Optional[str] = None
@@ -33,6 +38,10 @@ class UpdateAffectationDTO:
 
     def __post_init__(self) -> None:
         """Valide les donnees a la creation."""
+        # Validation de l'utilisateur_id si fourni
+        if self.utilisateur_id is not None and self.utilisateur_id <= 0:
+            raise ValueError("L'ID utilisateur doit etre positif")
+
         # Validation du chantier_id si fourni
         if self.chantier_id is not None and self.chantier_id <= 0:
             raise ValueError("L'ID chantier doit etre positif")
@@ -83,6 +92,8 @@ class UpdateAffectationDTO:
             True si au moins un champ est defini.
         """
         return any([
+            self.date is not None,
+            self.utilisateur_id is not None,
             self.heure_debut is not None,
             self.heure_fin is not None,
             self.note is not None,

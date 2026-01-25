@@ -103,6 +103,8 @@ class UpdateAffectationRequest(BaseModel):
     Tous les champs sont optionnels - seuls ceux fournis seront mis a jour.
 
     Attributes:
+        date: Nouvelle date de l'affectation (pour drag & drop PLN-27).
+        utilisateur_id: Nouvel ID utilisateur (pour drag & drop PLN-27).
         heure_debut: Nouvelle heure de debut au format "HH:MM".
         heure_fin: Nouvelle heure de fin au format "HH:MM".
         note: Nouveau commentaire prive.
@@ -115,6 +117,15 @@ class UpdateAffectationRequest(BaseModel):
         ... )
     """
 
+    date: Optional[datetime.date] = Field(
+        None,
+        description="Nouvelle date de l'affectation (pour drag & drop)",
+    )
+    utilisateur_id: Optional[int] = Field(
+        None,
+        gt=0,
+        description="Nouvel ID utilisateur (pour drag & drop)",
+    )
     heure_debut: Optional[str] = Field(
         None,
         pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
@@ -139,6 +150,8 @@ class UpdateAffectationRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
+                "date": "2026-01-22",
+                "utilisateur_id": 2,
                 "heure_debut": "09:00",
                 "heure_fin": "18:00",
                 "note": "Modification des horaires",
