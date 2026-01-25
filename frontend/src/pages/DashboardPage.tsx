@@ -91,7 +91,7 @@ export default function DashboardPage() {
       setIsUrgent(false)
       loadFeed(1)
     } catch (error) {
-      logger.error('Error creating post', error, { context: 'DashboardPage' })
+      logger.error('Erreur lors de la publication', error, { context: 'DashboardPage', showToast: true })
     } finally {
       setIsPosting(false)
     }
@@ -108,7 +108,7 @@ export default function DashboardPage() {
       const updatedPost = await dashboardService.getPost(postId)
       setPosts((prev) => prev.map((p) => (p.id === postId ? updatedPost : p)))
     } catch (error) {
-      logger.error('Error toggling like', error, { context: 'DashboardPage' })
+      logger.error('Erreur lors du like', error, { context: 'DashboardPage', showToast: true })
     }
   }, [])
 
@@ -121,7 +121,7 @@ export default function DashboardPage() {
       }
       loadFeed(1)
     } catch (error) {
-      logger.error('Error toggling pin', error, { context: 'DashboardPage' })
+      logger.error('Erreur lors de l\'epinglage', error, { context: 'DashboardPage', showToast: true })
     }
   }, [])
 
@@ -132,7 +132,7 @@ export default function DashboardPage() {
       await dashboardService.deletePost(postId)
       setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch (error) {
-      logger.error('Error deleting post', error, { context: 'DashboardPage' })
+      logger.error('Erreur lors de la suppression', error, { context: 'DashboardPage', showToast: true })
     }
   }, [])
 

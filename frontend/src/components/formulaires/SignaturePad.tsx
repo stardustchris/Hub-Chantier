@@ -137,8 +137,7 @@ export default function SignaturePad({
 
       setShowModal(false)
     } catch (err) {
-      logger.error('Error exporting signature', err, { context: 'SignaturePad' })
-      alert('Erreur lors de l\'export de la signature')
+      logger.error('Erreur lors de l\'export de la signature', err, { context: 'SignaturePad', showToast: true })
     }
   }
 

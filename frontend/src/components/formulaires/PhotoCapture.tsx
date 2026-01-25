@@ -31,13 +31,13 @@ export default function PhotoCapture({
 
     // Valider le type de fichier
     if (!file.type.startsWith('image/')) {
-      alert('Veuillez selectionner une image')
+      logger.warn('Veuillez selectionner une image', null, { context: 'PhotoCapture', showToast: true })
       return
     }
 
     // Valider la taille (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('L\'image ne doit pas depasser 10 Mo')
+      logger.warn('L\'image ne doit pas depasser 10 Mo', null, { context: 'PhotoCapture', showToast: true })
       return
     }
 
@@ -49,8 +49,7 @@ export default function PhotoCapture({
       setPreview(base64)
       onChange(base64)
     } catch (err) {
-      logger.error('Error converting file', err, { context: 'PhotoCapture' })
-      alert('Erreur lors du traitement de l\'image')
+      logger.error('Erreur lors du traitement de l\'image', err, { context: 'PhotoCapture', showToast: true })
     } finally {
       setIsLoading(false)
     }

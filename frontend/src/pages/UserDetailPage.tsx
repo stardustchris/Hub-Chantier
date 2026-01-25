@@ -66,7 +66,7 @@ export default function UserDetailPage() {
       const updated = await usersService.update(id!, { photo_profil: url } as UserUpdate)
       setUser(updated)
     } catch (error) {
-      logger.error('Error updating photo', error, { context: 'UserDetailPage' })
+      logger.error('Erreur lors de la mise a jour de la photo', error, { context: 'UserDetailPage', showToast: true })
     }
   }
 
@@ -76,7 +76,7 @@ export default function UserDetailPage() {
       setUser(updated)
       setShowEditModal(false)
     } catch (error) {
-      logger.error('Error updating user', error, { context: 'UserDetailPage' })
+      logger.error('Erreur lors de la mise a jour', error, { context: 'UserDetailPage', showToast: true })
     }
   }
 
@@ -92,7 +92,7 @@ export default function UserDetailPage() {
       }
       setUser(updated)
     } catch (error) {
-      logger.error('Error toggling user status', error, { context: 'UserDetailPage' })
+      logger.error('Erreur lors du changement de statut', error, { context: 'UserDetailPage', showToast: true })
     }
   }
 

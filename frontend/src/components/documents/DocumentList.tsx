@@ -66,7 +66,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
       await downloadAndSaveZip(Array.from(selectedIds));
       setSelectedIds(new Set());
     } catch (error) {
-      logger.error('Erreur téléchargement ZIP', error, { context: 'DocumentList' });
+      logger.error('Erreur lors du telechargement ZIP', error, { context: 'DocumentList', showToast: true });
     } finally {
       setIsDownloadingZip(false);
     }
