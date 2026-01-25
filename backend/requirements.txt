@@ -28,6 +28,12 @@ httpx>=0.26.0
 # Image processing
 Pillow>=10.0.0
 
+# Scheduling (jobs planifiés)
+apscheduler>=3.10.0
+
+# Push Notifications (Firebase Cloud Messaging)
+firebase-admin>=6.4.0
+
 # Development
 python-dotenv>=1.0.0
 

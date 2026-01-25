@@ -53,20 +53,27 @@ Aucun module en attente - tous complets!
 |--------|----------|-------------|
 | interventions | Haute | planning (OK), taches (OK) |
 
+## Infrastructure disponible
+
+- **APScheduler** : Jobs planifies (job scheduler)
+- **Firebase Cloud Messaging** : Notifications push
+
 ## Fonctionnalites en attente infrastructure
 
 - GED-11 : Transfert auto depuis ERP (Costructor/Graneet)
 - GED-15 : Synchronisation Offline
-- PLN-23/24 : Notifications push / Mode Offline
+- PLN-23/24 : Mode Offline (PWA)
 - FDH-16 : Import ERP auto
-- FEED-17 : Notifications push
-- SIG-13 : Notifications push signalements (partiel - backend OK)
-- SIG-16/17 : Escalade auto temps reel (job scheduler requis)
-- LOG-13/14 : Notifications push reservations (events publies, service push requis)
-- LOG-15 : Rappel J-1 reservations (job scheduler requis)
 
 ## Derniere mise a jour
 
+Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
+- APScheduler integre dans FastAPI (jobs planifies)
+- Firebase Cloud Messaging (notifications push backend + frontend)
+- Job rappel J-1 reservations (LOG-15)
+- Handlers notifications LOG-13/14 + SIG-13 + FEED-17
+- Service notifications frontend avec Firebase SDK
+- Module Logistique maintenant 100% COMPLET (18/18)
 Session 2026-01-25 - Module Interventions COMPLET (INT-01 a INT-17)
 - Entites: Intervention, AffectationIntervention, InterventionMessage, SignatureIntervention
 - Value Objects: StatutIntervention, PrioriteIntervention, TypeIntervention

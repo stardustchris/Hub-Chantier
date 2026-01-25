@@ -3,6 +3,88 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-25 (Infrastructure Notifications Push et Job Scheduler)
+
+Implementation de l'infrastructure de notifications push (Firebase) et du job scheduler (APScheduler).
+
+### APScheduler - Job Scheduler
+
+**Fichiers crees**
+- `shared/infrastructure/scheduler/__init__.py`
+- `shared/infrastructure/scheduler/scheduler_service.py` : Service singleton BackgroundScheduler
+- `shared/infrastructure/scheduler/jobs/__init__.py`
+- `shared/infrastructure/scheduler/jobs/rappel_reservation_job.py` : Job LOG-15 rappel J-1
+
+**Integration FastAPI**
+- Demarrage automatique au startup de l'application
+- Arret propre au shutdown
+- Job cron quotidien a 18h00 pour rappels reservations
+
+**Fonctionnalites**
+- `add_cron_job()` : Jobs a heure fixe (ex: tous les jours a 8h)
+- `add_interval_job()` : Jobs periodiques (ex: toutes les 5 minutes)
+- `run_job_now()` : Execution manuelle d'un job
+- Timezone Europe/Paris
+
+### Firebase Cloud Messaging - Notifications Push
+
+**Backend (firebase-admin)**
+- `shared/infrastructure/notifications/__init__.py`
+- `shared/infrastructure/notifications/notification_service.py` : Service FCM singleton
+- `shared/infrastructure/notifications/handlers/__init__.py`
+- `shared/infrastructure/notifications/handlers/reservation_notification_handler.py` : Handlers LOG-13/14
+
+**Fonctionnalites backend**
+- `send_to_token()` : Notification a un appareil
+- `send_to_tokens()` : Notification multicast
+- `send_to_topic()` : Notification a un groupe (ex: valideurs d'un chantier)
+- Mode simulation si Firebase non configure
+
+**Frontend (firebase SDK)**
+- `src/services/firebase.ts` : Configuration et initialisation Firebase
+- `src/services/notifications.ts` : Service de gestion des notifications
+- `public/firebase-messaging-sw.js` : Service Worker pour notifications background
+- `.env.example` : Variables d'environnement Firebase
+
+**Fonctionnalites frontend**
+- Demande de permission utilisateur
+- Enregistrement token aupres du backend
+- Ecoute des messages en foreground
+- Navigation au clic sur notification
+- Service Worker pour notifications en arriere-plan
+
+### Dependencies ajoutees
+
+**Backend (requirements.txt)**
+- `apscheduler>=3.10.0`
+- `firebase-admin>=6.4.0`
+
+**Frontend (package.json)**
+- `firebase: ^10.8.0`
+
+### Fonctionnalites debloqueees
+
+| Code | Fonctionnalite | Status |
+|------|---------------|--------|
+| LOG-13 | Notification demande reservation | ✅ Complet |
+| LOG-14 | Notification decision reservation | ✅ Complet |
+| LOG-15 | Rappel J-1 reservation | ✅ Complet |
+| SIG-13 | Notifications signalements | ✅ Infrastructure prete |
+| FEED-17 | Notifications dashboard | ✅ Infrastructure prete |
+| PLN-23 | Notifications planning | ✅ Infrastructure prete |
+
+### Configuration requise
+
+**Firebase (gratuit)**
+1. Creer projet sur https://console.firebase.google.com
+2. Activer Cloud Messaging
+3. Generer cle VAPID (Web Push)
+4. Copier config dans `.env` (frontend) et `FIREBASE_CREDENTIALS_PATH` (backend)
+
+**Cout** : 0 EUR (Firebase gratuit pour usage standard)
+
+---
+
 ## Session 2026-01-25 (Module Interventions - INT-01 a INT-17)
 
 Implementation complete du module Interventions pour la gestion des interventions ponctuelles (SAV, maintenance, depannages, levee de reserves).
