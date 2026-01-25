@@ -44,6 +44,44 @@ const navigation: NavItem[] = [
   { name: 'Logistique', href: '/logistique', icon: Truck },
 ]
 
+// Composant de navigation reutilisable (DRY)
+interface NavLinksProps {
+  currentPath: string
+  onItemClick?: () => void
+}
+
+function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
+  return (
+    <>
+      {navigation.map((item) => {
+        const isActive = currentPath === item.href
+        return (
+          <Link
+            key={item.name}
+            to={item.disabled ? '#' : item.href}
+            onClick={() => !item.disabled && onItemClick?.()}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              item.disabled
+                ? 'text-gray-400 cursor-not-allowed'
+                : isActive
+                ? 'bg-primary-50 text-primary-600'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <item.icon className="w-5 h-5" />
+            <span className="font-medium">{item.name}</span>
+            {item.disabled && (
+              <span className="ml-auto text-xs bg-gray-200 px-2 py-0.5 rounded">
+                Bientot
+              </span>
+            )}
+          </Link>
+        )
+      })}
+    </>
+  )
+}
+
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth()
   const location = useLocation()
@@ -82,32 +120,8 @@ export default function Layout({ children }: LayoutProps) {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <nav className="px-2 py-4">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                to={item.disabled ? '#' : item.href}
-                onClick={() => !item.disabled && setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 mb-1 rounded-lg transition-colors ${
-                  item.disabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : isActive
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.name}</span>
-                {item.disabled && (
-                  <span className="ml-auto text-xs bg-gray-200 px-2 py-0.5 rounded">
-                    Bientot
-                  </span>
-                )}
-              </Link>
-            )
-          })}
+        <nav className="px-2 py-4 space-y-1">
+          <NavLinks currentPath={location.pathname} onItemClick={() => setSidebarOpen(false)} />
         </nav>
       </div>
 
@@ -122,30 +136,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  to={item.disabled ? '#' : item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    item.disabled
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : isActive
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
-                  {item.disabled && (
-                    <span className="ml-auto text-xs bg-gray-200 px-2 py-0.5 rounded">
-                      Bientot
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
+            <NavLinks currentPath={location.pathname} />
           </nav>
 
           {/* User info */}

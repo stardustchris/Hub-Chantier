@@ -44,12 +44,19 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadTaches()
-    loadStats()
+  // Chargement des statistiques (stable car ne depend que de chantierId)
+  const loadStats = useCallback(async () => {
+    try {
+      const statsData = await tachesService.getStats(chantierId)
+      setStats(statsData)
+    } catch (err) {
+      logger.error('Erreur chargement stats', err, { context: 'TaskList' })
+      // Stats non critiques, pas d'affichage d'erreur
+    }
   }, [chantierId])
 
-  const loadTaches = async () => {
+  // Chargement des taches (depend de chantierId, searchQuery, filterStatut)
+  const loadTaches = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -65,17 +72,13 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [chantierId, searchQuery, filterStatut])
 
-  const loadStats = async () => {
-    try {
-      const statsData = await tachesService.getStats(chantierId)
-      setStats(statsData)
-    } catch (err) {
-      logger.error('Erreur chargement stats', err, { context: 'TaskList' })
-      // Stats non critiques, pas d'affichage d'erreur
-    }
-  }
+  // Chargement initial
+  useEffect(() => {
+    loadTaches()
+    loadStats()
+  }, [loadTaches, loadStats])
 
   // Recherche avec debounce (TAC-14)
   useEffect(() => {
@@ -83,7 +86,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       loadTaches()
     }, 300)
     return () => clearTimeout(timeout)
-  }, [searchQuery, filterStatut])
+  }, [loadTaches])
 
   // P1-7: Memoize handlers pour éviter re-renders
   const handleToggleComplete = useCallback(async (tacheId: number, terminer: boolean) => {
@@ -96,9 +99,9 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       logger.error('Erreur completion tache', err, { context: 'TaskList' })
       setError('Impossible de modifier le statut de la tache.')
     }
-  }, [chantierId])
+  }, [loadTaches, loadStats])
 
-  const handleSaveTache = async (data: TacheCreate | TacheUpdate) => {
+  const handleSaveTache = useCallback(async (data: TacheCreate | TacheUpdate) => {
     try {
       setError(null)
       if (editingTache) {
@@ -120,7 +123,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       logger.error('Erreur sauvegarde tache', err, { context: 'TaskList' })
       setError('Impossible de sauvegarder la tache. Verifiez les donnees.')
     }
-  }
+  }, [chantierId, editingTache, parentIdForNew, loadTaches, loadStats])
 
   const handleDeleteTache = useCallback(async (tacheId: number) => {
     if (!confirm('Supprimer cette tache et ses sous-taches ?')) return
@@ -134,9 +137,9 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       logger.error('Erreur suppression tache', err, { context: 'TaskList' })
       setError('Impossible de supprimer la tache.')
     }
-  }, [chantierId])
+  }, [loadTaches, loadStats])
 
-  const handleImportTemplate = async (templateId: number) => {
+  const handleImportTemplate = useCallback(async (templateId: number) => {
     try {
       setError(null)
       await tachesService.importTemplate(templateId, chantierId)
@@ -147,7 +150,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       logger.error('Erreur import template', err, { context: 'TaskList' })
       setError('Impossible d\'importer le modele.')
     }
-  }
+  }, [chantierId, loadTaches, loadStats])
 
   // Export PDF (TAC-16)
   const handleExportPDF = async () => {
