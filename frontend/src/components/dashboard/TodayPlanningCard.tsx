@@ -3,6 +3,7 @@
  * CDC Section 2.3.2 - Planning de la journee
  */
 
+import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, CheckCircle, Navigation, Phone } from 'lucide-react'
 
 interface Task {
@@ -13,6 +14,7 @@ interface Task {
 
 interface PlanningSlot {
   id: string
+  chantierId?: string
   startTime: string
   endTime: string
   period: 'morning' | 'afternoon' | 'break'
@@ -26,11 +28,13 @@ interface TodayPlanningCardProps {
   slots?: PlanningSlot[]
   onNavigate?: (slotId: string) => void
   onCall?: (slotId: string) => void
+  onChantierClick?: (chantierId: string) => void
 }
 
 const defaultSlots: PlanningSlot[] = [
   {
     id: '1',
+    chantierId: '2',
     startTime: '08:00',
     endTime: '12:00',
     period: 'morning',
@@ -47,6 +51,7 @@ const defaultSlots: PlanningSlot[] = [
   },
   {
     id: '3',
+    chantierId: '2',
     startTime: '13:30',
     endTime: '17:00',
     period: 'afternoon',
@@ -80,7 +85,18 @@ export default function TodayPlanningCard({
   slots = defaultSlots,
   onNavigate,
   onCall,
+  onChantierClick,
 }: TodayPlanningCardProps) {
+  const navigate = useNavigate()
+
+  const handleChantierClick = (slot: PlanningSlot) => {
+    if (onChantierClick && slot.chantierId) {
+      onChantierClick(slot.chantierId)
+    } else if (slot.chantierId) {
+      navigate(`/chantiers/${slot.chantierId}`)
+    }
+  }
+
   return (
     <div className="bg-white rounded-2xl p-5 shadow-lg">
       <div className="flex items-center justify-between mb-4">
@@ -128,7 +144,12 @@ export default function TodayPlanningCard({
                 )}
               </div>
 
-              <h3 className="font-semibold text-gray-900 text-lg">{slot.siteName}</h3>
+              <h3
+                onClick={() => handleChantierClick(slot)}
+                className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-primary-600 transition-colors"
+              >
+                {slot.siteName}
+              </h3>
               <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                 <MapPin className="w-4 h-4 text-red-500" />
                 {slot.siteAddress}
