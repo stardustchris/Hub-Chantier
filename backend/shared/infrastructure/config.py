@@ -2,6 +2,10 @@
 
 import os
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
 
 
 @dataclass
