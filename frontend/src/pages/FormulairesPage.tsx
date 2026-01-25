@@ -34,6 +34,7 @@ import type {
   CategorieFormulaire,
   Chantier,
 } from '../types'
+import { logger } from '../services/logger'
 import { CATEGORIES_FORMULAIRES } from '../types'
 
 type TabType = 'templates' | 'formulaires'
@@ -97,7 +98,7 @@ export default function FormulairesPage() {
       setChantiers(chantiersResponse.items)
     } catch (err) {
       setError('Erreur lors du chargement des donnees')
-      console.error('Error loading data:', err)
+      logger.error('Error loading data', err, { context: 'FormulairesPage' })
     } finally {
       setLoading(false)
     }

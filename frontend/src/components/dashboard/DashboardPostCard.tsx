@@ -59,7 +59,7 @@ export const DashboardPostCard = memo(function DashboardPostCard({
       setComments(updatedPost.commentaires || [])
       setNewComment('')
     } catch (error) {
-      logger.error('Error adding comment', error, { context: 'DashboardPostCard' })
+      logger.error('Erreur lors de l\'ajout du commentaire', error, { context: 'DashboardPostCard', showToast: true })
     } finally {
       setIsCommenting(false)
     }

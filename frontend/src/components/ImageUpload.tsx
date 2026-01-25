@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Camera, Loader2, AlertCircle } from 'lucide-react'
 import { uploadService } from '../services/upload'
+import { logger } from '../services/logger'
 
 interface ImageUploadProps {
   /** URL de l'image actuelle */
@@ -80,7 +81,7 @@ export default function ImageUpload({
     } catch (err) {
       setError("Erreur lors de l'upload")
       setPreviewUrl(null)
-      console.error('Upload error:', err)
+      logger.error('Upload error', err, { context: 'ImageUpload' })
     } finally {
       setIsUploading(false)
       // Reset input
@@ -106,6 +107,7 @@ export default function ImageUpload({
         type="button"
         onClick={handleClick}
         disabled={isUploading}
+        aria-label={displayImage ? 'Modifier la photo' : 'Ajouter une photo'}
         className={`
           ${sizeClasses[size]}
           relative rounded-full overflow-hidden
@@ -212,6 +214,7 @@ export function MultiImageUpload({
         disabled={disabled}
         className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title={`Ajouter des photos (max ${maxFiles})`}
+        aria-label={`Ajouter des photos (max ${maxFiles})`}
       >
         <Camera className="w-5 h-5" />
       </button>
