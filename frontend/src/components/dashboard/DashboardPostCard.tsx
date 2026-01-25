@@ -14,6 +14,7 @@ import {
   Send,
   Loader2,
 } from 'lucide-react'
+import MentionInput from '../common/MentionInput'
 import { useAuth } from '../../contexts/AuthContext'
 import { dashboardService } from '../../services/dashboard'
 import { logger } from '../../services/logger'
@@ -238,18 +239,19 @@ export const DashboardPostCard = memo(function DashboardPostCard({
               <div className="flex gap-3 mt-3">
                 <div className="w-8 h-8 rounded-full bg-gray-300 shrink-0" />
                 <div className="flex-1 flex gap-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Ajouter un commentaire..."
-                    className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-green-500"
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                  />
+                  <div className="flex-1">
+                    <MentionInput
+                      value={newComment}
+                      onChange={setNewComment}
+                      placeholder="Ajouter un commentaire... @ pour mentionner"
+                      rows={1}
+                      className="text-sm"
+                    />
+                  </div>
                   <button
                     onClick={handleAddComment}
                     disabled={!newComment.trim() || isCommenting}
-                    className="bg-green-600 text-white px-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    className="bg-green-600 text-white px-3 rounded-lg hover:bg-green-700 disabled:opacity-50 self-start mt-1"
                   >
                     {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>

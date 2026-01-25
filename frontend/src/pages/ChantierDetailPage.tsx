@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { chantiersService, NavigationIds } from '../services/chantiers'
+import { usersService } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
-import { useChantierDetail } from '../hooks'
-import { chantiersService } from '../services/chantiers'
+import { useToast } from '../contexts/ToastContext'
+import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
@@ -27,37 +29,213 @@ import {
   Users,
 } from 'lucide-react'
 import { formatDateFull } from '../utils/dates'
+import type { Chantier, ChantierUpdate, User } from '../types'
 import { CHANTIER_STATUTS } from '../types'
 
 type TabType = 'infos' | 'taches' | 'equipe'
 
 export default function ChantierDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { user: currentUser } = useAuth()
+  const { showUndoToast, addToast } = useToast()
+  const [chantier, setChantier] = useState<Chantier | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | 'ouvrier' | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [activeTab, setActiveTab] = useState<TabType>('infos')
 
   const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
   const canEdit = isAdmin || isConducteur
 
-  const {
-    chantier,
-    navIds,
-    availableUsers,
-    isLoading,
-    showEditModal,
-    showAddUserModal,
-    setShowEditModal,
-    openAddUserModal,
-    closeAddUserModal,
-    handleUpdateChantier,
-    handleDeleteChantier,
-    handleChangeStatut,
-    handleAddUser,
-    handleRemoveUser,
-  } = useChantierDetail({
-    chantierId: id!,
-  })
+  useEffect(() => {
+    if (id) {
+      loadChantier()
+      loadNavigation()
+    }
+  }, [id])
+
+  const loadNavigation = async () => {
+    try {
+      const ids = await chantiersService.getNavigationIds(id!)
+      setNavIds(ids)
+    } catch (error) {
+      logger.error('Error loading navigation', error, { context: 'ChantierDetailPage' })
+    }
+  }
+
+  const loadChantier = async () => {
+    try {
+      setIsLoading(true)
+      const data = await chantiersService.getById(id!)
+      setChantier(data)
+    } catch (error) {
+      logger.error('Error loading chantier', error, { context: 'ChantierDetailPage' })
+      addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
+      navigate('/chantiers')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loadAvailableUsers = async (role: 'conducteur' | 'chef' | 'ouvrier') => {
+    try {
+      // Pour les ouvriers, on charge tous les utilisateurs actifs (intérimaires, sous-traitants, ouvriers)
+      const roleFilter = role === 'conducteur' ? 'conducteur' : role === 'chef' ? 'chef_chantier' : 'ouvrier'
+      const response = await usersService.list({
+        size: 100,
+        role: roleFilter,
+        is_active: true,
+      })
+      let existingIds: string[] = []
+      if (role === 'conducteur') {
+        existingIds = chantier?.conducteurs.map((u) => u.id) || []
+      } else if (role === 'chef') {
+        existingIds = chantier?.chefs.map((u) => u.id) || []
+      } else {
+        existingIds = chantier?.ouvriers?.map((u) => u.id) || []
+      }
+      setAvailableUsers(response.items.filter((u) => !existingIds.includes(u.id)))
+    } catch (error) {
+      logger.error('Error loading users', error, { context: 'ChantierDetailPage' })
+      addToast({ message: 'Erreur lors du chargement des utilisateurs', type: 'error' })
+    }
+  }
+
+  const handleUpdateChantier = async (data: ChantierUpdate) => {
+    try {
+      const updated = await chantiersService.update(id!, data)
+      setChantier(updated)
+      setShowEditModal(false)
+      addToast({ message: 'Chantier mis a jour', type: 'success' })
+    } catch (error) {
+      logger.error('Error updating chantier', error, { context: 'ChantierDetailPage' })
+      addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
+    }
+  }
+
+  const handleDeleteChantier = () => {
+    if (!chantier) return
+
+    const chantierName = chantier.nom
+    navigate('/chantiers')
+
+    showUndoToast(
+      `Chantier "${chantierName}" supprime`,
+      () => {
+        navigate(`/chantiers/${id}`)
+        addToast({ message: 'Suppression annulee', type: 'success', duration: 3000 })
+      },
+      async () => {
+        try {
+          await chantiersService.delete(id!)
+        } catch (error) {
+          logger.error('Error deleting chantier', error, { context: 'ChantierDetailPage' })
+          addToast({ message: 'Erreur lors de la suppression', type: 'error', duration: 5000 })
+        }
+      },
+      5000
+    )
+  }
+
+  const handleChangeStatut = async (action: 'demarrer' | 'receptionner' | 'fermer') => {
+    try {
+      let updated: Chantier
+      switch (action) {
+        case 'demarrer':
+          updated = await chantiersService.demarrer(id!)
+          break
+        case 'receptionner':
+          updated = await chantiersService.receptionner(id!)
+          break
+        case 'fermer':
+          updated = await chantiersService.fermer(id!)
+          break
+      }
+      setChantier(updated)
+      addToast({ message: 'Statut mis a jour', type: 'success' })
+    } catch (error) {
+      logger.error('Error changing statut', error, { context: 'ChantierDetailPage' })
+      addToast({ message: 'Erreur lors du changement de statut', type: 'error' })
+    }
+  }
+
+  const handleAddUser = async (userId: string) => {
+    if (!showAddUserModal) return
+
+    try {
+      let updated: Chantier
+      if (showAddUserModal === 'conducteur') {
+        updated = await chantiersService.addConducteur(id!, userId)
+      } else if (showAddUserModal === 'chef') {
+        updated = await chantiersService.addChef(id!, userId)
+      } else {
+        updated = await chantiersService.addOuvrier(id!, userId)
+      }
+      setChantier(updated)
+      setShowAddUserModal(null)
+      addToast({ message: 'Utilisateur ajoute', type: 'success' })
+    } catch (error) {
+      logger.error('Error adding user', error, { context: 'ChantierDetailPage' })
+      addToast({ message: "Erreur lors de l'ajout", type: 'error' })
+    }
+  }
+
+  const handleRemoveUser = (userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => {
+    if (!chantier) return
+
+    let userList: User[]
+    if (type === 'conducteur') {
+      userList = chantier.conducteurs
+    } else if (type === 'chef') {
+      userList = chantier.chefs
+    } else {
+      userList = chantier.ouvriers || []
+    }
+    const removedUser = userList.find((u) => u.id === userId)
+    if (!removedUser) return
+
+    const updatedChantier = {
+      ...chantier,
+      conducteurs: type === 'conducteur'
+        ? chantier.conducteurs.filter((u) => u.id !== userId)
+        : chantier.conducteurs,
+      chefs: type === 'chef'
+        ? chantier.chefs.filter((u) => u.id !== userId)
+        : chantier.chefs,
+      ouvriers: type === 'ouvrier'
+        ? (chantier.ouvriers || []).filter((u) => u.id !== userId)
+        : chantier.ouvriers,
+    }
+    setChantier(updatedChantier)
+
+    showUndoToast(
+      `${removedUser.prenom} ${removedUser.nom} retire`,
+      () => {
+        setChantier(chantier)
+        addToast({ message: 'Retrait annule', type: 'success', duration: 3000 })
+      },
+      async () => {
+        try {
+          if (type === 'conducteur') {
+            await chantiersService.removeConducteur(id!, userId)
+          } else if (type === 'chef') {
+            await chantiersService.removeChef(id!, userId)
+          } else {
+            await chantiersService.removeOuvrier(id!, userId)
+          }
+        } catch (error) {
+          logger.error('Error removing user', error, { context: 'ChantierDetailPage' })
+          setChantier(chantier)
+          addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
+        }
+      },
+      5000
+    )
+  }
 
   if (isLoading || !chantier) {
     return (
@@ -228,8 +406,12 @@ export default function ChantierDetailPage() {
           <ChantierEquipeTab
             conducteurs={chantier.conducteurs}
             chefs={chantier.chefs}
+            ouvriers={chantier.ouvriers || []}
             canEdit={canEdit}
-            onAddUser={openAddUserModal}
+            onAddUser={(type) => {
+              loadAvailableUsers(type)
+              setShowAddUserModal(type)
+            }}
             onRemoveUser={handleRemoveUser}
           />
         ) : (
@@ -247,7 +429,7 @@ export default function ChantierDetailPage() {
 
               {/* Dates et heures */}
               <div className="card">
-                <h2 className="font-semibold text-gray-900 mb-4">Planning</h2>
+                <h2 className="font-semibold text-gray-900 mb-4">Planning du chantier</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {chantier.heures_estimees && (
                     <div className="flex items-center gap-3 text-sm">
@@ -282,12 +464,13 @@ export default function ChantierDetailPage() {
                   )}
                 </div>
               </div>
+
+              {/* Mes interventions planifiees - visible pour tous les utilisateurs */}
+              <MesInterventions chantierId={id!} />
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Mes interventions planifiees */}
-              <MesInterventions chantierId={id!} />
 
               {/* Contact */}
               {(chantier.contact_nom || chantier.contact_telephone) && (
@@ -358,7 +541,7 @@ export default function ChantierDetailPage() {
           <AddUserModal
             type={showAddUserModal}
             users={availableUsers}
-            onClose={closeAddUserModal}
+            onClose={() => setShowAddUserModal(null)}
             onSelect={handleAddUser}
           />
         )}

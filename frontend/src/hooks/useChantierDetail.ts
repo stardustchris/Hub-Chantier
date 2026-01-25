@@ -29,17 +29,17 @@ interface UseChantierDetailReturn {
 
   // Modal states
   showEditModal: boolean
-  showAddUserModal: 'conducteur' | 'chef' | null
+  showAddUserModal: 'conducteur' | 'chef' | 'ouvrier' | null
 
   // Actions
   setShowEditModal: (show: boolean) => void
-  openAddUserModal: (type: 'conducteur' | 'chef') => void
+  openAddUserModal: (type: 'conducteur' | 'chef' | 'ouvrier') => void
   closeAddUserModal: () => void
   handleUpdateChantier: (data: ChantierUpdate) => Promise<void>
   handleDeleteChantier: () => void
   handleChangeStatut: (action: 'demarrer' | 'receptionner' | 'fermer') => Promise<void>
   handleAddUser: (userId: string) => Promise<void>
-  handleRemoveUser: (userId: string, type: 'conducteur' | 'chef') => void
+  handleRemoveUser: (userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => void
   reload: () => Promise<void>
 }
 
@@ -57,7 +57,7 @@ export function useChantierDetail({
 
   // Modal states
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | null>(null)
+  const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | 'ouvrier' | null>(null)
 
   // Load chantier data
   const loadChantier = useCallback(async () => {
@@ -85,16 +85,22 @@ export function useChantierDetail({
   }, [chantierId])
 
   // Load available users for team management
-  const loadAvailableUsers = useCallback(async (role: 'conducteur' | 'chef') => {
+  const loadAvailableUsers = useCallback(async (role: 'conducteur' | 'chef' | 'ouvrier') => {
     try {
+      const roleFilter = role === 'conducteur' ? 'conducteur' : role === 'chef' ? 'chef_chantier' : 'ouvrier'
       const response = await usersService.list({
         size: 100,
-        role: role === 'conducteur' ? 'conducteur' : 'chef_chantier',
+        role: roleFilter,
         is_active: true,
       })
-      const existingIds = role === 'conducteur'
-        ? chantier?.conducteurs.map((u) => u.id) || []
-        : chantier?.chefs.map((u) => u.id) || []
+      let existingIds: string[] = []
+      if (role === 'conducteur') {
+        existingIds = chantier?.conducteurs.map((u) => u.id) || []
+      } else if (role === 'chef') {
+        existingIds = chantier?.chefs.map((u) => u.id) || []
+      } else {
+        existingIds = chantier?.ouvriers?.map((u) => u.id) || []
+      }
       setAvailableUsers(response.items.filter((u) => !existingIds.includes(u.id)))
     } catch (error) {
       logger.error('Error loading users', error, { context: 'useChantierDetail' })
@@ -179,8 +185,10 @@ export function useChantierDetail({
       let updated: Chantier
       if (showAddUserModal === 'conducteur') {
         updated = await chantiersService.addConducteur(chantierId, userId)
-      } else {
+      } else if (showAddUserModal === 'chef') {
         updated = await chantiersService.addChef(chantierId, userId)
+      } else {
+        updated = await chantiersService.addOuvrier(chantierId, userId)
       }
       setChantier(updated)
       setShowAddUserModal(null)
@@ -192,10 +200,17 @@ export function useChantierDetail({
   }, [chantierId, showAddUserModal, addToast])
 
   // Remove user from team with undo
-  const handleRemoveUser = useCallback((userId: string, type: 'conducteur' | 'chef') => {
+  const handleRemoveUser = useCallback((userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => {
     if (!chantier) return
 
-    const userList = type === 'conducteur' ? chantier.conducteurs : chantier.chefs
+    let userList: User[]
+    if (type === 'conducteur') {
+      userList = chantier.conducteurs
+    } else if (type === 'chef') {
+      userList = chantier.chefs
+    } else {
+      userList = chantier.ouvriers || []
+    }
     const removedUser = userList.find((u) => u.id === userId)
     if (!removedUser) return
 
@@ -208,6 +223,9 @@ export function useChantierDetail({
       chefs: type === 'chef'
         ? chantier.chefs.filter((u) => u.id !== userId)
         : chantier.chefs,
+      ouvriers: type === 'ouvrier'
+        ? (chantier.ouvriers || []).filter((u) => u.id !== userId)
+        : chantier.ouvriers,
     }
     setChantier(updatedChantier)
 
@@ -221,8 +239,10 @@ export function useChantierDetail({
         try {
           if (type === 'conducteur') {
             await chantiersService.removeConducteur(chantierId, userId)
-          } else {
+          } else if (type === 'chef') {
             await chantiersService.removeChef(chantierId, userId)
+          } else {
+            await chantiersService.removeOuvrier(chantierId, userId)
           }
         } catch (error) {
           logger.error('Error removing user', error, { context: 'useChantierDetail' })
@@ -235,7 +255,7 @@ export function useChantierDetail({
   }, [chantier, chantierId, showUndoToast, addToast])
 
   // Open add user modal
-  const openAddUserModal = useCallback((type: 'conducteur' | 'chef') => {
+  const openAddUserModal = useCallback((type: 'conducteur' | 'chef' | 'ouvrier') => {
     loadAvailableUsers(type)
     setShowAddUserModal(type)
   }, [loadAvailableUsers])

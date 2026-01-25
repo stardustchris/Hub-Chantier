@@ -6,7 +6,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from ...adapters.controllers import ChantierController
-from ..persistence import ContactChantierModel, PhaseChantierModel
+from ..persistence import ContactChantierModel, PhaseChantierModel, ChantierOuvrierModel
 from shared.infrastructure.database import get_db
 from ...application.use_cases import (
     CodeChantierAlreadyExistsError,
@@ -205,6 +205,7 @@ class ChantierResponse(BaseModel):
     description: Optional[str] = None
     conducteurs: List[UserPublicSummary] = []  # Objets User publics (sans email/tel)
     chefs: List[UserPublicSummary] = []  # Objets User publics (sans email/tel)
+    ouvriers: List[UserPublicSummary] = []  # Ouvriers/intérimaires/sous-traitants
     created_at: str
     updated_at: Optional[str] = None
 
@@ -307,6 +308,7 @@ def list_chantiers(
     size: int = Query(100, ge=1, le=500, description="Nombre d'éléments par page"),
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
     search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
+    db: Session = Depends(get_db),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
@@ -342,7 +344,7 @@ def list_chantiers(
     chantiers_data = result.get("chantiers", [])
 
     return ChantierListResponse(
-        items=[_transform_chantier_response(c, controller, user_repo) for c in chantiers_data],
+        items=[_transform_chantier_response(c, controller, user_repo, db) for c in chantiers_data],
         total=total,
         page=page,
         size=size,
@@ -353,6 +355,7 @@ def list_chantiers(
 @router.get("/{chantier_id}", response_model=ChantierResponse)
 def get_chantier(
     chantier_id: int,
+    db: Session = Depends(get_db),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
@@ -362,6 +365,7 @@ def get_chantier(
 
     Args:
         chantier_id: ID du chantier.
+        db: Session base de données.
         controller: Controller des chantiers.
         user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
@@ -374,7 +378,7 @@ def get_chantier(
     """
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return _transform_chantier_response(result, controller, user_repo, db)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -767,6 +771,96 @@ def retirer_chef_chantier(
     try:
         result = controller.retirer_chef_chantier(chantier_id, user_id)
         return _transform_chantier_response(result, controller, user_repo)
+    except ChantierNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message,
+        )
+
+
+# =============================================================================
+# Routes d'assignation des ouvriers (intérimaires, sous-traitants)
+# =============================================================================
+
+
+@router.post("/{chantier_id}/ouvriers", response_model=ChantierResponse)
+def assigner_ouvrier(
+    chantier_id: int,
+    request: AssignResponsableRequest,
+    db: Session = Depends(get_db),
+    controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: UserRepository = Depends(get_user_repository),
+    current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
+):
+    """
+    Assigne un ouvrier/intérimaire/sous-traitant au chantier.
+
+    RBAC: Requiert le rôle conducteur ou admin.
+
+    Args:
+        chantier_id: ID du chantier.
+        request: ID de l'ouvrier à assigner.
+        db: Session base de données.
+        controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
+        current_user_id: ID de l'utilisateur connecté.
+
+    Returns:
+        Le chantier mis à jour.
+    """
+    from ..persistence import ChantierOuvrierModel
+
+    # Vérifier si l'association existe déjà
+    existing = db.query(ChantierOuvrierModel).filter(
+        ChantierOuvrierModel.chantier_id == chantier_id,
+        ChantierOuvrierModel.user_id == request.user_id,
+    ).first()
+
+    if not existing:
+        # Créer l'association
+        association = ChantierOuvrierModel(
+            chantier_id=chantier_id,
+            user_id=request.user_id,
+        )
+        db.add(association)
+        db.commit()
+
+    # Récupérer le chantier mis à jour
+    try:
+        result = controller.get_by_id(chantier_id)
+        return _transform_chantier_response(result, controller, user_repo, db)
+    except ChantierNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message,
+        )
+
+
+@router.delete("/{chantier_id}/ouvriers/{user_id}", response_model=ChantierResponse)
+def retirer_ouvrier(
+    chantier_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    controller: ChantierController = Depends(get_chantier_controller),
+    user_repo: UserRepository = Depends(get_user_repository),
+    current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_conducteur_or_admin),  # RBAC
+):
+    """Retire un ouvrier du chantier. RBAC: conducteur ou admin requis."""
+    from ..persistence import ChantierOuvrierModel
+
+    # Supprimer l'association
+    db.query(ChantierOuvrierModel).filter(
+        ChantierOuvrierModel.chantier_id == chantier_id,
+        ChantierOuvrierModel.user_id == user_id,
+    ).delete()
+    db.commit()
+
+    # Récupérer le chantier mis à jour
+    try:
+        result = controller.get_by_id(chantier_id)
+        return _transform_chantier_response(result, controller, user_repo, db)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1170,11 +1264,12 @@ def _transform_chantier_response(
     chantier_dict: dict,
     controller: ChantierController,
     user_repo: Optional[UserRepository] = None,
+    db: Optional[Session] = None,
 ) -> ChantierResponse:
     """
     Transforme un dictionnaire chantier du controller en ChantierResponse.
 
-    Convertit les IDs des conducteurs/chefs en objets User complets.
+    Convertit les IDs des conducteurs/chefs/ouvriers en objets User complets.
     """
     # Récupérer les coordonnées GPS
     coords = chantier_dict.get("coordonnees_gps") or {}
@@ -1209,9 +1304,18 @@ def _transform_chantier_response(
     conducteur_ids = chantier_dict.get("conducteur_ids", [])
     chef_chantier_ids = chantier_dict.get("chef_chantier_ids", [])
 
+    # Récupérer les IDs des ouvriers depuis la base de données
+    ouvrier_ids = []
+    if db:
+        ouvrier_records = db.query(ChantierOuvrierModel).filter(
+            ChantierOuvrierModel.chantier_id == chantier_dict.get("id")
+        ).all()
+        ouvrier_ids = [r.user_id for r in ouvrier_records]
+
     # Récupérer les objets User complets si le repo est disponible
     conducteurs = []
     chefs = []
+    ouvriers = []
 
     if user_repo:
         for uid in conducteur_ids:
@@ -1223,6 +1327,11 @@ def _transform_chantier_response(
             user_summary = _get_user_summary(uid, user_repo)
             if user_summary:
                 chefs.append(user_summary)
+
+        for uid in ouvrier_ids:
+            user_summary = _get_user_summary(uid, user_repo)
+            if user_summary:
+                ouvriers.append(user_summary)
 
     return ChantierResponse(
         id=str(chantier_dict.get("id", "")),
@@ -1242,6 +1351,7 @@ def _transform_chantier_response(
         description=chantier_dict.get("description"),
         conducteurs=conducteurs,
         chefs=chefs,
+        ouvriers=ouvriers,
         created_at=chantier_dict.get("created_at", ""),
         updated_at=chantier_dict.get("updated_at"),
     )
