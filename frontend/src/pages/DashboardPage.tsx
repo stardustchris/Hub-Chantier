@@ -50,6 +50,8 @@ const MOCK_POSTS: Post[] = [
     medias: [],
     commentaires: [
       { id: 'c1', contenu: 'Bravo à tous !', auteur: { id: '2', prenom: 'Marie', nom: 'Dupont', couleur: '#E74C3C' } as Post['auteur'], created_at: new Date(Date.now() - 3600000).toISOString() },
+      { id: 'c2', contenu: 'Excellent travail malgré la pluie !', auteur: { id: '5', prenom: 'Sophie', nom: 'Technique', couleur: '#F39C12' } as Post['auteur'], created_at: new Date(Date.now() - 3000000).toISOString() },
+      { id: 'c3', contenu: 'On enchaîne demain avec le ferraillage', auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB' } as Post['auteur'], created_at: new Date(Date.now() - 2400000).toISOString() },
     ],
     created_at: new Date(Date.now() - 7200000).toISOString(),
   },
@@ -63,10 +65,13 @@ const MOCK_POSTS: Post[] = [
     is_pinned: false,
     is_urgent: true,
     likes_count: 5,
-    commentaires_count: 8,
+    commentaires_count: 2,
     likes: [],
     medias: [],
-    commentaires: [],
+    commentaires: [
+      { id: 'c4', contenu: 'Bien reçu, je préviens l\'équipe', auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB' } as Post['auteur'], created_at: new Date(Date.now() - 1500000).toISOString() },
+      { id: 'c5', contenu: 'OK je décale le planning en conséquence', auteur: { id: '5', prenom: 'Sophie', nom: 'Technique', couleur: '#F39C12' } as Post['auteur'], created_at: new Date(Date.now() - 1200000).toISOString() },
+    ],
     created_at: new Date(Date.now() - 1800000).toISOString(),
   },
   {
@@ -81,7 +86,10 @@ const MOCK_POSTS: Post[] = [
     commentaires_count: 2,
     likes: [],
     medias: [],
-    commentaires: [],
+    commentaires: [
+      { id: 'c6', contenu: 'Merci pour le rappel !', auteur: { id: '2', prenom: 'Marie', nom: 'Dupont', couleur: '#E74C3C' } as Post['auteur'], created_at: new Date(Date.now() - 80000000).toISOString() },
+      { id: 'c7', contenu: 'Bien noté chef 👍', auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB' } as Post['auteur'], created_at: new Date(Date.now() - 75000000).toISOString() },
+    ],
     created_at: new Date(Date.now() - 86400000).toISOString(),
   },
   {
@@ -93,10 +101,14 @@ const MOCK_POSTS: Post[] = [
     is_pinned: false,
     is_urgent: false,
     likes_count: 8,
-    commentaires_count: 5,
+    commentaires_count: 3,
     likes: [],
     medias: [],
-    commentaires: [],
+    commentaires: [
+      { id: 'c8', contenu: 'Je serai là !', auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB' } as Post['auteur'], created_at: new Date(Date.now() - 160000000).toISOString() },
+      { id: 'c9', contenu: 'Moi aussi, ça m\'intéresse', auteur: { id: '2', prenom: 'Marie', nom: 'Dupont', couleur: '#E74C3C' } as Post['auteur'], created_at: new Date(Date.now() - 155000000).toISOString() },
+      { id: 'c10', contenu: 'Super, rendez-vous à 8h devant le local', auteur: { id: '5', prenom: 'Sophie', nom: 'Technique', couleur: '#F39C12' } as Post['auteur'], created_at: new Date(Date.now() - 150000000).toISOString() },
+    ],
     created_at: new Date(Date.now() - 172800000).toISOString(),
   },
   {
@@ -108,10 +120,13 @@ const MOCK_POSTS: Post[] = [
     is_pinned: false,
     is_urgent: false,
     likes_count: 45,
-    commentaires_count: 12,
+    commentaires_count: 2,
     likes: [],
     medias: [],
-    commentaires: [],
+    commentaires: [
+      { id: 'c11', contenu: 'Merci ! Toute l\'équipe a donné le maximum', auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB' } as Post['auteur'], created_at: new Date(Date.now() - 250000000).toISOString() },
+      { id: 'c12', contenu: 'Bravo à tous, bien mérité !', auteur: { id: '3', prenom: 'Jean', nom: 'Conducteur', couleur: '#9B59B6' } as Post['auteur'], created_at: new Date(Date.now() - 245000000).toISOString() },
+    ],
     created_at: new Date(Date.now() - 259200000).toISOString(),
   },
 ]
