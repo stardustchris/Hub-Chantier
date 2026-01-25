@@ -163,6 +163,15 @@ export default function DashboardPage() {
     // En prod: window.location.href = 'tel:+33612345678'
   }, [])
 
+  const handleDocumentClick = useCallback((docId: string) => {
+    alert(`Ouverture du document ${docId}...`)
+    // En prod: navigate(`/documents/${docId}`)
+  }, [])
+
+  const handleViewAllDocuments = useCallback(() => {
+    navigate('/documents')
+  }, [navigate])
+
   const loadFeed = async (pageNum = 1) => {
     try {
       setIsLoading(true)
@@ -401,7 +410,10 @@ export default function DashboardPage() {
 
             {/* Right Column - Documents & Team - Extracted Components */}
             <div className="space-y-4">
-              <DocumentsCard />
+              <DocumentsCard
+                onDocumentClick={handleDocumentClick}
+                onViewAll={handleViewAllDocuments}
+              />
               <TeamCard />
             </div>
           </div>

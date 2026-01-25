@@ -37,6 +37,173 @@ import type {
 import { logger } from '../services/logger'
 import { CATEGORIES_FORMULAIRES } from '../types'
 
+// Mock templates pour démonstration
+const MOCK_TEMPLATES: TemplateFormulaire[] = [
+  {
+    id: 1,
+    nom: 'Contrôle qualité béton',
+    categorie: 'qualite',
+    description: 'Vérification de la qualité du béton coulé',
+    champs: [
+      { id: 1, nom: 'temperature', label: 'Température ambiante (°C)', type_champ: 'number', obligatoire: true, ordre: 1 },
+      { id: 2, nom: 'slump', label: 'Slump test (cm)', type_champ: 'number', obligatoire: true, ordre: 2 },
+      { id: 3, nom: 'conforme', label: 'Conforme aux spécifications', type_champ: 'checkbox', obligatoire: true, ordre: 3 },
+      { id: 4, nom: 'remarques', label: 'Remarques', type_champ: 'textarea', obligatoire: false, ordre: 4 },
+    ],
+    is_active: true,
+    version: 1,
+    nombre_champs: 4,
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+  {
+    id: 2,
+    nom: 'Inspection sécurité chantier',
+    categorie: 'securite',
+    description: 'Check-list sécurité quotidienne',
+    champs: [
+      { id: 5, nom: 'epi_ok', label: 'EPI portés par tous', type_champ: 'checkbox', obligatoire: true, ordre: 1 },
+      { id: 6, nom: 'zone_securisee', label: 'Zone de travail sécurisée', type_champ: 'checkbox', obligatoire: true, ordre: 2 },
+      { id: 7, nom: 'issues_secours', label: 'Issues de secours dégagées', type_champ: 'checkbox', obligatoire: true, ordre: 3 },
+      { id: 8, nom: 'extincteurs', label: 'Extincteurs accessibles', type_champ: 'checkbox', obligatoire: true, ordre: 4 },
+      { id: 9, nom: 'anomalies', label: 'Anomalies constatées', type_champ: 'textarea', obligatoire: false, ordre: 5 },
+    ],
+    is_active: true,
+    version: 2,
+    nombre_champs: 5,
+    created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: 3,
+    nom: 'Réception matériaux',
+    categorie: 'livraison',
+    description: 'Contrôle à la réception des matériaux',
+    champs: [
+      { id: 10, nom: 'fournisseur', label: 'Fournisseur', type_champ: 'text', obligatoire: true, ordre: 1 },
+      { id: 11, nom: 'bon_livraison', label: 'N° Bon de livraison', type_champ: 'text', obligatoire: true, ordre: 2 },
+      { id: 12, nom: 'quantite_conforme', label: 'Quantité conforme', type_champ: 'checkbox', obligatoire: true, ordre: 3 },
+      { id: 13, nom: 'etat_materiel', label: 'État du matériel', type_champ: 'select', obligatoire: true, ordre: 4, options: ['Bon', 'Acceptable', 'Endommagé'] },
+    ],
+    is_active: true,
+    version: 1,
+    nombre_champs: 4,
+    created_at: new Date(Date.now() - 45 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: 4,
+    nom: 'Rapport journalier',
+    categorie: 'rapport',
+    description: 'Rapport d\'activité quotidien',
+    champs: [
+      { id: 14, nom: 'meteo', label: 'Conditions météo', type_champ: 'select', obligatoire: true, ordre: 1, options: ['Beau', 'Nuageux', 'Pluie', 'Neige'] },
+      { id: 15, nom: 'effectif', label: 'Effectif présent', type_champ: 'number', obligatoire: true, ordre: 2 },
+      { id: 16, nom: 'travaux_realises', label: 'Travaux réalisés', type_champ: 'textarea', obligatoire: true, ordre: 3 },
+      { id: 17, nom: 'incidents', label: 'Incidents', type_champ: 'textarea', obligatoire: false, ordre: 4 },
+    ],
+    is_active: true,
+    version: 3,
+    nombre_champs: 4,
+    created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+]
+
+// Mock formulaires remplis
+const MOCK_FORMULAIRES: FormulaireRempli[] = [
+  {
+    id: 1,
+    template_id: 1,
+    template_nom: 'Contrôle qualité béton',
+    template_categorie: 'qualite',
+    chantier_id: 1,
+    chantier_nom: 'Villa Moderne Lyon',
+    user_id: 1,
+    user_nom: 'Pierre Martin',
+    statut: 'soumis',
+    champs: [],
+    photos: [],
+    est_signe: true,
+    signature_nom: 'Pierre Martin',
+    signature_timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
+    est_geolocalise: true,
+    localisation_latitude: 45.7640,
+    localisation_longitude: 4.8357,
+    soumis_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    version: 1,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: 2,
+    template_id: 2,
+    template_nom: 'Inspection sécurité chantier',
+    template_categorie: 'securite',
+    chantier_id: 2,
+    chantier_nom: 'Résidence Les Pins',
+    user_id: 2,
+    user_nom: 'Marie Dupont',
+    statut: 'valide',
+    champs: [],
+    photos: [],
+    est_signe: true,
+    signature_nom: 'Marie Dupont',
+    est_geolocalise: true,
+    soumis_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    valide_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+    valide_by: 3,
+    version: 1,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: 3,
+    template_id: 4,
+    template_nom: 'Rapport journalier',
+    template_categorie: 'rapport',
+    chantier_id: 1,
+    chantier_nom: 'Villa Moderne Lyon',
+    user_id: 1,
+    user_nom: 'Pierre Martin',
+    statut: 'brouillon',
+    champs: [],
+    photos: [],
+    est_signe: false,
+    est_geolocalise: false,
+    version: 1,
+    created_at: new Date(Date.now() - 1 * 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 3600000).toISOString(),
+  },
+  {
+    id: 4,
+    template_id: 3,
+    template_nom: 'Réception matériaux',
+    template_categorie: 'livraison',
+    chantier_id: 3,
+    chantier_nom: 'École Pasteur',
+    user_id: 4,
+    user_nom: 'Sophie Technique',
+    statut: 'soumis',
+    champs: [],
+    photos: [],
+    est_signe: true,
+    signature_nom: 'Sophie Technique',
+    est_geolocalise: true,
+    soumis_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    version: 1,
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+]
+
+// Mock chantiers
+const MOCK_CHANTIERS: Chantier[] = [
+  { id: '1', code: 'VML-001', nom: 'Villa Moderne Lyon', client_nom: 'M. Durand', statut: 'en_cours', adresse: '45 rue de la République, Lyon', date_debut: '2026-01-10', date_fin_prevue: '2026-06-30' } as Chantier,
+  { id: '2', code: 'RLP-002', nom: 'Résidence Les Pins', client_nom: 'SCI Les Pins', statut: 'en_cours', adresse: '12 avenue des Pins, Villeurbanne', date_debut: '2025-11-01', date_fin_prevue: '2026-08-15' } as Chantier,
+  { id: '3', code: 'EPA-003', nom: 'École Pasteur', client_nom: 'Mairie de Lyon', statut: 'en_cours', adresse: '8 rue Pasteur, Lyon', date_debut: '2026-01-15', date_fin_prevue: '2026-12-01' } as Chantier,
+]
+
 type TabType = 'templates' | 'formulaires'
 type ViewMode = 'grid' | 'list'
 
@@ -84,21 +251,27 @@ export default function FormulairesPage() {
         categorie: filterCategorie || undefined,
         active_only: activeTab === 'formulaires',
       })
-      setTemplates(templatesResponse.templates)
+      const loadedTemplates = templatesResponse?.templates || []
+      setTemplates(loadedTemplates.length > 0 ? loadedTemplates : MOCK_TEMPLATES)
 
       // Charger les formulaires
       const formulairesResponse = await formulairesService.listFormulaires({
         chantier_id: filterChantierId || undefined,
         template_id: undefined,
       })
-      setFormulaires(formulairesResponse.formulaires)
+      const loadedFormulaires = formulairesResponse?.formulaires || []
+      setFormulaires(loadedFormulaires.length > 0 ? loadedFormulaires : MOCK_FORMULAIRES)
 
       // Charger les chantiers
       const chantiersResponse = await chantiersService.list({ size: 100 })
-      setChantiers(chantiersResponse.items)
+      const loadedChantiers = chantiersResponse?.items || []
+      setChantiers(loadedChantiers.length > 0 ? loadedChantiers : MOCK_CHANTIERS)
     } catch (err) {
-      setError('Erreur lors du chargement des donnees')
-      logger.error('Error loading data', err, { context: 'FormulairesPage' })
+      // En cas d'erreur, utiliser les mocks
+      logger.error('Error loading data, using mocks', err, { context: 'FormulairesPage' })
+      setTemplates(MOCK_TEMPLATES)
+      setFormulaires(MOCK_FORMULAIRES)
+      setChantiers(MOCK_CHANTIERS)
     } finally {
       setLoading(false)
     }
