@@ -20,6 +20,7 @@ from ..persistence import (
     SQLAlchemyPostMediaRepository,
 )
 from shared.infrastructure.database import get_db
+from shared.infrastructure.event_bus import EventBus
 
 
 def get_post_repository(db: Session = Depends(get_db)) -> SQLAlchemyPostRepository:
@@ -103,6 +104,7 @@ def get_add_comment_use_case(
     return AddCommentUseCase(
         post_repo=post_repo,
         comment_repo=comment_repo,
+        event_publisher=EventBus.publish,
     )
 
 
@@ -114,6 +116,7 @@ def get_add_like_use_case(
     return AddLikeUseCase(
         post_repo=post_repo,
         like_repo=like_repo,
+        event_publisher=EventBus.publish,
     )
 
 

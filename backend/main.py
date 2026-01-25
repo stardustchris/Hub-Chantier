@@ -36,6 +36,8 @@ from modules.documents.infrastructure.web import router as documents_router
 from modules.logistique.infrastructure.web import router as logistique_router
 from modules.planning_charge.infrastructure import router as planning_charge_router
 from modules.interventions.infrastructure.web import router as interventions_router
+from modules.notifications.infrastructure.web import router as notifications_router
+from modules.notifications.infrastructure.event_handlers import register_notification_handlers
 from shared.infrastructure.web.upload_routes import router as upload_router
 
 # Créer l'application
@@ -107,6 +109,9 @@ async def startup_event():
     logger.info(f"Mode DEBUG: {settings.DEBUG}")
     init_db()
     logger.info("Base de données initialisée")
+
+    # Enregistrer les handlers de notifications
+    register_notification_handlers()
 
     # Démarrer le scheduler et enregistrer les jobs
     scheduler = get_scheduler()
@@ -188,6 +193,7 @@ app.include_router(documents_router, prefix="/api")
 app.include_router(logistique_router, prefix="/api")
 app.include_router(planning_charge_router, prefix="/api")
 app.include_router(interventions_router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
 
 # Futurs modules à ajouter:
 # app.include_router(employes_router, prefix="/api")
