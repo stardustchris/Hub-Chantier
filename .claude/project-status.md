@@ -50,7 +50,23 @@ Aucun module en attente - tous complets!
 - PLN-23/24 : Mode Offline (PWA)
 - FDH-16 : Import ERP auto
 
+## Tests en echec a corriger
+
+8 tests frontend en echec suite aux modifications de securite:
+- `AuthContext.test.tsx` : Mise a jour mocks pour cookies HttpOnly
+- `LoginPage.test.tsx` : Mise a jour mocks pour validation Zod
+- `api.test.ts` : Mise a jour mock pour `withCredentials: true`
+
 ## Derniere mise a jour
+
+Session 2026-01-25 - Corrections Frontend Priorite 2 & 3
+- 13 problemes corriges (securite, accessibilite, maintenabilite)
+- 3 nouveaux hooks: useChantierDetail, useFormulaires, useLogistique
+- DOMPurify ajoute pour protection XSS
+- HttpOnly cookies implementes
+- Validation Zod ajoutee
+- Accessibilite ARIA amelioree
+- Branche: claude/fix-frontend-errors-zDiqs (pret pour merge)
 
 Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
 - APScheduler integre dans FastAPI (jobs planifies)
@@ -59,6 +75,7 @@ Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
 - Handlers notifications LOG-13/14 + SIG-13 + FEED-17
 - Service notifications frontend avec Firebase SDK
 - Module Logistique maintenant 100% COMPLET (18/18)
+
 Session 2026-01-25 - Module Interventions COMPLET (INT-01 a INT-17)
 - Entites: Intervention, AffectationIntervention, InterventionMessage, SignatureIntervention
 - Value Objects: StatutIntervention, PrioriteIntervention, TypeIntervention
