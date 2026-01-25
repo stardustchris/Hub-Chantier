@@ -8,48 +8,60 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ChantierDetailPage from './ChantierDetailPage'
 
-// Mock useChantierDetail hook
-const mockUseChantierDetail = {
-  chantier: null as {
-    id: string
-    nom: string
-    code: string
-    statut: string
-    adresse: string
-    ville: string
-    code_postal: string
-    couleur: string
-    date_debut: string
-    conducteurs: unknown[]
-    chefs: unknown[]
-  } | null,
-  navIds: { prevId: null, nextId: '2' },
-  availableUsers: [],
-  isLoading: false,
-  showEditModal: false,
-  showAddUserModal: null as 'conducteur' | 'chef' | null,
-  setShowEditModal: vi.fn(),
-  openAddUserModal: vi.fn(),
-  closeAddUserModal: vi.fn(),
-  handleUpdateChantier: vi.fn(),
-  handleDeleteChantier: vi.fn(),
-  handleChangeStatut: vi.fn(),
-  handleAddUser: vi.fn(),
-  handleRemoveUser: vi.fn(),
+// Mock chantier data
+const mockChantier = {
+  id: '1',
+  nom: 'Chantier Test',
+  code: 'CT001',
+  statut: 'en_cours',
+  adresse: '123 Rue Test',
+  ville: 'Paris',
+  code_postal: '75001',
+  couleur: '#3498DB',
+  date_debut: '2026-01-01',
+  conducteurs: [{ id: 'u1', nom: 'Dupont', prenom: 'Jean' }],
+  chefs: [{ id: 'u2', nom: 'Martin', prenom: 'Pierre' }],
+  ouvriers: [],
 }
 
-vi.mock('../hooks', () => ({
-  useChantierDetail: () => mockUseChantierDetail,
+// Mock chantiersService
+vi.mock('../services/chantiers', () => ({
+  chantiersService: {
+    getById: vi.fn(),
+    getNavigationIds: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    changeStatut: vi.fn(),
+    addUser: vi.fn(),
+    removeUser: vi.fn(),
+  },
 }))
 
-vi.mock('../services/chantiers', () => ({
-  chantiersService: {},
+// Mock usersService
+vi.mock('../services/users', () => ({
+  usersService: {
+    list: vi.fn(),
+  },
 }))
+
+// Import mocked services
+import { chantiersService } from '../services/chantiers'
+import { usersService } from '../services/users'
 
 // Mock useAuth
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'admin-1', role: 'admin' },
+  }),
+}))
+
+// Mock ToastContext
+const mockAddToast = vi.fn()
+const mockShowUndoToast = vi.fn()
+vi.mock('../contexts/ToastContext', () => ({
+  useToast: () => ({
+    addToast: mockAddToast,
+    showUndoToast: mockShowUndoToast,
   }),
 }))
 
@@ -88,20 +100,6 @@ vi.mock('../components/chantiers', () => ({
   MesInterventions: () => <div data-testid="mes-interventions">Interventions</div>,
 }))
 
-const mockChantier = {
-  id: '1',
-  nom: 'Chantier Test',
-  code: 'CT001',
-  statut: 'en_cours',
-  adresse: '123 Rue Test',
-  ville: 'Paris',
-  code_postal: '75001',
-  couleur: '#3498DB',
-  date_debut: '2026-01-01',
-  conducteurs: [{ id: 'u1', nom: 'Dupont', prenom: 'Jean' }],
-  chefs: [{ id: 'u2', nom: 'Martin', prenom: 'Pierre' }],
-}
-
 const renderPage = (chantierId = '1') => {
   return render(
     <MemoryRouter initialEntries={[`/chantiers/${chantierId}`]}>
@@ -116,67 +114,82 @@ const renderPage = (chantierId = '1') => {
 describe('ChantierDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    Object.assign(mockUseChantierDetail, {
-      chantier: mockChantier,
-      isLoading: false,
-      showEditModal: false,
-      showAddUserModal: null,
-    })
+    vi.mocked(chantiersService.getById).mockResolvedValue(mockChantier as any)
+    vi.mocked(chantiersService.getNavigationIds).mockResolvedValue({ prevId: null, nextId: '2' })
+    vi.mocked(chantiersService.delete).mockResolvedValue(undefined)
+    vi.mocked(usersService.list).mockResolvedValue({ items: [], total: 0, page: 1, size: 50, pages: 1 })
   })
 
   describe('loading', () => {
     it('affiche le loader pendant le chargement', () => {
-      mockUseChantierDetail.isLoading = true
-      mockUseChantierDetail.chantier = null
+      // Make getById return a pending promise
+      vi.mocked(chantiersService.getById).mockImplementation(() => new Promise(() => {}))
       const { container } = renderPage()
       expect(container.querySelector('.animate-spin')).toBeTruthy()
     })
   })
 
   describe('rendering', () => {
-    it('affiche le nom du chantier', () => {
+    it('affiche le nom du chantier', async () => {
       renderPage()
-      expect(screen.getByText('Chantier Test')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Chantier Test')).toBeInTheDocument()
+      })
     })
 
-    it('affiche le code du chantier', () => {
+    it('affiche le code du chantier', async () => {
       renderPage()
-      expect(screen.getByText('CT001')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('CT001')).toBeInTheDocument()
+      })
     })
 
-    it('affiche l adresse', () => {
+    it('affiche l adresse', async () => {
       renderPage()
-      expect(screen.getByText('123 Rue Test')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('123 Rue Test')).toBeInTheDocument()
+      })
     })
 
-    it('affiche le statut du chantier', () => {
+    it('affiche le statut du chantier', async () => {
       renderPage()
-      // Le statut en_cours est affiché via CHANTIER_STATUTS
-      expect(screen.getByText(/en.cours/i)).toBeInTheDocument()
+      await waitFor(() => {
+        // Le statut en_cours est affiché via CHANTIER_STATUTS
+        expect(screen.getByText(/en.cours/i)).toBeInTheDocument()
+      })
     })
 
-    it('affiche le lien retour', () => {
+    it('affiche le lien retour', async () => {
       renderPage()
-      expect(screen.getByText('Retour aux chantiers')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Retour aux chantiers')).toBeInTheDocument()
+      })
     })
 
-    it('affiche la navigation', () => {
+    it('affiche la navigation', async () => {
       renderPage()
-      expect(screen.getByTestId('nav-prev-next')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByTestId('nav-prev-next')).toBeInTheDocument()
+      })
     })
   })
 
   describe('tabs', () => {
-    it('affiche les onglets', () => {
+    it('affiche les onglets', async () => {
       renderPage()
-      expect(screen.getByText('Informations')).toBeInTheDocument()
-      expect(screen.getByText('Taches')).toBeInTheDocument()
-      expect(screen.getByText('Equipe')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Informations')).toBeInTheDocument()
+        expect(screen.getByText('Taches')).toBeInTheDocument()
+        expect(screen.getByText('Equipe')).toBeInTheDocument()
+      })
     })
 
     it('change d onglet au clic sur taches', async () => {
       const user = userEvent.setup()
       renderPage()
+      await waitFor(() => {
+        expect(screen.getByText('Taches')).toBeInTheDocument()
+      })
       await user.click(screen.getByText('Taches'))
       expect(screen.getByTestId('task-list')).toBeInTheDocument()
     })
@@ -184,56 +197,67 @@ describe('ChantierDetailPage', () => {
     it('change d onglet au clic sur equipe', async () => {
       const user = userEvent.setup()
       renderPage()
+      await waitFor(() => {
+        expect(screen.getByText('Equipe')).toBeInTheDocument()
+      })
       await user.click(screen.getByText('Equipe'))
       expect(screen.getByTestId('equipe-tab')).toBeInTheDocument()
     })
   })
 
   describe('admin features', () => {
-    it('affiche le bouton modifier', () => {
+    it('affiche le bouton modifier', async () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /Modifier/i })).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Modifier/i })).toBeInTheDocument()
+      })
     })
 
     it('ouvre le modal edition au clic', async () => {
       const user = userEvent.setup()
       renderPage()
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Modifier/i })).toBeInTheDocument()
+      })
       await user.click(screen.getByRole('button', { name: /Modifier/i }))
-      expect(mockUseChantierDetail.setShowEditModal).toHaveBeenCalledWith(true)
+      await waitFor(() => {
+        expect(screen.getByTestId('edit-modal')).toBeInTheDocument()
+      })
     })
 
-    it('affiche le bouton supprimer', () => {
+    it('affiche le bouton supprimer', async () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /Supprimer/i })).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Supprimer/i })).toBeInTheDocument()
+      })
     })
 
-    it('appelle handleDeleteChantier au clic supprimer', async () => {
+    it('navigue vers la liste et affiche le toast au clic supprimer', async () => {
       const user = userEvent.setup()
       renderPage()
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Supprimer/i })).toBeInTheDocument()
+      })
       await user.click(screen.getByRole('button', { name: /Supprimer/i }))
-      expect(mockUseChantierDetail.handleDeleteChantier).toHaveBeenCalled()
-    })
-  })
-
-  describe('modals', () => {
-    it('affiche le modal edition si showEditModal', () => {
-      mockUseChantierDetail.showEditModal = true
-      renderPage()
-      expect(screen.getByTestId('edit-modal')).toBeInTheDocument()
-    })
-
-    it('affiche le modal ajout utilisateur si showAddUserModal', () => {
-      mockUseChantierDetail.showAddUserModal = 'conducteur'
-      renderPage()
-      expect(screen.getByTestId('add-user-modal')).toBeInTheDocument()
+      // Le composant navigue immédiatement et affiche un toast avec undo
+      await waitFor(() => {
+        expect(mockShowUndoToast).toHaveBeenCalledWith(
+          expect.stringContaining('Chantier'),
+          expect.any(Function),
+          expect.any(Function),
+          5000
+        )
+      })
     })
   })
 
   describe('navigation', () => {
-    it('passe les IDs de navigation', () => {
+    it('passe les IDs de navigation', async () => {
       renderPage()
-      const nav = screen.getByTestId('nav-prev-next')
-      expect(nav).toHaveAttribute('data-next', '2')
+      await waitFor(() => {
+        const nav = screen.getByTestId('nav-prev-next')
+        expect(nav).toHaveAttribute('data-next', '2')
+      })
     })
   })
 })
