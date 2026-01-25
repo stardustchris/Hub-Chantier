@@ -11,6 +11,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { AtSign, Loader2 } from 'lucide-react'
 import { usersService } from '../../services/users'
 import type { User } from '../../types'
+import { DURATIONS, COLORS } from '../../constants'
 
 interface MentionInputProps {
   value: string
@@ -32,7 +33,6 @@ interface MentionSuggestion {
 // Cache global pour les utilisateurs (evite les appels API repetes)
 let usersCache: MentionSuggestion[] | null = null
 let cacheTimestamp = 0
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 export default function MentionInput({
   value,
@@ -56,7 +56,7 @@ export default function MentionInput({
   const loadUsers = useCallback(async () => {
     // Utiliser le cache s'il est valide
     const now = Date.now()
-    if (usersCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    if (usersCache && (now - cacheTimestamp) < DURATIONS.CACHE_TTL) {
       setSuggestions(usersCache)
       return
     }
@@ -70,7 +70,7 @@ export default function MentionInput({
         prenom: u.prenom,
         nom: u.nom,
         role: u.role,
-        couleur: u.couleur || '#3498DB',
+        couleur: u.couleur || COLORS.DEFAULT_USER,
       }))
       // Mettre en cache
       usersCache = users
