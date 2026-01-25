@@ -1,6 +1,7 @@
 export { default as EditChantierModal } from './EditChantierModal'
 export { default as AddUserModal } from './AddUserModal'
 export { default as UserRow } from './UserRow'
+export { default as ChantierEquipeTab } from './ChantierEquipeTab'
 export { ChantierCard } from './ChantierCard'
 export { CreateChantierModal } from './CreateChantierModal'
 export type { TempContact, TempPhase } from './CreateChantierModal'
