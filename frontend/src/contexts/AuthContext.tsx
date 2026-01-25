@@ -2,13 +2,14 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { authService, User } from '../services/auth'
 import { onSessionExpired, emitLogout } from '../services/authEvents'
 import { clearCsrfToken } from '../services/csrf'
+import api from '../services/api'
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -18,7 +19,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   // Fonction logout mémorisée pour être utilisée comme callback
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      // Appeler l'API pour supprimer le cookie HttpOnly côté serveur
+      await api.post('/api/auth/logout')
+    } catch {
+      // Continue même si l'appel échoue
+    }
+    // Supprimer aussi le token sessionStorage (fallback)
     sessionStorage.removeItem('access_token')
     // Nettoyer le token CSRF pour éviter sa réutilisation
     clearCsrfToken()
@@ -28,17 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // Vérifier si un token existe au chargement
-    // sessionStorage est plus sécurisé que localStorage (non accessible après fermeture navigateur)
+    // Vérifier si l'utilisateur est authentifié au chargement
+    // Priorité: Cookie HttpOnly (envoyé automatiquement) > sessionStorage (fallback)
     const checkAuth = async () => {
-      const token = sessionStorage.getItem('access_token')
-      if (token) {
-        try {
-          const currentUser = await authService.getCurrentUser()
-          setUser(currentUser)
-        } catch {
-          sessionStorage.removeItem('access_token')
-        }
+      try {
+        // Essayer de récupérer l'utilisateur (le cookie HttpOnly est envoyé automatiquement)
+        const currentUser = await authService.getCurrentUser()
+        setUser(currentUser)
+      } catch {
+        // Non authentifié - nettoyer le sessionStorage au cas où
+        sessionStorage.removeItem('access_token')
       }
       setIsLoading(false)
     }
@@ -57,7 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await authService.login(email, password)
-    // sessionStorage: token supprimé à la fermeture du navigateur (plus sécurisé)
+    // Le token est stocké automatiquement dans un cookie HttpOnly par le serveur
+    // sessionStorage est conservé comme fallback pour compatibilité ascendante
     sessionStorage.setItem('access_token', response.access_token)
     setUser(response.user)
   }

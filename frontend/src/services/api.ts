@@ -19,12 +19,14 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 secondes
+  withCredentials: true, // Include HttpOnly cookies in requests
 })
 
 // Intercepteur pour ajouter le token d'authentification et CSRF
 api.interceptors.request.use(async (config) => {
   // Token d'authentification
-  // sessionStorage: plus sécurisé que localStorage (non accessible après fermeture navigateur)
+  // Préférence: Cookie HttpOnly (géré automatiquement par le navigateur via withCredentials)
+  // Fallback: sessionStorage pour compatibilité ascendante pendant la transition
   const token = sessionStorage.getItem('access_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

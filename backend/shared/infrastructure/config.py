@@ -32,6 +32,11 @@ class Settings:
     # CORS
     CORS_ORIGINS: list = None
 
+    # Cookie settings (HttpOnly for security)
+    COOKIE_SECURE: bool = True  # True in production (HTTPS)
+    COOKIE_SAMESITE: str = "lax"  # Protect against CSRF
+    COOKIE_DOMAIN: str = None  # None = current domain
+
     # Encryption (RGPD Art. 32)
     ENCRYPTION_KEY: str = "dev-encryption-key-change-in-production-32ch"
 
@@ -47,6 +52,11 @@ class Settings:
 
         cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173")
         self.CORS_ORIGINS = [origin.strip() for origin in cors_origins.split(",")]
+
+        # Cookie settings
+        self.COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
+        self.COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")
+        self.COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", None)
 
         # Encryption key (must be 32 bytes for AES-256)
         self.ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", self.ENCRYPTION_KEY)
