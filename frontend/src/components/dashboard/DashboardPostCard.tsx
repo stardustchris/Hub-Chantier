@@ -21,11 +21,17 @@ import { formatRelative } from '../../utils/dates'
 import type { Post, UserRole } from '../../types'
 import { ROLES } from '../../types'
 
+// Helper pour détecter les posts mock (IDs négatifs)
+const isMockPost = (postId: string | number): boolean => {
+  const numId = typeof postId === 'string' ? parseInt(postId, 10) : postId
+  return numId < 0 || isNaN(numId)
+}
+
 interface DashboardPostCardProps {
   post: Post
-  onLike: (postId: string, isLiked: boolean) => void
-  onPin: (postId: string, isPinned: boolean) => void
-  onDelete: (postId: string) => void
+  onLike: (postId: string | number, isLiked: boolean) => void
+  onPin: (postId: string | number, isPinned: boolean) => void
+  onDelete: (postId: string | number) => void
 }
 
 // P1-7: Memoize le composant pour éviter re-renders inutiles
@@ -56,8 +62,8 @@ export const DashboardPostCard = memo(function DashboardPostCard({
     try {
       setIsCommenting(true)
 
-      // Pour les mocks (id commence par "mock-"), ajouter localement
-      if (String(post.id).startsWith('mock-')) {
+      // Pour les mocks (IDs négatifs), ajouter localement
+      if (isMockPost(post.id)) {
         const newCommentObj = {
           id: `comment-${Date.now()}`,
           contenu: newComment,
@@ -75,7 +81,7 @@ export const DashboardPostCard = memo(function DashboardPostCard({
       }
 
       // Pour les vrais posts, appeler l'API
-      const updatedPost = await dashboardService.addComment(post.id, { contenu: newComment })
+      const updatedPost = await dashboardService.addComment(String(post.id), { contenu: newComment })
       setComments(updatedPost.commentaires || [])
       setNewComment('')
     } catch (error) {
