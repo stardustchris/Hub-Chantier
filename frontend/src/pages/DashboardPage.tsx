@@ -228,6 +228,25 @@ export default function DashboardPage() {
 
   // P1-7: Memoize handlers pour éviter re-renders des PostCards
   const handleLike = useCallback(async (postId: string, isLiked: boolean) => {
+    // Pour les mocks, mettre à jour localement avec feedback visuel
+    if (String(postId).startsWith('mock-')) {
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p
+          const currentLikes = p.likes || []
+          const newLikes = isLiked
+            ? currentLikes.filter((l) => l.user_id !== user?.id)
+            : [...currentLikes, { user_id: user?.id || '', created_at: new Date().toISOString() }]
+          return {
+            ...p,
+            likes_count: (p.likes_count || 0) + (isLiked ? -1 : 1),
+            likes: newLikes,
+          }
+        })
+      )
+      return
+    }
+
     try {
       if (isLiked) {
         await dashboardService.unlikePost(postId)
@@ -239,9 +258,17 @@ export default function DashboardPage() {
     } catch (error) {
       logger.error('Erreur lors du like', error, { context: 'DashboardPage', showToast: true })
     }
-  }, [])
+  }, [user?.id])
 
   const handlePin = useCallback(async (postId: string, isPinned: boolean) => {
+    // Pour les mocks, mettre à jour localement
+    if (String(postId).startsWith('mock-')) {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, is_pinned: !isPinned } : p))
+      )
+      return
+    }
+
     try {
       if (isPinned) {
         await dashboardService.unpinPost(postId)
@@ -256,6 +283,12 @@ export default function DashboardPage() {
 
   const handleDelete = useCallback(async (postId: string) => {
     if (!confirm('Supprimer cette publication ?')) return
+
+    // Pour les mocks, supprimer localement
+    if (String(postId).startsWith('mock-')) {
+      setPosts((prev) => prev.filter((p) => p.id !== postId))
+      return
+    }
 
     try {
       await dashboardService.deletePost(postId)
@@ -378,7 +411,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Posts - Fixed height with scroll */}
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
                   {sortedPosts.length === 0 && !isLoading ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />

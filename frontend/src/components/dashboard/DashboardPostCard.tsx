@@ -55,6 +55,26 @@ export const DashboardPostCard = memo(function DashboardPostCard({
     if (!newComment.trim()) return
     try {
       setIsCommenting(true)
+
+      // Pour les mocks (id commence par "mock-"), ajouter localement
+      if (String(post.id).startsWith('mock-')) {
+        const newCommentObj = {
+          id: `comment-${Date.now()}`,
+          contenu: newComment,
+          auteur: {
+            id: currentUserId,
+            prenom: user?.prenom || 'Moi',
+            nom: user?.nom || '',
+            couleur: user?.couleur || '#3498DB',
+          },
+          created_at: new Date().toISOString(),
+        }
+        setComments((prev) => [...prev, newCommentObj])
+        setNewComment('')
+        return
+      }
+
+      // Pour les vrais posts, appeler l'API
       const updatedPost = await dashboardService.addComment(post.id, { contenu: newComment })
       setComments(updatedPost.commentaires || [])
       setNewComment('')
