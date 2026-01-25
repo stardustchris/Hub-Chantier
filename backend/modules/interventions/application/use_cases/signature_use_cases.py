@@ -16,7 +16,7 @@ class AddSignatureUseCase:
     def __init__(self, repository: SignatureInterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self,
         intervention_id: int,
         dto: CreateSignatureDTO,
@@ -28,7 +28,7 @@ class AddSignatureUseCase:
 
         if type_signataire == TypeSignataire.CLIENT:
             # Verifier qu'il n'y a pas deja une signature client
-            existing = await self._repository.get_signature_client(intervention_id)
+            existing = self._repository.get_signature_client(intervention_id)
             if existing:
                 raise ValueError("Une signature client existe deja pour cette intervention")
 
@@ -47,7 +47,7 @@ class AddSignatureUseCase:
                 )
 
             # Verifier qu'il n'a pas deja signe
-            existing = await self._repository.get_signature_technicien(
+            existing = self._repository.get_signature_technicien(
                 intervention_id, utilisateur_id
             )
             if existing:
@@ -63,7 +63,7 @@ class AddSignatureUseCase:
                 longitude=dto.longitude,
             )
 
-        return await self._repository.save(signature)
+        return self._repository.save(signature)
 
 
 class ListSignaturesUseCase:
@@ -72,16 +72,16 @@ class ListSignaturesUseCase:
     def __init__(self, repository: SignatureInterventionRepository):
         self._repository = repository
 
-    async def execute(
+    def execute(
         self, intervention_id: int
     ) -> List[SignatureIntervention]:
         """Liste les signatures d'une intervention."""
-        return await self._repository.list_by_intervention(intervention_id)
+        return self._repository.list_by_intervention(intervention_id)
 
-    async def has_all_signatures(self, intervention_id: int) -> dict:
+    def has_all_signatures(self, intervention_id: int) -> dict:
         """Verifie si toutes les signatures sont presentes."""
-        has_client = await self._repository.has_signature_client(intervention_id)
-        has_all_tech = await self._repository.has_all_signatures_techniciens(
+        has_client = self._repository.has_signature_client(intervention_id)
+        has_all_tech = self._repository.has_all_signatures_techniciens(
             intervention_id
         )
 

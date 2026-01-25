@@ -70,8 +70,11 @@ class InterventionMessage:
         """Validation a la creation."""
         if self.intervention_id <= 0:
             raise ValueError("L'ID de l'intervention doit etre positif")
-        if self.auteur_id <= 0:
-            raise ValueError("L'ID de l'auteur doit etre positif")
+        # auteur_id peut etre 0 pour les messages systeme
+        if self.auteur_id < 0:
+            raise ValueError("L'ID de l'auteur ne peut pas etre negatif")
+        if self.auteur_id == 0 and self.type_message != TypeMessage.SYSTEME:
+            raise ValueError("L'ID de l'auteur doit etre positif pour les messages non-systeme")
         if not self.contenu or not self.contenu.strip():
             raise ValueError("Le contenu ne peut pas etre vide")
 

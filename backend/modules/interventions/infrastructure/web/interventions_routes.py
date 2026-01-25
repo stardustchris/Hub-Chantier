@@ -7,11 +7,10 @@ from datetime import date
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
-from shared.infrastructure.database import get_async_session
-from modules.auth.infrastructure.web.dependencies import get_current_user
-from modules.auth.domain.entities import User
+from shared.infrastructure.database import get_db
+from modules.auth.infrastructure.web.dependencies import get_current_user_id
 
 from ...application.dtos import (
     CreateInterventionDTO,
@@ -53,6 +52,25 @@ from .dependencies import (
     get_add_signature_use_case,
     get_list_signatures_use_case,
 )
+from ...application.use_cases import (
+    CreateInterventionUseCase,
+    GetInterventionUseCase,
+    ListInterventionsUseCase,
+    UpdateInterventionUseCase,
+    PlanifierInterventionUseCase,
+    DemarrerInterventionUseCase,
+    TerminerInterventionUseCase,
+    AnnulerInterventionUseCase,
+    DeleteInterventionUseCase,
+    AffecterTechnicienUseCase,
+    DesaffecterTechnicienUseCase,
+    ListTechniciensInterventionUseCase,
+    AddMessageUseCase,
+    ListMessagesUseCase,
+    ToggleRapportInclusionUseCase,
+    AddSignatureUseCase,
+    ListSignaturesUseCase,
+)
 
 router = APIRouter(prefix="/interventions", tags=["interventions"])
 
@@ -69,15 +87,15 @@ router = APIRouter(prefix="/interventions", tags=["interventions"])
     summary="Creer une intervention",
     description="INT-03: Creation d'une nouvelle intervention",
 )
-async def create_intervention(
+def create_intervention(
     dto: CreateInterventionDTO,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: CreateInterventionUseCase = Depends(get_create_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Cree une nouvelle intervention."""
-    use_case = await get_create_intervention_use_case(session)
-    intervention = await use_case.execute(dto, current_user.id)
-    await session.commit()
+    intervention = use_case.execute(dto, current_user_id)
+    db.commit()
 
     return _intervention_to_response(intervention)
 
@@ -88,7 +106,7 @@ async def create_intervention(
     summary="Lister les interventions",
     description="INT-02: Liste des interventions avec filtres et pagination",
 )
-async def list_interventions(
+def list_interventions(
     statut: Optional[StatutIntervention] = None,
     priorite: Optional[PrioriteIntervention] = None,
     type_intervention: Optional[TypeIntervention] = None,
@@ -97,8 +115,8 @@ async def list_interventions(
     chantier_origine_id: Optional[int] = None,
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    use_case: ListInterventionsUseCase = Depends(get_list_interventions_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les interventions."""
     filters = InterventionFiltersDTO(
@@ -112,8 +130,7 @@ async def list_interventions(
         offset=offset,
     )
 
-    use_case = await get_list_interventions_use_case(session)
-    interventions, total = await use_case.execute(filters)
+    interventions, total = use_case.execute(filters)
 
     return InterventionListResponseDTO(
         items=[_intervention_to_response(i) for i in interventions],
@@ -128,14 +145,13 @@ async def list_interventions(
     response_model=InterventionResponseDTO,
     summary="Recuperer une intervention",
 )
-async def get_intervention(
+def get_intervention(
     intervention_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    use_case: GetInterventionUseCase = Depends(get_get_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Recupere une intervention par son ID."""
-    use_case = await get_get_intervention_use_case(session)
-    intervention = await use_case.execute(intervention_id)
+    intervention = use_case.execute(intervention_id)
 
     if not intervention:
         raise HTTPException(
@@ -151,17 +167,16 @@ async def get_intervention(
     response_model=InterventionResponseDTO,
     summary="Modifier une intervention",
 )
-async def update_intervention(
+def update_intervention(
     intervention_id: int,
     dto: UpdateInterventionDTO,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: UpdateInterventionUseCase = Depends(get_update_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Modifie une intervention."""
-    use_case = await get_update_intervention_use_case(session)
-
     try:
-        intervention = await use_case.execute(intervention_id, dto)
+        intervention = use_case.execute(intervention_id, dto)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -174,7 +189,7 @@ async def update_intervention(
             detail="Intervention non trouvee",
         )
 
-    await session.commit()
+    db.commit()
     return _intervention_to_response(intervention)
 
 
@@ -183,14 +198,14 @@ async def update_intervention(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Supprimer une intervention",
 )
-async def delete_intervention(
+def delete_intervention(
     intervention_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: DeleteInterventionUseCase = Depends(get_delete_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Supprime une intervention (soft delete)."""
-    use_case = await get_delete_intervention_use_case(session)
-    deleted = await use_case.execute(intervention_id, current_user.id)
+    deleted = use_case.execute(intervention_id, current_user_id)
 
     if not deleted:
         raise HTTPException(
@@ -198,7 +213,7 @@ async def delete_intervention(
             detail="Intervention non trouvee",
         )
 
-    await session.commit()
+    db.commit()
 
 
 # =============================================================================
@@ -212,15 +227,15 @@ async def delete_intervention(
     summary="Planifier une intervention",
     description="INT-05, INT-06: Planifie l'intervention avec date et techniciens",
 )
-async def planifier_intervention(
+def planifier_intervention(
     intervention_id: int,
     dto: PlanifierInterventionDTO,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: PlanifierInterventionUseCase = Depends(get_planifier_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Planifie une intervention."""
-    use_case = await get_planifier_intervention_use_case(session)
-    intervention = await use_case.execute(intervention_id, dto, current_user.id)
+    intervention = use_case.execute(intervention_id, dto, current_user_id)
 
     if not intervention:
         raise HTTPException(
@@ -228,7 +243,7 @@ async def planifier_intervention(
             detail="Intervention non trouvee",
         )
 
-    await session.commit()
+    db.commit()
     return _intervention_to_response(intervention)
 
 
@@ -237,17 +252,16 @@ async def planifier_intervention(
     response_model=InterventionResponseDTO,
     summary="Demarrer une intervention",
 )
-async def demarrer_intervention(
+def demarrer_intervention(
     intervention_id: int,
     dto: DemarrerInterventionDTO = DemarrerInterventionDTO(),
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: DemarrerInterventionUseCase = Depends(get_demarrer_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Demarre une intervention."""
-    use_case = await get_demarrer_intervention_use_case(session)
-
     try:
-        intervention = await use_case.execute(intervention_id, dto)
+        intervention = use_case.execute(intervention_id, dto)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -260,7 +274,7 @@ async def demarrer_intervention(
             detail="Intervention non trouvee",
         )
 
-    await session.commit()
+    db.commit()
     return _intervention_to_response(intervention)
 
 
@@ -269,17 +283,16 @@ async def demarrer_intervention(
     response_model=InterventionResponseDTO,
     summary="Terminer une intervention",
 )
-async def terminer_intervention(
+def terminer_intervention(
     intervention_id: int,
     dto: TerminerInterventionDTO = TerminerInterventionDTO(),
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: TerminerInterventionUseCase = Depends(get_terminer_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Termine une intervention."""
-    use_case = await get_terminer_intervention_use_case(session)
-
     try:
-        intervention = await use_case.execute(intervention_id, dto)
+        intervention = use_case.execute(intervention_id, dto)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -292,7 +305,7 @@ async def terminer_intervention(
             detail="Intervention non trouvee",
         )
 
-    await session.commit()
+    db.commit()
     return _intervention_to_response(intervention)
 
 
@@ -301,16 +314,15 @@ async def terminer_intervention(
     response_model=InterventionResponseDTO,
     summary="Annuler une intervention",
 )
-async def annuler_intervention(
+def annuler_intervention(
     intervention_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: AnnulerInterventionUseCase = Depends(get_annuler_intervention_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Annule une intervention."""
-    use_case = await get_annuler_intervention_use_case(session)
-
     try:
-        intervention = await use_case.execute(intervention_id)
+        intervention = use_case.execute(intervention_id)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -323,7 +335,7 @@ async def annuler_intervention(
             detail="Intervention non trouvee",
         )
 
-    await session.commit()
+    db.commit()
     return _intervention_to_response(intervention)
 
 
@@ -339,24 +351,23 @@ async def annuler_intervention(
     summary="Affecter un technicien",
     description="INT-10, INT-17: Affecte un technicien ou sous-traitant",
 )
-async def affecter_technicien(
+def affecter_technicien(
     intervention_id: int,
     dto: AffecterTechnicienDTO,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: AffecterTechnicienUseCase = Depends(get_affecter_technicien_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Affecte un technicien a l'intervention."""
-    use_case = await get_affecter_technicien_use_case(session)
-
     try:
-        affectation = await use_case.execute(intervention_id, dto, current_user.id)
+        affectation = use_case.execute(intervention_id, dto, current_user_id)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
 
-    await session.commit()
+    db.commit()
 
     return TechnicienResponseDTO(
         id=affectation.id,
@@ -371,14 +382,13 @@ async def affecter_technicien(
     response_model=List[TechnicienResponseDTO],
     summary="Lister les techniciens",
 )
-async def list_techniciens(
+def list_techniciens(
     intervention_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    use_case: ListTechniciensInterventionUseCase = Depends(get_list_techniciens_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les techniciens affectes a l'intervention."""
-    use_case = await get_list_techniciens_use_case(session)
-    affectations = await use_case.execute(intervention_id)
+    affectations = use_case.execute(intervention_id)
 
     return [
         TechnicienResponseDTO(
@@ -396,15 +406,15 @@ async def list_techniciens(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Desaffecter un technicien",
 )
-async def desaffecter_technicien(
+def desaffecter_technicien(
     intervention_id: int,
     affectation_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: DesaffecterTechnicienUseCase = Depends(get_desaffecter_technicien_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Desaffecte un technicien de l'intervention."""
-    use_case = await get_desaffecter_technicien_use_case(session)
-    deleted = await use_case.execute(affectation_id, current_user.id)
+    deleted = use_case.execute(affectation_id, current_user_id)
 
     if not deleted:
         raise HTTPException(
@@ -412,7 +422,7 @@ async def desaffecter_technicien(
             detail="Affectation non trouvee",
         )
 
-    await session.commit()
+    db.commit()
 
 
 # =============================================================================
@@ -427,16 +437,16 @@ async def desaffecter_technicien(
     summary="Ajouter un message",
     description="INT-11, INT-12: Ajoute un message au fil d'activite",
 )
-async def add_message(
+def add_message(
     intervention_id: int,
     dto: CreateMessageDTO,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: AddMessageUseCase = Depends(get_add_message_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Ajoute un message a l'intervention."""
-    use_case = await get_add_message_use_case(session)
-    message = await use_case.execute(intervention_id, dto, current_user.id)
-    await session.commit()
+    message = use_case.execute(intervention_id, dto, current_user_id)
+    db.commit()
 
     return MessageResponseDTO(
         id=message.id,
@@ -455,17 +465,16 @@ async def add_message(
     response_model=List[MessageResponseDTO],
     summary="Lister les messages",
 )
-async def list_messages(
+def list_messages(
     intervention_id: int,
     type_message: Optional[str] = None,
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    use_case: ListMessagesUseCase = Depends(get_list_messages_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les messages de l'intervention."""
-    use_case = await get_list_messages_use_case(session)
-    messages, _ = await use_case.execute(
+    messages, _ = use_case.execute(
         intervention_id, type_message, limit, offset
     )
 
@@ -490,16 +499,16 @@ async def list_messages(
     summary="Inclure/exclure du rapport",
     description="INT-15: Selection des posts pour le rapport PDF",
 )
-async def toggle_rapport_inclusion(
+def toggle_rapport_inclusion(
     intervention_id: int,
     message_id: int,
     inclure: bool = Query(...),
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: ToggleRapportInclusionUseCase = Depends(get_toggle_rapport_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Active/desactive l'inclusion d'un message dans le rapport."""
-    use_case = await get_toggle_rapport_use_case(session)
-    updated = await use_case.execute(message_id, inclure)
+    updated = use_case.execute(message_id, inclure)
 
     if not updated:
         raise HTTPException(
@@ -507,7 +516,7 @@ async def toggle_rapport_inclusion(
             detail="Message non trouve",
         )
 
-    await session.commit()
+    db.commit()
 
 
 # =============================================================================
@@ -522,24 +531,23 @@ async def toggle_rapport_inclusion(
     summary="Ajouter une signature",
     description="INT-13: Signature client ou technicien",
 )
-async def add_signature(
+def add_signature(
     intervention_id: int,
     dto: CreateSignatureDTO,
     request: Request,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    use_case: AddSignatureUseCase = Depends(get_add_signature_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Ajoute une signature a l'intervention."""
-    use_case = await get_add_signature_use_case(session)
-
     # Recuperer l'IP pour la tracabilite
     ip_address = request.client.host if request.client else None
 
     try:
-        signature = await use_case.execute(
+        signature = use_case.execute(
             intervention_id,
             dto,
-            utilisateur_id=current_user.id if dto.type_signataire == "technicien" else None,
+            utilisateur_id=current_user_id if dto.type_signataire == "technicien" else None,
             ip_address=ip_address,
         )
     except ValueError as e:
@@ -548,7 +556,7 @@ async def add_signature(
             detail=str(e),
         )
 
-    await session.commit()
+    db.commit()
 
     return SignatureResponseDTO(
         id=signature.id,
@@ -566,14 +574,13 @@ async def add_signature(
     response_model=List[SignatureResponseDTO],
     summary="Lister les signatures",
 )
-async def list_signatures(
+def list_signatures(
     intervention_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user),
+    use_case: ListSignaturesUseCase = Depends(get_list_signatures_use_case),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Liste les signatures de l'intervention."""
-    use_case = await get_list_signatures_use_case(session)
-    signatures = await use_case.execute(intervention_id)
+    signatures = use_case.execute(intervention_id)
 
     return [
         SignatureResponseDTO(
