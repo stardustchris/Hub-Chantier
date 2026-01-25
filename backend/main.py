@@ -21,6 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.web.security_middleware import SecurityHeadersMiddleware
+from shared.infrastructure.scheduler import get_scheduler
+from shared.infrastructure.scheduler.jobs import RappelReservationJob
 from modules.auth.infrastructure.web import router as auth_router, users_router
 from modules.chantiers.infrastructure.web import router as chantiers_router
 from modules.dashboard.infrastructure.web import dashboard_router
@@ -33,6 +35,7 @@ from modules.signalements.infrastructure.web import router as signalements_route
 from modules.documents.infrastructure.web import router as documents_router
 from modules.logistique.infrastructure.web import router as logistique_router
 from modules.planning_charge.infrastructure import router as planning_charge_router
+from modules.interventions.infrastructure.web import router as interventions_router
 from shared.infrastructure.web.upload_routes import router as upload_router
 
 # Créer l'application
@@ -105,10 +108,20 @@ async def startup_event():
     init_db()
     logger.info("Base de données initialisée")
 
+    # Démarrer le scheduler et enregistrer les jobs
+    scheduler = get_scheduler()
+    RappelReservationJob.register(scheduler, SessionLocal)
+    scheduler.start()
+    logger.info("Scheduler démarré avec jobs planifiés")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Nettoyage à l'arrêt."""
+    # Arrêter le scheduler
+    scheduler = get_scheduler()
+    scheduler.shutdown(wait=True)
+    logger.info("Scheduler arrêté")
     logger.info("Arrêt de l'application")
 
 
@@ -174,6 +187,7 @@ app.include_router(signalements_router, prefix="/api")
 app.include_router(documents_router, prefix="/api")
 app.include_router(logistique_router, prefix="/api")
 app.include_router(planning_charge_router, prefix="/api")
+app.include_router(interventions_router, prefix="/api")
 
 # Futurs modules à ajouter:
 # app.include_router(employes_router, prefix="/api")

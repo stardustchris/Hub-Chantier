@@ -586,6 +586,76 @@ class TestBesoinsByChantier:
         assert "items" in data
         assert len(data["items"]) == 3
 
+    def test_get_besoins_with_pagination(self, client, admin_auth_headers):
+        """Test: pagination des besoins fonctionne correctement."""
+        chantier_id = self._create_test_chantier(client, admin_auth_headers)
+        semaine_debut, semaine_fin = self._get_week_range()
+
+        # Creer plusieurs besoins
+        types_metier = ["macon", "coffreur", "ferrailleur", "grutier", "electricien"]
+        for type_metier in types_metier:
+            client.post(
+                "/api/planning-charge/besoins",
+                json={
+                    "chantier_id": chantier_id,
+                    "semaine_code": semaine_debut,
+                    "type_metier": type_metier,
+                    "besoin_heures": 35.0,
+                },
+                headers=admin_auth_headers,
+            )
+
+        # Lire avec pagination page 1
+        response_page1 = client.get(
+            f"/api/planning-charge/chantiers/{chantier_id}/besoins",
+            params={
+                "semaine_debut": semaine_debut,
+                "semaine_fin": semaine_fin,
+                "page": 1,
+                "page_size": 2,
+            },
+            headers=admin_auth_headers,
+        )
+        assert response_page1.status_code == 200
+        data_page1 = response_page1.json()
+        assert len(data_page1["items"]) == 2
+        assert data_page1["total"] == 5
+        assert data_page1["page"] == 1
+        assert data_page1["page_size"] == 2
+        assert data_page1["total_pages"] == 3
+
+        # Lire avec pagination page 2
+        response_page2 = client.get(
+            f"/api/planning-charge/chantiers/{chantier_id}/besoins",
+            params={
+                "semaine_debut": semaine_debut,
+                "semaine_fin": semaine_fin,
+                "page": 2,
+                "page_size": 2,
+            },
+            headers=admin_auth_headers,
+        )
+        assert response_page2.status_code == 200
+        data_page2 = response_page2.json()
+        assert len(data_page2["items"]) == 2
+        assert data_page2["page"] == 2
+
+        # Lire avec pagination page 3 (derniere avec 1 element)
+        response_page3 = client.get(
+            f"/api/planning-charge/chantiers/{chantier_id}/besoins",
+            params={
+                "semaine_debut": semaine_debut,
+                "semaine_fin": semaine_fin,
+                "page": 3,
+                "page_size": 2,
+            },
+            headers=admin_auth_headers,
+        )
+        assert response_page3.status_code == 200
+        data_page3 = response_page3.json()
+        assert len(data_page3["items"]) == 1
+        assert data_page3["page"] == 3
+
 
 class TestPlanningChargeIntegration:
     """Tests d'integration complets pour le planning de charge."""

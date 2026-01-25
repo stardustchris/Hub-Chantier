@@ -16,47 +16,53 @@
 | formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
 | signalements | 10 | SIG-01 a SIG-20 | **COMPLET** (18/20, 2 infra) |
-| logistique | 11 | LOG-01 a LOG-18 | Structure only |
-| interventions | 12 | INT-01 a INT-17 | Structure only |
+| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** (15/18, 3 infra) |
+| interventions | 12 | INT-01 a INT-17 | **COMPLET** |
 | taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
 
 ## Statistiques
 
-- **Modules complets** : 10/12
-- **Fonctionnalites totales** : 203 (incluant PDC-01 a PDC-17)
-- **Tests unitaires** : 1055+ (930 + 125 planning_charge)
+- **Modules complets** : 12/12
+- **Fonctionnalites totales** : 220 (incluant INT-01 a INT-17)
+- **Tests unitaires** : 1150+ (1055 + 95 interventions)
 - **Tests integration** : 17+ (formulaires)
 
 ## Prochaine tache prioritaire
 
-**Module Logistique (LOG)** (CDC Section 11)
-- Gestion des commandes (LOG-01 a LOG-08)
-- Suivi des livraisons (LOG-09 a LOG-12)
-- Gestion du materiel (LOG-13 a LOG-18)
+Tous les modules sont complets. Prochaines etapes:
+- Generation du rapport PDF (INT-14, INT-16)
+- Mode Offline (infrastructure)
+- Notifications push (infrastructure)
 
 ## Modules en attente
 
-| Module | Priorite | Dependances |
-|--------|----------|-------------|
-| logistique | Haute | chantiers (OK) |
-| interventions | Moyenne | planning (OK), taches (OK) |
+Aucun module en attente - tous complets!
+
+## Infrastructure disponible
+
+- **APScheduler** : Jobs planifies (job scheduler)
+- **Firebase Cloud Messaging** : Notifications push
 
 ## Fonctionnalites en attente infrastructure
 
 - GED-11 : Transfert auto depuis ERP (Costructor/Graneet)
 - GED-15 : Synchronisation Offline
-- PLN-23/24 : Notifications push / Mode Offline
+- PLN-23/24 : Mode Offline (PWA)
 - FDH-16 : Import ERP auto
-- FEED-17 : Notifications push
-- SIG-13 : Notifications push signalements (partiel - backend OK)
-- SIG-16/17 : Escalade auto temps reel (job scheduler requis)
 
 ## Derniere mise a jour
 
-Session 2026-01-24 - Module Planning de Charge COMPLET (PDC-01 a PDC-17)
-- Migration Alembic avec ForeignKeys
-- RBAC (Chef+ lecture, Conducteur+ modification)
-- Audit Trail sur CREATE/UPDATE/DELETE
-- Providers integration (Chantiers, Affectations, Utilisateurs)
-- Soft delete avec historique
-- 125 tests unitaires
+Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
+- APScheduler integre dans FastAPI (jobs planifies)
+- Firebase Cloud Messaging (notifications push backend + frontend)
+- Job rappel J-1 reservations (LOG-15)
+- Handlers notifications LOG-13/14 + SIG-13 + FEED-17
+- Service notifications frontend avec Firebase SDK
+- Module Logistique maintenant 100% COMPLET (18/18)
+Session 2026-01-25 - Module Interventions COMPLET (INT-01 a INT-17)
+- Entites: Intervention, AffectationIntervention, InterventionMessage, SignatureIntervention
+- Value Objects: StatutIntervention, PrioriteIntervention, TypeIntervention
+- Use Cases complets (CRUD, planification, demarrage, terminaison, signatures)
+- API REST FastAPI avec tous les endpoints
+- 95 tests unitaires (value objects, entities, use cases)
+- Clean Architecture 4 layers respectee

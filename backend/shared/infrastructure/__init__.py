@@ -7,6 +7,7 @@ from .entity_info_impl import (
     SQLAlchemyEntityInfoService,
     get_entity_info_service,
 )
+from .cache import TTLCache, cache_manager, ttl_cache
 
 __all__ = [
     "settings",
@@ -19,4 +20,7 @@ __all__ = [
     "event_handler",
     "SQLAlchemyEntityInfoService",
     "get_entity_info_service",
+    "TTLCache",
+    "cache_manager",
+    "ttl_cache",
 ]

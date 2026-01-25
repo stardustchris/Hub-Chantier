@@ -81,7 +81,7 @@ const RessourceList: React.FC<RessourceListProps> = ({
         actif_seulement: !showInactifs,
         limit: 100,
       })
-      setRessources(data.items)
+      setRessources(data?.items || [])
     } catch (err) {
       setError('Erreur lors du chargement des ressources')
       logger.error('Erreur chargement ressources', err, { context: 'RessourceList' })

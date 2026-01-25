@@ -3,6 +3,198 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-25 (Infrastructure Notifications Push et Job Scheduler)
+
+Implementation de l'infrastructure de notifications push (Firebase) et du job scheduler (APScheduler).
+
+### APScheduler - Job Scheduler
+
+**Fichiers crees**
+- `shared/infrastructure/scheduler/__init__.py`
+- `shared/infrastructure/scheduler/scheduler_service.py` : Service singleton BackgroundScheduler
+- `shared/infrastructure/scheduler/jobs/__init__.py`
+- `shared/infrastructure/scheduler/jobs/rappel_reservation_job.py` : Job LOG-15 rappel J-1
+
+**Integration FastAPI**
+- Demarrage automatique au startup de l'application
+- Arret propre au shutdown
+- Job cron quotidien a 18h00 pour rappels reservations
+
+**Fonctionnalites**
+- `add_cron_job()` : Jobs a heure fixe (ex: tous les jours a 8h)
+- `add_interval_job()` : Jobs periodiques (ex: toutes les 5 minutes)
+- `run_job_now()` : Execution manuelle d'un job
+- Timezone Europe/Paris
+
+### Firebase Cloud Messaging - Notifications Push
+
+**Backend (firebase-admin)**
+- `shared/infrastructure/notifications/__init__.py`
+- `shared/infrastructure/notifications/notification_service.py` : Service FCM singleton
+- `shared/infrastructure/notifications/handlers/__init__.py`
+- `shared/infrastructure/notifications/handlers/reservation_notification_handler.py` : Handlers LOG-13/14
+
+**Fonctionnalites backend**
+- `send_to_token()` : Notification a un appareil
+- `send_to_tokens()` : Notification multicast
+- `send_to_topic()` : Notification a un groupe (ex: valideurs d'un chantier)
+- Mode simulation si Firebase non configure
+
+**Frontend (firebase SDK)**
+- `src/services/firebase.ts` : Configuration et initialisation Firebase
+- `src/services/notifications.ts` : Service de gestion des notifications
+- `public/firebase-messaging-sw.js` : Service Worker pour notifications background
+- `.env.example` : Variables d'environnement Firebase
+
+**Fonctionnalites frontend**
+- Demande de permission utilisateur
+- Enregistrement token aupres du backend
+- Ecoute des messages en foreground
+- Navigation au clic sur notification
+- Service Worker pour notifications en arriere-plan
+
+### Dependencies ajoutees
+
+**Backend (requirements.txt)**
+- `apscheduler>=3.10.0`
+- `firebase-admin>=6.4.0`
+
+**Frontend (package.json)**
+- `firebase: ^10.8.0`
+
+### Fonctionnalites debloqueees
+
+| Code | Fonctionnalite | Status |
+|------|---------------|--------|
+| LOG-13 | Notification demande reservation | ✅ Complet |
+| LOG-14 | Notification decision reservation | ✅ Complet |
+| LOG-15 | Rappel J-1 reservation | ✅ Complet |
+| SIG-13 | Notifications signalements | ✅ Infrastructure prete |
+| FEED-17 | Notifications dashboard | ✅ Infrastructure prete |
+| PLN-23 | Notifications planning | ✅ Infrastructure prete |
+
+### Configuration requise
+
+**Firebase (gratuit)**
+1. Creer projet sur https://console.firebase.google.com
+2. Activer Cloud Messaging
+3. Generer cle VAPID (Web Push)
+4. Copier config dans `.env` (frontend) et `FIREBASE_CREDENTIALS_PATH` (backend)
+
+**Cout** : 0 EUR (Firebase gratuit pour usage standard)
+
+---
+
+## Session 2026-01-25 (Module Interventions - INT-01 a INT-17)
+
+Implementation complete du module Interventions pour la gestion des interventions ponctuelles (SAV, maintenance, depannages, levee de reserves).
+
+### Architecture Clean implementee
+
+**Domain Layer**
+- `domain/entities/intervention.py` : Intervention avec cycle de vie complet
+- `domain/entities/affectation_intervention.py` : Affectation technicien (INT-10, INT-17)
+- `domain/entities/intervention_message.py` : Messages/fil d'activite (INT-11, INT-12)
+- `domain/entities/signature_intervention.py` : Signatures electroniques (INT-13)
+- `domain/value_objects/statut_intervention.py` : 5 statuts (A planifier, Planifiee, En cours, Terminee, Annulee)
+- `domain/value_objects/priorite_intervention.py` : 4 niveaux (Basse, Normale, Haute, Urgente)
+- `domain/value_objects/type_intervention.py` : 5 types (SAV, Maintenance, Depannage, Levee reserves, Autre)
+- `domain/repositories/` : 4 interfaces abstraites
+- `domain/events/` : 10 events domain (Created, Planifiee, Demarree, Terminee, etc.)
+
+**Application Layer**
+- `application/use_cases/intervention_use_cases.py` : 9 use cases (CRUD + workflow)
+- `application/use_cases/technicien_use_cases.py` : 3 use cases (affectation)
+- `application/use_cases/message_use_cases.py` : 3 use cases (fil d'activite)
+- `application/use_cases/signature_use_cases.py` : 2 use cases (signatures)
+- `application/dtos/` : DTOs complets pour toutes les operations
+
+**Infrastructure Layer**
+- `infrastructure/persistence/models.py` : 4 modeles SQLAlchemy avec index et contraintes
+- `infrastructure/persistence/sqlalchemy_*_repository.py` : 4 implementations completes
+- `infrastructure/web/interventions_routes.py` : API REST FastAPI complete
+- `infrastructure/web/dependencies.py` : Injection de dependances
+
+### Fonctionnalites implementees (17/17)
+
+| ID | Fonctionnalite | Status |
+|----|----------------|--------|
+| INT-01 | Onglet dedie Planning | ✅ Backend |
+| INT-02 | Liste des interventions | ✅ Complet |
+| INT-03 | Creation intervention | ✅ Complet |
+| INT-04 | Fiche intervention | ✅ Complet |
+| INT-05 | Statuts intervention | ✅ Complet |
+| INT-06 | Planning hebdomadaire | ✅ Backend |
+| INT-07 | Blocs intervention colores | ✅ Backend |
+| INT-08 | Multi-interventions/jour | ✅ Backend |
+| INT-09 | Toggle Afficher taches | ✅ Backend |
+| INT-10 | Affectation technicien | ✅ Complet |
+| INT-11 | Fil d'actualite | ✅ Complet |
+| INT-12 | Chat intervention | ✅ Complet |
+| INT-13 | Signature client | ✅ Complet |
+| INT-14 | Rapport PDF | ✅ Backend (structure) |
+| INT-15 | Selection posts rapport | ✅ Complet |
+| INT-16 | Generation mobile | ✅ Backend |
+| INT-17 | Affectation sous-traitants | ✅ Complet |
+
+### Tests generes
+
+- `tests/unit/interventions/test_value_objects.py` : 35 tests
+- `tests/unit/interventions/test_entities.py` : 30 tests
+- `tests/unit/interventions/test_use_cases.py` : 30 tests
+- **Total** : 95 tests (75 apres consolidation sync)
+
+### API Endpoints
+
+```
+POST   /interventions                    - Creer intervention (INT-03)
+GET    /interventions                    - Lister avec filtres (INT-02)
+GET    /interventions/{id}               - Obtenir intervention
+PATCH  /interventions/{id}               - Modifier intervention
+DELETE /interventions/{id}               - Supprimer intervention
+POST   /interventions/{id}/planifier     - Planifier (INT-05, INT-06)
+POST   /interventions/{id}/demarrer      - Demarrer
+POST   /interventions/{id}/terminer      - Terminer
+POST   /interventions/{id}/annuler       - Annuler
+POST   /interventions/{id}/techniciens   - Affecter technicien (INT-10)
+GET    /interventions/{id}/techniciens   - Lister techniciens
+DELETE /interventions/{id}/techniciens/{affectation_id} - Desaffecter
+POST   /interventions/{id}/messages      - Ajouter message (INT-11, INT-12)
+GET    /interventions/{id}/messages      - Lister messages
+PATCH  /interventions/{id}/messages/{id}/rapport - Toggle rapport (INT-15)
+POST   /interventions/{id}/signatures    - Ajouter signature (INT-13)
+GET    /interventions/{id}/signatures    - Lister signatures
+```
+
+### Statistiques
+
+- 45 fichiers Python crees
+- 75 tests unitaires (apres conversion sync)
+- Clean Architecture 4 layers respectee
+- Module complet sans dependances vers autres modules (sauf auth)
+
+### Corrections appliquees
+
+- Conversion async -> sync (SQLAlchemy synchrone)
+- Renommage `metadata` -> `extra_data` (mot reserve SQLAlchemy)
+- Fix validation `auteur_id=0` pour messages systeme
+- Enregistrement router dans main.py
+- Enregistrement models dans init_db()
+
+---
+
+## Session 2026-01-25 (Verification et documentation module Logistique)
+
+Verification de l'implementation complete du module Logistique (CDC Section 11 - LOG-01 a LOG-18).
+
+### Statistiques
+
+- **Fonctionnalites** : 15/18 (3 en attente infrastructure)
+- **Tests** : 45+
+- **Build frontend** : OK (27 kB LogistiquePage)
+
+---
+
 ## Session 2026-01-24 (Module Planning de Charge - PDC-01 a PDC-17)
 
 Implementation complete du module Planning de Charge avec corrections suite a audit agents.md.
