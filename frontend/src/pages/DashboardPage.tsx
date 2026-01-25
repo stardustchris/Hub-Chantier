@@ -52,11 +52,11 @@ export default function DashboardPage() {
       setIsLoading(true)
       const response = await dashboardService.getFeed({ page: pageNum, size: 20 })
       if (pageNum === 1) {
-        setPosts(response.items)
+        setPosts(response?.items || [])
       } else {
-        setPosts((prev) => [...prev, ...response.items])
+        setPosts((prev) => [...prev, ...(response?.items || [])])
       }
-      setHasMore(response.page < response.pages)
+      setHasMore((response?.page || 1) < (response?.pages || 1))
       setPage(pageNum)
     } catch (error) {
       logger.error('Error loading feed', error, { context: 'DashboardPage' })
@@ -68,7 +68,7 @@ export default function DashboardPage() {
   const loadChantiers = async () => {
     try {
       const response = await chantiersService.list({ size: 100, statut: 'en_cours' })
-      setChantiers(response.items)
+      setChantiers(response?.items || [])
     } catch (error) {
       logger.error('Error loading chantiers', error, { context: 'DashboardPage' })
     }
