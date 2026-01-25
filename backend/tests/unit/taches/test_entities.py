@@ -3,8 +3,8 @@
 import pytest
 from datetime import date, timedelta
 
-from backend.modules.taches.domain.entities import Tache, TemplateModele, FeuilleTache
-from backend.modules.taches.domain.value_objects import StatutTache, UniteMesure, CouleurProgression
+from modules.taches.domain.entities import Tache, TemplateModele, FeuilleTache
+from modules.taches.domain.value_objects import StatutTache, UniteMesure, CouleurProgression
 
 
 class TestTache:

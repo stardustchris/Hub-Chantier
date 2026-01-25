@@ -3,7 +3,7 @@
 import pytest
 from datetime import date
 
-from backend.modules.taches.application import (
+from modules.taches.application import (
     CreateTacheUseCase,
     GetTacheUseCase,
     ListTachesUseCase,
@@ -14,7 +14,7 @@ from backend.modules.taches.application import (
     TacheNotFoundError,
     TemplateNotFoundError,
 )
-from backend.modules.taches.application.dtos import (
+from modules.taches.application.dtos import (
     CreateTacheDTO,
     CreateFeuilleTacheDTO,
     ValidateFeuilleTacheDTO,

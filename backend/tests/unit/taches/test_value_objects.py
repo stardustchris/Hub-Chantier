@@ -2,7 +2,7 @@
 
 import pytest
 
-from backend.modules.taches.domain.value_objects import (
+from modules.taches.domain.value_objects import (
     StatutTache,
     UniteMesure,
     CouleurProgression,
