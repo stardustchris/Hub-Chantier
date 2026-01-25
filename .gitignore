@@ -57,6 +57,8 @@ htmlcov/
 .tox/
 coverage.xml
 *.cover
+coverage/
+frontend/coverage/
 
 # Node.js
 node_modules/
