@@ -88,9 +88,6 @@ Implementation de l'infrastructure de notifications push (Firebase) et du job sc
 ## Session 2026-01-25 (Module Interventions - INT-01 a INT-17)
 
 Implementation complete du module Interventions pour la gestion des interventions ponctuelles (SAV, maintenance, depannages, levee de reserves).
-## Session 2026-01-25 (Verification et documentation module Logistique)
-
-Verification de l'implementation complete du module Logistique (CDC Section 11 - LOG-01 a LOG-18).
 
 ### Architecture Clean implementee
 
@@ -145,7 +142,7 @@ Verification de l'implementation complete du module Logistique (CDC Section 11 -
 - `tests/unit/interventions/test_value_objects.py` : 35 tests
 - `tests/unit/interventions/test_entities.py` : 30 tests
 - `tests/unit/interventions/test_use_cases.py` : 30 tests
-- **Total** : 95 tests
+- **Total** : 95 tests (75 apres consolidation sync)
 
 ### API Endpoints
 
@@ -172,91 +169,23 @@ GET    /interventions/{id}/signatures    - Lister signatures
 ### Statistiques
 
 - 45 fichiers Python crees
-- 95 tests unitaires
+- 75 tests unitaires (apres conversion sync)
 - Clean Architecture 4 layers respectee
-- Module complet sans dependances vers autres modules
-- `domain/entities/ressource.py` : Ressource avec validation, plage horaire defaut, soft delete
-- `domain/entities/reservation.py` : Reservation avec workflow complet et detection conflits
-- `domain/value_objects/categorie_ressource.py` : 5 categories (engin_levage, engin_terrassement, vehicule, gros_outillage, equipement)
-- `domain/value_objects/statut_reservation.py` : EN_ATTENTE → VALIDEE/REFUSEE/ANNULEE
-- `domain/value_objects/plage_horaire.py` : Plage horaire avec detection chevauchement
-- `domain/repositories/` : Interfaces RessourceRepository, ReservationRepository
-- `domain/events/` : RessourceCreated/Updated/Deleted, ReservationCreated/Validee/Refusee/Annulee/Conflit
+- Module complet sans dependances vers autres modules (sauf auth)
 
-**Application Layer**
-- `application/use_cases/ressource_use_cases.py` : 5 use cases
-  - CreateRessource, UpdateRessource, DeleteRessource, GetRessource, ListRessources
-- `application/use_cases/reservation_use_cases.py` : 10 use cases
-  - CreateReservation, UpdateReservation, ValiderReservation, RefuserReservation, AnnulerReservation
-  - GetReservation, GetPlanningRessource, GetHistoriqueRessource, ListReservationsEnAttente
-- `application/dtos/` : DTOs complets (RessourceDTO, ReservationDTO, PlanningRessourceDTO, etc.)
-- `application/helpers/dto_enrichment.py` : Enrichissement avec noms utilisateurs/chantiers
+### Corrections appliquees
 
-**Adapters Layer**
-- `adapters/controllers/` : Controller facade (placeholder)
+- Conversion async -> sync (SQLAlchemy synchrone)
+- Renommage `metadata` -> `extra_data` (mot reserve SQLAlchemy)
+- Fix validation `auteur_id=0` pour messages systeme
+- Enregistrement router dans main.py
+- Enregistrement models dans init_db()
 
-**Infrastructure Layer**
-- `infrastructure/persistence/models.py` : RessourceModel, ReservationModel avec SQLAlchemy
-- `infrastructure/persistence/sqlalchemy_ressource_repository.py` : Implementation complete
-- `infrastructure/persistence/sqlalchemy_reservation_repository.py` : Implementation avec find_conflits
-- `infrastructure/web/logistique_routes.py` : Routes FastAPI completes
-- `infrastructure/web/dependencies.py` : Injection de dependances
-- `infrastructure/event_bus_impl.py` : Event bus implementation
+---
 
-### Frontend implemente
+## Session 2026-01-25 (Verification et documentation module Logistique)
 
-**Types TypeScript**
-- `frontend/src/types/logistique.ts` : Types complets (Ressource, Reservation, CategorieRessource, StatutReservation, etc.)
-
-**Service API**
-- `frontend/src/api/logistique.ts` : Client API complet (15+ fonctions)
-  - CRUD ressources + planning + historique
-  - CRUD reservations + workflow validation
-  - Utilitaires (formatPlageHoraire, getLundiSemaine, plagesHorairesSeChevauchent)
-
-**Composants React**
-- `ReservationCalendar.tsx` : Calendrier hebdomadaire avec navigation
-- `ReservationModal.tsx` : Modal creation/edition reservation
-- `ReservationFormFields.tsx` : Champs du formulaire reservation
-- `ReservationActions.tsx` : Actions workflow (valider, refuser, annuler)
-- `RessourceCard.tsx` : Carte ressource avec infos et planning
-- `RessourceList.tsx` : Liste des ressources avec filtres
-
-### Tests generes
-
-- `tests/unit/logistique/test_entities.py` : 30 tests (Ressource, Reservation)
-- `tests/unit/logistique/test_value_objects.py` : 15 tests (CategorieRessource, StatutReservation, PlageHoraire)
-- `tests/unit/logistique/test_use_cases.py` : Tests use cases principaux
-- `tests/unit/logistique/test_repositories.py` : Tests repositories
-- `tests/unit/logistique/test_event_bus.py` : Tests event bus
-- **Total** : 45+ tests
-
-### Migration DB
-
-- `migrations/versions/20260124_0003_logistique_schema.py` : Schema complet ressources + reservations
-
-### Fonctionnalites implementees
-
-| Code | Fonctionnalite | Status |
-|------|---------------|--------|
-| LOG-01 | Referentiel materiel | ✅ Backend + Frontend |
-| LOG-02 | Fiche ressource | ✅ Backend + Frontend |
-| LOG-03 | Planning par ressource | ✅ Backend + Frontend |
-| LOG-04 | Navigation semaine | ✅ Backend + Frontend |
-| LOG-05 | Axe horaire vertical | ✅ Frontend |
-| LOG-06 | Blocs reservation colores | ✅ Frontend (couleur dans entite) |
-| LOG-07 | Demande de reservation | ✅ Backend + Frontend |
-| LOG-08 | Selection chantier | ✅ Backend (chantier_id obligatoire) |
-| LOG-09 | Selection creneau | ✅ Backend + Frontend |
-| LOG-10 | Option validation N+1 | ✅ Backend (validation_requise) |
-| LOG-11 | Workflow validation | ✅ Backend + Frontend |
-| LOG-12 | Statuts reservation | ✅ Backend + Frontend |
-| LOG-13 | Notification demande | ⏳ Infra (event publie, push requis) |
-| LOG-14 | Notification decision | ⏳ Infra (event publie, push requis) |
-| LOG-15 | Rappel J-1 | ⏳ Infra (methode existe, job scheduler requis) |
-| LOG-16 | Motif de refus | ✅ Backend + Frontend |
-| LOG-17 | Conflit de reservation | ✅ Backend (find_conflits + alerte) |
-| LOG-18 | Historique par ressource | ✅ Backend + Frontend |
+Verification de l'implementation complete du module Logistique (CDC Section 11 - LOG-01 a LOG-18).
 
 ### Statistiques
 

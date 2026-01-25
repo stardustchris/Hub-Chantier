@@ -79,6 +79,7 @@ def init_db() -> None:
     from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
     from modules.documents.infrastructure.persistence import DossierModel, DocumentModel, AutorisationDocumentModel  # noqa: F401
     from modules.logistique.infrastructure.persistence import RessourceModel, ReservationModel  # noqa: F401
+    from modules.interventions.infrastructure.persistence import InterventionModel, AffectationInterventionModel, InterventionMessageModel, SignatureInterventionModel  # noqa: F401
 
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
