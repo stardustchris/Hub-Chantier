@@ -3,9 +3,11 @@
  *
  * Permet de mentionner des utilisateurs avec @ suivi du nom.
  * Affiche une liste filtree des utilisateurs au fur et a mesure de la saisie.
+ *
+ * Optimise avec cache des utilisateurs pour eviter les appels API repetes.
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { AtSign, Loader2 } from 'lucide-react'
 import { usersService } from '../../services/users'
 import type { User } from '../../types'
@@ -27,6 +29,11 @@ interface MentionSuggestion {
   couleur: string
 }
 
+// Cache global pour les utilisateurs (evite les appels API repetes)
+let usersCache: MentionSuggestion[] | null = null
+let cacheTimestamp = 0
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
 export default function MentionInput({
   value,
   onChange,
@@ -36,7 +43,7 @@ export default function MentionInput({
   disabled = false,
 }: MentionInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([])
+  const [suggestions, setSuggestions] = useState<MentionSuggestion[]>(usersCache || [])
   const [loading, setLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [mentionQuery, setMentionQuery] = useState('')
@@ -45,8 +52,15 @@ export default function MentionInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  // Charger tous les utilisateurs au premier @
-  const loadUsers = async () => {
+  // Charger les utilisateurs avec cache
+  const loadUsers = useCallback(async () => {
+    // Utiliser le cache s'il est valide
+    const now = Date.now()
+    if (usersCache && (now - cacheTimestamp) < CACHE_DURATION) {
+      setSuggestions(usersCache)
+      return
+    }
+
     setLoading(true)
     try {
       // Charger tous les utilisateurs (la recherche se fait cote client pour la reactivite)
@@ -58,6 +72,9 @@ export default function MentionInput({
         role: u.role,
         couleur: u.couleur || '#3498DB',
       }))
+      // Mettre en cache
+      usersCache = users
+      cacheTimestamp = now
       setSuggestions(users)
     } catch (error) {
       console.error('Erreur chargement utilisateurs:', error)
@@ -65,7 +82,7 @@ export default function MentionInput({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // Detecter le @ lors de la saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -92,7 +109,12 @@ export default function MentionInput({
 
         if (!showSuggestions) {
           setShowSuggestions(true)
-          loadUsers()
+          // Charger les utilisateurs seulement si le cache est vide
+          if (!usersCache) {
+            loadUsers()
+          } else {
+            setSuggestions(usersCache)
+          }
         }
         return
       }

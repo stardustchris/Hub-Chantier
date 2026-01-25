@@ -60,10 +60,8 @@ describe('UserCard', () => {
 
   it('n\'affiche pas le telephone si non defini', () => {
     const user = createMockUser({ telephone: undefined })
-    const { container } = renderWithRouter(user)
+    renderWithRouter(user)
 
-    // Phone icon est un svg dans la meme div que le numero
-    const phoneIcons = container.querySelectorAll('svg')
     // Il y a mail icon, arrow icon, mais pas de phone si pas de numero
     expect(screen.queryByText('+33')).not.toBeInTheDocument()
   })
@@ -185,7 +183,7 @@ describe('UserCard', () => {
     renderWithRouter(user, true, onToggleActive)
 
     const toggleButton = screen.getByTitle('Desactiver')
-    const clickEvent = fireEvent.click(toggleButton)
+    fireEvent.click(toggleButton)
 
     // Le clic sur le bouton ne devrait pas naviguer (preventDefault)
     expect(onToggleActive).toHaveBeenCalled()

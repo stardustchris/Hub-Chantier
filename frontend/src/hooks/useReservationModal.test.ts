@@ -26,11 +26,15 @@ import {
 const mockRessource: Ressource = {
   id: 1,
   nom: 'Camion Benne',
-  type_ressource: 'vehicule',
+  code: 'CAM-001',
+  categorie: 'vehicule',
+  categorie_label: 'Vehicule',
   description: 'Camion pour transport materiaux',
-  disponible: true,
-  heure_debut_defaut: '07:00:00',
-  heure_fin_defaut: '17:00:00',
+  couleur: '#3498DB',
+  heure_debut_defaut: '07:00',
+  heure_fin_defaut: '17:00',
+  validation_requise: false,
+  actif: true,
   created_at: '2024-01-01',
   updated_at: '2024-01-01',
 }
@@ -39,11 +43,13 @@ const mockReservation: Reservation = {
   id: 1,
   ressource_id: 1,
   chantier_id: 1,
-  utilisateur_id: 1,
+  demandeur_id: 1,
   date_reservation: '2024-01-15',
   heure_debut: '08:00',
   heure_fin: '12:00',
   statut: 'en_attente',
+  statut_label: 'En attente',
+  statut_couleur: '#FFC107',
   commentaire: 'Test reservation',
   created_at: '2024-01-10',
   updated_at: '2024-01-10',
@@ -301,7 +307,7 @@ describe('useReservationModal', () => {
 
   describe('handleValider', () => {
     it('valide une reservation avec succes', async () => {
-      vi.mocked(validerReservation).mockResolvedValue(undefined)
+      vi.mocked(validerReservation).mockResolvedValue(mockReservation)
 
       const { result } = renderHook(() =>
         useReservationModal({
@@ -365,7 +371,7 @@ describe('useReservationModal', () => {
 
   describe('handleRefuser', () => {
     it('refuse une reservation avec motif', async () => {
-      vi.mocked(refuserReservation).mockResolvedValue(undefined)
+      vi.mocked(refuserReservation).mockResolvedValue(mockReservation)
 
       const { result } = renderHook(() =>
         useReservationModal({
@@ -391,7 +397,7 @@ describe('useReservationModal', () => {
     })
 
     it('refuse sans motif', async () => {
-      vi.mocked(refuserReservation).mockResolvedValue(undefined)
+      vi.mocked(refuserReservation).mockResolvedValue(mockReservation)
 
       const { result } = renderHook(() =>
         useReservationModal({
@@ -431,7 +437,7 @@ describe('useReservationModal', () => {
 
   describe('handleAnnuler', () => {
     it('annule une reservation avec succes', async () => {
-      vi.mocked(annulerReservation).mockResolvedValue(undefined)
+      vi.mocked(annulerReservation).mockResolvedValue(mockReservation)
 
       const { result } = renderHook(() =>
         useReservationModal({

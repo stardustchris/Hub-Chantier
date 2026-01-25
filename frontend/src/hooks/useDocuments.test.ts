@@ -424,7 +424,7 @@ describe('useDocuments', () => {
     })
 
     it('handleDownloadDocument ouvre le document', async () => {
-      vi.mocked(documentsApi.downloadDocument).mockResolvedValue({ url: 'https://example.com/doc.pdf' })
+      vi.mocked(documentsApi.downloadDocument).mockResolvedValue({ url: 'https://example.com/doc.pdf', filename: 'doc.pdf', mime_type: 'application/pdf' })
       const mockOpen = vi.spyOn(window, 'open').mockImplementation(() => null)
 
       const { result } = renderHook(() => useDocuments())

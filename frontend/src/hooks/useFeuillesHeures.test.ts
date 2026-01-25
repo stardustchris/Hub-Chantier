@@ -58,7 +58,6 @@ vi.mock('../services/chantiers', () => ({
 import { pointagesService } from '../services/pointages'
 import { usersService } from '../services/users'
 import { chantiersService } from '../services/chantiers'
-import * as authModule from '../contexts/AuthContext'
 
 const mockUsers: any[] = [
   { id: '1', prenom: 'Jean', nom: 'Dupont', is_active: true },
@@ -404,11 +403,11 @@ describe('useFeuillesHeures', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      const newPointage = {
+      const newPointage: any = {
         utilisateur_id: 1,
         chantier_id: 1,
-        date: '2024-01-17',
-        heures: 8,
+        date_pointage: '2024-01-17',
+        heures_normales: '08:00',
       }
 
       await act(async () => {
@@ -432,7 +431,7 @@ describe('useFeuillesHeures', () => {
         result.current.handlePointageClick(mockPointage)
       })
 
-      const updateData = { heures: 10 }
+      const updateData: any = { heures_normales: '10:00' }
 
       await act(async () => {
         await result.current.handleSavePointage(updateData)
@@ -474,7 +473,7 @@ describe('useFeuillesHeures', () => {
 
   describe('workflow pointages', () => {
     it('handleSignPointage signe le pointage', async () => {
-      vi.mocked(pointagesService.sign).mockResolvedValue(undefined)
+      vi.mocked(pointagesService.sign).mockResolvedValue(mockPointage)
 
       const { result } = renderHook(() => useFeuillesHeures())
 
@@ -494,7 +493,7 @@ describe('useFeuillesHeures', () => {
     })
 
     it('handleSubmitPointage soumet le pointage', async () => {
-      vi.mocked(pointagesService.submit).mockResolvedValue(undefined)
+      vi.mocked(pointagesService.submit).mockResolvedValue(mockPointage)
 
       const { result } = renderHook(() => useFeuillesHeures())
 
@@ -514,7 +513,7 @@ describe('useFeuillesHeures', () => {
     })
 
     it('handleValidatePointage valide le pointage', async () => {
-      vi.mocked(pointagesService.validate).mockResolvedValue(undefined)
+      vi.mocked(pointagesService.validate).mockResolvedValue(mockPointage)
 
       const { result } = renderHook(() => useFeuillesHeures())
 
@@ -534,7 +533,7 @@ describe('useFeuillesHeures', () => {
     })
 
     it('handleRejectPointage rejette le pointage', async () => {
-      vi.mocked(pointagesService.reject).mockResolvedValue(undefined)
+      vi.mocked(pointagesService.reject).mockResolvedValue(mockPointage)
 
       const { result } = renderHook(() => useFeuillesHeures())
 

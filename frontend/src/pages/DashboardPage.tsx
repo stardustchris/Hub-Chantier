@@ -10,6 +10,7 @@
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../contexts/ToastContext'
 import { useClockCard, useDashboardFeed } from '../hooks'
 import Layout from '../components/Layout'
 import {
@@ -35,6 +36,7 @@ import type { TargetType } from '../types'
 export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { addToast } = useToast()
 
   // Hook pour le pointage (clock-in/out)
   const clock = useClockCard()
@@ -58,10 +60,10 @@ export default function DashboardPage() {
         navigate('/documents')
         break
       case 'photo':
-        alert('Ouverture de la caméra...')
+        addToast({ message: 'Ouverture de la camera...', type: 'info' })
         break
     }
-  }, [navigate])
+  }, [navigate, addToast])
 
   const handleNavigate = useCallback((_slotId: string) => {
     // Adresse demo - en prod, recuperer depuis le slot
@@ -103,14 +105,14 @@ export default function DashboardPage() {
   }, [])
 
   const handleCall = useCallback((_slotId: string) => {
-    alert('Appel du chef de chantier...')
+    addToast({ message: 'Appel du chef de chantier...', type: 'info' })
     // En prod: window.location.href = 'tel:+33612345678'
-  }, [])
+  }, [addToast])
 
   const handleDocumentClick = useCallback((docId: string) => {
-    alert(`Ouverture du document ${docId}...`)
+    addToast({ message: `Ouverture du document ${docId}...`, type: 'info' })
     // En prod: navigate(`/documents/${docId}`)
-  }, [])
+  }, [addToast])
 
   const handleViewAllDocuments = useCallback(() => {
     navigate('/documents')

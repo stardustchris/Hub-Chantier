@@ -64,7 +64,7 @@ describe('notifications service', () => {
       vi.mocked(isFirebaseConfigured).mockReturnValue(true)
       vi.mocked(requestNotificationPermission).mockResolvedValue('test-token-123')
       vi.mocked(api.post).mockResolvedValue({})
-      vi.mocked(onForegroundMessage).mockImplementation(() => {})
+      vi.mocked(onForegroundMessage).mockImplementation(() => () => {})
       vi.spyOn(console, 'log').mockImplementation(() => {})
 
       const result = await initNotifications()
@@ -78,7 +78,7 @@ describe('notifications service', () => {
       vi.mocked(isFirebaseConfigured).mockReturnValue(true)
       vi.mocked(requestNotificationPermission).mockResolvedValue('test-token')
       vi.mocked(api.post).mockRejectedValue(new Error('Network error'))
-      vi.mocked(onForegroundMessage).mockImplementation(() => {})
+      vi.mocked(onForegroundMessage).mockImplementation(() => () => {})
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await initNotifications()

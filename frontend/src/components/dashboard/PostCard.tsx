@@ -1,9 +1,11 @@
 /**
  * Composant PostCard - Affichage d'un post dans le feed
  * Selon CDC Section 2.2 - Types de posts affichés
+ *
+ * Optimisé avec React.memo pour éviter les re-renders inutiles
  */
 
-import { useState } from 'react'
+import { useState, useCallback, memo } from 'react'
 import type { Post, Author } from '../../types/dashboard'
 import { formatRelativeShort } from '../../utils/dates'
 
@@ -26,7 +28,7 @@ const roleBadgeColors: Record<string, string> = {
   compagnon: 'bg-gray-100 text-gray-800',
 }
 
-export default function PostCard({
+const PostCard = memo(function PostCard({
   post,
   author,
   currentUserId,
@@ -39,7 +41,7 @@ export default function PostCard({
   const [liked, setLiked] = useState(isLiked)
   const [likesCount, setLikesCount] = useState(post.likes_count)
 
-  const handleLikeClick = () => {
+  const handleLikeClick = useCallback(() => {
     if (liked) {
       onUnlike(post.id)
       setLiked(false)
@@ -49,7 +51,15 @@ export default function PostCard({
       setLiked(true)
       setLikesCount((c) => c + 1)
     }
-  }
+  }, [liked, onUnlike, onLike, post.id])
+
+  const handleDeleteClick = useCallback(() => {
+    onDelete?.(post.id)
+  }, [onDelete, post.id])
+
+  const handleCommentClick = useCallback(() => {
+    onComment(post.id)
+  }, [onComment, post.id])
 
   const isAuthor = post.author_id === currentUserId
   const canDelete = isAuthor || author?.role === 'admin'
@@ -110,7 +120,7 @@ export default function PostCard({
         {/* Menu actions */}
         {canDelete && onDelete && (
           <button
-            onClick={() => onDelete(post.id)}
+            onClick={handleDeleteClick}
             className="text-gray-400 hover:text-red-500 p-1"
             title="Supprimer"
             aria-label="Supprimer le post"
@@ -163,7 +173,7 @@ export default function PostCard({
         </button>
 
         <button
-          onClick={() => onComment(post.id)}
+          onClick={handleCommentClick}
           aria-label="Commenter le post"
           className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
         >
@@ -175,4 +185,6 @@ export default function PostCard({
       </div>
     </article>
   )
-}
+})
+
+export default PostCard

@@ -16,6 +16,8 @@ const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   id: 1,
   author_id: 100,
   content: 'Contenu du post',
+  status: 'published',
+  is_urgent: false,
   target_type: 'everyone',
   target_display: 'Tout le monde',
   likes_count: 5,
@@ -23,7 +25,6 @@ const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   medias_count: 0,
   is_pinned: false,
   created_at: '2024-01-15T10:00:00Z',
-  updated_at: '2024-01-15T10:00:00Z',
   ...overrides,
 })
 
