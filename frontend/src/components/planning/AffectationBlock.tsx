@@ -1,3 +1,9 @@
+/**
+ * Composant AffectationBlock - Bloc d'affectation dans le planning
+ * Optimisé avec React.memo pour éviter les re-renders dans les grilles
+ */
+
+import { memo, useCallback } from 'react'
 import { FileText, X } from 'lucide-react'
 import type { Affectation } from '../../types'
 
@@ -12,7 +18,7 @@ interface AffectationBlockProps {
   onDragEnd?: () => void
 }
 
-export default function AffectationBlock({
+const AffectationBlock = memo(function AffectationBlock({
   affectation,
   onClick,
   onDelete,
@@ -24,10 +30,10 @@ export default function AffectationBlock({
   const backgroundColor = affectation.chantier_couleur || '#3498DB'
   const hasNote = !!affectation.note
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     onDelete?.()
-  }
+  }, [onDelete])
 
   if (compact) {
     return (
@@ -78,4 +84,6 @@ export default function AffectationBlock({
       </div>
     </div>
   )
-}
+})
+
+export default AffectationBlock

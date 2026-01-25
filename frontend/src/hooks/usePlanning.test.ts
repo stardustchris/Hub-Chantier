@@ -87,7 +87,11 @@ describe('usePlanning', () => {
     mockUserRole = 'admin'
 
     vi.mocked(planningService.getAffectations).mockResolvedValue(mockAffectations)
-    vi.mocked(planningService.getNonPlanifies).mockResolvedValue({ count: 2 })
+    vi.mocked(planningService.getNonPlanifies).mockResolvedValue({
+      utilisateur_ids: ['u3'],
+      date_debut: '2024-01-15',
+      date_fin: '2024-01-21',
+    } as any)
     vi.mocked(usersService.list).mockResolvedValue({
       items: mockUsers,
       total: 3,
@@ -358,7 +362,7 @@ describe('usePlanning', () => {
       const { result } = renderHook(() => usePlanning())
 
       // Par défaut tous les métiers sont expanded
-      const initialLength = result.current.expandedMetiers.length
+      expect(result.current.expandedMetiers.length).toBeGreaterThanOrEqual(0)
 
       act(() => {
         result.current.handleToggleMetier('macon')
@@ -414,7 +418,7 @@ describe('usePlanning', () => {
         result.current.handleAffectationClick(mockAffectations[0])
       })
 
-      const updateData = {
+      const updateData: any = {
         type_journee: 'matin',
       }
 
@@ -454,7 +458,7 @@ describe('usePlanning', () => {
     })
 
     it('handleAffectationMove déplace une affectation', async () => {
-      vi.mocked(planningService.move).mockResolvedValue(undefined)
+      vi.mocked(planningService.move).mockResolvedValue(mockAffectations[0])
 
       const { result } = renderHook(() => usePlanning())
 
@@ -472,7 +476,7 @@ describe('usePlanning', () => {
 
   describe('duplication', () => {
     it('handleDuplicate duplique les affectations d\'un utilisateur', async () => {
-      vi.mocked(planningService.duplicate).mockResolvedValue(undefined)
+      vi.mocked(planningService.duplicate).mockResolvedValue(mockAffectations)
 
       const { result } = renderHook(() => usePlanning())
 
@@ -488,7 +492,7 @@ describe('usePlanning', () => {
     })
 
     it('handleDuplicateChantier duplique les affectations d\'un chantier', async () => {
-      vi.mocked(planningService.duplicate).mockResolvedValue(undefined)
+      vi.mocked(planningService.duplicate).mockResolvedValue(mockAffectations)
 
       const { result } = renderHook(() => usePlanning())
 

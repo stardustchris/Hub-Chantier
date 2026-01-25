@@ -25,6 +25,7 @@ import {
   formatDateISO,
   plagesHorairesSeChevauchent,
 } from './logistique'
+import type { CategorieRessource } from '../types/logistique'
 
 // Mock de l'API
 vi.mock('../services/api', () => ({
@@ -85,7 +86,7 @@ describe('API Logistique', () => {
         data: { ressources: [mockRessource], total: 1 },
       })
 
-      const filters = { categorie: 'vehicule', actif_seulement: true, limit: 10, offset: 0 }
+      const filters = { categorie: 'vehicule' as CategorieRessource, actif_seulement: true, limit: 10, offset: 0 }
       await listRessources(filters)
 
       expect(api.get).toHaveBeenCalledWith(
@@ -217,7 +218,7 @@ describe('API Logistique', () => {
 
     it('listReservationsEnAttente appelle GET avec pagination', async () => {
       vi.mocked(api.get).mockResolvedValue({
-        data: { reservations: [mockReservation], total: 1 },
+        data: { items: [mockReservation], total: 1, limit: 50, offset: 10, has_more: false },
       })
 
       const result = await listReservationsEnAttente(50, 10)
@@ -225,7 +226,7 @@ describe('API Logistique', () => {
       expect(api.get).toHaveBeenCalledWith(
         '/logistique/reservations/en-attente?limit=50&offset=10'
       )
-      expect(result.reservations).toHaveLength(1)
+      expect(result.items).toHaveLength(1)
     })
 
     it('validerReservation appelle POST /logistique/reservations/:id/valider', async () => {

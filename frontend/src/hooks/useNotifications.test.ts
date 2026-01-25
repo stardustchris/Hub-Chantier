@@ -64,8 +64,8 @@ describe('useNotifications', () => {
       total: 3,
       unread_count: 2,
     })
-    vi.mocked(notificationsService.markAsRead).mockResolvedValue(undefined)
-    vi.mocked(notificationsService.markAllAsRead).mockResolvedValue(undefined)
+    vi.mocked(notificationsService.markAsRead).mockResolvedValue()
+    vi.mocked(notificationsService.markAllAsRead).mockResolvedValue({ marked_count: 2 })
     vi.mocked(notificationsService.deleteNotification).mockResolvedValue(undefined)
   })
 
