@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
 import LoggerToastBridge from './components/LoggerToastBridge'
 import ProtectedRoute from './components/ProtectedRoute'
+import OfflineIndicator from './components/OfflineIndicator'
 
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -128,6 +129,7 @@ function App() {
         </Suspense>
         <LoggerToastBridge />
         <ToastContainer />
+        <OfflineIndicator />
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

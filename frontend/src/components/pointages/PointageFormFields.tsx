@@ -2,8 +2,8 @@
  * PointageFormFields - Champs de saisie du formulaire de pointage
  */
 
-import { Clock } from 'lucide-react'
 import type { Chantier } from '../../types'
+import MobileTimePicker from '../MobileTimePicker'
 
 interface PointageFormFieldsProps {
   chantierId: number | ''
@@ -56,36 +56,20 @@ export function PointageFormFields({
 
       {/* Heures */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Heures normales *
-          </label>
-          <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="time"
-              value={heuresNormales}
-              onChange={(e) => setHeuresNormales(e.target.value)}
-              disabled={!isEditable}
-              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Heures sup.
-          </label>
-          <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400" />
-            <input
-              type="time"
-              value={heuresSupplementaires}
-              onChange={(e) => setHeuresSupplementaires(e.target.value)}
-              disabled={!isEditable}
-              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
-            />
-          </div>
-        </div>
+        <MobileTimePicker
+          value={heuresNormales}
+          onChange={setHeuresNormales}
+          label="Heures normales *"
+          disabled={!isEditable}
+          step={15}
+        />
+        <MobileTimePicker
+          value={heuresSupplementaires}
+          onChange={setHeuresSupplementaires}
+          label="Heures sup."
+          disabled={!isEditable}
+          step={15}
+        />
       </div>
 
       {/* Commentaire */}

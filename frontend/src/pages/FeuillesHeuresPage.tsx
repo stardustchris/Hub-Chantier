@@ -1,10 +1,23 @@
-import { Filter, Users, Building2 } from 'lucide-react'
+import { useState } from 'react'
+import { Filter, Users, Building2, Settings } from 'lucide-react'
 import Layout from '../components/Layout'
-import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal } from '../components/pointages'
+import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig } from '../components/pointages'
+import type { PayrollConfig } from '../components/pointages'
 import { useFeuillesHeures } from '../hooks/useFeuillesHeures'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function FeuillesHeuresPage() {
   const fh = useFeuillesHeures()
+  const { user } = useAuth()
+  const [showMacrosConfig, setShowMacrosConfig] = useState(false)
+  const [payrollConfig, setPayrollConfig] = useState<PayrollConfig | undefined>()
+
+  const handleSaveMacros = (config: PayrollConfig) => {
+    setPayrollConfig(config)
+    // TODO: Persist to backend when API is ready
+  }
+
+  const isAdmin = user?.role === 'admin'
 
   return (
     <Layout>
@@ -15,6 +28,16 @@ export default function FeuillesHeuresPage() {
             <h1 className="text-2xl font-bold text-gray-900">Feuilles d'heures</h1>
             <p className="text-gray-600">Saisie et validation des heures travaillees</p>
           </div>
+          {isAdmin && (
+            <button
+              onClick={() => setShowMacrosConfig(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
+              aria-label="Configurer les macros de paie"
+            >
+              <Settings className="w-4 h-4" />
+              Macros de paie
+            </button>
+          )}
         </div>
 
         {/* Onglets de vue */}
@@ -166,7 +189,7 @@ export default function FeuillesHeuresPage() {
           />
         )}
 
-        {/* Modal */}
+        {/* Modal Pointage */}
         <PointageModal
           isOpen={fh.modalOpen}
           onClose={fh.closeModal}
@@ -182,6 +205,14 @@ export default function FeuillesHeuresPage() {
           selectedUserId={fh.selectedUserId}
           selectedChantierId={fh.selectedChantierId}
           isValidateur={fh.isValidateur}
+        />
+
+        {/* Modal Macros de paie */}
+        <PayrollMacrosConfig
+          isOpen={showMacrosConfig}
+          onClose={() => setShowMacrosConfig(false)}
+          config={payrollConfig}
+          onSave={handleSaveMacros}
         />
       </div>
     </Layout>
