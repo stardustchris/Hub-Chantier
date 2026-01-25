@@ -324,8 +324,8 @@ class ChantierController:
         )
         result = self.update_use_case.execute(chantier_id, dto)
 
-        # Si statut fourni, changer aussi le statut
-        if statut:
+        # Si statut fourni ET different du statut actuel, changer le statut
+        if statut and result.statut != statut:
             result = self.change_statut_use_case.execute(
                 chantier_id,
                 ChangeStatutDTO(nouveau_statut=statut)
