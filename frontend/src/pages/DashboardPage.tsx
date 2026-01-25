@@ -3,7 +3,7 @@
  * CDC Section 2 - Tableau de Bord & Feed d'Actualites
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardService } from '../services/dashboard'
 import { chantiersService } from '../services/chantiers'
@@ -97,7 +97,8 @@ export default function DashboardPage() {
     }
   }
 
-  const handleLike = async (postId: string, isLiked: boolean) => {
+  // P1-7: Memoize handlers pour éviter re-renders des PostCards
+  const handleLike = useCallback(async (postId: string, isLiked: boolean) => {
     try {
       if (isLiked) {
         await dashboardService.unlikePost(postId)
@@ -109,9 +110,9 @@ export default function DashboardPage() {
     } catch (error) {
       logger.error('Error toggling like', error, { context: 'DashboardPage' })
     }
-  }
+  }, [])
 
-  const handlePin = async (postId: string, isPinned: boolean) => {
+  const handlePin = useCallback(async (postId: string, isPinned: boolean) => {
     try {
       if (isPinned) {
         await dashboardService.unpinPost(postId)
@@ -122,9 +123,9 @@ export default function DashboardPage() {
     } catch (error) {
       logger.error('Error toggling pin', error, { context: 'DashboardPage' })
     }
-  }
+  }, [])
 
-  const handleDelete = async (postId: string) => {
+  const handleDelete = useCallback(async (postId: string) => {
     if (!confirm('Supprimer cette publication ?')) return
 
     try {
@@ -133,13 +134,14 @@ export default function DashboardPage() {
     } catch (error) {
       logger.error('Error deleting post', error, { context: 'DashboardPage' })
     }
-  }
+  }, [])
 
-  const sortedPosts = [...posts].sort((a, b) => {
+  // P1-7: Memoize sortedPosts pour éviter recalcul à chaque render
+  const sortedPosts = useMemo(() => [...posts].sort((a, b) => {
     if (a.is_pinned && !b.is_pinned) return -1
     if (!a.is_pinned && b.is_pinned) return 1
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
+  }), [posts])
 
   return (
     <Layout>
@@ -258,8 +260,6 @@ export default function DashboardPage() {
                       <DashboardPostCard
                         key={post.id}
                         post={post}
-                        currentUserId={user?.id || ''}
-                        isAdmin={user?.role === 'admin'}
                         onLike={handleLike}
                         onPin={handlePin}
                         onDelete={handleDelete}

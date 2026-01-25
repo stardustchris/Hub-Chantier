@@ -1,8 +1,9 @@
 /**
  * Composant SignalementCard - Carte individuelle pour un signalement
+ * P1-7: Memoized pour éviter re-renders inutiles dans les listes
  */
 
-import React from 'react';
+import { memo } from 'react';
 import type { Signalement } from '../../types/signalements';
 import { PRIORITE_BG_COLORS, STATUT_BG_COLORS } from '../../types/signalements';
 import { getPrioriteIcon, getStatutIcon } from '../../services/signalements';
@@ -16,13 +17,13 @@ interface SignalementCardProps {
   compact?: boolean;
 }
 
-const SignalementCard: React.FC<SignalementCardProps> = ({
+const SignalementCard = memo(function SignalementCard({
   signalement,
   onClick,
   onTraiter,
   onCloturer,
   compact = false,
-}) => {
+}: SignalementCardProps) {
   const prioriteClass = PRIORITE_BG_COLORS[signalement.priorite] || 'bg-gray-100 text-gray-800';
   const statutClass = STATUT_BG_COLORS[signalement.statut] || 'bg-gray-100 text-gray-800';
 
@@ -153,6 +154,6 @@ const SignalementCard: React.FC<SignalementCardProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default SignalementCard;

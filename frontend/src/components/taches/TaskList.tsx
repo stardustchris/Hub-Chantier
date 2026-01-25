@@ -3,7 +3,7 @@
  * Avec recherche (TAC-14), drag & drop (TAC-15), et statistiques (TAC-20)
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Search,
   Plus,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { tachesService } from '../../services/taches'
 import { logger } from '../../services/logger'
+import { TasksProvider } from '../../contexts/TasksContext'
 import type { Tache, TacheStats, TacheCreate, TacheUpdate } from '../../types'
 import { COULEURS_PROGRESSION } from '../../types'
 import TaskItem from './TaskItem'
@@ -84,7 +85,8 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
     return () => clearTimeout(timeout)
   }, [searchQuery, filterStatut])
 
-  const handleToggleComplete = async (tacheId: number, terminer: boolean) => {
+  // P1-7: Memoize handlers pour éviter re-renders
+  const handleToggleComplete = useCallback(async (tacheId: number, terminer: boolean) => {
     try {
       setError(null)
       await tachesService.complete(tacheId, terminer)
@@ -94,7 +96,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       logger.error('Erreur completion tache', err, { context: 'TaskList' })
       setError('Impossible de modifier le statut de la tache.')
     }
-  }
+  }, [chantierId])
 
   const handleSaveTache = async (data: TacheCreate | TacheUpdate) => {
     try {
@@ -120,7 +122,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
     }
   }
 
-  const handleDeleteTache = async (tacheId: number) => {
+  const handleDeleteTache = useCallback(async (tacheId: number) => {
     if (!confirm('Supprimer cette tache et ses sous-taches ?')) return
 
     try {
@@ -132,7 +134,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       logger.error('Erreur suppression tache', err, { context: 'TaskList' })
       setError('Impossible de supprimer la tache.')
     }
-  }
+  }, [chantierId])
 
   const handleImportTemplate = async (templateId: number) => {
     try {
@@ -162,17 +164,17 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
     }
   }
 
-  const openNewTaskModal = (parentId?: number) => {
+  const openNewTaskModal = useCallback((parentId?: number) => {
     setEditingTache(null)
     setParentIdForNew(parentId || null)
     setShowTaskModal(true)
-  }
+  }, [])
 
-  const openEditTaskModal = (tache: Tache) => {
+  const openEditTaskModal = useCallback((tache: Tache) => {
     setEditingTache(tache)
     setParentIdForNew(null)
     setShowTaskModal(true)
-  }
+  }, [])
 
   // Calcul couleur progression globale
   const progressionCouleur = stats
@@ -350,18 +352,18 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
             </button>
           </div>
         ) : (
-          <div className="divide-y">
-            {taches.map((tache) => (
-              <TaskItem
-                key={tache.id}
-                tache={tache}
-                onToggleComplete={handleToggleComplete}
-                onEdit={openEditTaskModal}
-                onDelete={handleDeleteTache}
-                onAddSubtask={openNewTaskModal}
-              />
-            ))}
-          </div>
+          <TasksProvider
+            onToggleComplete={handleToggleComplete}
+            onEdit={openEditTaskModal}
+            onDelete={handleDeleteTache}
+            onAddSubtask={openNewTaskModal}
+          >
+            <div className="divide-y">
+              {taches.map((tache) => (
+                <TaskItem key={tache.id} tache={tache} />
+              ))}
+            </div>
+          </TasksProvider>
         )}
       </div>
 

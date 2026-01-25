@@ -1,3 +1,9 @@
+/**
+ * ChantierCard - Carte de chantier pour les listes
+ * P1-7: Memoized pour éviter re-renders inutiles
+ */
+
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MapPin,
@@ -14,7 +20,7 @@ interface ChantierCardProps {
   chantier: Chantier
 }
 
-export function ChantierCard({ chantier }: ChantierCardProps) {
+export const ChantierCard = memo(function ChantierCard({ chantier }: ChantierCardProps) {
   const statutInfo = CHANTIER_STATUTS[chantier.statut]
 
   return (
@@ -97,6 +103,6 @@ export function ChantierCard({ chantier }: ChantierCardProps) {
       <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-hover:text-primary-500 transition-colors" />
     </Link>
   )
-}
+})
 
 export default ChantierCard

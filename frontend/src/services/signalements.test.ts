@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as signalementsService from './signalements'
 import api from './api'
+import type { Signalement } from '../types/signalements'
 
 vi.mock('./api')
 
@@ -293,21 +294,21 @@ describe('signalementsService', () => {
         signalementsService.isSignalementEnAlerte({
           est_en_retard: true,
           pourcentage_temps: 30,
-        } as signalementsService.Signalement)
+        } as Signalement)
       ).toBe(true)
 
       expect(
         signalementsService.isSignalementEnAlerte({
           est_en_retard: false,
           pourcentage_temps: 60,
-        } as signalementsService.Signalement)
+        } as Signalement)
       ).toBe(true)
 
       expect(
         signalementsService.isSignalementEnAlerte({
           est_en_retard: false,
           pourcentage_temps: 40,
-        } as signalementsService.Signalement)
+        } as Signalement)
       ).toBe(false)
     })
   })

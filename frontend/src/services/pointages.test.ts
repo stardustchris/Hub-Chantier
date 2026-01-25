@@ -19,13 +19,13 @@ describe('pointagesService', () => {
       vi.mocked(api.post).mockResolvedValue({ data: mockPointage })
 
       const result = await pointagesService.create(
-        { chantier_id: 1, date_pointage: '2026-01-25', heures_normales: '8' },
+        { utilisateur_id: 1, chantier_id: 1, date_pointage: '2026-01-25', heures_normales: '8' },
         123
       )
 
       expect(api.post).toHaveBeenCalledWith(
         '/api/pointages',
-        { chantier_id: 1, date_pointage: '2026-01-25', heures_normales: '8' },
+        { utilisateur_id: 1, chantier_id: 1, date_pointage: '2026-01-25', heures_normales: '8' },
         { params: { current_user_id: 123 } }
       )
       expect(result).toEqual(mockPointage)
@@ -255,14 +255,17 @@ describe('pointagesService', () => {
       const mockBlob = new Blob(['test'], { type: 'application/pdf' })
       vi.mocked(api.post).mockResolvedValue({ data: mockBlob })
 
-      const result = await pointagesService.export(
-        { utilisateur_ids: [1], semaine_debut: '2026-01-20', format: 'pdf' },
-        123
-      )
+      const exportData = {
+        format_export: 'pdf' as const,
+        date_debut: '2026-01-20',
+        date_fin: '2026-01-26',
+        utilisateur_ids: [1],
+      }
+      const result = await pointagesService.export(exportData, 123)
 
       expect(api.post).toHaveBeenCalledWith(
         '/api/pointages/export',
-        { utilisateur_ids: [1], semaine_debut: '2026-01-20', format: 'pdf' },
+        exportData,
         { params: { current_user_id: 123 }, responseType: 'blob' }
       )
       expect(result).toBe(mockBlob)
