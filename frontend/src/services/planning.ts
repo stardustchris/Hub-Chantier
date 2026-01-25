@@ -72,9 +72,11 @@ export const planningService = {
    * PLN-27: Déplace une affectation vers une nouvelle date/utilisateur
    */
   async move(id: string, newDate: string, newUserId?: string): Promise<Affectation> {
-    const data: AffectationUpdate = { date: newDate }
+    // Construire le payload avec les types corrects pour le backend
+    const data: Record<string, string | number> = { date: newDate }
     if (newUserId) {
-      data.utilisateur_id = newUserId
+      // Convertir explicitement en number pour le backend Pydantic
+      data.utilisateur_id = parseInt(newUserId, 10)
     }
     const response = await api.put<Affectation>(`/api/planning/affectations/${id}`, data)
     return response.data

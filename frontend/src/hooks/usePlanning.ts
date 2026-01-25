@@ -6,7 +6,7 @@ import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
 import type { Affectation, AffectationCreate, AffectationUpdate, User, Chantier } from '../types'
-import { METIERS, PLANNING_CATEGORIES } from '../types'
+import { PLANNING_CATEGORIES } from '../types'
 
 export type ViewMode = 'semaine' | 'mois'
 export type ViewTab = 'utilisateurs' | 'chantiers'
