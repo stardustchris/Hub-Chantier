@@ -21,6 +21,23 @@ from modules.auth.domain.value_objects import Email, PasswordHash, Role
 from modules.auth.infrastructure.persistence import Base
 
 
+def pytest_configure(config):
+    """Hook pytest pour charger tous les modèles SQLAlchemy avant les tests."""
+    # Importer tous les modèles une seule fois pour que SQLAlchemy puisse résoudre les relations
+    from modules.auth.infrastructure.persistence import UserModel  # noqa: F401
+    from modules.dashboard.infrastructure.persistence import PostModel, CommentModel, LikeModel, PostMediaModel  # noqa: F401
+    from modules.chantiers.infrastructure.persistence import ChantierModel, ContactChantierModel, PhaseChantierModel  # noqa: F401
+    from modules.pointages.infrastructure.persistence import PointageModel, FeuilleHeuresModel, VariablePaieModel  # noqa: F401
+    from modules.taches.infrastructure.persistence import TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel  # noqa: F401
+    from modules.formulaires.infrastructure.persistence import TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel, ChampRempliModel, PhotoFormulaireModel  # noqa: F401
+    from modules.signalements.infrastructure.persistence import SignalementModel, ReponseModel  # noqa: F401
+    from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
+    from modules.documents.infrastructure.persistence import DossierModel, DocumentModel, AutorisationDocumentModel  # noqa: F401
+    from modules.logistique.infrastructure.persistence import RessourceModel, ReservationModel  # noqa: F401
+    from modules.interventions.infrastructure.persistence import InterventionModel, AffectationInterventionModel, InterventionMessageModel, SignatureInterventionModel  # noqa: F401
+    from modules.planning_charge.infrastructure.persistence import BesoinChargeModel  # noqa: F401
+
+
 @pytest.fixture(scope="function")
 def db_session():
     """
