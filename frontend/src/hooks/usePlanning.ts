@@ -214,9 +214,39 @@ export function usePlanning() {
     try {
       await planningService.move(affectationId, newDate, newUserId)
       await loadData()
-    } catch (err) {
-      logger.error('Erreur deplacement', err, { context: 'PlanningPage' })
-      setError('Erreur lors du déplacement de l\'affectation')
+    } catch (err: unknown) {
+      // Distinguer les erreurs de validation des erreurs système
+      const axiosError = err as { response?: { status?: number; data?: { detail?: string } } }
+      if (axiosError?.response?.status === 400) {
+        // Erreur de validation (conflit, données invalides)
+        const detail = axiosError.response?.data?.detail || 'Impossible de déplacer l\'affectation'
+        setError(detail)
+      } else if (axiosError?.response?.status === 404) {
+        setError('Affectation non trouvée')
+      } else {
+        logger.error('Erreur deplacement', err, { context: 'PlanningPage' })
+        setError('Erreur lors du déplacement de l\'affectation')
+      }
+    }
+  }, [canEdit, loadData])
+
+  const handleAffectationResize = useCallback(async (affectationId: string, newStartDate: string, newEndDate: string) => {
+    if (!canEdit) return
+
+    try {
+      await planningService.resize(affectationId, newStartDate, newEndDate)
+      await loadData()
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number; data?: { detail?: string } } }
+      if (axiosError?.response?.status === 400) {
+        const detail = axiosError.response?.data?.detail || 'Impossible de redimensionner l\'affectation'
+        setError(detail)
+      } else if (axiosError?.response?.status === 404) {
+        setError('Affectation non trouvée')
+      } else {
+        logger.error('Erreur redimensionnement', err, { context: 'PlanningPage' })
+        setError('Erreur lors du redimensionnement de l\'affectation')
+      }
     }
   }, [canEdit, loadData])
 
@@ -330,6 +360,7 @@ export function usePlanning() {
     handleDuplicate,
     handleToggleMetier,
     handleAffectationMove,
+    handleAffectationResize,
     handleChantierCellClick,
     handleDuplicateChantier,
     toggleFilterMetier,

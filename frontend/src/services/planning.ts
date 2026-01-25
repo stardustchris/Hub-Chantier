@@ -72,13 +72,23 @@ export const planningService = {
    * PLN-27: Déplace une affectation vers une nouvelle date/utilisateur
    */
   async move(id: string, newDate: string, newUserId?: string): Promise<Affectation> {
+    // Valider et convertir l'ID affectation
+    const affectationId = parseInt(id, 10)
+    if (isNaN(affectationId)) {
+      throw new Error(`ID affectation invalide: ${id}`)
+    }
+
     // Construire le payload avec les types corrects pour le backend
     const data: Record<string, string | number> = { date: newDate }
     if (newUserId) {
-      // Convertir explicitement en number pour le backend Pydantic
-      data.utilisateur_id = parseInt(newUserId, 10)
+      // Valider et convertir l'ID utilisateur
+      const parsedUserId = parseInt(newUserId, 10)
+      if (isNaN(parsedUserId)) {
+        throw new Error(`ID utilisateur invalide: ${newUserId}`)
+      }
+      data.utilisateur_id = parsedUserId
     }
-    const response = await api.put<Affectation>(`/api/planning/affectations/${id}`, data)
+    const response = await api.put<Affectation>(`/api/planning/affectations/${affectationId}`, data)
     return response.data
   },
 
@@ -87,6 +97,29 @@ export const planningService = {
    */
   async duplicate(data: DuplicateAffectationsRequest): Promise<Affectation[]> {
     const response = await api.post<Affectation[]>('/api/planning/affectations/duplicate', data)
+    return response.data
+  },
+
+  /**
+   * Redimensionne une affectation en créant des affectations pour les jours manquants
+   * ou en supprimant les affectations en trop
+   */
+  async resize(
+    id: string,
+    newStartDate: string,
+    newEndDate: string
+  ): Promise<Affectation[]> {
+    // Valider l'ID
+    const affectationId = parseInt(id, 10)
+    if (isNaN(affectationId)) {
+      throw new Error(`ID affectation invalide: ${id}`)
+    }
+
+    // Appeler l'endpoint de resize
+    const response = await api.post<Affectation[]>(
+      `/api/planning/affectations/${affectationId}/resize`,
+      { date_debut: newStartDate, date_fin: newEndDate }
+    )
     return response.data
   },
 

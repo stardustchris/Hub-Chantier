@@ -18,6 +18,7 @@ from ...adapters.controllers.planning_schemas import (
     DuplicateAffectationsRequest,
     DeleteResponse,
     NonPlanifiesResponse,
+    ResizeAffectationRequest,
 )
 from ...application.use_cases import (
     AffectationConflictError,
@@ -317,6 +318,76 @@ def delete_affectation(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=e.message,
+        )
+
+
+@router.post(
+    "/affectations/{affectation_id}/resize",
+    response_model=List[AffectationResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Redimensionner une affectation",
+    responses={
+        200: {"description": "Affectation(s) creees/mises a jour"},
+        400: {"description": "Conflit ou donnees invalides"},
+        403: {"description": "Non autorise"},
+        404: {"description": "Affectation non trouvee"},
+    },
+)
+def resize_affectation(
+    affectation_id: int,
+    request: ResizeAffectationRequest,
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    controller: PlanningController = Depends(get_planning_controller),
+):
+    """
+    Redimensionne une affectation en creant/supprimant des jours.
+
+    Permet d'etendre ou reduire la duree d'une affectation via drag & drop
+    sur les bords. Cree de nouvelles affectations pour les jours manquants
+    ou supprime les affectations en trop.
+
+    Seuls les admin et conducteur peuvent redimensionner des affectations.
+
+    Args:
+        affectation_id: ID de l'affectation de reference.
+        request: Nouvelles dates de debut/fin.
+        current_user_id: ID de l'utilisateur connecte.
+        current_user_role: Role de l'utilisateur.
+        controller: Controller du planning.
+
+    Returns:
+        Liste des affectations dans la nouvelle plage.
+
+    Raises:
+        HTTPException 400: Conflit avec affectation existante.
+        HTTPException 403: Utilisateur non autorise.
+        HTTPException 404: Affectation non trouvee.
+    """
+    # Verifier les permissions
+    if current_user_role not in ("admin", "conducteur"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seuls les admin et conducteur peuvent redimensionner des affectations",
+        )
+
+    try:
+        result = controller.resize(affectation_id, request, current_user_id)
+        return result
+    except AffectationNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message,
+        )
+    except AffectationConflictError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
         )
 
 

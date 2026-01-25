@@ -39,6 +39,7 @@ class CreateAffectationDTO:
     utilisateur_id: int
     chantier_id: int
     date: date
+    date_fin: Optional[date] = None  # Pour affectation unique multi-jours
     heure_debut: Optional[str] = None  # Format "HH:MM"
     heure_fin: Optional[str] = None  # Format "HH:MM"
     note: Optional[str] = None

@@ -66,6 +66,7 @@ export default function PlanningPage() {
             showWeekend={planning.showWeekend}
             viewMode={planning.viewMode}
             onAffectationMove={planning.canEdit ? planning.handleAffectationMove : undefined}
+            onAffectationResize={planning.canEdit ? planning.handleAffectationResize : undefined}
           />
         ) : (
           <PlanningChantierGrid

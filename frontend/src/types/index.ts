@@ -304,6 +304,7 @@ export interface AffectationCreate {
   utilisateur_id: string
   chantier_id: string
   date: string
+  date_fin?: string  // Pour affectations uniques multi-jours
   heure_debut?: string
   heure_fin?: string
   note?: string

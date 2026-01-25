@@ -1,5 +1,5 @@
-import { useMemo, useState, useCallback } from 'react'
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isWeekend } from 'date-fns'
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react'
+import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isWeekend, addDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { ChevronDown, ChevronRight, Copy, Phone } from 'lucide-react'
 import type { Affectation, User, PlanningCategory } from '../../types'
@@ -18,7 +18,17 @@ interface PlanningGridProps {
   onToggleMetier: (metier: string) => void
   showWeekend?: boolean // PLN-06
   onAffectationMove?: (affectationId: string, newDate: string, newUserId?: string) => void // PLN-27
+  onAffectationResize?: (affectationId: string, newStartDate: string, newEndDate: string) => void // Resize support
   viewMode?: 'semaine' | 'mois' // PLN-05: Vue semaine ou mois
+}
+
+// Resize state
+interface ResizeState {
+  affectation: Affectation
+  direction: 'left' | 'right'
+  startX: number
+  cellWidth: number
+  originalDate: string
 }
 
 // Grouper les utilisateurs par catégorie (role/type_utilisateur)
@@ -65,11 +75,16 @@ export default function PlanningGrid({
   onToggleMetier,
   showWeekend = true,
   onAffectationMove,
+  onAffectationResize,
   viewMode = 'semaine',
 }: PlanningGridProps) {
   // PLN-27: Drag state
   const [draggedAffectation, setDraggedAffectation] = useState<Affectation | null>(null)
   const [dragOverCell, setDragOverCell] = useState<string | null>(null)
+
+  // Resize state
+  const [resizeState, setResizeState] = useState<ResizeState | null>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
 
   // PLN-05/PLN-06: Jours selon le mode de vue (semaine ou mois)
   const days = useMemo(() => {
@@ -122,6 +137,89 @@ export default function PlanningGrid({
     setDragOverCell(null)
   }, [])
 
+  // Resize handlers
+  const handleResizeStart = useCallback((affectation: Affectation, direction: 'left' | 'right', e: React.MouseEvent) => {
+    if (!onAffectationResize) return
+
+    // Calculer la largeur d'une cellule (approximation basée sur la grille)
+    const gridElement = gridRef.current
+    if (!gridElement) return
+
+    const cells = gridElement.querySelectorAll('[data-cell-day]')
+    if (cells.length === 0) return
+
+    const firstCell = cells[0] as HTMLElement
+    const cellWidth = firstCell.offsetWidth
+
+    setResizeState({
+      affectation,
+      direction,
+      startX: e.clientX,
+      cellWidth,
+      originalDate: affectation.date,
+    })
+  }, [onAffectationResize])
+
+  const handleResizeMove = useCallback((_e: MouseEvent) => {
+    if (!resizeState) return
+    // Afficher un feedback visuel (optionnel - pourrait être amélioré)
+    // Pour l'instant, on laisse juste le state se mettre à jour à la fin
+  }, [resizeState])
+
+  const handleResizeEnd = useCallback((e: MouseEvent) => {
+    if (!resizeState || !onAffectationResize) {
+      setResizeState(null)
+      return
+    }
+
+    const deltaX = e.clientX - resizeState.startX
+    const daysDelta = Math.round(deltaX / resizeState.cellWidth)
+
+    if (daysDelta !== 0) {
+      const originalDate = new Date(resizeState.originalDate)
+
+      if (resizeState.direction === 'right') {
+        // Étendre vers la droite: la date de début reste, on calcule la date de fin
+        const newEndDate = addDays(originalDate, daysDelta)
+        if (newEndDate >= originalDate) {
+          onAffectationResize(
+            resizeState.affectation.id,
+            resizeState.originalDate,
+            format(newEndDate, 'yyyy-MM-dd')
+          )
+        }
+      } else {
+        // Étendre vers la gauche: on recule la date de début
+        const newStartDate = addDays(originalDate, daysDelta)
+        if (newStartDate <= originalDate) {
+          onAffectationResize(
+            resizeState.affectation.id,
+            format(newStartDate, 'yyyy-MM-dd'),
+            resizeState.originalDate
+          )
+        }
+      }
+    }
+
+    setResizeState(null)
+  }, [resizeState, onAffectationResize])
+
+  // Écouter les événements mouse globalement pendant le resize
+  useEffect(() => {
+    if (!resizeState) return
+
+    const handleMouseMove = (e: MouseEvent) => handleResizeMove(e)
+    const handleMouseUp = (e: MouseEvent) => handleResizeEnd(e)
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [resizeState, handleResizeMove, handleResizeEnd])
+
   // Grouper les utilisateurs par catégorie (role/type)
   const groupedUsers = useMemo(() => groupByCategory(utilisateurs), [utilisateurs])
 
@@ -171,7 +269,7 @@ export default function PlanningGrid({
   const isMonthView = viewMode === 'mois'
 
   return (
-    <div className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''}`}>
+    <div ref={gridRef} className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''} ${resizeState ? 'select-none' : ''}`}>
       {/* Header - Jours */}
       <div className={`grid border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`} style={gridStyle}>
         <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
@@ -285,11 +383,12 @@ export default function PlanningGrid({
                     return (
                       <div
                         key={day.toISOString()}
+                        data-cell-day={format(day, 'yyyy-MM-dd')}
                         tabIndex={0}
                         role="gridcell"
                         aria-label={`${user.prenom} ${user.nom}, ${format(day, 'EEEE d MMMM', { locale: fr })}`}
-                        onClick={() => !hasAffectations && onCellClick(user.id, day)}
-                        onDoubleClick={() => onCellClick(user.id, day)}
+                        onClick={() => !hasAffectations && !resizeState && onCellClick(user.id, day)}
+                        onDoubleClick={() => !resizeState && onCellClick(user.id, day)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
@@ -318,6 +417,9 @@ export default function PlanningGrid({
                               draggable={!!onAffectationMove}
                               onDragStart={(e) => handleDragStart(e, aff)}
                               onDragEnd={handleDragEnd}
+                              resizable={!!onAffectationResize}
+                              onResizeStart={(direction, e) => handleResizeStart(aff, direction, e)}
+                              isResizing={resizeState?.affectation.id === aff.id}
                             />
                           ))}
                         </div>

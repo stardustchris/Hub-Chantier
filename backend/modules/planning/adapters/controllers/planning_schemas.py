@@ -39,6 +39,10 @@ class CreateAffectationRequest(BaseModel):
     utilisateur_id: int = Field(..., gt=0, description="ID de l'utilisateur a affecter")
     chantier_id: int = Field(..., gt=0, description="ID du chantier cible")
     date: datetime.date = Field(..., description="Date de l'affectation")
+    date_fin: Optional[datetime.date] = Field(
+        None,
+        description="Date de fin pour affectation unique multi-jours (incluse)",
+    )
     heure_debut: Optional[str] = Field(
         None,
         pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
@@ -365,6 +369,47 @@ class DuplicateAffectationsRequest(BaseModel):
                 "source_date_debut": "2026-01-13",
                 "source_date_fin": "2026-01-17",
                 "target_date_debut": "2026-01-20",
+            }
+        }
+    }
+
+
+class ResizeAffectationRequest(BaseModel):
+    """
+    Schema de requete pour redimensionner une affectation.
+
+    Permet d'etendre ou reduire la duree d'une affectation
+    en specifiant une nouvelle plage de dates.
+
+    Attributes:
+        date_debut: Nouvelle date de debut.
+        date_fin: Nouvelle date de fin.
+
+    Example:
+        >>> request = ResizeAffectationRequest(
+        ...     date_debut=datetime.date(2026, 1, 20),
+        ...     date_fin=datetime.date(2026, 1, 24),
+        ... )
+    """
+
+    date_debut: datetime.date = Field(..., description="Nouvelle date de debut")
+    date_fin: datetime.date = Field(..., description="Nouvelle date de fin")
+
+    @field_validator("date_fin")
+    @classmethod
+    def validate_date_fin(cls, v: datetime.date, info) -> datetime.date:
+        """Valide que la date de fin est >= date de debut."""
+        if "date_debut" in info.data and v < info.data["date_debut"]:
+            raise ValueError(
+                "La date de fin doit etre posterieure ou egale a la date de debut"
+            )
+        return v
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "date_debut": "2026-01-20",
+                "date_fin": "2026-01-24",
             }
         }
     }

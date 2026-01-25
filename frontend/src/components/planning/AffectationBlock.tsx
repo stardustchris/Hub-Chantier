@@ -4,7 +4,7 @@
  */
 
 import { memo, useCallback } from 'react'
-import { FileText, X } from 'lucide-react'
+import { FileText, X, GripVertical } from 'lucide-react'
 import type { Affectation } from '../../types'
 
 interface AffectationBlockProps {
@@ -16,6 +16,10 @@ interface AffectationBlockProps {
   draggable?: boolean
   onDragStart?: (e: React.DragEvent) => void
   onDragEnd?: () => void
+  // Resize support
+  resizable?: boolean
+  onResizeStart?: (direction: 'left' | 'right', e: React.MouseEvent) => void
+  isResizing?: boolean
 }
 
 const AffectationBlock = memo(function AffectationBlock({
@@ -26,6 +30,9 @@ const AffectationBlock = memo(function AffectationBlock({
   draggable = false,
   onDragStart,
   onDragEnd,
+  resizable = false,
+  onResizeStart,
+  isResizing = false,
 }: AffectationBlockProps) {
   const backgroundColor = affectation.chantier_couleur || '#3498DB'
   const hasNote = !!affectation.note
@@ -34,6 +41,12 @@ const AffectationBlock = memo(function AffectationBlock({
     e.stopPropagation()
     onDelete?.()
   }, [onDelete])
+
+  const handleResizeStart = useCallback((direction: 'left' | 'right', e: React.MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    onResizeStart?.(direction, e)
+  }, [onResizeStart])
 
   if (compact) {
     return (
@@ -53,18 +66,38 @@ const AffectationBlock = memo(function AffectationBlock({
 
   return (
     <div
-      className={`w-full max-w-full rounded-lg px-2 py-1.5 text-white cursor-pointer hover:opacity-90 transition-opacity relative group overflow-hidden ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      className={`w-full max-w-full rounded-lg px-2 py-1.5 text-white cursor-pointer hover:opacity-90 transition-opacity relative group overflow-hidden ${draggable ? 'cursor-grab active:cursor-grabbing' : ''} ${isResizing ? 'ring-2 ring-white' : ''}`}
       style={{ backgroundColor }}
       onClick={onClick}
-      draggable={draggable}
+      draggable={draggable && !isResizing}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
+      {/* Poignée de resize gauche */}
+      {resizable && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/30"
+          onMouseDown={(e) => handleResizeStart('left', e)}
+        >
+          <GripVertical className="w-3 h-3 opacity-70" />
+        </div>
+      )}
+
+      {/* Poignée de resize droite */}
+      {resizable && (
+        <div
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/30"
+          onMouseDown={(e) => handleResizeStart('right', e)}
+        >
+          <GripVertical className="w-3 h-3 opacity-70" />
+        </div>
+      )}
+
       {/* Bouton supprimer */}
       {onDelete && (
         <button
           onClick={handleDelete}
-          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
         >
           <X className="w-3 h-3" />
         </button>

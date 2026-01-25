@@ -103,7 +103,10 @@ class CreateAffectationUseCase:
         heure_fin: Optional[HeureAffectation],
     ) -> List[Affectation]:
         """
-        Cree une affectation unique.
+        Cree une ou plusieurs affectations uniques.
+
+        Si date_fin est fourni, cree une affectation pour chaque jour
+        entre date et date_fin (inclus).
 
         Args:
             dto: Les donnees de creation.
@@ -112,41 +115,67 @@ class CreateAffectationUseCase:
             heure_fin: Heure de fin (optionnel).
 
         Returns:
-            Liste contenant l'affectation creee.
+            Liste des affectations creees.
         """
-        # Verifier qu'il n'y a pas de conflit
-        if self.affectation_repo.exists_for_utilisateur_and_date(
-            dto.utilisateur_id, dto.date
-        ):
-            raise AffectationConflictError(dto.utilisateur_id, dto.date)
+        # Generer les dates (une seule si pas de date_fin)
+        dates_affectation = [dto.date]
+        if dto.date_fin and dto.date_fin > dto.date:
+            # Generer toutes les dates entre date et date_fin
+            dates_affectation = []
+            current_date = dto.date
+            while current_date <= dto.date_fin:
+                dates_affectation.append(current_date)
+                current_date += timedelta(days=1)
 
-        # Creer l'entite
-        affectation = Affectation(
-            utilisateur_id=dto.utilisateur_id,
-            chantier_id=dto.chantier_id,
-            date=dto.date,
-            heure_debut=heure_debut,
-            heure_fin=heure_fin,
-            note=dto.note,
-            type_affectation=TypeAffectation.UNIQUE,
-            created_by=created_by,
-        )
+        # Verifier les conflits pour toutes les dates
+        for date_aff in dates_affectation:
+            if self.affectation_repo.exists_for_utilisateur_and_date(
+                dto.utilisateur_id, date_aff
+            ):
+                raise AffectationConflictError(dto.utilisateur_id, date_aff)
 
-        # Sauvegarder
-        affectation = self.affectation_repo.save(affectation)
-
-        # Publier l'evenement
-        if self.event_bus:
-            event = AffectationCreatedEvent(
-                affectation_id=affectation.id,
-                utilisateur_id=affectation.utilisateur_id,
-                chantier_id=affectation.chantier_id,
-                date=affectation.date,
+        # Creer les affectations
+        affectations = []
+        for date_aff in dates_affectation:
+            affectation = Affectation(
+                utilisateur_id=dto.utilisateur_id,
+                chantier_id=dto.chantier_id,
+                date=date_aff,
+                heure_debut=heure_debut,
+                heure_fin=heure_fin,
+                note=dto.note,
+                type_affectation=TypeAffectation.UNIQUE,
                 created_by=created_by,
             )
-            self.event_bus.publish(event)
+            affectation = self.affectation_repo.save(affectation)
+            affectations.append(affectation)
 
-        return [affectation]
+        # Publier les evenements
+        if self.event_bus:
+            if len(affectations) == 1:
+                # Une seule affectation: evenement simple
+                event = AffectationCreatedEvent(
+                    affectation_id=affectations[0].id,
+                    utilisateur_id=affectations[0].utilisateur_id,
+                    chantier_id=affectations[0].chantier_id,
+                    date=affectations[0].date,
+                    created_by=created_by,
+                )
+                self.event_bus.publish(event)
+            else:
+                # Plusieurs affectations: evenement bulk
+                event = AffectationBulkCreatedEvent(
+                    affectation_ids=tuple(a.id for a in affectations),
+                    utilisateur_id=dto.utilisateur_id,
+                    chantier_id=dto.chantier_id,
+                    date_debut=dates_affectation[0],
+                    date_fin=dates_affectation[-1],
+                    created_by=created_by,
+                    count=len(affectations),
+                )
+                self.event_bus.publish(event)
+
+        return affectations
 
     def _create_recurrentes(
         self,

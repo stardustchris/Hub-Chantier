@@ -87,7 +87,8 @@ export default function AffectationModal({
           chantier_id: formData.chantier_id || undefined,
         })
       } else {
-        await onSave({
+        // Construire le payload de création
+        const payload: AffectationCreate = {
           utilisateur_id: formData.utilisateur_id,
           chantier_id: formData.chantier_id,
           date: formData.date,
@@ -95,9 +96,18 @@ export default function AffectationModal({
           heure_fin: formData.heure_fin || undefined,
           note: formData.note || undefined,
           type_affectation: formData.type_affectation,
-          jours_recurrence: formData.type_affectation === 'recurrente' ? formData.jours_recurrence : undefined,
-          date_fin_recurrence: formData.type_affectation === 'recurrente' ? formData.date_fin_recurrence : undefined,
-        })
+        }
+
+        if (formData.type_affectation === 'recurrente') {
+          // Affectation récurrente: utiliser jours_recurrence et date_fin_recurrence
+          payload.jours_recurrence = formData.jours_recurrence
+          payload.date_fin_recurrence = formData.date_fin_recurrence
+        } else if (formData.date_fin_recurrence && formData.date_fin_recurrence > formData.date) {
+          // Affectation unique multi-jours: utiliser date_fin
+          payload.date_fin = formData.date_fin_recurrence
+        }
+
+        await onSave(payload)
       }
       onClose()
     } catch (err: unknown) {
