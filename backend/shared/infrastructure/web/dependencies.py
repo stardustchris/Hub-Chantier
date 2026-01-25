@@ -4,14 +4,19 @@ Ce module fournit des dépendances communes pour l'authentification
 et l'autorisation, évitant les imports directs entre modules.
 """
 
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
 from shared.infrastructure.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# Cookie name for JWT token
+AUTH_COOKIE_NAME = "access_token"
+
+# OAuth2 scheme for backward compatibility with Authorization header
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def get_token_service():
@@ -37,14 +42,52 @@ def get_user_repository(db: Session = Depends(get_db)):
     return SQLAlchemyUserRepository(db)
 
 
+def get_token_from_cookie_or_header(
+    request: Request,
+    authorization_token: Optional[str] = Depends(oauth2_scheme),
+) -> str:
+    """
+    Extrait le token JWT depuis le cookie HttpOnly ou l'en-tête Authorization.
+
+    Priorité: Cookie > Authorization header
+    Le cookie HttpOnly est plus sécurisé car non accessible via JavaScript.
+
+    Args:
+        request: Requête HTTP pour accéder aux cookies.
+        authorization_token: Token depuis Authorization header (fallback).
+
+    Returns:
+        Le token JWT.
+
+    Raises:
+        HTTPException 401: Si aucun token n'est trouvé.
+    """
+    # Try cookie first (more secure - HttpOnly)
+    cookie_token = request.cookies.get(AUTH_COOKIE_NAME)
+    if cookie_token:
+        return cookie_token
+
+    # Fallback to Authorization header for backward compatibility
+    if authorization_token:
+        return authorization_token
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Non authentifié",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
 def get_current_user_id(
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_token_from_cookie_or_header),
 ) -> int:
     """
     Extrait l'ID utilisateur du token JWT.
 
+    Le token peut provenir d'un cookie HttpOnly (préféré) ou de l'en-tête Authorization.
+
     Args:
-        token: Le token JWT.
+        token: Le token JWT (depuis cookie ou header).
 
     Returns:
         L'ID de l'utilisateur.

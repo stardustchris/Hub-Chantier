@@ -1,12 +1,16 @@
 """Routes FastAPI pour l'authentification et gestion des utilisateurs."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
 from shared.infrastructure.rate_limiter import limiter
+from shared.infrastructure.config import settings
+
+# Cookie name for JWT token
+AUTH_COOKIE_NAME = "access_token"
 
 from ...adapters.controllers import AuthController
 from ...application.use_cases import (
@@ -117,6 +121,7 @@ class AuthResponse(BaseModel):
 @limiter.limit("5/minute")  # Protection brute force: 5 tentatives/minute par IP
 def login(
     request: Request,  # Requis par slowapi
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     controller: AuthController = Depends(get_auth_controller),
 ):
@@ -124,9 +129,11 @@ def login(
     Authentifie un utilisateur et retourne un token JWT.
 
     Rate limited: 5 requêtes par minute par IP pour protection brute force.
+    Le token est aussi envoyé via cookie HttpOnly pour une sécurité renforcée.
 
     Args:
         request: Requête HTTP (pour rate limiting).
+        response: Réponse HTTP (pour set cookie).
         form_data: Email (username) et mot de passe.
         controller: Controller d'authentification.
 
@@ -139,6 +146,19 @@ def login(
     """
     try:
         result = controller.login(form_data.username, form_data.password)
+
+        # Set HttpOnly cookie for enhanced security
+        # Token not accessible via JavaScript, protecting against XSS
+        response.set_cookie(
+            key=AUTH_COOKIE_NAME,
+            value=result["access_token"],
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            httponly=True,
+            secure=settings.COOKIE_SECURE,
+            samesite=settings.COOKIE_SAMESITE,
+            domain=settings.COOKIE_DOMAIN,
+        )
+
         return result
     except InvalidCredentialsError as e:
         raise HTTPException(
@@ -156,14 +176,16 @@ def login(
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def register(
-    request: RegisterRequest,
+    data: RegisterRequest,
+    response: Response,
     controller: AuthController = Depends(get_auth_controller),
 ):
     """
     Inscrit un nouvel utilisateur (USR-01).
 
     Args:
-        request: Données d'inscription.
+        data: Données d'inscription.
+        response: Réponse HTTP (pour set cookie).
         controller: Controller d'authentification.
 
     Returns:
@@ -174,17 +196,29 @@ def register(
     """
     try:
         result = controller.register(
-            email=request.email,
-            password=request.password,
-            nom=request.nom,
-            prenom=request.prenom,
-            role=request.role,
-            type_utilisateur=request.type_utilisateur,
-            telephone=request.telephone,
-            metier=request.metier,
-            code_utilisateur=request.code_utilisateur,
-            couleur=request.couleur,
+            email=data.email,
+            password=data.password,
+            nom=data.nom,
+            prenom=data.prenom,
+            role=data.role,
+            type_utilisateur=data.type_utilisateur,
+            telephone=data.telephone,
+            metier=data.metier,
+            code_utilisateur=data.code_utilisateur,
+            couleur=data.couleur,
         )
+
+        # Set HttpOnly cookie for enhanced security
+        response.set_cookie(
+            key=AUTH_COOKIE_NAME,
+            value=result["access_token"],
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            httponly=True,
+            secure=settings.COOKIE_SECURE,
+            samesite=settings.COOKIE_SAMESITE,
+            domain=settings.COOKIE_DOMAIN,
+        )
+
         return result
     except EmailAlreadyExistsError as e:
         raise HTTPException(
@@ -234,6 +268,27 @@ def get_current_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=e.message,
         )
+
+
+@router.post("/logout")
+def logout(response: Response):
+    """
+    Déconnecte l'utilisateur en supprimant le cookie d'authentification.
+
+    Args:
+        response: Réponse HTTP (pour supprimer le cookie).
+
+    Returns:
+        Message de confirmation.
+    """
+    response.delete_cookie(
+        key=AUTH_COOKIE_NAME,
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
+        domain=settings.COOKIE_DOMAIN,
+    )
+    return {"message": "Déconnexion réussie"}
 
 
 # =============================================================================
