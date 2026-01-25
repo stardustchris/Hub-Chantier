@@ -1,9 +1,10 @@
 /**
  * Composant TaskItem - Element de tache avec chevrons repliables (TAC-03)
  * Affiche une tache avec sa structure hierarchique et code couleur (TAC-20)
+ * P1-6/P1-10: Utilise TasksContext au lieu de props drilling
  */
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import {
   ChevronDown,
   ChevronRight,
@@ -17,6 +18,7 @@ import {
   Plus,
   GripVertical,
 } from 'lucide-react'
+import { useTasks } from '../../contexts/TasksContext'
 import { formatDateDayMonthShort } from '../../utils/dates'
 import type { Tache, UniteMesure } from '../../types'
 import { UNITES_MESURE, COULEURS_PROGRESSION } from '../../types'
@@ -24,24 +26,20 @@ import { UNITES_MESURE, COULEURS_PROGRESSION } from '../../types'
 interface TaskItemProps {
   tache: Tache
   level?: number
-  onToggleComplete: (tacheId: number, terminer: boolean) => void
-  onEdit: (tache: Tache) => void
-  onDelete: (tacheId: number) => void
-  onAddSubtask: (parentId: number) => void
   isDragging?: boolean
   dragHandleProps?: object
 }
 
-export default function TaskItem({
+// P1-7: Memoize le composant pour éviter re-renders inutiles
+const TaskItem = memo(function TaskItem({
   tache,
   level = 0,
-  onToggleComplete,
-  onEdit,
-  onDelete,
-  onAddSubtask,
   isDragging = false,
   dragHandleProps,
 }: TaskItemProps) {
+  // P1-6: Consommer le context au lieu de recevoir les callbacks en props
+  const { onToggleComplete, onEdit, onDelete, onAddSubtask } = useTasks()
+
   // TAC-03: Chevrons repliables pour les sous-taches
   const [isExpanded, setIsExpanded] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
@@ -238,6 +236,7 @@ export default function TaskItem({
       </div>
 
       {/* Sous-taches (TAC-02) - affichees si deroulees */}
+      {/* P1-6: Plus besoin de passer les callbacks - ils viennent du context */}
       {hasSousTaches && isExpanded && (
         <div className="ml-2">
           {tache.sous_taches.map((sousTache) => (
@@ -245,14 +244,12 @@ export default function TaskItem({
               key={sousTache.id}
               tache={sousTache}
               level={level + 1}
-              onToggleComplete={onToggleComplete}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onAddSubtask={onAddSubtask}
             />
           ))}
         </div>
       )}
     </div>
   )
-}
+})
+
+export default TaskItem

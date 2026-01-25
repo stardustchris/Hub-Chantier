@@ -1,3 +1,9 @@
+/**
+ * UserCard - Carte utilisateur pour les listes
+ * P1-7: Memoized pour éviter re-renders inutiles
+ */
+
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Phone,
@@ -16,7 +22,7 @@ interface UserCardProps {
   onToggleActive: () => void
 }
 
-export function UserCard({ user, canEdit, onToggleActive }: UserCardProps) {
+export const UserCard = memo(function UserCard({ user, canEdit, onToggleActive }: UserCardProps) {
   const roleInfo = ROLES[user.role as UserRole]
   const metierInfo = user.metier ? METIERS[user.metier as Metier] : null
 
@@ -99,6 +105,6 @@ export function UserCard({ user, canEdit, onToggleActive }: UserCardProps) {
       )}
     </div>
   )
-}
+})
 
 export default UserCard

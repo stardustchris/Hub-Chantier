@@ -1,9 +1,10 @@
 /**
  * DashboardPostCard - Carte de publication pour le fil d'actualités (API réelle)
  * Extrait de DashboardPage pour réduction de taille
+ * P1-6: Utilise useAuth() directement au lieu de props drilling
  */
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import {
   Heart,
   MessageCircle,
@@ -13,6 +14,7 @@ import {
   Send,
   Loader2,
 } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 import { dashboardService } from '../../services/dashboard'
 import { logger } from '../../services/logger'
 import { formatRelative } from '../../utils/dates'
@@ -21,21 +23,22 @@ import { ROLES } from '../../types'
 
 interface DashboardPostCardProps {
   post: Post
-  currentUserId: string
-  isAdmin: boolean
   onLike: (postId: string, isLiked: boolean) => void
   onPin: (postId: string, isPinned: boolean) => void
   onDelete: (postId: string) => void
 }
 
-export function DashboardPostCard({
+// P1-7: Memoize le composant pour éviter re-renders inutiles
+export const DashboardPostCard = memo(function DashboardPostCard({
   post,
-  currentUserId,
-  isAdmin,
   onLike,
   onPin,
   onDelete,
 }: DashboardPostCardProps) {
+  // P1-6: Consommer le context directement au lieu de recevoir en props
+  const { user } = useAuth()
+  const currentUserId = user?.id || ''
+  const isAdmin = user?.role === 'admin'
   const [showComments, setShowComments] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [newComment, setNewComment] = useState('')
@@ -227,4 +230,4 @@ export function DashboardPostCard({
       </div>
     </div>
   )
-}
+})
