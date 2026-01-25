@@ -20,6 +20,16 @@ vi.mock('../services/authEvents', () => ({
   emitLogout: vi.fn(),
 }))
 
+vi.mock('../services/api', () => ({
+  default: {
+    post: vi.fn().mockResolvedValue({}),
+  },
+}))
+
+vi.mock('../services/csrf', () => ({
+  clearCsrfToken: vi.fn(),
+}))
+
 import { authService } from '../services/auth'
 import { onSessionExpired, emitLogout } from '../services/authEvents'
 
@@ -127,8 +137,10 @@ describe('AuthContext', () => {
       })
     })
 
-    it('reste non authentifie sans token', async () => {
-      vi.mocked(authService.getCurrentUser).mockResolvedValue(createMockUser())
+    it('reste non authentifie si getCurrentUser echoue (pas de cookie valide)', async () => {
+      // Avec HttpOnly cookies, getCurrentUser est toujours appele
+      // car le cookie est envoye automatiquement avec la requete
+      vi.mocked(authService.getCurrentUser).mockRejectedValue(new Error('Unauthorized'))
 
       render(
         <AuthProvider>
@@ -141,8 +153,8 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
       })
 
-      // getCurrentUser ne doit pas avoir ete appele
-      expect(authService.getCurrentUser).not.toHaveBeenCalled()
+      // getCurrentUser doit avoir ete appele (le cookie est envoye automatiquement)
+      expect(authService.getCurrentUser).toHaveBeenCalled()
     })
 
     it('s\'abonne aux evenements de session expiree', async () => {
@@ -232,9 +244,12 @@ describe('AuthContext', () => {
 
       await user.click(screen.getByText('Logout'))
 
-      expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
-      expect(screen.getByTestId('user').textContent).toBe('null')
-      expect(sessionStorage.getItem('access_token')).toBeNull()
+      // Attendre que le logout async se termine
+      await waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
+        expect(screen.getByTestId('user').textContent).toBe('null')
+        expect(sessionStorage.getItem('access_token')).toBeNull()
+      })
     })
 
     it('emet un evenement de logout pour sync multi-onglets', async () => {
@@ -255,7 +270,10 @@ describe('AuthContext', () => {
 
       await user.click(screen.getByText('Logout'))
 
-      expect(emitLogout).toHaveBeenCalled()
+      // Attendre que le logout async se termine
+      await waitFor(() => {
+        expect(emitLogout).toHaveBeenCalled()
+      })
     })
   })
 

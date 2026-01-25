@@ -73,14 +73,36 @@ describe('LoginPage', () => {
     expect(passwordInput).toHaveValue('mypassword')
   })
 
-  it('should have required email field', () => {
+  it('should validate required email field with Zod', async () => {
+    const user = userEvent.setup()
     renderLoginPage()
-    expect(screen.getByLabelText('Email')).toBeRequired()
+
+    // Soumettre sans email
+    await user.type(screen.getByLabelText('Mot de passe'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Se connecter' }))
+
+    // Zod doit afficher une erreur de validation
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ce champ est requis')).toBeInTheDocument()
+    })
+    // Login ne doit pas etre appele
+    expect(mockLogin).not.toHaveBeenCalled()
   })
 
-  it('should have required password field', () => {
+  it('should validate required password field with Zod', async () => {
+    const user = userEvent.setup()
     renderLoginPage()
-    expect(screen.getByLabelText('Mot de passe')).toBeRequired()
+
+    // Soumettre sans mot de passe
+    await user.type(screen.getByLabelText('Email'), 'test@example.com')
+    await user.click(screen.getByRole('button', { name: 'Se connecter' }))
+
+    // Zod doit afficher une erreur de validation
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ce champ est requis')).toBeInTheDocument()
+    })
+    // Login ne doit pas etre appele
+    expect(mockLogin).not.toHaveBeenCalled()
   })
 
   it('should have email input type', () => {
@@ -131,7 +153,7 @@ describe('LoginPage', () => {
     renderLoginPage()
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Mot de passe'), 'wrong')
+    await user.type(screen.getByLabelText('Mot de passe'), 'wrongpassword')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     await vi.waitFor(() => {
@@ -146,7 +168,7 @@ describe('LoginPage', () => {
     renderLoginPage()
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Mot de passe'), 'pass')
+    await user.type(screen.getByLabelText('Mot de passe'), 'password')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     await vi.waitFor(() => {
