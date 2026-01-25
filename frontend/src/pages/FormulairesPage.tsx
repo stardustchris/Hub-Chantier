@@ -22,8 +22,10 @@ import {
   FormulaireModal,
   NewFormulaireModal,
 } from '../components/formulaires'
+import { GeolocationConsentModal } from '../components/common/GeolocationConsentModal'
 import { formulairesService } from '../services/formulaires'
 import { chantiersService } from '../services/chantiers'
+import { consentService } from '../services/consent'
 import { useAuth } from '../contexts/AuthContext'
 import type {
   TemplateFormulaire,
@@ -244,6 +246,10 @@ export default function FormulairesPage() {
   const [selectedFormulaire, setSelectedFormulaire] = useState<FormulaireRempli | null>(null)
   const [formulaireReadOnly, setFormulaireReadOnly] = useState(false)
 
+  // Consentement geolocalisation RGPD
+  const [geoConsentModalOpen, setGeoConsentModalOpen] = useState(false)
+  const [pendingTemplateId, setPendingTemplateId] = useState<number | null>(null)
+
   // Permissions
   const canManageTemplates = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
 
@@ -369,19 +375,16 @@ export default function FormulairesPage() {
 
   // ===== FORMULAIRES =====
 
-  const handleCreateFormulaire = async (templateId: number) => {
-    // Verifier qu'un chantier est selectionne
-    if (!selectedChantierId) {
-      setError('Veuillez selectionner un chantier')
-      return
-    }
-
+  /**
+   * Finalise la creation du formulaire avec ou sans geolocalisation
+   */
+  const finalizeCreateFormulaire = async (templateId: number, withGeolocation: boolean) => {
     try {
-      // Obtenir la position geographique si disponible
       let latitude: number | undefined
       let longitude: number | undefined
 
-      if (navigator.geolocation) {
+      // Obtenir la position geographique si consentement donne et API disponible
+      if (withGeolocation && navigator.geolocation) {
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
@@ -389,13 +392,13 @@ export default function FormulairesPage() {
           latitude = position.coords.latitude
           longitude = position.coords.longitude
         } catch {
-          // Geolocation non disponible ou refusee
+          // Geolocation non disponible ou refusee par le navigateur
         }
       }
 
       const formulaire = await formulairesService.createFormulaire({
         template_id: templateId,
-        chantier_id: parseInt(selectedChantierId, 10),
+        chantier_id: parseInt(selectedChantierId!, 10),
         latitude,
         longitude,
       })
@@ -410,6 +413,61 @@ export default function FormulairesPage() {
     } catch (err) {
       setError('Erreur lors de la creation du formulaire')
     }
+  }
+
+  /**
+   * Gere le clic sur "Creer formulaire" avec verification du consentement RGPD
+   */
+  const handleCreateFormulaire = async (templateId: number) => {
+    // Verifier qu'un chantier est selectionne
+    if (!selectedChantierId) {
+      setError('Veuillez selectionner un chantier')
+      return
+    }
+
+    // Verifier si le consentement geolocalisation a deja ete demande
+    if (!consentService.wasAsked('geolocation')) {
+      // Afficher la modal de consentement et stocker le templateId en attente
+      setPendingTemplateId(templateId)
+      setGeoConsentModalOpen(true)
+      return
+    }
+
+    // Consentement deja donne ou refuse, proceder avec le choix stocke
+    const hasConsent = consentService.hasConsent('geolocation')
+    await finalizeCreateFormulaire(templateId, hasConsent)
+  }
+
+  /**
+   * Callback quand l'utilisateur accepte le consentement geolocalisation
+   */
+  const handleGeoConsentAccept = async () => {
+    consentService.setConsent('geolocation', true)
+    setGeoConsentModalOpen(false)
+    if (pendingTemplateId !== null) {
+      await finalizeCreateFormulaire(pendingTemplateId, true)
+      setPendingTemplateId(null)
+    }
+  }
+
+  /**
+   * Callback quand l'utilisateur refuse le consentement geolocalisation
+   */
+  const handleGeoConsentDecline = async () => {
+    consentService.setConsent('geolocation', false)
+    setGeoConsentModalOpen(false)
+    if (pendingTemplateId !== null) {
+      await finalizeCreateFormulaire(pendingTemplateId, false)
+      setPendingTemplateId(null)
+    }
+  }
+
+  /**
+   * Callback quand l'utilisateur ferme la modal sans choisir
+   */
+  const handleGeoConsentClose = () => {
+    setGeoConsentModalOpen(false)
+    setPendingTemplateId(null)
   }
 
   const handleViewFormulaire = async (formulaire: FormulaireRempli) => {
@@ -674,6 +732,14 @@ export default function FormulairesPage() {
           chantiers={chantiers}
           selectedChantierId={selectedChantierId}
           onChantierChange={setSelectedChantierId}
+        />
+
+        {/* Modal de consentement RGPD pour la geolocalisation */}
+        <GeolocationConsentModal
+          isOpen={geoConsentModalOpen}
+          onAccept={handleGeoConsentAccept}
+          onDecline={handleGeoConsentDecline}
+          onClose={handleGeoConsentClose}
         />
       </div>
     </Layout>

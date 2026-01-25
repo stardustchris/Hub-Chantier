@@ -17,3 +17,9 @@ export type {
   UseReservationModalOptions,
   UseReservationModalReturn,
 } from './useReservationModal'
+
+export { useClockCard } from './useClockCard'
+export type { ClockState, UseClockCardReturn } from './useClockCard'
+
+export { useDashboardFeed } from './useDashboardFeed'
+export type { UseDashboardFeedReturn } from './useDashboardFeed'

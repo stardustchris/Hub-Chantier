@@ -34,6 +34,27 @@ vi.mock('../contexts/AuthContext', () => ({
   }),
 }))
 
+// Mock useNotifications pour les tests de notifications
+vi.mock('../hooks/useNotifications', () => ({
+  useNotifications: () => ({
+    notifications: [
+      {
+        id: '1',
+        type: 'chantier_assignment',
+        title: 'Nouvelle affectation',
+        message: 'Nouvelle affectation sur le chantier Villa Duplex',
+        is_read: false,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    unreadCount: 1,
+    loading: false,
+    markAsRead: vi.fn(),
+    markAllAsRead: vi.fn(),
+    fetchNotifications: vi.fn(),
+  }),
+}))
+
 const renderWithRouter = (initialRoute = '/') => {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
@@ -163,10 +184,12 @@ describe('Layout', () => {
       }
     })
 
-    it('affiche le bouton Tout marquer comme lu', () => {
+    it('affiche le bouton Tout marquer lu', () => {
       renderWithRouter()
       fireEvent.click(screen.getByLabelText(/Notifications/))
-      expect(screen.getByText('Tout marquer comme lu')).toBeInTheDocument()
+      // Le bouton n'apparait que s'il y a des notifications non lues
+      // Dans le mock useNotifications, unreadCount est 2
+      expect(screen.getByText('Tout marquer lu')).toBeInTheDocument()
     })
   })
 
