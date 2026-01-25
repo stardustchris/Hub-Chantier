@@ -3,6 +3,46 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-25 (Amélioration couverture tests - Suite)
+
+Continuation de l'amélioration de la couverture des tests frontend.
+
+### Tests créés
+
+| Fichier | Tests | Description |
+|---------|-------|-------------|
+| contexts/TasksContext.test.tsx | 9 | Tests contexte tâches (provider, hooks) |
+| services/notificationsApi.test.ts | 27 | Tests API notifications (CRUD, formatRelativeTime, icons) |
+| services/notifications.test.ts | 13 | Tests push notifications (init, subscribe, disable) |
+| utils/phone.test.ts | 33 | Tests validation/formatage téléphone international |
+| services/csrf.test.ts | +4 | Tests fetchCsrfToken, csrfService |
+| services/consent.test.ts | +3 | Tests revokeConsent, données corrompues |
+
+### Résultats
+
+| Métrique | Avant | Après |
+|----------|-------|-------|
+| Tests frontend | 746 | 839 (+93) |
+| Couverture globale | 26.84% | 28.08% |
+| Couverture contexts | 71.85% | 90.41% |
+| Couverture services | 73.35% | 80% |
+| Couverture utils | 60% | 100% |
+| CSRF coverage | 46% | 96% |
+
+### Fichiers créés
+
+- `contexts/TasksContext.test.tsx`
+- `services/notificationsApi.test.ts`
+- `services/notifications.test.ts`
+- `utils/phone.test.ts`
+
+### Fichiers modifiés
+
+- `services/csrf.test.ts` : +4 tests pour fetchCsrfToken
+- `services/consent.test.ts` : +3 tests pour edge cases
+
+---
+
 ## Session 2026-01-25 (Analyse Frontend et Tests)
 
 Analyse complete du frontend avec 5 agents specialises et amelioration de la couverture des tests.
