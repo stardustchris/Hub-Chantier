@@ -80,6 +80,7 @@ export default function Layout({ children }: LayoutProps) {
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-2 rounded-lg hover:bg-gray-100"
+            aria-label="Fermer le menu"
           >
             <X className="w-5 h-5" />
           </button>
@@ -187,6 +188,7 @@ export default function Layout({ children }: LayoutProps) {
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              aria-label="Ouvrir le menu"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -210,6 +212,8 @@ export default function Layout({ children }: LayoutProps) {
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
                   className="p-2 rounded-lg hover:bg-gray-100 relative"
+                  aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
+                  aria-expanded={notificationsOpen}
                 >
                   <Bell className="w-5 h-5 text-gray-600" />
                   {unreadCount > 0 && (
@@ -261,6 +265,8 @@ export default function Layout({ children }: LayoutProps) {
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100"
+                  aria-label="Menu utilisateur"
+                  aria-expanded={userMenuOpen}
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"

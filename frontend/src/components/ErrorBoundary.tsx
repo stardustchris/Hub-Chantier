@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
+import { logger } from '../services/logger'
 
 interface Props {
   children: ReactNode
@@ -47,7 +48,10 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo })
     // Log l'erreur pour debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    logger.error('ErrorBoundary caught an error', error, {
+      context: 'ErrorBoundary',
+      metadata: { componentStack: errorInfo?.componentStack },
+    })
   }
 
   handleReload = () => {

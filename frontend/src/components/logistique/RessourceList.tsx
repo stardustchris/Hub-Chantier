@@ -20,6 +20,7 @@ import type { Ressource, CategorieRessource } from '../../types/logistique'
 import { CATEGORIES_RESSOURCES } from '../../types/logistique'
 import { listRessources } from '../../api/logistique'
 import RessourceCard from './RessourceCard'
+import { logger } from '../../services/logger'
 
 /**
  * Props du composant RessourceList.
@@ -83,7 +84,7 @@ const RessourceList: React.FC<RessourceListProps> = ({
       setRessources(data?.items || [])
     } catch (err) {
       setError('Erreur lors du chargement des ressources')
-      console.error(err)
+      logger.error('Erreur chargement ressources', err, { context: 'RessourceList' })
     } finally {
       setLoading(false)
     }

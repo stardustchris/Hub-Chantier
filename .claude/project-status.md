@@ -17,11 +17,16 @@
 | documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
 | signalements | 10 | SIG-01 a SIG-20 | **COMPLET** (18/20, 2 infra) |
 | logistique | 11 | LOG-01 a LOG-18 | **COMPLET** |
+| interventions | 12 | INT-01 a INT-17 | **COMPLET** |
+| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** (15/18, 3 infra) |
 | interventions | 12 | INT-01 a INT-17 | Structure only |
 | taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
 
 ## Statistiques
 
+- **Modules complets** : 12/12
+- **Fonctionnalites totales** : 220 (incluant INT-01 a INT-17)
+- **Tests unitaires** : 1150+ (1055 + 95 interventions)
 - **Modules complets** : 11/12
 - **Fonctionnalites totales** : 203 (incluant PDC-01 a PDC-17)
 - **Tests unitaires** : 1100+ (1055 + 45 logistique)
@@ -29,6 +34,14 @@
 
 ## Prochaine tache prioritaire
 
+Tous les modules sont complets. Prochaines etapes:
+- Generation du rapport PDF (INT-14, INT-16)
+- Mode Offline (infrastructure)
+- Notifications push (infrastructure)
+
+## Modules en attente
+
+Aucun module en attente - tous complets!
 **Module Interventions (INT)** (CDC Section 12)
 - Suivi interventions (INT-01 a INT-08)
 - Workflow interventions (INT-09 a INT-12)
@@ -61,3 +74,16 @@ Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
 - Handlers notifications LOG-13/14 + SIG-13 + FEED-17
 - Service notifications frontend avec Firebase SDK
 - Module Logistique maintenant 100% COMPLET (18/18)
+Session 2026-01-25 - Module Interventions COMPLET (INT-01 a INT-17)
+- Entites: Intervention, AffectationIntervention, InterventionMessage, SignatureIntervention
+- Value Objects: StatutIntervention, PrioriteIntervention, TypeIntervention
+- Use Cases complets (CRUD, planification, demarrage, terminaison, signatures)
+- API REST FastAPI avec tous les endpoints
+- 95 tests unitaires (value objects, entities, use cases)
+- Clean Architecture 4 layers respectee
+Session 2026-01-25 - Verification et documentation module Logistique (LOG-01 a LOG-18)
+- Backend Clean Architecture complet (domain, application, infrastructure)
+- Frontend React complet (composants, API, types)
+- 15/18 fonctionnalites implementees (3 infra: notifications push + rappel J-1)
+- 45 tests unitaires (entities, value objects, use cases)
+- Migration Alembic pour schema logistique

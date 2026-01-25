@@ -29,6 +29,7 @@ export default function NavigationPrevNext({
           to={`${baseUrl}/${prevId}`}
           className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
           title={`${entityLabel} précédent`}
+          aria-label={`${entityLabel} précédent`}
         >
           <ChevronLeft className="w-5 h-5 text-gray-600" />
         </Link>
@@ -37,6 +38,8 @@ export default function NavigationPrevNext({
           disabled
           className="p-2 rounded-lg border border-gray-100 opacity-40 cursor-not-allowed"
           title={`Pas de ${entityLabel} précédent`}
+          aria-label={`Pas de ${entityLabel} précédent`}
+          aria-disabled="true"
         >
           <ChevronLeft className="w-5 h-5 text-gray-400" />
         </button>
@@ -47,6 +50,7 @@ export default function NavigationPrevNext({
           to={`${baseUrl}/${nextId}`}
           className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
           title={`${entityLabel} suivant`}
+          aria-label={`${entityLabel} suivant`}
         >
           <ChevronRight className="w-5 h-5 text-gray-600" />
         </Link>
@@ -55,6 +59,8 @@ export default function NavigationPrevNext({
           disabled
           className="p-2 rounded-lg border border-gray-100 opacity-40 cursor-not-allowed"
           title={`Pas de ${entityLabel} suivant`}
+          aria-label={`Pas de ${entityLabel} suivant`}
+          aria-disabled="true"
         >
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>

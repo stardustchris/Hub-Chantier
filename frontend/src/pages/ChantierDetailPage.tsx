@@ -9,7 +9,7 @@ import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
 import { TaskList } from '../components/taches'
-import { EditChantierModal, AddUserModal, UserRow } from '../components/chantiers'
+import { EditChantierModal, AddUserModal, ChantierEquipeTab } from '../components/chantiers'
 import {
   ArrowLeft,
   MapPin,
@@ -22,7 +22,6 @@ import {
   CheckCircle,
   Lock,
   Loader2,
-  Plus,
   Navigation,
   ExternalLink,
   ListTodo,
@@ -383,77 +382,16 @@ export default function ChantierDetailPage() {
         {activeTab === 'taches' ? (
           <TaskList chantierId={parseInt(id!)} chantierNom={chantier.nom} />
         ) : activeTab === 'equipe' ? (
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900">Equipe</h2>
-            </div>
-
-            {/* Conducteurs */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">Conducteurs de travaux</h3>
-                {canEdit && (
-                  <button
-                    onClick={() => {
-                      loadAvailableUsers('conducteur')
-                      setShowAddUserModal('conducteur')
-                    }}
-                    className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Ajouter
-                  </button>
-                )}
-              </div>
-              {chantier.conducteurs.length === 0 ? (
-                <p className="text-sm text-gray-500">Aucun conducteur assigne</p>
-              ) : (
-                <div className="space-y-2">
-                  {chantier.conducteurs.map((user) => (
-                    <UserRow
-                      key={user.id}
-                      user={user}
-                      canRemove={canEdit}
-                      onRemove={() => handleRemoveUser(user.id, 'conducteur')}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Chefs */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">Chefs de chantier</h3>
-                {canEdit && (
-                  <button
-                    onClick={() => {
-                      loadAvailableUsers('chef')
-                      setShowAddUserModal('chef')
-                    }}
-                    className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Ajouter
-                  </button>
-                )}
-              </div>
-              {chantier.chefs.length === 0 ? (
-                <p className="text-sm text-gray-500">Aucun chef assigne</p>
-              ) : (
-                <div className="space-y-2">
-                  {chantier.chefs.map((user) => (
-                    <UserRow
-                      key={user.id}
-                      user={user}
-                      canRemove={canEdit}
-                      onRemove={() => handleRemoveUser(user.id, 'chef')}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <ChantierEquipeTab
+            conducteurs={chantier.conducteurs}
+            chefs={chantier.chefs}
+            canEdit={canEdit}
+            onAddUser={(type) => {
+              loadAvailableUsers(type)
+              setShowAddUserModal(type)
+            }}
+            onRemoveUser={handleRemoveUser}
+          />
         ) : (
           /* Onglet Informations */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

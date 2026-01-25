@@ -68,7 +68,7 @@ export default function UsersListPage() {
       }
       reload()
     } catch (error) {
-      logger.error('Error toggling user status', error, { context: 'UsersListPage' })
+      logger.error('Erreur lors du changement de statut', error, { context: 'UsersListPage', showToast: true })
     }
   }, [reload])
 

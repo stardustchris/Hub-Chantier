@@ -22,6 +22,7 @@ import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react'
 import type { Ressource, Reservation, PlanningRessource } from '../../types/logistique'
 import { STATUTS_RESERVATION } from '../../types/logistique'
 import { getPlanningRessource, getLundiSemaine, formatDateISO } from '../../api/logistique'
+import { logger } from '../../services/logger'
 
 /**
  * Props du composant ReservationCalendar.
@@ -88,7 +89,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
       )
       setPlanning(data)
     } catch (err) {
-      console.error('Erreur chargement planning:', err)
+      logger.error('Erreur chargement planning', err, { context: 'ReservationCalendar' })
     } finally {
       setLoading(false)
     }

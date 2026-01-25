@@ -23,6 +23,8 @@ import {
   getStatutIcon,
 } from '../../services/signalements';
 import { formatDateDayMonthYearTime } from '../../utils/dates';
+import TraiterModal from './TraiterModal';
+import ReponsesSection from './ReponsesSection';
 
 interface SignalementDetailProps {
   signalementId: number;
@@ -47,10 +49,7 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
   const [reponses, setReponses] = useState<Reponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [newReponse, setNewReponse] = useState('');
-  const [sendingReponse, setSendingReponse] = useState(false);
   const [showTraiterModal, setShowTraiterModal] = useState(false);
-  const [commentaireTraitement, setCommentaireTraitement] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -74,34 +73,27 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
     loadData();
   }, [loadData]);
 
-  const handleAddReponse = async () => {
-    if (!newReponse.trim() || !signalement) return;
+  const handleAddReponse = async (contenu: string) => {
+    if (!signalement) return;
 
-    setSendingReponse(true);
     try {
-      const data: ReponseCreateDTO = {
-        contenu: newReponse.trim(),
-      };
+      const data: ReponseCreateDTO = { contenu };
       const reponse = await createReponse(signalement.id, data);
       setReponses((prev) => [...prev, reponse]);
-      setNewReponse('');
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi');
-    } finally {
-      setSendingReponse(false);
     }
   };
 
-  const handleTraiter = async () => {
-    if (!signalement || !commentaireTraitement.trim()) return;
+  const handleTraiter = async (commentaire: string) => {
+    if (!signalement) return;
 
     setActionLoading(true);
     try {
-      const updated = await marquerTraite(signalement.id, commentaireTraitement.trim());
+      const updated = await marquerTraite(signalement.id, commentaire);
       setSignalement(updated);
       setShowTraiterModal(false);
-      setCommentaireTraitement('');
       onUpdate?.(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du traitement');
@@ -331,106 +323,20 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
         </div>
 
         {/* Réponses */}
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-4">
-            Réponses ({reponses.length})
-          </h3>
-
-          {reponses.length === 0 ? (
-            <p className="text-gray-500 text-sm mb-4">Aucune réponse pour le moment.</p>
-          ) : (
-            <div className="space-y-4 mb-4">
-              {reponses.map((reponse) => (
-                <div
-                  key={reponse.id}
-                  className={`p-4 rounded-lg ${
-                    reponse.est_resolution
-                      ? 'bg-green-50 border border-green-200'
-                      : 'bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">
-                      {reponse.auteur_nom || `Utilisateur #${reponse.auteur_id}`}
-                    </span>
-                    <span className="text-xs text-gray-500">{formatDateDayMonthYearTime(reponse.created_at)}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{reponse.contenu}</p>
-                  {reponse.photo_url && (
-                    <img
-                      src={reponse.photo_url}
-                      alt="Photo de la réponse"
-                      className="mt-2 max-w-xs h-auto rounded border border-gray-200"
-                    />
-                  )}
-                  {reponse.est_resolution && (
-                    <span className="inline-block mt-2 px-2 py-0.5 text-xs font-medium text-green-800 bg-green-200 rounded">
-                      Résolution
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Nouvelle réponse */}
-          {signalement.statut !== 'cloture' && (
-            <div className="flex gap-2">
-              <textarea
-                value={newReponse}
-                onChange={(e) => setNewReponse(e.target.value)}
-                placeholder="Ajouter une réponse..."
-                rows={2}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-              <button
-                onClick={handleAddReponse}
-                disabled={sendingReponse || !newReponse.trim()}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed self-end"
-              >
-                {sendingReponse ? '...' : 'Envoyer'}
-              </button>
-            </div>
-          )}
-        </div>
+        <ReponsesSection
+          reponses={reponses}
+          canReply={signalement.statut !== 'cloture'}
+          onAddReponse={handleAddReponse}
+        />
       </div>
 
       {/* Modal traitement */}
-      {showTraiterModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowTraiterModal(false)} />
-            <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Marquer comme traité
-              </h3>
-              <textarea
-                value={commentaireTraitement}
-                onChange={(e) => setCommentaireTraitement(e.target.value)}
-                placeholder="Décrivez comment le problème a été résolu..."
-                rows={4}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 mb-4"
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowTraiterModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleTraiter}
-                  disabled={actionLoading || !commentaireTraitement.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {actionLoading ? 'Traitement...' : 'Confirmer'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <TraiterModal
+        isOpen={showTraiterModal}
+        onClose={() => setShowTraiterModal(false)}
+        onConfirm={handleTraiter}
+        isLoading={actionLoading}
+      />
     </div>
   );
 };
