@@ -6,6 +6,7 @@
 export { default as Feed } from './Feed'
 export { default as PostCard } from './PostCard'
 export { default as PostComposer } from './PostComposer'
+export { DashboardPostCard } from './DashboardPostCard'
 
 // Dashboard cards (CDC Section 2)
 export { default as ClockCard } from './ClockCard'
