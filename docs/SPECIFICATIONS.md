@@ -853,14 +853,16 @@ La connexion s'effectue de maniere securisee par SMS (code OTP) ou par identifia
 
 ### 15.2 Protection des donnees
 
-| Mesure | Description |
-|--------|-------------|
-| Chiffrement en transit | HTTPS/TLS 1.3 pour toutes les communications |
-| Chiffrement au repos | Donnees chiffrees AES-256 sur les serveurs |
-| Sauvegarde | Backup quotidien avec retention 30 jours minimum |
-| RGPD | Conformite totale, droit d'acces et droit a l'oubli |
-| Hebergement | Serveurs en Europe (France) certifies ISO 27001 |
-| Journalisation | Logs d'audit de toutes les actions sensibles |
+| Mesure | Description | Status |
+|--------|-------------|--------|
+| Chiffrement en transit | HTTPS/TLS 1.3 pour toutes les communications | ✅ |
+| Chiffrement au repos | Donnees chiffrees AES-256 sur les serveurs | ✅ |
+| Sauvegarde | Backup quotidien avec retention 30 jours minimum | ✅ |
+| RGPD | Conformite totale, droit d'acces et droit a l'oubli | ✅ |
+| Hebergement | Serveurs en Europe (France) certifies ISO 27001 | ✅ |
+| Journalisation | Logs d'audit de toutes les actions sensibles | ✅ |
+| Protection CSRF | Token CSRF pour requetes mutables (POST/PUT/DELETE) | ✅ |
+| Consentement RGPD | Modal de consentement pour geolocalisation | ✅ |
 
 ### 15.3 Mode Offline
 
