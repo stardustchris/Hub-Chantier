@@ -175,8 +175,51 @@ export default function DashboardPage() {
   }, [navigate])
 
   const handleNavigate = useCallback((_slotId: string) => {
-    alert('Ouverture de l\'itinéraire dans Google Maps...')
-    // En prod: window.open(`https://maps.google.com/?q=45+rue+de+la+Republique+Lyon`)
+    // Adresse demo - en prod, recuperer depuis le slot
+    const address = '45 rue de la Republique, Lyon 3eme, France'
+    const encodedAddress = encodeURIComponent(address)
+
+    // Detecter la plateforme
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isAndroid = /Android/.test(navigator.userAgent)
+
+    // Priorite: Waze > Google Maps > Apple Maps (iOS) > Google Maps web
+    // On essaie d'abord Waze avec un timeout, sinon fallback
+    if (isIOS) {
+      // Sur iOS: essayer Waze, sinon Apple Maps, sinon Google Maps web
+      const wazeUrl = `waze://?q=${encodedAddress}&navigate=yes`
+      const appleMapsUrl = `maps://maps.apple.com/?q=${encodedAddress}`
+      const googleMapsWeb = `https://maps.google.com/?q=${encodedAddress}`
+
+      // Essayer Waze d'abord
+      window.location.href = wazeUrl
+      // Fallback apres un court delai
+      setTimeout(() => {
+        // Si on est toujours sur la page, Waze n'est pas installe
+        // Essayer Apple Maps
+        window.location.href = appleMapsUrl
+        // Dernier fallback vers Google Maps web
+        setTimeout(() => {
+          window.open(googleMapsWeb, '_blank')
+        }, 500)
+      }, 500)
+    } else if (isAndroid) {
+      // Sur Android: essayer Waze, sinon Google Maps app, sinon web
+      const wazeUrl = `waze://?q=${encodedAddress}&navigate=yes`
+      const googleMapsUrl = `google.navigation:q=${encodedAddress}`
+      const googleMapsWeb = `https://maps.google.com/?q=${encodedAddress}`
+
+      window.location.href = wazeUrl
+      setTimeout(() => {
+        window.location.href = googleMapsUrl
+        setTimeout(() => {
+          window.open(googleMapsWeb, '_blank')
+        }, 500)
+      }, 500)
+    } else {
+      // Desktop: ouvrir Google Maps web
+      window.open(`https://maps.google.com/?q=${encodedAddress}`, '_blank')
+    }
   }, [])
 
   const handleCall = useCallback((_slotId: string) => {
