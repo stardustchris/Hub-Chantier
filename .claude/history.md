@@ -3,6 +3,29 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-25 (Amélioration couverture tests - Suite 2)
+
+Ajout de tests pour les composants dashboard.
+
+### Tests créés
+
+| Fichier | Tests | Description |
+|---------|-------|-------------|
+| components/dashboard/StatsCard.test.tsx | 7 | Tests carte statistiques |
+| components/dashboard/WeatherCard.test.tsx | 5 | Tests carte météo |
+| components/dashboard/QuickActions.test.tsx | 8 | Tests actions rapides |
+| components/dashboard/TeamCard.test.tsx | 9 | Tests carte équipe |
+| components/dashboard/ClockCard.test.tsx | 12 | Tests carte pointage |
+
+### Résultats
+
+| Métrique | Avant | Après |
+|----------|-------|-------|
+| Tests frontend | 839 | 880 (+41) |
+| Couverture globale | 28.08% | **29.27%** |
+
+---
+
 ## Session 2026-01-25 (Amélioration couverture tests - Suite)
 
 Continuation de l'amélioration de la couverture des tests frontend.
