@@ -146,7 +146,7 @@ class SQLAlchemyNotificationRepository(NotificationRepository):
             related_chantier_id=model.related_chantier_id,
             related_document_id=model.related_document_id,
             triggered_by_user_id=model.triggered_by_user_id,
-            metadata=model.metadata or {},
+            metadata=model.extra_data or {},
             created_at=model.created_at,
         )
 
@@ -165,7 +165,7 @@ class SQLAlchemyNotificationRepository(NotificationRepository):
             related_chantier_id=entity.related_chantier_id,
             related_document_id=entity.related_document_id,
             triggered_by_user_id=entity.triggered_by_user_id,
-            metadata=entity.metadata if entity.metadata else None,
+            extra_data=entity.metadata if entity.metadata else None,
             created_at=entity.created_at,
         )
 
@@ -175,4 +175,4 @@ class SQLAlchemyNotificationRepository(NotificationRepository):
         model.read_at = entity.read_at
         model.title = entity.title
         model.message = entity.message
-        model.metadata = entity.metadata if entity.metadata else None
+        model.extra_data = entity.metadata if entity.metadata else None

@@ -51,8 +51,8 @@ class NotificationModel(Base):
     # Utilisateur ayant declenche la notification
     triggered_by_user_id = Column(Integer, nullable=True, index=True)
 
-    # Metadata supplementaires (JSON)
-    metadata = Column(JSON, nullable=True)
+    # Donnees supplementaires (JSON)
+    extra_data = Column(JSON, nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.now, index=True)
