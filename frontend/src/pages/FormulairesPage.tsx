@@ -42,7 +42,7 @@ const MOCK_TEMPLATES: TemplateFormulaire[] = [
   {
     id: 1,
     nom: 'Contrôle qualité béton',
-    categorie: 'qualite',
+    categorie: 'reception',
     description: 'Vérification de la qualité du béton coulé',
     champs: [
       { id: 1, nom: 'temperature', label: 'Température ambiante (°C)', type_champ: 'number', obligatoire: true, ordre: 1 },
@@ -53,6 +53,8 @@ const MOCK_TEMPLATES: TemplateFormulaire[] = [
     is_active: true,
     version: 1,
     nombre_champs: 4,
+    a_signature: true,
+    a_photo: true,
     created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 7 * 86400000).toISOString(),
   },
@@ -71,13 +73,15 @@ const MOCK_TEMPLATES: TemplateFormulaire[] = [
     is_active: true,
     version: 2,
     nombre_champs: 5,
+    a_signature: true,
+    a_photo: false,
     created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 3 * 86400000).toISOString(),
   },
   {
     id: 3,
     nom: 'Réception matériaux',
-    categorie: 'livraison',
+    categorie: 'approvisionnement',
     description: 'Contrôle à la réception des matériaux',
     champs: [
       { id: 10, nom: 'fournisseur', label: 'Fournisseur', type_champ: 'text', obligatoire: true, ordre: 1 },
@@ -88,13 +92,15 @@ const MOCK_TEMPLATES: TemplateFormulaire[] = [
     is_active: true,
     version: 1,
     nombre_champs: 4,
+    a_signature: true,
+    a_photo: true,
     created_at: new Date(Date.now() - 45 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
     id: 4,
     nom: 'Rapport journalier',
-    categorie: 'rapport',
+    categorie: 'interventions',
     description: 'Rapport d\'activité quotidien',
     champs: [
       { id: 14, nom: 'meteo', label: 'Conditions météo', type_champ: 'select', obligatoire: true, ordre: 1, options: ['Beau', 'Nuageux', 'Pluie', 'Neige'] },
@@ -105,6 +111,8 @@ const MOCK_TEMPLATES: TemplateFormulaire[] = [
     is_active: true,
     version: 3,
     nombre_champs: 4,
+    a_signature: false,
+    a_photo: true,
     created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
@@ -116,7 +124,7 @@ const MOCK_FORMULAIRES: FormulaireRempli[] = [
     id: 1,
     template_id: 1,
     template_nom: 'Contrôle qualité béton',
-    template_categorie: 'qualite',
+    template_categorie: 'reception',
     chantier_id: 1,
     chantier_nom: 'Villa Moderne Lyon',
     user_id: 1,
@@ -161,7 +169,7 @@ const MOCK_FORMULAIRES: FormulaireRempli[] = [
     id: 3,
     template_id: 4,
     template_nom: 'Rapport journalier',
-    template_categorie: 'rapport',
+    template_categorie: 'interventions',
     chantier_id: 1,
     chantier_nom: 'Villa Moderne Lyon',
     user_id: 1,
@@ -179,7 +187,7 @@ const MOCK_FORMULAIRES: FormulaireRempli[] = [
     id: 4,
     template_id: 3,
     template_nom: 'Réception matériaux',
-    template_categorie: 'livraison',
+    template_categorie: 'approvisionnement',
     chantier_id: 3,
     chantier_nom: 'École Pasteur',
     user_id: 4,
@@ -198,11 +206,11 @@ const MOCK_FORMULAIRES: FormulaireRempli[] = [
 ]
 
 // Mock chantiers
-const MOCK_CHANTIERS: Chantier[] = [
-  { id: '1', code: 'VML-001', nom: 'Villa Moderne Lyon', client_nom: 'M. Durand', statut: 'en_cours', adresse: '45 rue de la République, Lyon', date_debut: '2026-01-10', date_fin_prevue: '2026-06-30' } as Chantier,
-  { id: '2', code: 'RLP-002', nom: 'Résidence Les Pins', client_nom: 'SCI Les Pins', statut: 'en_cours', adresse: '12 avenue des Pins, Villeurbanne', date_debut: '2025-11-01', date_fin_prevue: '2026-08-15' } as Chantier,
-  { id: '3', code: 'EPA-003', nom: 'École Pasteur', client_nom: 'Mairie de Lyon', statut: 'en_cours', adresse: '8 rue Pasteur, Lyon', date_debut: '2026-01-15', date_fin_prevue: '2026-12-01' } as Chantier,
-]
+const MOCK_CHANTIERS = [
+  { id: '1', code: 'VML-001', nom: 'Villa Moderne Lyon', contact_nom: 'M. Durand', statut: 'en_cours', adresse: '45 rue de la République, Lyon', date_debut_prevue: '2026-01-10', date_fin_prevue: '2026-06-30', conducteurs: [], chefs: [], created_at: '2026-01-01' },
+  { id: '2', code: 'RLP-002', nom: 'Résidence Les Pins', contact_nom: 'SCI Les Pins', statut: 'en_cours', adresse: '12 avenue des Pins, Villeurbanne', date_debut_prevue: '2025-11-01', date_fin_prevue: '2026-08-15', conducteurs: [], chefs: [], created_at: '2025-11-01' },
+  { id: '3', code: 'EPA-003', nom: 'École Pasteur', contact_nom: 'Mairie de Lyon', statut: 'en_cours', adresse: '8 rue Pasteur, Lyon', date_debut_prevue: '2026-01-15', date_fin_prevue: '2026-12-01', conducteurs: [], chefs: [], created_at: '2026-01-15' },
+] as Chantier[]
 
 type TabType = 'templates' | 'formulaires'
 type ViewMode = 'grid' | 'list'

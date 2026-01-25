@@ -72,7 +72,12 @@ export const DashboardPostCard = memo(function DashboardPostCard({
             prenom: user?.prenom || 'Moi',
             nom: user?.nom || '',
             couleur: user?.couleur || '#3498DB',
-          },
+            email: user?.email || '',
+            role: user?.role || 'ouvrier',
+            type_utilisateur: user?.type_utilisateur || 'interne',
+            is_active: true,
+            created_at: new Date().toISOString(),
+          } as Post['auteur'],
           created_at: new Date().toISOString(),
         }
         setComments((prev) => [...prev, newCommentObj])

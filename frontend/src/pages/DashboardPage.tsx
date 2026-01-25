@@ -37,7 +37,7 @@ const isMockPost = (postId: string | number): boolean => {
 // Mock posts pour démonstration (IDs négatifs pour éviter conflits avec API)
 const MOCK_POSTS: Post[] = [
   {
-    id: -1,
+    id: '-1',
     contenu: 'Dalle coulée avec succès sur le chantier Villa Moderne ! Beau travail de toute l\'équipe malgré la météo difficile ce matin.',
     type: 'message',
     auteur: { id: '1', prenom: 'Pierre', nom: 'Martin', couleur: '#3498DB', role: 'chef_chantier' } as Post['auteur'],
@@ -56,7 +56,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 7200000).toISOString(),
   },
   {
-    id: -2,
+    id: '-2',
     contenu: '⚠️ URGENT: Livraison de béton décalée à 14h au lieu de 10h sur Résidence Les Pins. Merci de réorganiser les équipes.',
     type: 'urgent',
     auteur: { id: '3', prenom: 'Jean', nom: 'Conducteur', couleur: '#9B59B6', role: 'conducteur' } as Post['auteur'],
@@ -75,7 +75,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 1800000).toISOString(),
   },
   {
-    id: -3,
+    id: '-3',
     contenu: 'Formation sécurité effectuée ce matin. Rappel: port du casque OBLIGATOIRE sur tous les chantiers. Bonne journée à tous !',
     type: 'message',
     auteur: { id: '4', prenom: 'Admin', nom: 'Greg', couleur: '#27AE60', role: 'admin' } as Post['auteur'],
@@ -93,7 +93,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 86400000).toISOString(),
   },
   {
-    id: -4,
+    id: '-4',
     contenu: 'Nouvelle machine arrivée sur le chantier École Pasteur. Formation d\'utilisation demain à 8h pour les volontaires.',
     type: 'message',
     auteur: { id: '5', prenom: 'Sophie', nom: 'Technique', couleur: '#F39C12', role: 'chef_chantier' } as Post['auteur'],
@@ -112,7 +112,7 @@ const MOCK_POSTS: Post[] = [
     created_at: new Date(Date.now() - 172800000).toISOString(),
   },
   {
-    id: -5,
+    id: '-5',
     contenu: 'Félicitations à l\'équipe du chantier Maison Durand pour la livraison en avance ! Client très satisfait.',
     type: 'message',
     auteur: { id: '4', prenom: 'Admin', nom: 'Greg', couleur: '#27AE60', role: 'admin' } as Post['auteur'],
@@ -257,7 +257,7 @@ export default function DashboardPage() {
           const currentLikes = p.likes || []
           const newLikes = isLiked
             ? currentLikes.filter((l) => l.user_id !== user?.id)
-            : [...currentLikes, { user_id: user?.id || '', created_at: new Date().toISOString() }]
+            : [...currentLikes, { user_id: user?.id || '', user: user! }]
           return {
             ...p,
             likes_count: (p.likes_count || 0) + (isLiked ? -1 : 1),
