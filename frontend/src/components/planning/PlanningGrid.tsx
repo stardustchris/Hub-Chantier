@@ -420,6 +420,8 @@ export default function PlanningGrid({
                               resizable={!!onAffectationResize}
                               onResizeStart={(direction, e) => handleResizeStart(aff, direction, e)}
                               isResizing={resizeState?.affectation.id === aff.id}
+                              proportionalHeight={true}
+                              cellHeight={60}
                             />
                           ))}
                         </div>

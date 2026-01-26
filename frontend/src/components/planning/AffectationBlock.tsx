@@ -20,7 +20,24 @@ interface AffectationBlockProps {
   resizable?: boolean
   onResizeStart?: (direction: 'left' | 'right', e: React.MouseEvent) => void
   isResizing?: boolean
+  // Hauteur proportionnelle a la duree
+  proportionalHeight?: boolean
+  cellHeight?: number // Hauteur de la cellule en pixels (pour une journee complete)
 }
+
+/**
+ * Calcule la duree en heures entre deux horaires (format "HH:MM")
+ */
+function calculateDurationHours(heureDebut: string, heureFin: string): number {
+  const [startH, startM] = heureDebut.split(':').map(Number)
+  const [endH, endM] = heureFin.split(':').map(Number)
+  const startMinutes = startH * 60 + startM
+  const endMinutes = endH * 60 + endM
+  return (endMinutes - startMinutes) / 60
+}
+
+// Journee de travail standard: 8h (ex: 08:00 - 17:00 avec 1h pause)
+const FULL_DAY_HOURS = 8
 
 const AffectationBlock = memo(function AffectationBlock({
   affectation,
@@ -33,9 +50,21 @@ const AffectationBlock = memo(function AffectationBlock({
   resizable = false,
   onResizeStart,
   isResizing = false,
+  proportionalHeight = false,
+  cellHeight = 60,
 }: AffectationBlockProps) {
   const backgroundColor = affectation.chantier_couleur || '#3498DB'
   const hasNote = !!affectation.note
+
+  // Calculer la hauteur proportionnelle si les horaires sont definis
+  let heightStyle: React.CSSProperties = {}
+  if (proportionalHeight && affectation.heure_debut && affectation.heure_fin) {
+    const durationHours = calculateDurationHours(affectation.heure_debut, affectation.heure_fin)
+    const heightPercent = Math.min(durationHours / FULL_DAY_HOURS, 1)
+    const minHeight = 24 // Hauteur minimale pour rester lisible
+    const calculatedHeight = Math.max(cellHeight * heightPercent, minHeight)
+    heightStyle = { height: `${calculatedHeight}px`, minHeight: `${minHeight}px` }
+  }
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -52,7 +81,7 @@ const AffectationBlock = memo(function AffectationBlock({
     return (
       <div
         className={`w-full max-w-full rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
-        style={{ backgroundColor }}
+        style={{ backgroundColor, ...heightStyle }}
         onClick={onClick}
         title={`${affectation.chantier_nom || 'Chantier'} ${affectation.heure_debut ? `${affectation.heure_debut} - ${affectation.heure_fin}` : ''}`}
         draggable={draggable}
@@ -67,7 +96,7 @@ const AffectationBlock = memo(function AffectationBlock({
   return (
     <div
       className={`w-full max-w-full rounded-lg px-2 py-1.5 text-white cursor-pointer hover:opacity-90 transition-opacity relative group overflow-hidden ${draggable ? 'cursor-grab active:cursor-grabbing' : ''} ${isResizing ? 'ring-2 ring-white' : ''}`}
-      style={{ backgroundColor }}
+      style={{ backgroundColor, ...heightStyle }}
       onClick={onClick}
       draggable={draggable && !isResizing}
       onDragStart={onDragStart}
