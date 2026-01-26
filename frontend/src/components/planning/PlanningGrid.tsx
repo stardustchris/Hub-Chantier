@@ -85,6 +85,7 @@ export default function PlanningGrid({
 
   // Resize state
   const [resizeState, setResizeState] = useState<ResizeState | null>(null)
+  const [resizePreviewDates, setResizePreviewDates] = useState<string[]>([]) // Dates qui seront ajoutées
   const gridRef = useRef<HTMLDivElement>(null)
 
   // PLN-05/PLN-06: Jours selon le mode de vue (semaine ou mois)
@@ -162,10 +163,29 @@ export default function PlanningGrid({
     })
   }, [onAffectationResize])
 
-  const handleResizeMove = useCallback((_e: MouseEvent) => {
+  const handleResizeMove = useCallback((e: MouseEvent) => {
     if (!resizeState) return
-    // Afficher un feedback visuel (optionnel - pourrait être amélioré)
-    // Pour l'instant, on laisse juste le state se mettre à jour à la fin
+
+    // Calculer les dates qui seront ajoutées pour afficher la preview
+    const deltaX = e.clientX - resizeState.startX
+    const daysDelta = Math.round(deltaX / resizeState.cellWidth)
+    const originalDate = new Date(resizeState.originalDate)
+
+    const previewDates: string[] = []
+
+    if (resizeState.direction === 'right' && daysDelta > 0) {
+      // Extension vers la droite
+      for (let i = 1; i <= daysDelta; i++) {
+        previewDates.push(format(addDays(originalDate, i), 'yyyy-MM-dd'))
+      }
+    } else if (resizeState.direction === 'left' && daysDelta < 0) {
+      // Extension vers la gauche
+      for (let i = daysDelta; i < 0; i++) {
+        previewDates.push(format(addDays(originalDate, i), 'yyyy-MM-dd'))
+      }
+    }
+
+    setResizePreviewDates(previewDates)
   }, [resizeState])
 
   const handleResizeEnd = useCallback((e: MouseEvent) => {
@@ -186,37 +206,33 @@ export default function PlanningGrid({
     const deltaX = e.clientX - resizeState.startX
     const daysDelta = Math.round(deltaX / resizeState.cellWidth)
 
+    // Le resize ne fait que de l'EXTENSION (ajout de jours)
+    // Pour supprimer des jours, l'utilisateur doit cliquer sur le X de chaque affectation
     if (daysDelta !== 0) {
       const originalDate = new Date(resizeState.originalDate)
 
-      if (resizeState.direction === 'right') {
-        // Poignée droite: étendre ou réduire depuis la fin
-        // deltaX > 0 = étendre vers la droite (ajouter des jours après)
-        // deltaX < 0 = réduire depuis la droite (supprimer des jours à la fin)
+      if (resizeState.direction === 'right' && daysDelta > 0) {
+        // Poignée droite tirée vers la droite = étendre
         const newEndDate = addDays(originalDate, daysDelta)
-        // S'assurer que date_fin >= date_debut (si reduction trop importante, on garde juste le jour original)
-        const finalEndDate = newEndDate < originalDate ? originalDate : newEndDate
         onAffectationResize(
           resizeState.affectation.id,
           resizeState.originalDate,
-          format(finalEndDate, 'yyyy-MM-dd')
+          format(newEndDate, 'yyyy-MM-dd')
         )
-      } else {
-        // Poignée gauche: étendre ou réduire depuis le début
-        // deltaX < 0 = étendre vers la gauche (ajouter des jours avant)
-        // deltaX > 0 = réduire depuis la gauche (supprimer des jours au début)
+      } else if (resizeState.direction === 'left' && daysDelta < 0) {
+        // Poignée gauche tirée vers la gauche = étendre
         const newStartDate = addDays(originalDate, daysDelta)
-        // S'assurer que date_debut <= date_fin (si reduction trop importante, on garde juste le jour original)
-        const finalStartDate = newStartDate > originalDate ? originalDate : newStartDate
         onAffectationResize(
           resizeState.affectation.id,
-          format(finalStartDate, 'yyyy-MM-dd'),
+          format(newStartDate, 'yyyy-MM-dd'),
           resizeState.originalDate
         )
       }
+      // Les autres cas (réduction) sont ignorés - l'utilisateur doit supprimer manuellement
     }
 
     setResizeState(null)
+    setResizePreviewDates([])
   }, [resizeState, onAffectationResize])
 
   // Écouter les événements mouse globalement pendant le resize
