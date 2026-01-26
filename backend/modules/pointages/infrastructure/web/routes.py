@@ -11,6 +11,7 @@ from shared.infrastructure.database import get_db
 from shared.infrastructure.web.dependencies import (
     get_current_user_id,
 )
+from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from ..persistence import (
     SQLAlchemyPointageRepository,
     SQLAlchemyFeuilleHeuresRepository,
@@ -97,12 +98,14 @@ def get_controller(db: Session = Depends(get_db)) -> PointageController:
     feuille_repo = SQLAlchemyFeuilleHeuresRepository(db)
     variable_repo = SQLAlchemyVariablePaieRepository(db)
     event_bus = get_event_bus()
+    entity_info_service = SQLAlchemyEntityInfoService(db)
 
     return PointageController(
         pointage_repo=pointage_repo,
         feuille_repo=feuille_repo,
         variable_repo=variable_repo,
         event_bus=event_bus,
+        entity_info_service=entity_info_service,
     )
 
 

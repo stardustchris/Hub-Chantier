@@ -1,7 +1,9 @@
 """Use Case: Lister les pointages avec filtres (FDH-04)."""
 
 from math import ceil
+from typing import Optional
 
+from shared.application.ports.entity_info_service import EntityInfoService
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository
 from ...domain.value_objects import StatutPointage
@@ -15,14 +17,20 @@ class ListPointagesUseCase:
     Implémente FDH-04: Filtre utilisateurs - Dropdown de sélection multi-critères.
     """
 
-    def __init__(self, pointage_repo: PointageRepository):
+    def __init__(
+        self,
+        pointage_repo: PointageRepository,
+        entity_info_service: Optional[EntityInfoService] = None,
+    ):
         """
         Initialise le use case.
 
         Args:
             pointage_repo: Repository des pointages.
+            entity_info_service: Service pour enrichir les données (noms utilisateurs/chantiers).
         """
         self.pointage_repo = pointage_repo
+        self.entity_info_service = entity_info_service
 
     def execute(self, search_dto: PointageSearchDTO) -> PointageListDTO:
         """
@@ -52,6 +60,10 @@ class ListPointagesUseCase:
             skip=skip,
             limit=search_dto.page_size,
         )
+
+        # Enrichir les pointages avec les noms utilisateurs et chantiers
+        if self.entity_info_service and pointages:
+            self._enrich_pointages(pointages)
 
         # Calcule le nombre de pages
         total_pages = ceil(total / search_dto.page_size) if total > 0 else 1
@@ -93,3 +105,37 @@ class ListPointagesUseCase:
             chantier_nom=pointage.chantier_nom,
             chantier_couleur=pointage.chantier_couleur,
         )
+
+    def _enrich_pointages(self, pointages: list) -> None:
+        """Enrichit les pointages avec les noms utilisateurs et chantiers.
+
+        Args:
+            pointages: Liste des pointages à enrichir (modifiés in-place).
+        """
+        # Collecter les IDs uniques
+        user_ids = {p.utilisateur_id for p in pointages}
+        chantier_ids = {p.chantier_id for p in pointages}
+
+        # Récupérer les infos en batch (cache local pour éviter requêtes répétées)
+        user_infos = {}
+        for uid in user_ids:
+            info = self.entity_info_service.get_user_info(uid)
+            if info:
+                user_infos[uid] = info
+
+        chantier_infos = {}
+        for cid in chantier_ids:
+            info = self.entity_info_service.get_chantier_info(cid)
+            if info:
+                chantier_infos[cid] = info
+
+        # Enrichir chaque pointage
+        for pointage in pointages:
+            user_info = user_infos.get(pointage.utilisateur_id)
+            if user_info:
+                pointage.utilisateur_nom = user_info.nom
+
+            chantier_info = chantier_infos.get(pointage.chantier_id)
+            if chantier_info:
+                pointage.chantier_nom = chantier_info.nom
+                pointage.chantier_couleur = chantier_info.couleur

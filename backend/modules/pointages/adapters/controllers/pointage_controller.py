@@ -57,6 +57,7 @@ class PointageController:
         feuille_repo: FeuilleHeuresRepository,
         variable_repo: VariablePaieRepository,
         event_bus: Optional[EventBus] = None,
+        entity_info_service: Optional["EntityInfoService"] = None,
     ):
         """
         Initialise le controller.
@@ -66,11 +67,13 @@ class PointageController:
             feuille_repo: Repository des feuilles d'heures.
             variable_repo: Repository des variables de paie.
             event_bus: Bus d'événements (optionnel).
+            entity_info_service: Service pour enrichir les données (noms utilisateurs/chantiers).
         """
         self.pointage_repo = pointage_repo
         self.feuille_repo = feuille_repo
         self.variable_repo = variable_repo
         self.event_bus = event_bus
+        self.entity_info_service = entity_info_service
 
         # Initialise les use cases
         self._create_uc = CreatePointageUseCase(pointage_repo, feuille_repo, event_bus)
@@ -81,7 +84,7 @@ class PointageController:
         self._validate_uc = ValidatePointageUseCase(pointage_repo, event_bus)
         self._reject_uc = RejectPointageUseCase(pointage_repo, event_bus)
         self._get_uc = GetPointageUseCase(pointage_repo)
-        self._list_uc = ListPointagesUseCase(pointage_repo)
+        self._list_uc = ListPointagesUseCase(pointage_repo, entity_info_service)
         self._get_feuille_uc = GetFeuilleHeuresUseCase(feuille_repo, pointage_repo)
         self._list_feuille_uc = ListFeuillesHeuresUseCase(feuille_repo, pointage_repo)
         self._vue_semaine_uc = GetVueSemaineUseCase(pointage_repo)
