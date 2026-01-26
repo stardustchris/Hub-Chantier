@@ -3,6 +3,56 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-26 (Correction tests et couverture Firebase)
+
+Analyse de la couverture des tests frontend et correction des tests en échec.
+
+### Analyse couverture
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests passés | 1651 / 1655 (99.88%) |
+| Fichiers de test | 91 |
+| Fichiers source | 159 |
+| Fichiers sans tests | 68 (43%) |
+
+### Tests corrigés
+
+| Fichier | Problème | Correction |
+|---------|----------|------------|
+| `usePlanning.test.ts` | `macon` n'existe pas dans `PLANNING_CATEGORIES` | Utilise `compagnon` (clé valide) |
+| `planning.test.ts` | Type mismatch `utilisateur_id` (string vs number) | Attend `number` (backend requirement) |
+| `LogistiquePage.test.tsx` | `useAuth must be used within AuthProvider` | Ajout mock `Layout` |
+
+### Tests créés
+
+| Fichier | Tests | Description |
+|---------|-------|-------------|
+| `services/firebase.test.ts` | 22 | Tests complets service Firebase |
+
+### Couverture firebase.ts (100%)
+
+- `isFirebaseConfigured` : validation variables environnement
+- `initFirebase` : initialisation, singleton, gestion erreurs
+- `getFirebaseMessaging` : initialisation messaging, singleton
+- `requestNotificationPermission` : flux permission, récupération token
+- `onForegroundMessage` : enregistrement listener, callbacks
+
+### Commits poussés
+
+```
+a7c5202 fix(tests): resolve failing tests and improve test reliability
+fa9a308 test(firebase): add comprehensive tests for firebase service
+```
+
+### Résultat final
+
+- **91 fichiers de tests** passent
+- **1655 tests** au total (1651 passés, 4 skipped)
+- **Couverture firebase.ts** : 100% (22 tests)
+
+---
+
 ## Session 2026-01-25 (Corrections Frontend Priorité 2 & 3)
 
 Correction de 13 problèmes frontend identifiés par les agents (Priorité 2 HAUTE et Priorité 3 MOYENNE).
