@@ -29,3 +29,10 @@ export { useLogistique } from './useLogistique'
 export { useFormulaires } from './useFormulaires'
 export { useTodayPlanning } from './useTodayPlanning'
 export type { UseTodayPlanningReturn } from './useTodayPlanning'
+
+export { useWeeklyStats } from './useWeeklyStats'
+
+export { useRecentDocuments } from './useRecentDocuments'
+export type { RecentDocument } from './useRecentDocuments'
+
+export { useChantierLogistique } from './useChantierLogistique'

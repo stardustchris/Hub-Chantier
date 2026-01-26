@@ -267,7 +267,7 @@ export const PLANNING_CATEGORIES: Record<PlanningCategory, { label: string; colo
 
 // ===== STATUTS CHANTIER =====
 export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: string; icon: string }> = {
-  ouvert: { label: 'Ouvert', color: '#3498DB', icon: 'circle' },
+  ouvert: { label: 'A lancer', color: '#3498DB', icon: 'circle' },
   en_cours: { label: 'En cours', color: '#27AE60', icon: 'play' },
   receptionne: { label: 'Receptionne', color: '#F1C40F', icon: 'check' },
   ferme: { label: 'Ferme', color: '#E74C3C', icon: 'lock' },

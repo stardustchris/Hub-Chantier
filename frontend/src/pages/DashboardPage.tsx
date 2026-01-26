@@ -11,7 +11,7 @@ import { useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { useClockCard, useDashboardFeed, useTodayPlanning } from '../hooks'
+import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats } from '../hooks'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -46,6 +46,9 @@ export default function DashboardPage() {
 
   // Hook pour le planning du jour (affectations réelles de l'utilisateur)
   const todayPlanning = useTodayPlanning()
+
+  // Hook pour les statistiques hebdomadaires (heures, tâches)
+  const weeklyStats = useWeeklyStats()
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
@@ -152,7 +155,12 @@ export default function DashboardPage() {
               onEditTime={clock.handleEditTime}
             />
             <WeatherCard />
-            <StatsCard />
+            <StatsCard
+              hoursWorked={weeklyStats.hoursWorked}
+              hoursProgress={weeklyStats.hoursProgress}
+              tasksCompleted={weeklyStats.tasksCompleted}
+              tasksTotal={weeklyStats.tasksTotal}
+            />
           </div>
 
           {/* Quick Actions */}

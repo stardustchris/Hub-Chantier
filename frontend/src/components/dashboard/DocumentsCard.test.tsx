@@ -1,96 +1,197 @@
 /**
  * Tests pour DocumentsCard
+ * Utilise le hook useRecentDocuments pour charger les documents
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
 import DocumentsCard from './DocumentsCard'
+import type { RecentDocument } from '../../hooks/useRecentDocuments'
+
+// Mock du hook useRecentDocuments
+const mockOpenDocument = vi.fn()
+const mockRefreshDocuments = vi.fn()
+const mockLoadMore = vi.fn()
+
+vi.mock('../../hooks', () => ({
+  useRecentDocuments: vi.fn(() => ({
+    documents: [],
+    isLoading: false,
+    hasMore: false,
+    openDocument: mockOpenDocument,
+    loadMore: mockLoadMore,
+    refreshDocuments: mockRefreshDocuments,
+  })),
+}))
+
+// Mock de useNavigate
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  }
+})
+
+// Import apres les mocks
+import { useRecentDocuments } from '../../hooks'
+
+const mockUseRecentDocuments = useRecentDocuments as ReturnType<typeof vi.fn>
+
+function renderWithRouter(component: React.ReactElement) {
+  return render(<BrowserRouter>{component}</BrowserRouter>)
+}
 
 describe('DocumentsCard', () => {
-  it('affiche le titre Mes documents', () => {
-    render(<DocumentsCard />)
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUseRecentDocuments.mockReturnValue({
+      documents: [],
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+  })
 
+  it('affiche le titre Mes documents', () => {
+    renderWithRouter(<DocumentsCard />)
     expect(screen.getByText('Mes documents')).toBeInTheDocument()
   })
 
-  it('affiche les documents par defaut', () => {
-    render(<DocumentsCard />)
-
-    expect(screen.getByText(/Plan étage 1/)).toBeInTheDocument()
-    expect(screen.getByText(/Consignes de sécurité/)).toBeInTheDocument()
-    expect(screen.getByText(/Checklist qualité/)).toBeInTheDocument()
-  })
-
-  it('affiche des documents personnalises', () => {
-    const customDocs = [
-      { id: '1', name: 'Document A.pdf', type: 'pdf' as const },
-      { id: '2', name: 'Image B.jpg', type: 'image' as const },
-    ]
-
-    render(<DocumentsCard documents={customDocs} />)
-
-    expect(screen.getByText('Document A.pdf')).toBeInTheDocument()
-    expect(screen.getByText('Image B.jpg')).toBeInTheDocument()
-  })
-
-  it('affiche le nom du chantier si defini', () => {
-    const docs = [
-      { id: '1', name: 'Test.pdf', siteName: 'Chantier ABC', type: 'pdf' as const },
-    ]
-
-    render(<DocumentsCard documents={docs} />)
-
-    expect(screen.getByText('Chantier ABC')).toBeInTheDocument()
-  })
-
-  it('n\'affiche pas le nom du chantier si non defini', () => {
-    const docs = [
-      { id: '1', name: 'Test.pdf', type: 'pdf' as const },
-    ]
-
-    render(<DocumentsCard documents={docs} />)
-
-    expect(screen.getByText('Test.pdf')).toBeInTheDocument()
-    expect(screen.queryByText('Chantier')).not.toBeInTheDocument()
-  })
-
   it('affiche le bouton Voir tout', () => {
-    render(<DocumentsCard />)
-
+    renderWithRouter(<DocumentsCard />)
     expect(screen.getByText('Voir tout')).toBeInTheDocument()
   })
 
-  it('appelle onViewAll au clic sur Voir tout', () => {
-    const onViewAll = vi.fn()
-    render(<DocumentsCard onViewAll={onViewAll} />)
+  it('affiche le loading state', () => {
+    mockUseRecentDocuments.mockReturnValue({
+      documents: [],
+      isLoading: true,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    const { container } = renderWithRouter(<DocumentsCard />)
+
+    // Verifier que le spinner est present
+    const spinner = container.querySelector('.animate-spin')
+    expect(spinner).toBeInTheDocument()
+  })
+
+  it('affiche le state vide quand pas de documents', () => {
+    mockUseRecentDocuments.mockReturnValue({
+      documents: [],
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    renderWithRouter(<DocumentsCard />)
+
+    expect(screen.getByText('Aucun document recent')).toBeInTheDocument()
+    expect(screen.getByText('Acceder a la GED')).toBeInTheDocument()
+  })
+
+  it('affiche les documents charges', () => {
+    const docs: RecentDocument[] = [
+      { id: '1', name: 'Document A.pdf', siteName: 'Chantier 1', type: 'pdf', chantierId: 1, documentId: 1 },
+      { id: '2', name: 'Image B.jpg', siteName: 'Chantier 2', type: 'image', chantierId: 2, documentId: 2 },
+    ]
+
+    mockUseRecentDocuments.mockReturnValue({
+      documents: docs,
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    renderWithRouter(<DocumentsCard />)
+
+    expect(screen.getByText('Document A.pdf')).toBeInTheDocument()
+    expect(screen.getByText('Image B.jpg')).toBeInTheDocument()
+    expect(screen.getByText('Chantier 1')).toBeInTheDocument()
+    expect(screen.getByText('Chantier 2')).toBeInTheDocument()
+  })
+
+  it('navigue vers /documents au clic sur Voir tout', () => {
+    renderWithRouter(<DocumentsCard />)
 
     fireEvent.click(screen.getByText('Voir tout'))
 
-    expect(onViewAll).toHaveBeenCalled()
+    expect(mockNavigate).toHaveBeenCalledWith('/documents')
   })
 
-  it('appelle onDocumentClick au clic sur un document', () => {
-    const onDocumentClick = vi.fn()
-    const docs = [
-      { id: 'doc-123', name: 'Mon Document.pdf', type: 'pdf' as const },
-    ]
+  it('navigue vers /documents au clic sur Acceder a la GED', () => {
+    mockUseRecentDocuments.mockReturnValue({
+      documents: [],
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
 
-    render(<DocumentsCard documents={docs} onDocumentClick={onDocumentClick} />)
+    renderWithRouter(<DocumentsCard />)
+
+    fireEvent.click(screen.getByText('Acceder a la GED'))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/documents')
+  })
+
+  it('appelle openDocument au clic sur un document', () => {
+    const doc: RecentDocument = {
+      id: 'doc-123',
+      name: 'Mon Document.pdf',
+      siteName: 'Chantier Test',
+      type: 'pdf',
+      chantierId: 1,
+      documentId: 123,
+    }
+
+    mockUseRecentDocuments.mockReturnValue({
+      documents: [doc],
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    renderWithRouter(<DocumentsCard />)
 
     fireEvent.click(screen.getByText('Mon Document.pdf'))
 
-    expect(onDocumentClick).toHaveBeenCalledWith('doc-123')
+    expect(mockOpenDocument).toHaveBeenCalledWith(doc)
   })
 
   it('gere les differents types de documents', () => {
-    const docs = [
-      { id: '1', name: 'PDF Doc', type: 'pdf' as const },
-      { id: '2', name: 'Word Doc', type: 'doc' as const },
-      { id: '3', name: 'Image Doc', type: 'image' as const },
-      { id: '4', name: 'Other Doc', type: 'other' as const },
+    const docs: RecentDocument[] = [
+      { id: '1', name: 'PDF Doc', siteName: '', type: 'pdf', chantierId: 1, documentId: 1 },
+      { id: '2', name: 'Word Doc', siteName: '', type: 'doc', chantierId: 1, documentId: 2 },
+      { id: '3', name: 'Image Doc', siteName: '', type: 'image', chantierId: 1, documentId: 3 },
+      { id: '4', name: 'Other Doc', siteName: '', type: 'other', chantierId: 1, documentId: 4 },
     ]
 
-    render(<DocumentsCard documents={docs} />)
+    mockUseRecentDocuments.mockReturnValue({
+      documents: docs,
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    renderWithRouter(<DocumentsCard />)
 
     expect(screen.getByText('PDF Doc')).toBeInTheDocument()
     expect(screen.getByText('Word Doc')).toBeInTheDocument()
@@ -98,44 +199,83 @@ describe('DocumentsCard', () => {
     expect(screen.getByText('Other Doc')).toBeInTheDocument()
   })
 
-  it('gere une liste vide de documents', () => {
-    render(<DocumentsCard documents={[]} />)
-
-    expect(screen.getByText('Mes documents')).toBeInTheDocument()
-    expect(screen.getByText('Voir tout')).toBeInTheDocument()
-  })
-
-  it('rend les documents cliquables', () => {
-    const docs = [
-      { id: '1', name: 'Clickable.pdf', type: 'pdf' as const },
-    ]
-
-    const { container } = render(<DocumentsCard documents={docs} />)
-
-    const button = container.querySelector('button')
-    expect(button).toBeInTheDocument()
-  })
-
   it('applique les couleurs correctes pour les types de fichiers', () => {
-    const docs = [
-      { id: '1', name: 'PDF', type: 'pdf' as const },
+    const docs: RecentDocument[] = [
+      { id: '1', name: 'PDF', siteName: '', type: 'pdf', chantierId: 1, documentId: 1 },
     ]
 
-    const { container } = render(<DocumentsCard documents={docs} />)
+    mockUseRecentDocuments.mockReturnValue({
+      documents: docs,
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    const { container } = renderWithRouter(<DocumentsCard />)
 
     // PDF devrait avoir la couleur rouge
     const pdfIcon = container.querySelector('.bg-red-100')
     expect(pdfIcon).toBeInTheDocument()
   })
 
-  it('affiche plusieurs documents du meme chantier', () => {
-    const docs = [
-      { id: '1', name: 'Doc 1.pdf', siteName: 'Villa Moderne', type: 'pdf' as const },
-      { id: '2', name: 'Doc 2.pdf', siteName: 'Villa Moderne', type: 'pdf' as const },
+  it('affiche le bouton Voir plus quand hasMore est true', () => {
+    const docs: RecentDocument[] = [
+      { id: '1', name: 'Doc1.pdf', siteName: '', type: 'pdf', chantierId: 1, documentId: 1 },
     ]
 
-    render(<DocumentsCard documents={docs} />)
+    mockUseRecentDocuments.mockReturnValue({
+      documents: docs,
+      isLoading: false,
+      hasMore: true,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
 
-    expect(screen.getAllByText('Villa Moderne')).toHaveLength(2)
+    renderWithRouter(<DocumentsCard />)
+
+    expect(screen.getByText('Voir plus')).toBeInTheDocument()
+  })
+
+  it('appelle loadMore au clic sur Voir plus', () => {
+    const docs: RecentDocument[] = [
+      { id: '1', name: 'Doc1.pdf', siteName: '', type: 'pdf', chantierId: 1, documentId: 1 },
+    ]
+
+    mockUseRecentDocuments.mockReturnValue({
+      documents: docs,
+      isLoading: false,
+      hasMore: true,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    renderWithRouter(<DocumentsCard />)
+
+    fireEvent.click(screen.getByText('Voir plus'))
+
+    expect(mockLoadMore).toHaveBeenCalled()
+  })
+
+  it('ne affiche pas le bouton Voir plus quand hasMore est false', () => {
+    const docs: RecentDocument[] = [
+      { id: '1', name: 'Doc1.pdf', siteName: '', type: 'pdf', chantierId: 1, documentId: 1 },
+    ]
+
+    mockUseRecentDocuments.mockReturnValue({
+      documents: docs,
+      isLoading: false,
+      hasMore: false,
+      openDocument: mockOpenDocument,
+      loadMore: mockLoadMore,
+      refreshDocuments: mockRefreshDocuments,
+    })
+
+    renderWithRouter(<DocumentsCard />)
+
+    expect(screen.queryByText('Voir plus')).not.toBeInTheDocument()
   })
 })

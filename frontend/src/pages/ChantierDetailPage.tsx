@@ -10,7 +10,7 @@ import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
 import { TaskList } from '../components/taches'
-import { EditChantierModal, AddUserModal, ChantierEquipeTab, MesInterventions } from '../components/chantiers'
+import { EditChantierModal, AddUserModal, ChantierEquipeTab, MesInterventions, ChantierLogistiqueSection } from '../components/chantiers'
 import {
   ArrowLeft,
   MapPin,
@@ -532,6 +532,9 @@ export default function ChantierDetailPage() {
 
               {/* Mes interventions planifiees - visible pour tous les utilisateurs */}
               <MesInterventions chantierId={id!} />
+
+              {/* Section Logistique */}
+              <ChantierLogistiqueSection chantierId={id!} />
             </div>
 
             {/* Sidebar */}

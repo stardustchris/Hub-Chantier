@@ -4,8 +4,9 @@
  * Affiche les affectations réelles de l'utilisateur connecté depuis le planning
  */
 
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, CheckCircle, Navigation, Phone, CalendarX, Loader2, Users } from 'lucide-react'
+import { Calendar, MapPin, CheckCircle, Navigation, Phone, CalendarX, Loader2, Users, ChevronDown } from 'lucide-react'
 
 interface Task {
   id: string
@@ -53,6 +54,9 @@ const periodStyles = {
   break: { border: 'border-gray-400', bg: 'bg-gray-50', badge: 'bg-gray-400' },
 }
 
+/** Nombre de chantiers affichés initialement */
+const INITIAL_DISPLAY_COUNT = 3
+
 export default function TodayPlanningCard({
   slots = [],
   isLoading = false,
@@ -61,6 +65,28 @@ export default function TodayPlanningCard({
   onChantierClick,
 }: TodayPlanningCardProps) {
   const navigate = useNavigate()
+  const [showAll, setShowAll] = useState(false)
+
+  // Filtrer les slots de chantiers (exclure les pauses)
+  const chantierSlots = slots.filter(s => s.period !== 'break')
+  const breakSlots = slots.filter(s => s.period === 'break')
+
+  // Slots à afficher (limités si showAll est false)
+  const displayedChantierSlots = showAll ? chantierSlots : chantierSlots.slice(0, INITIAL_DISPLAY_COUNT)
+  const hasMore = chantierSlots.length > INITIAL_DISPLAY_COUNT && !showAll
+
+  // Reconstruire les slots avec les pauses au bon endroit
+  const displayedSlots = [...displayedChantierSlots]
+  // Ajouter les pauses seulement si on affiche des slots matin ET après-midi
+  const hasMorning = displayedChantierSlots.some(s => s.period === 'morning')
+  const hasAfternoon = displayedChantierSlots.some(s => s.period === 'afternoon')
+  if (hasMorning && hasAfternoon && breakSlots.length > 0) {
+    // Insérer la pause entre matin et après-midi
+    const morningSlots = displayedChantierSlots.filter(s => s.period === 'morning')
+    const afternoonSlots = displayedChantierSlots.filter(s => s.period === 'afternoon')
+    displayedSlots.length = 0
+    displayedSlots.push(...morningSlots, ...breakSlots, ...afternoonSlots)
+  }
 
   const handleChantierClick = (slot: PlanningSlot) => {
     if (onChantierClick && slot.chantierId) {
@@ -109,7 +135,7 @@ export default function TodayPlanningCard({
       {/* Liste des slots */}
       {!isLoading && slots.length > 0 && (
         <div className="space-y-4">
-          {slots.map((slot) => {
+          {displayedSlots.map((slot) => {
           const period = periodStyles[slot.period]
 
           if (slot.period === 'break') {
@@ -204,12 +230,23 @@ export default function TodayPlanningCard({
                   className="border-2 border-gray-200 py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 font-medium"
                 >
                   <Phone className="w-4 h-4" />
-                  Appeler
+                  Appeler chef
                 </button>
               </div>
             </div>
           )
         })}
+
+          {/* Bouton Voir plus */}
+          {hasMore && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full flex items-center justify-center gap-1 py-2 text-sm text-green-600 hover:text-green-700 font-medium hover:bg-green-50 rounded-lg transition-colors"
+            >
+              <ChevronDown className="w-4 h-4" />
+              Voir plus ({chantierSlots.length - INITIAL_DISPLAY_COUNT} autres)
+            </button>
+          )}
         </div>
       )}
     </div>

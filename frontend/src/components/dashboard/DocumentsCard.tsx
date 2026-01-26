@@ -1,32 +1,12 @@
 /**
  * DocumentsCard - Carte mes documents
  * CDC Section 9 - GED avec acces rapide
+ * Charge les vrais documents depuis l'API et les ouvre sur toutes les plateformes
  */
 
-import { FileText } from 'lucide-react'
-
-interface Document {
-  id: string
-  name: string
-  siteName?: string
-  type: 'pdf' | 'doc' | 'image' | 'other'
-  url?: string
-}
-
-interface DocumentsCardProps {
-  documents?: Document[]
-  onViewAll?: () => void
-  onDocumentClick?: (docId: string) => void
-}
-
-const defaultDocuments: Document[] = [
-  { id: '1', name: 'Plan étage 1 - Villa Moderne.pdf', siteName: 'Villa Moderne Lyon', type: 'pdf' },
-  { id: '2', name: 'Consignes de sécurité 2026.pdf', siteName: 'Général', type: 'pdf' },
-  { id: '3', name: 'Checklist qualité béton.doc', siteName: 'Villa Moderne Lyon', type: 'doc' },
-  { id: '4', name: 'Planning semaine 4.pdf', siteName: 'Résidence Les Pins', type: 'pdf' },
-  { id: '5', name: 'Photo façade nord.jpg', siteName: 'École Pasteur', type: 'image' },
-  { id: '6', name: 'Devis sous-traitant électricité.pdf', siteName: 'Villa Moderne Lyon', type: 'pdf' },
-]
+import { FileText, Loader2, FolderOpen, ChevronDown } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useRecentDocuments, type RecentDocument } from '../../hooks'
 
 const typeColors = {
   pdf: { bg: 'bg-red-100', text: 'text-red-600' },
@@ -35,11 +15,18 @@ const typeColors = {
   other: { bg: 'bg-gray-100', text: 'text-gray-600' },
 }
 
-export default function DocumentsCard({
-  documents = defaultDocuments,
-  onViewAll,
-  onDocumentClick,
-}: DocumentsCardProps) {
+export default function DocumentsCard() {
+  const navigate = useNavigate()
+  const { documents, isLoading, hasMore, openDocument, loadMore } = useRecentDocuments()
+
+  const handleViewAll = () => {
+    navigate('/documents')
+  }
+
+  const handleDocumentClick = (doc: RecentDocument) => {
+    openDocument(doc)
+  }
+
   return (
     <div className="bg-white rounded-2xl p-5 shadow-lg">
       <div className="flex items-center justify-between mb-4">
@@ -48,32 +35,70 @@ export default function DocumentsCard({
           Mes documents
         </h2>
         <button
-          onClick={onViewAll}
+          onClick={handleViewAll}
           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
         >
           Voir tout
         </button>
       </div>
-      <div className="space-y-3 max-h-[280px] overflow-y-auto">
-        {documents.map((doc) => {
-          const colors = typeColors[doc.type]
-          return (
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && documents.length === 0 && (
+        <div className="text-center py-8">
+          <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">Aucun document recent</p>
+          <button
+            onClick={handleViewAll}
+            className="mt-3 text-sm text-purple-600 hover:text-purple-700 font-medium"
+          >
+            Acceder a la GED
+          </button>
+        </div>
+      )}
+
+      {/* Documents list */}
+      {!isLoading && documents.length > 0 && (
+        <div className="space-y-3">
+          <div className="space-y-2 max-h-[240px] overflow-y-auto">
+            {documents.map((doc) => {
+              const colors = typeColors[doc.type]
+              return (
+                <button
+                  key={doc.id}
+                  onClick={() => handleDocumentClick(doc)}
+                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
+                    <FileText className={`w-5 h-5 ${colors.text}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm truncate">{doc.name}</p>
+                    {doc.siteName && <p className="text-xs text-gray-500">{doc.siteName}</p>}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Bouton Voir plus */}
+          {hasMore && (
             <button
-              key={doc.id}
-              onClick={() => onDocumentClick?.(doc.id)}
-              className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              onClick={loadMore}
+              className="w-full flex items-center justify-center gap-1 py-2 text-sm text-purple-600 hover:text-purple-700 font-medium hover:bg-purple-50 rounded-lg transition-colors"
             >
-              <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
-                <FileText className={`w-5 h-5 ${colors.text}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm truncate">{doc.name}</p>
-                {doc.siteName && <p className="text-xs text-gray-500">{doc.siteName}</p>}
-              </div>
+              <ChevronDown className="w-4 h-4" />
+              Voir plus
             </button>
-          )
-        })}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
