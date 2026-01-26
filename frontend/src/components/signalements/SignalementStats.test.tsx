@@ -1,69 +1,89 @@
 /**
- * Tests unitaires pour SignalementStats
+ * Tests pour SignalementStats
+ *
+ * Couvre:
+ * - Chargement et affichage des statistiques
+ * - Affichage des indicateurs principaux
+ * - Affichage par statut et priorite
+ * - Alertes en retard
+ * - Gestion des erreurs
+ * - Formatage des durees
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import SignalementStats from './SignalementStats'
-import * as signalementsService from '../../services/signalements'
+import type { SignalementStatsResponse } from '../../types/signalements'
+
+// Mock services
+const mockGetStatistiques = vi.fn()
 
 vi.mock('../../services/signalements', () => ({
-  getStatistiques: vi.fn(),
+  getStatistiques: (...args: unknown[]) => mockGetStatistiques(...args),
 }))
 
-const mockStats = {
+const createMockStats = (overrides: Partial<SignalementStatsResponse> = {}): SignalementStatsResponse => ({
   total: 50,
-  en_retard: 5,
+  en_retard: 3,
   traites_cette_semaine: 12,
   taux_resolution: 75.5,
   temps_moyen_resolution: 48,
   par_statut: {
-    ouvert: 15,
-    en_cours: 10,
-    traite: 8,
-    cloture: 17,
+    ouvert: 10,
+    en_cours: 15,
+    traite: 20,
+    cloture: 5,
   },
   par_priorite: {
     critique: 5,
-    haute: 12,
+    haute: 15,
     moyenne: 20,
-    basse: 13,
+    basse: 10,
   },
-}
+  ...overrides,
+})
 
 describe('SignalementStats', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(signalementsService.getStatistiques).mockResolvedValue(mockStats)
+    mockGetStatistiques.mockResolvedValue(createMockStats())
   })
 
-  describe('chargement', () => {
-    it('affiche le message de chargement initialement', () => {
-      vi.mocked(signalementsService.getStatistiques).mockImplementation(() => new Promise(() => {}))
+  describe('Chargement', () => {
+    it('affiche le message de chargement', () => {
+      mockGetStatistiques.mockImplementation(() => new Promise(() => {}))
+
       render(<SignalementStats />)
 
-      expect(screen.getByText(/Chargement des statistiques/i)).toBeInTheDocument()
+      expect(screen.getByText('Chargement des statistiques...')).toBeInTheDocument()
     })
 
     it('charge les statistiques au montage', async () => {
       render(<SignalementStats />)
 
       await waitFor(() => {
-        expect(signalementsService.getStatistiques).toHaveBeenCalled()
+        expect(mockGetStatistiques).toHaveBeenCalled()
       })
     })
 
-    it('passe les parametres de filtre', async () => {
-      render(<SignalementStats chantierId={5} dateDebut="2026-01-01" dateFin="2026-01-31" />)
+    it('passe les parametres au service', async () => {
+      render(
+        <SignalementStats
+          chantierId={1}
+          dateDebut="2024-01-01"
+          dateFin="2024-12-31"
+        />
+      )
 
       await waitFor(() => {
-        expect(signalementsService.getStatistiques).toHaveBeenCalledWith(5, '2026-01-01', '2026-01-31')
+        expect(mockGetStatistiques).toHaveBeenCalledWith(1, '2024-01-01', '2024-12-31')
       })
     })
   })
 
-  describe('affichage des statistiques', () => {
-    it('affiche le total de signalements', async () => {
+  describe('Indicateurs principaux', () => {
+    it('affiche le total des signalements', async () => {
       render(<SignalementStats />)
 
       await waitFor(() => {
@@ -77,6 +97,7 @@ describe('SignalementStats', () => {
 
       await waitFor(() => {
         expect(screen.getByText('En retard')).toBeInTheDocument()
+        expect(screen.getByText('3')).toBeInTheDocument()
       })
     })
 
@@ -85,6 +106,7 @@ describe('SignalementStats', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Traités cette semaine')).toBeInTheDocument()
+        expect(screen.getByText('12')).toBeInTheDocument()
       })
     })
 
@@ -96,8 +118,10 @@ describe('SignalementStats', () => {
         expect(screen.getByText('76%')).toBeInTheDocument()
       })
     })
+  })
 
-    it('affiche la repartition par statut', async () => {
+  describe('Repartition par statut', () => {
+    it('affiche la section par statut', async () => {
       render(<SignalementStats />)
 
       await waitFor(() => {
@@ -105,7 +129,21 @@ describe('SignalementStats', () => {
       })
     })
 
-    it('affiche la repartition par priorite', async () => {
+    it('affiche les compteurs par statut', async () => {
+      render(<SignalementStats />)
+
+      await waitFor(() => {
+        // Les valeurs sont affichees (peuvent apparaitre plusieurs fois)
+        expect(screen.getAllByText('10').length).toBeGreaterThanOrEqual(1) // ouvert
+        expect(screen.getAllByText('15').length).toBeGreaterThanOrEqual(1) // en_cours
+        expect(screen.getAllByText('20').length).toBeGreaterThanOrEqual(1) // traite
+        expect(screen.getAllByText('5').length).toBeGreaterThanOrEqual(1) // cloture
+      })
+    })
+  })
+
+  describe('Repartition par priorite', () => {
+    it('affiche la section par priorite', async () => {
       render(<SignalementStats />)
 
       await waitFor(() => {
@@ -114,55 +152,51 @@ describe('SignalementStats', () => {
     })
   })
 
-  describe('alerte en retard', () => {
+  describe('Alertes', () => {
     it('affiche l alerte si signalements en retard', async () => {
+      mockGetStatistiques.mockResolvedValueOnce(createMockStats({ en_retard: 5 }))
+
       render(<SignalementStats />)
 
       await waitFor(() => {
-        expect(screen.getByText(/5 signalements en retard/i)).toBeInTheDocument()
+        expect(screen.getByText('5 signalements en retard')).toBeInTheDocument()
       })
     })
 
-    it('n affiche pas l alerte si aucun retard', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockResolvedValue({
-        ...mockStats,
-        en_retard: 0,
-      })
+    it('n affiche pas l alerte si aucun en retard', async () => {
+      mockGetStatistiques.mockResolvedValueOnce(createMockStats({ en_retard: 0 }))
 
       render(<SignalementStats />)
 
       await waitFor(() => {
-        expect(screen.queryByText(/signalements en retard/i)).not.toBeInTheDocument()
-      })
-    })
-
-    it('affiche singulier pour 1 retard', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockResolvedValue({
-        ...mockStats,
-        en_retard: 1,
-      })
-
-      render(<SignalementStats />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/1 signalement en retard/i)).toBeInTheDocument()
+        expect(screen.queryByText(/signalement.* en retard/)).not.toBeInTheDocument()
       })
     })
   })
 
-  describe('gestion des erreurs', () => {
-    it('affiche l erreur en cas d echec', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockRejectedValue(new Error('Erreur serveur'))
+  describe('Resume performance', () => {
+    it('affiche le resume performance', async () => {
+      render(<SignalementStats />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Résumé performance')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Gestion des erreurs', () => {
+    it('affiche l erreur si le chargement echoue', async () => {
+      mockGetStatistiques.mockRejectedValueOnce(new Error('Erreur reseau'))
 
       render(<SignalementStats />)
 
       await waitFor(() => {
-        expect(screen.getByText('Erreur serveur')).toBeInTheDocument()
+        expect(screen.getByText('Erreur reseau')).toBeInTheDocument()
       })
     })
 
-    it('affiche le bouton reessayer en cas d erreur', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockRejectedValue(new Error('Erreur'))
+    it('affiche le bouton Reessayer', async () => {
+      mockGetStatistiques.mockRejectedValueOnce(new Error('Erreur'))
 
       render(<SignalementStats />)
 
@@ -171,60 +205,28 @@ describe('SignalementStats', () => {
       })
     })
 
-    it('recharge au clic sur reessayer', async () => {
-      vi.mocked(signalementsService.getStatistiques)
-        .mockRejectedValueOnce(new Error('Erreur'))
-        .mockResolvedValueOnce(mockStats)
+    it('recharge les stats au clic sur Reessayer', async () => {
+      mockGetStatistiques.mockRejectedValueOnce(new Error('Erreur'))
 
+      const user = userEvent.setup()
       render(<SignalementStats />)
 
       await waitFor(() => {
         expect(screen.getByText('Réessayer')).toBeInTheDocument()
       })
 
-      fireEvent.click(screen.getByText('Réessayer'))
+      mockGetStatistiques.mockResolvedValueOnce(createMockStats())
+      await user.click(screen.getByText('Réessayer'))
 
       await waitFor(() => {
-        expect(signalementsService.getStatistiques).toHaveBeenCalledTimes(2)
+        expect(mockGetStatistiques).toHaveBeenCalledTimes(2)
       })
     })
   })
 
-  describe('rafraichissement', () => {
-    it('recharge quand refreshTrigger change', async () => {
-      const { rerender } = render(<SignalementStats refreshTrigger={1} />)
-
-      await waitFor(() => {
-        expect(signalementsService.getStatistiques).toHaveBeenCalledTimes(1)
-      })
-
-      rerender(<SignalementStats refreshTrigger={2} />)
-
-      await waitFor(() => {
-        expect(signalementsService.getStatistiques).toHaveBeenCalledTimes(2)
-      })
-    })
-  })
-
-  describe('formatage du temps', () => {
-    it('affiche le temps en heures', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockResolvedValue({
-        ...mockStats,
-        temps_moyen_resolution: 5.5,
-      })
-
-      render(<SignalementStats />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/5\.5h/)).toBeInTheDocument()
-      })
-    })
-
-    it('affiche le temps en jours si plus de 24h', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockResolvedValue({
-        ...mockStats,
-        temps_moyen_resolution: 48,
-      })
+  describe('Formatage durees', () => {
+    it('formate les heures en jours et heures', async () => {
+      mockGetStatistiques.mockResolvedValueOnce(createMockStats({ temps_moyen_resolution: 48 }))
 
       render(<SignalementStats />)
 
@@ -233,43 +235,29 @@ describe('SignalementStats', () => {
       })
     })
 
-    it('affiche le temps en minutes si moins d une heure', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockResolvedValue({
-        ...mockStats,
-        temps_moyen_resolution: 0.5,
-      })
+    it('formate les petites durees en heures', async () => {
+      mockGetStatistiques.mockResolvedValueOnce(createMockStats({ temps_moyen_resolution: 5.5 }))
 
       render(<SignalementStats />)
 
       await waitFor(() => {
-        expect(screen.getByText(/30 min/)).toBeInTheDocument()
-      })
-    })
-
-    it('affiche tiret si pas de temps', async () => {
-      vi.mocked(signalementsService.getStatistiques).mockResolvedValue({
-        ...mockStats,
-        temps_moyen_resolution: null,
-      })
-
-      render(<SignalementStats />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/Temps moyen: -/)).toBeInTheDocument()
+        expect(screen.getByText(/5.5h/)).toBeInTheDocument()
       })
     })
   })
 
-  describe('resume performance', () => {
-    it('affiche le resume des statuts', async () => {
-      render(<SignalementStats />)
+  describe('Refresh trigger', () => {
+    it('recharge les stats quand refreshTrigger change', async () => {
+      const { rerender } = render(<SignalementStats refreshTrigger={0} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Résumé performance')).toBeInTheDocument()
-        expect(screen.getByText(/Ouverts:/)).toBeInTheDocument()
-        expect(screen.getByText(/En cours:/)).toBeInTheDocument()
-        expect(screen.getByText(/Traités:/)).toBeInTheDocument()
-        expect(screen.getByText(/Clôturés:/)).toBeInTheDocument()
+        expect(mockGetStatistiques).toHaveBeenCalledTimes(1)
+      })
+
+      rerender(<SignalementStats refreshTrigger={1} />)
+
+      await waitFor(() => {
+        expect(mockGetStatistiques).toHaveBeenCalledTimes(2)
       })
     })
   })

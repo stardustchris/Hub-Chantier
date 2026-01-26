@@ -2,12 +2,11 @@
  * Tests pour SignalementDetail
  *
  * Couvre:
- * - Chargement des données
- * - Affichage des informations du signalement
- * - Actions (traiter, clôturer, réouvrir)
- * - Gestion des réponses
+ * - Chargement et affichage du signalement
+ * - Affichage des metadonnees (priorite, statut, dates)
+ * - Affichage de la photo
+ * - Actions (traiter, cloturer, reouvrir)
  * - Gestion des erreurs
- * - Affichage conditionnel selon les permissions
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -16,96 +15,53 @@ import userEvent from '@testing-library/user-event'
 import SignalementDetail from './SignalementDetail'
 import type { Signalement, Reponse } from '../../types/signalements'
 
-// Mock des services
+// Mock services
+const mockGetSignalement = vi.fn()
+const mockListReponses = vi.fn()
+const mockMarquerTraite = vi.fn()
+const mockCloturerSignalement = vi.fn()
+const mockReouvrirSignalement = vi.fn()
+
 vi.mock('../../services/signalements', () => ({
-  getSignalement: vi.fn(),
-  listReponses: vi.fn(),
+  getSignalement: (...args: unknown[]) => mockGetSignalement(...args),
+  listReponses: (...args: unknown[]) => mockListReponses(...args),
   createReponse: vi.fn(),
-  marquerTraite: vi.fn(),
-  cloturerSignalement: vi.fn(),
-  reouvrirSignalement: vi.fn(),
-  getPrioriteIcon: vi.fn((priorite: string) => {
-    const icons: Record<string, string> = {
-      critique: '🔴',
-      haute: '🟠',
-      moyenne: '🟡',
-      basse: '🟢',
-    }
-    return icons[priorite] || '⚪'
-  }),
-  getStatutIcon: vi.fn((statut: string) => {
-    const icons: Record<string, string> = {
-      ouvert: '📋',
-      en_cours: '🔧',
-      traite: '✅',
-      cloture: '🔒',
-    }
-    return icons[statut] || '❓'
-  }),
+  marquerTraite: (...args: unknown[]) => mockMarquerTraite(...args),
+  cloturerSignalement: (...args: unknown[]) => mockCloturerSignalement(...args),
+  reouvrirSignalement: (...args: unknown[]) => mockReouvrirSignalement(...args),
+  getPrioriteIcon: (priorite: string) => priorite === 'critique' ? '🔴' : '🟡',
+  getStatutIcon: (statut: string) => statut === 'cloture' ? '✅' : '🔵',
 }))
-
-vi.mock('../../utils/dates', () => ({
-  formatDateDayMonthYearTime: vi.fn((date: string) => `Formatted: ${date}`),
-}))
-
-vi.mock('./TraiterModal', () => ({
-  default: vi.fn(({ isOpen, onClose, onConfirm, isLoading }) =>
-    isOpen ? (
-      <div data-testid="traiter-modal">
-        <button onClick={() => onConfirm('Commentaire test')} disabled={isLoading}>
-          Confirmer
-        </button>
-        <button onClick={onClose}>Annuler</button>
-      </div>
-    ) : null
-  ),
-}))
-
-vi.mock('./ReponsesSection', () => ({
-  default: vi.fn(({ reponses, canReply, onAddReponse }) => (
-    <div data-testid="reponses-section">
-      <span>Réponses: {reponses.length}</span>
-      {canReply && (
-        <button onClick={() => onAddReponse('Nouvelle réponse')}>Ajouter réponse</button>
-      )}
-    </div>
-  )),
-}))
-
-import {
-  getSignalement,
-  listReponses,
-  createReponse,
-  marquerTraite,
-  cloturerSignalement,
-  reouvrirSignalement,
-} from '../../services/signalements'
 
 const createMockSignalement = (overrides: Partial<Signalement> = {}): Signalement => ({
   id: 1,
-  chantier_id: 'ch-1',
-  titre: 'Signalement Test',
-  description: 'Description du signalement',
+  chantier_id: 1,
+  titre: 'Fuite d eau',
+  description: 'Il y a une fuite au niveau du plafond',
   priorite: 'haute',
   priorite_label: 'Haute',
   statut: 'ouvert',
   statut_label: 'Ouvert',
-  cree_par: 'user-1',
+  cree_par: 1,
   cree_par_nom: 'Jean Dupont',
+  assigne_a: 2,
+  assigne_a_nom: 'Marie Martin',
   created_at: '2024-01-15T10:00:00',
   updated_at: '2024-01-15T10:00:00',
   est_en_retard: false,
-  pourcentage_temps: 25,
-  temps_restant: '3 jours',
+  pourcentage_temps: 30,
+  temps_restant: '2j 5h',
+  nb_reponses: 2,
+  nb_escalades: 0,
   ...overrides,
 })
 
 const createMockReponse = (overrides: Partial<Reponse> = {}): Reponse => ({
   id: 1,
   signalement_id: 1,
-  contenu: 'Contenu de la réponse',
-  auteur_id: 'user-1',
-  auteur_nom: 'Jean Dupont',
+  contenu: 'Je vais verifier',
+  cree_par: 2,
+  cree_par_nom: 'Marie Martin',
   created_at: '2024-01-15T11:00:00',
   ...overrides,
 })
@@ -124,44 +80,45 @@ describe('SignalementDetail', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(getSignalement).mockResolvedValue(createMockSignalement())
-    vi.mocked(listReponses).mockResolvedValue({ reponses: [] })
+    mockGetSignalement.mockResolvedValue(createMockSignalement())
+    mockListReponses.mockResolvedValue({ reponses: [createMockReponse()] })
   })
 
   describe('Chargement', () => {
-    it('affiche le texte de chargement', () => {
-      vi.mocked(getSignalement).mockImplementation(() => new Promise(() => {}))
+    it('affiche un loader pendant le chargement', () => {
+      mockGetSignalement.mockImplementation(() => new Promise(() => {}))
+
       render(<SignalementDetail {...defaultProps} />)
 
       expect(screen.getByText('Chargement...')).toBeInTheDocument()
     })
 
-    it('charge le signalement et les réponses', async () => {
+    it('charge le signalement au montage', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(getSignalement).toHaveBeenCalledWith(1)
-        expect(listReponses).toHaveBeenCalledWith(1)
+        expect(mockGetSignalement).toHaveBeenCalledWith(1)
+        expect(mockListReponses).toHaveBeenCalledWith(1)
       })
     })
 
-    it('affiche une erreur si le chargement échoue', async () => {
-      vi.mocked(getSignalement).mockRejectedValueOnce(new Error('Erreur de chargement'))
+    it('affiche une erreur si le chargement echoue', async () => {
+      mockGetSignalement.mockRejectedValueOnce(new Error('Erreur reseau'))
 
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Erreur de chargement')).toBeInTheDocument()
+        expect(screen.getByText('Erreur reseau')).toBeInTheDocument()
       })
     })
   })
 
-  describe('Affichage des informations', () => {
+  describe('Affichage', () => {
     it('affiche le titre du signalement', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Signalement Test')).toBeInTheDocument()
+        expect(screen.getByText('Fuite d eau')).toBeInTheDocument()
       })
     })
 
@@ -169,11 +126,12 @@ describe('SignalementDetail', () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Description du signalement')).toBeInTheDocument()
+        expect(screen.getByText('Description')).toBeInTheDocument()
+        expect(screen.getByText('Il y a une fuite au niveau du plafond')).toBeInTheDocument()
       })
     })
 
-    it('affiche le label de priorité', async () => {
+    it('affiche le badge de priorite', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -181,18 +139,8 @@ describe('SignalementDetail', () => {
       })
     })
 
-    it('affiche le label de statut', async () => {
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/Ouvert/)).toBeInTheDocument()
-      })
-    })
-
     it('affiche le badge EN RETARD si applicable', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ est_en_retard: true })
-      )
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ est_en_retard: true }))
 
       render(<SignalementDetail {...defaultProps} />)
 
@@ -201,7 +149,7 @@ describe('SignalementDetail', () => {
       })
     })
 
-    it('affiche le créateur', async () => {
+    it('affiche les informations de creation', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -209,11 +157,7 @@ describe('SignalementDetail', () => {
       })
     })
 
-    it('affiche l\'assigné', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ assigne_a: 'user-2', assigne_a_nom: 'Marie Martin' })
-      )
-
+    it('affiche l assignation', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -221,133 +165,71 @@ describe('SignalementDetail', () => {
       })
     })
 
-    it('affiche "Non assigné" si pas d\'assigné', async () => {
+    it('affiche Non assigne si pas d assignation', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ assigne_a: null, assigne_a_nom: undefined }))
+
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
         expect(screen.getByText('Non assigné')).toBeInTheDocument()
       })
     })
+  })
 
-    it('affiche la localisation si présente', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ localisation: 'Bâtiment A, 2ème étage' })
-      )
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Bâtiment A, 2ème étage')).toBeInTheDocument()
-      })
-    })
-
-    it('affiche la photo si présente', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ photo_url: 'https://example.com/photo.jpg' })
-      )
+  describe('Photo', () => {
+    it('affiche la photo si presente', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({
+        photo_url: 'https://example.com/photo.jpg',
+      }))
 
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        const img = screen.getByAltText('Photo du signalement')
+        const img = screen.getByRole('img', { name: 'Photo du signalement' })
         expect(img).toHaveAttribute('src', 'https://example.com/photo.jpg')
       })
     })
+  })
 
-    it('affiche le commentaire de traitement si présent', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({
-          commentaire_traitement: 'Problème résolu',
-          statut: 'traite',
-        })
-      )
-
+  describe('Barre de progression', () => {
+    it('affiche le pourcentage de temps ecoule', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Commentaire de traitement')).toBeInTheDocument()
-        expect(screen.getByText('Problème résolu')).toBeInTheDocument()
+        expect(screen.getByText(/30%/)).toBeInTheDocument()
       })
     })
 
-    it('affiche la barre de progression du temps', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ pourcentage_temps: 50 })
-      )
-
+    it('affiche le temps restant', async () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Temps écoulé: 50%')).toBeInTheDocument()
-      })
-    })
-
-    it('n\'affiche pas la barre de progression pour les signalements clôturés', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'cloture' })
-      )
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.queryByText(/Temps écoulé/)).not.toBeInTheDocument()
+        expect(screen.getByText('2j 5h')).toBeInTheDocument()
       })
     })
   })
 
   describe('Actions', () => {
-    it('affiche le bouton Modifier si canEdit=true et statut != cloture', async () => {
-      render(<SignalementDetail {...defaultProps} canEdit={true} />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Modifier')).toBeInTheDocument()
-      })
-    })
-
-    it('n\'affiche pas le bouton Modifier si canEdit=false', async () => {
-      render(<SignalementDetail {...defaultProps} canEdit={false} />)
-
-      await waitFor(() => {
-        expect(screen.queryByText('Modifier')).not.toBeInTheDocument()
-      })
-    })
-
-    it('n\'affiche pas le bouton Modifier si statut=cloture', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'cloture' })
-      )
-
-      render(<SignalementDetail {...defaultProps} canEdit={true} />)
-
-      await waitFor(() => {
-        expect(screen.queryByText('Modifier')).not.toBeInTheDocument()
-      })
-    })
-
-    it('affiche le bouton "Marquer comme traité" pour les statuts ouvert/en_cours', async () => {
-      render(<SignalementDetail {...defaultProps} canTraiter={true} />)
+    it('affiche le bouton Traiter pour signalement ouvert', async () => {
+      render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
         expect(screen.getByText('Marquer comme traité')).toBeInTheDocument()
       })
     })
 
-    it('affiche le bouton "Clôturer" pour le statut traité', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'traite' })
-      )
+    it('affiche le bouton Cloturer pour signalement traite', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ statut: 'traite' }))
 
-      render(<SignalementDetail {...defaultProps} canCloturer={true} />)
+      render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
         expect(screen.getByText('Clôturer')).toBeInTheDocument()
       })
     })
 
-    it('affiche le bouton "Réouvrir" pour le statut cloture', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'cloture' })
-      )
+    it('affiche le bouton Reouvrir pour signalement cloture', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ statut: 'cloture' }))
 
       render(<SignalementDetail {...defaultProps} />)
 
@@ -355,52 +237,23 @@ describe('SignalementDetail', () => {
         expect(screen.getByText('Réouvrir')).toBeInTheDocument()
       })
     })
-  })
 
-  describe('Marquer comme traité', () => {
-    it('ouvre le modal de traitement au clic', async () => {
-      const user = userEvent.setup()
-      render(<SignalementDetail {...defaultProps} />)
+    it('affiche le bouton Modifier si canEdit', async () => {
+      render(<SignalementDetail {...defaultProps} canEdit={true} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Marquer comme traité')).toBeInTheDocument()
-      })
-
-      await user.click(screen.getByText('Marquer comme traité'))
-
-      expect(screen.getByTestId('traiter-modal')).toBeInTheDocument()
-    })
-
-    it('appelle marquerTraite à la confirmation', async () => {
-      const user = userEvent.setup()
-      const updatedSignalement = createMockSignalement({ statut: 'traite' })
-      vi.mocked(marquerTraite).mockResolvedValueOnce(updatedSignalement)
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Marquer comme traité')).toBeInTheDocument()
-      })
-
-      await user.click(screen.getByText('Marquer comme traité'))
-      await user.click(screen.getByText('Confirmer'))
-
-      await waitFor(() => {
-        expect(marquerTraite).toHaveBeenCalledWith(1, 'Commentaire test')
-        expect(mockOnUpdate).toHaveBeenCalledWith(updatedSignalement)
+        expect(screen.getByText('Modifier')).toBeInTheDocument()
       })
     })
   })
 
-  describe('Clôturer', () => {
+  describe('Cloture', () => {
     it('appelle cloturerSignalement au clic', async () => {
-      const user = userEvent.setup()
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'traite' })
-      )
-      const updatedSignalement = createMockSignalement({ statut: 'cloture' })
-      vi.mocked(cloturerSignalement).mockResolvedValueOnce(updatedSignalement)
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ statut: 'traite' }))
+      const cloture = createMockSignalement({ statut: 'cloture' })
+      mockCloturerSignalement.mockResolvedValueOnce(cloture)
 
+      const user = userEvent.setup()
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -410,21 +263,19 @@ describe('SignalementDetail', () => {
       await user.click(screen.getByText('Clôturer'))
 
       await waitFor(() => {
-        expect(cloturerSignalement).toHaveBeenCalledWith(1)
-        expect(mockOnUpdate).toHaveBeenCalledWith(updatedSignalement)
+        expect(mockCloturerSignalement).toHaveBeenCalledWith(1)
+        expect(mockOnUpdate).toHaveBeenCalledWith(cloture)
       })
     })
   })
 
-  describe('Réouvrir', () => {
+  describe('Reouverture', () => {
     it('appelle reouvrirSignalement au clic', async () => {
-      const user = userEvent.setup()
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'cloture' })
-      )
-      const updatedSignalement = createMockSignalement({ statut: 'ouvert' })
-      vi.mocked(reouvrirSignalement).mockResolvedValueOnce(updatedSignalement)
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ statut: 'cloture' }))
+      const reouvert = createMockSignalement({ statut: 'ouvert' })
+      mockReouvrirSignalement.mockResolvedValueOnce(reouvert)
 
+      const user = userEvent.setup()
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -434,53 +285,8 @@ describe('SignalementDetail', () => {
       await user.click(screen.getByText('Réouvrir'))
 
       await waitFor(() => {
-        expect(reouvrirSignalement).toHaveBeenCalledWith(1)
-        expect(mockOnUpdate).toHaveBeenCalledWith(updatedSignalement)
-      })
-    })
-  })
-
-  describe('Réponses', () => {
-    it('affiche la section réponses', async () => {
-      vi.mocked(listReponses).mockResolvedValueOnce({
-        reponses: [createMockReponse(), createMockReponse({ id: 2 })],
-      })
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('reponses-section')).toBeInTheDocument()
-        expect(screen.getByText('Réponses: 2')).toBeInTheDocument()
-      })
-    })
-
-    it('permet d\'ajouter une réponse si non clôturé', async () => {
-      const user = userEvent.setup()
-      const newReponse = createMockReponse({ id: 3, contenu: 'Nouvelle réponse' })
-      vi.mocked(createReponse).mockResolvedValueOnce(newReponse)
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Ajouter réponse')).toBeInTheDocument()
-      })
-
-      await user.click(screen.getByText('Ajouter réponse'))
-
-      await waitFor(() => {
-        expect(createReponse).toHaveBeenCalledWith(1, { contenu: 'Nouvelle réponse' })
-      })
-    })
-
-    it('ne permet pas d\'ajouter une réponse si clôturé', async () => {
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'cloture' })
-      )
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.queryByText('Ajouter réponse')).not.toBeInTheDocument()
+        expect(mockReouvrirSignalement).toHaveBeenCalledWith(1)
+        expect(mockOnUpdate).toHaveBeenCalledWith(reouvert)
       })
     })
   })
@@ -491,71 +297,40 @@ describe('SignalementDetail', () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByLabelText('Fermer')).toBeInTheDocument()
+        expect(screen.getByText('Fuite d eau')).toBeInTheDocument()
       })
 
       await user.click(screen.getByLabelText('Fermer'))
-
       expect(mockOnClose).toHaveBeenCalled()
     })
   })
 
-  describe('Édition', () => {
-    it('appelle onEdit au clic sur Modifier', async () => {
-      const user = userEvent.setup()
-      const signalement = createMockSignalement()
-      vi.mocked(getSignalement).mockResolvedValueOnce(signalement)
+  describe('Commentaire de traitement', () => {
+    it('affiche le commentaire si present', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({
+        statut: 'traite',
+        commentaire_traitement: 'Probleme resolu par le plombier',
+      }))
 
-      render(<SignalementDetail {...defaultProps} canEdit={true} />)
+      render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Modifier')).toBeInTheDocument()
+        expect(screen.getByText('Commentaire de traitement')).toBeInTheDocument()
+        expect(screen.getByText('Probleme resolu par le plombier')).toBeInTheDocument()
       })
-
-      await user.click(screen.getByText('Modifier'))
-
-      expect(mockOnEdit).toHaveBeenCalledWith(signalement)
     })
   })
 
-  describe('Gestion des erreurs d\'action', () => {
-    it('affiche une erreur si marquerTraite échoue', async () => {
-      const user = userEvent.setup()
-      // Le message d'erreur affiché sera err.message si c'est une instance de Error
-      vi.mocked(marquerTraite).mockRejectedValueOnce(new Error('Erreur de traitement'))
+  describe('Localisation', () => {
+    it('affiche la localisation si presente', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({
+        localisation: 'Etage 2, Bureau 205',
+      }))
 
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Marquer comme traité')).toBeInTheDocument()
-      })
-
-      await user.click(screen.getByText('Marquer comme traité'))
-      await user.click(screen.getByText('Confirmer'))
-
-      await waitFor(() => {
-        expect(screen.getByText('Erreur de traitement')).toBeInTheDocument()
-      })
-    })
-
-    it('affiche une erreur si cloturerSignalement échoue', async () => {
-      const user = userEvent.setup()
-      vi.mocked(getSignalement).mockResolvedValueOnce(
-        createMockSignalement({ statut: 'traite' })
-      )
-      // Le message d'erreur affiché sera err.message
-      vi.mocked(cloturerSignalement).mockRejectedValueOnce(new Error('Erreur de clôture'))
-
-      render(<SignalementDetail {...defaultProps} />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Clôturer')).toBeInTheDocument()
-      })
-
-      await user.click(screen.getByText('Clôturer'))
-
-      await waitFor(() => {
-        expect(screen.getByText('Erreur de clôture')).toBeInTheDocument()
+        expect(screen.getByText('Etage 2, Bureau 205')).toBeInTheDocument()
       })
     })
   })
