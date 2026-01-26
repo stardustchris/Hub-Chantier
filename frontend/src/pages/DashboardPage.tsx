@@ -11,7 +11,7 @@ import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { useClockCard, useDashboardFeed } from '../hooks'
+import { useClockCard, useDashboardFeed, useTodayPlanning } from '../hooks'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -43,6 +43,9 @@ export default function DashboardPage() {
 
   // Hook pour le feed (posts, likes, etc.)
   const feed = useDashboardFeed()
+
+  // Hook pour le planning du jour (affectations réelles de l'utilisateur)
+  const todayPlanning = useTodayPlanning()
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
@@ -144,7 +147,12 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Column - Planning & Feed */}
             <div className="lg:col-span-2 space-y-4">
-              <TodayPlanningCard onNavigate={handleNavigate} onCall={handleCall} />
+              <TodayPlanningCard
+                slots={todayPlanning.slots}
+                isLoading={todayPlanning.isLoading}
+                onNavigate={handleNavigate}
+                onCall={handleCall}
+              />
 
               {/* Actualites Section */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">

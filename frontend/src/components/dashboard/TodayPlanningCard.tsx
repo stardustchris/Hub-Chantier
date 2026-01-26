@@ -1,10 +1,11 @@
 /**
  * TodayPlanningCard - Carte planning du jour
  * CDC Section 2.3.2 - Planning de la journee
+ * Affiche les affectations réelles de l'utilisateur connecté depuis le planning
  */
 
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, CheckCircle, Navigation, Phone } from 'lucide-react'
+import { Calendar, MapPin, CheckCircle, Navigation, Phone, CalendarX, Loader2 } from 'lucide-react'
 
 interface Task {
   id: string
@@ -26,41 +27,11 @@ interface PlanningSlot {
 
 interface TodayPlanningCardProps {
   slots?: PlanningSlot[]
+  isLoading?: boolean
   onNavigate?: (slotId: string) => void
   onCall?: (slotId: string) => void
   onChantierClick?: (chantierId: string) => void
 }
-
-const defaultSlots: PlanningSlot[] = [
-  {
-    id: '1',
-    chantierId: '4',
-    startTime: '08:00',
-    endTime: '12:00',
-    period: 'morning',
-    siteName: 'Villa Moderne - Lyon 3eme',
-    siteAddress: '45 rue de la Republique, Lyon 3eme',
-    status: 'in_progress',
-    tasks: [{ id: '1', name: 'Coulage dalle beton - Zone A', priority: 'urgent' }],
-  },
-  {
-    id: '2',
-    startTime: '12:00',
-    endTime: '13:30',
-    period: 'break',
-  },
-  {
-    id: '3',
-    chantierId: '4',
-    startTime: '13:30',
-    endTime: '17:00',
-    period: 'afternoon',
-    siteName: 'Villa Moderne - Lyon 3eme',
-    siteAddress: 'Meme adresse',
-    status: 'planned',
-    tasks: [{ id: '2', name: 'Montage murs porteurs', priority: 'medium' }],
-  },
-]
 
 const priorityStyles = {
   urgent: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500', label: 'Urgent' },
@@ -82,7 +53,8 @@ const periodStyles = {
 }
 
 export default function TodayPlanningCard({
-  slots = defaultSlots,
+  slots = [],
+  isLoading = false,
   onNavigate,
   onCall,
   onChantierClick,
@@ -109,8 +81,34 @@ export default function TodayPlanningCard({
         </a>
       </div>
 
-      <div className="space-y-4">
-        {slots.map((slot) => {
+      {/* État de chargement */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        </div>
+      )}
+
+      {/* Aucune affectation */}
+      {!isLoading && slots.length === 0 && (
+        <div className="text-center py-12">
+          <CalendarX className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Aucune affectation aujourd'hui</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Consultez le planning pour voir vos prochaines affectations
+          </p>
+          <a
+            href="/planning"
+            className="inline-block mt-4 text-green-600 hover:text-green-700 font-medium text-sm"
+          >
+            Voir le planning →
+          </a>
+        </div>
+      )}
+
+      {/* Liste des slots */}
+      {!isLoading && slots.length > 0 && (
+        <div className="space-y-4">
+          {slots.map((slot) => {
           const period = periodStyles[slot.period]
 
           if (slot.period === 'break') {
@@ -200,7 +198,8 @@ export default function TodayPlanningCard({
             </div>
           )
         })}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
