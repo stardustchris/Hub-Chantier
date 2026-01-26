@@ -94,6 +94,21 @@ export function usePlanning() {
     }
   }, [getDateRange])
 
+  // Recharger uniquement les affectations (sans loader pour eviter le scroll reset)
+  const reloadAffectations = useCallback(async () => {
+    try {
+      const { date_debut, date_fin } = getDateRange()
+      const [affectationsData, nonPlanifiesData] = await Promise.all([
+        planningService.getAffectations({ date_debut, date_fin }),
+        planningService.getNonPlanifies(date_debut, date_fin),
+      ])
+      setAffectations(affectationsData)
+      setNonPlanifiesCount(nonPlanifiesData.count)
+    } catch (err) {
+      logger.error('Erreur rechargement affectations', err, { context: 'PlanningPage' })
+    }
+  }, [getDateRange])
+
   useEffect(() => {
     loadData()
   }, [loadData])
@@ -213,7 +228,7 @@ export function usePlanning() {
 
     try {
       await planningService.move(affectationId, newDate, newUserId)
-      await loadData()
+      await reloadAffectations()
     } catch (err: unknown) {
       // Distinguer les erreurs de validation des erreurs système
       const axiosError = err as { response?: { status?: number; data?: { detail?: string } } }
@@ -228,14 +243,14 @@ export function usePlanning() {
         setError('Erreur lors du déplacement de l\'affectation')
       }
     }
-  }, [canEdit, loadData])
+  }, [canEdit, reloadAffectations])
 
   const handleAffectationResize = useCallback(async (affectationId: string, newStartDate: string, newEndDate: string) => {
     if (!canEdit) return
 
     try {
       await planningService.resize(affectationId, newStartDate, newEndDate)
-      await loadData()
+      await reloadAffectations()
     } catch (err: unknown) {
       const axiosError = err as { response?: { status?: number; data?: { detail?: string } } }
       if (axiosError?.response?.status === 400) {
@@ -248,7 +263,7 @@ export function usePlanning() {
         setError('Erreur lors du redimensionnement de l\'affectation')
       }
     }
-  }, [canEdit, loadData])
+  }, [canEdit, reloadAffectations])
 
   const handleChantierCellClick = useCallback((chantierId: string, date: Date) => {
     if (!canEdit) return
