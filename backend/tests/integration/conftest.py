@@ -66,19 +66,25 @@ def test_db():
     # La table a des ForeignKeys vers users et chantiers deja creees
     BesoinChargeModel.__table__.create(bind=engine, checkfirst=True)
 
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=True, bind=engine)
+
+    # Utiliser une seule session pour tout le test
+    # Cela permet aux donnees d'etre visibles entre les requetes
+    test_session = TestingSessionLocal()
 
     def override_get_db():
-        db = TestingSessionLocal()
         try:
-            yield db
-        finally:
-            db.close()
+            yield test_session
+            test_session.commit()
+        except Exception:
+            test_session.rollback()
+            raise
 
     app.dependency_overrides[get_db] = override_get_db
 
-    yield TestingSessionLocal()
+    yield test_session
 
+    test_session.close()
     app.dependency_overrides.clear()
 
 

@@ -7,6 +7,11 @@ Selon CDC Section 9 - Gestion Documentaire (GED-01 a GED-17).
 import io
 
 
+def to_int(value):
+    """Convertit une valeur en int (utile car l'API chantiers retourne des IDs en string)."""
+    return int(value) if value is not None else None
+
+
 class TestDossierCreate:
     """Tests d'integration pour la creation de dossiers (GED-02)."""
 
@@ -17,7 +22,7 @@ class TestDossierCreate:
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
         assert chantier_response.status_code == 201
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         # Creer un dossier
         dossier_data = {
@@ -41,7 +46,7 @@ class TestDossierCreate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         # Creer dossier parent
         parent_response = client.post(
@@ -70,7 +75,7 @@ class TestDossierCreate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_data = {"chantier_id": chantier_id, "nom": "Documents"}
 
@@ -93,7 +98,7 @@ class TestDossierGet:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/documents/dossiers",
@@ -125,7 +130,7 @@ class TestDossierList:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         # Creer plusieurs dossiers
         for nom in ["Plans", "Documents Admin", "Securite"]:
@@ -151,7 +156,7 @@ class TestDossierUpdate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/documents/dossiers",
@@ -179,7 +184,7 @@ class TestDossierDelete:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/documents/dossiers",
@@ -203,7 +208,7 @@ class TestArborescence:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         response = client.post(
             f"/api/documents/chantiers/{chantier_id}/init-arborescence",
@@ -222,7 +227,7 @@ class TestArborescence:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         # Initialiser l'arborescence
         client.post(
@@ -246,7 +251,7 @@ class TestDocumentUpload:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -280,7 +285,7 @@ class TestDocumentGet:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -291,7 +296,7 @@ class TestDocumentGet:
 
         # Upload
         file_content = b"Test content"
-        files = {"file": ("test.txt", io.BytesIO(file_content), "text/plain")}
+        files = {"file": ("test.pdf", io.BytesIO(file_content), "application/pdf")}
         upload_response = client.post(
             f"/api/documents/dossiers/{dossier_id}/documents",
             params={"chantier_id": chantier_id},
@@ -323,7 +328,7 @@ class TestDocumentList:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -334,7 +339,7 @@ class TestDocumentList:
 
         # Upload plusieurs documents
         for i in range(3):
-            files = {"file": (f"doc{i}.txt", io.BytesIO(b"content"), "text/plain")}
+            files = {"file": (f"doc{i}.pdf", io.BytesIO(b"content"), "application/pdf")}
             client.post(
                 f"/api/documents/dossiers/{dossier_id}/documents",
                 params={"chantier_id": chantier_id},
@@ -359,7 +364,7 @@ class TestDocumentSearch:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -394,7 +399,7 @@ class TestDocumentUpdate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -404,7 +409,7 @@ class TestDocumentUpdate:
         dossier_id = dossier_response.json()["id"]
 
         # Upload
-        files = {"file": ("old_name.txt", io.BytesIO(b"content"), "text/plain")}
+        files = {"file": ("old_name.pdf", io.BytesIO(b"content"), "application/pdf")}
         upload_response = client.post(
             f"/api/documents/dossiers/{dossier_id}/documents",
             params={"chantier_id": chantier_id},
@@ -416,12 +421,12 @@ class TestDocumentUpdate:
         # Update
         response = client.put(
             f"/api/documents/documents/{document_id}",
-            json={"nom": "new_name.txt", "description": "Description ajoutee"},
+            json={"nom": "new_name.pdf", "description": "Description ajoutee"},
             headers=auth_headers,
         )
 
         assert response.status_code == 200
-        assert response.json()["nom"] == "new_name.txt"
+        assert response.json()["nom"] == "new_name.pdf"
         assert response.json()["description"] == "Description ajoutee"
 
 
@@ -433,7 +438,7 @@ class TestDocumentDelete:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -443,7 +448,7 @@ class TestDocumentDelete:
         dossier_id = dossier_response.json()["id"]
 
         # Upload
-        files = {"file": ("to_delete.txt", io.BytesIO(b"content"), "text/plain")}
+        files = {"file": ("to_delete.pdf", io.BytesIO(b"content"), "application/pdf")}
         upload_response = client.post(
             f"/api/documents/dossiers/{dossier_id}/documents",
             params={"chantier_id": chantier_id},
@@ -474,7 +479,7 @@ class TestDocumentDownload:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -484,7 +489,7 @@ class TestDocumentDownload:
         dossier_id = dossier_response.json()["id"]
 
         # Upload
-        files = {"file": ("download_test.txt", io.BytesIO(b"content"), "text/plain")}
+        files = {"file": ("download_test.pdf", io.BytesIO(b"content"), "application/pdf")}
         upload_response = client.post(
             f"/api/documents/dossiers/{dossier_id}/documents",
             params={"chantier_id": chantier_id},
@@ -510,7 +515,7 @@ class TestDocumentPreview:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -548,7 +553,7 @@ class TestAutorisations:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -559,7 +564,7 @@ class TestAutorisations:
 
         # Creer utilisateur
         user_response = client.post("/api/auth/register", json=sample_user_data)
-        user_id = user_response.json()["user"]["id"]
+        user_id = to_int(user_response.json()["user"]["id"])
 
         # Creer autorisation
         response = client.post(
@@ -583,7 +588,7 @@ class TestAutorisations:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -593,7 +598,7 @@ class TestAutorisations:
         dossier_id = dossier_response.json()["id"]
 
         user_response = client.post("/api/auth/register", json=sample_user_data)
-        user_id = user_response.json()["user"]["id"]
+        user_id = to_int(user_response.json()["user"]["id"])
 
         # Creer autorisation
         client.post(
@@ -620,7 +625,7 @@ class TestAutorisations:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = to_int(chantier_response.json()["id"])
 
         dossier_response = client.post(
             "/api/documents/dossiers",
@@ -630,7 +635,7 @@ class TestAutorisations:
         dossier_id = dossier_response.json()["id"]
 
         user_response = client.post("/api/auth/register", json=sample_user_data)
-        user_id = user_response.json()["user"]["id"]
+        user_id = to_int(user_response.json()["user"]["id"])
 
         # Creer autorisation
         auth_response = client.post(

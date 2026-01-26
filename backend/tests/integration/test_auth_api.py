@@ -142,15 +142,18 @@ class TestUsersList:
 
     def test_list_users_pagination(self, client, auth_headers):
         """Test pagination de la liste."""
-        # Creer plusieurs utilisateurs
+        import uuid
+        unique_id = str(uuid.uuid4())[:8]
+        # Creer plusieurs utilisateurs avec emails uniques
         for i in range(5):
             client.post(
                 "/api/auth/register",
                 json={
-                    "email": f"user{i}@test.com",
+                    "email": f"user{i}_{unique_id}@test.com",
                     "password": "Password123!",
                     "nom": f"User{i}",
                     "prenom": "Test",
+                    "type_utilisateur": "employe",
                 },
             )
 
