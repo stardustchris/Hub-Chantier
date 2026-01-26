@@ -29,6 +29,7 @@ interface ResizeState {
   startX: number
   cellWidth: number
   originalDate: string
+  startTime: number // Timestamp pour ignorer les mouseup trop rapides (clics)
 }
 
 // Grouper les utilisateurs par catégorie (role/type_utilisateur)
@@ -157,6 +158,7 @@ export default function PlanningGrid({
       startX: e.clientX,
       cellWidth,
       originalDate: affectation.date,
+      startTime: Date.now(),
     })
   }, [onAffectationResize])
 
@@ -168,6 +170,15 @@ export default function PlanningGrid({
 
   const handleResizeEnd = useCallback((e: MouseEvent) => {
     if (!resizeState || !onAffectationResize) {
+      setResizeState(null)
+      return
+    }
+
+    const elapsed = Date.now() - resizeState.startTime
+    const movement = Math.abs(e.clientX - resizeState.startX)
+
+    // Ignorer les mouseup trop rapides ou sans mouvement significatif (c'est un clic, pas un drag)
+    if (elapsed < 100 || movement < 10) {
       setResizeState(null)
       return
     }
