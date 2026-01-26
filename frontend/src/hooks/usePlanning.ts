@@ -111,9 +111,12 @@ export function usePlanning() {
     }
   }, [getDateRange])
 
+  // Charger les données quand la date ou le mode de vue change
+  // On utilise les valeurs directement plutôt que loadData pour éviter les boucles infinies
   useEffect(() => {
     loadData()
-  }, [loadData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, viewMode])
 
   // Persist weekend toggle
   useEffect(() => {
@@ -150,7 +153,8 @@ export function usePlanning() {
   // Handlers
   const openCreateModal = useCallback(() => {
     setEditingAffectation(null)
-    setSelectedDate(undefined)
+    // Définir la date du jour par défaut pour les nouvelles affectations
+    setSelectedDate(new Date())
     setSelectedUserId(undefined)
     setSelectedChantierId(undefined)
     setModalOpen(true)
@@ -174,16 +178,53 @@ export function usePlanning() {
 
   const handleAffectationDelete = useCallback(async (affectation: Affectation) => {
     if (!canEdit) return
-    if (!confirm('Supprimer cette affectation ?')) return
 
     try {
       await planningService.delete(affectation.id)
-      await loadData()
+      await reloadAffectations()
     } catch (err) {
       logger.error('Erreur suppression', err, { context: 'PlanningPage' })
       setError('Erreur lors de la suppression')
     }
-  }, [canEdit, loadData])
+  }, [canEdit, reloadAffectations])
+
+  // Suppression depuis le modal (sans confirmation car le modal la gère)
+  const handleAffectationDeleteFromModal = useCallback(async (affectation: Affectation) => {
+    if (!canEdit) return
+
+    try {
+      await planningService.delete(affectation.id)
+      await reloadAffectations()
+    } catch (err) {
+      logger.error('Erreur suppression', err, { context: 'PlanningPage' })
+      throw err // Remonter l'erreur pour que le modal puisse l'afficher
+    }
+  }, [canEdit, reloadAffectations])
+
+  // Suppression multiple (utilisée par le resize pour réduire)
+  const handleAffectationsDelete = useCallback(async (affectationsToDelete: Affectation[]) => {
+    if (!canEdit || affectationsToDelete.length === 0) return
+
+    // Mise à jour optimiste: supprimer localement d'abord pour une UI fluide
+    const idsToDelete = new Set(affectationsToDelete.map(a => a.id))
+    setAffectations(prev => prev.filter(a => !idsToDelete.has(a.id)))
+
+    try {
+      // Supprimer les affectations une par une pour éviter les erreurs de concurrence
+      for (const aff of affectationsToDelete) {
+        await planningService.delete(aff.id)
+      }
+      // Recharger en arrière-plan pour synchroniser (sans bloquer l'UI)
+      reloadAffectations()
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number; data?: { detail?: string } } }
+      const detail = axiosError?.response?.data?.detail || 'Erreur lors de la suppression'
+      logger.error('Erreur suppression multiple', err, { context: 'PlanningPage', detail })
+      setError(detail)
+      // En cas d'erreur, recharger pour restaurer l'état correct
+      reloadAffectations()
+    }
+  }, [canEdit, reloadAffectations])
 
   const handleSaveAffectation = useCallback(async (data: AffectationCreate | AffectationUpdate) => {
     if (editingAffectation) {
@@ -191,8 +232,8 @@ export function usePlanning() {
     } else {
       await planningService.create(data as AffectationCreate)
     }
-    await loadData()
-  }, [editingAffectation, loadData])
+    await reloadAffectations()
+  }, [editingAffectation, reloadAffectations])
 
   const handleDuplicate = useCallback(async (userId: string) => {
     if (!canEdit) return
@@ -210,12 +251,12 @@ export function usePlanning() {
         source_date_fin,
         target_date_debut: format(nextWeekStart, 'yyyy-MM-dd'),
       })
-      await loadData()
+      await reloadAffectations()
     } catch (err) {
       logger.error('Erreur duplication', err, { context: 'PlanningPage' })
       setError('Erreur lors de la duplication')
     }
-  }, [canEdit, getDateRange, currentDate, loadData])
+  }, [canEdit, getDateRange, currentDate, reloadAffectations])
 
   const handleToggleMetier = useCallback((metier: string) => {
     setExpandedMetiers(prev =>
@@ -307,12 +348,12 @@ export function usePlanning() {
           })
         )
       )
-      await loadData()
+      await reloadAffectations()
     } catch (err) {
       logger.error('Erreur duplication chantier', err, { context: 'PlanningPage' })
       setError('Erreur lors de la duplication')
     }
-  }, [canEdit, getDateRange, currentDate, affectations, loadData])
+  }, [canEdit, getDateRange, currentDate, affectations, reloadAffectations])
 
   const toggleFilterMetier = useCallback((metier: string) => {
     setFilterMetiers(prev =>
@@ -373,6 +414,8 @@ export function usePlanning() {
     handleCellClick,
     handleAffectationClick,
     handleAffectationDelete,
+    handleAffectationDeleteFromModal,
+    handleAffectationsDelete,
     handleSaveAffectation,
     handleDuplicate,
     handleToggleMetier,

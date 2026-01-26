@@ -67,6 +67,7 @@ export default function PlanningPage() {
             viewMode={planning.viewMode}
             onAffectationMove={planning.canEdit ? planning.handleAffectationMove : undefined}
             onAffectationResize={planning.canEdit ? planning.handleAffectationResize : undefined}
+            onAffectationsDelete={planning.canEdit ? planning.handleAffectationsDelete : undefined}
           />
         ) : (
           <PlanningChantierGrid
@@ -86,6 +87,7 @@ export default function PlanningPage() {
           isOpen={planning.modalOpen}
           onClose={planning.closeModal}
           onSave={planning.handleSaveAffectation}
+          onDelete={planning.canEdit ? planning.handleAffectationDeleteFromModal : undefined}
           affectation={planning.editingAffectation}
           utilisateurs={planning.utilisateurs}
           chantiers={planning.chantiers}

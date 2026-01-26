@@ -64,7 +64,7 @@ export const planningService = {
   /**
    * Supprime une affectation
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: string | number): Promise<void> {
     await api.delete(`/api/planning/affectations/${id}`)
   },
 

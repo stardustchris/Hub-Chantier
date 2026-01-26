@@ -18,7 +18,8 @@ interface PlanningGridProps {
   onToggleMetier: (metier: string) => void
   showWeekend?: boolean // PLN-06
   onAffectationMove?: (affectationId: string, newDate: string, newUserId?: string) => void // PLN-27
-  onAffectationResize?: (affectationId: string, newStartDate: string, newEndDate: string) => void // Resize support
+  onAffectationResize?: (affectationId: string, newStartDate: string, newEndDate: string) => void // Resize support (extension)
+  onAffectationsDelete?: (affectations: Affectation[]) => Promise<void> // Resize support (reduction)
   viewMode?: 'semaine' | 'mois' // PLN-05: Vue semaine ou mois
 }
 
@@ -30,6 +31,17 @@ interface ResizeState {
   cellWidth: number
   originalDate: string
   startTime: number // Timestamp pour ignorer les mouseup trop rapides (clics)
+  // Pré-calculé au démarrage pour éviter les recalculs pendant le drag
+  userAffectations: Affectation[]
+  existingDates: Set<string>
+  affectationsByDate: Map<string, Affectation>
+  lastDaysDelta: number // Pour éviter les updates inutiles
+}
+
+// Preview state pour le resize
+interface ResizePreview {
+  datesToAdd: string[]    // Dates à ajouter (extension) - affichées en couleur du chantier
+  datesToRemove: string[] // Dates à supprimer (réduction) - affichées en rouge
 }
 
 // Grouper les utilisateurs par catégorie (role/type_utilisateur)
@@ -77,6 +89,7 @@ export default function PlanningGrid({
   showWeekend = true,
   onAffectationMove,
   onAffectationResize,
+  onAffectationsDelete,
   viewMode = 'semaine',
 }: PlanningGridProps) {
   // PLN-27: Drag state
@@ -85,7 +98,7 @@ export default function PlanningGrid({
 
   // Resize state
   const [resizeState, setResizeState] = useState<ResizeState | null>(null)
-  const [resizePreviewDates, setResizePreviewDates] = useState<string[]>([]) // Dates qui seront ajoutées
+  const [resizePreview, setResizePreview] = useState<ResizePreview>({ datesToAdd: [], datesToRemove: [] })
   const gridRef = useRef<HTMLDivElement>(null)
 
   // PLN-05/PLN-06: Jours selon le mode de vue (semaine ou mois)
@@ -141,7 +154,8 @@ export default function PlanningGrid({
 
   // Resize handlers
   const handleResizeStart = useCallback((affectation: Affectation, direction: 'left' | 'right', e: React.MouseEvent) => {
-    if (!onAffectationResize) return
+    // Permettre le resize si on peut étendre OU supprimer
+    if (!onAffectationResize && !onAffectationsDelete) return
 
     // Calculer la largeur d'une cellule (approximation basée sur la grille)
     const gridElement = gridRef.current
@@ -153,6 +167,14 @@ export default function PlanningGrid({
     const firstCell = cells[0] as HTMLElement
     const cellWidth = firstCell.offsetWidth
 
+    // Pré-calculer les données pour éviter les recalculs pendant le drag
+    const userAffectations = affectations.filter(
+      a => a.utilisateur_id === affectation.utilisateur_id &&
+           a.chantier_id === affectation.chantier_id
+    )
+    const existingDates = new Set(userAffectations.map(a => a.date))
+    const affectationsByDate = new Map(userAffectations.map(a => [a.date, a]))
+
     setResizeState({
       affectation,
       direction,
@@ -160,37 +182,85 @@ export default function PlanningGrid({
       cellWidth,
       originalDate: affectation.date,
       startTime: Date.now(),
+      userAffectations,
+      existingDates,
+      affectationsByDate,
+      lastDaysDelta: 0,
     })
-  }, [onAffectationResize])
+  }, [onAffectationResize, onAffectationsDelete, affectations])
 
   const handleResizeMove = useCallback((e: MouseEvent) => {
     if (!resizeState) return
 
-    // Calculer les dates qui seront ajoutées pour afficher la preview
     const deltaX = e.clientX - resizeState.startX
     const daysDelta = Math.round(deltaX / resizeState.cellWidth)
+
+    // Éviter les re-renders si le daysDelta n'a pas changé
+    if (daysDelta === resizeState.lastDaysDelta) return
+
+    // Mettre à jour lastDaysDelta (mutation directe OK car on va setState juste après)
+    resizeState.lastDaysDelta = daysDelta
+
     const originalDate = new Date(resizeState.originalDate)
+    const datesToAdd: string[] = []
+    const datesToRemove: string[] = []
 
-    const previewDates: string[] = []
+    // Utiliser les données pré-calculées
+    const { existingDates, userAffectations } = resizeState
 
-    if (resizeState.direction === 'right' && daysDelta > 0) {
-      // Extension vers la droite
-      for (let i = 1; i <= daysDelta; i++) {
-        previewDates.push(format(addDays(originalDate, i), 'yyyy-MM-dd'))
+    if (resizeState.direction === 'right') {
+      if (daysDelta > 0) {
+        // Extension vers la droite - ajouter des jours après l'affectation
+        for (let i = 1; i <= daysDelta; i++) {
+          const dateStr = format(addDays(originalDate, i), 'yyyy-MM-dd')
+          if (!existingDates.has(dateStr)) {
+            datesToAdd.push(dateStr)
+          }
+        }
+      } else if (daysDelta < 0) {
+        // Réduction depuis la droite - supprimer les affectations ENTRE targetDate et originalDate
+        const originalDateStr = resizeState.originalDate
+        const targetDate = addDays(originalDate, daysDelta)
+        const targetDateStr = format(targetDate, 'yyyy-MM-dd')
+
+        // Supprimer les affectations > targetDate ET <= originalDate
+        for (const aff of userAffectations) {
+          if (aff.date > targetDateStr && aff.date <= originalDateStr) {
+            datesToRemove.push(aff.date)
+          }
+        }
       }
-    } else if (resizeState.direction === 'left' && daysDelta < 0) {
-      // Extension vers la gauche
-      for (let i = daysDelta; i < 0; i++) {
-        previewDates.push(format(addDays(originalDate, i), 'yyyy-MM-dd'))
+    } else if (resizeState.direction === 'left') {
+      if (daysDelta < 0) {
+        // Extension vers la gauche - ajouter des jours avant l'affectation
+        for (let i = daysDelta; i < 0; i++) {
+          const dateStr = format(addDays(originalDate, i), 'yyyy-MM-dd')
+          if (!existingDates.has(dateStr)) {
+            datesToAdd.push(dateStr)
+          }
+        }
+      } else if (daysDelta > 0) {
+        // Réduction depuis la gauche - supprimer les affectations ENTRE originalDate et targetDate
+        const originalDateStr = resizeState.originalDate
+        const targetDate = addDays(originalDate, daysDelta)
+        const targetDateStr = format(targetDate, 'yyyy-MM-dd')
+
+        // Supprimer les affectations >= originalDate ET < targetDate
+        for (const aff of userAffectations) {
+          if (aff.date >= originalDateStr && aff.date < targetDateStr) {
+            datesToRemove.push(aff.date)
+          }
+        }
       }
     }
 
-    setResizePreviewDates(previewDates)
+    setResizePreview({ datesToAdd, datesToRemove })
   }, [resizeState])
 
-  const handleResizeEnd = useCallback((e: MouseEvent) => {
-    if (!resizeState || !onAffectationResize) {
+  const handleResizeEnd = useCallback(async (e: MouseEvent) => {
+    if (!resizeState) {
       setResizeState(null)
+      setResizePreview({ datesToAdd: [], datesToRemove: [] })
       return
     }
 
@@ -200,40 +270,97 @@ export default function PlanningGrid({
     // Ignorer les mouseup trop rapides ou sans mouvement significatif (c'est un clic, pas un drag)
     if (elapsed < 100 || movement < 10) {
       setResizeState(null)
+      setResizePreview({ datesToAdd: [], datesToRemove: [] })
       return
     }
 
     const deltaX = e.clientX - resizeState.startX
     const daysDelta = Math.round(deltaX / resizeState.cellWidth)
 
-    // Le resize ne fait que de l'EXTENSION (ajout de jours)
-    // Pour supprimer des jours, l'utilisateur doit cliquer sur le X de chaque affectation
     if (daysDelta !== 0) {
       const originalDate = new Date(resizeState.originalDate)
 
-      if (resizeState.direction === 'right' && daysDelta > 0) {
-        // Poignée droite tirée vers la droite = étendre
-        const newEndDate = addDays(originalDate, daysDelta)
-        onAffectationResize(
-          resizeState.affectation.id,
-          resizeState.originalDate,
-          format(newEndDate, 'yyyy-MM-dd')
-        )
-      } else if (resizeState.direction === 'left' && daysDelta < 0) {
-        // Poignée gauche tirée vers la gauche = étendre
-        const newStartDate = addDays(originalDate, daysDelta)
-        onAffectationResize(
-          resizeState.affectation.id,
-          format(newStartDate, 'yyyy-MM-dd'),
-          resizeState.originalDate
-        )
+      // Utiliser les données pré-calculées
+      const { userAffectations } = resizeState
+
+      if (resizeState.direction === 'right') {
+        if (daysDelta > 0 && onAffectationResize) {
+          // Extension vers la droite - ajouter des jours après l'affectation
+          const newEndDate = addDays(originalDate, daysDelta)
+          onAffectationResize(
+            resizeState.affectation.id,
+            resizeState.originalDate,
+            format(newEndDate, 'yyyy-MM-dd')
+          )
+        } else if (daysDelta < 0 && onAffectationsDelete) {
+          // Réduction depuis la droite - supprimer les affectations ENTRE targetDate et originalDate
+          const originalDateStr = resizeState.originalDate
+          const targetDate = addDays(originalDate, daysDelta)
+          const targetDateStr = format(targetDate, 'yyyy-MM-dd')
+
+          // Supprimer les affectations > targetDate ET <= originalDate
+          const affectationsToDelete = userAffectations.filter(
+            aff => aff.date > targetDateStr && aff.date <= originalDateStr
+          )
+
+          if (affectationsToDelete.length > 0) {
+            // Demander confirmation si on supprime toutes les affectations
+            if (affectationsToDelete.length === userAffectations.length) {
+              const chantierNom = resizeState.affectation.chantier_nom || 'ce chantier'
+              const confirmed = window.confirm(
+                `Supprimer toutes les affectations (${affectationsToDelete.length}) pour ${chantierNom} ?`
+              )
+              if (!confirmed) {
+                setResizeState(null)
+                setResizePreview({ datesToAdd: [], datesToRemove: [] })
+                return
+              }
+            }
+            await onAffectationsDelete(affectationsToDelete)
+          }
+        }
+      } else if (resizeState.direction === 'left') {
+        if (daysDelta < 0 && onAffectationResize) {
+          // Extension vers la gauche - ajouter des jours avant l'affectation
+          const newStartDate = addDays(originalDate, daysDelta)
+          onAffectationResize(
+            resizeState.affectation.id,
+            format(newStartDate, 'yyyy-MM-dd'),
+            resizeState.originalDate
+          )
+        } else if (daysDelta > 0 && onAffectationsDelete) {
+          // Réduction depuis la gauche - supprimer les affectations ENTRE originalDate et targetDate
+          const originalDateStr = resizeState.originalDate
+          const targetDate = addDays(originalDate, daysDelta)
+          const targetDateStr = format(targetDate, 'yyyy-MM-dd')
+
+          // Supprimer les affectations >= originalDate ET < targetDate
+          const affectationsToDelete = userAffectations.filter(
+            aff => aff.date >= originalDateStr && aff.date < targetDateStr
+          )
+
+          if (affectationsToDelete.length > 0) {
+            // Demander confirmation si on supprime toutes les affectations
+            if (affectationsToDelete.length === userAffectations.length) {
+              const chantierNom = resizeState.affectation.chantier_nom || 'ce chantier'
+              const confirmed = window.confirm(
+                `Supprimer toutes les affectations (${affectationsToDelete.length}) pour ${chantierNom} ?`
+              )
+              if (!confirmed) {
+                setResizeState(null)
+                setResizePreview({ datesToAdd: [], datesToRemove: [] })
+                return
+              }
+            }
+            await onAffectationsDelete(affectationsToDelete)
+          }
+        }
       }
-      // Les autres cas (réduction) sont ignorés - l'utilisateur doit supprimer manuellement
     }
 
     setResizeState(null)
-    setResizePreviewDates([])
-  }, [resizeState, onAffectationResize])
+    setResizePreview({ datesToAdd: [], datesToRemove: [] })
+  }, [resizeState, onAffectationResize, onAffectationsDelete])
 
   // Écouter les événements mouse globalement pendant le resize
   useEffect(() => {
@@ -360,7 +487,7 @@ export default function PlanningGrid({
               {isExpanded && users.map(user => (
                 <div
                   key={user.id}
-                  className="group grid hover:bg-gray-50 transition-colors" style={gridStyle}
+                  className="group/row grid hover:bg-gray-50 transition-colors" style={gridStyle}
                 >
                   {/* Colonne utilisateur */}
                   <div className="px-4 py-3 flex items-center gap-3 border-r">
@@ -380,7 +507,7 @@ export default function PlanningGrid({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -410,11 +537,22 @@ export default function PlanningGrid({
                     const hasAffectations = cellAffectations.length > 0
                     const cellKey = `${user.id}-${format(day, 'yyyy-MM-dd')}`
                     const isDragOver = dragOverCell === cellKey
+                    const dateStr = format(day, 'yyyy-MM-dd')
+                    // Vérifier si cette cellule est dans la preview du resize (même utilisateur)
+                    const isUserMatch = resizeState && String(resizeState.affectation.utilisateur_id) === String(user.id)
+                    const isAddPreview = isUserMatch && resizePreview.datesToAdd.includes(dateStr)
+                    const isRemovePreview = isUserMatch && resizePreview.datesToRemove.includes(dateStr)
+                    // Couleur de la preview = couleur du chantier (ajout) ou rouge (suppression)
+                    const previewColor = isAddPreview
+                      ? (resizeState?.affectation.chantier_couleur || '#3498DB')
+                      : isRemovePreview
+                        ? '#EF4444' // Rouge pour suppression
+                        : undefined
 
                     return (
                       <div
                         key={day.toISOString()}
-                        data-cell-day={format(day, 'yyyy-MM-dd')}
+                        data-cell-day={dateStr}
                         tabIndex={0}
                         role="gridcell"
                         aria-label={`${user.prenom} ${user.nom}, ${format(day, 'EEEE d MMMM', { locale: fr })}`}
@@ -434,8 +572,11 @@ export default function PlanningGrid({
                         } ${
                           isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
                         } ${
-                          !hasAffectations ? 'cursor-pointer hover:bg-gray-100' : ''
+                          !hasAffectations && !isAddPreview ? 'cursor-pointer hover:bg-gray-100' : ''
                         }`}
+                        style={previewColor ? {
+                          backgroundColor: `${previewColor}50`,
+                        } : undefined}
                       >
                         <div className="space-y-1 w-full">
                           {cellAffectations.map(aff => (
@@ -448,7 +589,7 @@ export default function PlanningGrid({
                               draggable={!!onAffectationMove}
                               onDragStart={(e) => handleDragStart(e, aff)}
                               onDragEnd={handleDragEnd}
-                              resizable={!!onAffectationResize}
+                              resizable={!!onAffectationResize || !!onAffectationsDelete}
                               onResizeStart={(direction, e) => handleResizeStart(aff, direction, e)}
                               isResizing={resizeState?.affectation.id === aff.id}
                               proportionalHeight={true}
