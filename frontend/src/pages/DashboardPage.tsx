@@ -7,7 +7,7 @@
  * - useDashboardFeed: gestion du feed
  */
 
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
@@ -28,7 +28,7 @@ import {
   MessageCircle,
   AlertTriangle,
   Loader2,
-  Camera,
+  ImagePlus,
   X,
 } from 'lucide-react'
 import type { TargetType } from '../types'
@@ -49,6 +49,21 @@ export default function DashboardPage() {
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
+
+  // Ref pour l'input file (ajout de photos)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Handler pour la sélection de photos
+  const handlePhotoSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      // TODO: Implémenter l'upload des photos
+      const fileNames = Array.from(files).map(f => f.name).join(', ')
+      addToast({ message: `Photo(s) sélectionnée(s): ${fileNames}`, type: 'info' })
+      // Reset input pour permettre de sélectionner le même fichier
+      e.target.value = ''
+    }
+  }, [addToast])
 
   // Handlers pour les actions rapides
   const handleQuickAction = useCallback((actionId: string) => {
@@ -224,17 +239,28 @@ export default function DashboardPage() {
                   )}
 
                   <div className="flex gap-3 mt-3">
-                    <button className="flex-1 bg-orange-500 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-600 font-medium">
-                      <Camera className="w-5 h-5" />
-                      Prendre une photo
-                    </button>
                     <button
                       onClick={feed.handleCreatePost}
                       disabled={!feed.newPostContent.trim() || feed.isPosting}
-                      className="bg-gray-200 text-gray-700 py-2.5 px-6 rounded-xl hover:bg-gray-300 font-medium disabled:opacity-50"
+                      className="flex-1 bg-green-600 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 font-medium disabled:opacity-50"
                     >
                       {feed.isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier'}
                     </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-orange-500 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-600 font-medium"
+                    >
+                      <ImagePlus className="w-5 h-5" />
+                      Ajouter une photo
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                    />
                   </div>
                 </div>
 

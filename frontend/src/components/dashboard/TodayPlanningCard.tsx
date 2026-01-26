@@ -126,13 +126,17 @@ export default function TodayPlanningCard({
           const status = slot.status ? statusStyles[slot.status] : null
 
           return (
-            <div key={slot.id} className={`border-l-4 ${period.border} rounded-xl ${period.bg} p-4`}>
+            <div
+              key={slot.id}
+              onClick={() => handleChantierClick(slot)}
+              className={`border-l-4 ${period.border} rounded-xl ${period.bg} p-4 cursor-pointer hover:shadow-md transition-shadow`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && handleChantierClick(slot)}
+            >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <span
-                    onClick={() => handleChantierClick(slot)}
-                    className={`text-xs px-2 py-1 rounded-md font-semibold ${period.badge} text-white cursor-pointer hover:opacity-80 transition-opacity`}
-                  >
+                  <span className={`text-xs px-2 py-1 rounded-md font-semibold ${period.badge} text-white`}>
                     {slot.startTime} - {slot.endTime}
                   </span>
                   <span className="ml-2 text-sm text-gray-600">
@@ -147,10 +151,7 @@ export default function TodayPlanningCard({
               </div>
 
               <div className="flex items-center gap-2">
-                <h3
-                  onClick={() => handleChantierClick(slot)}
-                  className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-primary-600 transition-colors"
-                >
+                <h3 className="font-semibold text-gray-900 text-lg">
                   {slot.siteName}
                 </h3>
                 {slot.isPersonalAffectation === false && (
@@ -192,14 +193,14 @@ export default function TodayPlanningCard({
 
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <button
-                  onClick={() => onNavigate?.(slot.id)}
+                  onClick={(e) => { e.stopPropagation(); onNavigate?.(slot.id) }}
                   className="bg-green-600 text-white py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 font-medium"
                 >
                   <Navigation className="w-4 h-4" />
                   Itineraire
                 </button>
                 <button
-                  onClick={() => onCall?.(slot.id)}
+                  onClick={(e) => { e.stopPropagation(); onCall?.(slot.id) }}
                   className="border-2 border-gray-200 py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 font-medium"
                 >
                   <Phone className="w-4 h-4" />
