@@ -105,20 +105,22 @@ const AffectationBlock = memo(function AffectationBlock({
       {/* Poignée de resize gauche */}
       {resizable && (
         <div
-          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/30"
+          className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-30 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/40 bg-black/10 rounded-l"
           onMouseDown={(e) => handleResizeStart('left', e)}
+          title="Glisser pour étendre vers la gauche"
         >
-          <GripVertical className="w-3 h-3 opacity-70" />
+          <GripVertical className="w-3 h-3" />
         </div>
       )}
 
       {/* Poignée de resize droite */}
       {resizable && (
         <div
-          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/30"
+          className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-30 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/40 bg-black/10 rounded-r"
           onMouseDown={(e) => handleResizeStart('right', e)}
+          title="Glisser pour étendre vers la droite"
         >
-          <GripVertical className="w-3 h-3 opacity-70" />
+          <GripVertical className="w-3 h-3" />
         </div>
       )}
 

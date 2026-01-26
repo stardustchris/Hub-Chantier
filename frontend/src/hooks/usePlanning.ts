@@ -86,6 +86,8 @@ export function usePlanning() {
       setUtilisateurs(usersData.items.filter(u => u.is_active))
       setChantiers(chantiersData.items.filter(c => c.statut !== 'ferme'))
       setNonPlanifiesCount(nonPlanifiesData.count)
+      // Effacer l'erreur explicitement apres succes (important pour les race conditions)
+      setError('')
     } catch (err) {
       logger.error('Erreur chargement planning', err, { context: 'PlanningPage' })
       setError('Erreur lors du chargement du planning')
