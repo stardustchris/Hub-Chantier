@@ -51,18 +51,40 @@ api.interceptors.request.use(async (config) => {
   return config
 })
 
+// URLs à exclure de la logique de session expirée (authentification et vérifications)
+const AUTH_URLS = ['/api/auth/me', '/api/auth/login', '/api/auth/logout', '/api/csrf-token']
+
+// Compteur pour détecter les 401 répétés (évite déconnexion sur erreur transitoire)
+let consecutive401Count = 0
+const MAX_CONSECUTIVE_401 = 2
+
 // Intercepteur pour gérer les erreurs
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Réinitialiser le compteur sur toute réponse réussie
+    consecutive401Count = 0
+    return response
+  },
   (error) => {
     if (error.response?.status === 401) {
-      sessionStorage.removeItem('access_token')
-      // Ne pas émettre sessionExpired pour /api/auth/me car c'est normal
-      // quand l'utilisateur n'est pas connecté (checkAuth initial)
       const url = error.config?.url || ''
-      if (!url.includes('/api/auth/me')) {
+
+      // Ne pas traiter les 401 sur les URLs d'authentification
+      const isAuthUrl = AUTH_URLS.some(authUrl => url.includes(authUrl))
+      if (isAuthUrl) {
+        return Promise.reject(error)
+      }
+
+      // Incrémenter le compteur de 401 consécutifs
+      consecutive401Count++
+
+      // Ne déclencher la déconnexion qu'après plusieurs 401 consécutifs
+      // Cela évite les déconnexions sur erreurs transitoires (hot-reload, race conditions)
+      if (consecutive401Count >= MAX_CONSECUTIVE_401) {
+        sessionStorage.removeItem('access_token')
         // Notifie AuthContext pour mettre à jour l'état user
         emitSessionExpired()
+        consecutive401Count = 0
       }
     }
     return Promise.reject(error)

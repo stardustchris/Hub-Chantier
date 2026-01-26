@@ -56,8 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
       setUser(null)
-      // Rediriger vers login après mise à jour de l'état
-      window.location.href = '/login'
+      // Nettoyer les tokens
+      sessionStorage.removeItem('access_token')
+      clearCsrfToken()
+      // Rediriger seulement si pas déjà sur /login (évite les boucles)
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login'
+      }
     })
     return unsubscribe
   }, [])
