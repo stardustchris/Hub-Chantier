@@ -231,7 +231,7 @@ class ListSignalementsUseCase:
         signalements = self._signalement_repo.find_by_chantier(
             chantier_id, skip, limit, statut_vo, priorite_vo
         )
-        total = self._signalement_repo.count_by_chantier(chantier_id, statut_vo)
+        total = self._signalement_repo.count_by_chantier(chantier_id, statut_vo, priorite_vo)
 
         dtos = []
         for sig in signalements:

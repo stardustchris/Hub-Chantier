@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import LoginPage from './LoginPage'
@@ -23,6 +23,12 @@ vi.mock('react-router-dom', async () => {
     ...actual,
     useNavigate: () => mockNavigate,
   }
+})
+
+// Mock schemas - utilise le vrai module mais permet de verifier les appels
+vi.mock('../schemas', async () => {
+  const actual = await vi.importActual('../schemas')
+  return actual
 })
 
 function renderLoginPage() {
@@ -77,12 +83,12 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderLoginPage()
 
-    // Soumettre sans email
+    // Soumettre sans email (seulement mot de passe)
     await user.type(screen.getByLabelText('Mot de passe'), 'password123')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
-    // Zod doit afficher une erreur de validation
-    await vi.waitFor(() => {
+    // Zod doit afficher une erreur de validation pour l'email
+    await waitFor(() => {
       expect(screen.getByText('Ce champ est requis')).toBeInTheDocument()
     })
     // Login ne doit pas etre appele
@@ -93,12 +99,12 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderLoginPage()
 
-    // Soumettre sans mot de passe
+    // Soumettre sans mot de passe (seulement email)
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
-    // Zod doit afficher une erreur de validation
-    await vi.waitFor(() => {
+    // Zod doit afficher une erreur de validation pour le mot de passe
+    await waitFor(() => {
       expect(screen.getByText('Ce champ est requis')).toBeInTheDocument()
     })
     // Login ne doit pas etre appele
@@ -139,7 +145,7 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     // Wait for the async login to complete
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/')
     })
   })
@@ -156,7 +162,7 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText('Mot de passe'), 'wrongpassword')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
     })
   })
@@ -171,7 +177,7 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText('Mot de passe'), 'password')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText('Erreur de connexion')).toBeInTheDocument()
     })
   })

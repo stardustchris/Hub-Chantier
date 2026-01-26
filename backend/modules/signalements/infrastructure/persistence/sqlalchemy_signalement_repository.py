@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Tuple
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 
 from .models import SignalementModel
 from ...domain.entities import Signalement
@@ -59,7 +59,8 @@ class SQLAlchemySignalementRepository(SignalementRepository):
                 updated_at=signalement.updated_at,
             )
             self._session.add(model)
-            self._session.flush()
+            self._session.commit()
+            self._session.refresh(model)
             signalement.id = model.id
         else:
             # Mise à jour
@@ -82,7 +83,7 @@ class SQLAlchemySignalementRepository(SignalementRepository):
                 model.nb_escalades = signalement.nb_escalades
                 model.derniere_escalade_at = signalement.derniere_escalade_at
                 model.updated_at = datetime.now()
-                self._session.flush()
+                self._session.commit()
 
         return signalement
 
@@ -91,7 +92,7 @@ class SQLAlchemySignalementRepository(SignalementRepository):
         result = self._session.query(SignalementModel).filter(
             SignalementModel.id == signalement_id
         ).delete()
-        self._session.flush()
+        self._session.commit()
         return result > 0
 
     def find_by_chantier(
@@ -114,14 +115,16 @@ class SQLAlchemySignalementRepository(SignalementRepository):
             query = query.filter(SignalementModel.priorite == priorite.value)
 
         # Tri par priorité puis par date de création (plus récent en premier)
-        priority_order = {
-            "critique": 1,
-            "haute": 2,
-            "moyenne": 3,
-            "basse": 4,
-        }
+        # Utilise CASE WHEN pour compatibilité SQLite/PostgreSQL (pas de func.field)
+        priority_order = case(
+            (SignalementModel.priorite == "critique", 1),
+            (SignalementModel.priorite == "haute", 2),
+            (SignalementModel.priorite == "moyenne", 3),
+            (SignalementModel.priorite == "basse", 4),
+            else_=5
+        )
         query = query.order_by(
-            func.field(SignalementModel.priorite, *priority_order.keys()),
+            priority_order,
             SignalementModel.created_at.desc(),
         )
 
@@ -197,6 +200,7 @@ class SQLAlchemySignalementRepository(SignalementRepository):
         self,
         chantier_id: int,
         statut: Optional[StatutSignalement] = None,
+        priorite: Optional[Priorite] = None,
     ) -> int:
         """Compte le nombre de signalements dans un chantier."""
         query = self._session.query(func.count(SignalementModel.id)).filter(
@@ -205,6 +209,9 @@ class SQLAlchemySignalementRepository(SignalementRepository):
 
         if statut:
             query = query.filter(SignalementModel.statut == statut.value)
+
+        if priorite:
+            query = query.filter(SignalementModel.priorite == priorite.value)
 
         return query.scalar() or 0
 

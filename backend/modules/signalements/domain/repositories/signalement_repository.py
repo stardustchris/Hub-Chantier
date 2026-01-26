@@ -152,6 +152,7 @@ class SignalementRepository(ABC):
         self,
         chantier_id: int,
         statut: Optional[StatutSignalement] = None,
+        priorite: Optional[Priorite] = None,
     ) -> int:
         """
         Compte le nombre de signalements dans un chantier.
@@ -159,6 +160,7 @@ class SignalementRepository(ABC):
         Args:
             chantier_id: ID du chantier.
             statut: Filtrer par statut (optionnel).
+            priorite: Filtrer par priorité (optionnel).
 
         Returns:
             Nombre de signalements.

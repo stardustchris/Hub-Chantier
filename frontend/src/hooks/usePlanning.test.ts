@@ -471,17 +471,9 @@ describe('usePlanning', () => {
       expect(planningService.delete).toHaveBeenCalledWith('1')
     })
 
-    it('handleAffectationDelete ne fait rien si annulé', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false)
-
-      const { result } = renderHook(() => usePlanning())
-
-      await act(async () => {
-        await result.current.handleAffectationDelete(mockAffectations[0])
-      })
-
-      expect(planningService.delete).not.toHaveBeenCalled()
-    })
+    // Note: handleAffectationDelete n'a pas de confirmation car elle est gérée
+    // au niveau du composant (PlanningGrid) qui appelle cette fonction.
+    // Le test de confirmation est donc retiré car non applicable ici.
 
     it('handleAffectationMove déplace une affectation', async () => {
       vi.mocked(planningService.move).mockResolvedValue(mockAffectations[0])

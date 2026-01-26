@@ -143,9 +143,10 @@ describe('ImageUpload', () => {
     })
 
     it('affiche le loader pendant l\'upload', async () => {
-      // Delayer la resolution du mock
+      // Utiliser un deferred pour controler la resolution
+      let resolveUpload: (value: { url: string }) => void = () => {}
       vi.mocked(uploadService.uploadProfilePhoto).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ url: 'test.jpg' }), 100))
+        () => new Promise((resolve) => { resolveUpload = resolve })
       )
 
       render(<ImageUpload {...defaultProps} />)
@@ -159,6 +160,15 @@ describe('ImageUpload', () => {
       await waitFor(() => {
         const button = screen.getByRole('button')
         expect(button).toBeDisabled()
+      })
+
+      // Resoudre la promise pour nettoyer proprement
+      resolveUpload({ url: 'test.jpg' })
+
+      // Attendre que l'upload se termine
+      await waitFor(() => {
+        const button = screen.getByRole('button')
+        expect(button).not.toBeDisabled()
       })
     })
 

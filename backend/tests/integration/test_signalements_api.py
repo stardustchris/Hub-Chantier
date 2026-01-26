@@ -17,7 +17,7 @@ class TestSignalementCreate:
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
         assert chantier_response.status_code == 201
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer un signalement
         signalement_data = {
@@ -43,7 +43,7 @@ class TestSignalementCreate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         date_resolution = (datetime.now() + timedelta(days=2)).isoformat()
         signalement_data = {
@@ -70,7 +70,7 @@ class TestSignalementCreate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         signalement_data = {
             "chantier_id": chantier_id,
@@ -105,7 +105,7 @@ class TestSignalementGet:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -144,7 +144,7 @@ class TestSignalementList:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer plusieurs signalements
         for i in range(3):
@@ -173,7 +173,7 @@ class TestSignalementList:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer des signalements avec differentes priorites
         client.post(
@@ -218,7 +218,7 @@ class TestSignalementSearch:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         client.post(
             "/api/signalements",
@@ -249,7 +249,7 @@ class TestSignalementUpdate:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -296,7 +296,7 @@ class TestSignalementDelete:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -329,7 +329,7 @@ class TestSignalementDelete:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -358,7 +358,7 @@ class TestSignalementWorkflow:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer signalement (statut: ouvert)
         create_response = client.post(
@@ -396,7 +396,7 @@ class TestSignalementWorkflow:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer, traiter et cloturer
         create_response = client.post(
@@ -438,11 +438,11 @@ class TestSignalementAssignation:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer un utilisateur a qui assigner
         user_response = client.post("/api/auth/register", json=sample_user_data)
-        user_id = user_response.json()["user"]["id"]
+        user_id = int(user_response.json()["user"]["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -474,7 +474,7 @@ class TestSignalementReponses:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -507,7 +507,7 @@ class TestSignalementReponses:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         create_response = client.post(
             "/api/signalements",
@@ -548,7 +548,7 @@ class TestSignalementStatistiques:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer quelques signalements
         for priorite in ["haute", "moyenne", "basse"]:
@@ -585,7 +585,7 @@ class TestSignalementAlertes:
         chantier_response = client.post(
             "/api/chantiers", json=sample_chantier_data, headers=auth_headers
         )
-        chantier_id = chantier_response.json()["id"]
+        chantier_id = int(chantier_response.json()["id"])
 
         # Creer un signalement critique (delai 4h) sans date resolution
         client.post(

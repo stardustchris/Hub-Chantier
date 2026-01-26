@@ -48,7 +48,7 @@ class SQLAlchemyReponseRepository(ReponseRepository):
                 updated_at=reponse.updated_at,
             )
             self._session.add(model)
-            self._session.flush()
+            self._session.commit()
             reponse.id = model.id
         else:
             # Mise à jour
@@ -61,7 +61,7 @@ class SQLAlchemyReponseRepository(ReponseRepository):
                 model.photo_url = reponse.photo_url
                 model.est_resolution = reponse.est_resolution
                 model.updated_at = datetime.now()
-                self._session.flush()
+                self._session.commit()
 
         return reponse
 
@@ -70,7 +70,7 @@ class SQLAlchemyReponseRepository(ReponseRepository):
         result = self._session.query(ReponseModel).filter(
             ReponseModel.id == reponse_id
         ).delete()
-        self._session.flush()
+        self._session.commit()
         return result > 0
 
     def find_by_signalement(
@@ -126,7 +126,7 @@ class SQLAlchemyReponseRepository(ReponseRepository):
         result = self._session.query(ReponseModel).filter(
             ReponseModel.signalement_id == signalement_id
         ).delete()
-        self._session.flush()
+        self._session.commit()
         return result
 
     def _to_entity(self, model: ReponseModel) -> Reponse:
