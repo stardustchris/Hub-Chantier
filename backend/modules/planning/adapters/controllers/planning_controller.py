@@ -542,7 +542,7 @@ class PlanningController:
             current_date += timedelta(days=1)
 
         # Recuperer les affectations existantes pour cet utilisateur/chantier
-        existing_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur_and_date_range(
+        existing_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
             affectation.utilisateur_id,
             request.date_debut,
             request.date_fin,
@@ -560,7 +560,7 @@ class PlanningController:
         dates_to_add = new_dates - existing_dates
 
         # Dates a supprimer (hors de la nouvelle plage)
-        all_user_chantier_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur_and_date_range(
+        all_user_chantier_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
             affectation.utilisateur_id,
             affectation.date - timedelta(days=365),
             affectation.date + timedelta(days=365),
@@ -603,7 +603,7 @@ class PlanningController:
         # L'utilisateur devra supprimer manuellement si necessaire
 
         # Recuperer toutes les affectations dans la nouvelle plage
-        final_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur_and_date_range(
+        final_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
             affectation.utilisateur_id,
             request.date_debut,
             request.date_fin,
