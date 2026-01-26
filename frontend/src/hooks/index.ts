@@ -36,3 +36,6 @@ export { useRecentDocuments } from './useRecentDocuments'
 export type { RecentDocument } from './useRecentDocuments'
 
 export { useChantierLogistique } from './useChantierLogistique'
+
+export { useTodayTeam } from './useTodayTeam'
+export type { TeamMember, UseTodayTeamReturn } from './useTodayTeam'

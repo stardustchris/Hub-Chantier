@@ -11,7 +11,7 @@ import { useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats } from '../hooks'
+import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam } from '../hooks'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -49,6 +49,9 @@ export default function DashboardPage() {
 
   // Hook pour les statistiques hebdomadaires (heures, tâches)
   const weeklyStats = useWeeklyStats()
+
+  // Hook pour l'équipe du jour (depuis les affectations du planning)
+  const todayTeam = useTodayTeam()
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
@@ -129,15 +132,6 @@ export default function DashboardPage() {
     addToast({ message: 'Appel du chef de chantier...', type: 'info' })
     // En prod: window.location.href = 'tel:+33612345678'
   }, [addToast])
-
-  const handleDocumentClick = useCallback((docId: string) => {
-    addToast({ message: `Ouverture du document ${docId}...`, type: 'info' })
-    // En prod: navigate(`/documents/${docId}`)
-  }, [addToast])
-
-  const handleViewAllDocuments = useCallback(() => {
-    navigate('/documents')
-  }, [navigate])
 
   return (
     <Layout>
@@ -305,11 +299,8 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-4">
-              <DocumentsCard
-                onDocumentClick={handleDocumentClick}
-                onViewAll={handleViewAllDocuments}
-              />
-              <TeamCard />
+              <DocumentsCard />
+              <TeamCard members={todayTeam.members} />
             </div>
           </div>
         </div>

@@ -23,6 +23,8 @@ interface PlanningSlot {
   siteName?: string
   siteAddress?: string
   status?: 'in_progress' | 'planned' | 'completed'
+  /** Statut réel du chantier (ouvert, en_cours, receptionne, ferme) */
+  chantierStatut?: 'ouvert' | 'en_cours' | 'receptionne' | 'ferme'
   tasks?: Task[]
   isPersonalAffectation?: boolean // true si l'utilisateur est personnellement affecté
 }
@@ -42,10 +44,12 @@ const priorityStyles = {
   low: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500', label: 'Basse' },
 }
 
-const statusStyles = {
-  in_progress: { bg: 'bg-green-100', text: 'text-green-700', label: 'En cours' },
-  planned: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Planifie' },
-  completed: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Termine' },
+/** Styles pour le statut réel du chantier */
+const chantierStatutStyles = {
+  ouvert: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'A lancer' },
+  en_cours: { bg: 'bg-green-100', text: 'text-green-700', label: 'En cours' },
+  receptionne: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Receptionne' },
+  ferme: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Ferme' },
 }
 
 const periodStyles = {
@@ -149,7 +153,7 @@ export default function TodayPlanningCard({
             )
           }
 
-          const status = slot.status ? statusStyles[slot.status] : null
+          const chantierStatus = slot.chantierStatut ? chantierStatutStyles[slot.chantierStatut] : null
 
           return (
             <div
@@ -169,9 +173,9 @@ export default function TodayPlanningCard({
                     {slot.period === 'morning' ? 'Matin' : 'Apres-midi'}
                   </span>
                 </div>
-                {status && (
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${status.bg} ${status.text}`}>
-                    {status.label}
+                {chantierStatus && (
+                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${chantierStatus.bg} ${chantierStatus.text}`}>
+                    {chantierStatus.label}
                   </span>
                 )}
               </div>

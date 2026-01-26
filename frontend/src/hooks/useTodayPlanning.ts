@@ -23,6 +23,8 @@ interface PlanningSlot {
   siteName?: string
   siteAddress?: string
   status?: 'in_progress' | 'planned' | 'completed'
+  /** Statut réel du chantier (ouvert, en_cours, receptionne, ferme) */
+  chantierStatut?: 'ouvert' | 'en_cours' | 'receptionne' | 'ferme'
   tasks?: { id: string; name: string; priority: 'urgent' | 'high' | 'medium' | 'low' }[]
   isPersonalAffectation?: boolean // true si l'utilisateur est personnellement affecté
 }
@@ -80,6 +82,7 @@ function affectationToSlot(
     siteName: chantier?.nom || affectation.chantier_nom || 'Chantier inconnu',
     siteAddress: chantier?.adresse || '',
     status: getStatus(heureDebut, heureFin),
+    chantierStatut: chantier?.statut, // Statut réel du chantier
     tasks: affectation.note
       ? [{ id: '1', name: affectation.note, priority: 'medium' as const }]
       : undefined,
