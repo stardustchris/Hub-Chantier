@@ -38,10 +38,16 @@ class GetTacheStatsUseCase:
         # Calculer la progression globale
         heures_estimees = stats.get("heures_estimees_total", 0) or 0
         heures_realisees = stats.get("heures_realisees_total", 0) or 0
+        total_taches = stats.get("total", 0) or 0
+        taches_terminees = stats.get("terminees", 0) or 0
 
         progression_globale = 0.0
-        if heures_estimees > 0:
+        if heures_realisees > 0 and heures_estimees > 0:
+            # Progression basee sur les heures si des heures ont ete saisies
             progression_globale = min((heures_realisees / heures_estimees) * 100, 100.0)
+        elif total_taches > 0:
+            # Fallback: progression basee sur le nombre de taches terminees
+            progression_globale = (taches_terminees / total_taches) * 100
 
         return TacheStatsDTO(
             chantier_id=chantier_id,
