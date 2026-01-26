@@ -7,11 +7,11 @@
  * - useDashboardFeed: gestion du feed
  */
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam } from '../hooks'
+import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather } from '../hooks'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -22,7 +22,9 @@ import {
   TeamCard,
   DocumentsCard,
   DashboardPostCard,
+  WeatherBulletinPost,
 } from '../components/dashboard'
+import { weatherNotificationService } from '../services/weatherNotifications'
 import MentionInput from '../components/common/MentionInput'
 import {
   MessageCircle,
@@ -52,6 +54,24 @@ export default function DashboardPage() {
 
   // Hook pour l'équipe du jour (depuis les affectations du planning)
   const todayTeam = useTodayTeam()
+
+  // Hook pour la météo réelle avec alertes
+  const { weather, alert: weatherAlert } = useWeather()
+
+  // Demander la permission pour les notifications et envoyer les alertes météo
+  useEffect(() => {
+    // Demander la permission au premier chargement
+    if (weatherNotificationService.areNotificationsSupported()) {
+      weatherNotificationService.requestNotificationPermission()
+    }
+  }, [])
+
+  // Envoyer une notification si alerte météo
+  useEffect(() => {
+    if (weatherAlert) {
+      weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
+    }
+  }, [weatherAlert])
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
@@ -268,7 +288,12 @@ export default function DashboardPage() {
 
                 {/* Posts */}
                 <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-                  {feed.sortedPosts.length === 0 && !feed.isLoading ? (
+                  {/* Bulletin météo du jour en premier */}
+                  {weather && (
+                    <WeatherBulletinPost weather={weather} alert={weatherAlert} />
+                  )}
+
+                  {feed.sortedPosts.length === 0 && !feed.isLoading && !weather ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Aucune publication pour le moment</p>
