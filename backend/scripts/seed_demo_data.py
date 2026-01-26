@@ -596,12 +596,13 @@ def seed_taches(db: Session, chantier_ids: dict):
 
 
 def seed_pointages(db: Session, user_ids: dict, chantier_ids: dict):
-    """Cree des pointages pour la semaine derniere."""
+    """Cree des pointages pour la semaine courante et la semaine derniere."""
     print("\n=== Creation des pointages ===")
 
-    # Semaine derniere
+    # Semaine courante et semaine derniere
     today = date.today()
-    last_monday = today - timedelta(days=today.weekday() + 7)
+    current_monday = today - timedelta(days=today.weekday())
+    last_monday = current_monday - timedelta(days=7)
 
     # Compagnons avec leurs chantiers
     compagnons = [
@@ -612,43 +613,53 @@ def seed_pointages(db: Session, user_ids: dict, chantier_ids: dict):
     ]
 
     created_count = 0
-    for email, chantier_code in compagnons:
-        user_id = user_ids.get(email)
-        chantier_id = chantier_ids.get(chantier_code)
 
-        if not user_id or not chantier_id:
-            continue
+    # Créer des pointages pour les deux semaines (courante et derniere)
+    for week_monday in [current_monday, last_monday]:
+        for email, chantier_code in compagnons:
+            user_id = user_ids.get(email)
+            chantier_id = chantier_ids.get(chantier_code)
 
-        # Creer des pointages du lundi au vendredi
-        for day_offset in range(5):
-            pointage_date = last_monday + timedelta(days=day_offset)
-
-            # Verifier si existe deja
-            existing = db.query(PointageModel).filter(
-                PointageModel.utilisateur_id == user_id,
-                PointageModel.date_pointage == pointage_date
-            ).first()
-
-            if existing:
+            if not user_id or not chantier_id:
                 continue
 
-            # Heures variables selon le jour (en minutes)
-            heures_normales_min = 480 if day_offset < 4 else 420  # 8h ou 7h
-            heures_sup_min = 60 if day_offset == 3 else 0  # 1h sup le jeudi
+            # Créer des pointages du lundi au vendredi (ou jusqu'à aujourd'hui pour la semaine courante)
+            for day_offset in range(5):
+                pointage_date = week_monday + timedelta(days=day_offset)
 
-            pointage = PointageModel(
-                utilisateur_id=user_id,
-                chantier_id=chantier_id,
-                date_pointage=pointage_date,
-                heures_normales_minutes=heures_normales_min,
-                heures_supplementaires_minutes=heures_sup_min,
-                statut="valide",
-            )
-            db.add(pointage)
-            created_count += 1
+                # Ne pas créer de pointages dans le futur
+                if pointage_date > today:
+                    continue
+
+                # Verifier si existe deja
+                existing = db.query(PointageModel).filter(
+                    PointageModel.utilisateur_id == user_id,
+                    PointageModel.date_pointage == pointage_date
+                ).first()
+
+                if existing:
+                    continue
+
+                # Heures variables selon le jour (en minutes)
+                heures_normales_min = 480 if day_offset < 4 else 420  # 8h ou 7h
+                heures_sup_min = 60 if day_offset == 3 else 0  # 1h sup le jeudi
+
+                # Pour la semaine courante, statut "soumis" (en attente de validation)
+                statut = "valide" if week_monday == last_monday else "soumis"
+
+                pointage = PointageModel(
+                    utilisateur_id=user_id,
+                    chantier_id=chantier_id,
+                    date_pointage=pointage_date,
+                    heures_normales_minutes=heures_normales_min,
+                    heures_supplementaires_minutes=heures_sup_min,
+                    statut=statut,
+                )
+                db.add(pointage)
+                created_count += 1
 
     db.commit()
-    print(f"  [CREE] {created_count} pointages pour la semaine du {last_monday}")
+    print(f"  [CREE] {created_count} pointages pour les semaines du {last_monday} et {current_monday}")
 
 
 def main():

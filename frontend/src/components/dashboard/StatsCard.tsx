@@ -1,7 +1,10 @@
 /**
  * StatsCard - Carte statistiques hebdomadaires
  * CDC Section 2 - KPI adaptes au role
+ * Cliquable pour accéder aux feuilles d'heures
  */
+
+import { useNavigate } from 'react-router-dom'
 
 interface StatsCardProps {
   hoursWorked?: string
@@ -16,8 +19,17 @@ export default function StatsCard({
   tasksCompleted = 8,
   tasksTotal = 12,
 }: StatsCardProps) {
+  const navigate = useNavigate()
+
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-lg">
+    <div
+      onClick={() => navigate('/feuilles-heures')}
+      className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && navigate('/feuilles-heures')}
+      title="Voir les feuilles d'heures"
+    >
       <h3 className="font-semibold text-gray-800 mb-4">Cette semaine</h3>
       <div className="space-y-4">
         <div>

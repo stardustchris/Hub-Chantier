@@ -40,7 +40,7 @@ export default function TimesheetGrid({
 
   // Rendu du statut
   const renderStatutBadge = (statut: StatutPointage) => {
-    const config = STATUTS_POINTAGE[statut]
+    const config = STATUTS_POINTAGE[statut] || STATUTS_POINTAGE.brouillon
     return (
       <span
         className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium"
