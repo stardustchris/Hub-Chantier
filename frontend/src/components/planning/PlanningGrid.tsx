@@ -190,25 +190,29 @@ export default function PlanningGrid({
       const originalDate = new Date(resizeState.originalDate)
 
       if (resizeState.direction === 'right') {
-        // Étendre vers la droite: la date de début reste, on calcule la date de fin
+        // Poignée droite: étendre ou réduire depuis la fin
+        // deltaX > 0 = étendre vers la droite (ajouter des jours après)
+        // deltaX < 0 = réduire depuis la droite (supprimer des jours à la fin)
         const newEndDate = addDays(originalDate, daysDelta)
-        if (newEndDate >= originalDate) {
-          onAffectationResize(
-            resizeState.affectation.id,
-            resizeState.originalDate,
-            format(newEndDate, 'yyyy-MM-dd')
-          )
-        }
+        // S'assurer que date_fin >= date_debut (si reduction trop importante, on garde juste le jour original)
+        const finalEndDate = newEndDate < originalDate ? originalDate : newEndDate
+        onAffectationResize(
+          resizeState.affectation.id,
+          resizeState.originalDate,
+          format(finalEndDate, 'yyyy-MM-dd')
+        )
       } else {
-        // Étendre vers la gauche: on recule la date de début
+        // Poignée gauche: étendre ou réduire depuis le début
+        // deltaX < 0 = étendre vers la gauche (ajouter des jours avant)
+        // deltaX > 0 = réduire depuis la gauche (supprimer des jours au début)
         const newStartDate = addDays(originalDate, daysDelta)
-        if (newStartDate <= originalDate) {
-          onAffectationResize(
-            resizeState.affectation.id,
-            format(newStartDate, 'yyyy-MM-dd'),
-            resizeState.originalDate
-          )
-        }
+        // S'assurer que date_debut <= date_fin (si reduction trop importante, on garde juste le jour original)
+        const finalStartDate = newStartDate > originalDate ? originalDate : newStartDate
+        onAffectationResize(
+          resizeState.affectation.id,
+          format(finalStartDate, 'yyyy-MM-dd'),
+          resizeState.originalDate
+        )
       }
     }
 

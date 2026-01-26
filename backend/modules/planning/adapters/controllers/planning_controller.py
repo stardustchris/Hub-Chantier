@@ -559,17 +559,18 @@ class PlanningController:
         # Dates a ajouter
         dates_to_add = new_dates - existing_dates
 
-        # Dates a supprimer (hors de la nouvelle plage)
+        # Identifier les affectations a supprimer lors d'une reduction
+        # On cherche les affectations du meme utilisateur/chantier qui sont
+        # HORS de la nouvelle plage mais adjacentes a l'affectation de reference
         all_user_chantier_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
             affectation.utilisateur_id,
-            affectation.date - timedelta(days=365),
-            affectation.date + timedelta(days=365),
+            affectation.date - timedelta(days=30),  # Chercher dans un mois autour
+            affectation.date + timedelta(days=30),
         )
         affectations_to_delete = [
             a for a in all_user_chantier_affectations
             if a.chantier_id == affectation.chantier_id
-            and a.date not in new_dates
-            and request.date_debut <= a.date <= request.date_fin  # Only within the resize context
+            and a.date not in new_dates  # Pas dans la nouvelle plage demandee
         ]
 
         # Verifier les conflits sur les dates a ajouter
@@ -598,9 +599,11 @@ class PlanningController:
             saved = self.get_planning_uc.affectation_repo.save(new_aff)
             created_affectations.append(saved)
 
-        # Supprimer les affectations hors plage (seulement si la plage a ete reduite)
-        # Note: On ne supprime pas automatiquement ici pour eviter les pertes de donnees
-        # L'utilisateur devra supprimer manuellement si necessaire
+        # Supprimer les affectations hors plage (reduction)
+        deleted_count = 0
+        for aff_to_delete in affectations_to_delete:
+            self.get_planning_uc.affectation_repo.delete(aff_to_delete.id)
+            deleted_count += 1
 
         # Recuperer toutes les affectations dans la nouvelle plage
         final_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
@@ -617,7 +620,7 @@ class PlanningController:
 
         logger.info(
             f"Resize complete: {len(created_affectations)} created, "
-            f"{len(result_affectations)} total in range"
+            f"{deleted_count} deleted, {len(result_affectations)} total in range"
         )
 
         return [self._entity_to_response(a) for a in result_affectations]
