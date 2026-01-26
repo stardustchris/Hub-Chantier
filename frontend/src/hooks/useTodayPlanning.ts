@@ -24,6 +24,7 @@ interface PlanningSlot {
   siteAddress?: string
   status?: 'in_progress' | 'planned' | 'completed'
   tasks?: { id: string; name: string; priority: 'urgent' | 'high' | 'medium' | 'low' }[]
+  isPersonalAffectation?: boolean // true si l'utilisateur est personnellement affecté
 }
 
 export interface UseTodayPlanningReturn {
@@ -62,7 +63,11 @@ function getStatus(heureDebut: string, heureFin: string): 'in_progress' | 'plann
 /**
  * Convertit une affectation en slot de planning
  */
-function affectationToSlot(affectation: Affectation, chantier?: Chantier): PlanningSlot {
+function affectationToSlot(
+  affectation: Affectation,
+  chantier?: Chantier,
+  isPersonal = true
+): PlanningSlot {
   const heureDebut = affectation.heure_debut || '08:00'
   const heureFin = affectation.heure_fin || '17:00'
 
@@ -78,6 +83,7 @@ function affectationToSlot(affectation: Affectation, chantier?: Chantier): Plann
     tasks: affectation.note
       ? [{ id: '1', name: affectation.note, priority: 'medium' as const }]
       : undefined,
+    isPersonalAffectation: isPersonal,
   }
 }
 
@@ -117,6 +123,7 @@ function addLunchBreak(slots: PlanningSlot[]): PlanningSlot[] {
 export function useTodayPlanning(): UseTodayPlanningReturn {
   const { user } = useAuth()
   const [affectations, setAffectations] = useState<Affectation[]>([])
+  const [isPersonalView, setIsPersonalView] = useState(true) // true si affectations personnelles
   const [chantiers, setChantiers] = useState<Map<string, Chantier>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -139,6 +146,7 @@ export function useTodayPlanning(): UseTodayPlanningReturn {
 
       // Charger les affectations de l'utilisateur pour aujourd'hui
       let todayAffectations = await planningService.getByUtilisateur(user.id, today, today)
+      let personalView = true
 
       // Si admin/conducteur sans affectation personnelle, charger toutes les affectations du jour
       if (isAdminOrConducteur && todayAffectations.length === 0) {
@@ -154,9 +162,11 @@ export function useTodayPlanning(): UseTodayPlanningReturn {
           chantiersSeen.add(a.chantier_id)
           return true
         })
+        personalView = false // Ce sont des affectations d'équipe, pas personnelles
       }
 
       setAffectations(todayAffectations)
+      setIsPersonalView(personalView)
 
       // Charger les détails des chantiers pour avoir les adresses
       const chantierIds = [...new Set(todayAffectations.map(a => a.chantier_id))]
@@ -191,11 +201,11 @@ export function useTodayPlanning(): UseTodayPlanningReturn {
     if (affectations.length === 0) return []
 
     const rawSlots = affectations
-      .map(a => affectationToSlot(a, chantiers.get(a.chantier_id)))
+      .map(a => affectationToSlot(a, chantiers.get(a.chantier_id), isPersonalView))
       .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
     return addLunchBreak(rawSlots)
-  }, [affectations, chantiers])
+  }, [affectations, chantiers, isPersonalView])
 
   return {
     slots,

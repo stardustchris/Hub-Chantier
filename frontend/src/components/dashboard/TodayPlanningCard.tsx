@@ -5,7 +5,7 @@
  */
 
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, CheckCircle, Navigation, Phone, CalendarX, Loader2 } from 'lucide-react'
+import { Calendar, MapPin, CheckCircle, Navigation, Phone, CalendarX, Loader2, Users } from 'lucide-react'
 
 interface Task {
   id: string
@@ -23,6 +23,7 @@ interface PlanningSlot {
   siteAddress?: string
   status?: 'in_progress' | 'planned' | 'completed'
   tasks?: Task[]
+  isPersonalAffectation?: boolean // true si l'utilisateur est personnellement affecté
 }
 
 interface TodayPlanningCardProps {
@@ -145,16 +146,26 @@ export default function TodayPlanningCard({
                 )}
               </div>
 
-              <h3
-                onClick={() => handleChantierClick(slot)}
-                className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-primary-600 transition-colors"
-              >
-                {slot.siteName}
-              </h3>
-              <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                <MapPin className="w-4 h-4 text-red-500" />
-                {slot.siteAddress}
-              </p>
+              <div className="flex items-center gap-2">
+                <h3
+                  onClick={() => handleChantierClick(slot)}
+                  className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-primary-600 transition-colors"
+                >
+                  {slot.siteName}
+                </h3>
+                {slot.isPersonalAffectation === false && (
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                    <Users className="w-3 h-3" />
+                    Equipe
+                  </span>
+                )}
+              </div>
+              {slot.siteAddress && (
+                <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                  <MapPin className="w-4 h-4 text-red-500" />
+                  {slot.siteAddress}
+                </p>
+              )}
 
               {slot.tasks && slot.tasks.length > 0 && (
                 <div className="mt-3">
