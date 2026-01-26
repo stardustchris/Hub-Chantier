@@ -534,18 +534,37 @@ class PlanningController:
         if not affectation:
             raise AffectationNotFoundError(affectation_id)
 
-        # Generer toutes les dates dans la nouvelle plage
-        new_dates = set()
-        current_date = request.date_debut
-        while current_date <= request.date_fin:
-            new_dates.add(current_date)
-            current_date += timedelta(days=1)
+        # Determiner la direction de l'extension
+        # Si date_debut < affectation.date, on etend vers la gauche
+        # Si date_fin > affectation.date, on etend vers la droite
+        affectation_date = affectation.date
+
+        # Generer uniquement les dates ADJACENTES a l'affectation d'origine
+        # (pas tous les trous dans la plage)
+        dates_to_add = set()
+
+        if request.date_fin > affectation_date:
+            # Extension vers la droite: ajouter les jours consecutifs apres l'affectation
+            current_date = affectation_date + timedelta(days=1)
+            while current_date <= request.date_fin:
+                dates_to_add.add(current_date)
+                current_date += timedelta(days=1)
+
+        if request.date_debut < affectation_date:
+            # Extension vers la gauche: ajouter les jours consecutifs avant l'affectation
+            current_date = affectation_date - timedelta(days=1)
+            while current_date >= request.date_debut:
+                dates_to_add.add(current_date)
+                current_date -= timedelta(days=1)
 
         # Recuperer les affectations existantes pour cet utilisateur/chantier
+        # pour exclure les dates qui ont deja une affectation
+        min_date = min(request.date_debut, affectation_date)
+        max_date = max(request.date_fin, affectation_date)
         existing_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
             affectation.utilisateur_id,
-            request.date_debut,
-            request.date_fin,
+            min_date,
+            max_date,
         )
 
         # Filtrer pour ne garder que celles du meme chantier
@@ -556,10 +575,10 @@ class PlanningController:
 
         existing_dates = {a.date for a in same_chantier_affectations}
 
-        # Dates a ajouter (extension uniquement)
-        dates_to_add = new_dates - existing_dates
+        # Exclure les dates qui existent deja
+        dates_to_add = dates_to_add - existing_dates
 
-        # Note: Le resize ne fait QUE de l'extension (ajout de jours).
+        # Note: Le resize ne fait QUE de l'extension (ajout de jours adjacents).
         # Pour supprimer des affectations, l'utilisateur doit les supprimer
         # manuellement via le bouton X. Cela evite les suppressions accidentelles.
 

@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { X, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import type { Affectation, AffectationCreate, AffectationUpdate, User, Chantier, JourSemaine } from '../../types'
 import { JOURS_SEMAINE } from '../../types'
+
+// Codes des chantiers spéciaux (absences)
+const CHANTIERS_SPECIAUX_CODES = ['CONGES', 'MALADIE', 'FORMATION', 'RTT']
 
 interface AffectationModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (data: AffectationCreate | AffectationUpdate) => Promise<void>
+  onDelete?: (affectation: Affectation) => Promise<void>
   affectation?: Affectation | null
   utilisateurs: User[]
   chantiers: Chantier[]
@@ -20,6 +24,7 @@ export default function AffectationModal({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   affectation,
   utilisateurs,
   chantiers,
@@ -28,6 +33,14 @@ export default function AffectationModal({
   selectedChantierId,
 }: AffectationModalProps) {
   const isEdit = !!affectation
+  const [deleting, setDeleting] = useState(false)
+
+  // Séparer les chantiers en deux groupes : absences et chantiers de travaux
+  const { chantiersAbsences, chantiersTravaux } = useMemo(() => {
+    const absences = chantiers.filter(c => CHANTIERS_SPECIAUX_CODES.includes(c.code))
+    const travaux = chantiers.filter(c => !CHANTIERS_SPECIAUX_CODES.includes(c.code))
+    return { chantiersAbsences: absences, chantiersTravaux: travaux }
+  }, [chantiers])
 
   const [formData, setFormData] = useState({
     utilisateur_id: '',
@@ -58,16 +71,17 @@ export default function AffectationModal({
         date_fin_recurrence: '',
       })
     } else {
+      const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
       setFormData({
         utilisateur_id: selectedUserId || '',
         chantier_id: selectedChantierId || '',
-        date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+        date: dateStr,
         heure_debut: '08:00',
         heure_fin: '17:00',
         note: '',
         type_affectation: 'unique',
         jours_recurrence: [],
-        date_fin_recurrence: '',
+        date_fin_recurrence: dateStr, // Par défaut, date fin = date début
       })
     }
     setError('')
@@ -127,6 +141,23 @@ export default function AffectationModal({
     }))
   }
 
+  const handleDelete = async () => {
+    if (!affectation || !onDelete) return
+    if (!confirm('Supprimer cette affectation ?')) return
+
+    setDeleting(true)
+    setError('')
+    try {
+      await onDelete(affectation)
+      onClose()
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression'
+      setError(errorMessage)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (!isOpen) return null
 
   return (
@@ -180,10 +211,10 @@ export default function AffectationModal({
               </div>
             )}
 
-            {/* Chantier */}
+            {/* Chantier ou Absence */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Chantier *
+                Chantier / Absence *
               </label>
               <select
                 value={formData.chantier_id}
@@ -191,12 +222,25 @@ export default function AffectationModal({
                 className="input w-full"
                 required
               >
-                <option value="">Sélectionner un chantier</option>
-                {chantiers.map(chantier => (
-                  <option key={chantier.id} value={chantier.id}>
-                    {chantier.code} - {chantier.nom}
-                  </option>
-                ))}
+                <option value="">Sélectionner...</option>
+                {chantiersAbsences.length > 0 && (
+                  <optgroup label="📅 Absences">
+                    {chantiersAbsences.map(chantier => (
+                      <option key={chantier.id} value={chantier.id}>
+                        {chantier.nom}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {chantiersTravaux.length > 0 && (
+                  <optgroup label="🏗️ Chantiers">
+                    {chantiersTravaux.map(chantier => (
+                      <option key={chantier.id} value={chantier.id}>
+                        {chantier.code} - {chantier.nom}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
 
@@ -211,7 +255,17 @@ export default function AffectationModal({
                     <input
                       type="date"
                       value={formData.date}
-                      onChange={e => setFormData({ ...formData, date: e.target.value })}
+                      onChange={e => {
+                        const newDate = e.target.value
+                        setFormData(prev => ({
+                          ...prev,
+                          date: newDate,
+                          // Si date_fin est vide ou antérieure à la nouvelle date, la synchroniser
+                          date_fin_recurrence: !prev.date_fin_recurrence || prev.date_fin_recurrence < newDate
+                            ? newDate
+                            : prev.date_fin_recurrence,
+                        }))
+                      }}
                       className="input w-full"
                       required
                     />
@@ -223,7 +277,7 @@ export default function AffectationModal({
                       </label>
                       <input
                         type="date"
-                        value={formData.date_fin_recurrence}
+                        value={formData.date_fin_recurrence || formData.date}
                         onChange={e => setFormData({ ...formData, date_fin_recurrence: e.target.value })}
                         className="input w-full"
                         min={formData.date}
@@ -348,18 +402,29 @@ export default function AffectationModal({
 
             {/* Boutons */}
             <div className="flex gap-3 pt-4">
+              {isEdit && onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="btn bg-red-500 hover:bg-red-600 text-white px-3"
+                  disabled={loading || deleting}
+                  title="Supprimer l'affectation"
+                >
+                  {deleting ? '...' : <Trash2 className="w-5 h-5" />}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onClose}
                 className="btn btn-outline flex-1"
-                disabled={loading}
+                disabled={loading || deleting}
               >
                 Annuler
               </button>
               <button
                 type="submit"
                 className="btn btn-primary flex-1"
-                disabled={loading}
+                disabled={loading || deleting}
               >
                 {loading ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer'}
               </button>

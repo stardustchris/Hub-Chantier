@@ -102,10 +102,10 @@ const AffectationBlock = memo(function AffectationBlock({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      {/* Poignée de resize gauche */}
+      {/* Poignée de resize gauche - z-10 pour être sous le bouton supprimer */}
       {resizable && (
         <div
-          className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-30 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/40 bg-black/10 rounded-l"
+          className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-30 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/40 bg-black/10 rounded-l z-10"
           onMouseDown={(e) => handleResizeStart('left', e)}
           title="Glisser pour étendre vers la gauche"
         >
@@ -113,10 +113,10 @@ const AffectationBlock = memo(function AffectationBlock({
         </div>
       )}
 
-      {/* Poignée de resize droite */}
+      {/* Poignée de resize droite - z-10 pour être sous le bouton supprimer */}
       {resizable && (
         <div
-          className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-30 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/40 bg-black/10 rounded-r"
+          className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-30 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-white/40 bg-black/10 rounded-r z-10"
           onMouseDown={(e) => handleResizeStart('right', e)}
           title="Glisser pour étendre vers la droite"
         >
@@ -124,11 +124,11 @@ const AffectationBlock = memo(function AffectationBlock({
         </div>
       )}
 
-      {/* Bouton supprimer */}
+      {/* Bouton supprimer - z-20 pour être au-dessus des poignées de resize */}
       {onDelete && (
         <button
           onClick={handleDelete}
-          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
         >
           <X className="w-3 h-3" />
         </button>

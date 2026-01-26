@@ -244,6 +244,47 @@ USERS_DATA = [
     },
 ]
 
+# Chantiers speciaux (conges, formations, etc.)
+# Ces chantiers sont utilises pour les affectations hors chantier
+CHANTIERS_SPECIAUX = [
+    {
+        "code": "CONGES",
+        "nom": "Conges payes",
+        "adresse": "-",
+        "description": "Conges payes du personnel",
+        "statut": "ouvert",
+        "couleur": "#4CAF50",  # Vert
+        "heures_estimees": 0,
+    },
+    {
+        "code": "MALADIE",
+        "nom": "Arret maladie",
+        "adresse": "-",
+        "description": "Arrets maladie",
+        "statut": "ouvert",
+        "couleur": "#F44336",  # Rouge
+        "heures_estimees": 0,
+    },
+    {
+        "code": "FORMATION",
+        "nom": "Formation",
+        "adresse": "-",
+        "description": "Sessions de formation",
+        "statut": "ouvert",
+        "couleur": "#2196F3",  # Bleu
+        "heures_estimees": 0,
+    },
+    {
+        "code": "RTT",
+        "nom": "RTT",
+        "adresse": "-",
+        "description": "Jours de RTT",
+        "statut": "ouvert",
+        "couleur": "#9C27B0",  # Violet
+        "heures_estimees": 0,
+    },
+]
+
 CHANTIERS_DATA = [
     {
         "code": "A001",
@@ -396,6 +437,33 @@ def seed_chantiers(db: Session, user_ids: dict) -> dict:
         user_ids.get("sophie.petit@greg-construction.fr"),
     ]
 
+    # D'abord creer les chantiers speciaux (conges, formations, etc.)
+    print("  -- Chantiers speciaux --")
+    for chantier_data in CHANTIERS_SPECIAUX:
+        existing = db.query(ChantierModel).filter(ChantierModel.code == chantier_data["code"]).first()
+        if existing:
+            print(f"  [EXISTE] {chantier_data['code']} - {chantier_data['nom']}")
+            chantier_ids[chantier_data["code"]] = existing.id
+            continue
+
+        chantier = ChantierModel(
+            code=chantier_data["code"],
+            nom=chantier_data["nom"],
+            adresse=chantier_data["adresse"],
+            description=chantier_data.get("description"),
+            statut=chantier_data["statut"],
+            couleur=chantier_data.get("couleur", "#607D8B"),
+            heures_estimees=chantier_data.get("heures_estimees", 0),
+            conducteur_ids=[],
+            chef_chantier_ids=[],
+        )
+        db.add(chantier)
+        db.flush()
+        chantier_ids[chantier_data["code"]] = chantier.id
+        print(f"  [CREE] {chantier_data['code']} - {chantier_data['nom']} (ID: {chantier.id})")
+
+    # Ensuite les chantiers normaux
+    print("  -- Chantiers de travaux --")
     for i, chantier_data in enumerate(CHANTIERS_DATA):
         # Verifier si le chantier existe deja
         existing = db.query(ChantierModel).filter(ChantierModel.code == chantier_data["code"]).first()
