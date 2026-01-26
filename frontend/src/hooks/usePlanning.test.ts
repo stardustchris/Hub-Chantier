@@ -112,7 +112,7 @@ describe('usePlanning', () => {
   })
 
   describe('état initial', () => {
-    it('initialise avec les valeurs par défaut', () => {
+    it('initialise avec les valeurs par défaut', async () => {
       const { result } = renderHook(() => usePlanning())
 
       expect(result.current.viewMode).toBe('semaine')
@@ -120,24 +120,41 @@ describe('usePlanning', () => {
       expect(result.current.loading).toBe(true)
       expect(result.current.error).toBe('')
       expect(result.current.modalOpen).toBe(false)
+
+      // Attendre la fin du chargement pour éviter les warnings act()
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
     })
 
-    it('canEdit est true pour admin', () => {
+    it('canEdit est true pour admin', async () => {
       mockUserRole = 'admin'
       const { result } = renderHook(() => usePlanning())
       expect(result.current.canEdit).toBe(true)
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
     })
 
-    it('canEdit est true pour conducteur', () => {
+    it('canEdit est true pour conducteur', async () => {
       mockUserRole = 'conducteur'
       const { result } = renderHook(() => usePlanning())
       expect(result.current.canEdit).toBe(true)
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
     })
 
-    it('canEdit est false pour compagnon', () => {
+    it('canEdit est false pour compagnon', async () => {
       mockUserRole = 'compagnon'
       const { result } = renderHook(() => usePlanning())
       expect(result.current.canEdit).toBe(false)
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
     })
   })
 
@@ -193,6 +210,10 @@ describe('usePlanning', () => {
     it('permet de changer le mode de vue', async () => {
       const { result } = renderHook(() => usePlanning())
 
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
       act(() => {
         result.current.setViewMode('mois')
       })
@@ -204,6 +225,10 @@ describe('usePlanning', () => {
   describe('viewTab', () => {
     it('permet de changer l\'onglet', async () => {
       const { result } = renderHook(() => usePlanning())
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
 
       act(() => {
         result.current.setViewTab('chantiers')
@@ -361,22 +386,23 @@ describe('usePlanning', () => {
     it('toggle l\'expansion d\'un métier', async () => {
       const { result } = renderHook(() => usePlanning())
 
-      // Par défaut tous les métiers sont expanded
-      expect(result.current.expandedMetiers.length).toBeGreaterThanOrEqual(0)
+      // Par défaut tous les métiers sont expanded (initialisés avec PLANNING_CATEGORIES)
+      // Les catégories sont: conducteur, chef_chantier, compagnon, interimaire, sous_traitant
+      expect(result.current.expandedMetiers).toContain('compagnon')
 
       act(() => {
-        result.current.handleToggleMetier('macon')
+        result.current.handleToggleMetier('compagnon')
       })
 
-      // Maintenant macon devrait être collapsed (retiré)
-      expect(result.current.expandedMetiers).not.toContain('macon')
+      // Après toggle, compagnon devrait être collapsed (retiré)
+      expect(result.current.expandedMetiers).not.toContain('compagnon')
 
       act(() => {
-        result.current.handleToggleMetier('macon')
+        result.current.handleToggleMetier('compagnon')
       })
 
-      // Maintenant macon devrait être expanded (ajouté)
-      expect(result.current.expandedMetiers).toContain('macon')
+      // Après second toggle, compagnon devrait être expanded (ajouté)
+      expect(result.current.expandedMetiers).toContain('compagnon')
     })
   })
 
@@ -529,6 +555,10 @@ describe('usePlanning', () => {
   describe('weekend toggle', () => {
     it('permet de toggle showWeekend', async () => {
       const { result } = renderHook(() => usePlanning())
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
 
       const initial = result.current.showWeekend
 

@@ -5,7 +5,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import LogistiquePage from './LogistiquePage'
+
+// Mock Layout component to avoid AuthContext dependency
+vi.mock('../components/Layout', () => ({
+  default: ({ children }: { children: ReactNode }) => <div data-testid="layout">{children}</div>,
+}))
 
 // Mock useLogistique hook
 const mockUseLogistique = {

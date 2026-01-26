@@ -109,14 +109,15 @@ describe('planningService', () => {
     })
 
     it('déplace une affectation vers un nouvel utilisateur', async () => {
-      const mockAffectation = { id: '1', date: '2026-01-21', utilisateur_id: '2' }
+      const mockAffectation = { id: '1', date: '2026-01-21', utilisateur_id: 2 }
       vi.mocked(api.put).mockResolvedValue({ data: mockAffectation })
 
       const result = await planningService.move('1', '2026-01-21', '2')
 
+      // Le service convertit l'utilisateur_id en number pour le backend
       expect(api.put).toHaveBeenCalledWith('/api/planning/affectations/1', {
         date: '2026-01-21',
-        utilisateur_id: '2',
+        utilisateur_id: 2,
       })
       expect(result).toEqual(mockAffectation)
     })
