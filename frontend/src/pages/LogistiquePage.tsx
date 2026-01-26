@@ -8,6 +8,7 @@ import React from 'react'
 import { Truck, Calendar, Clock, AlertCircle } from 'lucide-react'
 import { useLogistique } from '../hooks'
 import { RessourceList, ReservationCalendar, ReservationModal } from '../components/logistique'
+import Layout from '../components/Layout'
 
 const LogistiquePage: React.FC = () => {
   const {
@@ -32,6 +33,7 @@ const LogistiquePage: React.FC = () => {
   } = useLogistique()
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
@@ -201,6 +203,7 @@ const LogistiquePage: React.FC = () => {
         />
       )}
     </div>
+    </Layout>
   )
 }
 
