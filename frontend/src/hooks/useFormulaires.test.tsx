@@ -8,7 +8,6 @@ import { MemoryRouter } from 'react-router-dom'
 import { useFormulaires } from './useFormulaires'
 import { formulairesService } from '../services/formulaires'
 import { chantiersService } from '../services/chantiers'
-import { consentService } from '../services/consent'
 import type { ReactNode } from 'react'
 
 // Mocks
@@ -41,13 +40,6 @@ vi.mock('../services/chantiers', () => ({
   },
 }))
 
-vi.mock('../services/consent', () => ({
-  consentService: {
-    wasAsked: vi.fn(),
-    hasConsent: vi.fn(),
-    setConsent: vi.fn(),
-  },
-}))
 
 vi.mock('../services/logger', () => ({
   logger: {
@@ -345,103 +337,6 @@ describe('useFormulaires', () => {
       })
 
       expect(result.current.newFormulaireModalOpen).toBe(false)
-    })
-  })
-
-  describe('geolocation consent', () => {
-    it('demande le consentement si pas encore demande', async () => {
-      vi.mocked(consentService.wasAsked).mockReturnValue(false)
-      const { result } = renderHook(() => useFormulaires(), { wrapper })
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      })
-
-      act(() => {
-        result.current.setSelectedChantierId('1')
-      })
-
-      await act(async () => {
-        await result.current.handleCreateFormulaire(1)
-      })
-
-      expect(result.current.geoConsentModalOpen).toBe(true)
-    })
-
-    it('accepte le consentement geoloc', async () => {
-      vi.mocked(consentService.wasAsked).mockReturnValue(false)
-      vi.mocked(formulairesService.createFormulaire).mockResolvedValue(mockFormulaires[0] as never)
-      vi.mocked(formulairesService.getTemplate).mockResolvedValue(mockTemplates[0] as never)
-
-      const { result } = renderHook(() => useFormulaires(), { wrapper })
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      })
-
-      act(() => {
-        result.current.setSelectedChantierId('1')
-      })
-
-      await act(async () => {
-        await result.current.handleCreateFormulaire(1)
-      })
-
-      await act(async () => {
-        await result.current.handleGeoConsentAccept()
-      })
-
-      expect(consentService.setConsent).toHaveBeenCalledWith('geolocation', true)
-      expect(result.current.geoConsentModalOpen).toBe(false)
-    })
-
-    it('decline le consentement geoloc', async () => {
-      vi.mocked(consentService.wasAsked).mockReturnValue(false)
-      vi.mocked(formulairesService.createFormulaire).mockResolvedValue(mockFormulaires[0] as never)
-      vi.mocked(formulairesService.getTemplate).mockResolvedValue(mockTemplates[0] as never)
-
-      const { result } = renderHook(() => useFormulaires(), { wrapper })
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      })
-
-      act(() => {
-        result.current.setSelectedChantierId('1')
-      })
-
-      await act(async () => {
-        await result.current.handleCreateFormulaire(1)
-      })
-
-      await act(async () => {
-        await result.current.handleGeoConsentDecline()
-      })
-
-      expect(consentService.setConsent).toHaveBeenCalledWith('geolocation', false)
-    })
-
-    it('ferme le modal consentement', async () => {
-      vi.mocked(consentService.wasAsked).mockReturnValue(false)
-      const { result } = renderHook(() => useFormulaires(), { wrapper })
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      })
-
-      act(() => {
-        result.current.setSelectedChantierId('1')
-      })
-
-      await act(async () => {
-        await result.current.handleCreateFormulaire(1)
-      })
-
-      act(() => {
-        result.current.handleGeoConsentClose()
-      })
-
-      expect(result.current.geoConsentModalOpen).toBe(false)
     })
   })
 

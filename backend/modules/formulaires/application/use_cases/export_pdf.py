@@ -53,7 +53,6 @@ class PDFContent:
     champs: List[dict]
     photos: List[dict]
     signature: Optional[dict]
-    localisation: Optional[dict]
     soumis_at: Optional[datetime]
     valide_at: Optional[datetime]
     valide_by: Optional[int]
@@ -142,14 +141,6 @@ class ExportFormulairePDFUseCase:
                 "timestamp": formulaire.signature_timestamp,
             }
 
-        # Preparer la localisation
-        localisation_data = None
-        if formulaire.est_geolocalise:
-            localisation_data = {
-                "latitude": formulaire.localisation_latitude,
-                "longitude": formulaire.localisation_longitude,
-            }
-
         return PDFContent(
             titre=f"Formulaire {template.nom}",
             template_nom=template.nom,
@@ -160,7 +151,6 @@ class ExportFormulairePDFUseCase:
             champs=champs_data,
             photos=photos_data,
             signature=signature_data,
-            localisation=localisation_data,
             soumis_at=formulaire.soumis_at,
             valide_at=formulaire.valide_at,
             valide_by=formulaire.valide_by,
@@ -291,15 +281,6 @@ class ExportFormulairePDFUseCase:
             if content.valideur_nom:
                 valide_info += f" par {content.valideur_nom}"
             meta_data.append(["Valide le", valide_info])
-
-        # Localisation contextuelle
-        if content.localisation:
-            if content.chantier_nom:
-                meta_data.append(["Localisation", f"Rempli sur site ({content.chantier_nom})"])
-            else:
-                lat = content.localisation.get("latitude", "")
-                lng = content.localisation.get("longitude", "")
-                meta_data.append(["Localisation", f"{lat}, {lng}"])
 
         meta_table = Table(meta_data, colWidths=[45 * mm, 125 * mm])
         meta_table.setStyle(TableStyle([

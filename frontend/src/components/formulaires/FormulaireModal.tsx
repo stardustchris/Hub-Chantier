@@ -9,7 +9,6 @@ import {
   X,
   Send,
   Save,
-  MapPin,
   Clock,
   User,
   Building2,
@@ -203,12 +202,6 @@ export default function FormulaireModal({
               <Clock className="w-4 h-4" />
               {formatDateDayMonthYearTime(formulaire.created_at)}
             </span>
-            {formulaire.est_geolocalise && (
-              <span className="flex items-center gap-1.5 text-purple-600">
-                <MapPin className="w-4 h-4" />
-                Geolocalise
-              </span>
-            )}
           </div>
         )}
 

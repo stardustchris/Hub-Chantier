@@ -4,7 +4,6 @@
  * Extrait la logique metier de FormulairesPage:
  * - Gestion des templates (CRUD)
  * - Gestion des formulaires (CRUD, soumission, validation)
- * - Consentement geolocalisation RGPD
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -12,7 +11,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { formulairesService } from '../services/formulaires'
 import { chantiersService } from '../services/chantiers'
-import { consentService } from '../services/consent'
 import { logger } from '../services/logger'
 import type {
   TemplateFormulaire,
@@ -57,7 +55,6 @@ interface UseFormulairesReturn {
   templateModalOpen: boolean
   formulaireModalOpen: boolean
   newFormulaireModalOpen: boolean
-  geoConsentModalOpen: boolean
   formulaireReadOnly: boolean
 
   // Tab actions
@@ -84,11 +81,6 @@ interface UseFormulairesReturn {
   handleSubmitFormulaire: (signatureUrl?: string, signatureNom?: string) => Promise<void>
   handleValidateFormulaire: (formulaire: FormulaireRempli) => Promise<void>
   handleExportPDF: (formulaire: FormulaireRempli) => Promise<void>
-
-  // Geolocation consent actions
-  handleGeoConsentAccept: () => Promise<void>
-  handleGeoConsentDecline: () => Promise<void>
-  handleGeoConsentClose: () => void
 
   // Reload
   loadData: () => Promise<void>
@@ -127,9 +119,6 @@ export function useFormulaires(): UseFormulairesReturn {
   const [selectedFormulaire, setSelectedFormulaire] = useState<FormulaireRempli | null>(null)
   const [formulaireReadOnly, setFormulaireReadOnly] = useState(false)
 
-  // Geolocation consent RGPD
-  const [geoConsentModalOpen, setGeoConsentModalOpen] = useState(false)
-  const [pendingTemplateId, setPendingTemplateId] = useState<number | null>(null)
 
   // Permissions
   const canManageTemplates = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
@@ -276,29 +265,17 @@ export function useFormulaires(): UseFormulairesReturn {
     setSelectedTemplate(null)
   }, [])
 
-  // Finalize formulaire creation with or without geolocation
-  const finalizeCreateFormulaire = useCallback(async (templateId: number, withGeolocation: boolean) => {
+  // Create formulaire (without geolocation)
+  const handleCreateFormulaire = useCallback(async (templateId: number) => {
+    if (!selectedChantierId) {
+      setError('Veuillez selectionner un chantier')
+      return
+    }
+
     try {
-      let latitude: number | undefined
-      let longitude: number | undefined
-
-      if (withGeolocation && navigator.geolocation) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-          })
-          latitude = position.coords.latitude
-          longitude = position.coords.longitude
-        } catch {
-          // Geolocation not available or refused
-        }
-      }
-
       const formulaire = await formulairesService.createFormulaire({
         template_id: templateId,
         chantier_id: parseInt(selectedChantierId!, 10),
-        latitude,
-        longitude,
       })
 
       const template = templates.find((t) => t.id === templateId)
@@ -312,47 +289,6 @@ export function useFormulaires(): UseFormulairesReturn {
       setError('Erreur lors de la creation du formulaire')
     }
   }, [selectedChantierId, templates, loadData])
-
-  // Handle create formulaire with RGPD consent check
-  const handleCreateFormulaire = useCallback(async (templateId: number) => {
-    if (!selectedChantierId) {
-      setError('Veuillez selectionner un chantier')
-      return
-    }
-
-    if (!consentService.wasAsked('geolocation')) {
-      setPendingTemplateId(templateId)
-      setGeoConsentModalOpen(true)
-      return
-    }
-
-    const hasConsent = consentService.hasConsent('geolocation')
-    await finalizeCreateFormulaire(templateId, hasConsent)
-  }, [selectedChantierId, finalizeCreateFormulaire])
-
-  // Geolocation consent handlers
-  const handleGeoConsentAccept = useCallback(async () => {
-    consentService.setConsent('geolocation', true)
-    setGeoConsentModalOpen(false)
-    if (pendingTemplateId !== null) {
-      await finalizeCreateFormulaire(pendingTemplateId, true)
-      setPendingTemplateId(null)
-    }
-  }, [pendingTemplateId, finalizeCreateFormulaire])
-
-  const handleGeoConsentDecline = useCallback(async () => {
-    consentService.setConsent('geolocation', false)
-    setGeoConsentModalOpen(false)
-    if (pendingTemplateId !== null) {
-      await finalizeCreateFormulaire(pendingTemplateId, false)
-      setPendingTemplateId(null)
-    }
-  }, [pendingTemplateId, finalizeCreateFormulaire])
-
-  const handleGeoConsentClose = useCallback(() => {
-    setGeoConsentModalOpen(false)
-    setPendingTemplateId(null)
-  }, [])
 
   // View formulaire
   const handleViewFormulaire = useCallback(async (formulaire: FormulaireRempli) => {
@@ -463,7 +399,6 @@ export function useFormulaires(): UseFormulairesReturn {
     templateModalOpen,
     formulaireModalOpen,
     newFormulaireModalOpen,
-    geoConsentModalOpen,
     formulaireReadOnly,
 
     // Tab actions
@@ -490,11 +425,6 @@ export function useFormulaires(): UseFormulairesReturn {
     handleSubmitFormulaire,
     handleValidateFormulaire,
     handleExportPDF,
-
-    // Geolocation consent
-    handleGeoConsentAccept,
-    handleGeoConsentDecline,
-    handleGeoConsentClose,
 
     // Reload
     loadData,

@@ -21,7 +21,6 @@ import {
   FormulaireModal,
   NewFormulaireModal,
 } from '../components/formulaires'
-import { GeolocationConsentModal } from '../components/common/GeolocationConsentModal'
 import { useFormulaires } from '../hooks'
 import { CATEGORIES_FORMULAIRES } from '../types'
 import type { CategorieFormulaire } from '../types'
@@ -62,7 +61,6 @@ export default function FormulairesPage() {
     templateModalOpen,
     formulaireModalOpen,
     newFormulaireModalOpen,
-    geoConsentModalOpen,
     formulaireReadOnly,
 
     // Tab actions
@@ -89,11 +87,6 @@ export default function FormulairesPage() {
     handleSubmitFormulaire,
     handleValidateFormulaire,
     handleExportPDF,
-
-    // Geolocation consent
-    handleGeoConsentAccept,
-    handleGeoConsentDecline,
-    handleGeoConsentClose,
 
     // Reload
     loadData,
@@ -273,13 +266,6 @@ export default function FormulairesPage() {
           onChantierChange={setSelectedChantierId}
         />
 
-        {/* Modal de consentement RGPD pour la geolocalisation */}
-        <GeolocationConsentModal
-          isOpen={geoConsentModalOpen}
-          onAccept={handleGeoConsentAccept}
-          onDecline={handleGeoConsentDecline}
-          onClose={handleGeoConsentClose}
-        />
       </div>
     </Layout>
   )

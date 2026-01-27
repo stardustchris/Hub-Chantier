@@ -138,11 +138,6 @@ export default function FormulaireList({
                       {formulaire.photos.length} photo{formulaire.photos.length > 1 ? 's' : ''}
                     </span>
                   )}
-                  {formulaire.est_geolocalise && (
-                    <span className="text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                      Geolocalise
-                    </span>
-                  )}
                   {formulaire.soumis_at && (
                     <span className="flex items-center gap-1 text-gray-500">
                       <Clock className="w-3.5 h-3.5" />

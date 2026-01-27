@@ -168,15 +168,6 @@ describe('FormulaireModal', () => {
       expect(screen.getByText('Pierre Martin')).toBeInTheDocument()
     })
 
-    it('affiche l\'indicateur géolocalisation si activé', () => {
-      render(
-        <FormulaireModal
-          {...defaultProps}
-          formulaire={createMockFormulaire({ est_geolocalise: true })}
-        />
-      )
-      expect(screen.getByText('Geolocalise')).toBeInTheDocument()
-    })
   })
 
   describe('Description', () => {
