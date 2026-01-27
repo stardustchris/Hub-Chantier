@@ -3,6 +3,28 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-27 (Tests 0 fail + Mentions @)
+
+### Corrections tests (48 echecs → 0)
+
+- `logistique.test.ts` (30 tests) : URLs corrigees `/logistique/` → `/api/logistique/`
+- `PostCard.test.tsx` (18 tests) : ajout MemoryRouter + mock mentionRenderer
+- `RessourceList.test.tsx` (1 test) : accent manquant "catégories" → "categories"
+
+### Mentions @ (FEED-14) — **COMPLET**
+
+La feature etait deja implementee mais non trackee (fichier untracked) :
+- `MentionInput.tsx` : textarea avec autocomplete @, dropdown utilisateurs, navigation clavier
+- `mentionRenderer.tsx` : parse @Nom dans les posts, rend en Link cliquable vers /utilisateurs/:id
+- Utilise dans DashboardPage (composer), DashboardPostCard (posts + commentaires), PostCard (posts)
+- FEED-14 passe de "Future" a "Done" dans SPECIFICATIONS.md
+
+### Resultat tests
+
+116 fichiers, 2259 tests, 2253 pass, 0 fail, 6 skip. Suite 100% propre.
+
+---
+
 ## Session 2026-01-27 (3 fixes pre-pilote)
 
 Corrections critiques identifiees lors d'un audit product pour le pilote terrain.

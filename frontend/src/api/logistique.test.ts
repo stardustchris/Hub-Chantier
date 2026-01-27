@@ -77,7 +77,7 @@ describe('API Logistique', () => {
       const data = { nom: 'Camion Benne', type_ressource: 'vehicule' }
       const result = await createRessource(data as any)
 
-      expect(api.post).toHaveBeenCalledWith('/logistique/ressources', data)
+      expect(api.post).toHaveBeenCalledWith('/api/logistique/ressources', data)
       expect(result).toEqual(mockRessource)
     })
 
@@ -90,7 +90,7 @@ describe('API Logistique', () => {
       await listRessources(filters)
 
       expect(api.get).toHaveBeenCalledWith(
-        expect.stringContaining('/logistique/ressources?')
+        expect.stringContaining('/api/logistique/ressources?')
       )
       expect(api.get).toHaveBeenCalledWith(
         expect.stringContaining('categorie=vehicule')
@@ -107,7 +107,7 @@ describe('API Logistique', () => {
 
       await listRessources()
 
-      expect(api.get).toHaveBeenCalledWith('/logistique/ressources?')
+      expect(api.get).toHaveBeenCalledWith('/api/logistique/ressources?')
     })
 
     it('getRessource appelle GET /logistique/ressources/:id', async () => {
@@ -115,7 +115,7 @@ describe('API Logistique', () => {
 
       const result = await getRessource(1)
 
-      expect(api.get).toHaveBeenCalledWith('/logistique/ressources/1')
+      expect(api.get).toHaveBeenCalledWith('/api/logistique/ressources/1')
       expect(result).toEqual(mockRessource)
     })
 
@@ -125,7 +125,7 @@ describe('API Logistique', () => {
       const data = { nom: 'Camion Benne Modifie' }
       const result = await updateRessource(1, data)
 
-      expect(api.put).toHaveBeenCalledWith('/logistique/ressources/1', data)
+      expect(api.put).toHaveBeenCalledWith('/api/logistique/ressources/1', data)
       expect(result).toEqual(mockRessource)
     })
 
@@ -134,7 +134,7 @@ describe('API Logistique', () => {
 
       await deleteRessource(1)
 
-      expect(api.delete).toHaveBeenCalledWith('/logistique/ressources/1')
+      expect(api.delete).toHaveBeenCalledWith('/api/logistique/ressources/1')
     })
 
     it('getPlanningRessource appelle GET avec dates', async () => {
@@ -145,7 +145,7 @@ describe('API Logistique', () => {
       await getPlanningRessource(1, '2024-01-15', '2024-01-21')
 
       expect(api.get).toHaveBeenCalledWith(
-        expect.stringContaining('/logistique/ressources/1/planning?')
+        expect.stringContaining('/api/logistique/ressources/1/planning?')
       )
       expect(api.get).toHaveBeenCalledWith(
         expect.stringContaining('date_debut=2024-01-15')
@@ -163,7 +163,7 @@ describe('API Logistique', () => {
       await getPlanningRessource(1, '2024-01-15')
 
       expect(api.get).toHaveBeenCalledWith(
-        '/logistique/ressources/1/planning?date_debut=2024-01-15'
+        '/api/logistique/ressources/1/planning?date_debut=2024-01-15'
       )
     })
 
@@ -175,7 +175,7 @@ describe('API Logistique', () => {
       await getHistoriqueRessource(1, 50, 10)
 
       expect(api.get).toHaveBeenCalledWith(
-        '/logistique/ressources/1/historique?limit=50&offset=10'
+        '/api/logistique/ressources/1/historique?limit=50&offset=10'
       )
     })
   })
@@ -193,7 +193,7 @@ describe('API Logistique', () => {
       }
       const result = await createReservation(data as any)
 
-      expect(api.post).toHaveBeenCalledWith('/logistique/reservations', data)
+      expect(api.post).toHaveBeenCalledWith('/api/logistique/reservations', data)
       expect(result).toEqual(mockReservation)
     })
 
@@ -202,7 +202,7 @@ describe('API Logistique', () => {
 
       const result = await getReservation(1)
 
-      expect(api.get).toHaveBeenCalledWith('/logistique/reservations/1')
+      expect(api.get).toHaveBeenCalledWith('/api/logistique/reservations/1')
       expect(result).toEqual(mockReservation)
     })
 
@@ -212,7 +212,7 @@ describe('API Logistique', () => {
       const data = { commentaire: 'Mis a jour' }
       const result = await updateReservation(1, data)
 
-      expect(api.put).toHaveBeenCalledWith('/logistique/reservations/1', data)
+      expect(api.put).toHaveBeenCalledWith('/api/logistique/reservations/1', data)
       expect(result).toEqual(mockReservation)
     })
 
@@ -224,7 +224,7 @@ describe('API Logistique', () => {
       const result = await listReservationsEnAttente(50, 10)
 
       expect(api.get).toHaveBeenCalledWith(
-        '/logistique/reservations/en-attente?limit=50&offset=10'
+        '/api/logistique/reservations/en-attente?limit=50&offset=10'
       )
       expect(result.items).toHaveLength(1)
     })
@@ -236,7 +236,7 @@ describe('API Logistique', () => {
 
       const result = await validerReservation(1)
 
-      expect(api.post).toHaveBeenCalledWith('/logistique/reservations/1/valider')
+      expect(api.post).toHaveBeenCalledWith('/api/logistique/reservations/1/valider')
       expect(result.statut).toBe('confirmee')
     })
 
@@ -247,7 +247,7 @@ describe('API Logistique', () => {
 
       const result = await refuserReservation(1, 'Vehicule indisponible')
 
-      expect(api.post).toHaveBeenCalledWith('/logistique/reservations/1/refuser', {
+      expect(api.post).toHaveBeenCalledWith('/api/logistique/reservations/1/refuser', {
         motif: 'Vehicule indisponible',
       })
       expect(result.statut).toBe('refusee')
@@ -260,7 +260,7 @@ describe('API Logistique', () => {
 
       await refuserReservation(1)
 
-      expect(api.post).toHaveBeenCalledWith('/logistique/reservations/1/refuser', {
+      expect(api.post).toHaveBeenCalledWith('/api/logistique/reservations/1/refuser', {
         motif: undefined,
       })
     })
@@ -272,7 +272,7 @@ describe('API Logistique', () => {
 
       const result = await annulerReservation(1)
 
-      expect(api.post).toHaveBeenCalledWith('/logistique/reservations/1/annuler')
+      expect(api.post).toHaveBeenCalledWith('/api/logistique/reservations/1/annuler')
       expect(result.statut).toBe('annulee')
     })
   })

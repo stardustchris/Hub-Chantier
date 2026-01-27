@@ -215,7 +215,7 @@ describe('RessourceList', () => {
       render(<RessourceList {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Toutes catégories')).toBeInTheDocument()
+        expect(screen.getByText('Toutes categories')).toBeInTheDocument()
       })
     })
 

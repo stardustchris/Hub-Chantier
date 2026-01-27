@@ -8,7 +8,7 @@
 | Module | CDC Section | Fonctionnalites | Done | Infra | Status |
 |--------|-------------|-----------------|------|-------|--------|
 | auth (utilisateurs) | 3 | USR-01 a USR-13 | 13/13 | 0 | **COMPLET** |
-| dashboard (feed) | 2 | FEED-01 a FEED-20 | 17/20 | 1 | **COMPLET** (2 future) |
+| dashboard (feed) | 2 | FEED-01 a FEED-20 | 18/20 | 1 | **COMPLET** (1 future) |
 | dashboard (cards) | 2 | DASH-01 a DASH-15 | 15/15 | 0 | **COMPLET** |
 | chantiers | 4 | CHT-01 a CHT-21 | 19/21 | 1 | **COMPLET** (1 future) |
 | planning | 5 | PLN-01 a PLN-28 | 26/28 | 2 | **COMPLET** (2 infra) |
@@ -25,9 +25,9 @@
 
 - **Modules complets** : 13/13 (incluant dashboard cards)
 - **Fonctionnalites totales** : 237
-- **Fonctionnalites done** : 218 (92%)
+- **Fonctionnalites done** : 219 (92%)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
-- **Fonctionnalites future** : 3 (prevues pour versions futures)
+- **Fonctionnalites future** : 2 (prevues pour versions futures)
 
 ### Code source
 
@@ -38,13 +38,14 @@
 ### Tests
 
 - **Tests backend** : 140+ fichiers (unit + integration)
-- **Tests frontend** : 116 fichiers, 2259 tests (2205 pass, 48 fail pre-existants, 6 skip)
+- **Tests frontend** : 116 fichiers, 2259 tests (2253 pass, 0 fail, 6 skip)
 - **Integration tests** : 10 suites API completes
 
 ## Features recentes (Sessions 26-27 janvier)
 
 | Feature | Description | Session |
 |---------|-------------|---------|
+| Mentions @ (FEED-14) | Autocomplete @ avec dropdown utilisateurs, affichage cliquable | 27 jan |
 | Icones PWA | 5 icones generees (192, 512, apple-touch, favicon, mask-icon) | 27 jan |
 | Pointage backend | Clock-in/out persiste via POST /api/pointages (heures calculees) | 27 jan |
 | Suppression mock posts | Feed vide affiche etat vide au lieu de faux posts | 27 jan |
@@ -100,9 +101,7 @@
 
 ## Tests frontend
 
-**116 fichiers, 2259 tests, 2205 pass, 48 fail (pre-existants dans 2 fichiers non lies), 6 skip.**
-
-Les 48 echecs pre-existants sont dans `logistique.test.ts` (30) et `PostCard.test.tsx` (18) — composants legacy non maintenus.
+**Tous les tests passent : 116 fichiers, 2259 tests, 2253 pass, 0 fail, 6 skip.**
 
 Session 27 janvier 2026 : correction des 91 tests en echec sur 12 fichiers.
 Causes corrigees : MemoryRouter manquant, mocks de services/hooks obsoletes, assertions sur textes/props modifies.

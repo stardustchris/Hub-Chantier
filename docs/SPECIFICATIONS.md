@@ -183,7 +183,7 @@ Affichage timeline visuel :
 | FEED-11 | Mise en forme | Texte enrichi basique (retours a la ligne) | ✅ |
 | FEED-12 | Horodatage | Date et heure de publication | ✅ |
 | FEED-13 | Photos placeholder | Chargement progressif des images | ✅ |
-| FEED-14 | Mentions @ | Mentionner des utilisateurs (future) | 🔮 Future |
+| FEED-14 | Mentions @ | Mentionner des utilisateurs avec autocomplete @ et affichage cliquable | ✅ |
 | FEED-15 | Hashtags | Categoriser les posts (future) | 🔮 Future |
 | FEED-16 | Moderation Direction | Supprimer posts d'autrui | ✅ |
 | FEED-17 | Notifications push | Alerte nouvelles publications | ⏳ Infra |
