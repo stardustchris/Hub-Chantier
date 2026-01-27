@@ -292,12 +292,7 @@ describe('FormulairesPage', () => {
       expect(screen.getByTestId('new-formulaire-modal')).toBeInTheDocument()
     })
 
-    it('affiche le modal consentement geo si ouvert', () => {
-      mockUseFormulaires.geoConsentModalOpen = true
-      renderPage()
-
-      expect(screen.getByTestId('geo-consent-modal')).toBeInTheDocument()
-    })
+    // GeolocationConsentModal n'est plus rendu directement par FormulairesPage
   })
 
   describe('loading state', () => {

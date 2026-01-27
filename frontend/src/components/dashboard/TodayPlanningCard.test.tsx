@@ -28,12 +28,11 @@ describe('TodayPlanningCard', () => {
     expect(screen.getByText('Voir semaine →')).toBeInTheDocument()
   })
 
-  it('affiche les creneaux par defaut', () => {
+  it('affiche un message si aucun creneau', () => {
     renderWithRouter()
 
-    // Villa Moderne apparait 2 fois (matin et apres-midi)
-    expect(screen.getAllByText('Villa Moderne - Lyon 3eme')).toHaveLength(2)
-    expect(screen.getByText('Pause dejeuner')).toBeInTheDocument()
+    // slots defaults to [] so we should see the empty state
+    expect(screen.getByText('Aucune affectation aujourd\'hui')).toBeInTheDocument()
   })
 
   it('affiche les horaires des creneaux', () => {
@@ -109,7 +108,7 @@ describe('TodayPlanningCard', () => {
         endTime: '12:00',
         period: 'morning' as const,
         siteName: 'Test',
-        status: 'in_progress' as const,
+        chantierStatut: 'en_cours' as const,
       },
     ]
 
@@ -118,7 +117,7 @@ describe('TodayPlanningCard', () => {
     expect(screen.getByText('En cours')).toBeInTheDocument()
   })
 
-  it('affiche le statut Planifie', () => {
+  it('affiche le statut A lancer', () => {
     const slots = [
       {
         id: '1',
@@ -126,16 +125,16 @@ describe('TodayPlanningCard', () => {
         endTime: '12:00',
         period: 'morning' as const,
         siteName: 'Test',
-        status: 'planned' as const,
+        chantierStatut: 'ouvert' as const,
       },
     ]
 
     renderWithRouter({ slots })
 
-    expect(screen.getByText('Planifie')).toBeInTheDocument()
+    expect(screen.getByText('A lancer')).toBeInTheDocument()
   })
 
-  it('affiche le statut Termine', () => {
+  it('affiche le statut Receptionne', () => {
     const slots = [
       {
         id: '1',
@@ -143,13 +142,13 @@ describe('TodayPlanningCard', () => {
         endTime: '12:00',
         period: 'morning' as const,
         siteName: 'Test',
-        status: 'completed' as const,
+        chantierStatut: 'receptionne' as const,
       },
     ]
 
     renderWithRouter({ slots })
 
-    expect(screen.getByText('Termine')).toBeInTheDocument()
+    expect(screen.getByText('Receptionne')).toBeInTheDocument()
   })
 
   it('affiche les taches assignees', () => {
@@ -252,7 +251,7 @@ describe('TodayPlanningCard', () => {
     renderWithRouter({ slots })
 
     expect(screen.getByText('Itineraire')).toBeInTheDocument()
-    expect(screen.getByText('Appeler')).toBeInTheDocument()
+    expect(screen.getByText('Appeler chef')).toBeInTheDocument()
   })
 
   it('appelle onNavigate au clic sur Itineraire', () => {
@@ -288,7 +287,7 @@ describe('TodayPlanningCard', () => {
 
     renderWithRouter({ slots, onCall })
 
-    fireEvent.click(screen.getByText('Appeler'))
+    fireEvent.click(screen.getByText('Appeler chef'))
 
     expect(onCall).toHaveBeenCalledWith('slot-2')
   })
@@ -320,12 +319,27 @@ describe('TodayPlanningCard', () => {
   })
 
   it('affiche la pause dejeuner correctement', () => {
+    // Break is only rendered when both morning AND afternoon slots exist
     const slots = [
+      {
+        id: 'morning-1',
+        startTime: '08:00',
+        endTime: '12:00',
+        period: 'morning' as const,
+        siteName: 'Chantier Matin',
+      },
       {
         id: 'break',
         startTime: '12:00',
         endTime: '13:00',
         period: 'break' as const,
+      },
+      {
+        id: 'afternoon-1',
+        startTime: '13:00',
+        endTime: '17:00',
+        period: 'afternoon' as const,
+        siteName: 'Chantier Aprem',
       },
     ]
 
@@ -335,7 +349,7 @@ describe('TodayPlanningCard', () => {
     expect(screen.getByText('Pause dejeuner')).toBeInTheDocument()
   })
 
-  it('n\'affiche pas les boutons pour la pause', () => {
+  it('n\'affiche pas la pause si seulement un break slot sans matin+aprem', () => {
     const slots = [
       {
         id: 'break',
@@ -347,7 +361,7 @@ describe('TodayPlanningCard', () => {
 
     renderWithRouter({ slots })
 
-    expect(screen.queryByText('Itineraire')).not.toBeInTheDocument()
-    expect(screen.queryByText('Appeler')).not.toBeInTheDocument()
+    // Break-only slot without morning+afternoon won't render the break
+    expect(screen.queryByText('Pause dejeuner')).not.toBeInTheDocument()
   })
 })

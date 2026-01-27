@@ -147,7 +147,7 @@ describe('UserDetailPage', () => {
     it('affiche le lien retour', async () => {
       renderPage()
       await waitFor(() => {
-        expect(screen.getByText('Retour aux utilisateurs')).toBeInTheDocument()
+        expect(screen.getByText('Retour')).toBeInTheDocument()
       })
     })
 

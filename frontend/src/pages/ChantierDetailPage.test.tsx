@@ -44,9 +44,17 @@ vi.mock('../services/users', () => ({
   },
 }))
 
+// Mock planningService
+vi.mock('../services/planning', () => ({
+  planningService: {
+    getByChantier: vi.fn(),
+  },
+}))
+
 // Import mocked services
 import { chantiersService } from '../services/chantiers'
 import { usersService } from '../services/users'
+import { planningService } from '../services/planning'
 
 // Mock useAuth
 vi.mock('../contexts/AuthContext', () => ({
@@ -98,6 +106,7 @@ vi.mock('../components/chantiers', () => ({
   ),
   ChantierEquipeTab: () => <div data-testid="equipe-tab">Equipe</div>,
   MesInterventions: () => <div data-testid="mes-interventions">Interventions</div>,
+  ChantierLogistiqueSection: () => <div data-testid="logistique-section">Logistique</div>,
 }))
 
 const renderPage = (chantierId = '1') => {
@@ -118,6 +127,7 @@ describe('ChantierDetailPage', () => {
     vi.mocked(chantiersService.getNavigationIds).mockResolvedValue({ prevId: null, nextId: '2' })
     vi.mocked(chantiersService.delete).mockResolvedValue(undefined)
     vi.mocked(usersService.list).mockResolvedValue({ items: [], total: 0, page: 1, size: 50, pages: 1 })
+    vi.mocked(planningService.getByChantier).mockResolvedValue([])
   })
 
   describe('loading', () => {
@@ -162,7 +172,7 @@ describe('ChantierDetailPage', () => {
     it('affiche le lien retour', async () => {
       renderPage()
       await waitFor(() => {
-        expect(screen.getByText('Retour aux chantiers')).toBeInTheDocument()
+        expect(screen.getByText('Retour')).toBeInTheDocument()
       })
     })
 

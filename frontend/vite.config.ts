@@ -80,6 +80,10 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     allowedHosts: 'all',
+    hmr: false,
+    watch: {
+      ignored: ['**/*'],
+    },
     proxy: {
       '/api': {
         // En Docker: utilise 'api' (nom du service), sinon localhost

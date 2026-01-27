@@ -2,12 +2,20 @@
  * Tests pour WeatherCard
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import WeatherCard from './WeatherCard'
 import type { WeatherData } from '../../hooks/useWeather'
 
-// Mock du hook useWeather
+// Mock du hook useWeather avec alert configurable
+let mockAlert: {
+  type: 'vigilance_jaune' | 'vigilance_orange' | 'vigilance_rouge'
+  title: string
+  description: string
+  startTime: string
+  phenomena: string[]
+} | null = null
+
 vi.mock('../../hooks/useWeather', () => ({
   useWeather: () => ({
     weather: {
@@ -25,7 +33,7 @@ vi.mock('../../hooks/useWeather', () => ({
       sunrise: '07:30',
       sunset: '19:00',
     } as WeatherData,
-    alert: null,
+    alert: mockAlert,
     isLoading: false,
     error: null,
     locationSource: 'geolocation' as const,
@@ -35,6 +43,10 @@ vi.mock('../../hooks/useWeather', () => ({
 }))
 
 describe('WeatherCard', () => {
+  beforeEach(() => {
+    mockAlert = null
+  })
+
   it('affiche les données météo', () => {
     render(<WeatherCard />)
 
@@ -145,6 +157,15 @@ describe('WeatherCard', () => {
   })
 
   it('affiche une alerte météo si présente', () => {
+    // Alert comes from useWeather() hook, not from weatherOverride
+    mockAlert = {
+      type: 'vigilance_orange',
+      title: 'Vigilance orange - Canicule',
+      description: 'Températures élevées',
+      startTime: new Date().toISOString(),
+      phenomena: ['canicule'],
+    }
+
     const weatherWithAlert: WeatherData = {
       location: 'Nice',
       temperature: 28,
@@ -159,13 +180,6 @@ describe('WeatherCard', () => {
       uvIndex: 8,
       sunrise: '06:30',
       sunset: '20:30',
-      alert: {
-        type: 'vigilance_orange',
-        title: 'Vigilance orange - Canicule',
-        description: 'Températures élevées',
-        startTime: new Date().toISOString(),
-        phenomena: ['canicule'],
-      },
     }
 
     render(<WeatherCard weatherOverride={weatherWithAlert} />)

@@ -7,30 +7,29 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import TeamCard from './TeamCard'
 
 describe('TeamCard', () => {
-  it('affiche les membres par defaut', () => {
+  it('affiche un message si aucun membre', () => {
     render(<TeamCard />)
 
     expect(screen.getByText('Equipe du jour')).toBeInTheDocument()
-    expect(screen.getByText('Marc Dubois')).toBeInTheDocument()
-    expect(screen.getByText('Chef de chantier')).toBeInTheDocument()
-    expect(screen.getByText('Luc Martin')).toBeInTheDocument()
-    expect(screen.getByText('Macon')).toBeInTheDocument()
-    expect(screen.getByText('Thomas Bernard')).toBeInTheDocument()
-    expect(screen.getByText('Coffreur')).toBeInTheDocument()
+    // members defaults to [] so we should see the empty state
+    expect(screen.getByText('Aucun collegue affecte aujourd\'hui')).toBeInTheDocument()
   })
 
-  it('affiche les initiales des membres', () => {
-    render(<TeamCard />)
+  it('affiche les initiales des membres fournis', () => {
+    const members = [
+      { id: '1', chantierId: 'c1', firstName: 'Marc', lastName: 'Dubois', role: 'Chef de chantier', color: '#3498db' },
+      { id: '2', chantierId: 'c1', firstName: 'Luc', lastName: 'Martin', role: 'Macon', color: '#e74c3c' },
+    ]
+    render(<TeamCard members={members} />)
 
-    expect(screen.getByText('MD')).toBeInTheDocument() // Marc Dubois
-    expect(screen.getByText('LM')).toBeInTheDocument() // Luc Martin
-    expect(screen.getByText('TB')).toBeInTheDocument() // Thomas Bernard
+    expect(screen.getByText('MD')).toBeInTheDocument()
+    expect(screen.getByText('LM')).toBeInTheDocument()
   })
 
   it('affiche des membres personnalises', () => {
     const customMembers = [
-      { id: '1', firstName: 'Jean', lastName: 'Dupont', role: 'Electricien', color: '#ff0000' },
-      { id: '2', firstName: 'Marie', lastName: 'Curie', role: 'Ingenieur', color: '#00ff00' },
+      { id: '1', chantierId: 'c1', firstName: 'Jean', lastName: 'Dupont', role: 'Electricien', color: '#ff0000' },
+      { id: '2', chantierId: 'c1', firstName: 'Marie', lastName: 'Curie', role: 'Ingenieur', color: '#00ff00' },
     ]
 
     render(<TeamCard members={customMembers} />)
@@ -45,7 +44,7 @@ describe('TeamCard', () => {
 
   it('affiche le bouton telephone pour les membres avec numero', () => {
     const membersWithPhone = [
-      { id: '1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#000', phone: '+33123456789' },
+      { id: '1', chantierId: 'c1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#000', phone: '+33123456789' },
     ]
 
     render(<TeamCard members={membersWithPhone} />)
@@ -56,7 +55,7 @@ describe('TeamCard', () => {
 
   it('n\'affiche pas le bouton telephone pour les membres sans numero', () => {
     const membersWithoutPhone = [
-      { id: '1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#000' },
+      { id: '1', chantierId: 'c1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#000' },
     ]
 
     render(<TeamCard members={membersWithoutPhone} />)
@@ -67,7 +66,7 @@ describe('TeamCard', () => {
   it('appelle onCall au clic sur le bouton telephone', () => {
     const onCall = vi.fn()
     const membersWithPhone = [
-      { id: 'member-1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#000', phone: '+33123456789' },
+      { id: 'member-1', chantierId: 'c1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#000', phone: '+33123456789' },
     ]
 
     render(<TeamCard members={membersWithPhone} onCall={onCall} />)
@@ -86,7 +85,7 @@ describe('TeamCard', () => {
 
   it('gere les noms vides', () => {
     const membersWithEmptyNames = [
-      { id: '1', firstName: '', lastName: '', role: 'Unknown', color: '#000' },
+      { id: '1', chantierId: 'c1', firstName: '', lastName: '', role: 'Unknown', color: '#000' },
     ]
 
     render(<TeamCard members={membersWithEmptyNames} />)
@@ -96,7 +95,7 @@ describe('TeamCard', () => {
 
   it('applique la couleur du membre', () => {
     const memberWithColor = [
-      { id: '1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#ff5500' },
+      { id: '1', chantierId: 'c1', firstName: 'Test', lastName: 'User', role: 'Test', color: '#ff5500' },
     ]
 
     const { container } = render(<TeamCard members={memberWithColor} />)

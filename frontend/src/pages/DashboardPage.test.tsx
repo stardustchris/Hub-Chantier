@@ -65,6 +65,84 @@ vi.mock('../services/logger', () => ({
   },
 }))
 
+// Mock hooks used by DashboardPage that call unmocked services
+vi.mock('../hooks/useClockCard', () => ({
+  useClockCard: () => ({
+    isClocked: false,
+    clockTime: null,
+    elapsedTime: '00:00:00',
+    isLoading: false,
+    handleClockToggle: vi.fn(),
+  }),
+}))
+
+vi.mock('../hooks/useTodayPlanning', () => ({
+  useTodayPlanning: () => ({
+    slots: [],
+    isLoading: false,
+  }),
+}))
+
+vi.mock('../hooks/useWeeklyStats', () => ({
+  useWeeklyStats: () => ({
+    hoursWorked: '0:00',
+    hoursProgress: 0,
+    joursTravailesMois: 0,
+    joursTotalMois: 22,
+    congesPris: 0,
+    congesTotal: 25,
+    tasksCompleted: 0,
+    tasksTotal: 0,
+    isLoading: false,
+  }),
+}))
+
+vi.mock('../hooks/useTodayTeam', () => ({
+  useTodayTeam: () => ({
+    members: [],
+    isLoading: false,
+    getTeamForChantier: () => [],
+  }),
+}))
+
+vi.mock('../hooks/useWeather', () => ({
+  useWeather: () => ({
+    weather: null,
+    alert: null,
+    isLoading: false,
+    error: null,
+    locationSource: 'fallback',
+    refresh: vi.fn(),
+    setManualLocation: vi.fn(),
+  }),
+}))
+
+vi.mock('../services/weatherNotifications', () => ({
+  weatherNotificationService: {
+    areNotificationsSupported: () => false,
+    requestNotificationPermission: vi.fn(),
+    sendWeatherAlertNotification: vi.fn(),
+  },
+}))
+
+vi.mock('../components/common/MentionInput', () => ({
+  default: ({ value, onChange, placeholder }: any) => (
+    <textarea
+      value={value}
+      onChange={(e: any) => onChange(e.target.value)}
+      placeholder={placeholder}
+      data-testid="mention-input"
+    />
+  ),
+}))
+
+vi.mock('../hooks/useRecentDocuments', () => ({
+  useRecentDocuments: () => ({
+    documents: [],
+    isLoading: false,
+  }),
+}))
+
 // Mock des composants enfants pour isoler les tests
 vi.mock('../components/Layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="layout">{children}</div>,
@@ -85,6 +163,7 @@ vi.mock('../components/dashboard', () => ({
       <button onClick={() => onDelete(post.id)}>Delete</button>
     </div>
   ),
+  WeatherBulletinPost: () => null,
 }))
 
 import { dashboardService } from '../services/dashboard'

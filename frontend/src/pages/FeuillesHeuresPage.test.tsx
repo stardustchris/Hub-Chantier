@@ -23,8 +23,8 @@ const mockUseFeuillesHeures = {
   showWeekend: false,
   setShowWeekend: vi.fn(),
   utilisateurs: [
-    { id: '1', nom: 'Dupont', prenom: 'Jean' },
-    { id: '2', nom: 'Martin', prenom: 'Pierre' },
+    { id: '1', nom: 'Dupont', prenom: 'Jean', role: 'compagnon' },
+    { id: '2', nom: 'Martin', prenom: 'Pierre', role: 'compagnon' },
   ],
   chantiers: [
     { id: '1', nom: 'Chantier A', couleur: '#3498DB' },

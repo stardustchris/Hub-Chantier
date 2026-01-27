@@ -13,6 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import TimesheetChantierGrid from './TimesheetChantierGrid'
 import type { VueChantier, Pointage } from '../../types'
@@ -55,6 +56,9 @@ const createMockVueChantier = (overrides: Partial<VueChantier> = {}): VueChantie
   ...overrides,
 })
 
+const renderWithRouter = (ui: React.ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>)
+
 describe('TimesheetChantierGrid', () => {
   const mockOnCellClick = vi.fn()
   const mockOnPointageClick = vi.fn()
@@ -73,12 +77,12 @@ describe('TimesheetChantierGrid', () => {
 
   describe('État vide', () => {
     it('affiche un message si aucun chantier', () => {
-      render(<TimesheetChantierGrid {...defaultProps} vueChantiers={[]} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} vueChantiers={[]} />)
       expect(screen.getByText('Aucune donnee')).toBeInTheDocument()
     })
 
     it('affiche un message explicatif', () => {
-      render(<TimesheetChantierGrid {...defaultProps} vueChantiers={[]} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} vueChantiers={[]} />)
       expect(
         screen.getByText(/Aucun pointage pour cette semaine/i)
       ).toBeInTheDocument()
@@ -87,12 +91,12 @@ describe('TimesheetChantierGrid', () => {
 
   describe('Header', () => {
     it('affiche la colonne Chantier', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText('Chantier')).toBeInTheDocument()
     })
 
     it('affiche les jours de la semaine (lundi-vendredi par défaut)', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText(/lun\./i)).toBeInTheDocument()
       expect(screen.getByText(/mar\./i)).toBeInTheDocument()
       expect(screen.getByText(/mer\./i)).toBeInTheDocument()
@@ -101,49 +105,49 @@ describe('TimesheetChantierGrid', () => {
     })
 
     it('affiche samedi et dimanche si showWeekend', () => {
-      render(<TimesheetChantierGrid {...defaultProps} showWeekend={true} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} showWeekend={true} />)
       expect(screen.getByText(/sam\./i)).toBeInTheDocument()
       expect(screen.getByText(/dim\./i)).toBeInTheDocument()
     })
 
     it('affiche la colonne Total', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText('Total')).toBeInTheDocument()
     })
   })
 
   describe('Chantiers', () => {
     it('affiche le nom du chantier', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText('Chantier Alpha')).toBeInTheDocument()
     })
 
     it('affiche la couleur du chantier', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       const colorDot = document.querySelector('[style*="background-color: rgb(52, 152, 219)"]')
       expect(colorDot).toBeInTheDocument()
     })
 
     it('affiche le total heures du chantier', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText('40:00')).toBeInTheDocument()
     })
 
     it('affiche le total en décimal', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText('40h')).toBeInTheDocument()
     })
   })
 
   describe('Cellules avec pointages multiples', () => {
     it('affiche plusieurs pointages dans une cellule', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       expect(screen.getByText('Jean')).toBeInTheDocument()
       expect(screen.getByText('Pierre')).toBeInTheDocument()
     })
 
     it('affiche les heures de chaque pointage', () => {
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
       // Two pointages with 04:00 each
       const heures = screen.getAllByText('04:00')
       expect(heures.length).toBe(2)
@@ -167,7 +171,7 @@ describe('TimesheetChantierGrid', () => {
         },
       })
 
-      render(<TimesheetChantierGrid {...defaultProps} vueChantiers={[vueWithStatuses]} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} vueChantiers={[vueWithStatuses]} />)
 
       // Status badges are rendered (icons only without text in this component)
       const checkIcons = document.querySelectorAll('svg.lucide-check')
@@ -180,7 +184,7 @@ describe('TimesheetChantierGrid', () => {
   describe('Interactions', () => {
     it('appelle onPointageClick au clic sur un pointage éditable', async () => {
       const user = userEvent.setup()
-      render(<TimesheetChantierGrid {...defaultProps} canEdit={true} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} canEdit={true} />)
 
       await user.click(screen.getByText('Jean'))
       expect(mockOnPointageClick).toHaveBeenCalled()
@@ -200,7 +204,7 @@ describe('TimesheetChantierGrid', () => {
       })
 
       const user = userEvent.setup()
-      render(
+      renderWithRouter(
         <TimesheetChantierGrid
           {...defaultProps}
           vueChantiers={[vueWithNonEditable]}
@@ -214,7 +218,7 @@ describe('TimesheetChantierGrid', () => {
 
     it('appelle onCellClick au clic sur une cellule vide si canEdit', async () => {
       const user = userEvent.setup()
-      render(<TimesheetChantierGrid {...defaultProps} canEdit={true} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} canEdit={true} />)
 
       // Find an empty cell (Mardi column)
       const cells = document.querySelectorAll('td.cursor-pointer.hover\\:bg-gray-100')
@@ -225,10 +229,10 @@ describe('TimesheetChantierGrid', () => {
     })
 
     it('n\'appelle pas onCellClick si pas canEdit', async () => {
-      render(<TimesheetChantierGrid {...defaultProps} canEdit={false} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} canEdit={false} />)
 
-      // Empty cells should not be clickable
-      const clickableCells = document.querySelectorAll('td.cursor-pointer')
+      // Empty cells should not be clickable (only chantier name cells keep cursor-pointer for navigation)
+      const clickableCells = document.querySelectorAll('td.cursor-pointer.hover\\:bg-gray-100')
       expect(clickableCells.length).toBe(0)
     })
   })
@@ -238,7 +242,7 @@ describe('TimesheetChantierGrid', () => {
       // Mock today as Monday 2024-01-22
       vi.setSystemTime(new Date('2024-01-22'))
 
-      render(<TimesheetChantierGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} />)
 
       // Check for today highlighting class
       const todayCells = document.querySelectorAll('.bg-primary-50, .bg-primary-100')
@@ -255,7 +259,7 @@ describe('TimesheetChantierGrid', () => {
         createMockVueChantier({ chantier_id: 2, chantier_nom: 'Chantier Beta', chantier_couleur: '#e74c3c' }),
       ]
 
-      render(<TimesheetChantierGrid {...defaultProps} vueChantiers={multipleChantiers} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} vueChantiers={multipleChantiers} />)
 
       expect(screen.getByText('Chantier Alpha')).toBeInTheDocument()
       expect(screen.getByText('Chantier Beta')).toBeInTheDocument()
@@ -276,7 +280,7 @@ describe('TimesheetChantierGrid', () => {
         },
       })
 
-      render(<TimesheetChantierGrid {...defaultProps} vueChantiers={[vueWithLongName]} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} vueChantiers={[vueWithLongName]} />)
 
       // Should show first part of name (before space)
       expect(screen.getByText('Jean-Baptiste')).toBeInTheDocument()
@@ -295,7 +299,7 @@ describe('TimesheetChantierGrid', () => {
         },
       })
 
-      render(<TimesheetChantierGrid {...defaultProps} vueChantiers={[vueWithoutName]} />)
+      renderWithRouter(<TimesheetChantierGrid {...defaultProps} vueChantiers={[vueWithoutName]} />)
       expect(screen.getByText('Utilisateur')).toBeInTheDocument()
     })
   })

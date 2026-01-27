@@ -4,11 +4,15 @@
 
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import StatsCard from './StatsCard'
+
+const renderWithRouter = (ui: React.ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>)
 
 describe('StatsCard', () => {
   it('affiche les valeurs par defaut', () => {
-    render(<StatsCard />)
+    renderWithRouter(<StatsCard />)
 
     expect(screen.getByText('Heures travaillees')).toBeInTheDocument()
     expect(screen.getByText('Semaine en cours')).toBeInTheDocument()
@@ -17,41 +21,41 @@ describe('StatsCard', () => {
   })
 
   it('affiche les heures travaillees personnalisees', () => {
-    render(<StatsCard hoursWorked="40h00" />)
+    renderWithRouter(<StatsCard hoursWorked="40h00" />)
 
     expect(screen.getByText('40h00')).toBeInTheDocument()
   })
 
   it('affiche la progression des heures', () => {
-    const { container } = render(<StatsCard hoursProgress={50} />)
+    const { container } = renderWithRouter(<StatsCard hoursProgress={50} />)
 
     const progressBar = container.querySelector('[style*="width: 50%"]')
     expect(progressBar).toBeInTheDocument()
   })
 
   it('affiche les jours travailles du mois', () => {
-    render(<StatsCard joursTravailesMois={15} joursTotalMois={22} />)
+    renderWithRouter(<StatsCard joursTravailesMois={15} joursTotalMois={22} />)
 
     expect(screen.getByText('15')).toBeInTheDocument()
     expect(screen.getByText('/22')).toBeInTheDocument()
   })
 
   it('affiche les conges pris', () => {
-    render(<StatsCard congesPris={3.5} congesTotal={25} />)
+    renderWithRouter(<StatsCard congesPris={3.5} congesTotal={25} />)
 
     expect(screen.getByText('3.5')).toBeInTheDocument()
     expect(screen.getByText('/25j')).toBeInTheDocument()
   })
 
   it('affiche 100% de progression', () => {
-    const { container } = render(<StatsCard hoursProgress={100} />)
+    const { container } = renderWithRouter(<StatsCard hoursProgress={100} />)
 
     const progressBar = container.querySelector('[style*="width: 100%"]')
     expect(progressBar).toBeInTheDocument()
   })
 
   it('gere les valeurs extremes', () => {
-    render(
+    renderWithRouter(
       <StatsCard
         hoursWorked="168h00"
         hoursProgress={150}

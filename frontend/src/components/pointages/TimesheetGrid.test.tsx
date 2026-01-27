@@ -14,6 +14,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import TimesheetGrid from './TimesheetGrid'
 import type { VueCompagnon, Pointage } from '../../types'
@@ -68,6 +69,9 @@ const createMockVueCompagnon = (overrides: Partial<VueCompagnon> = {}): VueCompa
   ...overrides,
 })
 
+const renderWithRouter = (ui: React.ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>)
+
 describe('TimesheetGrid', () => {
   const mockOnCellClick = vi.fn()
   const mockOnPointageClick = vi.fn()
@@ -86,12 +90,12 @@ describe('TimesheetGrid', () => {
 
   describe('État vide', () => {
     it('affiche un message si aucun compagnon', () => {
-      render(<TimesheetGrid {...defaultProps} vueCompagnons={[]} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} vueCompagnons={[]} />)
       expect(screen.getByText('Aucune donnee')).toBeInTheDocument()
     })
 
     it('affiche un message explicatif', () => {
-      render(<TimesheetGrid {...defaultProps} vueCompagnons={[]} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} vueCompagnons={[]} />)
       expect(
         screen.getByText(/Aucun pointage pour cette semaine/i)
       ).toBeInTheDocument()
@@ -100,12 +104,12 @@ describe('TimesheetGrid', () => {
 
   describe('Header', () => {
     it('affiche la colonne Chantier', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getByText('Chantier')).toBeInTheDocument()
     })
 
     it('affiche les jours de la semaine (lundi-vendredi par défaut)', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getByText(/lun\./i)).toBeInTheDocument()
       expect(screen.getByText(/mar\./i)).toBeInTheDocument()
       expect(screen.getByText(/mer\./i)).toBeInTheDocument()
@@ -114,25 +118,25 @@ describe('TimesheetGrid', () => {
     })
 
     it('affiche samedi et dimanche si showWeekend', () => {
-      render(<TimesheetGrid {...defaultProps} showWeekend={true} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} showWeekend={true} />)
       expect(screen.getByText(/sam\./i)).toBeInTheDocument()
       expect(screen.getByText(/dim\./i)).toBeInTheDocument()
     })
 
     it('affiche la colonne Total', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getAllByText('Total').length).toBeGreaterThan(0)
     })
   })
 
   describe('Utilisateurs', () => {
     it('affiche le nom de l\'utilisateur', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getByText('Jean Dupont')).toBeInTheDocument()
     })
 
     it('affiche le total heures de l\'utilisateur', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       // Total appears in multiple places (header and cells)
       expect(screen.getAllByText(/40:00/).length).toBeGreaterThan(0)
     })
@@ -140,12 +144,12 @@ describe('TimesheetGrid', () => {
 
   describe('Chantiers', () => {
     it('affiche le nom du chantier', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getByText('Chantier Alpha')).toBeInTheDocument()
     })
 
     it('affiche la couleur du chantier', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       const colorDot = document.querySelector('[style*="background-color: rgb(52, 152, 219)"]')
       expect(colorDot).toBeInTheDocument()
     })
@@ -153,13 +157,13 @@ describe('TimesheetGrid', () => {
 
   describe('Cellules de pointage', () => {
     it('affiche les heures du pointage', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       // Il peut y avoir plusieurs pointages avec 04:00
       expect(screen.getAllByText('04:00').length).toBeGreaterThan(0)
     })
 
     it('affiche le badge de statut', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getAllByText('Brouillon').length).toBeGreaterThan(0)
     })
 
@@ -182,7 +186,7 @@ describe('TimesheetGrid', () => {
         }],
       })
 
-      render(<TimesheetGrid {...defaultProps} vueCompagnons={[vueWithOvertime]} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} vueCompagnons={[vueWithOvertime]} />)
       expect(screen.getByText('+02:00')).toBeInTheDocument()
     })
   })
@@ -207,7 +211,7 @@ describe('TimesheetGrid', () => {
         }],
       })
 
-      render(<TimesheetGrid {...defaultProps} vueCompagnons={[vueWithValidated]} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} vueCompagnons={[vueWithValidated]} />)
       expect(screen.getByText('Valide')).toBeInTheDocument()
     })
 
@@ -230,7 +234,7 @@ describe('TimesheetGrid', () => {
         }],
       })
 
-      render(<TimesheetGrid {...defaultProps} vueCompagnons={[vueWithSubmitted]} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} vueCompagnons={[vueWithSubmitted]} />)
       expect(screen.getByText('En attente')).toBeInTheDocument()
     })
   })
@@ -238,7 +242,7 @@ describe('TimesheetGrid', () => {
   describe('Interactions', () => {
     it('appelle onPointageClick au clic sur un pointage éditable', async () => {
       const user = userEvent.setup()
-      render(<TimesheetGrid {...defaultProps} canEdit={true} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} canEdit={true} />)
 
       const pointages = screen.getAllByText('04:00')
       await user.click(pointages[0])
@@ -265,7 +269,7 @@ describe('TimesheetGrid', () => {
       })
 
       const user = userEvent.setup()
-      render(
+      renderWithRouter(
         <TimesheetGrid
           {...defaultProps}
           vueCompagnons={[vueWithNonEditable]}
@@ -280,18 +284,18 @@ describe('TimesheetGrid', () => {
 
   describe('Ajout chantier', () => {
     it('affiche le bouton "Ajouter un chantier" si canEdit', () => {
-      render(<TimesheetGrid {...defaultProps} canEdit={true} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} canEdit={true} />)
       expect(screen.getByText('Ajouter un chantier')).toBeInTheDocument()
     })
 
     it('n\'affiche pas le bouton si pas canEdit', () => {
-      render(<TimesheetGrid {...defaultProps} canEdit={false} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} canEdit={false} />)
       expect(screen.queryByText('Ajouter un chantier')).not.toBeInTheDocument()
     })
 
     it('appelle onCellClick au clic sur le bouton', async () => {
       const user = userEvent.setup()
-      render(<TimesheetGrid {...defaultProps} canEdit={true} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} canEdit={true} />)
 
       await user.click(screen.getByText('Ajouter un chantier'))
       expect(mockOnCellClick).toHaveBeenCalledWith(1, null, expect.any(Date))
@@ -300,12 +304,12 @@ describe('TimesheetGrid', () => {
 
   describe('Totaux par jour', () => {
     it('affiche la ligne Total journalier', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       expect(screen.getByText('Total journalier')).toBeInTheDocument()
     })
 
     it('affiche les totaux par jour', () => {
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
       // Multiple occurrences of 08:00 in totaux_par_jour
       const totals = screen.getAllByText('08:00')
       expect(totals.length).toBeGreaterThan(0)
@@ -317,7 +321,7 @@ describe('TimesheetGrid', () => {
       // Mock today as Monday 2024-01-22
       vi.setSystemTime(new Date('2024-01-22'))
 
-      render(<TimesheetGrid {...defaultProps} />)
+      renderWithRouter(<TimesheetGrid {...defaultProps} />)
 
       // Check for today highlighting class
       const todayCells = document.querySelectorAll('.bg-primary-50, .bg-primary-100')

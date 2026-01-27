@@ -187,8 +187,8 @@ describe('FieldRenderer', () => {
     })
   })
 
-  describe('Champ email', () => {
-    it('rend un input email', () => {
+  describe('Champ texte type', () => {
+    it('rend un input text pour type_champ texte', () => {
       render(
         <FieldRenderer
           {...defaultProps}
@@ -196,17 +196,17 @@ describe('FieldRenderer', () => {
         />
       )
       const input = screen.getByRole('textbox')
-      expect(input).toHaveAttribute('type', 'email')
+      expect(input).toHaveAttribute('type', 'text')
     })
 
-    it('utilise le placeholder par défaut', () => {
+    it('affiche le placeholder personnalise', () => {
       render(
         <FieldRenderer
           {...defaultProps}
-          champ={createMockChamp({ type_champ: 'texte' })}
+          champ={createMockChamp({ type_champ: 'texte', placeholder: 'Saisir ici' })}
         />
       )
-      expect(screen.getByPlaceholderText('exemple@email.com')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Saisir ici')).toBeInTheDocument()
     })
   })
 

@@ -3,6 +3,38 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-27 (Correction 91 tests en echec → 0)
+
+Stabilisation de la suite de tests frontend : 12 fichiers corriges, 91 echecs resolus.
+Resultat final : 116 fichiers, 2253 tests, 0 echec, 6 skip.
+
+### Corrections par fichier
+
+| Fichier | Echecs | Cause principale |
+|---------|--------|-----------------|
+| TimesheetGrid.test.tsx | 23 | MemoryRouter manquant (useNavigate) |
+| TimesheetChantierGrid.test.tsx | 19 | MemoryRouter manquant + selecteur CSS trop large |
+| ChantierDetailPage.test.tsx | 14 | Mock planningService + ChantierLogistiqueSection manquants |
+| DashboardPage.test.tsx | 10 | Mocks hooks manquants (useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather, useClockCard) |
+| StatsCard.test.tsx | 7 | MemoryRouter manquant |
+| TodayPlanningCard.test.tsx | 7 | Props status renommes (chantierStatut), bouton "Appeler chef", pause conditionelle |
+| TeamCard.test.tsx | 2 | Composant default members=[], tests attendaient des donnees par defaut |
+| FieldRenderer.test.tsx | 2 | type_champ 'texte' → type="text" (pas "email") |
+| FeuillesHeuresPage.test.tsx | 2 | Mock utilisateurs sans propriete role |
+| WeatherCard.test.tsx | 1 | Alert vient du hook useWeather, pas de weatherOverride |
+| FormulairesPage.test.tsx | 1 | GeolocationConsentModal retire du composant |
+| UserDetailPage.test.tsx | 1 | Texte "Retour aux utilisateurs" → "Retour" |
+
+### Patterns de correction appliques
+
+1. **MemoryRouter wrapper** : Ajout `renderWithRouter` helper pour composants utilisant `useNavigate()`
+2. **Mocks de hooks** : Mock individuel des hooks (`vi.mock('../hooks/useXxx')`) pour isoler les tests du DashboardPage
+3. **Alignement assertions** : Mise a jour des textes, props et selecteurs pour correspondre aux composants actuels
+4. **Structure alert meteo** : Alert extraite du hook `useWeather()` via variable `mockAlert` configurable
+5. **Ajout proprietes manquantes** : `role` sur mock utilisateurs, `chantierId` sur mock membres equipe
+
+---
+
 ## Session 2026-01-27 (Feuilles heures, formulaires, dashboard)
 
 Ameliorations sur 3 modules : feuilles d'heures, formulaires, dashboard.

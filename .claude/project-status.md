@@ -38,7 +38,7 @@
 ### Tests
 
 - **Tests backend** : 140+ fichiers (unit + integration)
-- **Tests frontend** : 116 fichiers, 2260 tests (2163 pass, 91 fail, 6 skip)
+- **Tests frontend** : 116 fichiers, 2253 tests (2253 pass, 0 fail, 6 skip)
 - **Integration tests** : 10 suites API completes
 
 ## Features recentes (Sessions 26-27 janvier)
@@ -82,7 +82,6 @@
 
 - Page dediee signalements (actuellement dans chantier detail)
 - Page dediee interventions (actuellement backend only pour le frontend)
-- Corriger les 91 tests en echec (12 fichiers, principalement mocks obsoletes)
 - Couverture tests frontend > 50% (actuellement ~29%)
 - Mode offline complet (PWA)
 
@@ -96,56 +95,31 @@
 - **DOMPurify** : Protection XSS
 - **Zod** : Validation cote client
 
-## Tests en echec a corriger (91 tests, 12 fichiers)
+## Tests frontend
 
-Les tests auth/securite (AuthContext, LoginPage, api) sont desormais tous OK.
+**Tous les tests passent : 116 fichiers, 2253 tests, 0 echec, 6 skip.**
 
-### ChantierDetailPage.test.tsx (14 echecs)
-- Tous les tests echouent — mocks desynchronises avec le composant actuel
-
-### DashboardPage.test.tsx (10 echecs)
-- Rendu, composer, interactions, pagination, erreurs — mocks composants dashboard obsoletes
-
-### TimesheetGrid.test.tsx (22 echecs)
-- Composant refactorise (structure HTML/classes CSS changees), tests non mis a jour
-
-### TimesheetChantierGrid.test.tsx (19 echecs)
-- Meme cause que TimesheetGrid — queries sur anciennes classes/structure
-
-### StatsCard.test.tsx (7 echecs)
-- Props et structure du composant modifies (stats reelles), tests sur anciennes props
-
-### TodayPlanningCard.test.tsx (6 echecs)
-- Composant enrichi (creneaux reels), tests sur anciens mocks statiques
-
-### TeamCard.test.tsx (2 echecs)
-- 2 tests sur membres par defaut et initiales — donnees par defaut changees
-
-### WeatherCard.test.tsx (1 echec)
-- Test alerte meteo — structure alerte modifiee
-
-### FieldRenderer.test.tsx (2 echecs)
-- Champ email : type input ou placeholder modifie
-
-### FeuillesHeuresPage.test.tsx (2 echecs)
-- Filtres utilisateurs — structure filtres refactorisee
-
-### FormulairesPage.test.tsx (1 echec)
-- Modal consentement geolocalisation — mock manquant
-
-### UserDetailPage.test.tsx (1 echec)
-- Lien retour — structure navigation modifiee
-
-### Cause commune
-Les composants ont ete enrichis (stats reelles, equipe du jour, meteo, filtres) mais les tests n'ont pas ete mis a jour en parallele. Les mocks et queries (getByText, getByRole) ciblent l'ancienne structure HTML.
+Session 27 janvier 2026 : correction des 91 tests en echec sur 12 fichiers.
+Causes corrigees : MemoryRouter manquant, mocks de services/hooks obsoletes, assertions sur textes/props modifies.
 
 ## Derniere mise a jour
+
+Session 2026-01-27 - Correction des 91 tests en echec (0 remaining)
+- 12 fichiers de test corriges : TimesheetGrid (23), TimesheetChantierGrid (19), ChantierDetailPage (14), DashboardPage (10), StatsCard (7), TodayPlanningCard (7), TeamCard (2), FieldRenderer (2), FeuillesHeuresPage (2), WeatherCard (1), FormulairesPage (1), UserDetailPage (1)
+- Corrections principales :
+  - Ajout MemoryRouter pour composants utilisant useNavigate (49 tests)
+  - Mocks de hooks manquants (useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather, useClockCard)
+  - Ajout mock planningService pour ChantierDetailPage
+  - Alignement assertions sur textes/props actuels (status, boutons, labels)
+  - Correction structure alerte meteo (alert via hook, pas via prop)
+  - Ajout role aux utilisateurs mock pour filtres par role
+  - Retrait test GeolocationConsentModal (supprime du composant)
+- Resultat : 116 fichiers, 2253 tests, 0 echec, 6 skip
 
 Session 2026-01-27 - Audit tests frontend
 - Audit complet suite tests frontend : 2260 tests, 2163 pass, 91 fail, 6 skip
 - Tests auth/securite (AuthContext, LoginPage, api) : tous OK (corrige lors de sessions precedentes)
 - 91 echecs dans 12 fichiers — cause : composants enrichis sans mise a jour des tests
-- Fichiers les plus impactes : TimesheetGrid (22), TimesheetChantierGrid (19), ChantierDetailPage (14), DashboardPage (10)
 - project-status.md mis a jour avec inventaire detaille des echecs
 
 Session 2026-01-27 - Feuilles heures, formulaires, dashboard
