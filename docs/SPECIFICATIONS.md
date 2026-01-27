@@ -195,7 +195,7 @@ Affichage timeline visuel :
 
 | ID | Fonctionnalite | Description | Status |
 |----|----------------|-------------|--------|
-| DASH-01 | Carte pointage | Clock-in/out temps reel avec modification heure | ✅ |
+| DASH-01 | Carte pointage | Clock-in/out temps reel avec modification heure, persistance backend via pointagesService | ✅ |
 | DASH-02 | Carte meteo reelle | Geolocalisation + API Open-Meteo + 6 conditions | ✅ |
 | DASH-03 | Alertes meteo | Vigilance jaune/orange/rouge avec notification push | ✅ |
 | DASH-04 | Bulletin meteo feed | Post automatique resume meteo dans actualites | ✅ |

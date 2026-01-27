@@ -3,6 +3,46 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-27 (3 fixes pre-pilote)
+
+Corrections critiques identifiees lors d'un audit product pour le pilote terrain.
+
+### 1. Icones PWA (app installable sur mobile)
+
+Le manifest PWA referencait 5 fichiers d'icones inexistants dans `frontend/public/`.
+Sans ces icones, l'app ne peut pas etre installee sur les telephones des compagnons.
+
+**Fichiers crees :**
+- `pwa-192x192.png` — Logo HC bleu (#3B82F6) avec accent casque jaune
+- `pwa-512x512.png` — Version grande pour splash screen (purpose: any maskable)
+- `apple-touch-icon.png` — Version iOS 180x180 (fond opaque blanc)
+- `favicon.ico` — Multi-taille (16, 32, 48) genere depuis le 512px
+- `mask-icon.svg` — SVG monochrome pour Safari pinned tab
+- `index.html` — Liens favicon, apple-touch-icon, mask-icon, theme-color
+
+### 2. Pointage persiste cote serveur
+
+`useClockCard` fonctionnait en localStorage uniquement. Les heures pointees etaient perdues
+au nettoyage du cache navigateur ou au changement de telephone.
+
+- `useClockCard.ts` — Ajout sync backend via `pointagesService.create()` au clock-out
+- `DashboardPage.tsx` — Auto-association du chantier du planning au pointage
+- Calcul `heuresNormales` = clockOut - clockIn au format HH:MM
+
+### 3. Suppression des mock posts
+
+Le feed dashboard affichait 5 faux posts quand l'API retournait vide.
+
+- `useDashboardFeed.ts` — Etat initial `[]`, pas de fallback mock
+- `DashboardPostCard.tsx` — Suppression code `isMockPost`
+- Tests mis a jour (DashboardPage, DashboardPostCard, useClockCard)
+
+### Resultat tests
+
+116 fichiers, 2259 tests, 2205 pass, 48 pre-existants (logistique + PostCard legacy), 6 skip.
+
+---
+
 ## Session 2026-01-27 (Prise de connaissance et mise a jour documentation)
 
 Audit complet du projet : etat des modules, tests, documentation.

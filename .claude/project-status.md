@@ -122,7 +122,26 @@ Fichiers de deploiement :
 
 Instance recommandee : **DEV1-S** (~4 EUR/mois) pour le pilote.
 
+## PWA
+
+**PWA installable** : icones generees, manifest configure, service worker actif.
+
+Fichiers icones dans `frontend/public/` :
+- `pwa-192x192.png` — Icone principale Android (192x192)
+- `pwa-512x512.png` — Icone splash screen + maskable (512x512)
+- `apple-touch-icon.png` — Icone iOS (180x180)
+- `favicon.ico` — Favicon multi-taille (16, 32, 48)
+- `mask-icon.svg` — Icone Safari pinned tab
+
+`index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
+
 ## Derniere mise a jour
+
+Session 2026-01-27 - 3 fixes pre-pilote
+- Icones PWA generees (5 fichiers) pour rendre l'app installable sur mobile
+- Pointage clock-in/out persiste cote serveur via pointagesService (calcul heures HH:MM)
+- Mock posts supprimes du feed : etat vide propre au lieu de fausses donnees
+- Tests mis a jour (useClockCard, DashboardPage, DashboardPostCard)
 
 Session 2026-01-27 - Preparation deploiement Scaleway
 - 7 fichiers crees : docker-compose.prod.yml, nginx.prod.conf, Dockerfile.prod, .env.production.example, deploy.sh, init-server.sh, DEPLOYMENT.md
