@@ -5,50 +5,95 @@
 
 ## Etat des modules
 
-| Module | CDC Section | Fonctionnalites | Status |
-|--------|-------------|-----------------|--------|
-| auth (utilisateurs) | 3 | USR-01 a USR-13 | **COMPLET** |
-| dashboard | 2 | FEED-01 a FEED-20 | **COMPLET** |
-| chantiers | 4 | CHT-01 a CHT-20 | **COMPLET** |
-| planning | 5 | PLN-01 a PLN-28 | **COMPLET** |
-| planning_charge | 6 | PDC-01 a PDC-17 | **COMPLET** |
-| feuilles_heures | 7 | FDH-01 a FDH-20 | **COMPLET** |
-| formulaires | 8 | FOR-01 a FOR-11 | **COMPLET** |
-| documents | 9 | GED-01 a GED-17 | **COMPLET** (15/17, 2 infra) |
-| signalements | 10 | SIG-01 a SIG-20 | **COMPLET** (18/20, 2 infra) |
-| logistique | 11 | LOG-01 a LOG-18 | **COMPLET** (15/18, 3 infra) |
-| interventions | 12 | INT-01 a INT-17 | **COMPLET** |
-| taches | 13 | TAC-01 a TAC-20 | **COMPLET** |
+| Module | CDC Section | Fonctionnalites | Done | Infra | Status |
+|--------|-------------|-----------------|------|-------|--------|
+| auth (utilisateurs) | 3 | USR-01 a USR-13 | 13/13 | 0 | **COMPLET** |
+| dashboard (feed) | 2 | FEED-01 a FEED-20 | 17/20 | 1 | **COMPLET** (2 future) |
+| dashboard (cards) | 2 | DASH-01 a DASH-15 | 15/15 | 0 | **COMPLET** |
+| chantiers | 4 | CHT-01 a CHT-21 | 19/21 | 1 | **COMPLET** (1 future) |
+| planning | 5 | PLN-01 a PLN-28 | 26/28 | 2 | **COMPLET** (2 infra) |
+| planning_charge | 6 | PDC-01 a PDC-17 | 17/17 | 0 | **COMPLET** |
+| feuilles_heures | 7 | FDH-01 a FDH-20 | 16/20 | 4 | **COMPLET** (4 infra) |
+| formulaires | 8 | FOR-01 a FOR-11 | 11/11 | 0 | **COMPLET** |
+| documents | 9 | GED-01 a GED-17 | 15/17 | 2 | **COMPLET** (2 infra) |
+| signalements | 10 | SIG-01 a SIG-20 | 17/20 | 3 | **COMPLET** (3 infra) |
+| logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
+| interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
+| taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
 
-## Statistiques
+## Statistiques globales
 
-- **Modules complets** : 12/12
-- **Fonctionnalites totales** : 220 (incluant INT-01 a INT-17)
-- **Tests unitaires** : 1150+ (1055 + 95 interventions)
-- **Tests integration** : 17+ (formulaires)
+- **Modules complets** : 13/13 (incluant dashboard cards)
+- **Fonctionnalites totales** : 237
+- **Fonctionnalites done** : 218 (92%)
+- **Fonctionnalites infra** : 16 (en attente infrastructure)
+- **Fonctionnalites future** : 3 (prevues pour versions futures)
 
-## Prochaine tache prioritaire
+### Code source
 
-Tous les modules sont complets. Prochaines etapes:
-- Generation du rapport PDF (INT-14, INT-16)
-- Mode Offline (infrastructure)
-- Notifications push (infrastructure)
+- **Backend** : 16 modules, 35+ entites, 50+ value objects, 150+ use cases, 40+ repositories
+- **Frontend** : 11 pages, 27 hooks, 23 services, 80+ composants, 3 contextes
+- **Architecture** : Clean Architecture 4 layers (Domain > Application > Adapters > Infrastructure)
 
-## Modules en attente
+### Tests
 
-Aucun module en attente - tous complets!
+- **Tests backend** : 140+ fichiers (unit + integration)
+- **Tests frontend** : 91 fichiers, 1655 tests
+- **Integration tests** : 10 suites API completes
+
+## Features recentes (Sessions 26-27 janvier)
+
+| Feature | Description | Session |
+|---------|-------------|---------|
+| Formulaires seed data | 6 templates + 10 formulaires remplis demo | 27 jan |
+| Formulaires enrichis | API retourne template_nom, chantier_nom, user_nom | 27 jan |
+| Types formulaires alignes | Frontend/backend TypeChamp et CategorieFormulaire unifies | 27 jan |
+| Feuilles heures filtres | Filtre utilisateurs groupe par role | 27 jan |
+| Heures planifiees vs realisees | Jauge comparaison dans feuilles d'heures | 27 jan |
+| Navigation cliquable | Noms chantier/utilisateur cliquables dans feuilles | 27 jan |
+| Meteo reelle | API Open-Meteo + geolocalisation + alertes vigilance | 27 jan |
+| Bulletin meteo feed | Post automatique resume meteo dans actualites | 27 jan |
+| Notifications push meteo | Alertes meteo en temps reel via Notification API | 27 jan |
+| Statut reel chantier | Affiche ouvert/en_cours/receptionne/ferme | 27 jan |
+| Equipe du jour reelle | Collegues charges depuis planning affectations | 27 jan |
+| Chantiers speciaux | Conges, Maladie, Formation, RTT, Absence dans planning | 26 jan |
+| Resize affectations | Extension et reduction par drag sur bord | 26 jan |
+| Blocs proportionnels | Hauteur des blocs proportionnelle a la duree | 26 jan |
+| Multi-day affectations | Affectations sur plusieurs jours consecutifs | 26 jan |
+| Interimaire type | Nouveau type utilisateur interimaire | 26 jan |
+| Auto-geocoding | Geocodage automatique a la modification d'adresse | 26 jan |
+
+## Prochaines taches prioritaires
+
+### Infrastructure (16 features)
+
+| ID | Description |
+|----|-------------|
+| INT-14/15/16 | Generation rapport PDF interventions |
+| SIG-13 | Notifications push signalements |
+| SIG-16/17 | Alertes retard + escalade automatique signalements |
+| FEED-17 | Notifications push publications |
+| PLN-23/24 | Mode Offline PWA |
+| FDH-16/17/18/19 | Import ERP, export paie, macros, geolocalisation |
+| GED-11/15 | Transfert ERP + synchronisation offline |
+| CHT-11 | Integration ERP (Costructor/Graneet) |
+
+### Ameliorations possibles
+
+- Page dediee signalements (actuellement dans chantier detail)
+- Page dediee interventions (actuellement backend only pour le frontend)
+- Couverture tests frontend > 50% (actuellement ~29%)
+- Mode offline complet (PWA)
 
 ## Infrastructure disponible
 
 - **APScheduler** : Jobs planifies (job scheduler)
 - **Firebase Cloud Messaging** : Notifications push
-
-## Fonctionnalites en attente infrastructure
-
-- GED-11 : Transfert auto depuis ERP (Costructor/Graneet)
-- GED-15 : Synchronisation Offline
-- PLN-23/24 : Mode Offline (PWA)
-- FDH-16 : Import ERP auto
+- **Open-Meteo API** : Donnees meteo en temps reel
+- **Nominatim/OpenStreetMap** : Geocodage inverse
+- **Alembic** : Migrations base de donnees
+- **DOMPurify** : Protection XSS
+- **Zod** : Validation cote client
 
 ## Tests en echec a corriger
 
@@ -59,27 +104,34 @@ Aucun module en attente - tous complets!
 
 ## Derniere mise a jour
 
-Session 2026-01-25 - Corrections Frontend Priorite 2 & 3
+Session 2026-01-27 - Feuilles heures, formulaires, dashboard
+- Feuilles heures : filtres par role, heures planifiees vs realisees, navigation cliquable
+- Formulaires : seed data (6 templates + 10 formulaires), alignement types frontend/backend, API enrichie (noms)
+- Dashboard : stats reelles, equipe du jour, actions rapides
+- 43 fichiers modifies (12 backend, 31 frontend)
+
+Session 2026-01-27 - Audit documentation complet (Git + Code scan)
+- Scan complet du code source : 16 modules backend, 11 pages frontend, 27 hooks, 23 services
+- Ajout statut sur 31 features SIG et INT non marquees dans SPECIFICATIONS.md
+- 237 features totales identifiees (218 done, 16 infra, 3 future)
+- project-status.md reecrit avec inventaire complet et statistiques a jour
+
+Session 2026-01-27 - Meteo reelle, statut chantier, equipe du jour
+- API Open-Meteo avec geolocalisation et alertes vigilance
+- Bulletin meteo automatique dans le feed d'actualites
+- Statut reel du chantier (ouvert/en_cours/receptionne/ferme)
+- Equipe du jour chargee depuis les affectations planning
+- Notifications push alertes meteo
+
+Session 2026-01-26 - Planning ameliore et couverture tests
+- Chantiers speciaux (Conges, Maladie, Formation, RTT, Absence)
+- Resize multi-day affectations avec preview visuel
+- Blocs proportionnels selon duree
+- Type utilisateur interimaire + auto-geocoding
+- Couverture tests firebase 100%
+
+Session 2026-01-25 - Corrections Frontend et Infrastructure
 - 13 problemes corriges (securite, accessibilite, maintenabilite)
-- 3 nouveaux hooks: useChantierDetail, useFormulaires, useLogistique
-- DOMPurify ajoute pour protection XSS
-- HttpOnly cookies implementes
-- Validation Zod ajoutee
-- Accessibilite ARIA amelioree
-- Branche: claude/fix-frontend-errors-zDiqs (pret pour merge)
-
-Session 2026-01-25 - Infrastructure Notifications Push et Job Scheduler
-- APScheduler integre dans FastAPI (jobs planifies)
-- Firebase Cloud Messaging (notifications push backend + frontend)
-- Job rappel J-1 reservations (LOG-15)
-- Handlers notifications LOG-13/14 + SIG-13 + FEED-17
-- Service notifications frontend avec Firebase SDK
-- Module Logistique maintenant 100% COMPLET (18/18)
-
-Session 2026-01-25 - Module Interventions COMPLET (INT-01 a INT-17)
-- Entites: Intervention, AffectationIntervention, InterventionMessage, SignatureIntervention
-- Value Objects: StatutIntervention, PrioriteIntervention, TypeIntervention
-- Use Cases complets (CRUD, planification, demarrage, terminaison, signatures)
-- API REST FastAPI avec tous les endpoints
-- 95 tests unitaires (value objects, entities, use cases)
-- Clean Architecture 4 layers respectee
+- DOMPurify, HttpOnly cookies, Zod validation, ARIA
+- APScheduler + Firebase Cloud Messaging
+- Module Interventions COMPLET (INT-01 a INT-17)

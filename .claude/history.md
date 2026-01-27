@@ -3,6 +3,190 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-27 (Feuilles heures, formulaires, dashboard)
+
+Ameliorations sur 3 modules : feuilles d'heures, formulaires, dashboard.
+
+### Feuilles d'heures
+
+- Filtre utilisateurs groupe par role (Chef de chantier, Compagnon, Sous-traitant, Interimaire)
+- Comparaison heures planifiees vs realisees avec jauge visuelle
+- Noms chantier et utilisateur cliquables avec navigation
+- Bouton retour avec navigate(-1) sur ChantierDetailPage et UserDetailPage
+
+### Formulaires
+
+- Seed data : 6 templates formulaire + 10 formulaires remplis dans seed_demo_data.py
+- Alignement types frontend/backend (TypeChamp: texte/texte_long/nombre/heure, CategorieFormulaire: intervention/incident)
+- Enrichissement API : template_nom, template_categorie, chantier_nom, user_nom retournes par /api/formulaires
+- Mise a jour FieldRenderer, ChampEditor, useTemplateForm pour les nouveaux types
+- Mise a jour de tous les tests (ChampEditor, FieldRenderer, FormulaireModal, useFormulaires, formulaires.test.ts)
+
+### Dashboard
+
+- Stats reelles depuis API (heures, pointages, alertes meteo)
+- Equipe du jour chargee depuis les affectations planning
+- Actions rapides vers chantiers, planning, feuilles d'heures, formulaires
+
+### Fichiers modifies (43 fichiers)
+
+**Backend (12 fichiers)**
+- `backend/scripts/seed_demo_data.py` - Seed formulaires (templates + formulaires remplis)
+- `backend/modules/formulaires/application/dtos/formulaire_dto.py` - Champs enrichis (template_nom, chantier_nom, user_nom)
+- `backend/modules/formulaires/infrastructure/web/formulaire_routes.py` - Enrichissement noms dans API
+- `backend/modules/dashboard/infrastructure/web/dashboard_routes.py` - Stats reelles
+- `backend/modules/pointages/` - Controller, DTOs, use case, value objects pour heures planifiees
+- `backend/modules/chantiers/domain/value_objects/code_chantier.py` - Fix validation
+
+**Frontend (31 fichiers)**
+- `frontend/src/types/index.ts` - TypeChamp et CategorieFormulaire alignes backend
+- `frontend/src/components/formulaires/` - FieldRenderer, ChampEditor, useTemplateForm, tests
+- `frontend/src/components/pointages/` - TimesheetGrid, TimesheetChantierGrid (filtres, navigation)
+- `frontend/src/components/dashboard/` - StatsCard, TeamCard, QuickActions, WeatherBulletinPost
+- `frontend/src/hooks/` - useFeuillesHeures, useTodayTeam, useWeeklyStats, useWeather, useTodayPlanning
+- `frontend/src/pages/` - DashboardPage, FeuillesHeuresPage, ChantierDetailPage, UserDetailPage
+
+---
+
+## Session 2026-01-27 (Audit documentation complet - Git + Code scan)
+
+Audit complet du code source (frontend et backend) croise avec l'historique Git pour identifier toutes les fonctionnalites implementees et mettre a jour la documentation.
+
+### Methode
+
+1. Analyse historique Git (462 commits)
+2. Scan code source frontend (11 pages, 27 hooks, 23 services, 80+ composants)
+3. Scan code source backend (16 modules, 150+ use cases, 40+ repositories)
+4. Croisement avec SPECIFICATIONS.md
+
+### Ecarts trouves et corriges
+
+| Probleme | Correction |
+|----------|------------|
+| 17 features SIG sans statut | Ajout ✅ sur SIG-01 a SIG-12, SIG-14/15/18/19/20 |
+| 17 features INT sans statut | Ajout ✅ sur INT-01 a INT-13/17, ⏳ sur INT-14/15/16 |
+| Colonne Status manquante table INT | Ajout colonne Status a la table |
+| TOC reference "Memos" au lieu de "Signalements" | Corrige en "Signalements" |
+| project-status.md desynchronise | Reecrit avec inventaire complet |
+| Statistiques obsoletes (220 features) | Corrige : 237 features (218 done, 16 infra, 3 future) |
+
+### Statistiques finales
+
+| Metrique | Valeur |
+|----------|--------|
+| Features totales | 237 |
+| Features done (✅) | 218 (92%) |
+| Features infra (⏳) | 16 |
+| Features future (🔮) | 3 |
+| Modules backend | 16 |
+| Pages frontend | 11 |
+| Hooks custom | 27 |
+| Services frontend | 23 |
+| Composants frontend | 80+ |
+| Tests backend | 140+ fichiers |
+| Tests frontend | 91 fichiers, 1655 tests |
+
+### Fichiers modifies
+
+- `docs/SPECIFICATIONS.md` - Statuts SIG-01 a SIG-20, INT-01 a INT-17, TOC corrige
+- `.claude/project-status.md` - Reecrit avec inventaire complet
+- `.claude/history.md` - Session audit ajoutee
+
+---
+
+## Session 2026-01-27 (Meteo reelle, statut chantier, equipe du jour)
+
+Implémentation de la météo réelle avec géolocalisation et alertes, correction du statut affiché sur le dashboard, et ajout de l'équipe du jour depuis le planning.
+
+### Fonctionnalites ajoutees
+
+| Fonctionnalite | Description | Fichiers |
+|----------------|-------------|----------|
+| Meteo reelle | API Open-Meteo + geolocalisation device | `services/weather.ts`, `hooks/useWeather.ts` |
+| Alertes meteo | Vigilance jaune/orange/rouge (vent, orages, canicule...) | `services/weather.ts` |
+| Bulletin meteo feed | Post automatique resume meteo dans actualites | `WeatherBulletinPost.tsx` |
+| Notifications push meteo | Notification automatique si alerte active | `services/weatherNotifications.ts` |
+| WeatherCard dynamique | Degradé selon condition, badge alerte, UV, direction vent | `WeatherCard.tsx` |
+| Statut reel chantier | Affiche ouvert/en_cours/receptionne/ferme au lieu du statut temporel | `useTodayPlanning.ts`, `TodayPlanningCard.tsx` |
+| Equipe du jour reelle | Collegues charges depuis affectations du planning | `hooks/useTodayTeam.ts`, `TeamCard.tsx` |
+| Documents dashboard | Documents lies aux chantiers presents dans le planning | `hooks/useRecentDocuments.ts` (session precedente) |
+| Logistique chantier | Section logistique dans la fiche chantier | `ChantierLogistiqueSection.tsx` (session precedente) |
+
+### Corrections
+
+| Fichier | Probleme | Correction |
+|---------|----------|------------|
+| `TodayPlanningCard.tsx` | Affichait "Termine" (statut temporel) | Affiche maintenant le statut reel du chantier |
+| `TeamCard.tsx` | Donnees hardcodees (3 membres fixes) | Charge depuis les affectations du planning |
+| `DashboardPage.tsx` | Props inutilisees sur DocumentsCard | Suppression des props obsoletes |
+
+### Fichiers crees
+
+- `frontend/src/services/weather.ts` - Service meteo Open-Meteo + geolocalisation
+- `frontend/src/services/weatherNotifications.ts` - Notifications push alertes meteo
+- `frontend/src/hooks/useWeather.ts` - Hook donnees meteo avec cache 15min
+- `frontend/src/hooks/useTodayTeam.ts` - Hook equipe du jour depuis planning
+- `frontend/src/components/dashboard/WeatherBulletinPost.tsx` - Bulletin meteo dans feed
+
+### Fichiers modifies
+
+- `frontend/src/components/dashboard/WeatherCard.tsx` - Meteo reelle dynamique
+- `frontend/src/components/dashboard/WeatherCard.test.tsx` - Tests adaptes
+- `frontend/src/components/dashboard/TeamCard.tsx` - Equipe reelle
+- `frontend/src/components/dashboard/TodayPlanningCard.tsx` - Statut chantier reel
+- `frontend/src/hooks/useTodayPlanning.ts` - Ajout chantierStatut
+- `frontend/src/hooks/index.ts` - Exports nouveaux hooks
+- `frontend/src/components/dashboard/index.ts` - Export WeatherBulletinPost
+- `frontend/src/pages/DashboardPage.tsx` - Integration meteo + equipe + bulletin
+
+### Documentation mise a jour
+
+- `docs/SPECIFICATIONS.md` - Section 2.3.1 (meteo), 2.4.2 (dashboard features), 4.3 (onglet logistique), 14.3 (notifications meteo)
+- `.claude/project-status.md` - Statistiques et features dashboard
+- `.claude/history.md` - Historique session
+
+---
+
+## Session 2026-01-26 (Amélioration Planning: types spéciaux et resize)
+
+Améliorations du module planning avec ajout de types d'affectation spéciaux et correction du resize.
+
+### Fonctionnalités ajoutées
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Chantiers spéciaux | Congés, Maladie, Formation, RTT, Absence |
+| Date par défaut | Le modal affectation utilise la date du jour par défaut |
+| Sélecteur amélioré | Optgroups séparant Absences et Chantiers |
+| Bouton supprimer | Ajouté dans le modal pour les mobiles |
+
+### Corrections
+
+| Fichier | Problème | Correction |
+|---------|----------|------------|
+| `PlanningGrid.tsx` | Resize réduction ne fonctionnait pas | Logique de boucle corrigée |
+| `usePlanning.ts` | Date non définie à l'ouverture du modal | `selectedDate = new Date()` |
+| `AffectationModal.tsx` | Pas de bouton supprimer | Ajout bouton trash icon |
+
+### Fichiers modifiés
+
+- `frontend/src/hooks/usePlanning.ts` - Date par défaut, suppression multiple
+- `frontend/src/components/planning/AffectationModal.tsx` - UI avec optgroups et delete
+- `frontend/src/components/planning/PlanningGrid.tsx` - Logique resize corrigée
+- `backend/scripts/seed_demo_data.py` - Ajout chantiers spéciaux (CONGES, MALADIE, etc.)
+
+### Chantiers spéciaux créés
+
+| Code | Nom | Couleur |
+|------|-----|---------|
+| CONGES | Congés payés | #4CAF50 (vert) |
+| MALADIE | Arrêt maladie | #F44336 (rouge) |
+| FORMATION | Formation | #2196F3 (bleu) |
+| RTT | RTT | #9C27B0 (violet) |
+| ABSENT | Absence | #FF9800 (orange) |
+
+---
+
 ## Session 2026-01-26 (Correction tests et couverture Firebase)
 
 Analyse de la couverture des tests frontend et correction des tests en échec.

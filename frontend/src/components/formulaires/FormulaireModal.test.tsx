@@ -40,19 +40,19 @@ const createMockTemplate = (overrides: Partial<TemplateFormulaire> = {}): Templa
   id: 1,
   nom: 'Rapport de chantier',
   description: 'Description du formulaire',
-  categorie: 'qualite',
+  categorie: 'securite',
   champs: [
     {
       nom: 'titre',
       label: 'Titre',
-      type_champ: 'text',
+      type_champ: 'texte',
       obligatoire: true,
       ordre: 1,
     },
     {
       nom: 'commentaire',
       label: 'Commentaire',
-      type_champ: 'textarea',
+      type_champ: 'texte_long',
       obligatoire: false,
       ordre: 2,
     },
@@ -72,8 +72,8 @@ const createMockFormulaire = (overrides: Partial<FormulaireRempli> = {}): Formul
   user_id: 1,
   statut: 'brouillon',
   champs: [
-    { nom: 'titre', valeur: 'Mon titre', type_champ: 'text' },
-    { nom: 'commentaire', valeur: 'Mon commentaire', type_champ: 'textarea' },
+    { nom: 'titre', valeur: 'Mon titre', type_champ: 'texte' },
+    { nom: 'commentaire', valeur: 'Mon commentaire', type_champ: 'texte_long' },
   ] as ChampFormulaire[],
   photos: [],
   est_signe: false,

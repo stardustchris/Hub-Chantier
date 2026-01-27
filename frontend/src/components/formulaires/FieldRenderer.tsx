@@ -12,7 +12,6 @@ import {
   Calendar,
   Clock,
   Hash,
-  Mail,
   FileText,
   CheckSquare,
   Circle,
@@ -41,18 +40,22 @@ interface FieldComponentProps {
 }
 
 // Mapping des icones par type de champ
-const FIELD_ICONS: Record<TypeChamp, React.ElementType> = {
-  text: Type,
-  textarea: FileText,
-  number: Hash,
-  email: Mail,
+const FIELD_ICONS: Partial<Record<TypeChamp, React.ElementType>> = {
+  texte: Type,
+  texte_long: FileText,
+  nombre: Hash,
   date: Calendar,
-  time: Clock,
+  heure: Clock,
+  date_heure: Calendar,
   select: List,
   checkbox: CheckSquare,
   radio: Circle,
+  multi_select: List,
   photo: Camera,
+  photo_multiple: Camera,
   signature: PenTool,
+  titre_section: Type,
+  separateur: Type,
 }
 
 // Composants de champ individuels
@@ -94,18 +97,6 @@ const NumberField = memo(({ champ, value, onChange, readOnly, inputClass }: Fiel
   />
 ))
 NumberField.displayName = 'NumberField'
-
-const EmailField = memo(({ champ, value, onChange, readOnly, inputClass }: FieldComponentProps) => (
-  <input
-    type="email"
-    value={value as string}
-    onChange={(e) => onChange(e.target.value)}
-    placeholder={champ.placeholder || 'exemple@email.com'}
-    disabled={readOnly}
-    className={inputClass}
-  />
-))
-EmailField.displayName = 'EmailField'
 
 const DateField = memo(({ value, onChange, readOnly, inputClass }: FieldComponentProps) => (
   <input
@@ -200,17 +191,19 @@ const SignatureField = memo(({ value, onChange, readOnly }: FieldComponentProps)
 SignatureField.displayName = 'SignatureField'
 
 // Mapping des composants par type de champ
-const FIELD_COMPONENTS: Record<TypeChamp, React.ComponentType<FieldComponentProps>> = {
-  text: TextField,
-  textarea: TextareaField,
-  number: NumberField,
-  email: EmailField,
+const FIELD_COMPONENTS: Partial<Record<TypeChamp, React.ComponentType<FieldComponentProps>>> = {
+  texte: TextField,
+  texte_long: TextareaField,
+  nombre: NumberField,
   date: DateField,
-  time: TimeField,
+  heure: TimeField,
+  date_heure: DateField,
   select: SelectField,
   checkbox: CheckboxField,
   radio: RadioField,
+  multi_select: SelectField,
   photo: PhotoField,
+  photo_multiple: PhotoField,
   signature: SignatureField,
 }
 

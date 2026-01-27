@@ -16,7 +16,7 @@ Cree:
 
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 # Ajouter le chemin du backend pour les imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,6 +30,12 @@ from modules.chantiers.infrastructure.persistence.chantier_model import Chantier
 from modules.planning.infrastructure.persistence.affectation_model import AffectationModel
 from modules.pointages.infrastructure.persistence.models import PointageModel
 from modules.taches.infrastructure.persistence import TacheModel
+from modules.formulaires.infrastructure.persistence import (
+    TemplateFormulaireModel,
+    ChampTemplateModel,
+    FormulaireRempliModel,
+    ChampRempliModel,
+)
 
 
 def hash_password(password: str) -> str:
@@ -662,6 +668,390 @@ def seed_pointages(db: Session, user_ids: dict, chantier_ids: dict):
     print(f"  [CREE] {created_count} pointages pour les semaines du {last_monday} et {current_monday}")
 
 
+TEMPLATES_FORMULAIRES_DATA = [
+    {
+        "nom": "Rapport journalier de chantier",
+        "categorie": "intervention",
+        "description": "Rapport quotidien a remplir par le chef de chantier en fin de journee",
+        "champs": [
+            {"nom": "date_intervention", "label": "Date", "type_champ": "date", "obligatoire": True, "ordre": 1},
+            {"nom": "meteo", "label": "Conditions meteo", "type_champ": "select", "obligatoire": True, "ordre": 2, "options": ["Beau temps", "Nuageux", "Pluie legere", "Pluie forte", "Neige", "Gel"]},
+            {"nom": "nb_ouvriers", "label": "Nombre d'ouvriers presents", "type_champ": "nombre", "obligatoire": True, "ordre": 3, "min_value": 0, "max_value": 50},
+            {"nom": "travaux_realises", "label": "Travaux realises", "type_champ": "texte_long", "obligatoire": True, "ordre": 4, "placeholder": "Decrire les travaux effectues..."},
+            {"nom": "materiaux_utilises", "label": "Materiaux utilises", "type_champ": "texte_long", "obligatoire": False, "ordre": 5},
+            {"nom": "problemes", "label": "Problemes rencontres", "type_champ": "texte_long", "obligatoire": False, "ordre": 6},
+            {"nom": "photo_avancement", "label": "Photo d'avancement", "type_champ": "photo", "obligatoire": False, "ordre": 7},
+            {"nom": "signature_chef", "label": "Signature du chef de chantier", "type_champ": "signature", "obligatoire": True, "ordre": 8},
+        ],
+    },
+    {
+        "nom": "Fiche de reception travaux",
+        "categorie": "reception",
+        "description": "Formulaire de reception des travaux avec le client",
+        "champs": [
+            {"nom": "date_reception", "label": "Date de reception", "type_champ": "date", "obligatoire": True, "ordre": 1},
+            {"nom": "lot_concerne", "label": "Lot concerne", "type_champ": "select", "obligatoire": True, "ordre": 2, "options": ["Gros oeuvre", "Charpente", "Couverture", "Electricite", "Plomberie", "Peinture", "Menuiserie", "Autre"]},
+            {"nom": "conformite", "label": "Travaux conformes au cahier des charges", "type_champ": "radio", "obligatoire": True, "ordre": 3, "options": ["Oui", "Non", "Avec reserves"]},
+            {"nom": "reserves", "label": "Liste des reserves", "type_champ": "texte_long", "obligatoire": False, "ordre": 4, "placeholder": "Detailler les reserves eventuelles..."},
+            {"nom": "delai_levee", "label": "Delai de levee des reserves (jours)", "type_champ": "nombre", "obligatoire": False, "ordre": 5, "min_value": 1, "max_value": 90},
+            {"nom": "photo_reception", "label": "Photos de reception", "type_champ": "photo", "obligatoire": False, "ordre": 6},
+            {"nom": "signature_client", "label": "Signature du client", "type_champ": "signature", "obligatoire": True, "ordre": 7},
+            {"nom": "signature_conducteur", "label": "Signature du conducteur", "type_champ": "signature", "obligatoire": True, "ordre": 8},
+        ],
+    },
+    {
+        "nom": "Inspection securite hebdomadaire",
+        "categorie": "securite",
+        "description": "Check-list securite a realiser chaque semaine sur le chantier",
+        "champs": [
+            {"nom": "date_inspection", "label": "Date d'inspection", "type_champ": "date", "obligatoire": True, "ordre": 1},
+            {"nom": "epi_portes", "label": "EPI portes par tous", "type_champ": "radio", "obligatoire": True, "ordre": 2, "options": ["Oui", "Non"]},
+            {"nom": "balisage_ok", "label": "Balisage et signalisation en place", "type_champ": "radio", "obligatoire": True, "ordre": 3, "options": ["Oui", "Non", "Partiel"]},
+            {"nom": "echafaudages_ok", "label": "Echafaudages conformes", "type_champ": "radio", "obligatoire": True, "ordre": 4, "options": ["Oui", "Non", "N/A"]},
+            {"nom": "proprete_chantier", "label": "Proprete du chantier", "type_champ": "select", "obligatoire": True, "ordre": 5, "options": ["Tres bien", "Bien", "Acceptable", "A ameliorer", "Non conforme"]},
+            {"nom": "anomalies", "label": "Anomalies constatees", "type_champ": "texte_long", "obligatoire": False, "ordre": 6},
+            {"nom": "actions_correctives", "label": "Actions correctives", "type_champ": "texte_long", "obligatoire": False, "ordre": 7},
+            {"nom": "photo_anomalie", "label": "Photo anomalie", "type_champ": "photo", "obligatoire": False, "ordre": 8},
+            {"nom": "signature_inspecteur", "label": "Signature de l'inspecteur", "type_champ": "signature", "obligatoire": True, "ordre": 9},
+        ],
+    },
+    {
+        "nom": "Declaration d'incident",
+        "categorie": "incident",
+        "description": "Formulaire de declaration d'incident ou accident sur chantier",
+        "champs": [
+            {"nom": "date_incident", "label": "Date de l'incident", "type_champ": "date", "obligatoire": True, "ordre": 1},
+            {"nom": "heure_incident", "label": "Heure de l'incident", "type_champ": "heure", "obligatoire": True, "ordre": 2},
+            {"nom": "type_incident", "label": "Type d'incident", "type_champ": "select", "obligatoire": True, "ordre": 3, "options": ["Accident corporel", "Presqu'accident", "Dommage materiel", "Incident environnemental", "Autre"]},
+            {"nom": "gravite", "label": "Gravite", "type_champ": "select", "obligatoire": True, "ordre": 4, "options": ["Mineur", "Modere", "Grave", "Tres grave"]},
+            {"nom": "personnes_impliquees", "label": "Personnes impliquees", "type_champ": "texte_long", "obligatoire": True, "ordre": 5},
+            {"nom": "description_faits", "label": "Description des faits", "type_champ": "texte_long", "obligatoire": True, "ordre": 6, "placeholder": "Decrire precisement les circonstances..."},
+            {"nom": "mesures_prises", "label": "Mesures prises immediatement", "type_champ": "texte_long", "obligatoire": True, "ordre": 7},
+            {"nom": "temoins", "label": "Temoins", "type_champ": "texte", "obligatoire": False, "ordre": 8},
+            {"nom": "photo_incident", "label": "Photos", "type_champ": "photo", "obligatoire": False, "ordre": 9},
+            {"nom": "signature_declarant", "label": "Signature du declarant", "type_champ": "signature", "obligatoire": True, "ordre": 10},
+        ],
+    },
+    {
+        "nom": "Bon de livraison materiaux",
+        "categorie": "approvisionnement",
+        "description": "Formulaire de reception de livraison de materiaux",
+        "champs": [
+            {"nom": "date_livraison", "label": "Date de livraison", "type_champ": "date", "obligatoire": True, "ordre": 1},
+            {"nom": "fournisseur", "label": "Fournisseur", "type_champ": "texte", "obligatoire": True, "ordre": 2},
+            {"nom": "bon_numero", "label": "Numero du bon de livraison", "type_champ": "texte", "obligatoire": True, "ordre": 3},
+            {"nom": "materiaux", "label": "Materiaux livres", "type_champ": "texte_long", "obligatoire": True, "ordre": 4, "placeholder": "Lister les materiaux et quantites..."},
+            {"nom": "conforme_commande", "label": "Conforme a la commande", "type_champ": "radio", "obligatoire": True, "ordre": 5, "options": ["Oui", "Non", "Partiel"]},
+            {"nom": "etat_materiaux", "label": "Etat des materiaux", "type_champ": "select", "obligatoire": True, "ordre": 6, "options": ["Bon etat", "Dommages mineurs", "Dommages importants"]},
+            {"nom": "remarques", "label": "Remarques", "type_champ": "texte_long", "obligatoire": False, "ordre": 7},
+            {"nom": "photo_livraison", "label": "Photo de la livraison", "type_champ": "photo", "obligatoire": False, "ordre": 8},
+            {"nom": "signature_recepteur", "label": "Signature du receptionnaire", "type_champ": "signature", "obligatoire": True, "ordre": 9},
+        ],
+    },
+    {
+        "nom": "Controle beton - eprouvettes",
+        "categorie": "gros_oeuvre",
+        "description": "Fiche de suivi des eprouvettes beton pour controle qualite",
+        "champs": [
+            {"nom": "date_coulage", "label": "Date de coulage", "type_champ": "date", "obligatoire": True, "ordre": 1},
+            {"nom": "type_beton", "label": "Type de beton", "type_champ": "select", "obligatoire": True, "ordre": 2, "options": ["C25/30", "C30/37", "C35/45", "C40/50", "Autre"]},
+            {"nom": "volume_coule", "label": "Volume coule (m3)", "type_champ": "nombre", "obligatoire": True, "ordre": 3, "min_value": 0},
+            {"nom": "localisation_ouvrage", "label": "Localisation de l'ouvrage", "type_champ": "texte", "obligatoire": True, "ordre": 4, "placeholder": "Ex: Dalle RDC, Poteau B3..."},
+            {"nom": "nb_eprouvettes", "label": "Nombre d'eprouvettes", "type_champ": "nombre", "obligatoire": True, "ordre": 5, "min_value": 1, "max_value": 20},
+            {"nom": "temperature_exterieure", "label": "Temperature exterieure (C)", "type_champ": "nombre", "obligatoire": False, "ordre": 6, "min_value": -10, "max_value": 45},
+            {"nom": "observations", "label": "Observations", "type_champ": "texte_long", "obligatoire": False, "ordre": 7},
+            {"nom": "photo_coulage", "label": "Photo du coulage", "type_champ": "photo", "obligatoire": False, "ordre": 8},
+        ],
+    },
+]
+
+
+def seed_templates_formulaires(db: Session, user_ids: dict) -> dict:
+    """Cree les templates de formulaire. Retourne un dict nom -> template_id."""
+    print("\n=== Creation des templates de formulaire ===")
+    template_ids = {}
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
+
+    for tpl_data in TEMPLATES_FORMULAIRES_DATA:
+        existing = db.query(TemplateFormulaireModel).filter(
+            TemplateFormulaireModel.nom == tpl_data["nom"]
+        ).first()
+
+        if existing:
+            print(f"  [EXISTE] {tpl_data['nom']}")
+            template_ids[tpl_data["nom"]] = existing.id
+            continue
+
+        template = TemplateFormulaireModel(
+            nom=tpl_data["nom"],
+            description=tpl_data.get("description"),
+            categorie=tpl_data["categorie"],
+            is_active=True,
+            version=1,
+            created_by=admin_id,
+        )
+        db.add(template)
+        db.flush()
+
+        # Creer les champs du template
+        for champ_data in tpl_data.get("champs", []):
+            champ = ChampTemplateModel(
+                template_id=template.id,
+                nom=champ_data["nom"],
+                label=champ_data["label"],
+                type_champ=champ_data["type_champ"],
+                obligatoire=champ_data.get("obligatoire", False),
+                ordre=champ_data.get("ordre", 0),
+                placeholder=champ_data.get("placeholder"),
+                options=champ_data.get("options"),
+                valeur_defaut=champ_data.get("valeur_defaut"),
+                validation_regex=champ_data.get("validation_regex"),
+                min_value=champ_data.get("min_value"),
+                max_value=champ_data.get("max_value"),
+            )
+            db.add(champ)
+
+        template_ids[tpl_data["nom"]] = template.id
+        print(f"  [CREE] {tpl_data['nom']} ({tpl_data['categorie']}, {len(tpl_data.get('champs', []))} champs) - ID: {template.id}")
+
+    db.commit()
+    return template_ids
+
+
+def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, template_ids: dict):
+    """Cree des formulaires remplis de demonstration."""
+    print("\n=== Creation des formulaires remplis ===")
+
+    today = date.today()
+    created_count = 0
+
+    # Formulaires a creer : (template_nom, chantier_code, user_email, statut, jours_avant, champs_values)
+    formulaires_data = [
+        # Rapports journaliers sur Residence Les Jardins
+        {
+            "template": "Rapport journalier de chantier",
+            "chantier": "A001",
+            "user": "pierre.bernard@greg-construction.fr",
+            "statut": "valide",
+            "jours_avant": 3,
+            "champs": [
+                {"nom": "date_intervention", "type_champ": "date", "valeur": str(today - timedelta(days=3))},
+                {"nom": "meteo", "type_champ": "select", "valeur": "Beau temps"},
+                {"nom": "nb_ouvriers", "type_champ": "nombre", "valeur": 8},
+                {"nom": "travaux_realises", "type_champ": "texte_long", "valeur": "Coulage dalle RDC batiment B. Ferraillage escalier central."},
+                {"nom": "materiaux_utilises", "type_champ": "texte_long", "valeur": "12m3 beton C30/37, 2T acier HA"},
+                {"nom": "problemes", "type_champ": "texte_long", "valeur": ""},
+            ],
+        },
+        {
+            "template": "Rapport journalier de chantier",
+            "chantier": "A001",
+            "user": "pierre.bernard@greg-construction.fr",
+            "statut": "soumis",
+            "jours_avant": 1,
+            "champs": [
+                {"nom": "date_intervention", "type_champ": "date", "valeur": str(today - timedelta(days=1))},
+                {"nom": "meteo", "type_champ": "select", "valeur": "Nuageux"},
+                {"nom": "nb_ouvriers", "type_champ": "nombre", "valeur": 6},
+                {"nom": "travaux_realises", "type_champ": "texte_long", "valeur": "Elevation murs 1er etage. Pose coffrage poteau P4."},
+                {"nom": "materiaux_utilises", "type_champ": "texte_long", "valeur": "800 parpaings, 50 sacs ciment"},
+                {"nom": "problemes", "type_champ": "texte_long", "valeur": "Retard livraison aciers prevu demain"},
+            ],
+        },
+        # Rapport sur Centre Commercial
+        {
+            "template": "Rapport journalier de chantier",
+            "chantier": "A002",
+            "user": "sophie.petit@greg-construction.fr",
+            "statut": "valide",
+            "jours_avant": 2,
+            "champs": [
+                {"nom": "date_intervention", "type_champ": "date", "valeur": str(today - timedelta(days=2))},
+                {"nom": "meteo", "type_champ": "select", "valeur": "Pluie legere"},
+                {"nom": "nb_ouvriers", "type_champ": "nombre", "valeur": 12},
+                {"nom": "travaux_realises", "type_champ": "texte_long", "valeur": "Montage structure metallique zone A. Soudure portiques."},
+                {"nom": "materiaux_utilises", "type_champ": "texte_long", "valeur": "IPE 300, HEA 200, boulons HR"},
+                {"nom": "problemes", "type_champ": "texte_long", "valeur": "Arret 2h pour pluie"},
+            ],
+        },
+        # Inspection securite
+        {
+            "template": "Inspection securite hebdomadaire",
+            "chantier": "A001",
+            "user": "jean.dupont@greg-construction.fr",
+            "statut": "valide",
+            "jours_avant": 5,
+            "champs": [
+                {"nom": "date_inspection", "type_champ": "date", "valeur": str(today - timedelta(days=5))},
+                {"nom": "epi_portes", "type_champ": "radio", "valeur": "Oui"},
+                {"nom": "balisage_ok", "type_champ": "radio", "valeur": "Oui"},
+                {"nom": "echafaudages_ok", "type_champ": "radio", "valeur": "Oui"},
+                {"nom": "proprete_chantier", "type_champ": "select", "valeur": "Bien"},
+                {"nom": "anomalies", "type_champ": "texte_long", "valeur": ""},
+                {"nom": "actions_correctives", "type_champ": "texte_long", "valeur": ""},
+            ],
+        },
+        {
+            "template": "Inspection securite hebdomadaire",
+            "chantier": "A002",
+            "user": "marie.martin@greg-construction.fr",
+            "statut": "soumis",
+            "jours_avant": 2,
+            "champs": [
+                {"nom": "date_inspection", "type_champ": "date", "valeur": str(today - timedelta(days=2))},
+                {"nom": "epi_portes", "type_champ": "radio", "valeur": "Non"},
+                {"nom": "balisage_ok", "type_champ": "radio", "valeur": "Partiel"},
+                {"nom": "echafaudages_ok", "type_champ": "radio", "valeur": "Oui"},
+                {"nom": "proprete_chantier", "type_champ": "select", "valeur": "A ameliorer"},
+                {"nom": "anomalies", "type_champ": "texte_long", "valeur": "2 ouvriers sans casque zone B. Garde-corps manquant escalier provisoire."},
+                {"nom": "actions_correctives", "type_champ": "texte_long", "valeur": "Rappel consignes EPI. Pose garde-corps prevue demain matin."},
+            ],
+        },
+        # Declaration incident
+        {
+            "template": "Declaration d'incident",
+            "chantier": "A004",
+            "user": "sophie.petit@greg-construction.fr",
+            "statut": "valide",
+            "jours_avant": 10,
+            "champs": [
+                {"nom": "date_incident", "type_champ": "date", "valeur": str(today - timedelta(days=10))},
+                {"nom": "heure_incident", "type_champ": "heure", "valeur": "14:30"},
+                {"nom": "type_incident", "type_champ": "select", "valeur": "Dommage materiel"},
+                {"nom": "gravite", "type_champ": "select", "valeur": "Mineur"},
+                {"nom": "personnes_impliquees", "type_champ": "texte_long", "valeur": "Aucune blessure"},
+                {"nom": "description_faits", "type_champ": "texte_long", "valeur": "Chute d'une palette de parpaings lors du dechargement. Palette mal arrimee."},
+                {"nom": "mesures_prises", "type_champ": "texte_long", "valeur": "Zone securisee. Nettoyage debris. Rappel procedure dechargement."},
+                {"nom": "temoins", "type_champ": "texte", "valeur": "Lucas MOREAU, Emma GARCIA"},
+            ],
+        },
+        # Bon de livraison
+        {
+            "template": "Bon de livraison materiaux",
+            "chantier": "A001",
+            "user": "pierre.bernard@greg-construction.fr",
+            "statut": "valide",
+            "jours_avant": 4,
+            "champs": [
+                {"nom": "date_livraison", "type_champ": "date", "valeur": str(today - timedelta(days=4))},
+                {"nom": "fournisseur", "type_champ": "texte", "valeur": "Point P - Agence Montreuil"},
+                {"nom": "bon_numero", "type_champ": "texte", "valeur": "BL-2026-00847"},
+                {"nom": "materiaux", "type_champ": "texte_long", "valeur": "500 parpaings 20x20x50, 30 sacs ciment CEM II, 2 palettes agglos"},
+                {"nom": "conforme_commande", "type_champ": "radio", "valeur": "Oui"},
+                {"nom": "etat_materiaux", "type_champ": "select", "valeur": "Bon etat"},
+                {"nom": "remarques", "type_champ": "texte_long", "valeur": ""},
+            ],
+        },
+        {
+            "template": "Bon de livraison materiaux",
+            "chantier": "A002",
+            "user": "sophie.petit@greg-construction.fr",
+            "statut": "soumis",
+            "jours_avant": 1,
+            "champs": [
+                {"nom": "date_livraison", "type_champ": "date", "valeur": str(today - timedelta(days=1))},
+                {"nom": "fournisseur", "type_champ": "texte", "valeur": "ArcelorMittal Distribution"},
+                {"nom": "bon_numero", "type_champ": "texte", "valeur": "AMD-2026-12453"},
+                {"nom": "materiaux", "type_champ": "texte_long", "valeur": "6 IPE 300 x 6m, 4 HEA 200 x 4m, kit boulonnerie HR"},
+                {"nom": "conforme_commande", "type_champ": "radio", "valeur": "Partiel"},
+                {"nom": "etat_materiaux", "type_champ": "select", "valeur": "Dommages mineurs"},
+                {"nom": "remarques", "type_champ": "texte_long", "valeur": "1 IPE 300 avec traces de rouille. A signaler au fournisseur."},
+            ],
+        },
+        # Controle beton
+        {
+            "template": "Controle beton - eprouvettes",
+            "chantier": "A001",
+            "user": "pierre.bernard@greg-construction.fr",
+            "statut": "valide",
+            "jours_avant": 7,
+            "champs": [
+                {"nom": "date_coulage", "type_champ": "date", "valeur": str(today - timedelta(days=7))},
+                {"nom": "type_beton", "type_champ": "select", "valeur": "C30/37"},
+                {"nom": "volume_coule", "type_champ": "nombre", "valeur": 12},
+                {"nom": "localisation_ouvrage", "type_champ": "texte", "valeur": "Dalle RDC batiment B"},
+                {"nom": "nb_eprouvettes", "type_champ": "nombre", "valeur": 6},
+                {"nom": "temperature_exterieure", "type_champ": "nombre", "valeur": 8},
+                {"nom": "observations", "type_champ": "texte_long", "valeur": "Coulage par temps frais. Bache de protection posee."},
+            ],
+        },
+        # Brouillon en cours
+        {
+            "template": "Rapport journalier de chantier",
+            "chantier": "A004",
+            "user": "sophie.petit@greg-construction.fr",
+            "statut": "brouillon",
+            "jours_avant": 0,
+            "champs": [
+                {"nom": "date_intervention", "type_champ": "date", "valeur": str(today)},
+                {"nom": "meteo", "type_champ": "select", "valeur": "Beau temps"},
+                {"nom": "nb_ouvriers", "type_champ": "nombre", "valeur": 4},
+                {"nom": "travaux_realises", "type_champ": "texte_long", "valeur": ""},
+            ],
+        },
+    ]
+
+    for form_data in formulaires_data:
+        template_id = template_ids.get(form_data["template"])
+        chantier_id = chantier_ids.get(form_data["chantier"])
+        user_id = user_ids.get(form_data["user"])
+
+        if not template_id or not chantier_id or not user_id:
+            continue
+
+        # Verifier si un formulaire similaire existe deja
+        jours_avant = form_data["jours_avant"]
+        form_date = today - timedelta(days=jours_avant)
+        existing = db.query(FormulaireRempliModel).filter(
+            FormulaireRempliModel.template_id == template_id,
+            FormulaireRempliModel.chantier_id == chantier_id,
+            FormulaireRempliModel.user_id == user_id,
+            FormulaireRempliModel.created_at >= datetime(form_date.year, form_date.month, form_date.day),
+            FormulaireRempliModel.created_at < datetime(form_date.year, form_date.month, form_date.day) + timedelta(days=1),
+        ).first()
+
+        if existing:
+            continue
+
+        statut = form_data["statut"]
+        soumis_at = datetime.now() - timedelta(days=jours_avant) if statut in ("soumis", "valide") else None
+        valide_by = user_ids.get("jean.dupont@greg-construction.fr") if statut == "valide" else None
+        valide_at = datetime.now() - timedelta(days=max(0, jours_avant - 1)) if statut == "valide" else None
+
+        formulaire = FormulaireRempliModel(
+            template_id=template_id,
+            chantier_id=chantier_id,
+            user_id=user_id,
+            statut=statut,
+            soumis_at=soumis_at,
+            valide_by=valide_by,
+            valide_at=valide_at,
+            localisation_latitude=48.8566 if form_data["chantier"] == "A001" else 48.8634 if form_data["chantier"] == "A002" else 48.8049,
+            localisation_longitude=2.3522 if form_data["chantier"] == "A001" else 2.4437 if form_data["chantier"] == "A002" else 2.1204,
+            version=1,
+            created_at=datetime.now() - timedelta(days=jours_avant),
+            updated_at=datetime.now() - timedelta(days=jours_avant),
+        )
+        db.add(formulaire)
+        db.flush()
+
+        # Ajouter les champs remplis
+        for champ_data in form_data.get("champs", []):
+            champ = ChampRempliModel(
+                formulaire_id=formulaire.id,
+                nom=champ_data["nom"],
+                type_champ=champ_data["type_champ"],
+                valeur=champ_data["valeur"],
+                timestamp=datetime.now() - timedelta(days=jours_avant),
+            )
+            db.add(champ)
+
+        created_count += 1
+
+    db.commit()
+    print(f"  [CREE] {created_count} formulaires remplis")
+
+
 def main():
     """Point d'entree principal."""
     print("=" * 60)
@@ -689,6 +1079,12 @@ def main():
 
         # 5. Creer les pointages
         seed_pointages(db, user_ids, chantier_ids)
+
+        # 6. Creer les templates de formulaire
+        template_ids = seed_templates_formulaires(db, user_ids)
+
+        # 7. Creer les formulaires remplis
+        seed_formulaires_remplis(db, user_ids, chantier_ids, template_ids)
 
         print("\n" + "=" * 60)
         print("SEED TERMINE AVEC SUCCES!")

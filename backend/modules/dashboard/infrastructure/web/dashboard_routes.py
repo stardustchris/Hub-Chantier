@@ -32,6 +32,8 @@ from .dependencies import (
     get_remove_like_use_case,
 )
 from shared.infrastructure.web import get_current_user_id, get_is_moderator, get_current_user_chantier_ids
+from shared.infrastructure.database import SessionLocal
+from sqlalchemy import text
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -64,6 +66,7 @@ class UserSummary(BaseModel):
     role: str
     type_utilisateur: str
     is_active: bool
+    couleur: Optional[str] = None
 
 
 class PostMediaResponse(BaseModel):
@@ -163,12 +166,16 @@ def get_feed(
         include_archived=False,
     )
 
+    # Charger les données utilisateur pour tous les auteurs des posts
+    author_ids = list({p.author_id for p in result.posts})
+    users_cache = _load_users_by_ids(author_ids)
+
     # Convertir au format frontend
     total = result.total
     pages = (total + size - 1) // size if size > 0 else 0
 
     return PostListResponse(
-        items=[_post_dto_to_frontend_response(p) for p in result.posts],
+        items=[_post_dto_to_frontend_response(p, users_cache=users_cache) for p in result.posts],
         total=total,
         page=page,
         size=size,
@@ -214,7 +221,8 @@ def create_post(
             is_urgent=request.is_urgent or request.type == "urgent",
         )
         result = use_case.execute(dto, author_id=current_user_id)
-        return _post_dto_to_frontend_response(result)
+        users_cache = _load_users_by_ids([current_user_id])
+        return _post_dto_to_frontend_response(result, users_cache=users_cache)
 
     except PostContentEmptyError as e:
         raise HTTPException(
@@ -237,7 +245,14 @@ def get_post(
     """Récupère un post avec ses détails."""
     try:
         result = use_case.execute(post_id=post_id, user_id=current_user_id)
-        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids)
+        # Charger les auteurs du post et des commentaires
+        all_user_ids = [result.post.author_id]
+        if result.comments:
+            all_user_ids.extend(c.author_id for c in result.comments)
+        if result.liked_by_user_ids:
+            all_user_ids.extend(result.liked_by_user_ids)
+        users_cache = _load_users_by_ids(all_user_ids)
+        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids, users_cache=users_cache)
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -441,11 +456,64 @@ def unlike_post(
 # =============================================================================
 
 
+def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
+    """Charge les données utilisateur depuis la DB pour un ensemble d'IDs."""
+    if not user_ids:
+        return {}
+    db = SessionLocal()
+    try:
+        placeholders = ",".join(str(int(uid)) for uid in set(user_ids))
+        result = db.execute(
+            text(f"SELECT id, email, nom, prenom, role, type_utilisateur, is_active, couleur FROM users WHERE id IN ({placeholders})")
+        )
+        users = {}
+        for row in result:
+            users[row[0]] = {
+                "id": str(row[0]),
+                "email": row[1] or "",
+                "nom": row[2] or "",
+                "prenom": row[3] or "",
+                "role": row[4] or "compagnon",
+                "type_utilisateur": row[5] or "employe",
+                "is_active": bool(row[6]),
+                "couleur": row[7] or "",
+            }
+        return users
+    finally:
+        db.close()
+
+
+def _get_user_summary(user_id: int, users_cache: dict[int, dict] | None = None) -> UserSummary:
+    """Crée un UserSummary enrichi avec les vraies données utilisateur."""
+    if users_cache and user_id in users_cache:
+        u = users_cache[user_id]
+        return UserSummary(
+            id=u["id"],
+            email=u["email"],
+            nom=u["nom"],
+            prenom=u["prenom"],
+            role=u["role"],
+            type_utilisateur=u["type_utilisateur"],
+            is_active=u["is_active"],
+            couleur=u.get("couleur", ""),
+        )
+    return UserSummary(
+        id=str(user_id),
+        email="",
+        nom="",
+        prenom="",
+        role="compagnon",
+        type_utilisateur="employe",
+        is_active=True,
+    )
+
+
 def _post_dto_to_frontend_response(
     dto: PostDTO,
     medias: list = None,
     comments: list = None,
     liked_by_user_ids: list = None,
+    users_cache: dict[int, dict] | None = None,
 ) -> PostResponse:
     """Convertit un PostDTO en PostResponse format frontend."""
     # Mapper le type de ciblage backend -> frontend
@@ -455,16 +523,8 @@ def _post_dto_to_frontend_response(
     # Déterminer le type de post
     post_type = "urgent" if dto.is_urgent else "message"
 
-    # Créer un auteur minimal (à enrichir avec les vraies données utilisateur)
-    auteur = UserSummary(
-        id=str(dto.author_id),
-        email="",
-        nom="",
-        prenom="",
-        role="compagnon",
-        type_utilisateur="employe",
-        is_active=True,
-    )
+    # Créer un auteur enrichi avec les vraies données utilisateur
+    auteur = _get_user_summary(dto.author_id, users_cache)
 
     # Convertir les médias
     medias_response = []
@@ -484,15 +544,7 @@ def _post_dto_to_frontend_response(
             comments_response.append(PostCommentResponse(
                 id=str(c.id),
                 contenu=c.content,
-                auteur=UserSummary(
-                    id=str(c.author_id),
-                    email="",
-                    nom="",
-                    prenom="",
-                    role="compagnon",
-                    type_utilisateur="employe",
-                    is_active=True,
-                ),
+                auteur=_get_user_summary(c.author_id, users_cache),
                 created_at=c.created_at.isoformat() if hasattr(c.created_at, 'isoformat') else str(c.created_at),
             ))
 
@@ -502,15 +554,7 @@ def _post_dto_to_frontend_response(
         for user_id in liked_by_user_ids:
             likes_response.append(PostLikeResponse(
                 user_id=str(user_id),
-                user=UserSummary(
-                    id=str(user_id),
-                    email="",
-                    nom="",
-                    prenom="",
-                    role="compagnon",
-                    type_utilisateur="employe",
-                    is_active=True,
-                ),
+                user=_get_user_summary(user_id, users_cache),
             ))
 
     return PostResponse(

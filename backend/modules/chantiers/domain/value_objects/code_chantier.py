@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, Set
 
 
 @dataclass(frozen=True)
@@ -13,14 +13,20 @@ class CodeChantier:
     Selon CDC CHT-19: Identifiant unique (ex: A001, B023).
     Format: Une lettre majuscule suivie de 3 chiffres.
 
+    Les codes spéciaux pour les absences sont également acceptés:
+    CONGES, MALADIE, FORMATION, RTT, ABSENT.
+
     Attributes:
-        value: Le code du chantier (ex: "A001").
+        value: Le code du chantier (ex: "A001", "CONGES").
     """
 
     value: str
 
     # Pattern de validation: lettre + 3 chiffres
     PATTERN: ClassVar[str] = r"^[A-Z]\d{3}$"
+
+    # Codes spéciaux pour les absences (chantiers virtuels)
+    CODES_SPECIAUX: ClassVar[Set[str]] = {"CONGES", "MALADIE", "FORMATION", "RTT", "ABSENT"}
 
     def __post_init__(self) -> None:
         """Valide le code à la création."""
@@ -30,10 +36,12 @@ class CodeChantier:
         # Normaliser en majuscules
         normalized = self.value.upper().strip()
 
-        if not re.match(self.PATTERN, normalized):
+        # Accepter les codes spéciaux ou le pattern standard
+        if normalized not in self.CODES_SPECIAUX and not re.match(self.PATTERN, normalized):
             raise ValueError(
                 f"Format de code chantier invalide: {self.value}. "
-                f"Format attendu: Une lettre suivie de 3 chiffres (ex: A001, B023)"
+                f"Format attendu: Une lettre suivie de 3 chiffres (ex: A001, B023) "
+                f"ou un code spécial ({', '.join(sorted(self.CODES_SPECIAUX))})"
             )
 
         object.__setattr__(self, "value", normalized)
@@ -43,13 +51,22 @@ class CodeChantier:
         return self.value
 
     @property
+    def is_special(self) -> bool:
+        """Indique si c'est un code spécial (absence)."""
+        return self.value in self.CODES_SPECIAUX
+
+    @property
     def letter(self) -> str:
-        """Retourne la lettre du code."""
+        """Retourne la lettre du code (None pour codes spéciaux)."""
+        if self.is_special:
+            return self.value[0]
         return self.value[0]
 
     @property
     def number(self) -> int:
-        """Retourne la partie numérique du code."""
+        """Retourne la partie numérique du code (0 pour codes spéciaux)."""
+        if self.is_special:
+            return 0
         return int(self.value[1:])
 
     @classmethod

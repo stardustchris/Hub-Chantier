@@ -145,8 +145,8 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
       },
       (error) => {
         logger.warn('Erreur géolocalisation', { error: error.message })
-        // Fallback sur Lyon si géolocalisation refusée
-        resolve({ latitude: 45.7578, longitude: 4.8320, city: 'Lyon' })
+        // Fallback sur Chambéry si géolocalisation refusée
+        resolve({ latitude: 45.5646, longitude: 5.9178, city: 'Chambéry' })
       },
       {
         enableHighAccuracy: false,

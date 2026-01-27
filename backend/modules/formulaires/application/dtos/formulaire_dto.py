@@ -77,6 +77,11 @@ class FormulaireRempliDTO:
     parent_id: Optional[int]
     created_at: datetime
     updated_at: datetime
+    # Champs enrichis (noms des entites liees)
+    template_nom: Optional[str] = None
+    template_categorie: Optional[str] = None
+    chantier_nom: Optional[str] = None
+    user_nom: Optional[str] = None
 
     @classmethod
     def from_entity(cls, formulaire: FormulaireRempli) -> "FormulaireRempliDTO":

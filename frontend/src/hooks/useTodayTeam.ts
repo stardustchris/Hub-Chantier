@@ -1,9 +1,10 @@
 /**
  * useTodayTeam - Hook pour charger l'équipe du jour depuis les affectations du planning
  * Affiche les personnes assignées aux mêmes chantiers que l'utilisateur connecté
+ * Groupé par chantier pour permettre la synchro avec le planning en cours
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { planningService } from '../services/planning'
 import { logger } from '../services/logger'
@@ -15,10 +16,22 @@ export interface TeamMember {
   role: string
   color: string
   phone?: string
+  chantierId?: string
+  chantierName?: string
+}
+
+export interface ChantierTeam {
+  chantierId: string
+  chantierName: string
+  members: TeamMember[]
 }
 
 export interface UseTodayTeamReturn {
   members: TeamMember[]
+  /** Équipes groupées par chantier */
+  teams: ChantierTeam[]
+  /** Équipe filtrée pour un chantier donné */
+  getTeamForChantier: (chantierId: string) => TeamMember[]
   isLoading: boolean
   error: string | null
   refresh: () => Promise<void>
@@ -44,15 +57,32 @@ const ROLE_LABELS: Record<string, string> = {
   sous_traitant: 'Sous-traitant',
 }
 
+function sortMembers(members: TeamMember[]): TeamMember[] {
+  const roleOrder: Record<string, number> = {
+    'Direction': 0,
+    'Conducteur de travaux': 1,
+    'Chef de chantier': 2,
+    'Ouvrier': 3,
+    'Interimaire': 4,
+    'Sous-traitant': 5,
+  }
+  return [...members].sort((a, b) => {
+    const orderA = roleOrder[a.role] ?? 99
+    const orderB = roleOrder[b.role] ?? 99
+    if (orderA !== orderB) return orderA - orderB
+    return a.lastName.localeCompare(b.lastName)
+  })
+}
+
 export function useTodayTeam(): UseTodayTeamReturn {
   const { user } = useAuth()
-  const [members, setMembers] = useState<TeamMember[]>([])
+  const [allMembers, setAllMembers] = useState<TeamMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const loadTodayTeam = useCallback(async () => {
     if (!user?.id) {
-      setMembers([])
+      setAllMembers([])
       setIsLoading(false)
       return
     }
@@ -85,17 +115,17 @@ export function useTodayTeam(): UseTodayTeamReturn {
         allAffectations = allAffectations.filter(a => userChantierIds.includes(a.chantier_id))
       }
 
-      // 3. Extraire les utilisateurs uniques (exclure l'utilisateur connecté)
-      const seenUserIds = new Set<string>()
+      // 3. Extraire les utilisateurs avec leur chantier
       const teamMembers: TeamMember[] = []
+      // Dédupliquer par couple (utilisateur_id, chantier_id)
+      const seen = new Set<string>()
 
       for (const affectation of allAffectations) {
-        if (affectation.utilisateur_id === user.id) continue // Exclure soi-même
-        if (seenUserIds.has(affectation.utilisateur_id)) continue // Éviter les doublons
-        seenUserIds.add(affectation.utilisateur_id)
+        if (affectation.utilisateur_id === user.id) continue
+        const key = `${affectation.utilisateur_id}-${affectation.chantier_id}`
+        if (seen.has(key)) continue
+        seen.add(key)
 
-        // Utiliser les infos disponibles dans l'affectation
-        // utilisateur_nom contient le nom complet "Prenom Nom"
         const fullName = affectation.utilisateur_nom || 'Utilisateur'
         const nameParts = fullName.split(' ')
         const prenom = nameParts[0] || 'Utilisateur'
@@ -108,30 +138,13 @@ export function useTodayTeam(): UseTodayTeamReturn {
           lastName: nom,
           role: ROLE_LABELS[role] || role,
           color: affectation.utilisateur_couleur || ROLE_COLORS[role] || '#6b7280',
-          // Note: utilisateur_telephone n'est pas dans l'interface Affectation actuelle
           phone: undefined,
+          chantierId: affectation.chantier_id,
+          chantierName: affectation.chantier_nom || 'Chantier',
         })
       }
 
-      // Trier par rôle (chef de chantier en premier, puis alphabétique)
-      teamMembers.sort((a, b) => {
-        // Priorité des rôles
-        const roleOrder: Record<string, number> = {
-          'Direction': 0,
-          'Conducteur de travaux': 1,
-          'Chef de chantier': 2,
-          'Ouvrier': 3,
-          'Interimaire': 4,
-          'Sous-traitant': 5,
-        }
-        const orderA = roleOrder[a.role] ?? 99
-        const orderB = roleOrder[b.role] ?? 99
-        if (orderA !== orderB) return orderA - orderB
-        // Puis alphabétique
-        return a.lastName.localeCompare(b.lastName)
-      })
-
-      setMembers(teamMembers)
+      setAllMembers(sortMembers(teamMembers))
     } catch (err) {
       logger.error('Erreur chargement équipe du jour', err)
       setError('Impossible de charger l\'équipe')
@@ -144,8 +157,41 @@ export function useTodayTeam(): UseTodayTeamReturn {
     loadTodayTeam()
   }, [loadTodayTeam])
 
+  // Grouper par chantier
+  const teams = useMemo<ChantierTeam[]>(() => {
+    const map = new Map<string, ChantierTeam>()
+    for (const m of allMembers) {
+      if (!m.chantierId) continue
+      if (!map.has(m.chantierId)) {
+        map.set(m.chantierId, {
+          chantierId: m.chantierId,
+          chantierName: m.chantierName || 'Chantier',
+          members: [],
+        })
+      }
+      map.get(m.chantierId)!.members.push(m)
+    }
+    return Array.from(map.values())
+  }, [allMembers])
+
+  // Dédupliquer les membres pour la vue "tous" (un membre sur plusieurs chantiers = une seule entrée)
+  const uniqueMembers = useMemo(() => {
+    const seen = new Set<string>()
+    return allMembers.filter(m => {
+      if (seen.has(m.id)) return false
+      seen.add(m.id)
+      return true
+    })
+  }, [allMembers])
+
+  const getTeamForChantier = useCallback((chantierId: string) => {
+    return allMembers.filter(m => m.chantierId === chantierId)
+  }, [allMembers])
+
   return {
-    members,
+    members: uniqueMembers,
+    teams,
+    getTeamForChantier,
     isLoading,
     error,
     refresh: loadTodayTeam,

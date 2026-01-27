@@ -7,7 +7,7 @@
  * - useDashboardFeed: gestion du feed
  */
 
-import { useCallback, useRef, useEffect } from 'react'
+import { useCallback, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
@@ -72,6 +72,22 @@ export default function DashboardPage() {
       weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
     }
   }, [weatherAlert])
+
+  // Déterminer le slot en cours ou le prochain (synchro équipe avec planning)
+  const currentSlot = useMemo(() => {
+    const realSlots = todayPlanning.slots.filter(s => s.period !== 'break')
+    // Priorité : slot en cours > prochain slot planifié > premier slot
+    return realSlots.find(s => s.status === 'in_progress')
+      || realSlots.find(s => s.status === 'planned')
+      || realSlots[0]
+      || null
+  }, [todayPlanning.slots])
+
+  // Équipe filtrée pour le chantier du slot en cours
+  const currentTeamMembers = useMemo(() => {
+    if (!currentSlot?.chantierId) return todayTeam.members
+    return todayTeam.getTeamForChantier(currentSlot.chantierId)
+  }, [currentSlot, todayTeam])
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
@@ -172,13 +188,18 @@ export default function DashboardPage() {
             <StatsCard
               hoursWorked={weeklyStats.hoursWorked}
               hoursProgress={weeklyStats.hoursProgress}
-              tasksCompleted={weeklyStats.tasksCompleted}
-              tasksTotal={weeklyStats.tasksTotal}
+              joursTravailesMois={weeklyStats.joursTravailesMois}
+              joursTotalMois={weeklyStats.joursTotalMois}
+              congesPris={weeklyStats.congesPris}
+              congesTotal={weeklyStats.congesTotal}
             />
           </div>
 
           {/* Quick Actions */}
-          <QuickActions onActionClick={handleQuickAction} />
+          <QuickActions
+            onActionClick={handleQuickAction}
+            tasksBadge={weeklyStats.tasksTotal > 0 ? `${weeklyStats.tasksCompleted}/${weeklyStats.tasksTotal}` : undefined}
+          />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -288,26 +309,35 @@ export default function DashboardPage() {
 
                 {/* Posts */}
                 <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-                  {/* Bulletin météo du jour en premier */}
-                  {weather && (
-                    <WeatherBulletinPost weather={weather} alert={weatherAlert} />
-                  )}
-
                   {feed.sortedPosts.length === 0 && !feed.isLoading && !weather ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Aucune publication pour le moment</p>
                     </div>
                   ) : (
-                    feed.sortedPosts.map((post) => (
-                      <DashboardPostCard
-                        key={post.id}
-                        post={post}
-                        onLike={feed.handleLike}
-                        onPin={feed.handlePin}
-                        onDelete={feed.handleDelete}
-                      />
-                    ))
+                    <>
+                      {feed.sortedPosts.map((post) => (
+                        <DashboardPostCard
+                          key={post.id}
+                          post={post}
+                          onLike={feed.handleLike}
+                          onPin={feed.handlePin}
+                          onDelete={feed.handleDelete}
+                        />
+                      ))}
+
+                      {/* Bulletin météo du jour - lié au 1er chantier du planning */}
+                      {weather && (
+                        <WeatherBulletinPost
+                          weather={weather}
+                          alert={weatherAlert}
+                          chantierName={currentSlot?.siteName}
+                          chantierAddress={currentSlot?.siteAddress}
+                          chantierLatitude={currentSlot?.siteLatitude}
+                          chantierLongitude={currentSlot?.siteLongitude}
+                        />
+                      )}
+                    </>
                   )}
 
                   {feed.hasMore && !feed.isLoading && (
@@ -325,7 +355,7 @@ export default function DashboardPage() {
             {/* Right Column */}
             <div className="space-y-4">
               <DocumentsCard />
-              <TeamCard members={todayTeam.members} />
+              <TeamCard members={currentTeamMembers} chantierName={currentSlot?.siteName} />
             </div>
           </div>
         </div>

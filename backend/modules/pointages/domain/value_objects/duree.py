@@ -20,8 +20,8 @@ class Duree:
 
     def __post_init__(self) -> None:
         """Valide les données."""
-        if self.heures < 0 or self.heures > 23:
-            raise ValueError(f"Heures invalides: {self.heures}. Doit être entre 0 et 23.")
+        if self.heures < 0 or self.heures > 999:
+            raise ValueError(f"Heures invalides: {self.heures}. Doit être entre 0 et 999.")
         if self.minutes < 0 or self.minutes > 59:
             raise ValueError(f"Minutes invalides: {self.minutes}. Doit être entre 0 et 59.")
 
@@ -43,7 +43,7 @@ class Duree:
         """
         if total_minutes < 0:
             raise ValueError("Les minutes ne peuvent pas être négatives")
-        heures = min(total_minutes // 60, 23)
+        heures = total_minutes // 60
         minutes = total_minutes % 60
         return cls(heures=heures, minutes=minutes)
 

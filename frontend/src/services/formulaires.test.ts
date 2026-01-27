@@ -176,11 +176,11 @@ describe('formulairesService', () => {
 
   describe('updateFormulaire', () => {
     it('met à jour un formulaire', async () => {
-      const mockFormulaire = { id: 1, champs: [{ nom: 'field1', valeur: 'value1', type_champ: 'text' }] }
+      const mockFormulaire = { id: 1, champs: [{ nom: 'field1', valeur: 'value1', type_champ: 'texte' }] }
       vi.mocked(api.put).mockResolvedValue({ data: mockFormulaire })
 
       const updateData = {
-        champs: [{ nom: 'field1', valeur: 'value1', type_champ: 'text' as const }],
+        champs: [{ nom: 'field1', valeur: 'value1', type_champ: 'texte' as const }],
       }
       const result = await formulairesService.updateFormulaire(1, updateData)
 

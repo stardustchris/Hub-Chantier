@@ -18,7 +18,7 @@ import type { ChampTemplate } from '../../types'
 const createMockChamp = (overrides: Partial<ChampTemplate> = {}): ChampTemplate => ({
   nom: 'test_field',
   label: 'Test Field',
-  type_champ: 'text',
+  type_champ: 'texte',
   obligatoire: false,
   ordre: 1,
   ...overrides,
@@ -188,9 +188,9 @@ describe('ChampEditor', () => {
       render(<ChampEditor {...defaultProps} isExpanded={true} />)
 
       const typeSelect = screen.getByDisplayValue('Texte court')
-      await user.selectOptions(typeSelect, 'textarea')
+      await user.selectOptions(typeSelect, 'texte_long')
 
-      expect(mockOnUpdate).toHaveBeenCalledWith({ type_champ: 'textarea' })
+      expect(mockOnUpdate).toHaveBeenCalledWith({ type_champ: 'texte_long' })
     })
 
     it('permet de modifier le placeholder', async () => {
@@ -243,7 +243,7 @@ describe('ChampEditor', () => {
         <ChampEditor
           {...defaultProps}
           isExpanded={true}
-          champ={createMockChamp({ type_champ: 'text' })}
+          champ={createMockChamp({ type_champ: 'texte' })}
         />
       )
       expect(screen.queryByText('Options (une par ligne)')).not.toBeInTheDocument()
@@ -289,7 +289,7 @@ describe('ChampEditor', () => {
         <ChampEditor
           {...defaultProps}
           isExpanded={true}
-          champ={createMockChamp({ type_champ: 'number' })}
+          champ={createMockChamp({ type_champ: 'nombre' })}
         />
       )
       expect(screen.getByText('Valeur min')).toBeInTheDocument()
@@ -301,7 +301,7 @@ describe('ChampEditor', () => {
         <ChampEditor
           {...defaultProps}
           isExpanded={true}
-          champ={createMockChamp({ type_champ: 'text' })}
+          champ={createMockChamp({ type_champ: 'texte' })}
         />
       )
       expect(screen.queryByText('Valeur min')).not.toBeInTheDocument()
@@ -313,7 +313,7 @@ describe('ChampEditor', () => {
         <ChampEditor
           {...defaultProps}
           isExpanded={true}
-          champ={createMockChamp({ type_champ: 'number' })}
+          champ={createMockChamp({ type_champ: 'nombre' })}
         />
       )
 
@@ -332,7 +332,7 @@ describe('ChampEditor', () => {
         <ChampEditor
           {...defaultProps}
           isExpanded={true}
-          champ={createMockChamp({ type_champ: 'number' })}
+          champ={createMockChamp({ type_champ: 'nombre' })}
         />
       )
 

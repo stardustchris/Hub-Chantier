@@ -10,11 +10,10 @@ describe('StatsCard', () => {
   it('affiche les valeurs par defaut', () => {
     render(<StatsCard />)
 
-    expect(screen.getByText('Cette semaine')).toBeInTheDocument()
     expect(screen.getByText('Heures travaillees')).toBeInTheDocument()
-    expect(screen.getByText('32h15')).toBeInTheDocument()
-    expect(screen.getByText('Taches terminees')).toBeInTheDocument()
-    expect(screen.getByText('8/12')).toBeInTheDocument()
+    expect(screen.getByText('Semaine en cours')).toBeInTheDocument()
+    expect(screen.getByText('Jours travailles (mois)')).toBeInTheDocument()
+    expect(screen.getByText('Conges pris (annee)')).toBeInTheDocument()
   })
 
   it('affiche les heures travaillees personnalisees', () => {
@@ -30,16 +29,18 @@ describe('StatsCard', () => {
     expect(progressBar).toBeInTheDocument()
   })
 
-  it('affiche les taches terminees', () => {
-    render(<StatsCard tasksCompleted={5} tasksTotal={10} />)
+  it('affiche les jours travailles du mois', () => {
+    render(<StatsCard joursTravailesMois={15} joursTotalMois={22} />)
 
-    expect(screen.getByText('5/10')).toBeInTheDocument()
+    expect(screen.getByText('15')).toBeInTheDocument()
+    expect(screen.getByText('/22')).toBeInTheDocument()
   })
 
-  it('affiche 0 taches si non specifiees', () => {
-    render(<StatsCard tasksCompleted={0} tasksTotal={0} />)
+  it('affiche les conges pris', () => {
+    render(<StatsCard congesPris={3.5} congesTotal={25} />)
 
-    expect(screen.getByText('0/0')).toBeInTheDocument()
+    expect(screen.getByText('3.5')).toBeInTheDocument()
+    expect(screen.getByText('/25j')).toBeInTheDocument()
   })
 
   it('affiche 100% de progression', () => {
@@ -54,12 +55,14 @@ describe('StatsCard', () => {
       <StatsCard
         hoursWorked="168h00"
         hoursProgress={150}
-        tasksCompleted={999}
-        tasksTotal={1000}
+        joursTravailesMois={30}
+        joursTotalMois={31}
+        congesPris={25}
+        congesTotal={25}
       />
     )
 
     expect(screen.getByText('168h00')).toBeInTheDocument()
-    expect(screen.getByText('999/1000')).toBeInTheDocument()
+    expect(screen.getByText('30')).toBeInTheDocument()
   })
 })

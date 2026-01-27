@@ -275,11 +275,28 @@ class PointageController:
     ) -> List[Dict[str, Any]]:
         """Retourne la vue par chantiers."""
         result = self._vue_semaine_uc.get_vue_chantiers(semaine_debut, chantier_ids)
+
+        # Enrichir les noms via entity_info_service
+        user_names: Dict[int, str] = {}
+        chantier_enriched: Dict[int, Dict[str, str]] = {}
+        if self.entity_info_service:
+            for v in result:
+                if v.chantier_id not in chantier_enriched:
+                    cinfo = self.entity_info_service.get_chantier_info(v.chantier_id)
+                    if cinfo:
+                        chantier_enriched[v.chantier_id] = {"nom": cinfo.nom, "couleur": cinfo.couleur or "#808080"}
+                for jour, pointages in v.pointages_par_jour.items():
+                    for p in pointages:
+                        if p.utilisateur_id not in user_names:
+                            info = self.entity_info_service.get_user_info(p.utilisateur_id)
+                            if info:
+                                user_names[p.utilisateur_id] = info.nom
+
         return [
             {
                 "chantier_id": v.chantier_id,
-                "chantier_nom": v.chantier_nom,
-                "chantier_couleur": v.chantier_couleur,
+                "chantier_nom": chantier_enriched.get(v.chantier_id, {}).get("nom", v.chantier_nom),
+                "chantier_couleur": chantier_enriched.get(v.chantier_id, {}).get("couleur", v.chantier_couleur),
                 "total_heures": v.total_heures,
                 "total_heures_decimal": v.total_heures_decimal,
                 "pointages_par_jour": {
@@ -287,7 +304,7 @@ class PointageController:
                         {
                             "pointage_id": p.pointage_id,
                             "utilisateur_id": p.utilisateur_id,
-                            "utilisateur_nom": p.utilisateur_nom,
+                            "utilisateur_nom": user_names.get(p.utilisateur_id, p.utilisateur_nom),
                             "heures_normales": p.heures_normales,
                             "heures_supplementaires": p.heures_supplementaires,
                             "total_heures": p.total_heures,
@@ -307,19 +324,52 @@ class PointageController:
     ) -> List[Dict[str, Any]]:
         """Retourne la vue par compagnons."""
         result = self._vue_semaine_uc.get_vue_compagnons(semaine_debut, utilisateur_ids)
+
+        # Enrichir les noms d'utilisateurs et chantiers via entity_info_service
+        user_names: Dict[int, str] = {}
+        chantier_info: Dict[int, Dict[str, str]] = {}
+        if self.entity_info_service:
+            for v in result:
+                if v.utilisateur_id not in user_names:
+                    info = self.entity_info_service.get_user_info(v.utilisateur_id)
+                    if info:
+                        user_names[v.utilisateur_id] = info.nom
+                for c in v.chantiers:
+                    if c.chantier_id not in chantier_info:
+                        cinfo = self.entity_info_service.get_chantier_info(c.chantier_id)
+                        if cinfo:
+                            chantier_info[c.chantier_id] = {"nom": cinfo.nom, "couleur": cinfo.couleur or "#808080"}
+
         return [
             {
                 "utilisateur_id": v.utilisateur_id,
-                "utilisateur_nom": v.utilisateur_nom,
+                "utilisateur_nom": user_names.get(v.utilisateur_id, v.utilisateur_nom),
                 "total_heures": v.total_heures,
                 "total_heures_decimal": v.total_heures_decimal,
                 "chantiers": [
                     {
                         "chantier_id": c.chantier_id,
-                        "chantier_nom": c.chantier_nom,
-                        "chantier_couleur": c.chantier_couleur,
+                        "chantier_nom": chantier_info.get(c.chantier_id, {}).get("nom", c.chantier_nom),
+                        "chantier_couleur": chantier_info.get(c.chantier_id, {}).get("couleur", c.chantier_couleur),
                         "total_heures": c.total_heures,
-                        "pointages_par_jour": c.pointages_par_jour,
+                        "pointages_par_jour": {
+                            jour: [
+                                {
+                                    "id": p.id,
+                                    "utilisateur_id": p.utilisateur_id,
+                                    "chantier_id": p.chantier_id,
+                                    "date_pointage": p.date_pointage,
+                                    "heures_normales": p.heures_normales,
+                                    "heures_supplementaires": p.heures_supplementaires,
+                                    "total_heures": p.total_heures,
+                                    "statut": p.statut,
+                                    "is_editable": p.is_editable,
+                                    "commentaire": p.commentaire,
+                                }
+                                for p in pointages_list
+                            ]
+                            for jour, pointages_list in c.pointages_par_jour.items()
+                        },
                     }
                     for c in v.chantiers
                 ],

@@ -150,7 +150,7 @@ export function ChampEditor({
           </div>
 
           {/* Options pour select/radio */}
-          {(champ.type_champ === 'select' || champ.type_champ === 'radio') && (
+          {(champ.type_champ === 'select' || champ.type_champ === 'radio' || champ.type_champ === 'multi_select') && (
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 Options (une par ligne)
@@ -170,7 +170,7 @@ export function ChampEditor({
           )}
 
           {/* Min/Max pour number */}
-          {champ.type_champ === 'number' && (
+          {champ.type_champ === 'nombre' && (
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">

@@ -120,7 +120,7 @@ class TestDuree:
     def test_creation_invalid_heures(self):
         """Test création avec heures invalides."""
         with pytest.raises(ValueError):
-            Duree(heures=24, minutes=0)
+            Duree(heures=1000, minutes=0)
         with pytest.raises(ValueError):
             Duree(heures=-1, minutes=0)
 

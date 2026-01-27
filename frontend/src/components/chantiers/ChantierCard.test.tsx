@@ -71,11 +71,11 @@ describe('ChantierCard', () => {
     expect(screen.getByText('En cours')).toBeInTheDocument()
   })
 
-  it('affiche le statut ouvert', () => {
+  it('affiche le statut a lancer', () => {
     const chantier = createMockChantier({ statut: 'ouvert' })
     renderWithRouter(chantier)
 
-    expect(screen.getByText('Ouvert')).toBeInTheDocument()
+    expect(screen.getByText('A lancer')).toBeInTheDocument()
   })
 
   it('affiche le statut receptionne', () => {

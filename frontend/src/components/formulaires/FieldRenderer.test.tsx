@@ -54,7 +54,7 @@ vi.mock('./SignaturePad', () => ({
 const createMockChamp = (overrides: Partial<ChampTemplate> = {}): ChampTemplate => ({
   nom: 'test_field',
   label: 'Test Field',
-  type_champ: 'text',
+  type_champ: 'texte',
   obligatoire: false,
   ordre: 1,
   ...overrides,
@@ -152,7 +152,7 @@ describe('FieldRenderer', () => {
       render(
         <FieldRenderer
           {...defaultProps}
-          champ={createMockChamp({ type_champ: 'textarea' })}
+          champ={createMockChamp({ type_champ: 'texte_long' })}
         />
       )
       expect(screen.getByRole('textbox')).toHaveClass('min-h-[100px]')
@@ -164,7 +164,7 @@ describe('FieldRenderer', () => {
       render(
         <FieldRenderer
           {...defaultProps}
-          champ={createMockChamp({ type_champ: 'number' })}
+          champ={createMockChamp({ type_champ: 'nombre' })}
         />
       )
       expect(screen.getByRole('spinbutton')).toBeInTheDocument()
@@ -175,7 +175,7 @@ describe('FieldRenderer', () => {
         <FieldRenderer
           {...defaultProps}
           champ={createMockChamp({
-            type_champ: 'number',
+            type_champ: 'nombre',
             min_value: 0,
             max_value: 100,
           })}
@@ -192,7 +192,7 @@ describe('FieldRenderer', () => {
       render(
         <FieldRenderer
           {...defaultProps}
-          champ={createMockChamp({ type_champ: 'email' })}
+          champ={createMockChamp({ type_champ: 'texte' })}
         />
       )
       const input = screen.getByRole('textbox')
@@ -203,7 +203,7 @@ describe('FieldRenderer', () => {
       render(
         <FieldRenderer
           {...defaultProps}
-          champ={createMockChamp({ type_champ: 'email' })}
+          champ={createMockChamp({ type_champ: 'texte' })}
         />
       )
       expect(screen.getByPlaceholderText('exemple@email.com')).toBeInTheDocument()
@@ -228,7 +228,7 @@ describe('FieldRenderer', () => {
       render(
         <FieldRenderer
           {...defaultProps}
-          champ={createMockChamp({ type_champ: 'time' })}
+          champ={createMockChamp({ type_champ: 'heure' })}
         />
       )
       const input = document.querySelector('input[type="time"]')

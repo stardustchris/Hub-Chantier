@@ -70,8 +70,8 @@ export function useWeather(): UseWeatherReturn {
         // Obtenir la position par géolocalisation
         try {
           position = await weatherService.getCurrentPosition()
-          // Si on a reçu la position de fallback (Lyon), le signaler
-          if (position.city === 'Lyon' && position.latitude === 45.7578) {
+          // Si on a reçu la position de fallback (Chambéry), le signaler
+          if (position.city === 'Chambéry' && position.latitude === 45.5646) {
             setLocationSource('fallback')
           } else {
             setLocationSource('geolocation')

@@ -10,20 +10,15 @@ interface QuickAction {
   label: string
   icon: 'clock' | 'check' | 'file' | 'camera'
   color: string
+  badge?: string
   onClick?: () => void
 }
 
 interface QuickActionsProps {
   actions?: QuickAction[]
   onActionClick?: (actionId: string) => void
+  tasksBadge?: string
 }
-
-const defaultActions: QuickAction[] = [
-  { id: 'hours', label: 'Mes heures', icon: 'clock', color: 'blue' },
-  { id: 'tasks', label: 'Mes taches', icon: 'check', color: 'green' },
-  { id: 'docs', label: 'Documents', icon: 'file', color: 'purple' },
-  { id: 'photo', label: 'Photo', icon: 'camera', color: 'orange' },
-]
 
 const iconMap = {
   clock: Clock,
@@ -39,15 +34,30 @@ const colorMap = {
   orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
 }
 
+const defaultActions: QuickAction[] = [
+  { id: 'hours', label: 'Mes heures', icon: 'clock', color: 'blue' },
+  { id: 'tasks', label: 'Mes taches', icon: 'check', color: 'green' },
+  { id: 'docs', label: 'Documents', icon: 'file', color: 'purple' },
+  { id: 'photo', label: 'Photo', icon: 'camera', color: 'orange' },
+]
+
 export default function QuickActions({
-  actions = defaultActions,
+  actions,
   onActionClick,
+  tasksBadge,
 }: QuickActionsProps) {
+  const displayActions = actions || defaultActions.map(a => {
+    if (a.id === 'tasks' && tasksBadge) {
+      return { ...a, badge: tasksBadge }
+    }
+    return a
+  })
+
   return (
     <div>
       <h2 className="font-semibold text-gray-800 mb-3">Actions rapides</h2>
       <div className="grid grid-cols-4 gap-3">
-        {actions.map((action) => {
+        {displayActions.map((action) => {
           const Icon = iconMap[action.icon]
           const colors = colorMap[action.color as keyof typeof colorMap] || colorMap.blue
 
@@ -58,10 +68,15 @@ export default function QuickActions({
                 action.onClick?.()
                 onActionClick?.(action.id)
               }}
-              className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow"
+              className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow relative"
             >
-              <div className={`w-12 h-12 rounded-full ${colors.bg} flex items-center justify-center mb-2`}>
+              <div className={`w-12 h-12 rounded-full ${colors.bg} flex items-center justify-center mb-2 relative`}>
                 <Icon className={`w-6 h-6 ${colors.text}`} />
+                {action.badge && (
+                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {action.badge}
+                  </span>
+                )}
               </div>
               <span className="text-sm text-gray-700 font-medium text-center">{action.label}</span>
             </button>

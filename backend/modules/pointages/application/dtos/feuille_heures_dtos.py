@@ -144,6 +144,22 @@ class VueCompagnonDTO:
 
 
 @dataclass
+class PointageJourCompagnonDTO:
+    """DTO pour un pointage dans la vue compagnon (par jour/chantier)."""
+
+    id: int
+    utilisateur_id: int
+    chantier_id: int
+    date_pointage: str
+    heures_normales: str
+    heures_supplementaires: str
+    total_heures: str
+    statut: str
+    is_editable: bool
+    commentaire: Optional[str] = None
+
+
+@dataclass
 class ChantierPointageDTO:
     """DTO pour les pointages d'un chantier dans la vue compagnon."""
 
@@ -151,7 +167,7 @@ class ChantierPointageDTO:
     chantier_nom: str
     chantier_couleur: str
     total_heures: str
-    pointages_par_jour: Dict[str, str]
+    pointages_par_jour: Dict[str, List["PointageJourCompagnonDTO"]]
 
 
 @dataclass

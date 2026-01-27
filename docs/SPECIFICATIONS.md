@@ -21,7 +21,7 @@ Application SaaS de Gestion de Chantiers
 7. [Feuilles d'Heures](#7-feuilles-dheures)
 8. [Formulaires Chantier](#8-formulaires-chantier)
 9. [Gestion Documentaire (GED)](#9-gestion-documentaire-ged)
-10. [Memos](#10-memos)
+10. [Signalements](#10-signalements)
 11. [Logistique - Gestion du Materiel](#11-logistique---gestion-du-materiel)
 12. [Gestion des Interventions](#12-gestion-des-interventions)
 13. [Gestion des Taches](#13-gestion-des-taches)
@@ -116,16 +116,48 @@ Version simplifiee et orientee terrain pour les employes.
 - Bouton "Pointer l'arrivee" bien visible
 - Affichage de la derniere pointee
 
-**2. CARTE METEO (bleue) :**
-- Temperature actuelle + Icone meteo
-- Vent, probabilite de pluie, Min/Max (essentiel pour travaux exterieurs)
+**2. CARTE METEO (dynamique) :**
+- Temperature actuelle + Icone meteo (6 conditions : ensoleille, nuageux, pluvieux, orageux, neigeux, brumeux)
+- Geolocalisation automatique du device (fallback Lyon si refusee)
+- Donnees reelles via API Open-Meteo (gratuite, sans cle API)
+- Vent (vitesse + direction), probabilite de pluie, Min/Max, indice UV
+- Degradé de couleur dynamique selon la condition meteo
+- Badge d'alerte meteo vigilance (jaune/orange/rouge) si conditions dangereuses
+- Clic ouvre l'application meteo native (iOS/Android) ou Meteo-France (desktop)
+- Cache 15 minutes avec rafraichissement automatique
+
+**3. CARTE STATISTIQUES :**
+- Heures travaillees cette semaine / objectif
+- Taches completees / total
+- Clic navigue vers les feuilles d'heures
+
+**4. BULLETIN METEO (dans le feed d'actualites) :**
+- Affiche en premier dans le feed chaque jour
+- Resume textuel du bulletin meteo genere automatiquement
+- Details : temperature, vent, pluie, UV, lever/coucher soleil
+- Alerte meteo detaillee si vigilance active (phenomenes, description, recommandations BTP)
+
+**5. CARTE EQUIPE DU JOUR :**
+- Membres de l'equipe charges depuis les affectations du planning du jour
+- Affiche les collegues assignes aux memes chantiers (excluant soi-meme)
+- Initiales colorees + role + bouton appel si telephone disponible
+- Etat vide si aucun collegue affecte
+
+**6. CARTE MES DOCUMENTS :**
+- Documents recents lies aux chantiers presents dans le planning du jour
+- Ouverture cross-platform (iOS/Android/Desktop)
+- Pagination avec "Voir plus" (4 documents initialement)
+- Lien "Voir tout" vers la GED
 
 #### 2.3.2 Planning de la journee
 
 Affichage timeline visuel :
 - Horaires : 08:00 - 12:00 (Matin) / 13:30 - 17:00 (Apres-midi)
 - Nom et adresse du chantier + Taches assignees avec priorite
-- Boutons : "Itineraire" (GPS) et "Appeler le chef"
+- Statut reel du chantier affiche (A lancer / En cours / Receptionne / Ferme)
+- Boutons : "Itineraire" (GPS) et "Appeler chef de chantier"
+- "Voir plus" si plus de 3 chantiers planifies (pagination)
+- Badge "Equipe" pour les affectations non-personnelles (admin/conducteur)
 - Pause dejeuner (grisee) + Apercu planning lendemain
 
 #### 2.3.3 Zone de publication compagnon
@@ -158,6 +190,26 @@ Affichage timeline visuel :
 | FEED-18 | Historique | Scroll infini pour charger plus | ✅ |
 | FEED-19 | Compression photos | Automatique (max 2 Mo) | ✅ |
 | FEED-20 | Archivage | Posts +7 jours archives mais consultables | ✅ |
+
+#### 2.4.2 Fonctionnalites du Dashboard
+
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| DASH-01 | Carte pointage | Clock-in/out temps reel avec modification heure | ✅ |
+| DASH-02 | Carte meteo reelle | Geolocalisation + API Open-Meteo + 6 conditions | ✅ |
+| DASH-03 | Alertes meteo | Vigilance jaune/orange/rouge avec notification push | ✅ |
+| DASH-04 | Bulletin meteo feed | Post automatique resume meteo dans actualites | ✅ |
+| DASH-05 | Carte statistiques | Heures + taches, clic vers feuilles heures | ✅ |
+| DASH-06 | Planning du jour | Affectations reelles, statut chantier reel | ✅ |
+| DASH-07 | Voir plus planning | Pagination si + de 3 chantiers | ✅ |
+| DASH-08 | Equipe du jour | Collegues charges depuis planning affectations | ✅ |
+| DASH-09 | Mes documents | Documents recents des chantiers planifies | ✅ |
+| DASH-10 | Voir plus documents | Pagination avec chargement incremental | ✅ |
+| DASH-11 | Actions rapides | Heures, Chantiers, Documents, Photo | ✅ |
+| DASH-12 | Navigation GPS | Itineraire via Waze/Google Maps/Apple Maps | ✅ |
+| DASH-13 | Appel chef chantier | Bouton appel depuis le planning du jour | ✅ |
+| DASH-14 | Badge equipe | Indicateur affectations non-personnelles | ✅ |
+| DASH-15 | Notifications push meteo | Alerte auto si conditions dangereuses | ✅ |
 
 **Legende**: ✅ Complet | ⏳ En attente (Infra) | 🔮 Future version
 
@@ -253,6 +305,7 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 | CHT-18 | Heures estimees | Budget temps previsionnel du chantier | ✅ |
 | CHT-19 | Code chantier | Identifiant unique (ex: A001, B023) | ✅ |
 | CHT-20 | Dates debut/fin previsionnelles | Planning macro du projet | ✅ |
+| CHT-21 | Onglet Logistique | Reservations materiel, stats et planning dans la fiche | ✅ |
 
 **Note**: CHT-10 a CHT-12 sont implementes via le module Dashboard avec ciblage par chantier. Les posts cibles sur un chantier specifique apparaissent dans le fil d'actualite de ce chantier.
 
@@ -267,7 +320,8 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 | 5 | Taches | Liste des travaux hierarchiques avec avancement | Tous |
 | 6 | Feuilles de taches | Declarations quotidiennes par compagnon | Conducteur+ |
 | 7 | Feuilles d'heures | Saisie et validation du temps de travail | Tous |
-| 8 | Arrivees/Departs | Pointage et geolocalisation | Conducteur+ |
+| 8 | Logistique | Reservations materiel, stats et planning | Tous |
+| 9 | Arrivees/Departs | Pointage et geolocalisation | Conducteur+ |
 
 ### 4.4 Statuts de chantier
 
@@ -569,31 +623,31 @@ Le module Signalements permet de signaler des urgences, problemes ou information
 
 | ID | Fonctionnalite | Description | Status |
 |----|----------------|-------------|--------|
-| SIG-01 | Rattachement chantier | Signalement obligatoirement lie a un projet | |
-| SIG-02 | Liste chronologique | Affichage par date de creation | |
-| SIG-03 | Indicateur statut | 🟢 Ouvert / 🔴 Ferme | |
-| SIG-04 | Photo chantier | Vignette d'identification visuelle | |
-| SIG-05 | Horodatage | Date + heure de creation | |
-| SIG-06 | Fil de conversation | Mode chat pour echanges multiples | |
-| SIG-07 | Statut ferme avec badge | Ce signalement a ete ferme le [date] | |
-| SIG-08 | Ajout photo/video | Dans les reponses du fil | |
-| SIG-09 | Signature dans reponses | Validation des actions correctives | |
-| SIG-10 | Bouton Publier | Envoyer une reponse dans le fil | |
-| SIG-11 | Historique | X a ajoute un signalement sur Y le [date] | |
-| SIG-12 | Bouton + (FAB) | Creation rapide sur mobile | |
+| SIG-01 | Rattachement chantier | Signalement obligatoirement lie a un projet | ✅ |
+| SIG-02 | Liste chronologique | Affichage par date de creation | ✅ |
+| SIG-03 | Indicateur statut | 🟢 Ouvert / 🔴 Ferme | ✅ |
+| SIG-04 | Photo chantier | Vignette d'identification visuelle | ✅ |
+| SIG-05 | Horodatage | Date + heure de creation | ✅ |
+| SIG-06 | Fil de conversation | Mode chat pour echanges multiples | ✅ |
+| SIG-07 | Statut ferme avec badge | Ce signalement a ete ferme le [date] | ✅ |
+| SIG-08 | Ajout photo/video | Dans les reponses du fil | ✅ |
+| SIG-09 | Signature dans reponses | Validation des actions correctives | ✅ |
+| SIG-10 | Bouton Publier | Envoyer une reponse dans le fil | ✅ |
+| SIG-11 | Historique | X a ajoute un signalement sur Y le [date] | ✅ |
+| SIG-12 | Bouton + (FAB) | Creation rapide sur mobile | ✅ |
 | SIG-13 | Notifications push | Alerte temps reel a la creation | ⏳ Infra |
 
 ### 10.3 Fonctionnalites d'alertes et escalade
 
 | ID | Fonctionnalite | Description | Status |
 |----|----------------|-------------|--------|
-| SIG-14 | Priorite signalement | 4 niveaux : Critique / Haute / Moyenne / Basse | |
-| SIG-15 | Date resolution souhaitee | Echeance optionnelle fixee par le createur | |
+| SIG-14 | Priorite signalement | 4 niveaux : Critique / Haute / Moyenne / Basse | ✅ |
+| SIG-15 | Date resolution souhaitee | Echeance optionnelle fixee par le createur | ✅ |
 | SIG-16 | Alertes retard | Notification si signalement non traite dans les delais | ⏳ Infra |
 | SIG-17 | Escalade automatique | Remontee hierarchique progressive | ⏳ Infra |
-| SIG-18 | Tableau de bord alertes | Vue des signalements en retard (Admin/Conducteur) | |
-| SIG-19 | Filtres avances | Par chantier, statut, periode, priorite (Admin/Conducteur) | |
-| SIG-20 | Vue globale | Tous les signalements tous chantiers (Admin/Conducteur) | |
+| SIG-18 | Tableau de bord alertes | Vue des signalements en retard (Admin/Conducteur) | ✅ |
+| SIG-19 | Filtres avances | Par chantier, statut, periode, priorite (Admin/Conducteur) | ✅ |
+| SIG-20 | Vue globale | Tous les signalements tous chantiers (Admin/Conducteur) | ✅ |
 
 ### 10.4 Delais d'escalade par defaut
 
@@ -724,25 +778,25 @@ Le module Interventions est dedie a la gestion des interventions ponctuelles (SA
 
 ### 12.3 Fonctionnalites
 
-| ID | Fonctionnalite | Description |
-|----|----------------|-------------|
-| INT-01 | Onglet dedie Planning | 3eme onglet Gestion des interventions |
-| INT-02 | Liste des interventions | Tableau Chantier/Client/Adresse/Statut |
-| INT-03 | Creation intervention | Bouton + pour nouvelle intervention |
-| INT-04 | Fiche intervention | Client, adresse, contact, description, priorite |
-| INT-05 | Statuts intervention | A planifier / Planifiee / En cours / Terminee / Annulee |
-| INT-06 | Planning hebdomadaire | Utilisateurs en lignes, jours en colonnes |
-| INT-07 | Blocs intervention colores | Format HH:MM - HH:MM - Code - Nom client |
-| INT-08 | Multi-interventions/jour | Plusieurs par utilisateur |
-| INT-09 | Toggle Afficher les taches | Activer/desactiver l'affichage |
-| INT-10 | Affectation technicien | Drag & drop ou via modal |
-| INT-11 | Fil d'actualite | Timeline actions, photos, commentaires |
-| INT-12 | Chat intervention | Discussion instantanee equipe |
-| INT-13 | Signature client | Sur mobile avec stylet/doigt |
-| INT-14 | Rapport PDF | Generation automatique avec tous les details |
-| INT-15 | Selection posts pour rapport | Choisir les elements a inclure |
-| INT-16 | Generation mobile | Creer le PDF depuis l'application |
-| INT-17 | Affectation sous-traitants | Prestataires externes (PLB, CFA...) |
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| INT-01 | Onglet dedie Planning | 3eme onglet Gestion des interventions | ✅ |
+| INT-02 | Liste des interventions | Tableau Chantier/Client/Adresse/Statut | ✅ |
+| INT-03 | Creation intervention | Bouton + pour nouvelle intervention | ✅ |
+| INT-04 | Fiche intervention | Client, adresse, contact, description, priorite | ✅ |
+| INT-05 | Statuts intervention | A planifier / Planifiee / En cours / Terminee / Annulee | ✅ |
+| INT-06 | Planning hebdomadaire | Utilisateurs en lignes, jours en colonnes | ✅ |
+| INT-07 | Blocs intervention colores | Format HH:MM - HH:MM - Code - Nom client | ✅ |
+| INT-08 | Multi-interventions/jour | Plusieurs par utilisateur | ✅ |
+| INT-09 | Toggle Afficher les taches | Activer/desactiver l'affichage | ✅ |
+| INT-10 | Affectation technicien | Drag & drop ou via modal | ✅ |
+| INT-11 | Fil d'actualite | Timeline actions, photos, commentaires | ✅ |
+| INT-12 | Chat intervention | Discussion instantanee equipe | ✅ |
+| INT-13 | Signature client | Sur mobile avec stylet/doigt | ✅ |
+| INT-14 | Rapport PDF | Generation automatique avec tous les details | ⏳ Infra |
+| INT-15 | Selection posts pour rapport | Choisir les elements a inclure | ⏳ Infra |
+| INT-16 | Generation mobile | Creer le PDF depuis l'application | ⏳ Infra |
+| INT-17 | Affectation sous-traitants | Prestataires externes (PLB, CFA...) | ✅ |
 
 ### 12.4 Contenu du rapport PDF
 
@@ -840,6 +894,7 @@ Le module Taches permet de creer des listes de travaux structurees par chantier 
 | Canal | Utilisation | Delai |
 |-------|-------------|-------|
 | Push mobile | Affectations, validations, alertes, memos | Temps reel |
+| Push meteo | Alertes meteo vigilance (vent, orages, canicule, verglas) | Temps reel |
 | SMS | Invitations, urgences critiques | Temps reel |
 | Email | Rapports, exports, recapitulatifs hebdo | Differe |
 

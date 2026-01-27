@@ -98,26 +98,41 @@ export default function FeuillesHeuresPage() {
           <div className="bg-white rounded-lg shadow p-4 space-y-4">
             <div>
               <span className="text-sm font-medium text-gray-700 mr-2">Utilisateurs :</span>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {fh.utilisateurs.map((user) => (
-                  <button
-                    key={user.id}
-                    onClick={() => fh.handleFilterUtilisateur(Number(user.id))}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                      fh.filterUtilisateurs.includes(Number(user.id))
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {user.prenom} {user.nom}
-                  </button>
-                ))}
-                {fh.filterUtilisateurs.length > 0 && (
-                  <button onClick={fh.clearFilterUtilisateurs} className="text-xs text-gray-500 hover:text-gray-700 ml-2">
-                    Effacer
-                  </button>
-                )}
-              </div>
+              {(['admin', 'conducteur', 'chef_chantier', 'compagnon'] as const).map((role) => {
+                const usersForRole = fh.utilisateurs.filter((u) => u.role === role)
+                if (usersForRole.length === 0) return null
+                const roleLabels: Record<string, string> = {
+                  admin: 'Direction',
+                  conducteur: 'Conducteurs de travaux',
+                  chef_chantier: 'Chefs de chantier',
+                  compagnon: 'Compagnons',
+                }
+                return (
+                  <div key={role} className="mt-2">
+                    <span className="text-xs text-gray-500 font-medium">{roleLabels[role]}</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {usersForRole.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => fh.handleFilterUtilisateur(Number(user.id))}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                            fh.filterUtilisateurs.includes(Number(user.id))
+                              ? 'bg-primary-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {user.prenom} {user.nom}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+              {fh.filterUtilisateurs.length > 0 && (
+                <button onClick={fh.clearFilterUtilisateurs} className="text-xs text-gray-500 hover:text-gray-700 mt-2">
+                  Effacer
+                </button>
+              )}
             </div>
 
             <div>
@@ -182,6 +197,7 @@ export default function FeuillesHeuresPage() {
           <TimesheetChantierGrid
             currentDate={fh.currentDate}
             vueChantiers={fh.vueChantiers}
+            heuresPrevuesParChantier={fh.heuresPrevuesParChantier}
             onCellClick={fh.handleChantierCellClick}
             onPointageClick={fh.handlePointageClick}
             showWeekend={fh.showWeekend}

@@ -319,13 +319,13 @@ export default function ChantierDetailPage() {
       <div className="max-w-5xl mx-auto">
         {/* Back button + Navigation */}
         <div className="flex items-center justify-between mb-4">
-          <Link
-            to="/chantiers"
+          <button
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-4 h-4" />
-            Retour aux chantiers
-          </Link>
+            Retour
+          </button>
           <NavigationPrevNext
             prevId={navIds.prevId}
             nextId={navIds.nextId}

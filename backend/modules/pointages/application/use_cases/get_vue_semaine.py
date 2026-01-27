@@ -11,6 +11,7 @@ from ..dtos import (
     VueCompagnonDTO,
     PointageUtilisateurDTO,
     ChantierPointageDTO,
+    PointageJourCompagnonDTO,
 )
 
 
@@ -189,19 +190,27 @@ class GetVueSemaineUseCase:
 
                 chantier_total = sum(p.total_heures.total_minutes for p in chantier_pointages)
 
-                # Heures par jour
-                pointages_par_jour: Dict[str, str] = {}
+                # Pointages par jour (objets complets pour le frontend)
+                pointages_par_jour: Dict[str, List[PointageJourCompagnonDTO]] = {}
                 for i in range(7):
                     jour_date = semaine_debut + timedelta(days=i)
                     jour_nom = JOURS_SEMAINE[i]
-                    jour_pointage = next(
-                        (p for p in chantier_pointages if p.date_pointage == jour_date),
-                        None,
-                    )
-                    if jour_pointage:
-                        pointages_par_jour[jour_nom] = str(jour_pointage.total_heures)
-                    else:
-                        pointages_par_jour[jour_nom] = ""
+                    jour_pointages = [p for p in chantier_pointages if p.date_pointage == jour_date]
+                    pointages_par_jour[jour_nom] = [
+                        PointageJourCompagnonDTO(
+                            id=p.id,
+                            utilisateur_id=p.utilisateur_id,
+                            chantier_id=p.chantier_id,
+                            date_pointage=str(p.date_pointage),
+                            heures_normales=str(p.heures_normales),
+                            heures_supplementaires=str(p.heures_supplementaires),
+                            total_heures=str(p.total_heures),
+                            statut=p.statut.value,
+                            is_editable=p.is_editable,
+                            commentaire=p.commentaire,
+                        )
+                        for p in jour_pointages
+                    ]
 
                 chantiers.append(
                     ChantierPointageDTO(

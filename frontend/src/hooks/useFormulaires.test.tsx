@@ -69,7 +69,7 @@ const mockTemplates = [
   {
     id: 2,
     nom: 'Template 2',
-    categorie: 'qualite',
+    categorie: 'securite',
     description: 'Test template 2',
     champs: [],
     is_active: true,

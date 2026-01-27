@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { format, addDays, startOfWeek, isToday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Plus, Check, Clock, AlertCircle } from 'lucide-react'
@@ -22,6 +23,8 @@ export default function TimesheetGrid({
   showWeekend = false,
   canEdit = false,
 }: TimesheetGridProps) {
+  const navigate = useNavigate()
+
   // Calculer les jours de la semaine
   const jours = useMemo(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
@@ -179,7 +182,12 @@ export default function TimesheetGrid({
                     className="border px-3 py-2 font-medium text-gray-900"
                   >
                     <div className="flex items-center justify-between">
-                      <span>{compagnon.utilisateur_nom}</span>
+                      <span
+                        className="cursor-pointer text-primary-600 hover:text-primary-800"
+                        onClick={() => navigate(`/utilisateurs/${compagnon.utilisateur_id}`)}
+                      >
+                        {compagnon.utilisateur_nom}
+                      </span>
                       <span className="text-sm font-normal text-gray-600">
                         Total: {compagnon.total_heures} ({compagnon.total_heures_decimal}h)
                       </span>
@@ -190,13 +198,16 @@ export default function TimesheetGrid({
                 {/* Lignes par chantier */}
                 {compagnon.chantiers.map((chantier) => (
                   <tr key={`${compagnon.utilisateur_id}-${chantier.chantier_id}`}>
-                    <td className="border px-3 py-2">
+                    <td
+                      className="border px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => navigate(`/chantiers/${chantier.chantier_id}`)}
+                    >
                       <div className="flex items-center gap-2">
                         <span
                           className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: chantier.chantier_couleur || '#9E9E9E' }}
                         />
-                        <span className="text-sm font-medium text-gray-700 truncate">
+                        <span className="text-sm font-medium text-primary-600 hover:text-primary-800 truncate">
                           {chantier.chantier_nom}
                         </span>
                       </div>

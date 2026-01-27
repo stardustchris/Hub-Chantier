@@ -5,9 +5,54 @@ from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from shared.infrastructure.database import get_db
 from .dependencies import get_formulaire_controller, get_current_user_id
 from ...adapters.controllers import FormulaireController
+from ...application.dtos.formulaire_dto import FormulaireRempliDTO
+
+
+def _enrich_formulaires(formulaires: List[FormulaireRempliDTO], db: Session) -> None:
+    """Enrichit les formulaires avec template_nom, chantier_nom, user_nom."""
+    if not formulaires:
+        return
+
+    from ...infrastructure.persistence.template_model import TemplateFormulaireModel
+    from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
+    from modules.auth.infrastructure.persistence.user_model import UserModel
+
+    template_ids = {f.template_id for f in formulaires}
+    chantier_ids = {f.chantier_id for f in formulaires}
+    user_ids = {f.user_id for f in formulaires}
+
+    templates = {
+        t.id: t for t in db.query(TemplateFormulaireModel).filter(
+            TemplateFormulaireModel.id.in_(template_ids)
+        ).all()
+    }
+    chantiers = {
+        c.id: c for c in db.query(ChantierModel).filter(
+            ChantierModel.id.in_(chantier_ids)
+        ).all()
+    }
+    users = {
+        u.id: u for u in db.query(UserModel).filter(
+            UserModel.id.in_(user_ids)
+        ).all()
+    }
+
+    for f in formulaires:
+        tmpl = templates.get(f.template_id)
+        if tmpl:
+            f.template_nom = tmpl.nom
+            f.template_categorie = tmpl.categorie
+        chantier = chantiers.get(f.chantier_id)
+        if chantier:
+            f.chantier_nom = chantier.nom
+        user = users.get(f.user_id)
+        if user:
+            f.user_nom = f"{user.prenom} {user.nom}"
 
 
 # ===== SCHEMAS PYDANTIC =====
@@ -246,6 +291,7 @@ async def list_formulaires(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     controller: FormulaireController = Depends(get_formulaire_controller),
+    db: Session = Depends(get_db),
 ):
     """Liste les formulaires avec filtres."""
     result = controller.list_formulaires(
@@ -258,6 +304,9 @@ async def list_formulaires(
         skip=skip,
         limit=limit,
     )
+
+    _enrich_formulaires(result.formulaires, db)
+
     return {
         "formulaires": result.formulaires,
         "total": result.total,
@@ -272,19 +321,25 @@ async def list_formulaires_by_chantier(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     controller: FormulaireController = Depends(get_formulaire_controller),
+    db: Session = Depends(get_db),
 ):
     """Liste les formulaires d'un chantier (FOR-10)."""
-    return controller.list_formulaires_by_chantier(chantier_id, skip, limit)
+    formulaires = controller.list_formulaires_by_chantier(chantier_id, skip, limit)
+    _enrich_formulaires(formulaires, db)
+    return formulaires
 
 
 @router.get("/{formulaire_id}")
 async def get_formulaire(
     formulaire_id: int,
     controller: FormulaireController = Depends(get_formulaire_controller),
+    db: Session = Depends(get_db),
 ):
     """Recupere un formulaire par ID."""
     try:
-        return controller.get_formulaire(formulaire_id)
+        result = controller.get_formulaire(formulaire_id)
+        _enrich_formulaires([result], db)
+        return result
     except Exception as e:
         if "non trouve" in str(e):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

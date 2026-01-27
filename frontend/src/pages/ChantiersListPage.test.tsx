@@ -172,7 +172,7 @@ describe('ChantiersListPage', () => {
         // Les labels de statut peuvent apparaitre a plusieurs endroits (cartes + select)
         expect(screen.getAllByText('Tous').length).toBeGreaterThan(0)
         expect(screen.getAllByText('En cours').length).toBeGreaterThan(0)
-        expect(screen.getAllByText('Ouvert').length).toBeGreaterThan(0)
+        expect(screen.getAllByText('A lancer').length).toBeGreaterThan(0)
       })
     })
   })

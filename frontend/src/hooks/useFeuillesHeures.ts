@@ -3,6 +3,7 @@ import { format, startOfWeek, addDays } from 'date-fns'
 import { pointagesService } from '../services/pointages'
 import { usersService } from '../services/users'
 import { chantiersService } from '../services/chantiers'
+import { planningService } from '../services/planning'
 import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
 import type { Pointage, PointageCreate, PointageUpdate, User, Chantier, VueCompagnon, VueChantier } from '../types'
@@ -23,6 +24,7 @@ export function useFeuillesHeures() {
   const [vueChantiers, setVueChantiers] = useState<VueChantier[]>([])
   const [utilisateurs, setUtilisateurs] = useState<User[]>([])
   const [chantiers, setChantiers] = useState<Chantier[]>([])
+  const [heuresPrevuesParChantier, setHeuresPrevuesParChantier] = useState<Record<number, number>>({})
 
   // UI
   const [loading, setLoading] = useState(true)
@@ -60,12 +62,17 @@ export function useFeuillesHeures() {
         chantiersService.list({ size: 100 }),
       ])
 
-      setUtilisateurs(usersData.items.filter((u) => u.is_active))
+      // Tous les utilisateurs actifs pour le filtre (admin peut s'ajouter)
+      const allActive = usersData.items.filter((u) => u.is_active)
+      setUtilisateurs(allActive)
       setChantiers(chantiersData.items.filter((c) => c.statut !== 'ferme'))
 
+      // Par défaut : exclure admin/conducteur de la vue (ne travaillent pas sur chantier)
+      // Mais si un filtre est actif, respecter la sélection de l'utilisateur
+      const ROLES_CHANTIER = ['chef_chantier', 'compagnon']
       const utilisateurIds = filterUtilisateurs.length > 0
         ? filterUtilisateurs
-        : usersData.items.filter((u) => u.is_active).map((u) => Number(u.id))
+        : allActive.filter((u) => ROLES_CHANTIER.includes(u.role)).map((u) => Number(u.id))
       const chantierIds = filterChantiers.length > 0
         ? filterChantiers
         : chantiersData.items.filter((c) => c.statut !== 'ferme').map((c) => Number(c.id))
@@ -76,6 +83,36 @@ export function useFeuillesHeures() {
       } else {
         const vueData = await pointagesService.getVueChantiers(semaineDebut, chantierIds)
         setVueChantiers(vueData)
+
+        // Calculer les heures prévues par chantier depuis les affectations planning
+        try {
+          const semaineFin = format(addDays(new Date(semaineDebut), 6), 'yyyy-MM-dd')
+          const affectations = await planningService.getAffectations({
+            date_debut: semaineDebut,
+            date_fin: semaineFin,
+            chantier_ids: chantierIds.map(String),
+          })
+
+          const prevuesMap: Record<number, number> = {}
+          for (const aff of affectations) {
+            const cId = parseInt(aff.chantier_id, 10)
+            if (aff.heure_debut && aff.heure_fin) {
+              const [dh, dm] = aff.heure_debut.split(':').map(Number)
+              const [fh, fm] = aff.heure_fin.split(':').map(Number)
+              const minutes = (fh * 60 + fm) - (dh * 60 + dm)
+              if (minutes > 0) {
+                prevuesMap[cId] = (prevuesMap[cId] || 0) + minutes / 60
+              }
+            } else {
+              // Affectation sans horaires = journée standard (7h BTP)
+              prevuesMap[cId] = (prevuesMap[cId] || 0) + 7
+            }
+          }
+          setHeuresPrevuesParChantier(prevuesMap)
+        } catch {
+          // Ne pas bloquer si le planning n'est pas disponible
+          setHeuresPrevuesParChantier({})
+        }
       }
     } catch (err) {
       logger.error('Erreur chargement feuilles heures', err, { context: 'FeuillesHeuresPage' })
@@ -244,6 +281,7 @@ export function useFeuillesHeures() {
     vueChantiers,
     utilisateurs,
     chantiers,
+    heuresPrevuesParChantier,
 
     // Setters
     setCurrentDate,

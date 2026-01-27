@@ -114,13 +114,13 @@ export default function UserDetailPage() {
       <div className="max-w-4xl mx-auto">
         {/* Back button + Navigation (USR-09) */}
         <div className="flex items-center justify-between mb-4">
-          <Link
-            to="/utilisateurs"
+          <button
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-4 h-4" />
-            Retour aux utilisateurs
-          </Link>
+            Retour
+          </button>
           <NavigationPrevNext
             prevId={navIds.prevId}
             nextId={navIds.nextId}

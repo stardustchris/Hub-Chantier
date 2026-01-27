@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { format, addDays, startOfWeek, isToday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Plus, Check, Clock, AlertCircle } from 'lucide-react'
@@ -8,6 +9,7 @@ import { STATUTS_POINTAGE, JOURS_SEMAINE_ARRAY } from '../../types'
 interface TimesheetChantierGridProps {
   currentDate: Date
   vueChantiers: VueChantier[]
+  heuresPrevuesParChantier?: Record<number, number>
   onCellClick: (chantierId: number, date: Date) => void
   onPointageClick: (pointage: Pointage) => void
   showWeekend?: boolean
@@ -17,11 +19,14 @@ interface TimesheetChantierGridProps {
 export default function TimesheetChantierGrid({
   currentDate,
   vueChantiers,
+  heuresPrevuesParChantier = {},
   onCellClick,
   onPointageClick,
   showWeekend = false,
   canEdit = false,
 }: TimesheetChantierGridProps) {
+  const navigate = useNavigate()
+
   // Calculer les jours de la semaine
   const jours = useMemo(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
@@ -148,13 +153,16 @@ export default function TimesheetChantierGrid({
           <tbody>
             {vueChantiers.map((chantier) => (
               <tr key={chantier.chantier_id}>
-                <td className="border px-3 py-2">
+                <td
+                  className="border px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => navigate(`/chantiers/${chantier.chantier_id}`)}
+                >
                   <div className="flex items-center gap-2">
                     <span
                       className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: chantier.chantier_couleur || '#9E9E9E' }}
                     />
-                    <span className="text-sm font-medium text-gray-900 truncate">
+                    <span className="text-sm font-medium text-primary-600 hover:text-primary-800 truncate">
                       {chantier.chantier_nom}
                     </span>
                   </div>
@@ -163,10 +171,28 @@ export default function TimesheetChantierGrid({
                   renderPointagesCell(chantier.chantier_id, chantier.pointages_par_jour, jour)
                 )}
                 <td className="border px-3 py-2 text-center">
-                  <div className="font-medium text-gray-900">{chantier.total_heures}</div>
-                  <div className="text-xs text-gray-500">
-                    {chantier.total_heures_decimal}h
-                  </div>
+                  {(() => {
+                    const prevues = heuresPrevuesParChantier[chantier.chantier_id]
+                    const realisees = chantier.total_heures_decimal
+                    const hasPrevues = prevues !== undefined && prevues > 0
+                    const taux = hasPrevues ? Math.round((realisees / prevues) * 100) : null
+                    const isOver = taux !== null && taux > 100
+                    const isLow = taux !== null && taux < 80
+                    return (
+                      <>
+                        <div className="font-medium text-gray-900">{chantier.total_heures}</div>
+                        {hasPrevues ? (
+                          <div className={`text-xs font-medium ${isOver ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-green-600'}`}>
+                            /{Math.round(prevues)}h prevues
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-500">
+                            {realisees}h
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
                 </td>
               </tr>
             ))}

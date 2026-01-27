@@ -21,7 +21,7 @@ interface UseTemplateFormProps {
 const DEFAULT_CHAMP: ChampTemplate = {
   nom: '',
   label: '',
-  type_champ: 'text',
+  type_champ: 'texte',
   obligatoire: false,
   ordre: 0,
   placeholder: '',
@@ -85,7 +85,7 @@ export function useTemplateForm({
         return
       }
       if (
-        (champ.type_champ === 'select' || champ.type_champ === 'radio') &&
+        (champ.type_champ === 'select' || champ.type_champ === 'radio' || champ.type_champ === 'multi_select') &&
         (!champ.options || champ.options.length === 0)
       ) {
         setError(`Le champ "${champ.label}" doit avoir au moins une option`)

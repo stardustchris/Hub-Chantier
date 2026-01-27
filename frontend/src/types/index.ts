@@ -741,8 +741,8 @@ export const JOURS_SEMAINE_LABELS: Record<string, string> = {
 export const JOURS_SEMAINE_ARRAY = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
 
 // ===== FORMULAIRES (FOR-01 à FOR-11) =====
-export type TypeChamp = 'text' | 'textarea' | 'number' | 'email' | 'date' | 'time' | 'select' | 'checkbox' | 'radio' | 'photo' | 'signature'
-export type CategorieFormulaire = 'interventions' | 'reception' | 'securite' | 'incidents' | 'approvisionnement' | 'administratif' | 'gros_oeuvre' | 'autre'
+export type TypeChamp = 'texte' | 'texte_long' | 'nombre' | 'date' | 'heure' | 'date_heure' | 'select' | 'checkbox' | 'radio' | 'multi_select' | 'auto_date' | 'auto_heure' | 'auto_localisation' | 'auto_intervenant' | 'photo' | 'photo_multiple' | 'signature' | 'titre_section' | 'separateur'
+export type CategorieFormulaire = 'intervention' | 'reception' | 'securite' | 'incident' | 'approvisionnement' | 'administratif' | 'gros_oeuvre' | 'autre'
 export type StatutFormulaire = 'brouillon' | 'soumis' | 'valide'
 
 // Structure d'un champ de template (FOR-01)
@@ -865,25 +865,33 @@ export interface FormulaireHistorique {
 
 // Constantes pour les types de champs
 export const TYPES_CHAMPS: Record<TypeChamp, { label: string; icon: string }> = {
-  text: { label: 'Texte court', icon: 'Type' },
-  textarea: { label: 'Texte long', icon: 'FileText' },
-  number: { label: 'Nombre', icon: 'Hash' },
-  email: { label: 'Email', icon: 'Mail' },
+  texte: { label: 'Texte court', icon: 'Type' },
+  texte_long: { label: 'Texte long', icon: 'FileText' },
+  nombre: { label: 'Nombre', icon: 'Hash' },
   date: { label: 'Date', icon: 'Calendar' },
-  time: { label: 'Heure', icon: 'Clock' },
+  heure: { label: 'Heure', icon: 'Clock' },
+  date_heure: { label: 'Date et heure', icon: 'Calendar' },
   select: { label: 'Liste deroulante', icon: 'List' },
   checkbox: { label: 'Case a cocher', icon: 'CheckSquare' },
   radio: { label: 'Choix unique', icon: 'Circle' },
+  multi_select: { label: 'Selection multiple', icon: 'List' },
+  auto_date: { label: 'Date automatique', icon: 'Calendar' },
+  auto_heure: { label: 'Heure automatique', icon: 'Clock' },
+  auto_localisation: { label: 'Localisation auto', icon: 'MapPin' },
+  auto_intervenant: { label: 'Intervenant auto', icon: 'User' },
   photo: { label: 'Photo', icon: 'Camera' },
+  photo_multiple: { label: 'Photos multiples', icon: 'Camera' },
   signature: { label: 'Signature', icon: 'PenTool' },
+  titre_section: { label: 'Titre de section', icon: 'Type' },
+  separateur: { label: 'Separateur', icon: 'Minus' },
 }
 
 // Categories de formulaires (Section 8.3 du CDC)
 export const CATEGORIES_FORMULAIRES: Record<CategorieFormulaire, { label: string; color: string; description: string }> = {
-  interventions: { label: 'Interventions', color: '#3498DB', description: 'Rapport d\'intervention, Bon de SAV, Fiche depannage' },
+  intervention: { label: 'Interventions', color: '#3498DB', description: 'Rapport d\'intervention, Bon de SAV, Fiche depannage' },
   reception: { label: 'Reception', color: '#27AE60', description: 'PV de reception, Constat de reserves, Attestation fin travaux' },
   securite: { label: 'Securite', color: '#E74C3C', description: 'Formulaire securite, Visite PPSPS, Auto-controle' },
-  incidents: { label: 'Incidents', color: '#E67E22', description: 'Declaration sinistre, Fiche non-conformite, Rapport accident' },
+  incident: { label: 'Incidents', color: '#E67E22', description: 'Declaration sinistre, Fiche non-conformite, Rapport accident' },
   approvisionnement: { label: 'Approvisionnement', color: '#9B59B6', description: 'Commande materiel, Bon de livraison, Reception materiaux' },
   administratif: { label: 'Administratif', color: '#607D8B', description: 'Demande de conges, CERFA, Attestation diverse' },
   gros_oeuvre: { label: 'Gros Oeuvre', color: '#795548', description: 'Rapport journalier, Bon de betonnage, Controle ferraillage' },
