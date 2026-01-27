@@ -68,11 +68,18 @@ vi.mock('../services/logger', () => ({
 // Mock hooks used by DashboardPage that call unmocked services
 vi.mock('../hooks/useClockCard', () => ({
   useClockCard: () => ({
-    isClocked: false,
-    clockTime: null,
-    elapsedTime: '00:00:00',
-    isLoading: false,
-    handleClockToggle: vi.fn(),
+    clockState: null,
+    isClockedIn: false,
+    showEditModal: false,
+    editTimeType: 'arrival',
+    editTimeValue: '',
+    setEditTimeValue: vi.fn(),
+    handleClockIn: vi.fn(),
+    handleClockOut: vi.fn(),
+    handleEditTime: vi.fn(),
+    handleSaveEditedTime: vi.fn(),
+    closeEditModal: vi.fn(),
+    setChantierId: vi.fn(),
   }),
 }))
 
@@ -277,7 +284,7 @@ describe('DashboardPage', () => {
       })
     })
 
-    it('affiche les posts mock quand API retourne vide', async () => {
+    it('affiche un etat vide quand API retourne vide', async () => {
       vi.mocked(dashboardService.getFeed).mockResolvedValue({
         items: [],
         total: 0,
@@ -288,9 +295,8 @@ describe('DashboardPage', () => {
 
       renderWithProviders()
 
-      // Quand l'API retourne vide, on affiche les mocks de démonstration
       await waitFor(() => {
-        expect(screen.getByText(/Dalle coulée avec succès/i)).toBeInTheDocument()
+        expect(screen.getByText(/Aucune publication pour le moment/i)).toBeInTheDocument()
       })
     })
   })

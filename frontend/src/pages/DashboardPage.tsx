@@ -7,7 +7,7 @@
  * - useDashboardFeed: gestion du feed
  */
 
-import { useCallback, useRef, useEffect, useMemo } from 'react'
+import { useCallback, useRef, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
@@ -33,7 +33,8 @@ import {
   ImagePlus,
   X,
 } from 'lucide-react'
-import type { TargetType } from '../types'
+import type { TargetType, User } from '../types'
+import { usersService } from '../services/users'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -46,8 +47,22 @@ export default function DashboardPage() {
   // Hook pour le feed (posts, likes, etc.)
   const feed = useDashboardFeed()
 
+  // Charger tous les utilisateurs pour le matching des mentions @
+  const [allUsers, setAllUsers] = useState<User[]>([])
+  useEffect(() => {
+    usersService.list({ size: 100 }).then((res) => setAllUsers(res.items)).catch(() => {})
+  }, [])
+
   // Hook pour le planning du jour (affectations réelles de l'utilisateur)
   const todayPlanning = useTodayPlanning()
+
+  // Associer le premier chantier du planning au pointage
+  useEffect(() => {
+    const firstSlot = todayPlanning.slots.find(s => s.chantierId)
+    if (firstSlot?.chantierId) {
+      clock.setChantierId(firstSlot.chantierId)
+    }
+  }, [todayPlanning.slots, clock.setChantierId])
 
   // Hook pour les statistiques hebdomadaires (heures, tâches)
   const weeklyStats = useWeeklyStats()
@@ -313,6 +328,7 @@ export default function DashboardPage() {
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Aucune publication pour le moment</p>
+                      <p className="text-gray-400 text-sm mt-1">Partagez une info avec votre equipe ci-dessus</p>
                     </div>
                   ) : (
                     <>
@@ -320,6 +336,7 @@ export default function DashboardPage() {
                         <DashboardPostCard
                           key={post.id}
                           post={post}
+                          allAuthors={allUsers}
                           onLike={feed.handleLike}
                           onPin={feed.handlePin}
                           onDelete={feed.handleDelete}

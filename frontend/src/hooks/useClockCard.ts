@@ -1,9 +1,16 @@
 /**
  * Hook pour gérer la logique de pointage (clock-in/out)
  * Extrait de DashboardPage pour améliorer la maintenabilité
+ *
+ * Persiste le pointage côté serveur via pointagesService :
+ * - Clock-in : enregistre l'heure d'arrivée en local
+ * - Clock-out : calcule les heures travaillées et crée un pointage backend
  */
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
+import { pointagesService } from '../services/pointages'
+import { logger } from '../services/logger'
 
 // Clé localStorage pour le pointage du jour
 const CLOCK_STORAGE_KEY = 'hub_chantier_clock_today'
@@ -12,6 +19,10 @@ export interface ClockState {
   date: string
   clockInTime?: string
   clockOutTime?: string
+  /** ID du pointage backend (set après sync réussie) */
+  pointageId?: number
+  /** ID du chantier associé */
+  chantierId?: string
 }
 
 export interface UseClockCardReturn {
@@ -26,6 +37,23 @@ export interface UseClockCardReturn {
   handleEditTime: (type: 'arrival' | 'departure', currentTime?: string) => void
   handleSaveEditedTime: () => void
   closeEditModal: () => void
+  /** Définir le chantier pour le pointage du jour */
+  setChantierId: (id: string) => void
+}
+
+/**
+ * Calcule la différence entre deux heures HH:MM et retourne au format HH:MM
+ */
+function computeHoursWorked(clockIn: string, clockOut: string): string {
+  const [inH, inM] = clockIn.split(':').map(Number)
+  const [outH, outM] = clockOut.split(':').map(Number)
+
+  let totalMinutes = (outH * 60 + outM) - (inH * 60 + inM)
+  if (totalMinutes < 0) totalMinutes = 0
+
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 }
 
 /**
@@ -33,6 +61,7 @@ export interface UseClockCardReturn {
  */
 export function useClockCard(): UseClockCardReturn {
   const { addToast } = useToast()
+  const { user } = useAuth()
   const [clockState, setClockState] = useState<ClockState | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editTimeType, setEditTimeType] = useState<'arrival' | 'departure'>('arrival')
@@ -85,6 +114,19 @@ export function useClockCard(): UseClockCardReturn {
   }
 
   /**
+   * Définir le chantier ID pour le pointage
+   */
+  const setChantierId = useCallback((id: string) => {
+    setClockState(prev => {
+      if (!prev) return prev
+      if (prev.chantierId === id) return prev
+      const newState = { ...prev, chantierId: id }
+      saveClockState(newState)
+      return newState
+    })
+  }, [])
+
+  /**
    * Enregistre l'heure d'arrivée
    */
   const handleClockIn = useCallback(() => {
@@ -105,7 +147,60 @@ export function useClockCard(): UseClockCardReturn {
   }, [addToast])
 
   /**
-   * Enregistre l'heure de départ
+   * Synchonise le pointage avec le backend
+   */
+  const syncPointageToBackend = useCallback(async (state: ClockState) => {
+    if (!user?.id || !state.clockInTime || !state.clockOutTime) return
+
+    const userId = Number(user.id)
+    if (isNaN(userId)) return
+
+    const heuresNormales = computeHoursWorked(state.clockInTime, state.clockOutTime)
+
+    // Si déjà un pointage backend, mettre à jour
+    if (state.pointageId) {
+      try {
+        await pointagesService.update(state.pointageId, {
+          heures_normales: heuresNormales,
+        }, userId)
+        logger.info('Pointage mis à jour', { pointageId: state.pointageId, heuresNormales })
+      } catch (err) {
+        logger.error('Erreur mise à jour pointage', err)
+      }
+      return
+    }
+
+    // Créer un nouveau pointage
+    const chantierId = state.chantierId ? Number(state.chantierId) : null
+    if (!chantierId) {
+      logger.warn('Pas de chantier associé au pointage, sync ignorée')
+      return
+    }
+
+    try {
+      const pointage = await pointagesService.create({
+        utilisateur_id: userId,
+        chantier_id: chantierId,
+        date_pointage: state.date,
+        heures_normales: heuresNormales,
+      }, userId)
+
+      // Sauvegarder l'ID du pointage pour pouvoir le mettre à jour
+      const updatedState = { ...state, pointageId: pointage.id }
+      setClockState(updatedState)
+      saveClockState(updatedState)
+      logger.info('Pointage créé', { pointageId: pointage.id, heuresNormales })
+    } catch (err) {
+      logger.error('Erreur création pointage backend', err)
+      addToast({
+        message: 'Pointage enregistré localement (synchronisation en attente)',
+        type: 'warning',
+      })
+    }
+  }, [user?.id, addToast])
+
+  /**
+   * Enregistre l'heure de départ et sync avec le backend
    */
   const handleClockOut = useCallback(() => {
     const now = new Date()
@@ -115,13 +210,17 @@ export function useClockCard(): UseClockCardReturn {
       if (!prev) return null
       const newState = { ...prev, clockOutTime: timeStr }
       saveClockState(newState)
+
+      // Sync async avec le backend
+      syncPointageToBackend(newState)
+
       return newState
     })
     addToast({
       message: `Depart pointe a ${timeStr}. A demain !`,
       type: 'success',
     })
-  }, [addToast])
+  }, [addToast, syncPointageToBackend])
 
   /**
    * Ouvre la modal d'édition d'heure
@@ -133,7 +232,7 @@ export function useClockCard(): UseClockCardReturn {
   }, [])
 
   /**
-   * Sauvegarde l'heure modifiée
+   * Sauvegarde l'heure modifiée et re-sync si départ modifié
    */
   const handleSaveEditedTime = useCallback(() => {
     if (!editTimeValue) return
@@ -156,6 +255,12 @@ export function useClockCard(): UseClockCardReturn {
         [editTimeType === 'arrival' ? 'clockInTime' : 'clockOutTime']: editTimeValue,
       }
       saveClockState(newState)
+
+      // Re-sync si les deux heures sont renseignées
+      if (newState.clockInTime && newState.clockOutTime) {
+        syncPointageToBackend(newState)
+      }
+
       return newState
     })
 
@@ -164,7 +269,7 @@ export function useClockCard(): UseClockCardReturn {
       message: `Heure modifiee: ${editTimeValue}`,
       type: 'success',
     })
-  }, [editTimeType, editTimeValue, addToast])
+  }, [editTimeType, editTimeValue, addToast, syncPointageToBackend])
 
   /**
    * Ferme la modal d'édition
@@ -185,6 +290,7 @@ export function useClockCard(): UseClockCardReturn {
     handleEditTime,
     handleSaveEditedTime,
     closeEditModal,
+    setChantierId,
   }
 }
 

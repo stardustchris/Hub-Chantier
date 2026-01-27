@@ -7,7 +7,6 @@ import { dashboardService } from '../services/dashboard'
 import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
-import { MOCK_POSTS, isMockPost } from '../fixtures/mockPosts'
 import type { Post, Chantier, TargetType } from '../types'
 
 export interface UseDashboardFeedReturn {
@@ -47,7 +46,7 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
   const { user } = useAuth()
 
   // Data state
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS)
+  const [posts, setPosts] = useState<Post[]>([])
   const [chantiers, setChantiers] = useState<Chantier[]>([])
 
   // Loading state
@@ -78,8 +77,7 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
       const items = response?.items || []
 
       if (pageNum === 1) {
-        // Utilise les mocks si l'API retourne vide
-        setPosts(items.length > 0 ? items : MOCK_POSTS)
+        setPosts(items)
       } else {
         setPosts(prev => [...prev, ...items])
       }
@@ -88,8 +86,6 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
       setPage(pageNum)
     } catch (error) {
       logger.error('Error loading feed', error, { context: 'DashboardFeed' })
-      // En cas d'erreur, affiche les mocks
-      setPosts(MOCK_POSTS)
     } finally {
       setIsLoading(false)
     }
@@ -141,25 +137,6 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
    * Like/Unlike un post
    */
   const handleLike = useCallback(async (postId: string | number, isLiked: boolean) => {
-    // Pour les mocks, mettre à jour localement
-    if (isMockPost(postId)) {
-      setPosts(prev =>
-        prev.map(p => {
-          if (p.id !== postId) return p
-          const currentLikes = p.likes || []
-          const newLikes = isLiked
-            ? currentLikes.filter(l => l.user_id !== user?.id)
-            : [...currentLikes, { user_id: user?.id || '', user: user! }]
-          return {
-            ...p,
-            likes_count: (p.likes_count || 0) + (isLiked ? -1 : 1),
-            likes: newLikes,
-          }
-        })
-      )
-      return
-    }
-
     try {
       if (isLiked) {
         await dashboardService.unlikePost(String(postId))
@@ -177,14 +154,6 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
    * Pin/Unpin un post
    */
   const handlePin = useCallback(async (postId: string | number, isPinned: boolean) => {
-    // Pour les mocks, mettre à jour localement
-    if (isMockPost(postId)) {
-      setPosts(prev =>
-        prev.map(p => (p.id === postId ? { ...p, is_pinned: !isPinned } : p))
-      )
-      return
-    }
-
     try {
       if (isPinned) {
         await dashboardService.unpinPost(String(postId))
@@ -202,12 +171,6 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
    */
   const handleDelete = useCallback(async (postId: string | number) => {
     if (!confirm('Supprimer cette publication ?')) return
-
-    // Pour les mocks, supprimer localement
-    if (isMockPost(postId)) {
-      setPosts(prev => prev.filter(p => p.id !== postId))
-      return
-    }
 
     try {
       await dashboardService.deletePost(String(postId))

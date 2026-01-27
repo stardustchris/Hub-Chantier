@@ -4,6 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { DashboardPostCard } from './DashboardPostCard'
 import type { Post } from '../../types'
 
@@ -71,12 +72,14 @@ describe('DashboardPostCard', () => {
 
   const renderCard = (post: Post = createMockPost()) => {
     return render(
-      <DashboardPostCard
-        post={post}
-        onLike={mockOnLike}
-        onPin={mockOnPin}
-        onDelete={mockOnDelete}
-      />
+      <MemoryRouter>
+        <DashboardPostCard
+          post={post}
+          onLike={mockOnLike}
+          onPin={mockOnPin}
+          onDelete={mockOnDelete}
+        />
+      </MemoryRouter>
     )
   }
 

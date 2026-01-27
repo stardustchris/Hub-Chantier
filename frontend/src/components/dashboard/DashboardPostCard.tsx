@@ -5,6 +5,7 @@
  */
 
 import { useState, memo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Heart,
   MessageCircle,
@@ -19,17 +20,13 @@ import { useAuth } from '../../contexts/AuthContext'
 import { dashboardService } from '../../services/dashboard'
 import { logger } from '../../services/logger'
 import { formatRelative } from '../../utils/dates'
-import type { Post, UserRole } from '../../types'
+import { renderContentWithMentions } from '../../utils/mentionRenderer'
+import type { Post, User, UserRole } from '../../types'
 import { ROLES } from '../../types'
-
-// Helper pour détecter les posts mock (IDs négatifs)
-const isMockPost = (postId: string | number): boolean => {
-  const numId = typeof postId === 'string' ? parseInt(postId, 10) : postId
-  return numId < 0 || isNaN(numId)
-}
 
 interface DashboardPostCardProps {
   post: Post
+  allAuthors?: User[]
   onLike: (postId: string | number, isLiked: boolean) => void
   onPin: (postId: string | number, isPinned: boolean) => void
   onDelete: (postId: string | number) => void
@@ -38,6 +35,7 @@ interface DashboardPostCardProps {
 // P1-7: Memoize le composant pour éviter re-renders inutiles
 export const DashboardPostCard = memo(function DashboardPostCard({
   post,
+  allAuthors = [],
   onLike,
   onPin,
   onDelete,
@@ -63,30 +61,7 @@ export const DashboardPostCard = memo(function DashboardPostCard({
     try {
       setIsCommenting(true)
 
-      // Pour les mocks (IDs négatifs), ajouter localement
-      if (isMockPost(post.id)) {
-        const newCommentObj = {
-          id: `comment-${Date.now()}`,
-          contenu: newComment,
-          auteur: {
-            id: currentUserId,
-            prenom: user?.prenom || 'Moi',
-            nom: user?.nom || '',
-            couleur: user?.couleur || '#3498DB',
-            email: user?.email || '',
-            role: user?.role || 'ouvrier',
-            type_utilisateur: user?.type_utilisateur || 'interne',
-            is_active: true,
-            created_at: new Date().toISOString(),
-          } as Post['auteur'],
-          created_at: new Date().toISOString(),
-        }
-        setComments((prev) => [...prev, newCommentObj])
-        setNewComment('')
-        return
-      }
-
-      // Pour les vrais posts, appeler l'API
+      // Appeler l'API
       const updatedPost = await dashboardService.addComment(String(post.id), { contenu: newComment })
       setComments(updatedPost.commentaires || [])
       setNewComment('')
@@ -111,9 +86,15 @@ export const DashboardPostCard = memo(function DashboardPostCard({
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-gray-900">
-                  {post.auteur?.prenom} {post.auteur?.nom}
-                </span>
+                {post.auteur?.id ? (
+                  <Link to={`/utilisateurs/${post.auteur.id}`} className="font-semibold text-gray-900 hover:underline">
+                    {post.auteur.prenom} {post.auteur.nom}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-gray-900">
+                    {post.auteur?.prenom} {post.auteur?.nom}
+                  </span>
+                )}
                 {roleInfo && (
                   <span
                     className="text-xs px-2 py-0.5 rounded-full"
@@ -179,7 +160,9 @@ export const DashboardPostCard = memo(function DashboardPostCard({
             )}
           </div>
 
-          <p className="text-gray-700 mt-2 mb-3">{post.contenu}</p>
+          <p className="text-gray-700 mt-2 mb-3 whitespace-pre-wrap">
+            {renderContentWithMentions(post.contenu, allAuthors)}
+          </p>
 
           {post.medias && post.medias.length > 0 && (
             <div className="grid grid-cols-2 gap-2 mb-3">
@@ -224,10 +207,18 @@ export const DashboardPostCard = memo(function DashboardPostCard({
                   </div>
                   <div className="flex-1">
                     <div className="bg-gray-100 rounded-lg p-3">
-                      <span className="font-medium text-sm">
-                        {comment.auteur?.prenom} {comment.auteur?.nom}
-                      </span>
-                      <p className="text-sm text-gray-700">{comment.contenu}</p>
+                      {comment.auteur?.id ? (
+                        <Link to={`/utilisateurs/${comment.auteur.id}`} className="font-medium text-sm text-gray-900 hover:underline">
+                          {comment.auteur.prenom} {comment.auteur.nom}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-sm">
+                          {comment.auteur?.prenom} {comment.auteur?.nom}
+                        </span>
+                      )}
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {renderContentWithMentions(comment.contenu, allAuthors)}
+                      </p>
                     </div>
                     <span className="text-xs text-gray-500 ml-2">
                       {formatRelative(comment.created_at)}

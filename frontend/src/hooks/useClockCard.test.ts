@@ -14,6 +14,26 @@ vi.mock('../contexts/ToastContext', () => ({
   }),
 }))
 
+// Mock AuthContext
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: '1', nom: 'Test', prenom: 'User', role: 'compagnon' },
+  }),
+}))
+
+// Mock pointagesService
+vi.mock('../services/pointages', () => ({
+  pointagesService: {
+    create: vi.fn().mockResolvedValue({ id: 100 }),
+    update: vi.fn().mockResolvedValue({}),
+  },
+}))
+
+// Mock logger
+vi.mock('../services/logger', () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+
 describe('useClockCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
