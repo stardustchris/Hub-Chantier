@@ -232,6 +232,14 @@ export const formulairesService = {
     return response.data
   },
 
+  /**
+   * Refuse un formulaire soumis et le renvoie en brouillon
+   */
+  async rejectFormulaire(formulaireId: number): Promise<FormulaireRempli> {
+    const response = await api.post(`/api/formulaires/${formulaireId}/reject`)
+    return response.data
+  },
+
   // ===== HISTORIQUE (FOR-08) =====
 
   /**

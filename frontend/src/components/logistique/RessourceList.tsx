@@ -115,19 +115,19 @@ const RessourceList: React.FC<RessourceListProps> = ({
             placeholder="Rechercher une ressource..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
           />
         </div>
 
         {/* Filtre catégorie */}
         <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-400" />
+          <Filter size={18} className="text-gray-400 flex-shrink-0" />
           <select
             value={categorieFilter}
             onChange={(e) => setCategorieFilter(e.target.value as CategorieRessource | '')}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full sm:w-auto px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
           >
-            <option value="">Toutes catégories</option>
+            <option value="">Toutes categories</option>
             {Object.entries(CATEGORIES_RESSOURCES).map(([key, info]) => (
               <option key={key} value={key}>
                 {info.label}

@@ -313,6 +313,20 @@ class FormulaireRempli:
         self.valide_at = datetime.now()
         self.updated_at = datetime.now()
 
+    def refuser(self) -> None:
+        """
+        Refuse un formulaire soumis et le renvoie en brouillon.
+
+        Raises:
+            ValueError: Si le formulaire n'est pas soumis.
+        """
+        if self.statut != StatutFormulaire.SOUMIS:
+            raise ValueError("Seul un formulaire soumis peut etre refuse")
+
+        self.statut = StatutFormulaire.BROUILLON
+        self.soumis_at = None
+        self.updated_at = datetime.now()
+
     def archiver(self) -> None:
         """
         Archive le formulaire (FOR-08).

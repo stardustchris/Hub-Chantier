@@ -262,6 +262,13 @@ class FormulaireController:
         """Valide un formulaire soumis."""
         return self._submit_formulaire_uc.validate(formulaire_id, valideur_id)
 
+    def reject_formulaire(
+        self,
+        formulaire_id: int,
+    ) -> FormulaireRempliDTO:
+        """Refuse un formulaire soumis et le renvoie en brouillon."""
+        return self._submit_formulaire_uc.reject(formulaire_id)
+
     def get_formulaire(self, formulaire_id: int) -> FormulaireRempliDTO:
         """Recupere un formulaire par ID."""
         return self._get_formulaire_uc.execute(formulaire_id)

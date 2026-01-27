@@ -6,12 +6,15 @@
  */
 
 import { useState, useCallback, memo } from 'react'
+import { Link } from 'react-router-dom'
 import type { Post, Author } from '../../types/dashboard'
 import { formatRelativeShort } from '../../utils/dates'
+import { renderContentWithMentions } from '../../utils/mentionRenderer'
 
 interface PostCardProps {
   post: Post
   author?: Author
+  allAuthors?: Author[]
   currentUserId: number
   onLike: (postId: number) => void
   onUnlike: (postId: number) => void
@@ -31,6 +34,7 @@ const roleBadgeColors: Record<string, string> = {
 const PostCard = memo(function PostCard({
   post,
   author,
+  allAuthors = [],
   currentUserId,
   onLike,
   onUnlike,
@@ -90,9 +94,13 @@ const PostCard = memo(function PostCard({
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-900">
-                {author ? `${author.prenom} ${author.nom}` : 'Utilisateur'}
-              </span>
+              {author ? (
+                <Link to={`/utilisateurs/${author.id}`} className="font-semibold text-gray-900 hover:underline">
+                  {author.prenom} {author.nom}
+                </Link>
+              ) : (
+                <span className="font-semibold text-gray-900">Utilisateur</span>
+              )}
               {/* Badge rôle */}
               {author?.role && (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleBadgeColors[author.role] || 'bg-gray-100 text-gray-800'}`}>
@@ -132,9 +140,9 @@ const PostCard = memo(function PostCard({
         )}
       </div>
 
-      {/* Contenu (FEED-01, FEED-10 emojis) */}
+      {/* Contenu (FEED-01, FEED-10 emojis, FEED-14 mentions @) */}
       <div className="text-gray-800 mb-4 whitespace-pre-wrap">
-        {post.content}
+        {renderContentWithMentions(post.content, allAuthors)}
       </div>
 
       {/* Médias (FEED-02) */}

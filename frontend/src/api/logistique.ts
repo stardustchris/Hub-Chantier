@@ -18,7 +18,7 @@ import type {
   PlanningRessource,
 } from '../types/logistique'
 
-const BASE_URL = '/logistique'
+const BASE_URL = '/api/logistique'
 
 // =============================================================================
 // RESSOURCES (LOG-01, LOG-02)

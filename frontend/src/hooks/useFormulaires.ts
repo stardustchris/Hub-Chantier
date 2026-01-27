@@ -80,6 +80,7 @@ interface UseFormulairesReturn {
   handleSaveFormulaire: (data: FormulaireUpdate) => Promise<void>
   handleSubmitFormulaire: (signatureUrl?: string, signatureNom?: string) => Promise<void>
   handleValidateFormulaire: (formulaire: FormulaireRempli) => Promise<void>
+  handleRejectFormulaire: (formulaire: FormulaireRempli) => Promise<void>
   handleExportPDF: (formulaire: FormulaireRempli) => Promise<void>
 
   // Reload
@@ -351,6 +352,18 @@ export function useFormulaires(): UseFormulairesReturn {
     }
   }, [loadData])
 
+  // Reject formulaire
+  const handleRejectFormulaire = useCallback(async (formulaire: FormulaireRempli) => {
+    if (!confirm('Refuser ce formulaire et le renvoyer en brouillon ?')) return
+
+    try {
+      await formulairesService.rejectFormulaire(formulaire.id)
+      await loadData()
+    } catch (err) {
+      setError('Erreur lors du refus du formulaire')
+    }
+  }, [loadData])
+
   // Export PDF
   const handleExportPDF = useCallback(async (formulaire: FormulaireRempli) => {
     try {
@@ -424,6 +437,7 @@ export function useFormulaires(): UseFormulairesReturn {
     handleSaveFormulaire,
     handleSubmitFormulaire,
     handleValidateFormulaire,
+    handleRejectFormulaire,
     handleExportPDF,
 
     // Reload

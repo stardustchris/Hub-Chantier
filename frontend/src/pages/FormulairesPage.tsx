@@ -86,6 +86,7 @@ export default function FormulairesPage() {
     handleSaveFormulaire,
     handleSubmitFormulaire,
     handleValidateFormulaire,
+    handleRejectFormulaire,
     handleExportPDF,
 
     // Reload
@@ -232,6 +233,7 @@ export default function FormulairesPage() {
             onEdit={handleEditFormulaire}
             onExportPDF={handleExportPDF}
             onValidate={canManageTemplates ? handleValidateFormulaire : undefined}
+            onReject={canManageTemplates ? handleRejectFormulaire : undefined}
             loading={loading}
           />
         )}

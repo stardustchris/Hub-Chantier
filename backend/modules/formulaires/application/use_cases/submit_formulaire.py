@@ -128,3 +128,31 @@ class SubmitFormulaireUseCase:
         saved = self._formulaire_repo.save(formulaire)
 
         return FormulaireRempliDTO.from_entity(saved)
+
+    def reject(
+        self,
+        formulaire_id: int,
+    ) -> FormulaireRempliDTO:
+        """
+        Refuse un formulaire soumis et le renvoie en brouillon.
+
+        Args:
+            formulaire_id: ID du formulaire.
+
+        Returns:
+            Le formulaire refuse (revenu en brouillon).
+
+        Raises:
+            FormulaireNotFoundError: Si le formulaire n'existe pas.
+            ValueError: Si le formulaire n'est pas soumis.
+        """
+        formulaire = self._formulaire_repo.find_by_id(formulaire_id)
+        if not formulaire:
+            raise FormulaireNotFoundError(
+                f"Formulaire {formulaire_id} non trouve"
+            )
+
+        formulaire.refuser()
+        saved = self._formulaire_repo.save(formulaire)
+
+        return FormulaireRempliDTO.from_entity(saved)

@@ -471,6 +471,24 @@ async def validate_formulaire(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
+@router.post("/{formulaire_id}/reject")
+async def reject_formulaire(
+    formulaire_id: int,
+    controller: FormulaireController = Depends(get_formulaire_controller),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Refuse un formulaire soumis et le renvoie en brouillon."""
+    try:
+        result = controller.reject_formulaire(
+            formulaire_id=formulaire_id,
+        )
+        return result
+    except Exception as e:
+        if "non trouve" in str(e):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 @router.get("/{formulaire_id}/export")
 async def export_pdf(
     formulaire_id: int,

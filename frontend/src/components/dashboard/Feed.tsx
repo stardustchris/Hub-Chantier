@@ -202,6 +202,7 @@ export default function Feed({
             key={post.id}
             post={post}
             author={mockAuthors[post.author_id]}
+            allAuthors={Object.values(mockAuthors)}
             currentUserId={currentUserId}
             onLike={handleLike}
             onUnlike={handleUnlike}

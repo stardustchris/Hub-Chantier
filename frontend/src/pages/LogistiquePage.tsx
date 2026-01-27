@@ -34,10 +34,9 @@ const LogistiquePage: React.FC = () => {
 
   return (
     <Layout>
-    <div className="min-h-screen bg-gray-50">
+    <div>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white border-b border-gray-200 -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -53,20 +52,20 @@ const LogistiquePage: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mt-4 -mb-px">
+          <div className="flex gap-0.5 sm:gap-1 mt-4 -mb-px">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-t-lg transition-colors ${
                   activeTab === tab.id
                     ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {tab.id === 'ressources' && <Truck size={18} />}
-                {tab.id === 'planning' && <Calendar size={18} />}
-                {tab.id === 'en-attente' && <Clock size={18} />}
+                {tab.id === 'ressources' && <Truck size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                {tab.id === 'planning' && <Calendar size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                {tab.id === 'en-attente' && <Clock size={16} className="sm:w-[18px] sm:h-[18px]" />}
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className="px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
@@ -76,7 +75,6 @@ const LogistiquePage: React.FC = () => {
               </button>
             ))}
           </div>
-        </div>
       </div>
 
       {/* Contenu */}
@@ -150,33 +148,28 @@ const LogistiquePage: React.FC = () => {
                     className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => handleSelectPendingReservation(reservation)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-3 h-12 rounded"
-                          style={{ backgroundColor: reservation.ressource_couleur || '#3B82F6' }}
-                        />
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            [{reservation.ressource_code}] {reservation.ressource_nom}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(reservation.date_reservation).toLocaleDateString('fr-FR', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                            })}{' '}
-                            • {reservation.heure_debut.substring(0, 5)} - {reservation.heure_fin.substring(0, 5)}
-                          </p>
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-3 h-12 rounded flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: reservation.ressource_couleur || '#3B82F6' }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">
+                          [{reservation.ressource_code}] {reservation.ressource_nom}
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {new Date(reservation.date_reservation).toLocaleDateString('fr-FR', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })}{' '}
+                          • {reservation.heure_debut.substring(0, 5)} - {reservation.heure_fin.substring(0, 5)}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                          <span>{reservation.demandeur_nom || `User #${reservation.demandeur_id}`}</span>
+                          <span>•</span>
+                          <span>{reservation.chantier_nom || `Chantier #${reservation.chantier_id}`}</span>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-900">
-                          {reservation.demandeur_nom || `User #${reservation.demandeur_id}`}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {reservation.chantier_nom || `Chantier #${reservation.chantier_id}`}
-                        </p>
                       </div>
                     </div>
                   </div>
