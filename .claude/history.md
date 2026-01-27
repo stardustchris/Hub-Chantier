@@ -3,6 +3,33 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-27 (Preparation deploiement Scaleway)
+
+Fichiers de deploiement production crees pour heberger Hub Chantier sur Scaleway.
+
+### Fichiers crees
+
+| Fichier | Description |
+|---------|-------------|
+| `docker-compose.prod.yml` | Stack production : PostgreSQL + FastAPI + Nginx SSL + Certbot |
+| `frontend/Dockerfile.prod` | Build multi-stage avec VITE_API_URL configurable via ARG |
+| `frontend/nginx.prod.conf` | Nginx HTTPS : redirect 80→443, HSTS, CSP, cache PWA, proxy /api |
+| `.env.production.example` | Template avec instructions de generation des secrets |
+| `scripts/init-server.sh` | Init serveur : Docker, UFW (22/80/443), swap 2 Go, user deploy |
+| `scripts/deploy.sh` | Deploiement auto : verification, build, SSL Let's Encrypt, lancement, healthcheck |
+| `docs/DEPLOYMENT.md` | Guide complet : Scaleway, domaine, DNS, deploy, backup, couts |
+
+### Choix techniques
+
+- **Certbot sidecar** : conteneur dedie pour renouvellement auto SSL toutes les 12h
+- **Nginx templates** : `envsubst` pour injecter `$DOMAIN` dans la config nginx
+- **Ports non exposes** : PostgreSQL et FastAPI accessibles uniquement en interne (via Nginx)
+- **PWA headers** : `no-cache` sur `sw.js` et `manifest.webmanifest` pour detecter les mises a jour
+- **CSP production** : autorise Open-Meteo, Nominatim pour meteo et geocodage
+- **Instance DEV1-S** : 2 vCPU, 2 Go RAM, ~4 EUR/mois suffisant pour le pilote
+
+---
+
 ## Session 2026-01-27 (Correction 91 tests en echec → 0)
 
 Stabilisation de la suite de tests frontend : 12 fichiers corriges, 91 echecs resolus.

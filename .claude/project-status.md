@@ -102,7 +102,28 @@
 Session 27 janvier 2026 : correction des 91 tests en echec sur 12 fichiers.
 Causes corrigees : MemoryRouter manquant, mocks de services/hooks obsoletes, assertions sur textes/props modifies.
 
+## Deploiement production
+
+**Pret a deployer sur Scaleway** (ou tout VPS Linux avec Docker).
+
+Fichiers de deploiement :
+- `docker-compose.prod.yml` — Stack production (PostgreSQL + FastAPI + Nginx SSL + Certbot)
+- `frontend/nginx.prod.conf` — Nginx HTTPS avec HSTS, CSP, cache, proxy API
+- `frontend/Dockerfile.prod` — Build multi-stage avec VITE_API_URL configurable
+- `.env.production.example` — Template variables d'environnement
+- `scripts/init-server.sh` — Initialisation serveur (Docker, firewall, swap, user)
+- `scripts/deploy.sh` — Deploiement automatise (build, SSL, lancement, verification)
+- `docs/DEPLOYMENT.md` — Guide pas-a-pas complet
+
+Instance recommandee : **DEV1-S** (~4 EUR/mois) pour le pilote.
+
 ## Derniere mise a jour
+
+Session 2026-01-27 - Preparation deploiement Scaleway
+- 7 fichiers crees : docker-compose.prod.yml, nginx.prod.conf, Dockerfile.prod, .env.production.example, deploy.sh, init-server.sh, DEPLOYMENT.md
+- Stack production : PostgreSQL 16, FastAPI, Nginx SSL (Let's Encrypt), Certbot auto-renewal
+- Securite : HSTS, CSP strict, firewall UFW, cookies secure, pas d'Adminer en prod
+- PWA installable : manifest, service worker, cache headers pour sw.js et manifest.webmanifest
 
 Session 2026-01-27 - Correction des 91 tests en echec (0 remaining)
 - 12 fichiers de test corriges : TimesheetGrid (23), TimesheetChantierGrid (19), ChantierDetailPage (14), DashboardPage (10), StatsCard (7), TodayPlanningCard (7), TeamCard (2), FieldRenderer (2), FeuillesHeuresPage (2), WeatherCard (1), FormulairesPage (1), UserDetailPage (1)

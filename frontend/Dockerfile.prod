@@ -1,0 +1,50 @@
+# Hub Chantier - Frontend Dockerfile (Production SSL)
+# Multi-stage build: Node for build, nginx for serving with HTTPS
+
+# ===========================================
+# Stage 1: Build the React application
+# ===========================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Build argument for API URL (baked into frontend at build time)
+ARG VITE_API_URL=https://localhost
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Set env for build
+ENV VITE_API_URL=${VITE_API_URL}
+
+# Build the application
+RUN npm run build
+
+# ===========================================
+# Stage 2: Serve with nginx + SSL
+# ===========================================
+FROM nginx:alpine
+
+# Install envsubst for template processing
+RUN apk add --no-cache gettext
+
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Nginx config is mounted as volume template (envsubst via docker)
+# See nginx.prod.conf and docker-compose.prod.yml
+
+EXPOSE 80 443
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# Use nginx templates directory for envsubst
+CMD ["nginx", "-g", "daemon off;"]

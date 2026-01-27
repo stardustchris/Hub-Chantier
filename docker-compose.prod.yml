@@ -1,0 +1,106 @@
+# Hub Chantier - Docker Compose Production
+# Usage: docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#
+# Prerequis:
+#   1. Copier .env.production.example vers .env.production
+#   2. Configurer les valeurs (domaine, secrets, etc.)
+#   3. Lancer scripts/deploy.sh
+
+services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  db:
+    image: postgres:16-alpine
+    container_name: hub-chantier-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-hub_chantier}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Port non expose publiquement (acces interne uniquement)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-hub_chantier}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # FastAPI Backend
+  # ===========================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hub-chantier-api
+    restart: unless-stopped
+    environment:
+      - APP_NAME=Hub Chantier
+      - DEBUG=false
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-hub_chantier}
+      - SECRET_KEY=${SECRET_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      - CORS_ORIGINS=https://${DOMAIN}
+      - COOKIE_SECURE=true
+      - COOKIE_SAMESITE=lax
+      - COOKIE_DOMAIN=${DOMAIN}
+    volumes:
+      - uploads_data:/app/uploads
+    # Port non expose publiquement (acces via Nginx uniquement)
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===========================================
+  # React Frontend (Nginx + SSL)
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        - VITE_API_URL=https://${DOMAIN}
+    container_name: hub-chantier-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/nginx.prod.conf:/etc/nginx/templates/default.conf.template:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - api
+
+  # ===========================================
+  # Certbot - SSL Certificate Manager
+  # ===========================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: hub-chantier-certbot
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # Renouvellement automatique toutes les 12h
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads_data:
+    driver: local
+  certbot_conf:
+    driver: local
+  certbot_www:
+    driver: local
