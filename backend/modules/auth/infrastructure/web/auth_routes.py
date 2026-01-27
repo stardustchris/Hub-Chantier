@@ -118,7 +118,7 @@ class AuthResponse(BaseModel):
 
 
 @router.post("/login", response_model=AuthResponse)
-@limiter.limit("5/minute")  # Protection brute force: 5 tentatives/minute par IP
+@limiter.limit("60/minute")  # Protection brute force: 60 tentatives/minute par IP (dev)
 def login(
     request: Request,  # Requis par slowapi
     response: Response,
