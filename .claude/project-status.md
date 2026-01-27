@@ -38,7 +38,7 @@
 ### Tests
 
 - **Tests backend** : 140+ fichiers (unit + integration)
-- **Tests frontend** : 91 fichiers, 1655 tests
+- **Tests frontend** : 116 fichiers, 2260 tests (2163 pass, 91 fail, 6 skip)
 - **Integration tests** : 10 suites API completes
 
 ## Features recentes (Sessions 26-27 janvier)
@@ -82,6 +82,7 @@
 
 - Page dediee signalements (actuellement dans chantier detail)
 - Page dediee interventions (actuellement backend only pour le frontend)
+- Corriger les 91 tests en echec (12 fichiers, principalement mocks obsoletes)
 - Couverture tests frontend > 50% (actuellement ~29%)
 - Mode offline complet (PWA)
 
@@ -95,14 +96,57 @@
 - **DOMPurify** : Protection XSS
 - **Zod** : Validation cote client
 
-## Tests en echec a corriger
+## Tests en echec a corriger (91 tests, 12 fichiers)
 
-8 tests frontend en echec suite aux modifications de securite:
-- `AuthContext.test.tsx` : Mise a jour mocks pour cookies HttpOnly
-- `LoginPage.test.tsx` : Mise a jour mocks pour validation Zod
-- `api.test.ts` : Mise a jour mock pour `withCredentials: true`
+Les tests auth/securite (AuthContext, LoginPage, api) sont desormais tous OK.
+
+### ChantierDetailPage.test.tsx (14 echecs)
+- Tous les tests echouent — mocks desynchronises avec le composant actuel
+
+### DashboardPage.test.tsx (10 echecs)
+- Rendu, composer, interactions, pagination, erreurs — mocks composants dashboard obsoletes
+
+### TimesheetGrid.test.tsx (22 echecs)
+- Composant refactorise (structure HTML/classes CSS changees), tests non mis a jour
+
+### TimesheetChantierGrid.test.tsx (19 echecs)
+- Meme cause que TimesheetGrid — queries sur anciennes classes/structure
+
+### StatsCard.test.tsx (7 echecs)
+- Props et structure du composant modifies (stats reelles), tests sur anciennes props
+
+### TodayPlanningCard.test.tsx (6 echecs)
+- Composant enrichi (creneaux reels), tests sur anciens mocks statiques
+
+### TeamCard.test.tsx (2 echecs)
+- 2 tests sur membres par defaut et initiales — donnees par defaut changees
+
+### WeatherCard.test.tsx (1 echec)
+- Test alerte meteo — structure alerte modifiee
+
+### FieldRenderer.test.tsx (2 echecs)
+- Champ email : type input ou placeholder modifie
+
+### FeuillesHeuresPage.test.tsx (2 echecs)
+- Filtres utilisateurs — structure filtres refactorisee
+
+### FormulairesPage.test.tsx (1 echec)
+- Modal consentement geolocalisation — mock manquant
+
+### UserDetailPage.test.tsx (1 echec)
+- Lien retour — structure navigation modifiee
+
+### Cause commune
+Les composants ont ete enrichis (stats reelles, equipe du jour, meteo, filtres) mais les tests n'ont pas ete mis a jour en parallele. Les mocks et queries (getByText, getByRole) ciblent l'ancienne structure HTML.
 
 ## Derniere mise a jour
+
+Session 2026-01-27 - Audit tests frontend
+- Audit complet suite tests frontend : 2260 tests, 2163 pass, 91 fail, 6 skip
+- Tests auth/securite (AuthContext, LoginPage, api) : tous OK (corrige lors de sessions precedentes)
+- 91 echecs dans 12 fichiers — cause : composants enrichis sans mise a jour des tests
+- Fichiers les plus impactes : TimesheetGrid (22), TimesheetChantierGrid (19), ChantierDetailPage (14), DashboardPage (10)
+- project-status.md mis a jour avec inventaire detaille des echecs
 
 Session 2026-01-27 - Feuilles heures, formulaires, dashboard
 - Feuilles heures : filtres par role, heures planifiees vs realisees, navigation cliquable
