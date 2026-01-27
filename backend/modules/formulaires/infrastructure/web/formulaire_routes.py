@@ -478,7 +478,7 @@ async def export_pdf(
 ):
     """Exporte un formulaire en PDF (FOR-09)."""
     try:
-        return controller.export_pdf(formulaire_id)
+        return controller.export_pdf_download(formulaire_id)
     except Exception as e:
         if "non trouve" in str(e):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

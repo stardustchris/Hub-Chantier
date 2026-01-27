@@ -7,11 +7,17 @@ import { useState, useRef } from 'react'
 import { Camera, X, Upload, Image as ImageIcon } from 'lucide-react'
 import { logger } from '../../services/logger'
 
+interface AttachedPhoto {
+  url: string
+  nom_fichier: string
+}
+
 interface PhotoCaptureProps {
   value?: string // URL ou base64
   onChange: (value: string) => void
   readOnly?: boolean
   label?: string
+  attachedPhotos?: AttachedPhoto[]
 }
 
 export default function PhotoCapture({
@@ -19,6 +25,7 @@ export default function PhotoCapture({
   onChange,
   readOnly = false,
   label,
+  attachedPhotos,
 }: PhotoCaptureProps) {
   const [preview, setPreview] = useState<string | null>(value || null)
   const [isLoading, setIsLoading] = useState(false)
@@ -87,6 +94,26 @@ export default function PhotoCapture({
 
   // Affichage en mode lecture seule
   if (readOnly) {
+    // Afficher les photos attachees si disponibles
+    if (attachedPhotos && attachedPhotos.length > 0) {
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          {attachedPhotos.map((photo, index) => (
+            <div key={index} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+              <div className="relative aspect-video">
+                <img
+                  src={photo.url}
+                  alt={photo.nom_fichier}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="text-xs text-gray-500 px-2 py-1 truncate">{photo.nom_fichier}</p>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
     return (
       <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
         {preview ? (

@@ -229,37 +229,55 @@ export default function FormulaireModal({
           <div className="space-y-5">
             {template.champs
               .sort((a, b) => a.ordre - b.ordre)
-              .map((champ) => (
-                <FieldRenderer
-                  key={champ.nom}
-                  champ={champ}
-                  value={values[champ.nom]}
-                  onChange={(value) => handleValueChange(champ.nom, value)}
-                  readOnly={!isEditable}
-                  error={validationErrors[champ.nom]}
-                />
-              ))}
+              .map((champ) => {
+                // Pour les champs photo, filtrer les photos attachees par champ_nom
+                const champPhotos = (champ.type_champ === 'photo' || champ.type_champ === 'photo_multiple')
+                  ? formulaire?.photos.filter((p) => p.champ_nom === champ.nom) || []
+                  : undefined
+
+                return (
+                  <FieldRenderer
+                    key={champ.nom}
+                    champ={champ}
+                    value={values[champ.nom]}
+                    onChange={(value) => handleValueChange(champ.nom, value)}
+                    readOnly={!isEditable}
+                    error={validationErrors[champ.nom]}
+                    photos={champPhotos}
+                  />
+                )
+              })}
           </div>
 
-          {/* Photos */}
-          {formulaire && formulaire.photos.length > 0 && (
-            <div className="mt-6 pt-6 border-t">
-              <h3 className="font-medium text-gray-900 mb-3">
-                Photos ({formulaire.photos.length})
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                {formulaire.photos.map((photo, index) => (
-                  <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img
-                      src={photo.url}
-                      alt={photo.nom_fichier}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+          {/* Photos non liees a un champ photo (evite la duplication) */}
+          {formulaire && (() => {
+            const photoFieldNames = new Set(
+              template.champs
+                .filter((c) => c.type_champ === 'photo' || c.type_champ === 'photo_multiple')
+                .map((c) => c.nom)
+            )
+            const unmatchedPhotos = formulaire.photos.filter(
+              (p) => !photoFieldNames.has(p.champ_nom)
+            )
+            return unmatchedPhotos.length > 0 ? (
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Photos ({unmatchedPhotos.length})
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {unmatchedPhotos.map((photo, index) => (
+                    <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                      <img
+                        src={photo.url}
+                        alt={photo.nom_fichier}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null
+          })()}
 
           {/* Signature */}
           {formulaire?.est_signe && (

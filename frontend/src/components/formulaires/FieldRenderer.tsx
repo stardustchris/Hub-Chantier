@@ -18,7 +18,7 @@ import {
   List,
   Type,
 } from 'lucide-react'
-import type { ChampTemplate, TypeChamp } from '../../types'
+import type { ChampTemplate, TypeChamp, PhotoFormulaire } from '../../types'
 import PhotoCapture from './PhotoCapture'
 import SignaturePad from './SignaturePad'
 
@@ -28,6 +28,7 @@ interface FieldRendererProps {
   onChange: (value: string | number | boolean | string[]) => void
   readOnly?: boolean
   error?: string
+  photos?: PhotoFormulaire[]
 }
 
 // Props communes pour tous les composants de champ
@@ -37,6 +38,7 @@ interface FieldComponentProps {
   onChange: (value: string | number | boolean | string[]) => void
   readOnly: boolean
   inputClass: string
+  photos?: PhotoFormulaire[]
 }
 
 // Mapping des icones par type de champ
@@ -171,12 +173,13 @@ const RadioField = memo(({ champ, value, onChange, readOnly }: FieldComponentPro
 ))
 RadioField.displayName = 'RadioField'
 
-const PhotoField = memo(({ champ, value, onChange, readOnly }: FieldComponentProps) => (
+const PhotoField = memo(({ champ, value, onChange, readOnly, photos }: FieldComponentProps) => (
   <PhotoCapture
     value={value as string}
     onChange={(val) => onChange(val)}
     readOnly={readOnly}
     label={champ.label}
+    attachedPhotos={photos}
   />
 ))
 PhotoField.displayName = 'PhotoField'
@@ -213,6 +216,7 @@ function FieldRenderer({
   onChange,
   readOnly = false,
   error,
+  photos,
 }: FieldRendererProps) {
   const [localValue, setLocalValue] = useState(value ?? champ.valeur_defaut ?? '')
   const Icon = FIELD_ICONS[champ.type_champ] || Type
@@ -247,6 +251,7 @@ function FieldRenderer({
         onChange={handleChange}
         readOnly={readOnly}
         inputClass={inputClass}
+        photos={photos}
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
     </div>

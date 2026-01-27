@@ -29,7 +29,7 @@ from ...application.dtos import (
 )
 from ...application.use_cases.list_templates import ListTemplatesResult
 from ...application.use_cases.list_formulaires import ListFormulairesResult
-from ...application.use_cases.export_pdf import PDFContent
+from ...application.use_cases.export_pdf import PDFContent, PDFExportResult
 
 
 class FormulaireController:
@@ -308,5 +308,9 @@ class FormulaireController:
         return self._get_history_uc.execute(formulaire_id)
 
     def export_pdf(self, formulaire_id: int) -> PDFContent:
-        """Exporte un formulaire en PDF (FOR-09)."""
+        """Exporte un formulaire en PDF (FOR-09) - contenu structure."""
         return self._export_pdf_uc.execute(formulaire_id)
+
+    def export_pdf_download(self, formulaire_id: int) -> PDFExportResult:
+        """Exporte un formulaire en PDF base64 pour telechargement."""
+        return self._export_pdf_uc.export_as_pdf(formulaire_id)

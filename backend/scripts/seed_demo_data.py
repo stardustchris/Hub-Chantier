@@ -35,6 +35,7 @@ from modules.formulaires.infrastructure.persistence import (
     ChampTemplateModel,
     FormulaireRempliModel,
     ChampRempliModel,
+    PhotoFormulaireModel,
 )
 
 
@@ -842,6 +843,11 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 {"nom": "materiaux_utilises", "type_champ": "texte_long", "valeur": "12m3 beton C30/37, 2T acier HA"},
                 {"nom": "problemes", "type_champ": "texte_long", "valeur": ""},
             ],
+            "photos": [
+                {"url": "https://picsum.photos/seed/dalle-rdc/800/600", "nom_fichier": "coulage_dalle_rdc_bat_b.jpg", "champ_nom": "photo_avancement"},
+                {"url": "https://picsum.photos/seed/ferraillage/800/600", "nom_fichier": "ferraillage_escalier_central.jpg", "champ_nom": "photo_avancement"},
+                {"url": "https://picsum.photos/seed/beton-c30/800/600", "nom_fichier": "livraison_beton_c30.jpg", "champ_nom": "photo_avancement"},
+            ],
         },
         {
             "template": "Rapport journalier de chantier",
@@ -856,6 +862,10 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 {"nom": "travaux_realises", "type_champ": "texte_long", "valeur": "Elevation murs 1er etage. Pose coffrage poteau P4."},
                 {"nom": "materiaux_utilises", "type_champ": "texte_long", "valeur": "800 parpaings, 50 sacs ciment"},
                 {"nom": "problemes", "type_champ": "texte_long", "valeur": "Retard livraison aciers prevu demain"},
+            ],
+            "photos": [
+                {"url": "https://picsum.photos/seed/murs-1er/800/600", "nom_fichier": "elevation_murs_1er_etage.jpg", "champ_nom": "photo_avancement"},
+                {"url": "https://picsum.photos/seed/coffrage-p4/800/600", "nom_fichier": "coffrage_poteau_p4.jpg", "champ_nom": "photo_avancement"},
             ],
         },
         # Rapport sur Centre Commercial
@@ -872,6 +882,12 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 {"nom": "travaux_realises", "type_champ": "texte_long", "valeur": "Montage structure metallique zone A. Soudure portiques."},
                 {"nom": "materiaux_utilises", "type_champ": "texte_long", "valeur": "IPE 300, HEA 200, boulons HR"},
                 {"nom": "problemes", "type_champ": "texte_long", "valeur": "Arret 2h pour pluie"},
+            ],
+            "photos": [
+                {"url": "https://picsum.photos/seed/structure-metal/800/600", "nom_fichier": "montage_structure_metallique_zone_a.jpg", "champ_nom": "photo_avancement"},
+                {"url": "https://picsum.photos/seed/soudure-portique/800/600", "nom_fichier": "soudure_portiques.jpg", "champ_nom": "photo_avancement"},
+                {"url": "https://picsum.photos/seed/ipe300/800/600", "nom_fichier": "materiaux_ipe300_hea200.jpg", "champ_nom": "photo_avancement"},
+                {"url": "https://picsum.photos/seed/pluie-chantier/800/600", "nom_fichier": "arret_pluie_zone_a.jpg", "champ_nom": "photo_avancement"},
             ],
         },
         # Inspection securite
@@ -923,6 +939,10 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 {"nom": "description_faits", "type_champ": "texte_long", "valeur": "Chute d'une palette de parpaings lors du dechargement. Palette mal arrimee."},
                 {"nom": "mesures_prises", "type_champ": "texte_long", "valeur": "Zone securisee. Nettoyage debris. Rappel procedure dechargement."},
                 {"nom": "temoins", "type_champ": "texte", "valeur": "Lucas MOREAU, Emma GARCIA"},
+            ],
+            "photos": [
+                {"url": "https://picsum.photos/seed/palette-chute/800/600", "nom_fichier": "chute_palette_parpaings.jpg", "champ_nom": "photo_incident"},
+                {"url": "https://picsum.photos/seed/zone-securisee/800/600", "nom_fichier": "zone_securisee_apres_incident.jpg", "champ_nom": "photo_incident"},
             ],
         },
         # Bon de livraison
@@ -1045,6 +1065,19 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 timestamp=datetime.now() - timedelta(days=jours_avant),
             )
             db.add(champ)
+
+        # Ajouter les photos
+        for photo_data in form_data.get("photos", []):
+            photo = PhotoFormulaireModel(
+                formulaire_id=formulaire.id,
+                url=photo_data["url"],
+                nom_fichier=photo_data["nom_fichier"],
+                champ_nom=photo_data["champ_nom"],
+                timestamp=datetime.now() - timedelta(days=jours_avant),
+                latitude=formulaire.localisation_latitude,
+                longitude=formulaire.localisation_longitude,
+            )
+            db.add(photo)
 
         created_count += 1
 
