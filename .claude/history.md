@@ -3,6 +3,27 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-27 (Prise de connaissance et mise a jour documentation)
+
+Audit complet du projet : etat des modules, tests, documentation.
+
+### Actions realisees
+
+- Lecture des specs (SPECIFICATIONS.md), project-status, history, agents.md
+- Audit tests frontend : 2253 tests passent, 0 echec (les 91 echecs precedents sont corriges)
+- Mise a jour project-status.md : chiffres tests corriges, section tests en echec remplacee
+- Mise a jour README.md : tableau modules a jour (13/13 complets), arborescence modules enrichie, lien DEPLOYMENT.md, commandes tests frontend
+- Commit et push sur main
+
+### Etat constate
+
+- 13/13 modules complets, 218/237 features (92%)
+- 16 features infra restantes (ERP, PWA offline, export paie)
+- Tests frontend : 116 fichiers, 2253 tests, 0 echec, 6 skip
+- Documentation a jour et coherente entre tous les fichiers
+
+---
+
 ## Session 2026-01-27 (Preparation deploiement Scaleway)
 
 Fichiers de deploiement production crees pour heberger Hub Chantier sur Scaleway.

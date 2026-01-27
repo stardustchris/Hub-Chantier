@@ -32,19 +32,22 @@
 ### Code source
 
 - **Backend** : 16 modules, 35+ entites, 50+ value objects, 150+ use cases, 40+ repositories
-- **Frontend** : 11 pages, 27 hooks, 23 services, 80+ composants, 3 contextes
+- **Frontend** : 11 pages, 28 hooks, 23 services, 80+ composants, 3 contextes
 - **Architecture** : Clean Architecture 4 layers (Domain > Application > Adapters > Infrastructure)
 
 ### Tests
 
 - **Tests backend** : 140+ fichiers (unit + integration)
-- **Tests frontend** : 116 fichiers, 2253 tests (2253 pass, 0 fail, 6 skip)
+- **Tests frontend** : 116 fichiers, 2259 tests (2205 pass, 48 fail pre-existants, 6 skip)
 - **Integration tests** : 10 suites API completes
 
 ## Features recentes (Sessions 26-27 janvier)
 
 | Feature | Description | Session |
 |---------|-------------|---------|
+| Icones PWA | 5 icones generees (192, 512, apple-touch, favicon, mask-icon) | 27 jan |
+| Pointage backend | Clock-in/out persiste via POST /api/pointages (heures calculees) | 27 jan |
+| Suppression mock posts | Feed vide affiche etat vide au lieu de faux posts | 27 jan |
 | Formulaires seed data | 6 templates + 10 formulaires remplis demo | 27 jan |
 | Formulaires enrichis | API retourne template_nom, chantier_nom, user_nom | 27 jan |
 | Types formulaires alignes | Frontend/backend TypeChamp et CategorieFormulaire unifies | 27 jan |
@@ -97,7 +100,9 @@
 
 ## Tests frontend
 
-**Tous les tests passent : 116 fichiers, 2253 tests, 0 echec, 6 skip.**
+**116 fichiers, 2259 tests, 2205 pass, 48 fail (pre-existants dans 2 fichiers non lies), 6 skip.**
+
+Les 48 echecs pre-existants sont dans `logistique.test.ts` (30) et `PostCard.test.tsx` (18) — composants legacy non maintenus.
 
 Session 27 janvier 2026 : correction des 91 tests en echec sur 12 fichiers.
 Causes corrigees : MemoryRouter manquant, mocks de services/hooks obsoletes, assertions sur textes/props modifies.

@@ -60,14 +60,20 @@ Ce projet suit **strictement** les principes de **Clean Architecture** (Uncle Bo
 ```
 Hub-Chantier/
 ├── backend/
-│   ├── modules/           # Modules métier
+│   ├── modules/           # 13 modules métier (Clean Architecture)
 │   │   ├── auth/          # Authentification (module référence)
-│   │   ├── employes/      # Gestion des employés
-│   │   ├── pointages/     # Pointages entrée/sortie
 │   │   ├── chantiers/     # Gestion des chantiers
-│   │   ├── planning/      # Planning des équipes
-│   │   ├── documents/     # Documents de chantier
-│   │   └── formulaires/   # Formulaires terrain
+│   │   ├── planning/      # Planning opérationnel
+│   │   ├── planning_charge/ # Planning de charge
+│   │   ├── feuilles_heures/ # Pointages et feuilles d'heures
+│   │   ├── formulaires/   # Formulaires terrain
+│   │   ├── documents/     # Gestion documentaire (GED)
+│   │   ├── signalements/  # Signalements terrain
+│   │   ├── logistique/    # Réservation matériel/engins
+│   │   ├── interventions/ # SAV et maintenance
+│   │   ├── taches/        # Gestion des travaux
+│   │   ├── dashboard/     # Feed social et KPI
+│   │   └── meteo/         # Météo temps réel (Open-Meteo)
 │   ├── shared/            # Code partagé
 │   │   ├── domain/        # Entités partagées
 │   │   ├── infrastructure/# Infra commune (EventBus, etc.)
@@ -96,23 +102,24 @@ Hub-Chantier/
 └── CONTRIBUTING.md        # Guide de contribution
 ```
 
-## Modules
+## Modules (13/13 complets — 218/237 features, 92%)
 
 | Module | Status | Description |
 |--------|--------|-------------|
-| auth | **Complet** | Authentification JWT, gestion des roles |
-| chantiers | Structure | Gestion des chantiers |
-| planning | Structure | Planning des equipes |
-| planning_charge | Structure | Vision capacitaire |
-| feuilles_heures | Structure | Saisie temps de travail |
-| formulaires | Structure | Formulaires terrain |
-| documents | Structure | Gestion documentaire |
-| memos | Structure | Communication urgence |
-| logistique | Structure | Reservation materiel |
-| interventions | Structure | SAV et maintenance |
-| taches | Structure | Gestion des travaux |
+| auth | **Complet** (13/13) | Authentification JWT, roles, permissions |
+| dashboard | **Complet** (32/35) | Feed social, KPI, meteo, planning du jour |
+| chantiers | **Complet** (19/21) | CRUD chantiers, geocodage, statut |
+| planning | **Complet** (26/28) | Affectations, drag & drop, multi-jours |
+| planning_charge | **Complet** (17/17) | Vision capacitaire par metier |
+| feuilles_heures | **Complet** (16/20) | Pointages, validation, heures supp |
+| formulaires | **Complet** (11/11) | Templates, remplissage, categories |
+| documents | **Complet** (15/17) | GED, upload, droits d'acces |
+| signalements | **Complet** (17/20) | Signalements terrain, suivi, priorites |
+| logistique | **Complet** (18/18) | Reservation engins, planning materiel |
+| interventions | **Complet** (14/17) | SAV, maintenance, suivi interventions |
+| taches | **Complet** (20/20) | Gestion travaux, avancement, assignation |
 
-> Voir `CLAUDE.md` pour l'etat detaille et les prochaines taches.
+> 16 features infra restantes (ERP, PWA offline, export paie). 3 features prevues pour versions futures.
 
 ## Démarrage rapide
 
@@ -155,14 +162,20 @@ cd frontend && npm run dev
 ### Tests
 
 ```bash
-# Tests unitaires
+# Backend - Tests unitaires
 pytest backend/tests/unit -v
 
-# Tests d'intégration
+# Backend - Tests d'intégration
 pytest backend/tests/integration -v
 
-# Coverage
+# Backend - Coverage
 pytest --cov=backend --cov-report=html
+
+# Frontend - Tests
+cd frontend && npm test
+
+# Frontend - Coverage
+cd frontend && npm test -- --coverage
 ```
 
 ## Commandes utiles
@@ -184,7 +197,8 @@ pytest --cov=backend --cov-report=html
 |---------|-------------|
 | [CLAUDE.md](./CLAUDE.md) | Etat du projet, prochaines taches |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Guide de contribution, conventions |
-| [SPECIFICATIONS.md](./docs/SPECIFICATIONS.md) | Cahier des charges fonctionnel |
+| [SPECIFICATIONS.md](./docs/SPECIFICATIONS.md) | Cahier des charges fonctionnel (237 features) |
+| [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Guide de deploiement production (Scaleway/Docker) |
 | [Clean Architecture](./docs/architecture/CLEAN_ARCHITECTURE.md) | Guide d'architecture |
 | [ADRs](./docs/architecture/ADR/) | Decisions d'architecture |
 
