@@ -59,10 +59,10 @@ export default function DashboardPage() {
   // Associer le premier chantier du planning au pointage
   useEffect(() => {
     const firstSlot = todayPlanning.slots.find(s => s.chantierId)
-    if (firstSlot?.chantierId) {
+    if (firstSlot?.chantierId && clock.setChantierId) {
       clock.setChantierId(firstSlot.chantierId)
     }
-  }, [todayPlanning.slots, clock.setChantierId])
+  }, [todayPlanning.slots, clock])
 
   // Hook pour les statistiques hebdomadaires (heures, tâches)
   const weeklyStats = useWeeklyStats()

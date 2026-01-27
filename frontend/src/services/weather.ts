@@ -29,6 +29,8 @@ export interface WeatherData {
     latitude: number
     longitude: number
   }
+  /** Code postal (pour URLs externes) */
+  postalCode?: string
 }
 
 export interface WeatherAlert {
@@ -60,6 +62,7 @@ interface GeoPosition {
   latitude: number
   longitude: number
   city?: string
+  postalCode?: string
 }
 
 // Codes météo Open-Meteo -> condition
@@ -129,15 +132,16 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
       async (position) => {
         const { latitude, longitude } = position.coords
 
-        // Reverse geocoding pour obtenir le nom de la ville
+        // Reverse geocoding pour obtenir le nom de la ville et le code postal
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`
           )
           const data = await response.json()
           const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || 'Position actuelle'
+          const postalCode = data.address?.postcode
 
-          resolve({ latitude, longitude, city })
+          resolve({ latitude, longitude, city, postalCode })
         } catch {
           // Si le reverse geocoding échoue, on renvoie juste les coordonnées
           resolve({ latitude, longitude, city: 'Position actuelle' })
@@ -146,7 +150,7 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
       (error) => {
         logger.warn('Erreur géolocalisation', { error: error.message })
         // Fallback sur Chambéry si géolocalisation refusée
-        resolve({ latitude: 45.5646, longitude: 5.9178, city: 'Chambéry' })
+        resolve({ latitude: 45.5646, longitude: 5.9178, city: 'Chambéry', postalCode: '73000' })
       },
       {
         enableHighAccuracy: false,
@@ -199,6 +203,7 @@ export async function fetchWeather(position?: GeoPosition): Promise<WeatherData>
       latitude: pos.latitude,
       longitude: pos.longitude,
     },
+    postalCode: pos.postalCode,
   }
 
   // Générer le bulletin

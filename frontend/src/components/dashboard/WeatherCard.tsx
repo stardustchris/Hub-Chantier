@@ -11,12 +11,17 @@ import { useWeather, type WeatherData } from '../../hooks/useWeather'
 /**
  * Ouvre l'application météo native ou une alternative web
  */
-function openWeatherApp(location: string, coordinates?: { latitude: number; longitude: number }): void {
+function openWeatherApp(location: string, postalCode?: string, coordinates?: { latitude: number; longitude: number }): void {
   const userAgent = navigator.userAgent.toLowerCase()
   const isIOS = /iphone|ipad|ipod/.test(userAgent)
   const isAndroid = /android/.test(userAgent)
 
   const encodedLocation = encodeURIComponent(location)
+
+  // Construire l'URL Météo France avec code postal si disponible
+  const meteoFranceUrl = postalCode
+    ? `https://meteofrance.com/previsions-meteo-france/${encodedLocation}/${postalCode}`
+    : `https://meteofrance.com/previsions-meteo-france/${encodedLocation}`
 
   if (isIOS) {
     const iframe = document.createElement('iframe')
@@ -26,17 +31,13 @@ function openWeatherApp(location: string, coordinates?: { latitude: number; long
 
     setTimeout(() => {
       document.body.removeChild(iframe)
-      window.open(`https://meteofrance.com/previsions-meteo-france/${encodedLocation}`, '_blank')
+      window.open(meteoFranceUrl, '_blank')
     }, 1000)
   } else if (isAndroid) {
     window.open(`https://www.google.com/search?q=météo+${encodedLocation}`, '_blank')
   } else {
-    // Desktop: Météo France avec coordonnées si disponibles
-    if (coordinates) {
-      window.open(`https://meteofrance.com/previsions-meteo-france/${encodedLocation}`, '_blank')
-    } else {
-      window.open(`https://meteofrance.com/previsions-meteo-france/${encodedLocation}`, '_blank')
-    }
+    // Desktop: Météo France avec code postal si disponible
+    window.open(meteoFranceUrl, '_blank')
   }
 }
 
@@ -85,7 +86,7 @@ export default function WeatherCard({ weatherOverride }: WeatherCardProps) {
 
   const handleClick = useCallback(() => {
     if (weather) {
-      openWeatherApp(weather.location, weather.coordinates)
+      openWeatherApp(weather.location, weather.postalCode, weather.coordinates)
     }
   }, [weather])
 
