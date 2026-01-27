@@ -6,6 +6,7 @@ from .get_current_user import GetCurrentUserUseCase, InvalidTokenError, UserNotF
 from .update_user import UpdateUserUseCase
 from .deactivate_user import DeactivateUserUseCase, ActivateUserUseCase
 from .list_users import ListUsersUseCase, GetUserByIdUseCase
+from .export_user_data import ExportUserDataUseCase
 
 __all__ = [
     # Use Cases
@@ -17,6 +18,7 @@ __all__ = [
     "ActivateUserUseCase",
     "ListUsersUseCase",
     "GetUserByIdUseCase",
+    "ExportUserDataUseCase",
     # Exceptions
     "InvalidCredentialsError",
     "UserInactiveError",

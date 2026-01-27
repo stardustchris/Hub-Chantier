@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.web.security_middleware import SecurityHeadersMiddleware
 from shared.infrastructure.web.csrf_middleware import CSRFMiddleware
+from shared.infrastructure.web.rate_limit_middleware import RateLimitMiddleware
 from shared.infrastructure.scheduler import get_scheduler
 from shared.infrastructure.scheduler.jobs import RappelReservationJob
 from modules.auth.infrastructure.web import router as auth_router, users_router
@@ -68,6 +69,9 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Middleware CSRF (M-01) - Protection contre attaques CSRF
 app.add_middleware(CSRFMiddleware)
+
+# Middleware Rate Limiting avancé (L-01) - Backoff exponentiel
+app.add_middleware(RateLimitMiddleware)
 
 
 # P2-8: Global exception handler

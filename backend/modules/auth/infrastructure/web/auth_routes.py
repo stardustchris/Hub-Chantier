@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
 
@@ -591,6 +591,49 @@ def activate_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=e.message,
         )
+
+
+@users_router.get("/me/export-data")
+def export_user_data_rgpd(
+    controller: AuthController = Depends(get_auth_controller),
+    current_user_id: int = Depends(get_current_user_id),
+) -> dict[str, Any]:
+    """
+    Exporte toutes les données personnelles de l'utilisateur connecté.
+
+    Conformité RGPD Article 20 - Droit à la portabilité des données.
+
+    Permet à un utilisateur de télécharger toutes ses données personnelles
+    dans un format structuré, couramment utilisé et lisible par machine (JSON).
+
+    Returns:
+        Dictionnaire JSON avec toutes les données:
+        - Profil utilisateur
+        - Pointages et heures
+        - Affectations planning
+        - Posts et commentaires
+        - Documents et formulaires
+        - Signalements et interventions
+
+    Notes:
+        - Les fichiers uploadés ne sont pas inclus (seulement métadonnées)
+        - Utilisable 1 fois par semaine maximum (rate limiting)
+        - Export limité aux 24 derniers mois
+    """
+    from ...application.use_cases import ExportUserDataUseCase
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+    from shared.infrastructure.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        user_repo = SQLAlchemyUserRepository(db)
+        use_case = ExportUserDataUseCase(user_repo)
+
+        export_data = use_case.execute(current_user_id)
+
+        return export_data
+    finally:
+        db.close()
 
 
 # =============================================================================
