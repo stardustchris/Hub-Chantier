@@ -1,11 +1,14 @@
 """Routes FastAPI pour le module Documents."""
 
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from datetime import datetime
+from sqlalchemy.orm import Session
 
+from shared.infrastructure.database import get_db
+from shared.infrastructure.audit import AuditService
 from .dependencies import get_document_controller, get_current_user_id
 from ...adapters.controllers import DocumentController
 from ...application.dtos import (
@@ -28,6 +31,11 @@ from ...application.use_cases import (
 
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
+
+
+def get_audit_service(db: Session = Depends(get_db)) -> AuditService:
+    """Factory pour le service d'audit."""
+    return AuditService(db)
 
 
 # Pydantic models for request/response
@@ -271,12 +279,14 @@ def init_arborescence(
 @router.post("/dossiers/{dossier_id}/documents", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
     dossier_id: int,
+    http_request: Request,
     chantier_id: int = Query(...),
     file: UploadFile = File(...),
     description: Optional[str] = Query(None),
     niveau_acces: Optional[str] = Query(None),
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """Upload un document (GED-06, GED-07, GED-08)."""
     try:
@@ -298,6 +308,23 @@ async def upload_document(
             description=description,
             niveau_acces=niveau_acces,
         )
+
+        # Audit Trail
+        audit.log_action(
+            entity_type="document",
+            entity_id=result.get("id"),
+            action="uploaded",
+            user_id=current_user_id,
+            new_values={
+                "nom": result.get("nom"),
+                "chantier_id": chantier_id,
+                "dossier_id": dossier_id,
+                "taille": taille,
+                "type_document": result.get("type_document"),
+            },
+            ip_address=http_request.client.host if http_request.client else None,
+        )
+
         return result
     except FileTooLargeError as e:
         raise HTTPException(status_code=413, detail=str(e))
@@ -358,19 +385,50 @@ def search_documents(
 @router.put("/documents/{document_id}", response_model=DocumentResponse)
 def update_document(
     document_id: int,
+    http_request: Request,
     request: DocumentUpdateRequest,
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """Met à jour un document (GED-13)."""
     try:
+        # Récupérer les anciennes valeurs pour audit
+        old_doc = controller.get_document(document_id)
+        old_values = {
+            "nom": old_doc.get("nom"),
+            "description": old_doc.get("description"),
+            "dossier_id": old_doc.get("dossier_id"),
+            "niveau_acces": old_doc.get("niveau_acces"),
+        }
+
         dto = DocumentUpdateDTO(
             nom=request.nom,
             description=request.description,
             dossier_id=request.dossier_id,
             niveau_acces=request.niveau_acces,
         )
-        return controller.update_document(document_id, dto)
+        result = controller.update_document(document_id, dto)
+
+        # Audit Trail
+        new_values = {
+            "nom": result.get("nom"),
+            "description": result.get("description"),
+            "dossier_id": result.get("dossier_id"),
+            "niveau_acces": result.get("niveau_acces"),
+        }
+
+        audit.log_action(
+            entity_type="document",
+            entity_id=document_id,
+            action="updated",
+            user_id=current_user_id,
+            old_values=old_values,
+            new_values=new_values,
+            ip_address=http_request.client.host if http_request.client else None,
+        )
+
+        return result
     except DocumentNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except DossierNotFoundError as e:
@@ -380,12 +438,34 @@ def update_document(
 @router.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_document(
     document_id: int,
+    http_request: Request,
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """Supprime un document (GED-13)."""
     try:
+        # Récupérer les valeurs pour audit avant suppression
+        old_doc = controller.get_document(document_id)
+        old_values = {
+            "nom": old_doc.get("nom"),
+            "chantier_id": old_doc.get("chantier_id"),
+            "dossier_id": old_doc.get("dossier_id"),
+            "type_document": old_doc.get("type_document"),
+            "taille": old_doc.get("taille"),
+        }
+
         controller.delete_document(document_id)
+
+        # Audit Trail
+        audit.log_action(
+            entity_type="document",
+            entity_id=document_id,
+            action="deleted",
+            user_id=current_user_id,
+            old_values=old_values,
+            ip_address=http_request.client.host if http_request.client else None,
+        )
     except DocumentNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -459,9 +539,11 @@ def get_document_preview_content(
 
 @router.post("/autorisations", response_model=AutorisationResponse, status_code=status.HTTP_201_CREATED)
 def create_autorisation(
+    http_request: Request,
     request: AutorisationCreateRequest,
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """Crée une autorisation nominative (GED-05, GED-10)."""
     try:
@@ -473,7 +555,27 @@ def create_autorisation(
             document_id=request.document_id,
             expire_at=request.expire_at,
         )
-        return controller.create_autorisation(dto)
+        result = controller.create_autorisation(dto)
+
+        # Audit Trail
+        entity_type = "autorisation_document" if request.document_id else "autorisation_dossier"
+        target_id = request.document_id or request.dossier_id
+
+        audit.log_action(
+            entity_type=entity_type,
+            entity_id=result.get("id"),
+            action="permissions_changed",
+            user_id=current_user_id,
+            new_values={
+                "user_id": request.user_id,
+                "type_autorisation": request.type_autorisation,
+                "target_type": "document" if request.document_id else "dossier",
+                "target_id": target_id,
+            },
+            ip_address=http_request.client.host if http_request.client else None,
+        )
+
+        return result
     except AutorisationAlreadyExistsError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -501,11 +603,24 @@ def list_autorisations_document(
 @router.delete("/autorisations/{autorisation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_autorisation(
     autorisation_id: int,
+    http_request: Request,
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """Révoque une autorisation."""
     try:
+        # Note: Nous ne pouvons pas récupérer les anciennes valeurs car le controller
+        # ne fournit pas de méthode get_autorisation. L'audit sera simplifié.
         controller.revoke_autorisation(autorisation_id)
+
+        # Audit Trail
+        audit.log_action(
+            entity_type="autorisation",
+            entity_id=autorisation_id,
+            action="permissions_revoked",
+            user_id=current_user_id,
+            ip_address=http_request.client.host if http_request.client else None,
+        )
     except AutorisationNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

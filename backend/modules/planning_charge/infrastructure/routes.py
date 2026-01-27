@@ -1,8 +1,9 @@
 """Routes API pour le module planning de charge."""
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
-from typing import Optional
 
 from shared.infrastructure.database import get_db
 from shared.infrastructure.cache import cache_manager
@@ -18,8 +19,13 @@ from shared.infrastructure.audit import AuditService
 CACHE_PREFIX = "planning_charge"
 
 
-def _invalidate_planning_cache():
-    """Invalidate all planning charge cache entries."""
+def _invalidate_planning_cache() -> None:
+    """
+    Invalide tous les caches du planning de charge.
+
+    Supprime toutes les entrees de cache commencant par le prefixe
+    CACHE_PREFIX pour forcer le rechargement des donnees.
+    """
     cache_manager.invalidate_pattern(CACHE_PREFIX)
 
 from ..application.use_cases import (
@@ -55,12 +61,31 @@ router = APIRouter(prefix="/planning-charge", tags=["Planning de Charge"])
 
 
 def get_audit_service(db: Session = Depends(get_db)) -> AuditService:
-    """Factory pour le service d'audit."""
+    """
+    Factory pour le service d'audit.
+
+    Args:
+        db: Session de base de donnees injectee par FastAPI.
+
+    Returns:
+        Instance du service d'audit configuree.
+    """
     return AuditService(db)
 
 
 def get_controller(db: Session = Depends(get_db)) -> PlanningChargeController:
-    """Factory pour le controller avec injection de dependances."""
+    """
+    Factory pour le controller avec injection de dependances.
+
+    Construit le controller avec toutes ses dependances (repositories,
+    providers, use cases) pour les endpoints du planning de charge.
+
+    Args:
+        db: Session de base de donnees injectee par FastAPI.
+
+    Returns:
+        Instance du PlanningChargeController completement configuree.
+    """
     repo = SQLAlchemyBesoinChargeRepository(db)
 
     # Providers pour integration avec autres modules
@@ -113,7 +138,7 @@ def get_planning_charge(
     unite: str = Query("heures", description="Unite: heures ou jours_homme"),
     _role: str = Depends(require_chef_or_above),  # RBAC: Chef+ peut voir
     controller: PlanningChargeController = Depends(get_controller),
-):
+) -> PlanningChargeResponse:
     """
     Endpoint principal du planning de charge.
 
@@ -151,7 +176,7 @@ def get_occupation_details(
     semaine_code: str,
     _role: str = Depends(require_chef_or_above),  # RBAC: Chef+ peut voir
     controller: PlanningChargeController = Depends(get_controller),
-):
+) -> OccupationDetailsResponse:
     """
     Modal details occupation.
 
@@ -180,7 +205,7 @@ def get_besoins_by_chantier(
     page_size: int = Query(50, ge=1, le=100, description="Taille de la page"),
     _role: str = Depends(require_chef_or_above),  # RBAC: Chef+ peut voir
     controller: PlanningChargeController = Depends(get_controller),
-):
+) -> ListeBesoinResponse:
     """
     Recupere les besoins pour un chantier specifique.
 
@@ -218,7 +243,7 @@ def create_besoin(
     _role: str = Depends(require_conducteur_or_admin),  # RBAC: Conducteur+ seulement
     controller: PlanningChargeController = Depends(get_controller),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> BesoinChargeResponse:
     """
     Modal planification des besoins.
 
@@ -271,7 +296,7 @@ def update_besoin(
     _role: str = Depends(require_conducteur_or_admin),  # RBAC: Conducteur+ seulement
     controller: PlanningChargeController = Depends(get_controller),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> BesoinChargeResponse:
     """
     Met a jour un besoin existant.
 
@@ -328,7 +353,7 @@ def delete_besoin(
     _role: str = Depends(require_conducteur_or_admin),  # RBAC: Conducteur+ seulement
     controller: PlanningChargeController = Depends(get_controller),
     audit: AuditService = Depends(get_audit_service),
-):
+) -> None:
     """
     Supprime un besoin (soft delete).
 

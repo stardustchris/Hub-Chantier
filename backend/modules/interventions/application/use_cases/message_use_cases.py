@@ -15,6 +15,12 @@ class AddMessageUseCase:
     """
 
     def __init__(self, repository: InterventionMessageRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux messages d'intervention.
+        """
         self._repository = repository
 
     def execute(
@@ -23,7 +29,17 @@ class AddMessageUseCase:
         dto: CreateMessageDTO,
         auteur_id: int,
     ) -> InterventionMessage:
-        """Ajoute un message a l'intervention."""
+        """
+        Ajoute un message a l'intervention.
+
+        Args:
+            intervention_id: ID de l'intervention concernee.
+            dto: Donnees du message a creer.
+            auteur_id: ID de l'auteur du message.
+
+        Returns:
+            Le message cree.
+        """
         type_message = TypeMessage(dto.type_message)
 
         if type_message == TypeMessage.PHOTO:
@@ -53,6 +69,12 @@ class ListMessagesUseCase:
     """Use case pour lister les messages."""
 
     def __init__(self, repository: InterventionMessageRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux messages d'intervention.
+        """
         self._repository = repository
 
     def execute(
@@ -62,7 +84,18 @@ class ListMessagesUseCase:
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[List[InterventionMessage], int]:
-        """Liste les messages d'une intervention."""
+        """
+        Liste les messages d'une intervention.
+
+        Args:
+            intervention_id: ID de l'intervention.
+            type_message: Type de message a filtrer (optionnel).
+            limit: Nombre maximum de messages a retourner.
+            offset: Nombre de messages a sauter.
+
+        Returns:
+            Tuple contenant la liste des messages et le nombre total.
+        """
         type_filter = TypeMessage(type_message) if type_message else None
 
         messages = self._repository.list_by_intervention(
@@ -84,8 +117,23 @@ class ToggleRapportInclusionUseCase:
     """
 
     def __init__(self, repository: InterventionMessageRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux messages d'intervention.
+        """
         self._repository = repository
 
     def execute(self, message_id: int, inclure: bool) -> bool:
-        """Active/desactive l'inclusion dans le rapport."""
+        """
+        Active/desactive l'inclusion dans le rapport.
+
+        Args:
+            message_id: ID du message a modifier.
+            inclure: True pour inclure, False pour exclure.
+
+        Returns:
+            True si l'operation a reussi, False sinon.
+        """
         return self._repository.toggle_inclure_rapport(message_id, inclure)

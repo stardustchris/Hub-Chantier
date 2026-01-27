@@ -27,7 +27,16 @@ class CreateInterventionUseCase:
     def execute(
         self, dto: CreateInterventionDTO, created_by: int
     ) -> Intervention:
-        """Cree une nouvelle intervention."""
+        """
+        Cree une nouvelle intervention.
+
+        Args:
+            dto: Donnees de creation de l'intervention.
+            created_by: ID de l'utilisateur createur.
+
+        Returns:
+            L'intervention creee.
+        """
         intervention = Intervention(
             type_intervention=dto.type_intervention,
             priorite=dto.priorite,
@@ -48,14 +57,36 @@ class GetInterventionUseCase:
     """Use case pour recuperer une intervention."""
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(self, intervention_id: int) -> Optional[Intervention]:
-        """Recupere une intervention par son ID."""
+        """
+        Recupere une intervention par son ID.
+
+        Args:
+            intervention_id: ID de l'intervention a recuperer.
+
+        Returns:
+            L'intervention ou None si non trouvee.
+        """
         return self._repository.get_by_id(intervention_id)
 
     def by_code(self, code: str) -> Optional[Intervention]:
-        """Recupere une intervention par son code."""
+        """
+        Recupere une intervention par son code.
+
+        Args:
+            code: Code unique de l'intervention.
+
+        Returns:
+            L'intervention ou None si non trouvee.
+        """
         return self._repository.get_by_code(code)
 
 
@@ -66,12 +97,26 @@ class ListInterventionsUseCase:
     """
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(
         self, filters: InterventionFiltersDTO
     ) -> tuple[List[Intervention], int]:
-        """Liste les interventions avec filtres et pagination."""
+        """
+        Liste les interventions avec filtres et pagination.
+
+        Args:
+            filters: Criteres de filtrage et pagination.
+
+        Returns:
+            Tuple contenant la liste des interventions et le nombre total.
+        """
         interventions = self._repository.list_all(
             statut=filters.statut,
             priorite=filters.priorite,
@@ -96,12 +141,30 @@ class UpdateInterventionUseCase:
     """Use case pour modifier une intervention."""
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(
         self, intervention_id: int, dto: UpdateInterventionDTO
     ) -> Optional[Intervention]:
-        """Met a jour une intervention."""
+        """
+        Met a jour une intervention.
+
+        Args:
+            intervention_id: ID de l'intervention a modifier.
+            dto: Donnees de mise a jour.
+
+        Returns:
+            L'intervention mise a jour ou None si non trouvee.
+
+        Raises:
+            ValueError: Si l'intervention ne peut plus etre modifiee.
+        """
         intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
@@ -150,13 +213,30 @@ class PlanifierInterventionUseCase:
         repository: InterventionRepository,
         affectation_repository: AffectationInterventionRepository,
     ):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+            affectation_repository: Repository pour les affectations techniciens.
+        """
         self._repository = repository
         self._affectation_repository = affectation_repository
 
     def execute(
         self, intervention_id: int, dto: PlanifierInterventionDTO, planned_by: int
     ) -> Optional[Intervention]:
-        """Planifie une intervention avec date et techniciens."""
+        """
+        Planifie une intervention avec date et techniciens.
+
+        Args:
+            intervention_id: ID de l'intervention a planifier.
+            dto: Donnees de planification.
+            planned_by: ID de l'utilisateur planificateur.
+
+        Returns:
+            L'intervention planifiee ou None si non trouvee.
+        """
         intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
@@ -191,12 +271,27 @@ class DemarrerInterventionUseCase:
     """Use case pour demarrer une intervention."""
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(
         self, intervention_id: int, dto: DemarrerInterventionDTO
     ) -> Optional[Intervention]:
-        """Demarre une intervention."""
+        """
+        Demarre une intervention.
+
+        Args:
+            intervention_id: ID de l'intervention a demarrer.
+            dto: Donnees de demarrage.
+
+        Returns:
+            L'intervention demarree ou None si non trouvee.
+        """
         intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
@@ -210,12 +305,27 @@ class TerminerInterventionUseCase:
     """Use case pour terminer une intervention."""
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(
         self, intervention_id: int, dto: TerminerInterventionDTO
     ) -> Optional[Intervention]:
-        """Termine une intervention."""
+        """
+        Termine une intervention.
+
+        Args:
+            intervention_id: ID de l'intervention a terminer.
+            dto: Donnees de fin (travaux realises, anomalies).
+
+        Returns:
+            L'intervention terminee ou None si non trouvee.
+        """
         intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
@@ -233,10 +343,24 @@ class AnnulerInterventionUseCase:
     """Use case pour annuler une intervention."""
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(self, intervention_id: int) -> Optional[Intervention]:
-        """Annule une intervention."""
+        """
+        Annule une intervention.
+
+        Args:
+            intervention_id: ID de l'intervention a annuler.
+
+        Returns:
+            L'intervention annulee ou None si non trouvee.
+        """
         intervention = self._repository.get_by_id(intervention_id)
         if not intervention:
             return None
@@ -250,8 +374,23 @@ class DeleteInterventionUseCase:
     """Use case pour supprimer une intervention (soft delete)."""
 
     def __init__(self, repository: InterventionRepository):
+        """
+        Initialise le use case.
+
+        Args:
+            repository: Repository pour acceder aux interventions.
+        """
         self._repository = repository
 
     def execute(self, intervention_id: int, deleted_by: int) -> bool:
-        """Supprime une intervention."""
+        """
+        Supprime une intervention (soft delete).
+
+        Args:
+            intervention_id: ID de l'intervention a supprimer.
+            deleted_by: ID de l'utilisateur suppresseur.
+
+        Returns:
+            True si supprimee, False sinon.
+        """
         return self._repository.delete(intervention_id, deleted_by)

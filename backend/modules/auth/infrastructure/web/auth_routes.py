@@ -5,9 +5,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.config import settings
+from shared.infrastructure.database import get_db
+from shared.infrastructure.audit import AuditService
 
 # Cookie name for JWT token
 AUTH_COOKIE_NAME = "access_token"
@@ -27,6 +30,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def get_audit_service(db: Session = Depends(get_db)) -> AuditService:
+    """Factory pour le service d'audit."""
+    return AuditService(db)
 
 
 # =============================================================================
@@ -384,18 +392,22 @@ def get_user(
 @users_router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int,
+    http_request: Request,
     request: UpdateUserRequest,
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """
     Met à jour un utilisateur.
 
     Args:
         user_id: ID de l'utilisateur à mettre à jour.
+        http_request: Requête HTTP (pour audit).
         request: Données de mise à jour.
         controller: Controller d'authentification.
         current_user_id: ID de l'utilisateur connecté.
+        audit: Service d'audit.
 
     Returns:
         Utilisateur mis à jour.
@@ -405,7 +417,19 @@ def update_user(
         HTTPException 400: Données invalides.
     """
     try:
-        return controller.update_user(
+        # Récupérer les anciennes valeurs pour l'audit
+        old_user = controller.get_user_by_id(user_id)
+        old_values = {
+            "nom": old_user.get("nom"),
+            "prenom": old_user.get("prenom"),
+            "telephone": old_user.get("telephone"),
+            "metier": old_user.get("metier"),
+            "role": old_user.get("role"),
+            "type_utilisateur": old_user.get("type_utilisateur"),
+            "code_utilisateur": old_user.get("code_utilisateur"),
+        }
+
+        result = controller.update_user(
             user_id=user_id,
             nom=request.nom,
             prenom=request.prenom,
@@ -419,6 +443,29 @@ def update_user(
             type_utilisateur=request.type_utilisateur,
             code_utilisateur=request.code_utilisateur,
         )
+
+        # Audit Trail
+        new_values = {
+            "nom": result.get("nom"),
+            "prenom": result.get("prenom"),
+            "telephone": result.get("telephone"),
+            "metier": result.get("metier"),
+            "role": result.get("role"),
+            "type_utilisateur": result.get("type_utilisateur"),
+            "code_utilisateur": result.get("code_utilisateur"),
+        }
+
+        audit.log_action(
+            entity_type="user",
+            entity_id=user_id,
+            action="updated",
+            user_id=current_user_id,
+            old_values=old_values,
+            new_values=new_values,
+            ip_address=http_request.client.host if http_request.client else None,
+        )
+
+        return result
     except UserNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -439,8 +486,10 @@ def update_user(
 @users_router.post("/{user_id}/deactivate", response_model=UserResponse)
 def deactivate_user(
     user_id: int,
+    http_request: Request,
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """
     Désactive un utilisateur (USR-10 - révocation instantanée).
@@ -449,8 +498,10 @@ def deactivate_user(
 
     Args:
         user_id: ID de l'utilisateur à désactiver.
+        http_request: Requête HTTP (pour audit).
         controller: Controller d'authentification.
         current_user_id: ID de l'utilisateur connecté.
+        audit: Service d'audit.
 
     Returns:
         Utilisateur désactivé.
@@ -459,7 +510,28 @@ def deactivate_user(
         HTTPException 404: Utilisateur non trouvé.
     """
     try:
-        return controller.deactivate_user(user_id)
+        # Récupérer les valeurs pour audit
+        old_user = controller.get_user_by_id(user_id)
+
+        result = controller.deactivate_user(user_id)
+
+        # Audit Trail
+        audit.log_action(
+            entity_type="user",
+            entity_id=user_id,
+            action="deactivated",
+            user_id=current_user_id,
+            old_values={
+                "is_active": old_user.get("is_active"),
+                "email": old_user.get("email"),
+            },
+            new_values={
+                "is_active": False,
+            },
+            ip_address=http_request.client.host if http_request.client else None,
+        )
+
+        return result
     except UserNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -470,16 +542,20 @@ def deactivate_user(
 @users_router.post("/{user_id}/activate", response_model=UserResponse)
 def activate_user(
     user_id: int,
+    http_request: Request,
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
+    audit: AuditService = Depends(get_audit_service),
 ):
     """
     Réactive un utilisateur précédemment désactivé.
 
     Args:
         user_id: ID de l'utilisateur à activer.
+        http_request: Requête HTTP (pour audit).
         controller: Controller d'authentification.
         current_user_id: ID de l'utilisateur connecté.
+        audit: Service d'audit.
 
     Returns:
         Utilisateur activé.
@@ -488,7 +564,28 @@ def activate_user(
         HTTPException 404: Utilisateur non trouvé.
     """
     try:
-        return controller.activate_user(user_id)
+        # Récupérer les valeurs pour audit
+        old_user = controller.get_user_by_id(user_id)
+
+        result = controller.activate_user(user_id)
+
+        # Audit Trail
+        audit.log_action(
+            entity_type="user",
+            entity_id=user_id,
+            action="activated",
+            user_id=current_user_id,
+            old_values={
+                "is_active": old_user.get("is_active"),
+                "email": old_user.get("email"),
+            },
+            new_values={
+                "is_active": True,
+            },
+            ip_address=http_request.client.host if http_request.client else None,
+        )
+
+        return result
     except UserNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

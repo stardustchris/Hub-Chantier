@@ -34,7 +34,7 @@ class Settings:
 
     # Cookie settings (HttpOnly for security)
     COOKIE_SECURE: bool = True  # True in production (HTTPS)
-    COOKIE_SAMESITE: str = "lax"  # Protect against CSRF
+    COOKIE_SAMESITE: str = "strict"  # Enhanced CSRF protection (M-01)
     COOKIE_DOMAIN: str = None  # None = current domain
 
     # Encryption (RGPD Art. 32)
@@ -55,7 +55,7 @@ class Settings:
 
         # Cookie settings
         self.COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
-        self.COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")
+        self.COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "strict")  # M-01: strict par défaut
         self.COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", None)
 
         # Encryption key (must be 32 bytes for AES-256)

@@ -1,5 +1,7 @@
 """Routes API pour le module notifications."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -32,7 +34,7 @@ async def get_notifications(
     limit: int = Query(50, ge=1, le=100, description="Nombre maximum d'elements"),
     current_user_id: int = Depends(get_current_user_id),
     use_case: GetNotificationsUseCase = Depends(get_notifications_use_case),
-):
+) -> NotificationListDTO:
     """
     Recupere les notifications de l'utilisateur connecte.
 
@@ -52,7 +54,7 @@ async def get_notifications(
 async def get_unread_count(
     current_user_id: int = Depends(get_current_user_id),
     use_case: GetNotificationsUseCase = Depends(get_notifications_use_case),
-):
+) -> dict[str, int]:
     """Retourne le nombre de notifications non lues."""
     result = use_case.execute(user_id=current_user_id, limit=0)
     return {"unread_count": result.unread_count}
@@ -63,7 +65,7 @@ async def mark_notifications_as_read(
     data: MarkAsReadDTO,
     current_user_id: int = Depends(get_current_user_id),
     use_case: MarkAsReadUseCase = Depends(get_mark_as_read_use_case),
-):
+) -> dict[str, int]:
     """
     Marque des notifications comme lues.
 
@@ -82,7 +84,7 @@ async def mark_notification_as_read(
     notification_id: int,
     current_user_id: int = Depends(get_current_user_id),
     use_case: MarkAsReadUseCase = Depends(get_mark_as_read_use_case),
-):
+) -> dict[str, bool]:
     """Marque une notification specifique comme lue."""
     count = use_case.execute(
         user_id=current_user_id,
@@ -98,7 +100,7 @@ async def delete_notification(
     notification_id: int,
     current_user_id: int = Depends(get_current_user_id),
     use_case: DeleteNotificationUseCase = Depends(get_delete_notification_use_case),
-):
+) -> dict[str, bool]:
     """Supprime une notification."""
     try:
         count = use_case.execute(
@@ -116,7 +118,7 @@ async def delete_notification(
 async def delete_all_notifications(
     current_user_id: int = Depends(get_current_user_id),
     use_case: DeleteNotificationUseCase = Depends(get_delete_notification_use_case),
-):
+) -> dict[str, int]:
     """Supprime toutes les notifications de l'utilisateur."""
     count = use_case.execute(user_id=current_user_id)
     return {"deleted_count": count}
@@ -126,7 +128,7 @@ async def delete_all_notifications(
 async def seed_test_notifications(
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     """
     Cree des notifications de test pour l'utilisateur connecte.
 

@@ -4,7 +4,7 @@ INT-01 a INT-17: Endpoints REST pour la gestion des interventions.
 """
 
 from datetime import date
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
@@ -92,7 +92,7 @@ def create_intervention(
     db: Session = Depends(get_db),
     use_case: CreateInterventionUseCase = Depends(get_create_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Cree une nouvelle intervention."""
     intervention = use_case.execute(dto, current_user_id)
     db.commit()
@@ -117,7 +117,7 @@ def list_interventions(
     offset: int = Query(0, ge=0),
     use_case: ListInterventionsUseCase = Depends(get_list_interventions_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionListResponseDTO:
     """Liste les interventions."""
     filters = InterventionFiltersDTO(
         statut=statut,
@@ -149,7 +149,7 @@ def get_intervention(
     intervention_id: int,
     use_case: GetInterventionUseCase = Depends(get_get_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Recupere une intervention par son ID."""
     intervention = use_case.execute(intervention_id)
 
@@ -173,7 +173,7 @@ def update_intervention(
     db: Session = Depends(get_db),
     use_case: UpdateInterventionUseCase = Depends(get_update_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Modifie une intervention."""
     try:
         intervention = use_case.execute(intervention_id, dto)
@@ -203,7 +203,7 @@ def delete_intervention(
     db: Session = Depends(get_db),
     use_case: DeleteInterventionUseCase = Depends(get_delete_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> None:
     """Supprime une intervention (soft delete)."""
     deleted = use_case.execute(intervention_id, current_user_id)
 
@@ -233,7 +233,7 @@ def planifier_intervention(
     db: Session = Depends(get_db),
     use_case: PlanifierInterventionUseCase = Depends(get_planifier_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Planifie une intervention."""
     intervention = use_case.execute(intervention_id, dto, current_user_id)
 
@@ -258,7 +258,7 @@ def demarrer_intervention(
     db: Session = Depends(get_db),
     use_case: DemarrerInterventionUseCase = Depends(get_demarrer_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Demarre une intervention."""
     try:
         intervention = use_case.execute(intervention_id, dto)
@@ -289,7 +289,7 @@ def terminer_intervention(
     db: Session = Depends(get_db),
     use_case: TerminerInterventionUseCase = Depends(get_terminer_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Termine une intervention."""
     try:
         intervention = use_case.execute(intervention_id, dto)
@@ -319,7 +319,7 @@ def annuler_intervention(
     db: Session = Depends(get_db),
     use_case: AnnulerInterventionUseCase = Depends(get_annuler_intervention_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> InterventionResponseDTO:
     """Annule une intervention."""
     try:
         intervention = use_case.execute(intervention_id)
@@ -357,7 +357,7 @@ def affecter_technicien(
     db: Session = Depends(get_db),
     use_case: AffecterTechnicienUseCase = Depends(get_affecter_technicien_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> TechnicienResponseDTO:
     """Affecte un technicien a l'intervention."""
     try:
         affectation = use_case.execute(intervention_id, dto, current_user_id)
@@ -386,7 +386,7 @@ def list_techniciens(
     intervention_id: int,
     use_case: ListTechniciensInterventionUseCase = Depends(get_list_techniciens_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> List[TechnicienResponseDTO]:
     """Liste les techniciens affectes a l'intervention."""
     affectations = use_case.execute(intervention_id)
 
@@ -412,7 +412,7 @@ def desaffecter_technicien(
     db: Session = Depends(get_db),
     use_case: DesaffecterTechnicienUseCase = Depends(get_desaffecter_technicien_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> None:
     """Desaffecte un technicien de l'intervention."""
     deleted = use_case.execute(affectation_id, current_user_id)
 
@@ -443,7 +443,7 @@ def add_message(
     db: Session = Depends(get_db),
     use_case: AddMessageUseCase = Depends(get_add_message_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> MessageResponseDTO:
     """Ajoute un message a l'intervention."""
     message = use_case.execute(intervention_id, dto, current_user_id)
     db.commit()
@@ -472,7 +472,7 @@ def list_messages(
     offset: int = Query(0, ge=0),
     use_case: ListMessagesUseCase = Depends(get_list_messages_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> List[MessageResponseDTO]:
     """Liste les messages de l'intervention."""
     messages, _ = use_case.execute(
         intervention_id, type_message, limit, offset
@@ -506,7 +506,7 @@ def toggle_rapport_inclusion(
     db: Session = Depends(get_db),
     use_case: ToggleRapportInclusionUseCase = Depends(get_toggle_rapport_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> None:
     """Active/desactive l'inclusion d'un message dans le rapport."""
     updated = use_case.execute(message_id, inclure)
 
@@ -538,7 +538,7 @@ def add_signature(
     db: Session = Depends(get_db),
     use_case: AddSignatureUseCase = Depends(get_add_signature_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> SignatureResponseDTO:
     """Ajoute une signature a l'intervention."""
     # Recuperer l'IP pour la tracabilite
     ip_address = request.client.host if request.client else None
@@ -578,7 +578,7 @@ def list_signatures(
     intervention_id: int,
     use_case: ListSignaturesUseCase = Depends(get_list_signatures_use_case),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> List[SignatureResponseDTO]:
     """Liste les signatures de l'intervention."""
     signatures = use_case.execute(intervention_id)
 

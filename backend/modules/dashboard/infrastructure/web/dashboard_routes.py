@@ -457,26 +457,38 @@ def unlike_post(
 
 
 def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
-    """Charge les données utilisateur depuis la DB pour un ensemble d'IDs."""
+    """
+    Charge les données utilisateur depuis la DB pour un ensemble d'IDs.
+
+    Args:
+        user_ids: Liste des IDs utilisateurs à charger.
+
+    Returns:
+        Dictionnaire {user_id: données_utilisateur}.
+    """
     if not user_ids:
         return {}
+
+    from modules.auth.infrastructure.persistence.models import UserModel
+
     db = SessionLocal()
     try:
-        placeholders = ",".join(str(int(uid)) for uid in set(user_ids))
-        result = db.execute(
-            text(f"SELECT id, email, nom, prenom, role, type_utilisateur, is_active, couleur FROM users WHERE id IN ({placeholders})")
-        )
+        # Utiliser l'ORM SQLAlchemy pour éviter l'injection SQL
+        users_query = db.query(UserModel).filter(
+            UserModel.id.in_(set(user_ids))
+        ).all()
+
         users = {}
-        for row in result:
-            users[row[0]] = {
-                "id": str(row[0]),
-                "email": row[1] or "",
-                "nom": row[2] or "",
-                "prenom": row[3] or "",
-                "role": row[4] or "compagnon",
-                "type_utilisateur": row[5] or "employe",
-                "is_active": bool(row[6]),
-                "couleur": row[7] or "",
+        for user in users_query:
+            users[user.id] = {
+                "id": str(user.id),
+                "email": user.email or "",
+                "nom": user.nom or "",
+                "prenom": user.prenom or "",
+                "role": user.role or "compagnon",
+                "type_utilisateur": user.type_utilisateur or "employe",
+                "is_active": bool(user.is_active),
+                "couleur": user.couleur or "",
             }
         return users
     finally:

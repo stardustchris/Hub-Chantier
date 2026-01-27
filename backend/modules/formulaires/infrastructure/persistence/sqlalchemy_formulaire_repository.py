@@ -15,11 +15,24 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
     """Implementation SQLAlchemy du repository des formulaires."""
 
     def __init__(self, session: Session):
-        """Initialise le repository avec une session."""
+        """
+        Initialise le repository avec une session.
+
+        Args:
+            session: Session SQLAlchemy pour les operations de persistence.
+        """
         self._session = session
 
     def _to_entity(self, model: FormulaireRempliModel) -> FormulaireRempli:
-        """Convertit un modele en entite."""
+        """
+        Convertit un modele en entite.
+
+        Args:
+            model: Modele SQLAlchemy du formulaire rempli.
+
+        Returns:
+            Entite FormulaireRempli du domaine.
+        """
         champs = [
             ChampRempli(
                 nom=c.nom,
@@ -66,12 +79,28 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         )
 
     def find_by_id(self, formulaire_id: int) -> Optional[FormulaireRempli]:
-        """Trouve un formulaire par son ID."""
+        """
+        Trouve un formulaire par son ID.
+
+        Args:
+            formulaire_id: ID du formulaire a rechercher.
+
+        Returns:
+            Le formulaire ou None si non trouve.
+        """
         model = self._session.query(FormulaireRempliModel).filter_by(id=formulaire_id).first()
         return self._to_entity(model) if model else None
 
     def save(self, formulaire: FormulaireRempli) -> FormulaireRempli:
-        """Persiste un formulaire."""
+        """
+        Persiste un formulaire.
+
+        Args:
+            formulaire: Entite formulaire a sauvegarder.
+
+        Returns:
+            Le formulaire sauvegarde avec son ID.
+        """
         if formulaire.id:
             # Update
             model = self._session.query(FormulaireRempliModel).filter_by(id=formulaire.id).first()
@@ -168,7 +197,15 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         return self._to_entity(model)
 
     def delete(self, formulaire_id: int) -> bool:
-        """Supprime un formulaire."""
+        """
+        Supprime un formulaire.
+
+        Args:
+            formulaire_id: ID du formulaire a supprimer.
+
+        Returns:
+            True si supprime, False sinon.
+        """
         model = self._session.query(FormulaireRempliModel).filter_by(id=formulaire_id).first()
         if model:
             self._session.delete(model)
@@ -182,7 +219,17 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         skip: int = 0,
         limit: int = 100,
     ) -> List[FormulaireRempli]:
-        """Trouve les formulaires d'un chantier (FOR-10)."""
+        """
+        Trouve les formulaires d'un chantier (FOR-10).
+
+        Args:
+            chantier_id: ID du chantier.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum d'elements a retourner.
+
+        Returns:
+            Liste des formulaires du chantier.
+        """
         models = (
             self._session.query(FormulaireRempliModel)
             .filter_by(chantier_id=chantier_id)
@@ -199,7 +246,17 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         skip: int = 0,
         limit: int = 100,
     ) -> List[FormulaireRempli]:
-        """Trouve les formulaires bases sur un template."""
+        """
+        Trouve les formulaires bases sur un template.
+
+        Args:
+            template_id: ID du template.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum d'elements a retourner.
+
+        Returns:
+            Liste des formulaires bases sur ce template.
+        """
         models = (
             self._session.query(FormulaireRempliModel)
             .filter_by(template_id=template_id)
@@ -216,7 +273,17 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         skip: int = 0,
         limit: int = 100,
     ) -> List[FormulaireRempli]:
-        """Trouve les formulaires remplis par un utilisateur."""
+        """
+        Trouve les formulaires remplis par un utilisateur.
+
+        Args:
+            user_id: ID de l'utilisateur.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum d'elements a retourner.
+
+        Returns:
+            Liste des formulaires de cet utilisateur.
+        """
         models = (
             self._session.query(FormulaireRempliModel)
             .filter_by(user_id=user_id)
@@ -233,7 +300,17 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         skip: int = 0,
         limit: int = 100,
     ) -> List[FormulaireRempli]:
-        """Trouve les formulaires par statut."""
+        """
+        Trouve les formulaires par statut.
+
+        Args:
+            statut: Statut a filtrer.
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum d'elements a retourner.
+
+        Returns:
+            Liste des formulaires avec ce statut.
+        """
         models = (
             self._session.query(FormulaireRempliModel)
             .filter_by(statut=statut.value)
@@ -245,7 +322,15 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         return [self._to_entity(m) for m in models]
 
     def count_by_chantier(self, chantier_id: int) -> int:
-        """Compte les formulaires d'un chantier."""
+        """
+        Compte les formulaires d'un chantier.
+
+        Args:
+            chantier_id: ID du chantier.
+
+        Returns:
+            Nombre de formulaires du chantier.
+        """
         return (
             self._session.query(FormulaireRempliModel)
             .filter_by(chantier_id=chantier_id)
@@ -253,7 +338,15 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         )
 
     def find_history(self, formulaire_id: int) -> List[FormulaireRempli]:
-        """Trouve l'historique d'un formulaire (FOR-08)."""
+        """
+        Trouve l'historique d'un formulaire (FOR-08).
+
+        Args:
+            formulaire_id: ID du formulaire.
+
+        Returns:
+            Liste des versions du formulaire (actuel + parents).
+        """
         result = []
 
         # Ajouter le formulaire courant
@@ -284,7 +377,22 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         skip: int = 0,
         limit: int = 100,
     ) -> tuple[List[FormulaireRempli], int]:
-        """Recherche des formulaires avec filtres."""
+        """
+        Recherche des formulaires avec filtres.
+
+        Args:
+            chantier_id: Filtrer par chantier (optionnel).
+            template_id: Filtrer par template (optionnel).
+            user_id: Filtrer par utilisateur (optionnel).
+            statut: Filtrer par statut (optionnel).
+            date_debut: Date minimale de creation (optionnel).
+            date_fin: Date maximale de creation (optionnel).
+            skip: Nombre d'elements a sauter.
+            limit: Nombre maximum d'elements a retourner.
+
+        Returns:
+            Tuple contenant la liste des formulaires et le total.
+        """
         q = self._session.query(FormulaireRempliModel)
 
         if chantier_id:
