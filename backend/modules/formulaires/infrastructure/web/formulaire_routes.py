@@ -475,10 +475,29 @@ async def validate_formulaire(
 async def export_pdf(
     formulaire_id: int,
     controller: FormulaireController = Depends(get_formulaire_controller),
+    db: Session = Depends(get_db),
 ):
     """Exporte un formulaire en PDF (FOR-09)."""
     try:
-        return controller.export_pdf_download(formulaire_id)
+        from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
+        from modules.auth.infrastructure.persistence.user_model import UserModel
+
+        # Resoudre les noms pour le PDF
+        def resolve_names(chantier_id: int, user_id: int, valide_by: int | None) -> dict:
+            result = {}
+            chantier = db.query(ChantierModel).filter_by(id=chantier_id).first()
+            if chantier:
+                result["chantier_nom"] = chantier.nom
+            user = db.query(UserModel).filter_by(id=user_id).first()
+            if user:
+                result["user_nom"] = f"{user.prenom} {user.nom}"
+            if valide_by:
+                valideur = db.query(UserModel).filter_by(id=valide_by).first()
+                if valideur:
+                    result["valideur_nom"] = f"{valideur.prenom} {valideur.nom}"
+            return result
+
+        return controller.export_pdf_download(formulaire_id, resolve_names)
     except Exception as e:
         if "non trouve" in str(e):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -311,6 +311,6 @@ class FormulaireController:
         """Exporte un formulaire en PDF (FOR-09) - contenu structure."""
         return self._export_pdf_uc.execute(formulaire_id)
 
-    def export_pdf_download(self, formulaire_id: int) -> PDFExportResult:
+    def export_pdf_download(self, formulaire_id: int, resolve_names=None) -> PDFExportResult:
         """Exporte un formulaire en PDF base64 pour telechargement."""
-        return self._export_pdf_uc.export_as_pdf(formulaire_id)
+        return self._export_pdf_uc.export_as_pdf(formulaire_id, resolve_names=resolve_names)
