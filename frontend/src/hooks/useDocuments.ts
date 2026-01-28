@@ -73,7 +73,7 @@ export function useDocuments() {
     try {
       setIsLoadingDocuments(true)
       const response = await documentsApi.listDocuments(dossierId)
-      setDocuments(response.items)
+      setDocuments(response.documents)
     } catch (error) {
       logger.error('Error loading documents', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du chargement des documents', type: 'error' })
@@ -237,7 +237,7 @@ export function useDocuments() {
         parseInt(selectedChantier.id),
         searchQuery
       )
-      setDocuments(response.items)
+      setDocuments(response.documents)
       setSelectedDossier(null)
     } catch (error) {
       logger.error('Error searching documents', error, { context: 'DocumentsPage' })

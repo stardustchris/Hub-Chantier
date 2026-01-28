@@ -79,7 +79,7 @@ export interface Arborescence {
 }
 
 export interface DocumentListResponse {
-  items: Document[];
+  documents: Document[];
   total: number;
   skip: number;
   limit: number;
