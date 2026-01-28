@@ -26,23 +26,26 @@ export function GDPRBanner() {
   })
 
   useEffect(() => {
-    // Vérifier si le banner doit être affiché
-    const checkConsents = async () => {
-      try {
-        const hasAnswered = await consentService.hasAnswered()
-        const wasShown = consentService.wasBannerShown()
+    // TEMPORAIRE: Désactiver la bannière GDPR pour les tests
+    setShowBanner(false)
 
-        // Afficher le banner si l'utilisateur n'a pas encore répondu ET pas déjà affiché dans cette session
-        if (!hasAnswered && !wasShown) {
-          setShowBanner(true)
-          consentService.markBannerAsShown()
-        }
-      } catch (error) {
-        logger.error('Error checking consents', error)
-      }
-    }
+    // // Vérifier si le banner doit être affiché
+    // const checkConsents = async () => {
+    //   try {
+    //     const hasAnswered = await consentService.hasAnswered()
+    //     const wasShown = consentService.wasBannerShown()
 
-    checkConsents()
+    //     // Afficher le banner si l'utilisateur n'a pas encore répondu ET pas déjà affiché dans cette session
+    //     if (!hasAnswered && !wasShown) {
+    //       setShowBanner(true)
+    //       consentService.markBannerAsShown()
+    //     }
+    //   } catch (error) {
+    //     logger.error('Error checking consents', error)
+    //   }
+    // }
+
+    // checkConsents()
   }, [])
 
   const handleAcceptAll = async () => {
