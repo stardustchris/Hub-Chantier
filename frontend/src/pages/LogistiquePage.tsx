@@ -94,7 +94,7 @@ const LogistiquePage: React.FC = () => {
             {selectedRessource ? (
               <div className="space-y-4">
                 <button
-                  onClick={() => setSelectedRessource(null)}
+                  onClick={() => setActiveTab('ressources')}
                   className="text-sm text-blue-600 hover:text-blue-700"
                 >
                   ← Retour aux ressources
