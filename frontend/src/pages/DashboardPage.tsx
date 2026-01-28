@@ -26,6 +26,7 @@ import {
 } from '../components/dashboard'
 import { weatherNotificationService } from '../services/weatherNotifications'
 import { consentService } from '../services/consent'
+import { openNavigationApp } from '../utils/navigation'
 import MentionInput from '../components/common/MentionInput'
 import {
   MessageCircle,
@@ -157,40 +158,7 @@ export default function DashboardPage() {
   const handleNavigate = useCallback((_slotId: string) => {
     // Adresse demo - en prod, recuperer depuis le slot
     const address = '45 rue de la Republique, Lyon 3eme, France'
-    const encodedAddress = encodeURIComponent(address)
-
-    // Detecter la plateforme
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    const isAndroid = /Android/.test(navigator.userAgent)
-
-    // Priorite: Waze > Google Maps > Apple Maps (iOS) > Google Maps web
-    if (isIOS) {
-      const wazeUrl = `waze://?q=${encodedAddress}&navigate=yes`
-      const appleMapsUrl = `maps://maps.apple.com/?q=${encodedAddress}`
-      const googleMapsWeb = `https://maps.google.com/?q=${encodedAddress}`
-
-      window.location.href = wazeUrl
-      setTimeout(() => {
-        window.location.href = appleMapsUrl
-        setTimeout(() => {
-          window.open(googleMapsWeb, '_blank')
-        }, 500)
-      }, 500)
-    } else if (isAndroid) {
-      const wazeUrl = `waze://?q=${encodedAddress}&navigate=yes`
-      const googleMapsUrl = `google.navigation:q=${encodedAddress}`
-      const googleMapsWeb = `https://maps.google.com/?q=${encodedAddress}`
-
-      window.location.href = wazeUrl
-      setTimeout(() => {
-        window.location.href = googleMapsUrl
-        setTimeout(() => {
-          window.open(googleMapsWeb, '_blank')
-        }, 500)
-      }, 500)
-    } else {
-      window.open(`https://maps.google.com/?q=${encodedAddress}`, '_blank')
-    }
+    openNavigationApp(address)
   }, [])
 
   const handleCall = useCallback((_slotId: string) => {

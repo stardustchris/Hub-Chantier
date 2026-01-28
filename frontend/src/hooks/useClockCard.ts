@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { pointagesService } from '../services/pointages'
 import { logger } from '../services/logger'
 
-// Clé localStorage pour le pointage du jour
+// Clé sessionStorage pour le pointage du jour (évite manipulation localStorage)
 const CLOCK_STORAGE_KEY = 'hub_chantier_clock_today'
 
 export interface ClockState {
@@ -67,18 +67,18 @@ export function useClockCard(): UseClockCardReturn {
   const [editTimeType, setEditTimeType] = useState<'arrival' | 'departure'>('arrival')
   const [editTimeValue, setEditTimeValue] = useState('')
 
-  // Charger l'état du pointage depuis localStorage au montage
+  // Charger l'état du pointage depuis sessionStorage au montage
   useEffect(() => {
     loadClockState()
   }, [])
 
   /**
-   * Charge l'état du pointage depuis localStorage avec validation
+   * Charge l'état du pointage depuis sessionStorage avec validation
    */
   const loadClockState = () => {
     try {
       const today = new Date().toISOString().split('T')[0]
-      const stored = localStorage.getItem(CLOCK_STORAGE_KEY)
+      const stored = sessionStorage.getItem(CLOCK_STORAGE_KEY)
 
       if (!stored) return
 
@@ -86,7 +86,7 @@ export function useClockCard(): UseClockCardReturn {
 
       // Valider le schéma
       if (!state.date || typeof state.date !== 'string') {
-        localStorage.removeItem(CLOCK_STORAGE_KEY)
+        sessionStorage.removeItem(CLOCK_STORAGE_KEY)
         return
       }
 
@@ -94,22 +94,22 @@ export function useClockCard(): UseClockCardReturn {
       if (state.date === today) {
         setClockState(state)
       } else {
-        localStorage.removeItem(CLOCK_STORAGE_KEY)
+        sessionStorage.removeItem(CLOCK_STORAGE_KEY)
       }
     } catch {
       // En cas d'erreur de parsing, supprimer les données corrompues
-      localStorage.removeItem(CLOCK_STORAGE_KEY)
+      sessionStorage.removeItem(CLOCK_STORAGE_KEY)
     }
   }
 
   /**
-   * Sauvegarde l'état du pointage dans localStorage
+   * Sauvegarde l'état du pointage dans sessionStorage
    */
   const saveClockState = (state: ClockState) => {
     try {
-      localStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(state))
+      sessionStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(state))
     } catch {
-      // Silently fail si localStorage non disponible
+      // Silently fail si sessionStorage non disponible
     }
   }
 
