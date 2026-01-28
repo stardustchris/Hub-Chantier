@@ -125,6 +125,23 @@ class AuthResponse(BaseModel):
 # =============================================================================
 
 
+@router.get("/csrf-token")
+def get_csrf_token(request: Request):
+    """
+    Retourne le token CSRF depuis le cookie.
+
+    Le middleware CSRF génère automatiquement un token lors des requêtes GET.
+    Cette route permet au frontend de récupérer explicitement ce token.
+    """
+    csrf_token = request.cookies.get("csrf_token")
+    if not csrf_token:
+        raise HTTPException(
+            status_code=400,
+            detail="No CSRF token found. Make a GET request first to initialize the token."
+        )
+    return {"csrf_token": csrf_token}
+
+
 @router.post("/login", response_model=AuthResponse)
 @limiter.limit("60/minute")  # Protection brute force: 60 tentatives/minute par IP (dev)
 def login(

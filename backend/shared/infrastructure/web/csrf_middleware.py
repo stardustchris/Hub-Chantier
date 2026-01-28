@@ -113,7 +113,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             key="csrf_token",
             value=csrf_token,
             httponly=False,  # Doit être accessible en JavaScript
-            secure=True,     # HTTPS uniquement en production
-            samesite="strict",  # Protection complémentaire
+            secure=False,    # HTTPS uniquement en production (False en dev)
+            samesite="lax",  # "strict" bloque certains POST, "lax" est plus permissif
             max_age=3600,    # 1 heure
         )
