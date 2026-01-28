@@ -251,3 +251,32 @@ def get_is_moderator(
     """
     moderator_roles = {"admin", "conducteur"}
     return current_user_role in moderator_roles
+
+
+def get_current_user(
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Récupère l'utilisateur connecté (UserModel complet).
+
+    Args:
+        current_user_id: ID de l'utilisateur connecté.
+        db: Session database.
+
+    Returns:
+        Le UserModel de l'utilisateur connecté.
+
+    Raises:
+        HTTPException 401: Si l'utilisateur n'existe pas.
+    """
+    from ..persistence.user_model import UserModel
+
+    user = db.query(UserModel).filter(UserModel.id == current_user_id).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Utilisateur non trouvé",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user

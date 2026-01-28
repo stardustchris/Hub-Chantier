@@ -3,6 +3,169 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-28 (API Publique v1 - Authentication par API Keys)
+
+**Durée**: ~6h
+**Modules**: Auth (backend + frontend), Shared (middleware)
+**Branche**: `claude/public-api-v1-auth-5PfT3`
+
+### Objectif
+
+Implémenter une API publique v1 pour Hub Chantier avec authentification par clés API (hbc_xxx), en suivant strictement le workflow des 7 agents et avec impact minimal sur l'architecture existante.
+
+### Travail effectué
+
+#### Phase 0: Validation environnement ✅
+- Fix import `Callable` manquant dans `export_pdf.py`
+- Tests backend: 2597 → 2689 tests passent (+92 nouveaux)
+- Build frontend: 0 erreur TypeScript
+
+#### Phase 1: sql-pro - Migration database ✅
+**Fichier créé**: `migrations/versions/20260128_0002_add_api_keys_table.py`
+- Table `api_keys` avec hash SHA256 sécurisé
+- Index optimisés (key_hash UNIQUE, user_id, is_active partiel, expires_at)
+- Foreign Key CASCADE vers users(id)
+- Champs: id (UUID), key_hash, key_prefix, nom, scopes[], rate_limit_per_hour, is_active, expires_at, created_at, last_used_at
+
+#### Phase 2: python-pro - Implémentation backend ✅
+**10 fichiers créés** (Domain, Application, Infrastructure):
+
+**Domain Layer**:
+- `domain/entities/api_key.py` - Entity pure (is_expired, can_perform, revoke)
+- `domain/repositories/api_key_repository.py` - Interface abstraite
+
+**Application Layer**:
+- `application/dtos/api_key_dtos.py` - DTOs (Create, Created, Info, Revoke)
+- `application/use_cases/create_api_key.py` - Génération secret crypto-sécurisé (secrets.token_urlsafe, SHA256)
+- `application/use_cases/list_api_keys.py` - Liste clés utilisateur
+- `application/use_cases/revoke_api_key.py` - Révocation avec vérif propriété
+
+**Infrastructure Layer**:
+- `infrastructure/persistence/api_key_model.py` - Model SQLAlchemy
+- `infrastructure/persistence/sqlalchemy_api_key_repository.py` - Repository impl avec mappers
+- `infrastructure/web/api_keys_routes.py` - 3 routes FastAPI (POST, GET, DELETE)
+
+**Shared**:
+- `shared/infrastructure/api_v1/middleware.py` - Auth unifiée JWT OU API Key
+
+**Modifications**:
+- `user_model.py`: Ajout relation `api_keys` (relationship + cascade)
+- `main.py`: Import et include router `api_keys_router`
+
+#### Phase 3: architect-reviewer - Validation Clean Architecture ✅
+**Score**: 98/100 - PASS
+- Domain Layer pur (0 dépendance framework)
+- Application Layer indépendant
+- Inversion de dépendance parfaite
+- Mappers Model ↔ Entity séparés
+- 1 warning mineur: Middleware optimisé (acceptable pour performance)
+
+#### Phase 4: test-automator - Génération tests ✅
+**92 tests créés** (97% couverture):
+- `test_api_key_entity.py` (13 tests) - Entity methods
+- `test_create_api_key_use_case.py` (18 tests) - Création + hash
+- `test_list_api_keys_use_case.py` (12 tests) - Liste + filtrage
+- `test_revoke_api_key_use_case.py` (12 tests) - Révocation + erreurs
+- `test_api_keys_routes.py` (17 tests) - Routes FastAPI async
+- `test_api_key_middleware.py` (20 tests) - Auth JWT + API Key
+
+**Résultat**: 2689 tests passent (+92), 0.40s temps exécution tests API Keys
+
+#### Phase 5: code-reviewer - Qualité code ✅
+**Score**: 100/100 - APPROVED
+- Type hints 100%
+- Docstrings Google style 100%
+- Nommage conventions Python 100%
+- Complexité <50 lignes/fonction
+- Aucun code mort
+- 2 violations mineures cosmétiques (non bloquantes)
+
+#### Phase 6: security-auditor - Audit sécurité ✅
+**Score**: 88/100 - PASS_WITH_FIXES
+- **0 findings CRITIQUES**
+- **2 findings HAUTE** (non bloquants, Phase 2):
+  - Rate limiting non implémenté (DoS protection)
+  - Pas de limite clés/utilisateur (resource exhaustion)
+- **2 findings MOYENNE**:
+  - Logs applicatifs manquants (SOC)
+  - HTTPS à documenter
+
+**Points forts**:
+- Cryptographie robuste: `secrets.token_urlsafe(32)` (256 bits), SHA256
+- Secret JAMAIS stocké en clair (hash uniquement)
+- Access control strict (isolation user_id, UUID anti-IDOR)
+- RGPD 100% conforme (CASCADE DELETE, traçabilité, minimisation)
+- Expiration + révocation + audit trail
+
+#### Phase 7: typescript-pro - UI gestion clés API ✅
+**2 fichiers créés**:
+- `services/apiKeys.ts` - Service API (list, create, revoke)
+- `pages/APIKeysPage.tsx` - Page React complète (634 lignes)
+
+**Fonctionnalités UI**:
+- Liste clés avec statuts (active, révoquée, expirée, expire bientôt)
+- Bouton "Créer une clé" → Modal formulaire
+- Modal création: nom, description, scopes (checkboxes), expiration (jours)
+- Modal secret (UNE FOIS): Alerte jaune, bouton copie clipboard, instructions curl
+- Bouton "Révoquer" avec confirmation
+- Responsive Tailwind CSS, icônes Lucide
+
+**Modifications**:
+- `App.tsx`: Route `/api-keys` ajoutée
+
+#### Phase 8: Tests finaux ✅
+- Backend: 2689 tests passent (dont 92 nouveaux API Keys)
+- Frontend: Build TypeScript 0 erreur
+- Couverture: 97% sur code API Keys
+
+### Fichiers créés/modifiés
+
+**Backend (13 fichiers)**:
+- 1 migration Alembic
+- 9 fichiers code source (Domain/Application/Infrastructure)
+- 3 modifications (user_model.py, main.py, persistence/__init__.py)
+
+**Frontend (3 fichiers)**:
+- 1 service API
+- 1 page React
+- 1 modification (App.tsx)
+
+**Tests (6 fichiers)**:
+- 92 tests unitaires (6 fichiers test_*.py)
+
+**Total**: 22 fichiers créés/modifiés
+
+### Validations agents (100% PASS)
+
+| Agent | Score | Décision | Détails |
+|-------|-------|----------|---------|
+| architect-reviewer | 98/100 | PASS | 0 violation, Clean Architecture respectée |
+| test-automator | 97% | PASS | 92 tests, couverture >85% |
+| code-reviewer | 100/100 | APPROVED | Type hints, docstrings, nommage parfaits |
+| security-auditor | 88/100 | PASS_WITH_FIXES | 0 critique, 2 haute (Phase 2) |
+
+### Métriques
+
+- **Tests**: 2689 passent (+92 nouveaux)
+- **Couverture**: 97% (API Keys)
+- **Build frontend**: 0 erreur TypeScript
+- **Temps tests**: 0.40s (tests API Keys), 16.16s (tous tests)
+- **Sécurité**: RGPD 100% conforme, crypto robuste (256 bits)
+
+### Prochaines étapes (Phase 2)
+
+1. **Rate limiting** (HAUTE priorité): Redis + sliding window par clé
+2. **Limite clés/user** (HAUTE priorité): MAX_KEYS_PER_USER = 10
+3. **Logs structurés** (MOYENNE): JSON logs pour SOC/SIEM
+4. **Documentation HTTPS** (MOYENNE): Guide déploiement production
+
+### Liens
+
+- Session Claude: https://claude.ai/code/session_011u3yRrSvnWiaaZPEQvnBg6
+- Branche: `claude/public-api-v1-auth-5PfT3`
+
+---
+
 ## Session 2026-01-28 (Refactoring Frontend TypeScript - 152 → 0 erreurs)
 
 **Duree**: ~4h

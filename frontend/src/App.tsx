@@ -16,6 +16,7 @@ const ChantiersListPage = lazy(() => import('./pages/ChantiersListPage'))
 const ChantierDetailPage = lazy(() => import('./pages/ChantierDetailPage'))
 const UsersListPage = lazy(() => import('./pages/UsersListPage'))
 const UserDetailPage = lazy(() => import('./pages/UserDetailPage'))
+const APIKeysPage = lazy(() => import('./pages/APIKeysPage'))
 const PlanningPage = lazy(() => import('./pages/PlanningPage'))
 const FeuillesHeuresPage = lazy(() => import('./pages/FeuillesHeuresPage'))
 const FormulairesPage = lazy(() => import('./pages/FormulairesPage'))
@@ -80,6 +81,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/api-keys"
+            element={
+              <ProtectedRoute>
+                <APIKeysPage />
               </ProtectedRoute>
             }
           />
