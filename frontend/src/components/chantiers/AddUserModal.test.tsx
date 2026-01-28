@@ -7,24 +7,25 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddUserModal from './AddUserModal'
 import type { User } from '../../types'
+import { createMockUser } from '../../fixtures'
 
 const mockUsers: User[] = [
-  {
+  createMockUser({
     id: '1',
     nom: 'Dupont',
     prenom: 'Jean',
     email: 'jean.dupont@example.com',
     role: 'conducteur',
     couleur: '#3498DB',
-  },
-  {
+  }),
+  createMockUser({
     id: '2',
     nom: 'Martin',
     prenom: 'Marie',
     email: 'marie.martin@example.com',
     role: 'conducteur',
     couleur: '#E74C3C',
-  },
+  }),
 ]
 
 const mockOnClose = vi.fn()
@@ -141,13 +142,14 @@ describe('AddUserModal', () => {
 
     it('utilise couleur par defaut si pas de couleur', () => {
       const usersWithoutColor: User[] = [
-        {
+        createMockUser({
           id: '3',
           nom: 'Sans',
           prenom: 'Couleur',
           email: 'sans.couleur@example.com',
           role: 'conducteur',
-        },
+          couleur: undefined,
+        }),
       ]
 
       render(<AddUserModal {...defaultProps} users={usersWithoutColor} />)

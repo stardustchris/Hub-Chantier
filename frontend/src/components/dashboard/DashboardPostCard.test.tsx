@@ -7,6 +7,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { DashboardPostCard } from './DashboardPostCard'
 import type { Post } from '../../types'
+import { createMockChantier, createMockPostMedia } from '../../fixtures'
 
 // Mock useAuth
 const mockUser = {
@@ -46,7 +47,7 @@ const createMockPost = (overrides: Partial<Post> = {}): Post => ({
     couleur: '#FF5733',
     email: 'marie@test.com',
     role: 'conducteur',
-    type_utilisateur: 'interne',
+    type_utilisateur: 'employe',
     is_active: true,
     created_at: '2024-01-01',
   },
@@ -142,7 +143,10 @@ describe('DashboardPostCard', () => {
     it('affiche les chantiers cibles', () => {
       const post = createMockPost({
         target_type: 'chantiers',
-        target_chantiers: [{ id: '1', nom: 'Chantier A' }, { id: '2', nom: 'Chantier B' }],
+        target_chantiers: [
+          createMockChantier({ id: '1', nom: 'Chantier A' }),
+          createMockChantier({ id: '2', nom: 'Chantier B' })
+        ],
       })
       renderCard(post)
       expect(screen.getByText('→ Chantier A, Chantier B')).toBeInTheDocument()
@@ -153,8 +157,8 @@ describe('DashboardPostCard', () => {
     it('affiche les medias du post', () => {
       const post = createMockPost({
         medias: [
-          { id: '1', url: 'https://example.com/img1.jpg' },
-          { id: '2', url: 'https://example.com/img2.jpg' },
+          createMockPostMedia({ id: '1', url: 'https://example.com/img1.jpg', type: 'image' }),
+          createMockPostMedia({ id: '2', url: 'https://example.com/img2.jpg', type: 'image' }),
         ],
       })
       const { container } = renderCard(post)

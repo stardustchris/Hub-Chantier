@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MentionInput from './MentionInput'
+import { createMockUser } from '../../fixtures'
 
 // Mock usersService
 vi.mock('../../services/users', () => ({
@@ -17,9 +18,9 @@ vi.mock('../../services/users', () => ({
 import { usersService } from '../../services/users'
 
 const mockUsers = [
-  { id: '1', prenom: 'Jean', nom: 'Dupont', role: 'admin', couleur: '#3498DB' },
-  { id: '2', prenom: 'Marie', nom: 'Martin', role: 'conducteur', couleur: '#E74C3C' },
-  { id: '3', prenom: 'Pierre', nom: 'Durand', role: 'compagnon', couleur: '#2ECC71' },
+  createMockUser({ id: '1', prenom: 'Jean', nom: 'Dupont', role: 'admin', couleur: '#3498DB' }),
+  createMockUser({ id: '2', prenom: 'Marie', nom: 'Martin', role: 'conducteur', couleur: '#E74C3C' }),
+  createMockUser({ id: '3', prenom: 'Pierre', nom: 'Durand', role: 'compagnon', couleur: '#2ECC71' }),
 ]
 
 describe('MentionInput', () => {

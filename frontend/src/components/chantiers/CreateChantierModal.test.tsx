@@ -250,7 +250,6 @@ describe('CreateChantierModal', () => {
       await user.type(screen.getByPlaceholderText(/Residence Les Pins/), 'Mon chantier')
       await user.type(screen.getByPlaceholderText(/12 rue des Lilas/), '123 rue Test')
 
-      const dateInputs = screen.getAllByRole('textbox', { hidden: true })
       // Note: Les inputs date ne sont pas facilement testables avec userEvent
     })
   })

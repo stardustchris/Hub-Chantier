@@ -38,7 +38,7 @@ vi.mock('../../services/chantiers', () => ({
 }))
 
 const createMockChantier = (overrides: Partial<Chantier> = {}): Chantier => ({
-  id: 1,
+  id: '1',
   code: 'CH001',
   nom: 'Chantier Test',
   adresse: '12 Rue de la Republique, Lyon',
