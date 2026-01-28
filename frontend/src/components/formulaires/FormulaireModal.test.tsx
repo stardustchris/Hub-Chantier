@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FormulaireModal from './FormulaireModal'
-import type { TemplateFormulaire, FormulaireRempli, ChampFormulaire } from '../../types'
+import type { TemplateFormulaire, FormulaireRempli, ChampRempli } from '../../types'
 
 // Mock FieldRenderer
 vi.mock('./FieldRenderer', () => ({
@@ -57,8 +57,11 @@ const createMockTemplate = (overrides: Partial<TemplateFormulaire> = {}): Templa
       ordre: 2,
     },
   ],
-  actif: true,
+  is_active: true,
   version: 1,
+  nombre_champs: 2,
+  a_signature: false,
+  a_photo: false,
   created_by: 1,
   created_at: '2024-01-15T10:00:00',
   updated_at: '2024-01-15T10:00:00',
@@ -74,10 +77,11 @@ const createMockFormulaire = (overrides: Partial<FormulaireRempli> = {}): Formul
   champs: [
     { nom: 'titre', valeur: 'Mon titre', type_champ: 'texte' },
     { nom: 'commentaire', valeur: 'Mon commentaire', type_champ: 'texte_long' },
-  ] as ChampFormulaire[],
+  ] as ChampRempli[],
   photos: [],
   est_signe: false,
   est_geolocalise: false,
+  version: 1,
   created_at: '2024-01-15T10:00:00',
   updated_at: '2024-01-15T10:00:00',
   chantier_nom: 'Chantier Test',
@@ -212,8 +216,8 @@ describe('FormulaireModal', () => {
           {...defaultProps}
           formulaire={createMockFormulaire({
             photos: [
-              { url: 'http://example.com/photo1.jpg', nom_fichier: 'photo1.jpg' },
-              { url: 'http://example.com/photo2.jpg', nom_fichier: 'photo2.jpg' },
+              { url: 'http://example.com/photo1.jpg', nom_fichier: 'photo1.jpg', champ_nom: 'photo_chantier' },
+              { url: 'http://example.com/photo2.jpg', nom_fichier: 'photo2.jpg', champ_nom: 'photo_chantier' },
             ],
           })}
         />

@@ -37,10 +37,11 @@ vi.mock('../../utils/dates', () => ({
 
 const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   id: 1,
+  chantier_id: 1,
   dossier_id: 1,
   nom: 'document.pdf',
   nom_original: 'document.pdf',
-  type_document: 'plan',
+  type_document: 'pdf',
   taille: 1024000,
   taille_formatee: '1 Mo',
   mime_type: 'application/pdf',
@@ -49,7 +50,7 @@ const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   uploaded_at: '2024-01-15T10:00:00',
   description: null,
   version: 1,
-  icone: 'file-text',
+  icone: 'file-pdf',
   extension: 'pdf',
   niveau_acces: null,
   ...overrides,

@@ -1,6 +1,7 @@
 import type { User, Chantier, Affectation, Pointage, PostMedia, PhotoFormulaire } from '../types'
 import type { Ressource, Reservation, PlanningRessource } from '../types/logistique'
 import type { Document, Dossier, DossierTree } from '../types/documents'
+import type { Signalement } from '../types/signalements'
 
 // ===== USERS =====
 export function createMockUser(overrides: Partial<User> = {}): User {
@@ -28,6 +29,7 @@ export function createMockChantier(overrides: Partial<Chantier> = {}): Chantier 
     statut: 'en_cours',
     couleur: '#10B981',
     conducteurs: [],
+    chefs: [],
     phases: [],
     created_at: new Date().toISOString(),
     ...overrides,
@@ -36,11 +38,11 @@ export function createMockChantier(overrides: Partial<Chantier> = {}): Chantier 
 
 // ===== RESSOURCES =====
 export function createMockRessource(overrides: Partial<Ressource> = {}): Ressource {
-  return {
+  const defaults = {
     id: 1,
     nom: 'Grue Mobile',
     code: 'GRU001',
-    categorie: 'engin_levage',
+    categorie: 'engin_levage' as const,
     categorie_label: 'Engin de levage',
     couleur: '#E74C3C',
     heure_debut_defaut: '08:00',
@@ -48,13 +50,18 @@ export function createMockRessource(overrides: Partial<Ressource> = {}): Ressour
     validation_requise: true,
     actif: true,
     created_at: new Date().toISOString(),
+  }
+  return {
+    ...defaults,
     ...overrides,
+    // Ensure required fields are not undefined
+    categorie_label: overrides.categorie_label ?? defaults.categorie_label,
   }
 }
 
 // ===== RESERVATIONS =====
 export function createMockReservation(overrides: Partial<Reservation> = {}): Reservation {
-  return {
+  const defaults = {
     id: 1,
     ressource_id: 1,
     ressource_nom: 'Grue Mobile',
@@ -67,12 +74,17 @@ export function createMockReservation(overrides: Partial<Reservation> = {}): Res
     date_reservation: new Date().toISOString().split('T')[0],
     heure_debut: '08:00',
     heure_fin: '17:00',
-    statut: 'validee',
+    statut: 'validee' as const,
     statut_label: 'Validée',
     statut_couleur: '#4CAF50',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+  }
+  return {
+    ...defaults,
     ...overrides,
+    // Ensure required fields are not undefined
+    statut_label: overrides.statut_label ?? defaults.statut_label,
   }
 }
 
@@ -80,7 +92,7 @@ export function createMockReservation(overrides: Partial<Reservation> = {}): Res
 export function createMockPlanningRessource(
   overrides: Partial<PlanningRessource> = {}
 ): PlanningRessource {
-  return {
+  const defaults = {
     ressource_id: 1,
     ressource_nom: 'Grue Mobile',
     ressource_code: 'GRU001',
@@ -89,7 +101,14 @@ export function createMockPlanningRessource(
     date_fin: new Date().toISOString().split('T')[0],
     reservations: [],
     jours: [],
+  }
+  return {
+    ...defaults,
     ...overrides,
+    // Ensure required fields are not undefined
+    ressource_nom: overrides.ressource_nom ?? defaults.ressource_nom,
+    ressource_code: overrides.ressource_code ?? defaults.ressource_code,
+    ressource_couleur: overrides.ressource_couleur ?? defaults.ressource_couleur,
   }
 }
 
@@ -104,15 +123,13 @@ export function createMockPointage(overrides: Partial<Pointage> = {}): Pointage 
     heures_supplementaires: '00:00',
     total_heures: '08:00',
     total_heures_decimal: 8.0,
-    statut: 'en_attente',
+    statut: 'brouillon',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    // Enrichissement
+    // Enrichissement (optional)
     utilisateur_nom: 'Jean Dupont',
     chantier_nom: 'Chantier Test',
     chantier_couleur: '#10B981',
-    statut_label: 'En attente',
-    statut_couleur: '#FFC107',
     ...overrides,
   }
 }
@@ -144,7 +161,7 @@ export function createMockDocument(overrides: Partial<Document> = {}): Document 
     dossier_id: 1,
     nom: 'Test Document.pdf',
     nom_original: 'Test Document.pdf',
-    type_document: 'plan',
+    type_document: 'pdf',
     taille: 1024,
     taille_formatee: '1 KB',
     mime_type: 'application/pdf',
@@ -153,7 +170,7 @@ export function createMockDocument(overrides: Partial<Document> = {}): Document 
     uploaded_at: new Date().toISOString(),
     description: null,
     version: 1,
-    icone: 'file-text',
+    icone: 'file-pdf',
     extension: 'pdf',
     niveau_acces: null,
     ...overrides,
@@ -166,7 +183,7 @@ export function createMockDossier(overrides: Partial<Dossier> = {}): Dossier {
     id: 1,
     chantier_id: 1,
     nom: 'Dossier Test',
-    type_dossier: 'dossier_chantier',
+    type_dossier: 'custom',
     niveau_acces: 'compagnon',
     parent_id: null,
     ordre: 1,
@@ -204,6 +221,40 @@ export function createMockPhotoFormulaire(overrides: Partial<PhotoFormulaire> = 
     champ_nom: 'photo_test',
     url: 'https://example.com/photo.jpg',
     nom_fichier: 'photo.jpg',
+    ...overrides,
+  }
+}
+
+// ===== SIGNALEMENTS =====
+export function createMockSignalement(overrides: Partial<Signalement> = {}): Signalement {
+  return {
+    id: 1,
+    chantier_id: 1,
+    titre: 'Signalement Test',
+    description: 'Description du signalement',
+    priorite: 'moyenne',
+    priorite_label: 'Moyenne',
+    priorite_couleur: '#FFA500',
+    statut: 'ouvert',
+    statut_label: 'Ouvert',
+    statut_couleur: '#3B82F6',
+    cree_par: 1,
+    cree_par_nom: 'Jean Dupont',
+    assigne_a: null,
+    assigne_a_nom: null,
+    date_resolution_souhaitee: null,
+    date_traitement: null,
+    date_cloture: null,
+    commentaire_traitement: null,
+    photo_url: null,
+    localisation: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    est_en_retard: false,
+    temps_restant: null,
+    pourcentage_temps: 0,
+    nb_reponses: 0,
+    nb_escalades: 0,
     ...overrides,
   }
 }

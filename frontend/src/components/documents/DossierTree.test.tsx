@@ -20,7 +20,7 @@ const createMockDossier = (overrides: Partial<DossierTreeType> = {}): DossierTre
   id: 1,
   chantier_id: 1,
   nom: 'Plans',
-  type_dossier: 'dossier_chantier',
+  type_dossier: 'custom',
   niveau_acces: 'compagnon',
   parent_id: null,
   ordre: 1,
