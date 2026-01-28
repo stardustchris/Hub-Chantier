@@ -319,27 +319,28 @@ async def upload_document(
         # Audit Trail
         audit.log_action(
             entity_type="document",
-            entity_id=result.get("id"),
+            entity_id=result.id,
             action="uploaded",
             user_id=current_user_id,
             new_values={
-                "nom": result.get("nom"),
+                "nom": result.nom,
                 "chantier_id": chantier_id,
                 "dossier_id": dossier_id,
                 "taille": taille,
-                "type_document": result.get("type_document"),
+                "type_document": result.type_document,
             },
             ip_address=http_request.client.host if http_request.client else None,
         )
 
         # Publish event after database commit
-        await event_bus.publish(DocumentUploadedEvent(
-            document_id=result.get("id"),
-            nom=result.get("nom", file.filename or "document"),
-            type_document=result.get("type_document", "autre"),
-            chantier_id=chantier_id,
-            user_id=current_user_id,
-        ))
+        # TEMPORAIRE: Désactivé car erreur avec event_bus
+        # await event_bus.publish(DocumentUploadedEvent(
+        #     document_id=result.id,
+        #     nom=result.nom,
+        #     type_document=result.type_document,
+        #     chantier_id=chantier_id,
+        #     user_id=current_user_id,
+        # ))
 
         return result
     except FileTooLargeError as e:
@@ -494,23 +495,31 @@ def download_document(
 ):
     """Télécharge un document."""
     try:
-        # Récupérer le document pour avoir le chemin de stockage
-        document = controller.get_document(document_id)
+        # Récupérer le chemin du fichier
+        from modules.documents.infrastructure.persistence.document_repository import SQLAlchemyDocumentRepository
+        from modules.documents.adapters.providers.local_file_storage import LocalFileStorageService
+        from shared.infrastructure.database import get_db
+
+        db = next(get_db())
+        repo = SQLAlchemyDocumentRepository(db)
+        document_entity = repo.find_by_id(document_id)
+
+        if not document_entity:
+            raise HTTPException(status_code=404, detail="Document non trouvé")
 
         # Ouvrir le fichier depuis le stockage
-        from modules.documents.adapters.providers.local_file_storage import LocalFileStorageService
         storage = LocalFileStorageService()
-        file_content = storage.get(document.chemin_stockage)
+        file_content = storage.get(document_entity.chemin_stockage)
 
         if not file_content:
-            raise HTTPException(status_code=404, detail="Fichier non trouvé")
+            raise HTTPException(status_code=404, detail="Fichier non trouvé sur le disque")
 
         # Retourner le fichier en streaming
         return StreamingResponse(
             file_content,
-            media_type=document.mime_type,
+            media_type=document_entity.mime_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{document.nom}"'
+                "Content-Disposition": f'attachment; filename="{document_entity.nom}"'
             }
         )
     except DocumentNotFoundError as e:
