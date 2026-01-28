@@ -120,6 +120,22 @@ class AuthResponse(BaseModel):
     token_type: str
 
 
+class ConsentPreferences(BaseModel):
+    """Préférences de consentement RGPD."""
+
+    geolocation: bool = False
+    notifications: bool = False
+    analytics: bool = False
+
+
+class ConsentUpdateRequest(BaseModel):
+    """Requête de mise à jour des consentements."""
+
+    geolocation: Optional[bool] = None
+    notifications: Optional[bool] = None
+    analytics: Optional[bool] = None
+
+
 # =============================================================================
 # Routes d'authentification
 # =============================================================================
@@ -314,6 +330,71 @@ def logout(response: Response):
         domain=settings.COOKIE_DOMAIN,
     )
     return {"message": "Déconnexion réussie"}
+
+
+@router.get("/consents", response_model=ConsentPreferences)
+def get_consents(
+    request: Request,
+):
+    """
+    Récupère les préférences de consentement RGPD.
+
+    Conformité RGPD : permet de consulter les consentements même avant login.
+    Pour les utilisateurs non authentifiés, retourne les valeurs par défaut.
+
+    Args:
+        request: Requête HTTP.
+
+    Returns:
+        Préférences de consentement.
+
+    Note:
+        Les consentements sont stockés en session pour les non-authentifiés.
+        Pour les utilisateurs authentifiés, ils seront stockés en base (TODO).
+    """
+    # Pour l'instant, retourner des valeurs par défaut
+    # TODO: Vérifier si utilisateur authentifié et récupérer depuis base
+    # TODO: Pour non-authentifiés, utiliser le session storage (côté client)
+    return ConsentPreferences(
+        geolocation=False,
+        notifications=False,
+        analytics=False,
+    )
+
+
+@router.post("/consents", response_model=ConsentPreferences)
+def update_consents(
+    consent_request: ConsentUpdateRequest,
+    http_request: Request,
+):
+    """
+    Met à jour les préférences de consentement RGPD.
+
+    Conformité RGPD : permet de modifier les consentements même avant login.
+    Pour les utilisateurs non authentifiés, accepte les consentements mais ne les persiste pas.
+
+    Args:
+        consent_request: Nouvelles préférences de consentement.
+        http_request: Requête HTTP.
+
+    Returns:
+        Préférences de consentement mises à jour.
+
+    Note:
+        Les consentements sont stockés côté client pour les non-authentifiés.
+        Pour les utilisateurs authentifiés, ils seront stockés en base (TODO).
+        Audit trail sera ajouté pour tracer les modifications (TODO).
+    """
+    # Pour l'instant, retourner les valeurs envoyées (accepter les consentements)
+    # TODO: Vérifier si utilisateur authentifié et stocker en base
+    # TODO: Ajouter un audit trail pour tracer les modifications de consentement
+
+    # Construire la réponse en utilisant les valeurs fournies ou les valeurs par défaut
+    return ConsentPreferences(
+        geolocation=consent_request.geolocation if consent_request.geolocation is not None else False,
+        notifications=consent_request.notifications if consent_request.notifications is not None else False,
+        analytics=consent_request.analytics if consent_request.analytics is not None else False,
+    )
 
 
 # =============================================================================

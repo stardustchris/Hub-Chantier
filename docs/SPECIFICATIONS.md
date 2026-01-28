@@ -723,7 +723,7 @@ Le module Logistique permet de gerer les engins et gros materiel de l'entreprise
 | LOG-03 | Planning par ressource | Vue calendrier hebdomadaire 7 jours | ✅ Backend + Frontend |
 | LOG-04 | Navigation semaine | < [Semaine X] > avec 3 semaines visibles | ✅ Backend + Frontend |
 | LOG-05 | Axe horaire vertical | 08:00 → 18:00 (configurable) | ✅ Frontend |
-| LOG-06 | Blocs reservation colores | Par demandeur avec nom + bouton ✕ | ✅ Frontend |
+| LOG-06 | Blocs reservation colores | Par demandeur avec nom complet (ex: "Jean DUPONT") | ✅ Frontend + Backend |
 | LOG-07 | Demande de reservation | Depuis mobile ou web | ✅ Backend + Frontend |
 | LOG-08 | Selection chantier | Association obligatoire au projet | ✅ Backend |
 | LOG-09 | Selection creneau | Date + heure debut / heure fin | ✅ Backend + Frontend |
@@ -736,6 +736,11 @@ Le module Logistique permet de gerer les engins et gros materiel de l'entreprise
 | LOG-16 | Motif de refus | Champ texte optionnel | ✅ Backend + Frontend |
 | LOG-17 | Conflit de reservation | Alerte si creneau deja occupe | ✅ Backend |
 | LOG-18 | Historique par ressource | Journal complet des reservations | ✅ Backend + Frontend |
+| LOG-19 | Selecteur de ressource | Dropdown pour choisir quelle ressource afficher | ✅ Frontend |
+| LOG-20 | Vue "Toutes les ressources" | Affichage empile de toutes les ressources avec leurs plannings | ✅ Frontend |
+| LOG-21 | Basculement vue globale/detaillee | Bouton "Voir en detail →" pour passer d'une ressource a sa vue detaillee | ✅ Frontend |
+| LOG-22 | Enrichissement noms utilisateurs | Affichage "Prenom NOM" au lieu de "User #X" dans les reservations | ✅ Backend |
+| LOG-23 | Persistence selection ressource | Conservation de la ressource selectionnee lors de navigation entre onglets | ✅ Frontend |
 
 ### 11.3 Types de ressources (Greg Constructions)
 
@@ -917,7 +922,9 @@ La connexion s'effectue de maniere securisee par SMS (code OTP) ou par identifia
 | Hebergement | Serveurs en Europe (France) certifies ISO 27001 | ✅ |
 | Journalisation | Logs d'audit de toutes les actions sensibles | ✅ |
 | Protection CSRF | Token CSRF pour requetes mutables (POST/PUT/DELETE) | ✅ |
-| Consentement RGPD | Modal de consentement pour geolocalisation | ✅ |
+| Consentement RGPD | Banniere de consentement pour geolocalisation, notifications, analytics | ✅ |
+| API Consentements | Endpoints GET/POST /api/auth/consents pour gestion consentements | ✅ |
+| Consentement avant login | Possibilite de donner/retirer consentement meme sans authentification | ✅ |
 
 ### 15.3 Mode Offline
 

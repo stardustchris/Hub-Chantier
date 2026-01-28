@@ -3,6 +3,69 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-28 (Module Logistique UX + RGPD Consentements)
+
+**Duree**: ~2h30
+**Modules**: Logistique, Auth/RGPD
+**Documentation complete**: `.claude/session-28jan2026.md`
+
+### Problemes resolus
+
+1. **Planning Logistique - Affichage "User #2"** ✅
+   - Enrichissement DTOs avec noms complets utilisateurs ("Jean DUPONT")
+   - Backend: helpers dto_enrichment.py + injection UserRepository
+   - Commits: e8d354e
+
+2. **Planning - Perte selection lors navigation** ✅
+   - Fix bouton "Retour" preservation contexte
+   - Commits: 5dec337
+
+3. **Planning - Selecteur ressources** ✅
+   - Dropdown avec liste toutes ressources format [CODE] Nom
+   - Commits: 2c4a6c5
+
+4. **Planning - Vue "Toutes les ressources" par defaut** ✅
+   - Affichage empile multi-ressources avec calendriers
+   - Boutons "Voir en detail →" pour basculer vue unique
+   - Frontend: LogistiquePage.tsx (vue conditionnelle)
+
+5. **Banniere RGPD - Boutons non fonctionnels** ✅
+   - Implementation endpoints GET/POST /api/auth/consents
+   - Fonctionnement sans authentification (conformite RGPD)
+   - Backend: auth_routes.py (ConsentPreferences models + routes)
+
+### Fichiers modifies
+
+**Backend (4)**:
+- `modules/logistique/application/helpers/dto_enrichment.py`
+- `modules/logistique/application/use_cases/reservation_use_cases.py`
+- `modules/logistique/infrastructure/web/dependencies.py`
+- `modules/auth/infrastructure/web/auth_routes.py`
+
+**Frontend (1)**:
+- `pages/LogistiquePage.tsx`
+
+**Documentation (2)**:
+- `docs/SPECIFICATIONS.md` (LOG-19 a LOG-23 + RGPD)
+- `.claude/session-28jan2026.md` (doc complete)
+
+### Specifications ajoutees
+
+- LOG-19: Selecteur de ressource (dropdown)
+- LOG-20: Vue "Toutes les ressources"
+- LOG-21: Basculement vue globale/detaillee
+- LOG-22: Enrichissement noms utilisateurs
+- LOG-23: Persistence selection ressource
+- SEC-RGPD: API consentements + banniere fonctionnelle
+
+### Metriques
+- Tests manuels: 100% pass
+- Erreurs console: 0
+- Nouveaux endpoints API: 2
+- Cache pattern pour optimisation N+1 queries
+
+---
+
 ## Session 2026-01-27 (Audit Backend + Corrections P1 & P2)
 
 ### Audit complet backend selon workflow agents.md

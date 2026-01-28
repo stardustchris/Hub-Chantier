@@ -37,6 +37,7 @@ const LogistiquePage: React.FC = () => {
   // Liste des ressources pour le sélecteur
   const [allRessources, setAllRessources] = useState<Ressource[]>([])
   const [loadingRessources, setLoadingRessources] = useState(false)
+  const [viewAllResources, setViewAllResources] = useState(true)
 
   // Charger toutes les ressources
   useEffect(() => {
@@ -122,16 +123,24 @@ const LogistiquePage: React.FC = () => {
               </label>
               <select
                 id="ressource-select"
-                value={selectedRessource?.id || ''}
+                value={viewAllResources ? 'all' : (selectedRessource?.id || '')}
                 onChange={(e) => {
-                  const ressourceId = parseInt(e.target.value, 10)
-                  const ressource = allRessources.find((r) => r.id === ressourceId)
-                  setSelectedRessource(ressource || null)
+                  const value = e.target.value
+                  if (value === 'all') {
+                    setViewAllResources(true)
+                    setSelectedRessource(null)
+                  } else {
+                    setViewAllResources(false)
+                    const ressourceId = parseInt(value, 10)
+                    const ressource = allRessources.find((r) => r.id === ressourceId)
+                    setSelectedRessource(ressource || null)
+                  }
                 }}
                 className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={loadingRessources}
               >
-                <option value="">-- Sélectionner une ressource --</option>
+                <option value="all">📋 Toutes les ressources</option>
+                <option value="" disabled>────────────────</option>
                 {allRessources.map((ressource) => (
                   <option key={ressource.id} value={ressource.id}>
                     [{ressource.code}] {ressource.nom}
@@ -145,8 +154,56 @@ const LogistiquePage: React.FC = () => {
               )}
             </div>
 
-            {/* Planning de la ressource sélectionnée */}
-            {selectedRessource ? (
+            {/* Planning de la ressource sélectionnée ou toutes les ressources */}
+            {viewAllResources ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Planning : Toutes les ressources
+                  </h2>
+                  <button
+                    onClick={() => setActiveTab('ressources')}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Voir la liste des ressources
+                  </button>
+                </div>
+                {allRessources.length > 0 ? (
+                  <div className="space-y-6">
+                    {allRessources.map((ressource) => (
+                      <div key={ressource.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold text-gray-900">
+                            [{ressource.code}] {ressource.nom}
+                          </h3>
+                          <button
+                            onClick={() => {
+                              setViewAllResources(false)
+                              setSelectedRessource(ressource)
+                            }}
+                            className="text-sm text-blue-600 hover:text-blue-700"
+                          >
+                            Voir en détail →
+                          </button>
+                        </div>
+                        <ReservationCalendar
+                          ressource={ressource}
+                          onCreateReservation={handleCreateReservation}
+                          onSelectReservation={handleSelectReservation}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                    <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-500">
+                      Aucune ressource disponible. {isAdmin && 'Créez-en une depuis l\'onglet Ressources.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : selectedRessource ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-gray-900">
