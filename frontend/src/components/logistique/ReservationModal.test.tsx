@@ -10,9 +10,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ReservationModal from './ReservationModal'
+import { createMockRessource, createMockReservation, createMockChantier } from '../../fixtures'
 import type { Ressource, Reservation } from '../../types/logistique'
 import type { Chantier } from '../../types'
 
@@ -90,44 +91,8 @@ vi.mock('./ReservationActions', () => ({
 import { useReservationModal } from '../../hooks/useReservationModal'
 const mockUseReservationModal = useReservationModal as ReturnType<typeof vi.fn>
 
-const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => ({
-  id: 1,
-  code: 'CAM01',
-  nom: 'Camion benne',
-  categorie: 'vehicule',
-  couleur: '#FF5733',
-  actif: true,
-  validation_requise: true,
-  created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
-  ...overrides,
-})
 
-const createMockReservation = (overrides: Partial<Reservation> = {}): Reservation => ({
-  id: 1,
-  ressource_id: 1,
-  demandeur_id: 1,
-  chantier_id: 1,
-  date_reservation: '2024-01-25',
-  heure_debut: '09:00',
-  heure_fin: '12:00',
-  statut: 'en_attente',
-  created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
-  ...overrides,
-})
 
-const createMockChantier = (overrides: Partial<Chantier> = {}): Chantier => ({
-  id: 1,
-  nom: 'Chantier Test',
-  adresse: '123 rue Test',
-  code_chantier: 'CH001',
-  statut: 'en_cours',
-  couleur: '#3498db',
-  created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
-  ...overrides,
-})
 
 describe('ReservationModal', () => {
   const mockOnClose = vi.fn()
