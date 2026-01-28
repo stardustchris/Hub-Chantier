@@ -26,9 +26,8 @@ from shared.infrastructure.web import (
 from shared.infrastructure.event_bus.dependencies import get_event_bus
 from shared.infrastructure.event_bus import EventBus
 
-# Type hints only - avoid runtime import cross-module
-if TYPE_CHECKING:
-    from modules.auth.domain.repositories import UserRepository
+# Import UserRepository pour les dépendances FastAPI
+from modules.auth.domain.repositories import UserRepository
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 

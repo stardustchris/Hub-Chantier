@@ -7,7 +7,7 @@ from typing import List, Optional
 from shared.infrastructure.event_bus import event_handler, EventBus
 from shared.infrastructure.database import SessionLocal
 from shared.application.ports import EntityInfoService
-from shared.infrastructure.entity_info_impl import EntityInfoServiceImpl
+from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from modules.dashboard.domain.events import CommentAddedEvent, LikeAddedEvent
 from ..domain.entities import Notification
 from ..domain.value_objects import NotificationType
@@ -56,7 +56,7 @@ def get_user_id_by_email_or_name(db, identifier: str) -> int | None:
 
 def get_user_name(db, user_id: int) -> str:
     """Recupere le nom complet d'un utilisateur via EntityInfoService."""
-    entity_info = EntityInfoServiceImpl(db)
+    entity_info = SQLAlchemyEntityInfoService(db)
     user_info = entity_info.get_user_info(user_id)
     return user_info.nom if user_info else "Utilisateur"
 
