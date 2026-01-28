@@ -20,21 +20,31 @@ vi.mock('../../contexts/TasksContext', () => ({
 }))
 
 const createMockTache = (overrides: Partial<Tache> = {}): Tache => ({
-  id: '1',
+  id: 1,
   titre: 'Tache Test',
   description: 'Description de test',
-  chantier_id: 'ch-1',
+  chantier_id: 1,
+  ordre: 1,
+  statut: 'a_faire',
+  statut_display: 'À faire',
+  statut_icon: '⏳',
+  quantite_realisee: 50,
+  heures_realisees: 5,
+  progression_heures: 50,
+  progression_quantite: 50,
+  couleur_progression: 'vert',
+  couleur_hex: '#10B981',
   est_terminee: false,
   est_en_retard: false,
-  ordre: 1,
-  couleur_progression: 'vert',
-  heures_estimees: 10,
-  heures_realisees: 5,
-  quantite_estimee: 100,
-  quantite_realisee: 50,
-  unite_mesure: 'm2',
+  a_sous_taches: false,
   nombre_sous_taches: 0,
   nombre_sous_taches_terminees: 0,
+  heures_estimees: 10,
+  quantite_estimee: 100,
+  unite_mesure: 'm2',
+  created_at: '2026-01-25T10:00:00',
+  updated_at: '2026-01-25T10:00:00',
+  sous_taches: [],
   ...overrides,
 })
 
@@ -69,7 +79,7 @@ describe('TaskItem', () => {
       render(<TaskItem tache={createMockTache({
         nombre_sous_taches: 5,
         nombre_sous_taches_terminees: 2,
-        sous_taches: [createMockTache({ id: 'sub-1' })],
+        sous_taches: [createMockTache({ id: 2 })],
       })} />)
       expect(screen.getByText('2/5')).toBeInTheDocument()
     })
@@ -138,7 +148,7 @@ describe('TaskItem', () => {
       openMenu()
       fireEvent.click(screen.getByText('Modifier'))
 
-      expect(mockTasksContext.onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }))
+      expect(mockTasksContext.onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
     })
 
     it('appelle onDelete au clic sur Supprimer', () => {
@@ -147,7 +157,7 @@ describe('TaskItem', () => {
       openMenu()
       fireEvent.click(screen.getByText('Supprimer'))
 
-      expect(mockTasksContext.onDelete).toHaveBeenCalledWith('1')
+      expect(mockTasksContext.onDelete).toHaveBeenCalledWith(1)
     })
 
     it('appelle onAddSubtask au clic sur Ajouter sous-tache', () => {
@@ -156,14 +166,14 @@ describe('TaskItem', () => {
       openMenu()
       fireEvent.click(screen.getByText('Ajouter sous-tache'))
 
-      expect(mockTasksContext.onAddSubtask).toHaveBeenCalledWith('1')
+      expect(mockTasksContext.onAddSubtask).toHaveBeenCalledWith(1)
     })
   })
 
   describe('sous-taches', () => {
     it('affiche le chevron si a des sous-taches', () => {
       render(<TaskItem tache={createMockTache({
-        sous_taches: [createMockTache({ id: 'sub-1', titre: 'Sous-tache 1' })],
+        sous_taches: [createMockTache({ id: 2, titre: 'Sous-tache 1' })],
       })} />)
 
       expect(screen.getByTitle(/Replier/i)).toBeInTheDocument()
@@ -171,7 +181,7 @@ describe('TaskItem', () => {
 
     it('affiche les sous-taches par defaut', () => {
       render(<TaskItem tache={createMockTache({
-        sous_taches: [createMockTache({ id: 'sub-1', titre: 'Sous-tache visible' })],
+        sous_taches: [createMockTache({ id: 2, titre: 'Sous-tache visible' })],
       })} />)
 
       expect(screen.getByText('Sous-tache visible')).toBeInTheDocument()
@@ -179,7 +189,7 @@ describe('TaskItem', () => {
 
     it('masque les sous-taches au clic sur chevron', () => {
       render(<TaskItem tache={createMockTache({
-        sous_taches: [createMockTache({ id: 'sub-1', titre: 'Sous-tache cachee' })],
+        sous_taches: [createMockTache({ id: 2, titre: 'Sous-tache cachee' })],
       })} />)
 
       fireEvent.click(screen.getByTitle(/Replier/i))
@@ -189,7 +199,7 @@ describe('TaskItem', () => {
 
     it('affiche a nouveau au clic sur chevron', () => {
       render(<TaskItem tache={createMockTache({
-        sous_taches: [createMockTache({ id: 'sub-1', titre: 'Sous-tache re-visible' })],
+        sous_taches: [createMockTache({ id: 2, titre: 'Sous-tache re-visible' })],
       })} />)
 
       fireEvent.click(screen.getByTitle(/Replier/i))
