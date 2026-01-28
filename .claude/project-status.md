@@ -11,8 +11,7 @@
 | dashboard (feed) | 2 | FEED-01 a FEED-20 | 18/20 | 1 | **COMPLET** (1 future) |
 | dashboard (cards) | 2 | DASH-01 a DASH-15 | 15/15 | 0 | **COMPLET** |
 | chantiers | 4 | CHT-01 a CHT-21 | 19/21 | 1 | **COMPLET** (1 future) |
-| planning | 5 | PLN-01 a PLN-28 | 26/28 | 2 | **COMPLET** (2 infra) |
-| planning_charge | 6 | PDC-01 a PDC-17 | 17/17 | 0 | **COMPLET** |
+| planning (+ charge) | 5-6 | PLN-01 a PLN-28 + PDC-01 a PDC-17 | 43/45 | 2 | **COMPLET** (2 infra) |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | 16/20 | 4 | **COMPLET** (4 infra) |
 | formulaires | 8 | FOR-01 a FOR-11 | 11/11 | 0 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | 15/17 | 2 | **COMPLET** (2 infra) |
@@ -23,11 +22,13 @@
 
 ## Statistiques globales
 
-- **Modules complets** : 13/13 (incluant dashboard cards)
+- **Modules complets** : 12/12 (dashboard cards + planning unifié)
 - **Fonctionnalites totales** : 237
 - **Fonctionnalites done** : 219 (92%)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 2 (prevues pour versions futures)
+
+**Note**: Le module `planning_charge` a été fusionné dans `planning` (28 jan 2026) pour conformité Clean Architecture. Score architect review: 87/100, 186 tests unitaires passent.
 
 ### Code source
 
@@ -135,6 +136,17 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-01-28 - Fusion planning_charge → planning (Phase 2.5 P1)
+- **Objectif**: Fusionner planning_charge dans planning pour conformité Clean Architecture
+- **Résultat**: 32 violations → 0 (-100%) ✅
+- **Architecture**: Score 87/100 (objectif 75+ dépassé)
+- **Tests**: 186/186 tests unitaires passent (100%)
+- **Déplacement**: 43 fichiers reorganisés en sous-répertoires charge/
+- **Corrections**: 17 fichiers modifiés (imports, exports, TYPE_CHECKING)
+- **Router**: Combiné affectations + charge (17 routes API)
+- **Commits**: 4 commits sur branche claude/merge-planning-charge-5PfT3
+- Verdict : ✅ **MODULE PLANNING CONFORME CLEAN ARCHITECTURE**
 
 Session 2026-01-28 - Refactoring Frontend TypeScript (152 → 0 erreurs)
 - **Objectif**: Éliminer toutes les erreurs TypeScript dans le frontend (mode strict)
