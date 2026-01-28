@@ -472,7 +472,7 @@ def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
     if not user_ids:
         return {}
 
-    from modules.auth.infrastructure.persistence.models import UserModel
+    from modules.auth.infrastructure.persistence.user_model import UserModel
 
     db = SessionLocal()
     try:
