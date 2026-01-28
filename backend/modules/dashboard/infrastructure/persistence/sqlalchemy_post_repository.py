@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, case
 
 from ...domain.entities import Post
 from ...domain.repositories import PostRepository
@@ -138,9 +138,14 @@ class SQLAlchemyPostRepository(PostRepository):
         query = query.filter(or_(*targeting_conditions))
 
         # Tri: épinglés d'abord, puis par date
+        # Utiliser CASE WHEN pour donner une priorité numérique aux statuts
+        status_priority = case(
+            (PostModel.status == PostStatus.PINNED.value, 1),
+            else_=2
+        )
         query = query.order_by(
-            PostModel.status.desc(),  # PINNED > PUBLISHED
-            PostModel.created_at.desc(),
+            status_priority.asc(),  # 1 (PINNED) avant 2 (autres)
+            PostModel.created_at.desc(),  # Plus récent en premier
         )
 
         # Pagination
