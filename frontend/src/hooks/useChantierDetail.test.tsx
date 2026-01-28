@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { useChantierDetail } from './useChantierDetail'
 import { chantiersService } from '../services/chantiers'
 import { usersService } from '../services/users'
+import { createMockUser } from '../fixtures'
 import type { ReactNode } from 'react'
 
 // Mocks
@@ -71,8 +72,8 @@ const mockChantier = {
 const mockNavIds = { prevId: null, nextId: '2' }
 
 const mockUsers = [
-  { id: 'u3', nom: 'Bernard', prenom: 'Paul', role: 'conducteur' },
-  { id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' },
+  createMockUser({ id: 'u3', nom: 'Bernard', prenom: 'Paul', role: 'conducteur' }),
+  createMockUser({ id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' }),
 ]
 
 const wrapper = ({ children }: { children: ReactNode }) => (

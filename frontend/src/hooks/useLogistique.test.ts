@@ -7,6 +7,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { useLogistique } from './useLogistique'
 import { chantiersService } from '../services/chantiers'
 import { listReservationsEnAttente, listRessources } from '../api/logistique'
+import { createMockChantier, createMockReservation, createMockRessource } from '../fixtures'
 
 // Mocks
 vi.mock('../contexts/AuthContext', () => ({
@@ -35,18 +36,18 @@ vi.mock('../services/logger', () => ({
 }))
 
 const mockChantiers = [
-  { id: 1, nom: 'Chantier 1', code: 'CH1' },
-  { id: 2, nom: 'Chantier 2', code: 'CH2' },
+  createMockChantier({ id: '1', nom: 'Chantier 1', code: 'CH1' }),
+  createMockChantier({ id: '2', nom: 'Chantier 2', code: 'CH2' }),
 ]
 
 const mockReservationsEnAttente = [
-  { id: 1, ressource_id: 1, statut: 'en_attente', date_debut: '2026-01-25' },
-  { id: 2, ressource_id: 2, statut: 'en_attente', date_debut: '2026-01-26' },
+  createMockReservation({ id: 1, ressource_id: 1, statut: 'en_attente', date_reservation: '2026-01-25' }),
+  createMockReservation({ id: 2, ressource_id: 2, statut: 'en_attente', date_reservation: '2026-01-26' }),
 ]
 
 const mockRessources = [
-  { id: 1, nom: 'Grue 1', type: 'engin' },
-  { id: 2, nom: 'Camion 1', type: 'vehicule' },
+  createMockRessource({ id: 1, nom: 'Grue 1', categorie: 'engin_levage' }),
+  createMockRessource({ id: 2, nom: 'Camion 1', categorie: 'vehicule' }),
 ]
 
 describe('useLogistique', () => {
