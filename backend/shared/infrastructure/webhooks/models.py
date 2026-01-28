@@ -1,10 +1,13 @@
 """SQLAlchemy Models pour les Webhooks."""
 
+import json
 from datetime import datetime
+from typing import List, Dict, Any
 from uuid import uuid4
 
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ARRAY, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ForeignKey, func
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
@@ -24,14 +27,34 @@ class WebhookModel(Base):
     __tablename__ = "webhooks"
     __table_args__ = {"extend_existing": True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     # Configuration
     url = Column(String(500), nullable=False, comment="URL destination du webhook")
-    events = Column(ARRAY(String), nullable=False, comment="Patterns d'événements (ex: chantier.*, heures.*)")
+    _events = Column("events", Text, nullable=False, comment="Patterns d'événements - JSON pour compatibilité SQLite")
     secret = Column(String(64), nullable=False, comment="Secret pour signatures HMAC-SHA256")
     description = Column(Text, nullable=True, comment="Description du webhook")
+
+    @hybrid_property
+    def events(self) -> List[str]:
+        """Récupère les événements en tant que liste Python."""
+        if self._events:
+            try:
+                return json.loads(self._events) if isinstance(self._events, str) else self._events
+            except (json.JSONDecodeError, TypeError):
+                return []
+        return []
+
+    @events.setter
+    def events(self, value: List[str]) -> None:
+        """Stocke les événements en JSON string pour compatibilité SQLite."""
+        if isinstance(value, list):
+            self._events = json.dumps(value)
+        elif isinstance(value, str):
+            self._events = value
+        else:
+            self._events = '[]'
 
     # État
     is_active = Column(Boolean, server_default="true", nullable=False, comment="Webhook actif ou désactivé")
@@ -72,12 +95,32 @@ class WebhookDeliveryModel(Base):
     __tablename__ = "webhook_deliveries"
     __table_args__ = {"extend_existing": True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    webhook_id = Column(UUID(as_uuid=True), ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    webhook_id = Column(String(36), ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False)
 
     # Événement
     event_type = Column(String(100), nullable=False, comment="Type d'événement (ex: chantier.created)")
-    payload = Column(JSONB, nullable=False, comment="Payload JSON de l'événement")
+    _payload = Column("payload", Text, nullable=False, comment="Payload JSON de l'événement - Text pour compatibilité SQLite")
+
+    @hybrid_property
+    def payload(self) -> Dict[str, Any]:
+        """Récupère le payload en tant que dict Python."""
+        if self._payload:
+            try:
+                return json.loads(self._payload) if isinstance(self._payload, str) else self._payload
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+
+    @payload.setter
+    def payload(self, value: Dict[str, Any]) -> None:
+        """Stocke le payload en JSON string pour compatibilité SQLite."""
+        if isinstance(value, dict):
+            self._payload = json.dumps(value)
+        elif isinstance(value, str):
+            self._payload = value
+        else:
+            self._payload = '{}'
 
     # Résultat de la livraison
     status_code = Column(Integer, nullable=True, comment="Code HTTP de la réponse")
