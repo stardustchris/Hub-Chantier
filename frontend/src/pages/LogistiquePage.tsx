@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react'
 import { Truck, Calendar, Clock, AlertCircle } from 'lucide-react'
 import { useLogistique } from '../hooks'
-import { RessourceList, ReservationCalendar, ReservationModal } from '../components/logistique'
+import { RessourceList, RessourceModal, ReservationCalendar, ReservationModal } from '../components/logistique'
 import Layout from '../components/Layout'
 import { listRessources } from '../api/logistique'
 import type { Ressource } from '../types/logistique'
@@ -39,23 +39,51 @@ const LogistiquePage: React.FC = () => {
   const [loadingRessources, setLoadingRessources] = useState(false)
   const [viewAllResources, setViewAllResources] = useState(true)
 
+  // State pour le modal de ressource
+  const [showRessourceModal, setShowRessourceModal] = useState(false)
+  const [editingRessource, setEditingRessource] = useState<Ressource | undefined>(undefined)
+
   // Charger toutes les ressources
-  useEffect(() => {
-    const loadRessources = async () => {
-      setLoadingRessources(true)
-      try {
-        const data = await listRessources({ limit: 1000 })
-        setAllRessources(data?.items || [])
-      } catch (error) {
-        console.error('Erreur chargement ressources:', error)
-      } finally {
-        setLoadingRessources(false)
-      }
+  const loadAllRessources = async () => {
+    setLoadingRessources(true)
+    try {
+      const data = await listRessources({ limit: 1000 })
+      setAllRessources(data?.items || [])
+    } catch (error) {
+      console.error('Erreur chargement ressources:', error)
+    } finally {
+      setLoadingRessources(false)
     }
-    if (activeTab === 'planning') {
-      loadRessources()
+  }
+
+  useEffect(() => {
+    if (activeTab === 'planning' || activeTab === 'ressources') {
+      loadAllRessources()
     }
   }, [activeTab])
+
+  // Handlers pour le modal de ressource
+  const handleCreateRessource = () => {
+    setEditingRessource(undefined)
+    setShowRessourceModal(true)
+  }
+
+  const handleEditRessource = (ressource: Ressource) => {
+    setEditingRessource(ressource)
+    setShowRessourceModal(true)
+  }
+
+  const handleRessourceModalClose = () => {
+    setShowRessourceModal(false)
+    setEditingRessource(undefined)
+  }
+
+  const handleRessourceModalSuccess = () => {
+    setShowRessourceModal(false)
+    setEditingRessource(undefined)
+    // Recharger la liste des ressources
+    loadAllRessources()
+  }
 
   return (
     <Layout>
@@ -108,6 +136,8 @@ const LogistiquePage: React.FC = () => {
         {activeTab === 'ressources' && (
           <RessourceList
             onSelectRessource={handleSelectRessource}
+            onCreateRessource={handleCreateRessource}
+            onEditRessource={handleEditRessource}
             selectedRessourceId={selectedRessource?.id}
             isAdmin={isAdmin}
           />
@@ -304,6 +334,15 @@ const LogistiquePage: React.FC = () => {
           initialHeureFin={modalInitialData.heureFin}
           canValidate={canValidate}
           onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {/* Modal de ressource (création/édition) */}
+      {showRessourceModal && (
+        <RessourceModal
+          ressource={editingRessource}
+          onClose={handleRessourceModalClose}
+          onSuccess={handleRessourceModalSuccess}
         />
       )}
     </div>
