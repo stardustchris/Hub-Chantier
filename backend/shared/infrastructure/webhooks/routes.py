@@ -10,7 +10,7 @@ import socket
 import ipaddress
 from urllib.parse import urlparse
 
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from shared.infrastructure.web import get_current_user_id
 from shared.infrastructure.database import get_db
 from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.webhooks.models import WebhookModel, WebhookDeliveryModel

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from shared.infrastructure.web import get_current_user_id
 
 from ...application.dtos import (
     CreateInterventionDTO,

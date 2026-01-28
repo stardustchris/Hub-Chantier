@@ -9,8 +9,8 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
 from shared.infrastructure.web import (
+    get_current_user_id,
     require_admin,
     require_conducteur_or_admin,
     get_current_user_role,
