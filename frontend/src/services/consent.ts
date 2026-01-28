@@ -134,6 +134,15 @@ export const consentService = {
   },
 
   /**
+   * Vérifie si l'utilisateur a déjà répondu au banner RGPD
+   * (true si l'utilisateur a cliqué sur Accepter ou Refuser)
+   */
+  hasAnswered: async (): Promise<boolean> => {
+    const consents = await getConsents()
+    return consents.has_answered === true
+  },
+
+  /**
    * Enregistre un consentement côté serveur
    */
   setConsent,
