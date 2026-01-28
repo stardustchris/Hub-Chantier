@@ -164,7 +164,7 @@ class TestResizeExtendBothSides:
         mock_repo.exists_for_utilisateur_and_date.return_value = False
 
         # 2 avant + 2 après = 4 nouvelles
-        mock_repo.save.side_effect = [
+        new_affectations = [
             Affectation(id=i, utilisateur_id=10, chantier_id=5, date=d, created_by=1)
             for i, d in enumerate(
                 [
@@ -176,10 +176,11 @@ class TestResizeExtendBothSides:
                 start=2,
             )
         ]
+        mock_repo.save.side_effect = new_affectations
 
         mock_repo.find_by_utilisateur.side_effect = [
             [affectation_reference],
-            [affectation_reference] + mock_repo.save.side_effect,
+            [affectation_reference] + new_affectations,
         ]
 
         result = use_case.execute(
