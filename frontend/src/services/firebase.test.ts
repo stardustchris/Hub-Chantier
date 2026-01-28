@@ -22,7 +22,6 @@ vi.mock('firebase/messaging', () => ({
 }))
 
 // Mock import.meta.env
-const originalEnv = import.meta.env
 
 describe('firebase service', () => {
   const mockFirebaseApp = { name: 'test-app' }
