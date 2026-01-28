@@ -65,27 +65,48 @@ class UpdateAffectationUseCase:
         Example:
             >>> affectation = use_case.execute(1, dto, updated_by=2)
         """
-        # Recuperer l'affectation
+        affectation = self._get_affectation(affectation_id)
+        changes: Dict[str, Any] = {}
+
+        self._update_date(affectation, dto, changes)
+        self._update_utilisateur(affectation, dto, changes)
+        self._update_horaires(affectation, dto, changes)
+        self._update_note(affectation, dto, changes)
+        self._update_chantier(affectation, dto, changes)
+
+        affectation = self.affectation_repo.save(affectation)
+        self._publish_update_event(affectation, changes, updated_by)
+
+        return affectation
+
+    def _get_affectation(self, affectation_id: int) -> Affectation:
+        """Recupere l'affectation ou leve une erreur si non trouvee."""
         affectation = self.affectation_repo.find_by_id(affectation_id)
         if not affectation:
             raise AffectationNotFoundError(affectation_id)
+        return affectation
 
-        # Tracker les modifications pour l'evenement
-        changes: Dict[str, Any] = {}
-
-        # PLN-27: Modifier la date si fournie (drag & drop)
+    def _update_date(
+        self, affectation: Affectation, dto: UpdateAffectationDTO, changes: Dict[str, Any]
+    ) -> None:
+        """Modifie la date si fournie (PLN-27: drag & drop)."""
         if dto.date is not None:
             affectation.changer_date(dto.date)
             changes["date"] = dto.date.isoformat()
 
-        # PLN-27: Modifier l'utilisateur si fourni (drag & drop)
+    def _update_utilisateur(
+        self, affectation: Affectation, dto: UpdateAffectationDTO, changes: Dict[str, Any]
+    ) -> None:
+        """Modifie l'utilisateur si fourni (PLN-27: drag & drop)."""
         if dto.utilisateur_id is not None:
             affectation.changer_utilisateur(dto.utilisateur_id)
             changes["utilisateur_id"] = dto.utilisateur_id
 
-        # Modifier les horaires si fournis
+    def _update_horaires(
+        self, affectation: Affectation, dto: UpdateAffectationDTO, changes: Dict[str, Any]
+    ) -> None:
+        """Modifie les horaires si fournis."""
         if dto.heure_debut is not None or dto.heure_fin is not None:
-            # Determiner les nouvelles valeurs
             new_heure_debut = (
                 HeureAffectation.from_string(dto.heure_debut)
                 if dto.heure_debut
@@ -97,7 +118,6 @@ class UpdateAffectationUseCase:
                 else affectation.heure_fin
             )
 
-            # Appliquer les modifications
             affectation.modifier_horaires(new_heure_debut, new_heure_fin)
 
             if dto.heure_debut is not None:
@@ -105,7 +125,10 @@ class UpdateAffectationUseCase:
             if dto.heure_fin is not None:
                 changes["heure_fin"] = dto.heure_fin
 
-        # Modifier la note si fournie
+    def _update_note(
+        self, affectation: Affectation, dto: UpdateAffectationDTO, changes: Dict[str, Any]
+    ) -> None:
+        """Modifie la note si fournie."""
         if dto.note is not None:
             if dto.note.strip():
                 affectation.ajouter_note(dto.note)
@@ -113,15 +136,18 @@ class UpdateAffectationUseCase:
                 affectation.supprimer_note()
             changes["note"] = dto.note
 
-        # Modifier le chantier si fourni
+    def _update_chantier(
+        self, affectation: Affectation, dto: UpdateAffectationDTO, changes: Dict[str, Any]
+    ) -> None:
+        """Modifie le chantier si fourni."""
         if dto.chantier_id is not None:
             affectation.changer_chantier(dto.chantier_id)
             changes["chantier_id"] = dto.chantier_id
 
-        # Sauvegarder
-        affectation = self.affectation_repo.save(affectation)
-
-        # Publier l'evenement si des modifications ont ete faites
+    def _publish_update_event(
+        self, affectation: Affectation, changes: Dict[str, Any], updated_by: int
+    ) -> None:
+        """Publie l'evenement de mise a jour si des modifications ont ete faites."""
         if self.event_bus and changes:
             event = AffectationUpdatedEvent(
                 affectation_id=affectation.id,
@@ -131,5 +157,3 @@ class UpdateAffectationUseCase:
                 updated_by=updated_by,
             )
             self.event_bus.publish(event)
-
-        return affectation

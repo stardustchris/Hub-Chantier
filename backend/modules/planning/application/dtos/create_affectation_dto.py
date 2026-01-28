@@ -49,19 +49,29 @@ class CreateAffectationDTO:
 
     def __post_init__(self) -> None:
         """Valide les donnees a la creation."""
+        self._validate_ids()
+        self._validate_type_affectation()
+        self._validate_recurrence()
+        self._validate_jours_recurrence()
+        self._validate_heures()
+
+    def _validate_ids(self) -> None:
+        """Valide les IDs utilisateur et chantier."""
         if self.utilisateur_id <= 0:
             raise ValueError("L'ID utilisateur doit etre positif")
-
         if self.chantier_id <= 0:
             raise ValueError("L'ID chantier doit etre positif")
 
+    def _validate_type_affectation(self) -> None:
+        """Valide le type d'affectation."""
         if self.type_affectation not in ("unique", "recurrente"):
             raise ValueError(
                 f"Type d'affectation invalide: {self.type_affectation}. "
                 "Valeurs valides: 'unique', 'recurrente'"
             )
 
-        # Validation coherence type/recurrence
+    def _validate_recurrence(self) -> None:
+        """Valide la coherence entre type et parametres de recurrence."""
         if self.type_affectation == "recurrente":
             if not self.jours_recurrence or len(self.jours_recurrence) == 0:
                 raise ValueError(
@@ -76,7 +86,8 @@ class CreateAffectationDTO:
                     "La date de fin de recurrence doit etre posterieure a la date de debut"
                 )
 
-        # Validation des jours de recurrence (0-6)
+    def _validate_jours_recurrence(self) -> None:
+        """Valide les jours de recurrence (0-6 pour Lundi-Dimanche)."""
         if self.jours_recurrence:
             for jour in self.jours_recurrence:
                 if not isinstance(jour, int) or jour < 0 or jour > 6:
@@ -85,13 +96,13 @@ class CreateAffectationDTO:
                         "Valeurs valides: 0 (Lundi) a 6 (Dimanche)"
                     )
 
-        # Validation format heure
+    def _validate_heures(self) -> None:
+        """Valide les formats d'heure de debut et de fin."""
         if self.heure_debut and not self._validate_heure_format(self.heure_debut):
             raise ValueError(
                 f"Format d'heure de debut invalide: {self.heure_debut}. "
                 "Format attendu: HH:MM"
             )
-
         if self.heure_fin and not self._validate_heure_format(self.heure_fin):
             raise ValueError(
                 f"Format d'heure de fin invalide: {self.heure_fin}. "

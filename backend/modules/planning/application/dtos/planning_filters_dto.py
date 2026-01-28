@@ -41,25 +41,35 @@ class PlanningFiltersDTO:
 
     def __post_init__(self) -> None:
         """Valide les donnees a la creation."""
+        self._validate_dates()
+        self._validate_utilisateur_ids()
+        self._validate_chantier_ids()
+        self._validate_mutually_exclusive_filters()
+
+    def _validate_dates(self) -> None:
+        """Valide la coherence entre date de debut et date de fin."""
         if self.date_fin < self.date_debut:
             raise ValueError(
                 f"La date de fin ({self.date_fin}) doit etre posterieure "
                 f"ou egale a la date de debut ({self.date_debut})"
             )
 
-        # Validation des IDs utilisateurs si fournis
+    def _validate_utilisateur_ids(self) -> None:
+        """Valide les IDs utilisateurs si fournis."""
         if self.utilisateur_ids:
             for uid in self.utilisateur_ids:
                 if not isinstance(uid, int) or uid <= 0:
                     raise ValueError(f"ID utilisateur invalide: {uid}")
 
-        # Validation des IDs chantiers si fournis
+    def _validate_chantier_ids(self) -> None:
+        """Valide les IDs chantiers si fournis."""
         if self.chantier_ids:
             for cid in self.chantier_ids:
                 if not isinstance(cid, int) or cid <= 0:
                     raise ValueError(f"ID chantier invalide: {cid}")
 
-        # planifies_only et non_planifies_only sont mutuellement exclusifs
+    def _validate_mutually_exclusive_filters(self) -> None:
+        """Valide que planifies_only et non_planifies_only sont mutuellement exclusifs."""
         if self.planifies_only and self.non_planifies_only:
             raise ValueError(
                 "Les filtres planifies_only et non_planifies_only sont mutuellement exclusifs"

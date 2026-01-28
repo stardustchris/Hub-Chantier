@@ -75,35 +75,59 @@ class CreateChantierUseCase:
             InvalidDatesError: Si les dates sont invalides.
             ValueError: Si les données sont invalides.
         """
-        # Générer ou valider le code chantier (CHT-19)
+        code = self._generate_or_validate_code(dto)
+        coordonnees_gps = self._parse_coordonnees_gps(dto)
+        contact = self._parse_contact(dto)
+        date_debut, date_fin = self._parse_and_validate_dates(dto)
+        couleur = self._parse_couleur(dto)
+
+        chantier = self._create_chantier_entity(
+            code, dto, couleur, coordonnees_gps, contact, date_debut, date_fin
+        )
+
+        chantier = self.chantier_repo.save(chantier)
+        self._publish_created_event(chantier)
+
+        return ChantierDTO.from_entity(chantier)
+
+    def _generate_or_validate_code(self, dto: CreateChantierDTO) -> CodeChantier:
+        """Génère ou valide le code chantier (CHT-19)."""
         if dto.code:
             code = CodeChantier(dto.code)
             if self.chantier_repo.exists_by_code(code):
                 raise CodeChantierAlreadyExistsError(dto.code)
+            return code
         else:
-            # Auto-générer le prochain code
             last_code = self.chantier_repo.get_last_code()
-            code = CodeChantier.generate_next(last_code)
+            return CodeChantier.generate_next(last_code)
 
-        # Parser les coordonnées GPS (CHT-04)
-        coordonnees_gps = None
+    def _parse_coordonnees_gps(
+        self, dto: CreateChantierDTO
+    ) -> Optional[CoordonneesGPS]:
+        """Parse les coordonnées GPS (CHT-04)."""
         if dto.latitude is not None and dto.longitude is not None:
-            coordonnees_gps = CoordonneesGPS(
+            return CoordonneesGPS(
                 latitude=dto.latitude,
                 longitude=dto.longitude,
             )
+        return None
 
-        # Parser le contact (CHT-07)
-        contact = None
+    def _parse_contact(self, dto: CreateChantierDTO) -> Optional[ContactChantier]:
+        """Parse le contact (CHT-07)."""
         if dto.contact_nom and dto.contact_telephone:
-            contact = ContactChantier(
+            return ContactChantier(
                 nom=dto.contact_nom,
                 telephone=dto.contact_telephone,
             )
+        return None
 
-        # Parser les dates (CHT-20)
+    def _parse_and_validate_dates(
+        self, dto: CreateChantierDTO
+    ) -> tuple[Optional[date], Optional[date]]:
+        """Parse et valide les dates (CHT-20)."""
         date_debut = None
         date_fin = None
+
         if dto.date_debut:
             date_debut = date.fromisoformat(dto.date_debut)
         if dto.date_fin:
@@ -114,13 +138,26 @@ class CreateChantierUseCase:
                 "La date de fin ne peut pas être antérieure à la date de début"
             )
 
-        # Parser la couleur (CHT-02)
-        couleur = Couleur.default()
-        if dto.couleur:
-            couleur = Couleur(dto.couleur)
+        return date_debut, date_fin
 
-        # Créer l'entité chantier
-        chantier = Chantier(
+    def _parse_couleur(self, dto: CreateChantierDTO) -> Couleur:
+        """Parse la couleur (CHT-02)."""
+        if dto.couleur:
+            return Couleur(dto.couleur)
+        return Couleur.default()
+
+    def _create_chantier_entity(
+        self,
+        code: CodeChantier,
+        dto: CreateChantierDTO,
+        couleur: Couleur,
+        coordonnees_gps: Optional[CoordonneesGPS],
+        contact: Optional[ContactChantier],
+        date_debut: Optional[date],
+        date_fin: Optional[date],
+    ) -> Chantier:
+        """Crée l'entité chantier avec tous les paramètres."""
+        return Chantier(
             code=code,
             nom=dto.nom,
             adresse=dto.adresse,
@@ -137,10 +174,8 @@ class CreateChantierUseCase:
             chef_chantier_ids=list(dto.chef_chantier_ids or []),
         )
 
-        # Sauvegarder
-        chantier = self.chantier_repo.save(chantier)
-
-        # Publier l'event
+    def _publish_created_event(self, chantier: Chantier) -> None:
+        """Publie l'événement de création."""
         if self.event_publisher:
             event = ChantierCreatedEvent(
                 chantier_id=chantier.id,
@@ -151,5 +186,3 @@ class CreateChantierUseCase:
                 chef_chantier_ids=tuple(chantier.chef_chantier_ids),
             )
             self.event_publisher(event)
-
-        return ChantierDTO.from_entity(chantier)

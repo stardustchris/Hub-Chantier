@@ -70,16 +70,36 @@ def init_db() -> None:
 
     # Import des modèles pour les enregistrer dans la Base partagée
     from modules.auth.infrastructure.persistence import UserModel  # noqa: F401
-    from modules.dashboard.infrastructure.persistence import PostModel, CommentModel, LikeModel, PostMediaModel  # noqa: F401
-    from modules.chantiers.infrastructure.persistence import ChantierModel, ContactChantierModel, PhaseChantierModel  # noqa: F401
-    from modules.pointages.infrastructure.persistence import PointageModel, FeuilleHeuresModel, VariablePaieModel  # noqa: F401
-    from modules.taches.infrastructure.persistence import TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel  # noqa: F401
-    from modules.formulaires.infrastructure.persistence import TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel, ChampRempliModel, PhotoFormulaireModel  # noqa: F401
-    from modules.signalements.infrastructure.persistence import SignalementModel, ReponseModel  # noqa: F401
+    from modules.dashboard.infrastructure.persistence import (  # noqa: F401
+        PostModel, CommentModel, LikeModel, PostMediaModel
+    )
+    from modules.chantiers.infrastructure.persistence import (  # noqa: F401
+        ChantierModel, ContactChantierModel, PhaseChantierModel
+    )
+    from modules.pointages.infrastructure.persistence import (  # noqa: F401
+        PointageModel, FeuilleHeuresModel, VariablePaieModel
+    )
+    from modules.taches.infrastructure.persistence import (  # noqa: F401
+        TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel
+    )
+    from modules.formulaires.infrastructure.persistence import (  # noqa: F401
+        TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel,
+        ChampRempliModel, PhotoFormulaireModel
+    )
+    from modules.signalements.infrastructure.persistence import (  # noqa: F401
+        SignalementModel, ReponseModel
+    )
     from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
-    from modules.documents.infrastructure.persistence import DossierModel, DocumentModel, AutorisationDocumentModel  # noqa: F401
-    from modules.logistique.infrastructure.persistence import RessourceModel, ReservationModel  # noqa: F401
-    from modules.interventions.infrastructure.persistence import InterventionModel, AffectationInterventionModel, InterventionMessageModel, SignatureInterventionModel  # noqa: F401
+    from modules.documents.infrastructure.persistence import (  # noqa: F401
+        DossierModel, DocumentModel, AutorisationDocumentModel
+    )
+    from modules.logistique.infrastructure.persistence import (  # noqa: F401
+        RessourceModel, ReservationModel
+    )
+    from modules.interventions.infrastructure.persistence import (  # noqa: F401
+        InterventionModel, AffectationInterventionModel,
+        InterventionMessageModel, SignatureInterventionModel
+    )
 
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
