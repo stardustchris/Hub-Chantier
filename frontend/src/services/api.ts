@@ -13,6 +13,13 @@ if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
   )
 }
 
+// Validation HTTPS en production (sécurité)
+if (import.meta.env.PROD && baseURL && !baseURL.startsWith('https://')) {
+  throw new Error(
+    `[API] VITE_API_URL doit utiliser HTTPS en production. Valeur actuelle: ${baseURL}`
+  )
+}
+
 const api = axios.create({
   baseURL,
   headers: {
