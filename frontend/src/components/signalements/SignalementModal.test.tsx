@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementModal from './SignalementModal'
-import type { Signalement } from '../../types/signalements'
+import { createMockSignalement } from '../../fixtures'
 
 // Mock services
 const mockCreateSignalement = vi.fn()
@@ -25,27 +25,6 @@ vi.mock('../../services/signalements', () => ({
   updateSignalement: (...args: unknown[]) => mockUpdateSignalement(...args),
 }))
 
-const createMockSignalement = (overrides: Partial<Signalement> = {}): Signalement => ({
-  id: 1,
-  chantier_id: 1,
-  titre: 'Signalement existant',
-  description: 'Description existante',
-  priorite: 'moyenne',
-  priorite_label: 'Moyenne',
-  priorite_couleur: '#F39C12',
-  statut: 'ouvert',
-  statut_label: 'Ouvert',
-  statut_couleur: '#3498DB',
-  cree_par: 1,
-  cree_par_nom: 'Jean Dupont',
-  created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-15T10:00:00',
-  est_en_retard: false,
-  pourcentage_temps: 0,
-  nb_reponses: 0,
-  nb_escalades: 0,
-  ...overrides,
-})
 
 describe('SignalementModal', () => {
   const mockOnClose = vi.fn()

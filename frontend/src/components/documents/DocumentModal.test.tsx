@@ -18,10 +18,13 @@ const createMockDossier = (overrides: Partial<Dossier> = {}): Dossier => ({
   id: 1,
   chantier_id: 1,
   nom: 'Plans',
-  type_dossier: '01_plans',
+  type_dossier: 'custom',
   niveau_acces: 'compagnon',
   parent_id: null,
+  ordre: 1,
+  chemin_complet: '/Plans',
   nombre_documents: 5,
+  nombre_sous_dossiers: 0,
   created_at: '2024-01-15T10:00:00',
   ...overrides,
 })
@@ -35,13 +38,17 @@ const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   type_document: 'pdf',
   taille: 1024000,
   taille_formatee: '1 Mo',
+  mime_type: 'application/pdf',
   uploaded_by: 1,
+  uploaded_by_nom: 'Jean Dupont',
   uploaded_at: '2024-01-15T10:00:00',
   description: 'Plan du RDC',
+  version: 1,
+  icone: 'file-pdf',
+  extension: 'pdf',
   niveau_acces: 'compagnon',
   ...overrides,
 })
-
 
 describe('DossierModal', () => {
   const mockOnClose = vi.fn()

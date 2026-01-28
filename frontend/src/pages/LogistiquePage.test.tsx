@@ -7,6 +7,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import LogistiquePage from './LogistiquePage'
+import { createMockReservation } from '../fixtures'
+import type { Reservation } from '../types/logistique'
 
 // Mock Layout component to avoid AuthContext dependency
 vi.mock('../components/Layout', () => ({
@@ -17,10 +19,10 @@ vi.mock('../components/Layout', () => ({
 const mockUseLogistique = {
   isAdmin: true,
   canValidate: true,
-  activeTab: 'ressources' as const,
+  activeTab: 'ressources' as 'ressources' | 'planning' | 'en-attente',
   setActiveTab: vi.fn(),
   chantiers: [],
-  reservationsEnAttente: [],
+  reservationsEnAttente: [] as Reservation[],
   selectedRessource: null as { id: number; nom: string; code: string } | null,
   setSelectedRessource: vi.fn(),
   showModal: false,
@@ -194,19 +196,19 @@ describe('LogistiquePage', () => {
 
     it('affiche les reservations en attente', () => {
       mockUseLogistique.reservationsEnAttente = [
-        {
+        createMockReservation({
           id: 1,
           ressource_code: 'GRU001',
           ressource_nom: 'Grue',
           ressource_couleur: '#3B82F6',
           date_reservation: '2026-01-25',
-          heure_debut: '08:00:00',
-          heure_fin: '12:00:00',
+          heure_debut: '08:00',
+          heure_fin: '12:00',
           demandeur_id: 1,
           demandeur_nom: 'Jean Dupont',
           chantier_id: 1,
           chantier_nom: 'Chantier A',
-        },
+        }),
       ]
       render(<LogistiquePage />)
       expect(screen.getByText('[GRU001] Grue')).toBeInTheDocument()
@@ -215,19 +217,19 @@ describe('LogistiquePage', () => {
 
     it('selectionne une reservation au clic', async () => {
       const user = userEvent.setup()
-      const reservation = {
+      const reservation = createMockReservation({
         id: 1,
         ressource_code: 'GRU001',
         ressource_nom: 'Grue',
         ressource_couleur: '#3B82F6',
         date_reservation: '2026-01-25',
-        heure_debut: '08:00:00',
-        heure_fin: '12:00:00',
+        heure_debut: '08:00',
+        heure_fin: '12:00',
         demandeur_id: 1,
         demandeur_nom: 'Jean Dupont',
         chantier_id: 1,
         chantier_nom: 'Chantier A',
-      }
+      })
       mockUseLogistique.reservationsEnAttente = [reservation]
       render(<LogistiquePage />)
 

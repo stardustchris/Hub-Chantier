@@ -13,7 +13,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementDetail from './SignalementDetail'
-import type { Signalement, Reponse } from '../../types/signalements'
+import { createMockSignalement } from '../../fixtures'
+import type { Reponse } from '../../types/signalements'
 
 // Mock services
 const mockGetSignalement = vi.fn()
@@ -33,39 +34,17 @@ vi.mock('../../services/signalements', () => ({
   getStatutIcon: (statut: string) => statut === 'cloture' ? '✅' : '🔵',
 }))
 
-const createMockSignalement = (overrides: Partial<Signalement> = {}): Signalement => ({
-  id: 1,
-  chantier_id: 1,
-  titre: 'Fuite d eau',
-  description: 'Il y a une fuite au niveau du plafond',
-  priorite: 'haute',
-  priorite_label: 'Haute',
-  priorite_couleur: '#E74C3C',
-  statut: 'ouvert',
-  statut_label: 'Ouvert',
-  statut_couleur: '#3498DB',
-  cree_par: 1,
-  cree_par_nom: 'Jean Dupont',
-  assigne_a: 2,
-  assigne_a_nom: 'Marie Martin',
-  created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-15T10:00:00',
-  est_en_retard: false,
-  pourcentage_temps: 30,
-  temps_restant: '2j 5h',
-  nb_reponses: 2,
-  nb_escalades: 0,
-  ...overrides,
-})
 
 const createMockReponse = (overrides: Partial<Reponse> = {}): Reponse => ({
   id: 1,
   signalement_id: 1,
   contenu: 'Je vais verifier',
-  cree_par: 2,
-  cree_par_nom: 'Marie Martin',
+  auteur_id: 2,
+  auteur_nom: 'Marie Martin',
+  photo_url: null,
   created_at: '2024-01-15T11:00:00',
   updated_at: '2024-01-15T11:00:00',
+  est_resolution: false,
   ...overrides,
 })
 

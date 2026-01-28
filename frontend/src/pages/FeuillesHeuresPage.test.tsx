@@ -10,7 +10,7 @@ import FeuillesHeuresPage from './FeuillesHeuresPage'
 
 // Mock useFeuillesHeures hook
 const mockUseFeuillesHeures = {
-  viewTab: 'compagnons' as const,
+  viewTab: 'compagnons' as 'compagnons' | 'chantiers',
   setViewTab: vi.fn(),
   showFilters: false,
   setShowFilters: vi.fn(),

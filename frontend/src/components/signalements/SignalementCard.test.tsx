@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementCard from './SignalementCard'
-import type { Signalement } from '../../types/signalements'
+import { createMockSignalement } from '../../fixtures'
 
 // Mock services
 vi.mock('../../services/signalements', () => ({
@@ -26,30 +26,7 @@ vi.mock('../../utils/dates', () => ({
   formatDateDayMonthYearTime: () => '15/01/2024 10:00',
 }))
 
-const createMockSignalement = (overrides: Partial<Signalement> = {}): Signalement => ({
-  id: 1,
-  chantier_id: 1,
-  titre: 'Fuite eau',
-  description: 'Il y a une fuite au plafond',
-  priorite: 'haute',
-  priorite_label: 'Haute',
-  priorite_couleur: '#E74C3C',
-  statut: 'ouvert',
-  statut_label: 'Ouvert',
-  statut_couleur: '#3498DB',
-  cree_par: 1,
-  cree_par_nom: 'Jean Dupont',
-  assigne_a: 2,
-  assigne_a_nom: 'Marie Martin',
-  created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-15T10:00:00',
-  est_en_retard: false,
-  pourcentage_temps: 30,
-  temps_restant: '2j 5h',
-  nb_reponses: 3,
-  nb_escalades: 0,
-  ...overrides,
-})
+// Using shared fixture from ../../fixtures
 
 describe('SignalementCard', () => {
   const mockOnClick = vi.fn()

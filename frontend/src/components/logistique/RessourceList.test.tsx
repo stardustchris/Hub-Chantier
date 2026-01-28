@@ -13,6 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { createMockRessource } from '../../fixtures'
 import userEvent from '@testing-library/user-event'
 import RessourceList from './RessourceList'
 import type { Ressource } from '../../types/logistique'
@@ -63,20 +64,6 @@ vi.mock('../../services/logger', () => ({
 import { listRessources } from '../../api/logistique'
 const mockListRessources = listRessources as ReturnType<typeof vi.fn>
 
-const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => ({
-  id: 1,
-  code: 'CAM01',
-  nom: 'Camion benne',
-  categorie: 'vehicule',
-  categorie_label: 'Véhicule',
-  couleur: '#FF5733',
-  actif: true,
-  validation_requise: false,
-  description: 'Camion de transport',
-  created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
-  ...overrides,
-})
 
 describe('RessourceList', () => {
   const mockOnSelectRessource = vi.fn()

@@ -22,7 +22,6 @@ vi.mock('firebase/messaging', () => ({
 }))
 
 // Mock import.meta.env
-const originalEnv = import.meta.env
 
 describe('firebase service', () => {
   const mockFirebaseApp = { name: 'test-app' }
@@ -234,7 +233,7 @@ describe('firebase service', () => {
     const originalNotification = global.Notification
 
     beforeEach(() => {
-      // @ts-expect-error - mock Notification API
+      // @ts-expect-error - Simplified mock for testing
       global.Notification = {
         requestPermission: vi.fn(),
       }
@@ -245,8 +244,8 @@ describe('firebase service', () => {
     })
 
     it('retourne null si Notification non supporte', async () => {
-      // @ts-expect-error - supprimer Notification pour le test
-      delete global.Notification
+      // @ts-expect-error - Setting to undefined to simulate unsupported environment
+      global.Notification = undefined
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
@@ -261,7 +260,7 @@ describe('firebase service', () => {
     })
 
     it('retourne null si permission refusee', async () => {
-      // @ts-expect-error - mock Notification API
+
       global.Notification.requestPermission = vi.fn().mockResolvedValue('denied')
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -279,7 +278,7 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', '')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '')
 
-      // @ts-expect-error - mock Notification API
+
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -298,7 +297,7 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
       vi.stubEnv('VITE_FIREBASE_VAPID_KEY', 'test-vapid-key')
 
-      // @ts-expect-error - mock Notification API
+
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
       mockGetToken.mockResolvedValue('test-fcm-token-123456789')
 
@@ -318,7 +317,7 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-      // @ts-expect-error - mock Notification API
+
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
       mockGetToken.mockResolvedValue('')
 
@@ -338,7 +337,7 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-      // @ts-expect-error - mock Notification API
+
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
       mockGetToken.mockRejectedValue(new Error('Token error'))
 

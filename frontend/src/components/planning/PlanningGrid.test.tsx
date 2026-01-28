@@ -56,9 +56,11 @@ const createMockAffectation = (overrides: Partial<Affectation> = {}): Affectatio
   heure_debut: '08:00',
   heure_fin: '17:00',
   chantier_nom: 'Chantier Test',
+  chantier_couleur: '#E74C3C',
   type_affectation: 'unique',
   created_at: '2024-01-01',
   updated_at: '2024-01-01',
+  created_by: 'user-1',
   ...overrides,
 })
 

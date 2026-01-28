@@ -10,7 +10,7 @@ import PlanningPage from './PlanningPage'
 // Mock usePlanning hook
 const mockUsePlanning = {
   canEdit: true,
-  viewTab: 'utilisateurs' as const,
+  viewTab: 'utilisateurs' as 'utilisateurs' | 'chantiers',
   setViewTab: vi.fn(),
   nonPlanifiesCount: 3,
   showNonPlanifiesOnly: false,

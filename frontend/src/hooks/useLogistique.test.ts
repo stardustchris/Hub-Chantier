@@ -7,6 +7,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { useLogistique } from './useLogistique'
 import { chantiersService } from '../services/chantiers'
 import { listReservationsEnAttente, listRessources } from '../api/logistique'
+import { createMockChantier, createMockReservation, createMockRessource } from '../fixtures'
 
 // Mocks
 vi.mock('../contexts/AuthContext', () => ({
@@ -35,26 +36,26 @@ vi.mock('../services/logger', () => ({
 }))
 
 const mockChantiers = [
-  { id: '1', nom: 'Chantier 1', code: 'CH1', adresse: 'Adresse 1', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
-  { id: '2', nom: 'Chantier 2', code: 'CH2', adresse: 'Adresse 2', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
+  createMockChantier({ id: '1', nom: 'Chantier 1', code: 'CH1' }),
+  createMockChantier({ id: '2', nom: 'Chantier 2', code: 'CH2' }),
 ]
 
 const mockReservationsEnAttente = [
-  { id: 1, ressource_id: 1, chantier_id: 1, demandeur_id: 1, statut: 'en_attente' as const, date_reservation: '2026-01-25', date_debut: '2026-01-25', heure_debut: '08:00', heure_fin: '17:00', created_at: '2024-01-01' },
-  { id: 2, ressource_id: 2, chantier_id: 2, demandeur_id: 1, statut: 'en_attente' as const, date_reservation: '2026-01-26', date_debut: '2026-01-26', heure_debut: '08:00', heure_fin: '17:00', created_at: '2024-01-01' },
+  createMockReservation({ id: 1, ressource_id: 1, statut: 'en_attente', date_reservation: '2026-01-25' }),
+  createMockReservation({ id: 2, ressource_id: 2, statut: 'en_attente', date_reservation: '2026-01-26' }),
 ]
 
 const mockRessources = [
-  { id: 1, nom: 'Grue 1', code: 'G1', type: 'engin', categorie: 'levage', categorie_label: 'Levage', couleur: '#3498db', heure_debut_defaut: '08:00', heure_fin_defaut: '17:00', validation_n_plus_1: false, is_active: true },
-  { id: 2, nom: 'Camion 1', code: 'C1', type: 'vehicule', categorie: 'transport', categorie_label: 'Transport', couleur: '#e74c3c', heure_debut_defaut: '08:00', heure_fin_defaut: '17:00', validation_n_plus_1: false, is_active: true },
+  createMockRessource({ id: 1, nom: 'Grue 1', categorie: 'engin_levage' }),
+  createMockRessource({ id: 2, nom: 'Camion 1', categorie: 'vehicule' }),
 ]
 
 describe('useLogistique', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers })
-    vi.mocked(listReservationsEnAttente).mockResolvedValue({ items: mockReservationsEnAttente })
-    vi.mocked(listRessources).mockResolvedValue({ items: mockRessources })
+    vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers, total: mockChantiers.length, page: 1, size: 20, pages: 1 })
+    vi.mocked(listReservationsEnAttente).mockResolvedValue({ items: mockReservationsEnAttente, total: mockReservationsEnAttente.length, limit: 20, offset: 0, has_more: false })
+    vi.mocked(listRessources).mockResolvedValue({ items: mockRessources, total: mockRessources.length, limit: 20, offset: 0, has_more: false })
   })
 
   describe('permissions', () => {

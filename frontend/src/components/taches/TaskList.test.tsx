@@ -59,39 +59,69 @@ vi.mock('./TemplateImportModal', () => ({
 const mockTaches: Tache[] = [
   {
     id: 1,
+    chantier_id: 1,
     titre: 'Tache 1',
     description: 'Description 1',
+    ordre: 1,
     statut: 'a_faire',
-    priorite: 'haute',
-    progression: 0,
-    chantier_id: 1,
+    statut_display: 'À faire',
+    statut_icon: '⏳',
+    quantite_realisee: 0,
+    heures_realisees: 0,
+    progression_heures: 0,
+    progression_quantite: 0,
+    couleur_progression: 'rouge',
+    couleur_hex: '#EF4444',
+    est_terminee: false,
+    est_en_retard: false,
+    a_sous_taches: false,
+    nombre_sous_taches: 0,
+    nombre_sous_taches_terminees: 0,
+    sous_taches: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 2,
+    chantier_id: 1,
     titre: 'Tache 2',
     description: 'Description 2',
+    ordre: 2,
     statut: 'termine',
-    priorite: 'normale',
-    progression: 100,
-    chantier_id: 1,
+    statut_display: 'Terminé',
+    statut_icon: '✅',
+    quantite_realisee: 100,
+    heures_realisees: 10,
+    progression_heures: 100,
+    progression_quantite: 100,
+    couleur_progression: 'vert',
+    couleur_hex: '#10B981',
+    est_terminee: true,
+    est_en_retard: false,
+    a_sous_taches: false,
+    nombre_sous_taches: 0,
+    nombre_sous_taches_terminees: 0,
+    sous_taches: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
 ]
 
 const mockStats: TacheStats = {
+  chantier_id: 1,
   total_taches: 10,
   taches_terminees: 5,
+  taches_en_cours: 3,
   taches_en_retard: 2,
+  heures_estimees_total: 100,
+  heures_realisees_total: 50,
   progression_globale: 50,
 }
 
 describe('TaskList', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(tachesService.listByChantier).mockResolvedValue({ items: mockTaches })
+    vi.mocked(tachesService.listByChantier).mockResolvedValue({ items: mockTaches, total: mockTaches.length, page: 1, size: 20, pages: 1 })
     vi.mocked(tachesService.getStats).mockResolvedValue(mockStats)
     vi.stubGlobal('confirm', vi.fn(() => true))
   })
@@ -150,7 +180,7 @@ describe('TaskList', () => {
     })
 
     it('affiche message si aucune tache', async () => {
-      vi.mocked(tachesService.listByChantier).mockResolvedValue({ items: [] })
+      vi.mocked(tachesService.listByChantier).mockResolvedValue({ items: [], total: 0, page: 1, size: 20, pages: 0 })
 
       render(<TaskList chantierId={1} chantierNom="Test Chantier" />)
 

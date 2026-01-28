@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { useChantierDetail } from './useChantierDetail'
 import { chantiersService } from '../services/chantiers'
 import { usersService } from '../services/users'
+import { createMockUser } from '../fixtures'
 import type { ReactNode } from 'react'
 
 // Mocks
@@ -71,8 +72,8 @@ const mockChantier = {
 const mockNavIds = { prevId: null, nextId: '2' }
 
 const mockUsers = [
-  { id: 'u3', nom: 'Bernard', prenom: 'Paul', role: 'conducteur' as const, email: 'bernard@test.fr', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
-  { id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' as const, email: 'petit@test.fr', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
+  createMockUser({ id: 'u3', nom: 'Bernard', prenom: 'Paul', role: 'conducteur' }),
+  createMockUser({ id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' }),
 ]
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -84,7 +85,7 @@ describe('useChantierDetail', () => {
     vi.clearAllMocks()
     vi.mocked(chantiersService.getById).mockResolvedValue(mockChantier as never)
     vi.mocked(chantiersService.getNavigationIds).mockResolvedValue(mockNavIds)
-    vi.mocked(usersService.list).mockResolvedValue({ items: mockUsers })
+    vi.mocked(usersService.list).mockResolvedValue({ items: mockUsers, total: mockUsers.length, page: 1, size: 20, pages: 1 })
   })
 
   describe('initial loading', () => {

@@ -3,108 +3,160 @@
  * Note: Ces tests vérifient principalement l'API du service
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { consentService, type ConsentType } from './consent'
+import api from './api'
+
+// Mock de l'API
+vi.mock('./api')
 
 describe('consentService', () => {
   beforeEach(() => {
-    // Révoque tout avant chaque test pour un état propre
-    consentService.revokeAllConsents()
+    vi.clearAllMocks()
+    // Réinitialise le cache avant chaque test
+    consentService.resetCache()
   })
 
   describe('structure API', () => {
     it('expose les méthodes requises', () => {
       expect(typeof consentService.hasConsent).toBe('function')
-      expect(typeof consentService.wasAsked).toBe('function')
+      expect(typeof consentService.hasAnyConsent).toBe('function')
       expect(typeof consentService.setConsent).toBe('function')
+      expect(typeof consentService.setConsents).toBe('function')
       expect(typeof consentService.revokeAllConsents).toBe('function')
       expect(typeof consentService.getAllConsents).toBe('function')
-      expect(typeof consentService.getConsentTimestamp).toBe('function')
+      expect(typeof consentService.wasBannerShown).toBe('function')
+      expect(typeof consentService.markBannerAsShown).toBe('function')
+      expect(typeof consentService.resetCache).toBe('function')
     })
   })
 
   describe('hasConsent', () => {
-    it('retourne false par défaut', () => {
-      expect(consentService.hasConsent('geolocation')).toBe(false)
-      expect(consentService.hasConsent('analytics')).toBe(false)
-      expect(consentService.hasConsent('notifications')).toBe(false)
+    it('retourne false par défaut', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: { geolocation: false, analytics: false, notifications: false }
+      })
+
+      expect(await consentService.hasConsent('geolocation')).toBe(false)
+      expect(await consentService.hasConsent('analytics')).toBe(false)
+      expect(await consentService.hasConsent('notifications')).toBe(false)
     })
 
-    it('accepte les types de consentement valides', () => {
-      const types: ConsentType[] = ['geolocation', 'analytics', 'notifications']
-      types.forEach(type => {
-        expect(() => consentService.hasConsent(type)).not.toThrow()
+    it('accepte les types de consentement valides', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: { geolocation: true, analytics: false, notifications: false }
       })
+
+      const types: ConsentType[] = ['geolocation', 'analytics', 'notifications']
+      for (const type of types) {
+        await expect(consentService.hasConsent(type)).resolves.toBeDefined()
+      }
     })
   })
 
-  describe('wasAsked', () => {
-    it('retourne false par défaut', () => {
-      expect(consentService.wasAsked('geolocation')).toBe(false)
+  describe('hasAnyConsent', () => {
+    it('retourne false si aucun consentement', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: { geolocation: false, analytics: false, notifications: false }
+      })
+
+      expect(await consentService.hasAnyConsent()).toBe(false)
+    })
+
+    it('retourne true si au moins un consentement', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: { geolocation: true, analytics: false, notifications: false }
+      })
+
+      expect(await consentService.hasAnyConsent()).toBe(true)
     })
   })
 
   describe('setConsent', () => {
-    it('ne lève pas d\'erreur', () => {
-      expect(() => consentService.setConsent('geolocation', true)).not.toThrow()
-      expect(() => consentService.setConsent('analytics', false)).not.toThrow()
+    it('envoie une requête à l\'API', async () => {
+      vi.mocked(api.post).mockResolvedValue({ data: {} })
+
+      await consentService.setConsent('geolocation', true)
+
+      expect(api.post).toHaveBeenCalledWith('/api/auth/consents', {
+        geolocation: true,
+      })
+    })
+
+    it('met à jour le cache', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: { geolocation: false, analytics: false, notifications: false }
+      })
+      vi.mocked(api.post).mockResolvedValue({ data: {} })
+
+      await consentService.hasConsent('geolocation') // Charge le cache
+      await consentService.setConsent('geolocation', true)
+
+      // Le cache devrait être mis à jour, pas d'appel API supplémentaire
+      vi.mocked(api.get).mockClear()
+      expect(await consentService.hasConsent('geolocation')).toBe(true)
+      expect(api.get).not.toHaveBeenCalled()
     })
   })
 
   describe('revokeAllConsents', () => {
-    it('ne lève pas d\'erreur', () => {
-      expect(() => consentService.revokeAllConsents()).not.toThrow()
-    })
+    it('révoque tous les consentements', async () => {
+      vi.mocked(api.post).mockResolvedValue({ data: {} })
 
-    it('réinitialise l\'état', () => {
-      consentService.revokeAllConsents()
-      expect(consentService.hasConsent('geolocation')).toBe(false)
-      expect(consentService.wasAsked('geolocation')).toBe(false)
+      await consentService.revokeAllConsents()
+
+      expect(api.post).toHaveBeenCalledWith('/api/auth/consents', {
+        geolocation: false,
+        analytics: false,
+        notifications: false,
+      })
     })
   })
 
   describe('getAllConsents', () => {
-    it('retourne un tableau', () => {
-      const consents = consentService.getAllConsents()
-      expect(Array.isArray(consents)).toBe(true)
-    })
+    it('retourne tous les consentements', async () => {
+      const mockConsents = {
+        geolocation: true,
+        analytics: false,
+        notifications: true
+      }
+      vi.mocked(api.get).mockResolvedValue({ data: mockConsents })
 
-    it('retourne un tableau vide après révocation', () => {
-      consentService.revokeAllConsents()
-      const consents = consentService.getAllConsents()
-      expect(consents).toHaveLength(0)
-    })
-  })
+      const consents = await consentService.getAllConsents()
 
-  describe('getConsentTimestamp', () => {
-    it('retourne null par défaut', () => {
-      expect(consentService.getConsentTimestamp('geolocation')).toBeNull()
+      expect(consents).toEqual(mockConsents)
     })
   })
 
-  describe('revokeConsent', () => {
-    it('appelle setConsent avec false', () => {
-      // Vérifie que revokeConsent ne lève pas d'erreur
-      expect(() => consentService.revokeConsent('geolocation')).not.toThrow()
+  describe('banner management', () => {
+    it('wasBannerShown retourne false par défaut', () => {
+      expect(consentService.wasBannerShown()).toBe(false)
+    })
+
+    it('markBannerAsShown change l\'état', () => {
+      consentService.markBannerAsShown()
+      expect(consentService.wasBannerShown()).toBe(true)
+    })
+
+    it('resetCache réinitialise l\'état du banner', () => {
+      consentService.markBannerAsShown()
+      consentService.resetCache()
+      expect(consentService.wasBannerShown()).toBe(false)
     })
   })
 
-  describe('gestion des données corrompues', () => {
-    it('gère gracieusement les données localStorage corrompues', () => {
-      // Simuler des données corrompues
-      localStorage.setItem('hub_chantier_rgpd_consents', 'invalid json{')
+  describe('gestion des erreurs', () => {
+    it('gère gracieusement les erreurs API', async () => {
+      vi.mocked(api.get).mockRejectedValue(new Error('API error'))
 
-      // Ne devrait pas lever d'erreur
-      expect(consentService.hasConsent('geolocation')).toBe(false)
-      expect(consentService.getAllConsents()).toEqual([])
-    })
+      const consents = await consentService.getAllConsents()
 
-    it('gère les données avec un schéma invalide', () => {
-      // Données sans tableau consents
-      localStorage.setItem('hub_chantier_rgpd_consents', JSON.stringify({ invalid: 'schema' }))
-
-      expect(consentService.hasConsent('geolocation')).toBe(false)
-      expect(consentService.getAllConsents()).toEqual([])
+      // Devrait retourner des valeurs par défaut (tous false)
+      expect(consents).toEqual({
+        geolocation: false,
+        analytics: false,
+        notifications: false,
+      })
     })
   })
 })

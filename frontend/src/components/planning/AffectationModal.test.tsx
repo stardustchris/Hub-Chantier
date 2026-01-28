@@ -65,6 +65,7 @@ const createMockAffectation = (overrides: Partial<Affectation> = {}): Affectatio
   type_affectation: 'unique',
   created_at: '2024-01-01',
   updated_at: '2024-01-01',
+  created_by: 'user-1',
   ...overrides,
 })
 

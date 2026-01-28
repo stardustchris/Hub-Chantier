@@ -7,6 +7,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { DashboardPostCard } from './DashboardPostCard'
 import type { Post } from '../../types'
+import { createMockChantier, createMockPostMedia } from '../../fixtures'
 
 // Mock useAuth
 const mockUser = {
@@ -39,14 +40,14 @@ vi.mock('../../services/logger', () => ({
 const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   id: '1',
   contenu: 'Test post content',
-  type: 'general',
+  type: 'message',
   auteur: {
     id: '2',
     prenom: 'Marie',
     nom: 'Martin',
     couleur: '#FF5733',
     email: 'marie@test.com',
-    role: 'conducteur' as const,
+    role: 'conducteur',
     type_utilisateur: 'employe',
     is_active: true,
     created_at: '2024-01-01',
@@ -58,6 +59,7 @@ const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   commentaires_count: 2,
   likes: [],
   commentaires: [],
+  medias: [],
   target_type: 'tous',
   ...overrides,
 })
@@ -144,8 +146,8 @@ describe('DashboardPostCard', () => {
       const post = createMockPost({
         target_type: 'chantiers',
         target_chantiers: [
-          { id: '1', nom: 'Chantier A', code: 'CH001', adresse: 'Adresse A', statut: 'en_cours', conducteurs: [], chefs: [], created_at: '2024-01-01' },
-          { id: '2', nom: 'Chantier B', code: 'CH002', adresse: 'Adresse B', statut: 'en_cours', conducteurs: [], chefs: [], created_at: '2024-01-01' },
+          createMockChantier({ id: '1', nom: 'Chantier A' }),
+          createMockChantier({ id: '2', nom: 'Chantier B' })
         ],
       })
       renderCard(post)
@@ -157,8 +159,8 @@ describe('DashboardPostCard', () => {
     it('affiche les medias du post', () => {
       const post = createMockPost({
         medias: [
-          { id: '1', url: 'https://example.com/img1.jpg', type: 'image' },
-          { id: '2', url: 'https://example.com/img2.jpg', type: 'image' },
+          createMockPostMedia({ id: '1', url: 'https://example.com/img1.jpg', type: 'image' }),
+          createMockPostMedia({ id: '2', url: 'https://example.com/img2.jpg', type: 'image' }),
         ],
       })
       const { container } = renderCard(post)

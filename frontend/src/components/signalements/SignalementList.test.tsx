@@ -13,7 +13,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementList from './SignalementList'
-import type { Signalement } from '../../types/signalements'
+import { createMockSignalement } from '../../fixtures'
 
 // Mock services
 const mockListSignalementsByChantier = vi.fn()
@@ -34,27 +34,6 @@ vi.mock('../../services/logger', () => ({
   },
 }))
 
-const createMockSignalement = (overrides: Partial<Signalement> = {}): Signalement => ({
-  id: 1,
-  chantier_id: 1,
-  titre: 'Signalement test',
-  description: 'Description du signalement',
-  priorite: 'haute',
-  priorite_label: 'Haute',
-  priorite_couleur: '#E74C3C',
-  statut: 'ouvert',
-  statut_label: 'Ouvert',
-  statut_couleur: '#3498DB',
-  cree_par: 1,
-  cree_par_nom: 'Jean Dupont',
-  created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-15T10:00:00',
-  est_en_retard: false,
-  pourcentage_temps: 30,
-  nb_reponses: 0,
-  nb_escalades: 0,
-  ...overrides,
-})
 
 describe('SignalementList', () => {
   const mockOnClick = vi.fn()

@@ -53,7 +53,7 @@ const mockTemplates = [
   {
     id: 1,
     nom: 'Template 1',
-    categorie: 'securite',
+    categorie: 'securite' as const,
     description: 'Test template',
     champs: [],
     is_active: true,
@@ -61,13 +61,13 @@ const mockTemplates = [
     nombre_champs: 0,
     a_signature: false,
     a_photo: false,
-    created_at: '2024-01-01',
-    updated_at: '2024-01-01',
+    created_at: '2026-01-25T10:00:00',
+    updated_at: '2026-01-25T10:00:00',
   },
   {
     id: 2,
     nom: 'Template 2',
-    categorie: 'securite',
+    categorie: 'securite' as const,
     description: 'Test template 2',
     champs: [],
     is_active: true,
@@ -75,8 +75,8 @@ const mockTemplates = [
     nombre_champs: 0,
     a_signature: false,
     a_photo: false,
-    created_at: '2024-01-01',
-    updated_at: '2024-01-01',
+    created_at: '2026-01-25T10:00:00',
+    updated_at: '2026-01-25T10:00:00',
   },
 ]
 
@@ -84,24 +84,22 @@ const mockFormulaires = [
   {
     id: 1,
     template_id: 1,
-    chantier_id: 1,
     user_id: 1,
-    statut: 'brouillon',
-    reponses: {},
+    chantier_id: 1,
+    statut: 'brouillon' as const,
     champs: [],
     photos: [],
     est_signe: false,
-    signature_url: null,
-    created_at: '2024-01-01',
-    updated_at: '2024-01-01',
-    template_nom: 'Template 1',
-    chantier_nom: 'Chantier 1',
+    est_geolocalise: false,
+    version: 1,
+    created_at: '2026-01-25T10:00:00',
+    updated_at: '2026-01-25T10:00:00',
   },
 ]
 
 const mockChantiers = [
-  { id: '1', nom: 'Chantier 1', code: 'CH1', adresse: 'Adresse 1', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
-  { id: '2', nom: 'Chantier 2', code: 'CH2', adresse: 'Adresse 2', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
+  { id: '1', nom: 'Chantier 1', code: 'CH1', adresse: 'Adresse 1', statut: 'en_cours' as const, couleur: '#10B981', conducteurs: [], chefs: [], phases: [], created_at: '2026-01-25T10:00:00' },
+  { id: '2', nom: 'Chantier 2', code: 'CH2', adresse: 'Adresse 2', statut: 'en_cours' as const, couleur: '#3B82F6', conducteurs: [], chefs: [], phases: [], created_at: '2026-01-25T10:00:00' },
 ]
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -111,9 +109,9 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 describe('useFormulaires', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(formulairesService.listTemplates).mockResolvedValue({ templates: mockTemplates })
-    vi.mocked(formulairesService.listFormulaires).mockResolvedValue({ formulaires: mockFormulaires })
-    vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers })
+    vi.mocked(formulairesService.listTemplates).mockResolvedValue({ templates: mockTemplates, total: mockTemplates.length, skip: 0, limit: 50 })
+    vi.mocked(formulairesService.listFormulaires).mockResolvedValue({ formulaires: mockFormulaires, total: mockFormulaires.length, skip: 0, limit: 50 })
+    vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers, total: mockChantiers.length, page: 1, size: 20, pages: 1 })
   })
 
   describe('initial state', () => {

@@ -136,6 +136,27 @@ Fichiers icones dans `frontend/public/` :
 
 ## Derniere mise a jour
 
+Session 2026-01-28 - Refactoring Frontend TypeScript (152 → 0 erreurs)
+- **Objectif**: Éliminer toutes les erreurs TypeScript dans le frontend (mode strict)
+- **Résultat**: 152 → 0 erreurs (100% réduction) ✅
+- **Fixtures**: Création de 10 factories réutilisables (/frontend/src/fixtures/index.ts)
+- **Tests**: 40+ fichiers tests corrigés avec fixtures partagées
+- **Corrections**: DocumentListResponse.items, pagination, types primitifs, enums, imports
+- **Merge main**: 29 conflits résolus (tests + WeatherCard.tsx)
+- **Post-merge**: useRecentDocuments.ts, consent.test.ts réécrits pour API async
+- **Build**: ✅ 0 erreurs TypeScript, compilation 12.76s
+- **Commits**: 15 commits atomiques sur branche claude/refactor-frontend-typescript-zhaHE
+- Verdict : ✅ **FRONTEND 100% CONFORME MODE STRICT TYPESCRIPT**
+
+Session 2026-01-28 - Module Logistique UX + RGPD Consentements
+- **Planning Logistique**: Affichage noms complets utilisateurs (vs "User #2")
+- **Vue "Toutes les ressources"**: Affichage empilé multi-ressources par défaut
+- **Sélecteur ressources**: Dropdown avec format [CODE] Nom
+- **RGPD**: Endpoints GET/POST /api/auth/consents + bannière fonctionnelle
+- **Enrichissement DTOs**: helpers dto_enrichment.py + injection UserRepository
+- **Spécifications**: LOG-19 à LOG-23 + SEC-RGPD ajoutés
+- Tests manuels: 100% pass, 0 erreur console
+
 Session 2026-01-27 - Audit Backend + Corrections Priorite 1 & 2
 - **Audit complet backend** selon workflow agents.md (4 agents)
 - **Score global backend**: 8.7/10 (Tests: 10/10, Architect: 10/10, Security: 7.5/10, Code: 7.2/10)

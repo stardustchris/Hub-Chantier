@@ -7,6 +7,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import DocumentsPage from './DocumentsPage'
+import type { Document } from '../types/documents'
 
 // Mock useDocuments hook
 const mockUseDocuments = {
@@ -22,7 +23,7 @@ const mockUseDocuments = {
   isUploading: false,
   arborescence: null as { dossiers: unknown[]; total_documents: number; total_taille: number } | null,
   refreshArborescence: vi.fn(),
-  selectedDossier: null,
+  selectedDossier: null as { id: number; nom: string } | null,
   handleSelectDossier: vi.fn(),
   handleCreateDossier: vi.fn(),
   handleEditDossier: vi.fn(),
@@ -38,7 +39,7 @@ const mockUseDocuments = {
   handleDownloadDocument: vi.fn(),
   handleDeleteDocument: vi.fn(),
   setPreviewDocument: vi.fn(),
-  previewDocument: null,
+  previewDocument: null as Partial<Document> | null,
   closePreviewModal: vi.fn(),
   showDossierModal: false,
   parentDossierId: null,

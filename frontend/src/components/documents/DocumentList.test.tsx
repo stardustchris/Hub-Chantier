@@ -44,9 +44,15 @@ const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   type_document: 'pdf',
   taille: 1024000,
   taille_formatee: '1 Mo',
+  mime_type: 'application/pdf',
   uploaded_by: 1,
   uploaded_by_nom: 'Jean Dupont',
   uploaded_at: '2024-01-15T10:00:00',
+  description: null,
+  version: 1,
+  icone: 'file-pdf',
+  extension: 'pdf',
+  niveau_acces: null,
   ...overrides,
 })
 
