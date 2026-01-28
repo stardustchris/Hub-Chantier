@@ -5,9 +5,11 @@ from .entity_info_service import (
     UserBasicInfo,
     ChantierBasicInfo,
 )
+from .pdf_generator import PdfGeneratorPort
 
 __all__ = [
     "EntityInfoService",
     "UserBasicInfo",
     "ChantierBasicInfo",
+    "PdfGeneratorPort",
 ]

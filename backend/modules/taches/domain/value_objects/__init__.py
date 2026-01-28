@@ -2,6 +2,7 @@
 
 from .statut_tache import StatutTache
 from .unite_mesure import UniteMesure
-from .couleur_progression import CouleurProgression
+# CouleurProgression déplacé vers shared.domain (réutilisable entre modules)
+from shared.domain import CouleurProgression
 
 __all__ = ["StatutTache", "UniteMesure", "CouleurProgression"]

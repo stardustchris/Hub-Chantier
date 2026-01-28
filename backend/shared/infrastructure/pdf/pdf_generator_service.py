@@ -11,8 +11,11 @@ from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from shared.application.ports import PdfGeneratorPort
+from shared.domain import CouleurProgression
 
-class PdfGeneratorService:
+
+class PdfGeneratorService(PdfGeneratorPort):
     """Service de génération de PDF à partir de templates Jinja2.
 
     Utilise Jinja2 pour générer le HTML puis WeasyPrint pour convertir en PDF.
@@ -49,7 +52,7 @@ class PdfGeneratorService:
         # Charger les macros
         self.env.globals['render_tache_row'] = self._get_macro('macros.html', 'render_tache_row')
 
-    def _get_macro(self, template_name: str, macro_name: str):
+    def _get_macro(self, template_name: str, macro_name: str) -> Any:
         """Récupère une macro Jinja2 depuis un template.
 
         Args:
@@ -135,8 +138,6 @@ class PdfGeneratorService:
         Returns:
             Liste des tâches enrichies.
         """
-        from modules.taches.domain.value_objects import CouleurProgression
-
         enriched = []
         for tache in taches:
             # Créer un dict avec les attributs nécessaires

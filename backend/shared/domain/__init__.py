@@ -1,9 +1,7 @@
-"""Domain partagé - Entités et Value Objects communs.
+"""Domain layer partagé."""
 
-Ce module contient les éléments du domain qui sont partagés
-entre plusieurs modules.
-"""
+from .value_objects import CouleurProgression
 
-from .value_objects import Couleur
-
-__all__ = ["Couleur"]
+__all__ = [
+    "CouleurProgression",
+]

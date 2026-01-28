@@ -2,11 +2,10 @@
 
 from datetime import datetime
 from io import BytesIO
-from typing import Optional
+import re
 
-from shared.infrastructure.pdf import PdfGeneratorService
+from shared.application.ports import PdfGeneratorPort
 from ...domain.repositories import TacheRepository
-from ...domain.value_objects import CouleurProgression
 
 
 class ExportTachesPDFUseCase:
@@ -23,17 +22,17 @@ class ExportTachesPDFUseCase:
     def __init__(
         self,
         tache_repo: TacheRepository,
-        pdf_service: Optional[PdfGeneratorService] = None,
+        pdf_service: PdfGeneratorPort,
     ):
         """
         Initialise le use case.
 
         Args:
             tache_repo: Repository taches (interface).
-            pdf_service: Service PDF (optionnel, créé automatiquement si absent).
+            pdf_service: Service PDF (injecté via DI).
         """
         self.tache_repo = tache_repo
-        self.pdf_service = pdf_service or PdfGeneratorService()
+        self.pdf_service = pdf_service
 
     def execute(
         self,
@@ -46,12 +45,33 @@ class ExportTachesPDFUseCase:
 
         Args:
             chantier_id: ID du chantier.
-            chantier_nom: Nom du chantier pour le titre.
+            chantier_nom: Nom du chantier pour le titre (max 200 caractères alphanumériques).
             include_completed: Inclure les taches terminees.
 
         Returns:
             Contenu PDF en bytes.
+
+        Raises:
+            ValueError: Si chantier_nom est invalide (vide, trop long, caractères interdits).
         """
+        # Valider chantier_nom (sécurité: prévention XSS/injection)
+        if not chantier_nom or not chantier_nom.strip():
+            raise ValueError("Le nom du chantier ne peut pas être vide")
+
+        if len(chantier_nom) > 200:
+            raise ValueError("Le nom du chantier ne peut pas dépasser 200 caractères")
+
+        # Pattern: lettres, chiffres, espaces, tirets, points, apostrophes (caractères sûrs)
+        pattern = r'^[\w\s\-\.\'À-ÿ]+$'
+        if not re.match(pattern, chantier_nom):
+            raise ValueError(
+                "Le nom du chantier contient des caractères non autorisés. "
+                "Seuls les lettres, chiffres, espaces, tirets, points et apostrophes sont acceptés."
+            )
+
+        # Nettoyer les espaces multiples
+        chantier_nom = ' '.join(chantier_nom.split())
+
         # Recuperer les taches
         taches = self.tache_repo.find_by_chantier(
             chantier_id=chantier_id,
