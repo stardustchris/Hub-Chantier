@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from ...application.use_cases.get_planning_charge import ChantierProvider
+from ...application.use_cases.charge.get_planning_charge import ChantierProvider
 from ...domain.value_objects import Semaine
 
 

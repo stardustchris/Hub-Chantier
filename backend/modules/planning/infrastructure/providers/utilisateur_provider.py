@@ -4,7 +4,7 @@ from typing import Dict
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from ...application.use_cases.get_occupation_details import UtilisateurProvider
+from ...application.use_cases.charge.get_occupation_details import UtilisateurProvider
 from ...domain.value_objects import Semaine
 
 

@@ -2,7 +2,7 @@
 
 from typing import List
 
-from ...application.dtos import (
+from ....application.dtos import (
     CreateBesoinDTO,
     UpdateBesoinDTO,
     PlanningChargeFiltersDTO,
@@ -10,7 +10,7 @@ from ...application.dtos import (
     PlanningChargeDTO,
     OccupationDetailsDTO,
 )
-from ...application.use_cases import (
+from ....application.use_cases import (
     CreateBesoinUseCase,
     UpdateBesoinUseCase,
     DeleteBesoinUseCase,

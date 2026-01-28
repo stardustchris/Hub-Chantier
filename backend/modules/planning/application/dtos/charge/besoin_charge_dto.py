@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from ...domain.entities import BesoinCharge
-from ...domain.value_objects import Semaine, TypeMetier
+from ....domain.entities import BesoinCharge
+from ....domain.value_objects import Semaine, TypeMetier
 
 
 @dataclass
