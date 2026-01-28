@@ -274,30 +274,38 @@ class TestGetCurrentUserChantierIds:
 
     def test_compagnon_uses_db_query(self):
         """Test que compagnon fait une requete DB."""
-        from shared.infrastructure.database import SessionLocal
-        db = SessionLocal()
-        try:
-            # Le test verifie juste que ca ne plante pas et retourne une liste
-            result = get_current_user_chantier_ids(
-                current_user_id=99999,  # ID inexistant
-                current_user_role="compagnon",
-                db=db,
-            )
-            # Doit retourner une liste (vide pour un user inexistant)
-            assert isinstance(result, list)
-        finally:
-            db.close()
+        from unittest.mock import Mock, MagicMock
+
+        # Mock de la session DB
+        db = Mock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value = mock_query
+
+        # Le test verifie juste que ca ne plante pas et retourne une liste
+        result = get_current_user_chantier_ids(
+            current_user_id=99999,  # ID inexistant
+            current_user_role="compagnon",
+            db=db,
+        )
+        # Doit retourner une liste (vide pour un user inexistant)
+        assert isinstance(result, list)
+        assert result == []
 
     def test_chef_chantier_uses_db_query(self):
         """Test que chef_chantier fait une requete DB."""
-        from shared.infrastructure.database import SessionLocal
-        db = SessionLocal()
-        try:
-            result = get_current_user_chantier_ids(
-                current_user_id=99999,
-                current_user_role="chef_chantier",
-                db=db,
-            )
-            assert isinstance(result, list)
-        finally:
-            db.close()
+        from unittest.mock import Mock, MagicMock
+
+        # Mock de la session DB
+        db = Mock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value = mock_query
+
+        result = get_current_user_chantier_ids(
+            current_user_id=99999,
+            current_user_role="chef_chantier",
+            db=db,
+        )
+        assert isinstance(result, list)
+        assert result == []

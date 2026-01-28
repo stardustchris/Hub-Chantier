@@ -37,6 +37,7 @@ def pytest_configure(config):
     from modules.interventions.infrastructure.persistence import InterventionModel, AffectationInterventionModel, InterventionMessageModel, SignatureInterventionModel  # noqa: F401
     from modules.planning_charge.infrastructure.persistence import BesoinChargeModel  # noqa: F401
     from modules.notifications.infrastructure.persistence import NotificationModel  # noqa: F401
+    from shared.infrastructure.webhooks.models import WebhookModel, WebhookDeliveryModel  # noqa: F401
 
 
 @pytest.fixture(scope="function")

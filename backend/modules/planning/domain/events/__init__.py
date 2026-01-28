@@ -1,14 +1,22 @@
 """Événements de domaine pour le module planning."""
 
-from .affectation_created import AffectationCreatedEvent
-from .affectation_updated import AffectationUpdatedEvent
-from .affectation_deleted import AffectationDeletedEvent
-from .affectation_events import AffectationBulkCreatedEvent, AffectationBulkDeletedEvent
+# Use old-style events from affectation_events.py (compatible with existing use cases)
+from .affectation_events import (
+    AffectationCreatedEvent,
+    AffectationUpdatedEvent,
+    AffectationDeletedEvent,
+    AffectationBulkCreatedEvent,
+    AffectationBulkDeletedEvent,
+)
+
+# New DomainEvent-based events (for Phase 2 refactoring)
+from .affectation_cancelled import AffectationCancelledEvent
 
 __all__ = [
     "AffectationCreatedEvent",
     "AffectationUpdatedEvent",
     "AffectationDeletedEvent",
+    "AffectationCancelledEvent",
     "AffectationBulkCreatedEvent",
     "AffectationBulkDeletedEvent",
 ]

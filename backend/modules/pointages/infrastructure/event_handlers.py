@@ -140,7 +140,7 @@ def setup_planning_integration(session_factory) -> None:
         session_factory: Factory pour créer des sessions SQLAlchemy.
     """
     try:
-        from shared.infrastructure.event_bus import EventBus
+        from shared.infrastructure.event_bus import event_bus
         from modules.planning.domain.events import AffectationCreatedEvent
 
         def wrapped_handler(event):
@@ -151,7 +151,7 @@ def setup_planning_integration(session_factory) -> None:
             finally:
                 session.close()
 
-        EventBus.subscribe(AffectationCreatedEvent, wrapped_handler)
+        event_bus.subscribe('affectation.created', wrapped_handler)
         logger.info("Planning integration configured successfully")
 
     except ImportError as e:
