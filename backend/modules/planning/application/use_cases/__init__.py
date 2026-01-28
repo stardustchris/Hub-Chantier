@@ -13,9 +13,20 @@ from .exceptions import (
     InvalidDateRangeError,
     NoAffectationsToDuplicateError,
 )
+from .charge import (
+    CreateBesoinUseCase,
+    UpdateBesoinUseCase,
+    DeleteBesoinUseCase,
+    GetPlanningChargeUseCase,
+    GetBesoinsByChantierUseCase,
+    GetOccupationDetailsUseCase,
+    BesoinNotFoundError,
+    BesoinAlreadyExistsError,
+    InvalidSemaineRangeError,
+)
 
 __all__ = [
-    # Use Cases
+    # Use Cases - Affectations
     "CreateAffectationUseCase",
     "UpdateAffectationUseCase",
     "DeleteAffectationUseCase",
@@ -23,9 +34,20 @@ __all__ = [
     "DuplicateAffectationsUseCase",
     "GetNonPlanifiesUseCase",
     "ResizeAffectationUseCase",
-    # Exceptions
+    # Use Cases - Charge
+    "CreateBesoinUseCase",
+    "UpdateBesoinUseCase",
+    "DeleteBesoinUseCase",
+    "GetPlanningChargeUseCase",
+    "GetBesoinsByChantierUseCase",
+    "GetOccupationDetailsUseCase",
+    # Exceptions - Affectations
     "AffectationConflictError",
     "AffectationNotFoundError",
     "InvalidDateRangeError",
     "NoAffectationsToDuplicateError",
+    # Exceptions - Charge
+    "BesoinNotFoundError",
+    "BesoinAlreadyExistsError",
+    "InvalidSemaineRangeError",
 ]

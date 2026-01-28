@@ -5,8 +5,8 @@ from datetime import date, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
-from ...application.use_cases.get_planning_charge import AffectationProvider
-from ...application.use_cases.get_occupation_details import AffectationProviderForOccupation
+from ...application.use_cases.charge.get_planning_charge import AffectationProvider
+from ...application.use_cases.charge.get_occupation_details import AffectationProviderForOccupation
 from ...domain.value_objects import Semaine
 
 

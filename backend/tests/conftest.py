@@ -31,11 +31,10 @@ def pytest_configure(config):
     from modules.taches.infrastructure.persistence import TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel  # noqa: F401
     from modules.formulaires.infrastructure.persistence import TemplateFormulaireModel, ChampTemplateModel, FormulaireRempliModel, ChampRempliModel, PhotoFormulaireModel  # noqa: F401
     from modules.signalements.infrastructure.persistence import SignalementModel, ReponseModel  # noqa: F401
-    from modules.planning.infrastructure.persistence import AffectationModel  # noqa: F401
+    from modules.planning.infrastructure.persistence import AffectationModel, BesoinChargeModel  # noqa: F401
     from modules.documents.infrastructure.persistence import DossierModel, DocumentModel, AutorisationDocumentModel  # noqa: F401
     from modules.logistique.infrastructure.persistence import RessourceModel, ReservationModel  # noqa: F401
     from modules.interventions.infrastructure.persistence import InterventionModel, AffectationInterventionModel, InterventionMessageModel, SignatureInterventionModel  # noqa: F401
-    from modules.planning_charge.infrastructure.persistence import BesoinChargeModel  # noqa: F401
     from modules.notifications.infrastructure.persistence import NotificationModel  # noqa: F401
     from shared.infrastructure.webhooks.models import WebhookModel, WebhookDeliveryModel  # noqa: F401
 

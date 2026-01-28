@@ -8,7 +8,7 @@ from sqlalchemy import func, and_
 from ...domain.entities import BesoinCharge
 from ...domain.repositories import BesoinChargeRepository
 from ...domain.value_objects import Semaine, TypeMetier
-from .models import BesoinChargeModel
+from .besoin_charge_model import BesoinChargeModel
 
 
 class SQLAlchemyBesoinChargeRepository(BesoinChargeRepository):

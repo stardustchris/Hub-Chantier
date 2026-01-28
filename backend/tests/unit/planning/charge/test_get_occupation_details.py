@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock
 
-from modules.planning.application.use_cases.get_occupation_details import (
+from modules.planning.application.use_cases.charge.get_occupation_details import (
     GetOccupationDetailsUseCase,
 )
 from modules.planning.domain.value_objects import Semaine, TypeMetier

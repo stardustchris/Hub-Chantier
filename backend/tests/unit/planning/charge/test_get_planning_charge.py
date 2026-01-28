@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock
 from datetime import date
 
-from modules.planning.application.use_cases.get_planning_charge import (
+from modules.planning.application.use_cases.charge.get_planning_charge import (
     GetPlanningChargeUseCase,
 )
 from modules.planning.application.dtos import PlanningChargeFiltersDTO

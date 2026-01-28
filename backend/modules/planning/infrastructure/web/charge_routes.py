@@ -28,7 +28,7 @@ def _invalidate_planning_cache() -> None:
     """
     cache_manager.invalidate_pattern(CACHE_PREFIX)
 
-from ..application.use_cases import (
+from ...application.use_cases.charge import (
     CreateBesoinUseCase,
     UpdateBesoinUseCase,
     DeleteBesoinUseCase,
@@ -39,7 +39,7 @@ from ..application.use_cases import (
     BesoinAlreadyExistsError,
     InvalidSemaineRangeError,
 )
-from ..adapters.controllers import (
+from ...adapters.controllers.charge import (
     PlanningChargeController,
     CreateBesoinRequest,
     UpdateBesoinRequest,
@@ -49,8 +49,8 @@ from ..adapters.controllers import (
     OccupationDetailsResponse,
     ListeBesoinResponse,
 )
-from .persistence import SQLAlchemyBesoinChargeRepository
-from .providers import (
+from ..persistence import SQLAlchemyBesoinChargeRepository
+from ..providers import (
     SQLAlchemyChantierProvider,
     SQLAlchemyAffectationProvider,
     SQLAlchemyUtilisateurProvider,
