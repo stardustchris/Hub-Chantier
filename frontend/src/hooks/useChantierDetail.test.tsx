@@ -85,7 +85,7 @@ describe('useChantierDetail', () => {
     vi.clearAllMocks()
     vi.mocked(chantiersService.getById).mockResolvedValue(mockChantier as never)
     vi.mocked(chantiersService.getNavigationIds).mockResolvedValue(mockNavIds)
-    vi.mocked(usersService.list).mockResolvedValue({ items: mockUsers })
+    vi.mocked(usersService.list).mockResolvedValue({ items: mockUsers, total: mockUsers.length, page: 1, size: 20, pages: 1 })
   })
 
   describe('initial loading', () => {

@@ -53,9 +53,9 @@ const mockRessources = [
 describe('useLogistique', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers })
-    vi.mocked(listReservationsEnAttente).mockResolvedValue({ items: mockReservationsEnAttente })
-    vi.mocked(listRessources).mockResolvedValue({ items: mockRessources })
+    vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers, total: mockChantiers.length, page: 1, size: 20, pages: 1 })
+    vi.mocked(listReservationsEnAttente).mockResolvedValue({ items: mockReservationsEnAttente, total: mockReservationsEnAttente.length, limit: 20, offset: 0, has_more: false })
+    vi.mocked(listRessources).mockResolvedValue({ items: mockRessources, total: mockRessources.length, limit: 20, offset: 0, has_more: false })
   })
 
   describe('permissions', () => {
