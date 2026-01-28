@@ -9,6 +9,8 @@ from ...application.ports.event_bus import EventBus
 from ..event_bus_impl import LogistiqueEventBus
 
 from ...domain.repositories import RessourceRepository, ReservationRepository
+from ....auth.domain.repositories import UserRepository
+from ....auth.infrastructure.persistence import SQLAlchemyUserRepository
 from ...application.use_cases import (
     CreateRessourceUseCase,
     UpdateRessourceUseCase,
@@ -45,6 +47,13 @@ def get_reservation_repository(
 ) -> ReservationRepository:
     """Retourne le repository Reservation."""
     return SQLAlchemyReservationRepository(db)
+
+
+def get_user_repository(
+    db: Session = Depends(get_db),
+) -> UserRepository:
+    """Retourne le repository User."""
+    return SQLAlchemyUserRepository(db)
 
 
 # Use Cases Ressources
@@ -151,9 +160,10 @@ def get_get_reservation_use_case(
 def get_planning_ressource_use_case(
     reservation_repository: ReservationRepository = Depends(get_reservation_repository),
     ressource_repository: RessourceRepository = Depends(get_ressource_repository),
+    user_repository: UserRepository = Depends(get_user_repository),
 ) -> GetPlanningRessourceUseCase:
     """Retourne le use case GetPlanningRessource."""
-    return GetPlanningRessourceUseCase(reservation_repository, ressource_repository)
+    return GetPlanningRessourceUseCase(reservation_repository, ressource_repository, user_repository)
 
 
 def get_historique_ressource_use_case(
