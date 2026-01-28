@@ -26,6 +26,7 @@ from .domain.events import (
     AffectationUpdatedEvent,
     AffectationDeletedEvent,
     AffectationBulkCreatedEvent,
+    AffectationBulkDeletedEvent,
 )
 
 # Application Layer
@@ -87,6 +88,7 @@ __all__ = [
     "AffectationUpdatedEvent",
     "AffectationDeletedEvent",
     "AffectationBulkCreatedEvent",
+    "AffectationBulkDeletedEvent",
     # Application - Use Cases
     "CreateAffectationUseCase",
     "UpdateAffectationUseCase",

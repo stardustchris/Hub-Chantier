@@ -16,6 +16,7 @@ import {
   X,
   Bell,
   ChevronDown,
+  Webhook,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -42,6 +43,7 @@ const navigation: NavItem[] = [
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
   { name: 'Logistique', href: '/logistique', icon: Truck },
+  { name: 'Webhooks', href: '/webhooks', icon: Webhook },
 ]
 
 // Composant de navigation reutilisable (DRY)

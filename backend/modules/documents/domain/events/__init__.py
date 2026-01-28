@@ -1,4 +1,4 @@
-"""Events du module Documents."""
+"""Événements de domaine pour le module documents."""
 
 from .document_events import (
     DocumentEvent,
@@ -13,6 +13,8 @@ from .document_events import (
     AutorisationAccordee,
     AutorisationRevoquee,
 )
+from .document_uploaded import DocumentUploadedEvent
+from .document_deleted import DocumentDeletedEvent
 
 __all__ = [
     "DocumentEvent",
@@ -26,4 +28,6 @@ __all__ = [
     "AutorisationEvent",
     "AutorisationAccordee",
     "AutorisationRevoquee",
+    "DocumentUploadedEvent",
+    "DocumentDeletedEvent",
 ]

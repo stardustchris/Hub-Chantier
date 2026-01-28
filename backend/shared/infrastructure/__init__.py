@@ -2,7 +2,7 @@
 
 from .config import settings, Settings
 from .database import get_db, init_db, engine, SessionLocal
-from .event_bus import EventBus, event_handler
+from .event_bus import EventBus, event_handler, event_bus
 from .entity_info_impl import (
     SQLAlchemyEntityInfoService,
     get_entity_info_service,
@@ -18,6 +18,7 @@ __all__ = [
     "SessionLocal",
     "EventBus",
     "event_handler",
+    "event_bus",
     "SQLAlchemyEntityInfoService",
     "get_entity_info_service",
     "TTLCache",
