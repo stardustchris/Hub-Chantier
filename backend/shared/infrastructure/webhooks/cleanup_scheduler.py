@@ -30,7 +30,7 @@ SCHEDULE_MINUTE = 0
 _scheduler = None
 
 
-def cleanup_old_deliveries_job():
+def cleanup_old_deliveries_job() -> None:
     """
     Job de nettoyage des anciennes deliveries.
 
@@ -72,7 +72,7 @@ def cleanup_old_deliveries_job():
         db.close()
 
 
-def start_cleanup_scheduler():
+def start_cleanup_scheduler() -> "BackgroundScheduler":
     """
     Démarre le scheduler de nettoyage automatique.
 
@@ -112,7 +112,7 @@ def start_cleanup_scheduler():
     return _scheduler
 
 
-def stop_cleanup_scheduler():
+def stop_cleanup_scheduler() -> None:
     """
     Arrête le scheduler de nettoyage.
 
