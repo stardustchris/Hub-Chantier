@@ -1,0 +1,46 @@
+{% macro render_tache_row(tache, level) %}
+{% set indent = "&nbsp;" * (level * 4) %}
+{% set status_class = "status-done" if tache.est_terminee else "status-todo" %}
+{% set status_icon = "✓" if tache.est_terminee else "○" %}
+
+{% set echeance = "" %}
+{% if tache.date_echeance %}
+    {% if tache.date_echeance is string %}
+        {% set echeance = tache.date_echeance %}
+    {% else %}
+        {% set echeance = tache.date_echeance.strftime("%d/%m/%Y") %}
+    {% endif %}
+{% endif %}
+
+{% set heures = "" %}
+{% if tache.heures_estimees %}
+    {% set heures = "%.1f/%.1f h"|format(tache.heures_realisees, tache.heures_estimees) %}
+{% endif %}
+
+{% set quantite = "" %}
+{% if tache.quantite_estimee and tache.unite_mesure %}
+    {% set quantite = "%.1f/%.1f %s"|format(tache.quantite_realisee, tache.quantite_estimee, tache.unite_mesure.value) %}
+{% endif %}
+
+{% set progression = "" %}
+{% if tache.heures_estimees and tache.heures_estimees > 0 %}
+    {% set pct = (tache.heures_realisees / tache.heures_estimees * 100) %}
+    {% if pct > 100 %}{% set pct = 100 %}{% endif %}
+    {% set progression = "%.0f%%"|format(pct) %}
+{% endif %}
+
+<tr class="{{ 'subtask' if level > 0 else '' }}">
+    <td class="{{ status_class }}">{{ status_icon }}</td>
+    <td>{{ indent|safe }}<span class="color-indicator" style="background: {{ tache.couleur_hex }};"></span>{{ tache.titre }}</td>
+    <td>{{ echeance }}</td>
+    <td>{{ heures }}</td>
+    <td>{{ quantite }}</td>
+    <td>{{ progression }}</td>
+</tr>
+
+{% if tache.sous_taches %}
+    {% for sous_tache in tache.sous_taches %}
+        {{ render_tache_row(sous_tache, level + 1) }}
+    {% endfor %}
+{% endif %}
+{% endmacro %}

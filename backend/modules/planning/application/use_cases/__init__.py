@@ -6,6 +6,7 @@ from .delete_affectation import DeleteAffectationUseCase
 from .get_planning import GetPlanningUseCase
 from .duplicate_affectations import DuplicateAffectationsUseCase
 from .get_non_planifies import GetNonPlanifiesUseCase
+from .resize_affectation import ResizeAffectationUseCase
 from .exceptions import (
     AffectationConflictError,
     AffectationNotFoundError,
@@ -21,6 +22,7 @@ __all__ = [
     "GetPlanningUseCase",
     "DuplicateAffectationsUseCase",
     "GetNonPlanifiesUseCase",
+    "ResizeAffectationUseCase",
     # Exceptions
     "AffectationConflictError",
     "AffectationNotFoundError",

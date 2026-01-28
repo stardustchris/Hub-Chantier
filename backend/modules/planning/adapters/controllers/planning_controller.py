@@ -12,6 +12,7 @@ from ...application.use_cases import (
     GetPlanningUseCase,
     DuplicateAffectationsUseCase,
     GetNonPlanifiesUseCase,
+    ResizeAffectationUseCase,
 )
 from ...application.dtos import (
     CreateAffectationDTO,
@@ -60,6 +61,7 @@ class PlanningController:
         get_planning_uc: GetPlanningUseCase,
         duplicate_affectations_uc: DuplicateAffectationsUseCase,
         get_non_planifies_uc: GetNonPlanifiesUseCase,
+        resize_affectation_uc: 'ResizeAffectationUseCase',
         presenter: Optional[AffectationPresenter] = None,
     ):
         """
@@ -72,6 +74,7 @@ class PlanningController:
             get_planning_uc: Use case de recuperation planning.
             duplicate_affectations_uc: Use case de duplication.
             get_non_planifies_uc: Use case des non planifies.
+            resize_affectation_uc: Use case de redimensionnement.
             presenter: Presenter pour enrichir les donnees (optionnel).
         """
         self.create_affectation_uc = create_affectation_uc
@@ -80,6 +83,7 @@ class PlanningController:
         self.get_planning_uc = get_planning_uc
         self.duplicate_affectations_uc = duplicate_affectations_uc
         self.get_non_planifies_uc = get_non_planifies_uc
+        self.resize_affectation_uc = resize_affectation_uc
         self.presenter = presenter
 
     def _dto_to_response(self, dto: AffectationDTO) -> Dict[str, Any]:
@@ -521,109 +525,19 @@ class PlanningController:
         Example:
             >>> results = controller.resize(1, request, current_user_id=2)
         """
-        from ...application.use_cases import AffectationNotFoundError, AffectationConflictError
-
         logger.info(
             f"Resize affectation: id={affectation_id}, "
             f"new_dates={request.date_debut} -> {request.date_fin}, "
             f"by={current_user_id}"
         )
 
-        # Recuperer l'affectation de reference
-        affectation = self.get_planning_uc.affectation_repo.find_by_id(affectation_id)
-        if not affectation:
-            raise AffectationNotFoundError(affectation_id)
-
-        # Determiner la direction de l'extension
-        # Si date_debut < affectation.date, on etend vers la gauche
-        # Si date_fin > affectation.date, on etend vers la droite
-        affectation_date = affectation.date
-
-        # Generer uniquement les dates ADJACENTES a l'affectation d'origine
-        # (pas tous les trous dans la plage)
-        dates_to_add = set()
-
-        if request.date_fin > affectation_date:
-            # Extension vers la droite: ajouter les jours consecutifs apres l'affectation
-            current_date = affectation_date + timedelta(days=1)
-            while current_date <= request.date_fin:
-                dates_to_add.add(current_date)
-                current_date += timedelta(days=1)
-
-        if request.date_debut < affectation_date:
-            # Extension vers la gauche: ajouter les jours consecutifs avant l'affectation
-            current_date = affectation_date - timedelta(days=1)
-            while current_date >= request.date_debut:
-                dates_to_add.add(current_date)
-                current_date -= timedelta(days=1)
-
-        # Recuperer les affectations existantes pour cet utilisateur/chantier
-        # pour exclure les dates qui ont deja une affectation
-        min_date = min(request.date_debut, affectation_date)
-        max_date = max(request.date_fin, affectation_date)
-        existing_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
-            affectation.utilisateur_id,
-            min_date,
-            max_date,
+        # Deleguer au use case
+        affectations = self.resize_affectation_uc.execute(
+            affectation_id=affectation_id,
+            date_debut=request.date_debut,
+            date_fin=request.date_fin,
+            current_user_id=current_user_id,
         )
 
-        # Filtrer pour ne garder que celles du meme chantier
-        same_chantier_affectations = [
-            a for a in existing_affectations
-            if a.chantier_id == affectation.chantier_id
-        ]
-
-        existing_dates = {a.date for a in same_chantier_affectations}
-
-        # Exclure les dates qui existent deja
-        dates_to_add = dates_to_add - existing_dates
-
-        # Note: Le resize ne fait QUE de l'extension (ajout de jours adjacents).
-        # Pour supprimer des affectations, l'utilisateur doit les supprimer
-        # manuellement via le bouton X. Cela evite les suppressions accidentelles.
-
-        # Verifier les conflits sur les dates a ajouter
-        for date_to_add in dates_to_add:
-            if self.get_planning_uc.affectation_repo.exists_for_utilisateur_and_date(
-                affectation.utilisateur_id, date_to_add
-            ):
-                raise AffectationConflictError(affectation.utilisateur_id, date_to_add)
-
-        # Creer les nouvelles affectations
-        from ...domain.entities import Affectation as AffectationEntity
-        from ...domain.value_objects import TypeAffectation
-
-        created_affectations = []
-        for date_to_add in sorted(dates_to_add):
-            new_aff = AffectationEntity(
-                utilisateur_id=affectation.utilisateur_id,
-                chantier_id=affectation.chantier_id,
-                date=date_to_add,
-                heure_debut=affectation.heure_debut,
-                heure_fin=affectation.heure_fin,
-                note=affectation.note,
-                type_affectation=TypeAffectation.UNIQUE,
-                created_by=current_user_id,
-            )
-            saved = self.get_planning_uc.affectation_repo.save(new_aff)
-            created_affectations.append(saved)
-
-        # Recuperer toutes les affectations dans la nouvelle plage
-        final_affectations = self.get_planning_uc.affectation_repo.find_by_utilisateur(
-            affectation.utilisateur_id,
-            request.date_debut,
-            request.date_fin,
-        )
-
-        # Filtrer pour ne garder que celles du meme chantier
-        result_affectations = [
-            a for a in final_affectations
-            if a.chantier_id == affectation.chantier_id
-        ]
-
-        logger.info(
-            f"Resize complete: {len(created_affectations)} created, "
-            f"{len(result_affectations)} total in range"
-        )
-
-        return [self._entity_to_response(a) for a in result_affectations]
+        # Convertir en reponse
+        return [self._entity_to_response(a) for a in affectations]
