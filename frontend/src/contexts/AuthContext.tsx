@@ -26,8 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Continue même si l'appel échoue
     }
-    // Supprimer aussi le token sessionStorage (fallback)
-    sessionStorage.removeItem('access_token')
     // Nettoyer le token CSRF pour éviter sa réutilisation
     clearCsrfToken()
     setUser(null)
@@ -37,15 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Vérifier si l'utilisateur est authentifié au chargement
-    // Priorité: Cookie HttpOnly (envoyé automatiquement) > sessionStorage (fallback)
+    // Le cookie HttpOnly est envoyé automatiquement avec chaque requête
     const checkAuth = async () => {
       try {
-        // Essayer de récupérer l'utilisateur (le cookie HttpOnly est envoyé automatiquement)
+        // Récupérer l'utilisateur (le cookie HttpOnly est envoyé automatiquement)
         const currentUser = await authService.getCurrentUser()
         setUser(currentUser)
       } catch {
-        // Non authentifié - nettoyer le sessionStorage au cas où
-        sessionStorage.removeItem('access_token')
+        // Non authentifié
       }
       setIsLoading(false)
     }
@@ -56,8 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
       setUser(null)
-      // Nettoyer les tokens
-      sessionStorage.removeItem('access_token')
+      // Nettoyer le token CSRF
       clearCsrfToken()
       // Rediriger seulement si pas déjà sur /login (évite les boucles)
       if (!window.location.pathname.startsWith('/login')) {
@@ -70,8 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await authService.login(email, password)
     // Le token est stocké automatiquement dans un cookie HttpOnly par le serveur
-    // sessionStorage est conservé comme fallback pour compatibilité ascendante
-    sessionStorage.setItem('access_token', response.access_token)
+    // Le cookie est envoyé automatiquement avec chaque requête (withCredentials: true)
     setUser(response.user)
   }
 
