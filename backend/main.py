@@ -37,7 +37,7 @@ from modules.formulaires.infrastructure.web import templates_router as templates
 from modules.signalements.infrastructure.web import router as signalements_router
 from modules.documents.infrastructure.web import router as documents_router
 from modules.logistique.infrastructure.web import router as logistique_router
-from modules.planning_charge.infrastructure import router as planning_charge_router
+# from modules.planning_charge.infrastructure import router as planning_charge_router
 from modules.interventions.infrastructure.web import router as interventions_router
 from modules.notifications.infrastructure.web import router as notifications_router
 from modules.notifications.infrastructure.event_handlers import register_notification_handlers
@@ -222,7 +222,7 @@ app.include_router(templates_formulaires_router, prefix="/api")
 app.include_router(signalements_router, prefix="/api")
 app.include_router(documents_router, prefix="/api")
 app.include_router(logistique_router, prefix="/api")
-app.include_router(planning_charge_router, prefix="/api")
+# app.include_router(planning_charge_router, prefix="/api")
 app.include_router(interventions_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(webhooks_router, prefix="/api/v1")
