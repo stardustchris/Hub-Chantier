@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FormulaireModal from './FormulaireModal'
-import type { TemplateFormulaire, FormulaireRempli, ChampFormulaire } from '../../types'
+import type { TemplateFormulaire, FormulaireRempli } from '../../types'
 
 // Mock FieldRenderer
 vi.mock('./FieldRenderer', () => ({
@@ -57,7 +57,7 @@ const createMockTemplate = (overrides: Partial<TemplateFormulaire> = {}): Templa
       ordre: 2,
     },
   ],
-  actif: true,
+  is_active: true,
   version: 1,
   created_by: 1,
   created_at: '2024-01-15T10:00:00',
@@ -68,20 +68,23 @@ const createMockTemplate = (overrides: Partial<TemplateFormulaire> = {}): Templa
 const createMockFormulaire = (overrides: Partial<FormulaireRempli> = {}): FormulaireRempli => ({
   id: 1,
   template_id: 1,
+  template_nom: 'Rapport de chantier',
+  template_categorie: 'securite',
   chantier_id: 1,
+  chantier_nom: 'Chantier Test',
   user_id: 1,
+  user_nom: 'Jean Dupont',
   statut: 'brouillon',
   champs: [
     { nom: 'titre', valeur: 'Mon titre', type_champ: 'texte' },
     { nom: 'commentaire', valeur: 'Mon commentaire', type_champ: 'texte_long' },
-  ] as ChampFormulaire[],
+  ],
   photos: [],
   est_signe: false,
   est_geolocalise: false,
+  version: 1,
   created_at: '2024-01-15T10:00:00',
   updated_at: '2024-01-15T10:00:00',
-  chantier_nom: 'Chantier Test',
-  user_nom: 'Jean Dupont',
   ...overrides,
 })
 
@@ -212,8 +215,8 @@ describe('FormulaireModal', () => {
           {...defaultProps}
           formulaire={createMockFormulaire({
             photos: [
-              { url: 'http://example.com/photo1.jpg', nom_fichier: 'photo1.jpg' },
-              { url: 'http://example.com/photo2.jpg', nom_fichier: 'photo2.jpg' },
+              { url: 'http://example.com/photo1.jpg', nom_fichier: 'photo1.jpg', champ_nom: 'photo_field' },
+              { url: 'http://example.com/photo2.jpg', nom_fichier: 'photo2.jpg', champ_nom: 'photo_field' },
             ],
           })}
         />

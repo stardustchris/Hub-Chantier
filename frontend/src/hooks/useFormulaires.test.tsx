@@ -57,6 +57,12 @@ const mockTemplates = [
     description: 'Test template',
     champs: [],
     is_active: true,
+    version: 1,
+    nombre_champs: 0,
+    a_signature: false,
+    a_photo: false,
+    created_at: '2024-01-01',
+    updated_at: '2024-01-01',
   },
   {
     id: 2,
@@ -65,6 +71,12 @@ const mockTemplates = [
     description: 'Test template 2',
     champs: [],
     is_active: true,
+    version: 1,
+    nombre_champs: 0,
+    a_signature: false,
+    a_photo: false,
+    created_at: '2024-01-01',
+    updated_at: '2024-01-01',
   },
 ]
 
@@ -73,14 +85,23 @@ const mockFormulaires = [
     id: 1,
     template_id: 1,
     chantier_id: 1,
+    user_id: 1,
     statut: 'brouillon',
     reponses: {},
+    champs: [],
+    photos: [],
+    est_signe: false,
+    signature_url: null,
+    created_at: '2024-01-01',
+    updated_at: '2024-01-01',
+    template_nom: 'Template 1',
+    chantier_nom: 'Chantier 1',
   },
 ]
 
 const mockChantiers = [
-  { id: 1, nom: 'Chantier 1', code: 'CH1' },
-  { id: 2, nom: 'Chantier 2', code: 'CH2' },
+  { id: '1', nom: 'Chantier 1', code: 'CH1', adresse: 'Adresse 1', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
+  { id: '2', nom: 'Chantier 2', code: 'CH2', adresse: 'Adresse 2', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
 ]
 
 const wrapper = ({ children }: { children: ReactNode }) => (

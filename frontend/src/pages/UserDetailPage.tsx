@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { usersService, NavigationIds } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../services/logger'

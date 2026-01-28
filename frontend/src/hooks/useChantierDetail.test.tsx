@@ -71,8 +71,8 @@ const mockChantier = {
 const mockNavIds = { prevId: null, nextId: '2' }
 
 const mockUsers = [
-  { id: 'u3', nom: 'Bernard', prenom: 'Paul', role: 'conducteur' },
-  { id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' },
+  { id: 'u3', nom: 'Bernard', prenom: 'Paul', role: 'conducteur' as const, email: 'bernard@test.fr', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
+  { id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' as const, email: 'petit@test.fr', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
 ]
 
 const wrapper = ({ children }: { children: ReactNode }) => (

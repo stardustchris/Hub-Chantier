@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DossierModal, DocumentEditModal } from './DocumentModal'
 import type { Dossier, Document } from '../../types/documents'
@@ -21,28 +21,27 @@ const createMockDossier = (overrides: Partial<Dossier> = {}): Dossier => ({
   type_dossier: '01_plans',
   niveau_acces: 'compagnon',
   parent_id: null,
-  chemin: '/Plans',
   nombre_documents: 5,
   created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-15T10:00:00',
   ...overrides,
 })
 
 const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   id: 1,
+  chantier_id: 1,
   dossier_id: 1,
   nom: 'plan.pdf',
   nom_original: 'plan.pdf',
   type_document: 'pdf',
   taille: 1024000,
   taille_formatee: '1 Mo',
-  chemin_stockage: '/storage/plan.pdf',
   uploaded_by: 1,
   uploaded_at: '2024-01-15T10:00:00',
   description: 'Plan du RDC',
   niveau_acces: 'compagnon',
   ...overrides,
 })
+
 
 describe('DossierModal', () => {
   const mockOnClose = vi.fn()

@@ -17,9 +17,9 @@ vi.mock('../../services/users', () => ({
 import { usersService } from '../../services/users'
 
 const mockUsers = [
-  { id: '1', prenom: 'Jean', nom: 'Dupont', role: 'admin', couleur: '#3498DB' },
-  { id: '2', prenom: 'Marie', nom: 'Martin', role: 'conducteur', couleur: '#E74C3C' },
-  { id: '3', prenom: 'Pierre', nom: 'Durand', role: 'compagnon', couleur: '#2ECC71' },
+  { id: '1', prenom: 'Jean', nom: 'Dupont', role: 'admin' as const, couleur: '#3498DB', email: 'jean@example.com', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
+  { id: '2', prenom: 'Marie', nom: 'Martin', role: 'conducteur' as const, couleur: '#E74C3C', email: 'marie@example.com', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
+  { id: '3', prenom: 'Pierre', nom: 'Durand', role: 'compagnon' as const, couleur: '#2ECC71', email: 'pierre@example.com', type_utilisateur: 'employe' as const, is_active: true, created_at: '2024-01-01' },
 ]
 
 describe('MentionInput', () => {

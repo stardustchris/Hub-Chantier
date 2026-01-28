@@ -101,37 +101,33 @@ const createMockPointage = (overrides: Partial<Pointage> = {}): Pointage => ({
   utilisateur_id: 1,
   chantier_id: 1,
   date_pointage: '2024-01-22',
-  heure_debut: '08:00',
-  heure_fin: '17:00',
-  total_heures: '08:00',
+  heures_normales: '08:00',
   heures_supplementaires: '00:00',
+  total_heures: '08:00',
+  total_heures_decimal: 8,
+  commentaire: '',
   statut: 'brouillon',
-  is_editable: true,
   created_at: '2024-01-22T08:00:00',
   updated_at: '2024-01-22T17:00:00',
   ...overrides,
 })
 
 const createMockChantier = (overrides: Partial<Chantier> = {}): Chantier => ({
-  id: 1,
+  id: '1',
   nom: 'Chantier Test',
+  code: 'CH001',
   adresse: '123 rue Test',
-  code_chantier: 'CH001',
   statut: 'en_cours',
   couleur: '#3498db',
+  conducteurs: [],
+  chefs: [],
   created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
   ...overrides,
 })
 
 describe('PointageModal', () => {
   const mockOnClose = vi.fn()
   const mockOnSave = vi.fn()
-  const mockOnDelete = vi.fn()
-  const mockOnSign = vi.fn()
-  const mockOnSubmit = vi.fn()
-  const mockOnValidate = vi.fn()
-  const mockOnReject = vi.fn()
 
   const defaultProps = {
     isOpen: true,

@@ -16,6 +16,9 @@ const mockUsers: User[] = [
     email: 'jean.dupont@example.com',
     role: 'conducteur',
     couleur: '#3498DB',
+    type_utilisateur: 'employe',
+    is_active: true,
+    created_at: '2024-01-01',
   },
   {
     id: '2',
@@ -24,6 +27,9 @@ const mockUsers: User[] = [
     email: 'marie.martin@example.com',
     role: 'conducteur',
     couleur: '#E74C3C',
+    type_utilisateur: 'employe',
+    is_active: true,
+    created_at: '2024-01-01',
   },
 ]
 
@@ -147,6 +153,9 @@ describe('AddUserModal', () => {
           prenom: 'Couleur',
           email: 'sans.couleur@example.com',
           role: 'conducteur',
+          type_utilisateur: 'employe',
+          is_active: true,
+          created_at: '2024-01-01',
         },
       ]
 

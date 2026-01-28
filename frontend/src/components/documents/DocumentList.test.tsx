@@ -37,13 +37,13 @@ vi.mock('../../utils/dates', () => ({
 
 const createMockDocument = (overrides: Partial<Document> = {}): Document => ({
   id: 1,
+  chantier_id: 1,
   dossier_id: 1,
   nom: 'document.pdf',
   nom_original: 'document.pdf',
   type_document: 'pdf',
   taille: 1024000,
   taille_formatee: '1 Mo',
-  chemin_stockage: '/storage/doc.pdf',
   uploaded_by: 1,
   uploaded_by_nom: 'Jean Dupont',
   uploaded_at: '2024-01-15T10:00:00',

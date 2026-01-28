@@ -219,7 +219,7 @@ export function usePlanning() {
     } catch (err: unknown) {
       const axiosError = err as { response?: { status?: number; data?: { detail?: string } } }
       const detail = axiosError?.response?.data?.detail || 'Erreur lors de la suppression'
-      logger.error('Erreur suppression multiple', err, { context: 'PlanningPage', detail })
+      logger.error('Erreur suppression multiple', err, { context: 'PlanningPage' })
       setError(detail)
       // En cas d'erreur, recharger pour restaurer l'état correct
       reloadAffectations()

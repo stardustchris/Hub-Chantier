@@ -23,11 +23,12 @@ vi.mock('../../types/logistique', () => ({
 }))
 
 const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => ({
-  id: '1',
+  id: 1,
   code: 'GRU-01',
   nom: 'Grue à tour 45m',
   description: 'Grue de chantier pour levage lourd',
-  categorie: 'materiel',
+  categorie: 'vehicule',
+  categorie_label: 'Véhicule',
   couleur: '#3498DB',
   actif: true,
   validation_requise: true,

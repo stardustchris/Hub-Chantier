@@ -20,10 +20,10 @@ vi.mock('../../contexts/TasksContext', () => ({
 }))
 
 const createMockTache = (overrides: Partial<Tache> = {}): Tache => ({
-  id: '1',
+  id: 1,
   titre: 'Tache Test',
   description: 'Description de test',
-  chantier_id: 'ch-1',
+  chantier_id: 1,
   est_terminee: false,
   est_en_retard: false,
   ordre: 1,

@@ -68,6 +68,7 @@ const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => (
   code: 'CAM01',
   nom: 'Camion benne',
   categorie: 'vehicule',
+  categorie_label: 'Véhicule',
   couleur: '#FF5733',
   actif: true,
   validation_requise: false,

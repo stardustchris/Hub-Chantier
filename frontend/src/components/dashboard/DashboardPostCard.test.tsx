@@ -39,14 +39,15 @@ vi.mock('../../services/logger', () => ({
 const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   id: '1',
   contenu: 'Test post content',
+  type: 'general',
   auteur: {
     id: '2',
     prenom: 'Marie',
     nom: 'Martin',
     couleur: '#FF5733',
     email: 'marie@test.com',
-    role: 'conducteur',
-    type_utilisateur: 'interne',
+    role: 'conducteur' as const,
+    type_utilisateur: 'employe',
     is_active: true,
     created_at: '2024-01-01',
   },
@@ -142,7 +143,10 @@ describe('DashboardPostCard', () => {
     it('affiche les chantiers cibles', () => {
       const post = createMockPost({
         target_type: 'chantiers',
-        target_chantiers: [{ id: '1', nom: 'Chantier A' }, { id: '2', nom: 'Chantier B' }],
+        target_chantiers: [
+          { id: '1', nom: 'Chantier A', code: 'CH001', adresse: 'Adresse A', statut: 'en_cours', conducteurs: [], chefs: [], created_at: '2024-01-01' },
+          { id: '2', nom: 'Chantier B', code: 'CH002', adresse: 'Adresse B', statut: 'en_cours', conducteurs: [], chefs: [], created_at: '2024-01-01' },
+        ],
       })
       renderCard(post)
       expect(screen.getByText('→ Chantier A, Chantier B')).toBeInTheDocument()
@@ -153,8 +157,8 @@ describe('DashboardPostCard', () => {
     it('affiche les medias du post', () => {
       const post = createMockPost({
         medias: [
-          { id: '1', url: 'https://example.com/img1.jpg' },
-          { id: '2', url: 'https://example.com/img2.jpg' },
+          { id: '1', url: 'https://example.com/img1.jpg', type: 'image' },
+          { id: '2', url: 'https://example.com/img2.jpg', type: 'image' },
         ],
       })
       const { container } = renderCard(post)

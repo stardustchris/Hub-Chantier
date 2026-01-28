@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ReservationModal from './ReservationModal'
 import type { Ressource, Reservation } from '../../types/logistique'
@@ -95,6 +95,7 @@ const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => (
   code: 'CAM01',
   nom: 'Camion benne',
   categorie: 'vehicule',
+  categorie_label: 'Véhicule',
   couleur: '#FF5733',
   actif: true,
   validation_requise: true,
@@ -106,26 +107,33 @@ const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => (
 const createMockReservation = (overrides: Partial<Reservation> = {}): Reservation => ({
   id: 1,
   ressource_id: 1,
+  ressource_nom: 'Camion benne',
+  ressource_code: 'CAM01',
+  ressource_couleur: '#FF5733',
   demandeur_id: 1,
+  demandeur_nom: 'Jean Dupont',
   chantier_id: 1,
+  chantier_nom: 'Chantier Test',
   date_reservation: '2024-01-25',
   heure_debut: '09:00',
   heure_fin: '12:00',
   statut: 'en_attente',
+  statut_label: 'En attente',
   created_at: '2024-01-01T00:00:00',
   updated_at: '2024-01-01T00:00:00',
   ...overrides,
 })
 
 const createMockChantier = (overrides: Partial<Chantier> = {}): Chantier => ({
-  id: 1,
+  id: '1',
   nom: 'Chantier Test',
+  code: 'CH001',
   adresse: '123 rue Test',
-  code_chantier: 'CH001',
   statut: 'en_cours',
   couleur: '#3498db',
+  conducteurs: [],
+  chefs: [],
   created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
   ...overrides,
 })
 

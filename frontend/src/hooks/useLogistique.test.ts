@@ -35,18 +35,18 @@ vi.mock('../services/logger', () => ({
 }))
 
 const mockChantiers = [
-  { id: 1, nom: 'Chantier 1', code: 'CH1' },
-  { id: 2, nom: 'Chantier 2', code: 'CH2' },
+  { id: '1', nom: 'Chantier 1', code: 'CH1', adresse: 'Adresse 1', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
+  { id: '2', nom: 'Chantier 2', code: 'CH2', adresse: 'Adresse 2', statut: 'en_cours' as const, conducteurs: [], chefs: [], created_at: '2024-01-01' },
 ]
 
 const mockReservationsEnAttente = [
-  { id: 1, ressource_id: 1, statut: 'en_attente', date_debut: '2026-01-25' },
-  { id: 2, ressource_id: 2, statut: 'en_attente', date_debut: '2026-01-26' },
+  { id: 1, ressource_id: 1, chantier_id: 1, demandeur_id: 1, statut: 'en_attente' as const, date_reservation: '2026-01-25', date_debut: '2026-01-25', heure_debut: '08:00', heure_fin: '17:00', created_at: '2024-01-01' },
+  { id: 2, ressource_id: 2, chantier_id: 2, demandeur_id: 1, statut: 'en_attente' as const, date_reservation: '2026-01-26', date_debut: '2026-01-26', heure_debut: '08:00', heure_fin: '17:00', created_at: '2024-01-01' },
 ]
 
 const mockRessources = [
-  { id: 1, nom: 'Grue 1', type: 'engin' },
-  { id: 2, nom: 'Camion 1', type: 'vehicule' },
+  { id: 1, nom: 'Grue 1', code: 'G1', type: 'engin', categorie: 'levage', categorie_label: 'Levage', couleur: '#3498db', heure_debut_defaut: '08:00', heure_fin_defaut: '17:00', validation_n_plus_1: false, is_active: true },
+  { id: 2, nom: 'Camion 1', code: 'C1', type: 'vehicule', categorie: 'transport', categorie_label: 'Transport', couleur: '#e74c3c', heure_debut_defaut: '08:00', heure_fin_defaut: '17:00', validation_n_plus_1: false, is_active: true },
 ]
 
 describe('useLogistique', () => {

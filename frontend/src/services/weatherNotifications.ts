@@ -102,7 +102,7 @@ export function sendWeatherAlertNotification(alert: WeatherAlert): void {
 export function sendMorningBulletinNotification(
   location: string,
   temperature: number,
-  condition: string,
+  _condition: string,
   bulletin: string
 ): void {
   if (!areNotificationsAllowed()) {

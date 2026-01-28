@@ -40,8 +40,10 @@ const createMockSignalement = (overrides: Partial<Signalement> = {}): Signalemen
   description: 'Il y a une fuite au niveau du plafond',
   priorite: 'haute',
   priorite_label: 'Haute',
+  priorite_couleur: '#E74C3C',
   statut: 'ouvert',
   statut_label: 'Ouvert',
+  statut_couleur: '#3498DB',
   cree_par: 1,
   cree_par_nom: 'Jean Dupont',
   assigne_a: 2,
@@ -63,6 +65,7 @@ const createMockReponse = (overrides: Partial<Reponse> = {}): Reponse => ({
   cree_par: 2,
   cree_par_nom: 'Marie Martin',
   created_at: '2024-01-15T11:00:00',
+  updated_at: '2024-01-15T11:00:00',
   ...overrides,
 })
 

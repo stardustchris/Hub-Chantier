@@ -23,10 +23,8 @@ const createMockDossier = (overrides: Partial<DossierTreeType> = {}): DossierTre
   type_dossier: '01_plans',
   niveau_acces: 'compagnon',
   parent_id: null,
-  chemin: '/Plans',
   nombre_documents: 5,
   created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-15T10:00:00',
   children: [],
   ...overrides,
 })
@@ -34,8 +32,6 @@ const createMockDossier = (overrides: Partial<DossierTreeType> = {}): DossierTre
 describe('DossierTree', () => {
   const mockOnSelect = vi.fn()
   const mockOnCreate = vi.fn()
-  const mockOnEdit = vi.fn()
-  const mockOnDelete = vi.fn()
 
   const defaultProps = {
     dossiers: [createMockDossier()],

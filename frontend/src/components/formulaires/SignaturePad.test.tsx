@@ -41,8 +41,12 @@ const mockGetContext = vi.fn(() => ({
 
 // Override HTMLCanvasElement prototype
 beforeEach(() => {
-  HTMLCanvasElement.prototype.getContext = mockGetContext
-  HTMLCanvasElement.prototype.toDataURL = mockToDataURL
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+    value: mockGetContext,
+  })
+  Object.defineProperty(HTMLCanvasElement.prototype, 'toDataURL', {
+    value: mockToDataURL,
+  })
   HTMLCanvasElement.prototype.getBoundingClientRect = vi.fn(() => ({
     width: 300,
     height: 160,

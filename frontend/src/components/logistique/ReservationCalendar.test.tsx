@@ -47,6 +47,7 @@ const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => (
   code: 'CAM01',
   nom: 'Camion benne',
   categorie: 'vehicule',
+  categorie_label: 'Véhicule',
   couleur: '#FF5733',
   actif: true,
   validation_requise: false,
@@ -57,6 +58,9 @@ const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => (
 
 const createMockPlanning = (overrides: Partial<PlanningRessource> = {}): PlanningRessource => ({
   ressource_id: 1,
+  ressource_nom: 'Camion benne',
+  ressource_code: 'CAM01',
+  ressource_couleur: '#FF5733',
   jours: [
     '2024-01-22', '2024-01-23', '2024-01-24', '2024-01-25',
     '2024-01-26', '2024-01-27', '2024-01-28',
@@ -68,16 +72,20 @@ const createMockPlanning = (overrides: Partial<PlanningRessource> = {}): Plannin
 const createMockReservation = (overrides: Partial<Reservation> = {}): Reservation => ({
   id: 1,
   ressource_id: 1,
+  ressource_nom: 'Camion benne',
+  ressource_code: 'CAM01',
+  ressource_couleur: '#FF5733',
   demandeur_id: 1,
+  demandeur_nom: 'Jean Dupont',
   chantier_id: 1,
+  chantier_nom: 'Chantier Test',
   date_reservation: '2024-01-23',
   heure_debut: '09:00',
   heure_fin: '12:00',
   statut: 'validee',
+  statut_label: 'Validée',
   created_at: '2024-01-01T00:00:00',
   updated_at: '2024-01-01T00:00:00',
-  demandeur_nom: 'Jean Dupont',
-  ressource_couleur: '#FF5733',
   ...overrides,
 })
 

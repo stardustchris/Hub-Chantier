@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import PlanningGrid from './PlanningGrid'
 import type { Affectation, User } from '../../types'
@@ -56,9 +56,9 @@ const createMockAffectation = (overrides: Partial<Affectation> = {}): Affectatio
   heure_debut: '08:00',
   heure_fin: '17:00',
   chantier_nom: 'Chantier Test',
-  chantier_code: 'CH001',
-  chantier_couleur: '#E74C3C',
+  type_affectation: 'unique',
   created_at: '2024-01-01',
+  updated_at: '2024-01-01',
   ...overrides,
 })
 
@@ -69,7 +69,6 @@ describe('PlanningGrid', () => {
   const mockOnDuplicate = vi.fn()
   const mockOnToggleMetier = vi.fn()
   const mockOnAffectationMove = vi.fn()
-  const mockOnAffectationResize = vi.fn()
 
   const defaultProps = {
     currentDate: new Date('2024-01-15'),

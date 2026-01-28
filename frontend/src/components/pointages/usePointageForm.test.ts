@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { usePointageForm } from './usePointageForm'
 import type { Pointage } from '../../types'
 
@@ -49,8 +49,12 @@ const mockPointage: Pointage = {
   date_pointage: '2026-01-25',
   heures_normales: '08:00',
   heures_supplementaires: '02:00',
+  total_heures: '10:00',
+  total_heures_decimal: 10,
   commentaire: 'Test commentaire',
   statut: 'brouillon',
+  created_at: '2026-01-25T00:00:00',
+  updated_at: '2026-01-25T00:00:00',
 }
 
 describe('usePointageForm', () => {
