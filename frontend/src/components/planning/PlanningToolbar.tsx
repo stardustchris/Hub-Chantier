@@ -41,24 +41,25 @@ export function PlanningToolbar({
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Planning</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-sm sm:text-base">
             Gestion des affectations des équipes aux chantiers
           </p>
         </div>
 
         {canEdit && (
-          <button onClick={onCreateClick} className="btn btn-primary">
+          <button onClick={onCreateClick} className="btn btn-primary whitespace-nowrap">
             <Plus className="w-5 h-5 mr-2" />
-            Créer une affectation
+            <span className="hidden sm:inline">Créer une affectation</span>
+            <span className="sm:hidden">Créer</span>
           </button>
         )}
       </div>
 
       {/* Onglets de vue */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         <div className="flex rounded-lg bg-gray-100 p-1">
           <button
             onClick={() => onViewTabChange('utilisateurs')}
@@ -103,7 +104,7 @@ export function PlanningToolbar({
         <select
           value={filterChantier}
           onChange={(e) => onFilterChantierChange(e.target.value)}
-          className="px-3 py-2 rounded-lg text-sm border border-gray-200 bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm border border-gray-200 bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 max-w-[150px] sm:max-w-none"
         >
           <option value="">Tous les chantiers</option>
           {chantiers.map((chantier) => (
@@ -132,7 +133,7 @@ export function PlanningToolbar({
         </button>
 
         {/* Toggle weekend */}
-        <label className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors">
+        <label className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors whitespace-nowrap">
           <input
             type="checkbox"
             checked={showWeekend}

@@ -26,11 +26,11 @@ export function GDPRBanner() {
     // Vérifier si le banner doit être affiché
     const checkConsents = async () => {
       try {
-        const hasAny = await consentService.hasAnyConsent()
+        const hasAnswered = await consentService.hasAnswered()
         const wasShown = consentService.wasBannerShown()
 
-        // Afficher le banner si aucun consentement ET pas déjà affiché dans cette session
-        if (!hasAny && !wasShown) {
+        // Afficher le banner si l'utilisateur n'a pas encore répondu ET pas déjà affiché dans cette session
+        if (!hasAnswered && !wasShown) {
           setShowBanner(true)
           consentService.markBannerAsShown()
         }

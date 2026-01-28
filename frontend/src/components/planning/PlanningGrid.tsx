@@ -420,16 +420,19 @@ export default function PlanningGrid({
       // Pour le mois, colonne fixe pour utilisateurs + colonnes dynamiques pour les jours
       return { gridTemplateColumns: `200px repeat(${numDays}, minmax(40px, 1fr))` }
     }
-    return { gridTemplateColumns: showWeekend ? '250px repeat(7, 1fr)' : '250px repeat(5, 1fr)' }
+    // Mobile-responsive: 120px pour la colonne utilisateurs sur petit écran, 250px sur grand écran
+    const userColWidth = window.innerWidth < 768 ? '120px' : '250px'
+    const dayColWidth = window.innerWidth < 768 ? 'minmax(80px, 1fr)' : '1fr'
+    return { gridTemplateColumns: showWeekend ? `${userColWidth} repeat(7, ${dayColWidth})` : `${userColWidth} repeat(5, ${dayColWidth})` }
   }, [days.length, viewMode, showWeekend])
 
   // Mode mois = affichage compact
   const isMonthView = viewMode === 'mois'
 
   return (
-    <div ref={gridRef} className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''} ${resizeState ? 'select-none' : ''}`}>
+    <div ref={gridRef} className={`bg-white rounded-lg shadow overflow-hidden overflow-x-auto ${resizeState ? 'select-none' : ''}`}>
       {/* Header - Jours */}
-      <div className={`grid border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`} style={gridStyle}>
+      <div className={`grid border-b bg-gray-50 min-w-max`} style={gridStyle}>
         <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
           Utilisateurs
         </div>
@@ -461,7 +464,7 @@ export default function PlanningGrid({
               {/* Header du groupe (catégorie) */}
               <button
                 onClick={() => onToggleMetier(category)}
-                className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors" style={gridStyle}
+                className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors min-w-max" style={gridStyle}
               >
                 <div className="px-4 py-2 flex items-center gap-2 border-r">
                   {isExpanded ? (
@@ -487,7 +490,7 @@ export default function PlanningGrid({
               {isExpanded && users.map(user => (
                 <div
                   key={user.id}
-                  className="group/row grid hover:bg-gray-50 transition-colors" style={gridStyle}
+                  className="group/row grid hover:bg-gray-50 transition-colors min-w-max" style={gridStyle}
                 >
                   {/* Colonne utilisateur */}
                   <div className="px-4 py-3 flex items-center gap-3 border-r">

@@ -128,7 +128,10 @@ export default function PlanningChantierGrid({
       // Pour le mois, colonne fixe pour chantiers + colonnes dynamiques pour les jours
       return { gridTemplateColumns: `220px repeat(${numDays}, minmax(40px, 1fr))` }
     }
-    return { gridTemplateColumns: showWeekend ? '280px repeat(7, 1fr)' : '280px repeat(5, 1fr)' }
+    // Mobile-responsive: 140px pour la colonne chantiers sur petit écran, 280px sur grand écran
+    const chantierColWidth = window.innerWidth < 768 ? '140px' : '280px'
+    const dayColWidth = window.innerWidth < 768 ? 'minmax(80px, 1fr)' : '1fr'
+    return { gridTemplateColumns: showWeekend ? `${chantierColWidth} repeat(7, ${dayColWidth})` : `${chantierColWidth} repeat(5, ${dayColWidth})` }
   }, [days.length, viewMode, showWeekend])
 
   // Trier les chantiers par statut puis par nom
@@ -145,9 +148,9 @@ export default function PlanningChantierGrid({
   const isMonthView = viewMode === 'mois'
 
   return (
-    <div className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''}`}>
+    <div className={`bg-white rounded-lg shadow overflow-hidden overflow-x-auto`}>
       {/* Header - Jours */}
-      <div className={`grid border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`} style={gridStyle}>
+      <div className={`grid border-b bg-gray-50 min-w-max`} style={gridStyle}>
         <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
           Chantiers
         </div>
@@ -177,7 +180,7 @@ export default function PlanningChantierGrid({
           return (
             <div
               key={chantier.id}
-              className="group grid hover:bg-gray-50 transition-colors" style={gridStyle}
+              className="group grid hover:bg-gray-50 transition-colors min-w-max" style={gridStyle}
             >
               {/* Colonne chantier */}
               <div className="px-4 py-3 flex items-center gap-3 border-r">
