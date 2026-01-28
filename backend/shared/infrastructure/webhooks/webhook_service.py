@@ -41,7 +41,7 @@ class WebhookDeliveryService:
         Tous les appels sont asynchrones (async/await).
     """
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session) -> None:
         """
         Initialise le service de delivery.
 
