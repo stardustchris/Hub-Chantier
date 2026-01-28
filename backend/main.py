@@ -49,6 +49,7 @@ from shared.infrastructure.webhooks import (
     stop_cleanup_scheduler,
 )
 from shared.infrastructure.event_bus import event_bus
+from shared.infrastructure.api_v1 import configure_openapi, get_custom_openapi_schema
 
 # Créer l'application
 app = FastAPI(
@@ -58,6 +59,10 @@ app = FastAPI(
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
 )
+
+# Configurer OpenAPI avec documentation enrichie
+configure_openapi(app)
+app.openapi = lambda: get_custom_openapi_schema(app)
 
 # Configurer le rate limiter
 app.state.limiter = limiter
