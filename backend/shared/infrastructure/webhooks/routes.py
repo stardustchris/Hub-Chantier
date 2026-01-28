@@ -3,7 +3,7 @@
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from pydantic import BaseModel, HttpUrl, Field, field_validator
 from sqlalchemy.orm import Session
 import socket
@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from modules.auth.infrastructure.web.dependencies import get_current_user_id
 from shared.infrastructure.database import get_db
+from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.webhooks.models import WebhookModel, WebhookDeliveryModel
 from shared.infrastructure.webhooks.webhook_service import WebhookDeliveryService
 from shared.infrastructure.event_bus.domain_event import DomainEvent
@@ -20,6 +21,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+
+# Configuration limits
+MAX_WEBHOOKS_PER_USER = 20
 
 
 # ============================================================================
@@ -178,7 +182,9 @@ class WebhookDeliveryListResponse(BaseModel):
 # ============================================================================
 
 @router.post("", response_model=WebhookCreatedResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def create_webhook(
+    request: Request,  # Required by slowapi
     data: WebhookCreate,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
@@ -188,20 +194,41 @@ async def create_webhook(
 
     Le secret retourné une seule fois - À CONSERVER ! Il ne sera plus affiché.
 
+    **Limites**:
+    - Rate limit: 10 webhooks par minute
+    - Maximum: 20 webhooks actifs par utilisateur
+
     **Patterns d'événements** (fnmatch):
     - `chantier.*` - tous les événements liés aux chantiers
     - `*.created` - tous les événements de création
     - `*` - tous les événements
 
     Args:
+        request: Request FastAPI (requis par slowapi)
         data: Données du webhook (url, events, description)
         current_user_id: ID de l'utilisateur connecté
         db: Session base de données
 
     Returns:
         Le webhook créé avec le secret (UNE FOIS SEULEMENT)
+
+    Raises:
+        HTTPException: 429 si rate limit dépassé, 400 si quota webhooks atteint
     """
     import secrets
+
+    # Vérifier le quota de webhooks par utilisateur
+    existing_webhooks_count = db.query(WebhookModel).filter(
+        WebhookModel.user_id == current_user_id,
+        WebhookModel.is_active == True
+    ).count()
+
+    if existing_webhooks_count >= MAX_WEBHOOKS_PER_USER:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Maximum {MAX_WEBHOOKS_PER_USER} webhooks actifs atteint. "
+                   f"Supprimez un webhook existant avant d'en créer un nouveau."
+        )
 
     # Générer un secret aléatoire
     secret = secrets.token_hex(32)  # 64 caractères hexadécimaux
@@ -232,7 +259,9 @@ async def create_webhook(
 
 
 @router.get("", response_model=WebhookListResponse)
+@limiter.limit("30/minute")
 async def list_webhooks(
+    request: Request,  # Required by slowapi
     skip: int = Query(0, ge=0, description="Nombre d'éléments à sauter"),
     limit: int = Query(50, ge=1, le=100, description="Nombre max d'éléments"),
     current_user_id: int = Depends(get_current_user_id),
@@ -262,7 +291,9 @@ async def list_webhooks(
 
 
 @router.get("/{webhook_id}", response_model=WebhookResponse)
+@limiter.limit("30/minute")
 async def get_webhook(
+    request: Request,  # Required by slowapi
     webhook_id: UUID,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
@@ -293,7 +324,9 @@ async def get_webhook(
 
 
 @router.get("/{webhook_id}/deliveries", response_model=WebhookDeliveryListResponse)
+@limiter.limit("30/minute")
 async def get_webhook_deliveries(
+    request: Request,  # Required by slowapi
     webhook_id: UUID,
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: int = Query(50, ge=1, le=100, description="Nombre max (max 100)"),
@@ -354,7 +387,9 @@ async def get_webhook_deliveries(
 
 
 @router.delete("/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("20/minute")
 async def delete_webhook(
+    request: Request,  # Required by slowapi
     webhook_id: UUID,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
@@ -388,7 +423,9 @@ async def delete_webhook(
 
 
 @router.post("/{webhook_id}/test", status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit("5/minute")
 async def test_webhook(
+    request: Request,  # Required by slowapi
     webhook_id: UUID,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),

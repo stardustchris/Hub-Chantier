@@ -42,7 +42,12 @@ from modules.interventions.infrastructure.web import router as interventions_rou
 from modules.notifications.infrastructure.web import router as notifications_router
 from modules.notifications.infrastructure.event_handlers import register_notification_handlers
 from shared.infrastructure.web.upload_routes import router as upload_router
-from shared.infrastructure.webhooks import router as webhooks_router, webhook_event_handler
+from shared.infrastructure.webhooks import (
+    router as webhooks_router,
+    webhook_event_handler,
+    start_cleanup_scheduler,
+    stop_cleanup_scheduler,
+)
 from shared.infrastructure.event_bus import event_bus
 
 # Créer l'application
@@ -136,11 +141,19 @@ async def startup_event():
     scheduler.start()
     logger.info("Scheduler démarré avec jobs planifiés")
 
+    # Démarrer le nettoyage automatique des webhook deliveries (GDPR)
+    start_cleanup_scheduler()
+    logger.info("Webhook cleanup scheduler démarré (rétention: 90 jours)")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Nettoyage à l'arrêt."""
-    # Arrêter le scheduler
+    # Arrêter le webhook cleanup scheduler
+    stop_cleanup_scheduler()
+    logger.info("Webhook cleanup scheduler arrêté")
+
+    # Arrêter le scheduler principal
     scheduler = get_scheduler()
     scheduler.shutdown(wait=True)
     logger.info("Scheduler arrêté")

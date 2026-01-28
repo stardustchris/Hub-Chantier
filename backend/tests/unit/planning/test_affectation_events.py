@@ -370,3 +370,134 @@ class TestAffectationBulkDeletedEvent:
         assert result["count"] == 10
         assert result["utilisateur_id"] == 5
         assert result["chantier_id"] is None
+
+
+# =============================================================================
+# Tests AffectationCancelledEvent
+# =============================================================================
+
+class TestAffectationCancelledEvent:
+    """Tests pour l'event AffectationCancelledEvent."""
+
+    def test_should_create_event_with_required_fields(self):
+        """Test: création avec tous les champs requis."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+        )
+
+        assert event.aggregate_id == "42"
+        assert event.event_type == "affectation.cancelled"
+        assert event.data["affectation_id"] == 42
+        assert event.data["user_id"] == 5
+        assert event.data["chantier_id"] == 10
+        assert event.data["cancelled_by"] == 3
+        assert event.data["date_affectation"] == "2026-01-30"
+
+    def test_should_create_event_with_optional_raison(self):
+        """Test: création avec raison d'annulation optionnelle."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+            raison="Intempéries",
+        )
+
+        assert event.data["raison"] == "Intempéries"
+
+    def test_should_have_none_raison_by_default(self):
+        """Test: raison est None par défaut."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+        )
+
+        assert event.data["raison"] is None
+
+    def test_should_convert_to_dict(self):
+        """Test: conversion en dictionnaire."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+            raison="Test",
+        )
+
+        result = event.to_dict()
+
+        assert result["event_type"] == "affectation.cancelled"
+        assert result["aggregate_id"] == "42"
+        assert "data" in result
+        assert result["data"]["affectation_id"] == 42
+        assert result["data"]["user_id"] == 5
+        assert result["data"]["chantier_id"] == 10
+        assert result["data"]["cancelled_by"] == 3
+        assert result["data"]["raison"] == "Test"
+        assert "occurred_at" in result
+
+    def test_should_be_immutable(self):
+        """Test: event est immutable (frozen dataclass)."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+        )
+
+        # Tentative de modification doit lever FrozenInstanceError
+        with pytest.raises(Exception):  # FrozenInstanceError est une sous-classe de AttributeError
+            event.event_type = "modified"
+
+    def test_should_format_date_as_iso(self):
+        """Test: date formatée en ISO dans data."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+        )
+
+        # La date doit être formatée en ISO string dans data
+        assert event.data["date_affectation"] == "2026-01-30"
+
+    def test_should_handle_metadata(self):
+        """Test: gestion des métadonnées."""
+        from modules.planning.domain.events.affectation_cancelled import AffectationCancelledEvent
+
+        metadata = {"ip_address": "192.168.1.1", "user_agent": "Test"}
+
+        event = AffectationCancelledEvent(
+            affectation_id=42,
+            user_id=5,
+            chantier_id=10,
+            date_affectation=date(2026, 1, 30),
+            cancelled_by=3,
+            metadata=metadata,
+        )
+
+        assert event.metadata == metadata
+        assert event.metadata["ip_address"] == "192.168.1.1"
