@@ -26,6 +26,7 @@ from shared.infrastructure.web.rate_limit_middleware import RateLimitMiddleware
 from shared.infrastructure.scheduler import get_scheduler
 from shared.infrastructure.scheduler.jobs import RappelReservationJob
 from modules.auth.infrastructure.web import router as auth_router, users_router
+from modules.auth.infrastructure.web.api_keys_routes import router as api_keys_router
 from modules.chantiers.infrastructure.web import router as chantiers_router
 from modules.dashboard.infrastructure.web import dashboard_router
 from modules.taches.infrastructure.web import router as taches_router
@@ -189,6 +190,7 @@ async def health_check():
 # Inclure les routers des modules
 app.include_router(auth_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
+app.include_router(api_keys_router, prefix="/api/auth")
 app.include_router(chantiers_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")

@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
 from shared.infrastructure.security import EncryptedString
@@ -71,6 +72,9 @@ class UserModel(Base):
     consent_timestamp = Column(DateTime, nullable=True, index=True)  # Date du consentement
     consent_ip_address = Column(String(45), nullable=True)  # IPv4/IPv6
     consent_user_agent = Column(String(500), nullable=True)  # User agent navigateur
+
+    # Relations
+    api_keys = relationship("APIKeyModel", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<UserModel(id={self.id}, email={self.email}, role={self.role})>"

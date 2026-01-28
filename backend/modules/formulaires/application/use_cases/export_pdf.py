@@ -1,7 +1,7 @@
 """Use Case ExportFormulairePDF - Export PDF d'un formulaire (FOR-09)."""
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Callable
 from datetime import datetime
 
 from shared.infrastructure.pdf import PdfGeneratorService
