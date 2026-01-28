@@ -20,6 +20,7 @@ from ...application.use_cases import (
     GetPlanningUseCase,
     DuplicateAffectationsUseCase,
     GetNonPlanifiesUseCase,
+    ResizeAffectationUseCase,
 )
 from ..persistence import SQLAlchemyAffectationRepository
 from ..event_bus_impl import EventBusImpl
@@ -192,6 +193,13 @@ def get_get_non_planifies_use_case(
     )
 
 
+def get_resize_affectation_use_case(
+    affectation_repo: SQLAlchemyAffectationRepository = Depends(get_affectation_repository),
+) -> ResizeAffectationUseCase:
+    """Retourne le use case de redimensionnement d'affectation."""
+    return ResizeAffectationUseCase(affectation_repo=affectation_repo)
+
+
 def get_planning_controller(
     create_uc: CreateAffectationUseCase = Depends(get_create_affectation_use_case),
     update_uc: UpdateAffectationUseCase = Depends(get_update_affectation_use_case),
@@ -199,6 +207,7 @@ def get_planning_controller(
     get_planning_uc: GetPlanningUseCase = Depends(get_get_planning_use_case),
     duplicate_uc: DuplicateAffectationsUseCase = Depends(get_duplicate_affectations_use_case),
     get_non_planifies_uc: GetNonPlanifiesUseCase = Depends(get_get_non_planifies_use_case),
+    resize_uc: ResizeAffectationUseCase = Depends(get_resize_affectation_use_case),
     presenter: AffectationPresenter = Depends(get_affectation_presenter),
 ) -> PlanningController:
     """
@@ -211,6 +220,7 @@ def get_planning_controller(
         get_planning_uc: Use case de recuperation.
         duplicate_uc: Use case de duplication.
         get_non_planifies_uc: Use case des non planifies.
+        resize_uc: Use case de redimensionnement.
         presenter: Presenter pour enrichir les reponses.
 
     Returns:
@@ -223,5 +233,6 @@ def get_planning_controller(
         get_planning_uc=get_planning_uc,
         duplicate_affectations_uc=duplicate_uc,
         get_non_planifies_uc=get_non_planifies_uc,
+        resize_affectation_uc=resize_uc,
         presenter=presenter,
     )
