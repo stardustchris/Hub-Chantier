@@ -4,11 +4,13 @@
  * LOG-01 a LOG-18: Module complet de gestion logistique
  */
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Truck, Calendar, Clock, AlertCircle } from 'lucide-react'
 import { useLogistique } from '../hooks'
 import { RessourceList, ReservationCalendar, ReservationModal } from '../components/logistique'
 import Layout from '../components/Layout'
+import { listRessources } from '../api/logistique'
+import type { Ressource } from '../types/logistique'
 
 const LogistiquePage: React.FC = () => {
   const {
@@ -31,6 +33,28 @@ const LogistiquePage: React.FC = () => {
     handleModalSuccess,
     tabs,
   } = useLogistique()
+
+  // Liste des ressources pour le sélecteur
+  const [allRessources, setAllRessources] = useState<Ressource[]>([])
+  const [loadingRessources, setLoadingRessources] = useState(false)
+
+  // Charger toutes les ressources
+  useEffect(() => {
+    const loadRessources = async () => {
+      setLoadingRessources(true)
+      try {
+        const data = await listRessources({ limit: 1000 })
+        setAllRessources(data?.items || [])
+      } catch (error) {
+        console.error('Erreur chargement ressources:', error)
+      } finally {
+        setLoadingRessources(false)
+      }
+    }
+    if (activeTab === 'planning') {
+      loadRessources()
+    }
+  }, [activeTab])
 
   return (
     <Layout>
@@ -90,15 +114,51 @@ const LogistiquePage: React.FC = () => {
 
         {/* Tab Planning */}
         {activeTab === 'planning' && (
-          <>
+          <div className="space-y-4">
+            {/* Sélecteur de ressource */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <label htmlFor="ressource-select" className="block text-sm font-medium text-gray-700 mb-2">
+                Ressource à afficher
+              </label>
+              <select
+                id="ressource-select"
+                value={selectedRessource?.id || ''}
+                onChange={(e) => {
+                  const ressourceId = parseInt(e.target.value, 10)
+                  const ressource = allRessources.find((r) => r.id === ressourceId)
+                  setSelectedRessource(ressource || null)
+                }}
+                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={loadingRessources}
+              >
+                <option value="">-- Sélectionner une ressource --</option>
+                {allRessources.map((ressource) => (
+                  <option key={ressource.id} value={ressource.id}>
+                    [{ressource.code}] {ressource.nom}
+                  </option>
+                ))}
+              </select>
+              {allRessources.length === 0 && !loadingRessources && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Aucune ressource disponible. {isAdmin && 'Créez-en une depuis l\'onglet Ressources.'}
+                </p>
+              )}
+            </div>
+
+            {/* Planning de la ressource sélectionnée */}
             {selectedRessource ? (
               <div className="space-y-4">
-                <button
-                  onClick={() => setActiveTab('ressources')}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  ← Retour aux ressources
-                </button>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Planning : {selectedRessource.nom}
+                  </h2>
+                  <button
+                    onClick={() => setActiveTab('ressources')}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Voir toutes les ressources
+                  </button>
+                </div>
                 <ReservationCalendar
                   ressource={selectedRessource}
                   onCreateReservation={handleCreateReservation}
@@ -106,23 +166,17 @@ const LogistiquePage: React.FC = () => {
                 />
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
                 <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Selectionnez une ressource
+                  Sélectionnez une ressource
                 </h3>
-                <p className="text-gray-500 mb-4">
-                  Choisissez une ressource pour voir son planning de reservations
+                <p className="text-gray-500">
+                  Utilisez le sélecteur ci-dessus pour afficher le planning d'une ressource
                 </p>
-                <button
-                  onClick={() => setActiveTab('ressources')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Voir les ressources
-                </button>
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* Tab En attente */}
