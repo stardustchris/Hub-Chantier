@@ -14,7 +14,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementDetail from './SignalementDetail'
 import { createMockSignalement } from '../../fixtures'
-import type { Signalement, Reponse } from '../../types/signalements'
+import type { Reponse } from '../../types/signalements'
 
 // Mock services
 const mockGetSignalement = vi.fn()
