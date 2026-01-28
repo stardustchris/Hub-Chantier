@@ -15,6 +15,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ReservationCalendar from './ReservationCalendar'
+import { createMockRessource, createMockReservation } from '../../fixtures'
 import type { Ressource, PlanningRessource, Reservation } from '../../types/logistique'
 
 // Mock API
@@ -42,42 +43,18 @@ import { getPlanningRessource } from '../../api/logistique'
 
 const mockGetPlanningRessource = getPlanningRessource as ReturnType<typeof vi.fn>
 
-const createMockRessource = (overrides: Partial<Ressource> = {}): Ressource => ({
-  id: 1,
-  code: 'CAM01',
-  nom: 'Camion benne',
-  categorie: 'vehicule',
-  couleur: '#FF5733',
-  actif: true,
-  validation_requise: false,
-  created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
-  ...overrides,
-})
-
 const createMockPlanning = (overrides: Partial<PlanningRessource> = {}): PlanningRessource => ({
   ressource_id: 1,
+  ressource_nom: 'Camion benne',
+  ressource_code: 'CAM01',
+  ressource_couleur: '#FF5733',
+  date_debut: '2024-01-22',
+  date_fin: '2024-01-28',
   jours: [
     '2024-01-22', '2024-01-23', '2024-01-24', '2024-01-25',
     '2024-01-26', '2024-01-27', '2024-01-28',
   ],
   reservations: [],
-  ...overrides,
-})
-
-const createMockReservation = (overrides: Partial<Reservation> = {}): Reservation => ({
-  id: 1,
-  ressource_id: 1,
-  demandeur_id: 1,
-  chantier_id: 1,
-  date_reservation: '2024-01-23',
-  heure_debut: '09:00',
-  heure_fin: '12:00',
-  statut: 'validee',
-  created_at: '2024-01-01T00:00:00',
-  updated_at: '2024-01-01T00:00:00',
-  demandeur_nom: 'Jean Dupont',
-  ressource_couleur: '#FF5733',
   ...overrides,
 })
 
