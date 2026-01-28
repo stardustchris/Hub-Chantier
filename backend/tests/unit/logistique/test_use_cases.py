@@ -401,8 +401,11 @@ class TestGetPlanningRessourceUseCase:
             sample_reservation
         ]
 
+        from unittest.mock import Mock
+        mock_user_repository = Mock()
+
         use_case = GetPlanningRessourceUseCase(
-            mock_reservation_repository, mock_ressource_repository
+            mock_reservation_repository, mock_ressource_repository, mock_user_repository
         )
 
         result = use_case.execute(
