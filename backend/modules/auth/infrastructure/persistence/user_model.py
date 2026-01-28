@@ -75,7 +75,7 @@ class UserModel(Base):
 
     # Relations
     api_keys = relationship("APIKeyModel", back_populates="user", cascade="all, delete-orphan")
-    webhooks = relationship("WebhookModel", back_populates="user", cascade="all, delete-orphan")
+    # webhooks = relationship("WebhookModel", back_populates="user", cascade="all, delete-orphan")  # Temporairement désactivé
 
     def __repr__(self) -> str:
         return f"<UserModel(id={self.id}, email={self.email}, role={self.role})>"

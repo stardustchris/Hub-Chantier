@@ -70,7 +70,7 @@ class WebhookModel(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relations
-    user = relationship("UserModel", back_populates="webhooks")
+    # user = relationship("UserModel", back_populates="webhooks")  # Temporairement désactivé
     deliveries = relationship(
         "WebhookDeliveryModel",
         back_populates="webhook",
