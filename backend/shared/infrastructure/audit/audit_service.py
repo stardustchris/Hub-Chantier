@@ -4,10 +4,11 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from shared.application.ports import AuditPort
 from .audit_model import AuditLog
 
 
-class AuditService:
+class AuditService(AuditPort):
     """
     Service pour enregistrer les actions d'audit.
 
@@ -267,4 +268,58 @@ class AuditService:
             },
             ip_address=ip_address,
             user_agent=user_agent,
+        )
+
+    def log_data_accessed(
+        self,
+        user_id: int,
+        resource_type: str,
+        resource_id: int,
+        action: str,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> None:
+        """
+        Trace l'accès à une ressource sensible (RGPD Art. 30).
+
+        Args:
+            user_id: ID de l'utilisateur ayant accédé à la ressource.
+            resource_type: Type de ressource (ex: "feuille_heures", "formulaire").
+            resource_id: ID de la ressource.
+            action: Action effectuée (ex: "read", "export", "delete").
+            ip_address: Adresse IP de l'utilisateur (optionnel).
+            user_agent: User-Agent du navigateur/client (optionnel).
+        """
+        self.log_action(
+            entity_type=resource_type,
+            entity_id=resource_id,
+            action=action,
+            user_id=user_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
+    def log_user_deleted(
+        self,
+        user_id: int,
+        deleted_by: int,
+        reason: str,
+        ip_address: Optional[str] = None,
+    ) -> None:
+        """
+        Trace la suppression d'un utilisateur (RGPD Art. 17 - Droit à l'oubli).
+
+        Args:
+            user_id: ID de l'utilisateur supprimé.
+            deleted_by: ID de l'administrateur ayant effectué la suppression.
+            reason: Raison de la suppression.
+            ip_address: Adresse IP de l'administrateur (optionnel).
+        """
+        self.log_action(
+            entity_type="user",
+            entity_id=user_id,
+            action="deleted",
+            user_id=deleted_by,
+            new_values={"reason": reason},
+            ip_address=ip_address,
         )

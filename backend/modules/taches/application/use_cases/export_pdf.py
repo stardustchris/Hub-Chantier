@@ -5,8 +5,7 @@ from io import BytesIO
 import re
 from typing import Optional
 
-from shared.application.ports import PdfGeneratorPort
-from shared.infrastructure.audit import AuditService
+from shared.application.ports import PdfGeneratorPort, AuditPort
 from ...domain.repositories import TacheRepository
 
 
@@ -26,7 +25,7 @@ class ExportTachesPDFUseCase:
         self,
         tache_repo: TacheRepository,
         pdf_service: PdfGeneratorPort,
-        audit_service: AuditService,
+        audit_service: AuditPort,
     ):
         """
         Initialise le use case.
@@ -34,7 +33,7 @@ class ExportTachesPDFUseCase:
         Args:
             tache_repo: Repository taches (interface).
             pdf_service: Service PDF (injecté via DI).
-            audit_service: Service audit pour traçabilité RGPD.
+            audit_service: Service audit pour traçabilité RGPD (interface).
         """
         self.tache_repo = tache_repo
         self.pdf_service = pdf_service

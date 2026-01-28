@@ -6,10 +6,12 @@ from .entity_info_service import (
     ChantierBasicInfo,
 )
 from .pdf_generator import PdfGeneratorPort
+from .audit import AuditPort
 
 __all__ = [
     "EntityInfoService",
     "UserBasicInfo",
     "ChantierBasicInfo",
     "PdfGeneratorPort",
+    "AuditPort",
 ]
