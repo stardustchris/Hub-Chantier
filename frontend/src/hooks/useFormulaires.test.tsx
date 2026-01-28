@@ -109,8 +109,8 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 describe('useFormulaires', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(formulairesService.listTemplates).mockResolvedValue({ templates: mockTemplates })
-    vi.mocked(formulairesService.listFormulaires).mockResolvedValue({ formulaires: mockFormulaires })
+    vi.mocked(formulairesService.listTemplates).mockResolvedValue({ templates: mockTemplates, total: mockTemplates.length, skip: 0, limit: 50 })
+    vi.mocked(formulairesService.listFormulaires).mockResolvedValue({ formulaires: mockFormulaires, total: mockFormulaires.length, skip: 0, limit: 50 })
     vi.mocked(chantiersService.list).mockResolvedValue({ items: mockChantiers, total: mockChantiers.length, page: 1, size: 20, pages: 1 })
   })
 

@@ -40,6 +40,7 @@ vi.mock('../../services/logger', () => ({
 const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   id: '1',
   contenu: 'Test post content',
+  type: 'message',
   auteur: {
     id: '2',
     prenom: 'Marie',
@@ -58,6 +59,7 @@ const createMockPost = (overrides: Partial<Post> = {}): Post => ({
   commentaires_count: 2,
   likes: [],
   commentaires: [],
+  medias: [],
   target_type: 'tous',
   ...overrides,
 })

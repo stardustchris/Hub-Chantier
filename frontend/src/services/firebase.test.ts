@@ -233,7 +233,7 @@ describe('firebase service', () => {
     const originalNotification = global.Notification
 
     beforeEach(() => {
-
+      // @ts-expect-error - Simplified mock for testing
       global.Notification = {
         requestPermission: vi.fn(),
       }
@@ -244,8 +244,8 @@ describe('firebase service', () => {
     })
 
     it('retourne null si Notification non supporte', async () => {
-
-      delete global.Notification
+      // @ts-expect-error - Setting to undefined to simulate unsupported environment
+      global.Notification = undefined
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')

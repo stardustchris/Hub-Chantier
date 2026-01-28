@@ -17,14 +17,14 @@ import { EditUserModal } from './EditUserModal'
 import type { User } from '../../types'
 
 const createMockUser = (overrides: Partial<User> = {}): User => ({
-  id: 1,
+  id: '1',
   email: 'jean.dupont@test.com',
   nom: 'Dupont',
   prenom: 'Jean',
   role: 'compagnon',
   type_utilisateur: 'employe',
   couleur: '#3498db',
-  actif: true,
+  is_active: true,
   created_at: '2024-01-01T00:00:00',
   updated_at: '2024-01-01T00:00:00',
   ...overrides,

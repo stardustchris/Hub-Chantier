@@ -228,7 +228,7 @@ describe('notifications service', () => {
       await initNotifications()
 
       if (messageHandler) {
-        messageHandler({
+        ;(messageHandler as (payload: any) => void)({
           title: 'Test Title',
           body: 'Test Body',
           data: { type: 'reservation_demande' },

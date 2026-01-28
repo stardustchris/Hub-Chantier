@@ -10,7 +10,7 @@ import FormulairesPage from './FormulairesPage'
 
 // Mock useFormulaires hook
 const mockUseFormulaires = {
-  activeTab: 'formulaires' as const,
+  activeTab: 'formulaires' as 'formulaires' | 'templates',
   loading: false,
   error: '',
   templates: [],
