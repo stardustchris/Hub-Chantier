@@ -1,17 +1,19 @@
 /**
- * useFormulaires - Hook pour la gestion des formulaires et templates
+ * useFormulaires - Hook composé pour la gestion des formulaires et templates
  *
- * Extrait la logique metier de FormulairesPage:
- * - Gestion des templates (CRUD)
- * - Gestion des formulaires (CRUD, soumission, validation)
+ * Ce hook est maintenant refactorisé en 3 sous-hooks :
+ * - useFormulairesData : Gestion données et CRUD
+ * - useFormulairesUI : Gestion modals, tabs, selections
+ * - useFormulairesFilters : Gestion filtres et recherche
+ *
+ * Garde la même interface pour compatibilité avec FormulairesPage
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { formulairesService } from '../services/formulaires'
-import { chantiersService } from '../services/chantiers'
-import { logger } from '../services/logger'
+import { useFormulairesData } from './useFormulairesData'
+import { useFormulairesUI } from './useFormulairesUI'
+import { useFormulairesFilters } from './useFormulairesFilters'
 import type {
   TemplateFormulaire,
   TemplateFormulaireCreate,
@@ -87,339 +89,211 @@ interface UseFormulairesReturn {
   loadData: () => Promise<void>
 }
 
-// Default mock data
-const MOCK_TEMPLATES: TemplateFormulaire[] = []
-const MOCK_FORMULAIRES: FormulaireRempli[] = []
-const MOCK_CHANTIERS: Chantier[] = []
-
 export function useFormulaires(): UseFormulairesReturn {
   const { user: currentUser } = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
 
-  // Main state
-  const [activeTab, setActiveTab] = useState<TabType>('formulaires')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  // Data
-  const [templates, setTemplates] = useState<TemplateFormulaire[]>([])
-  const [formulaires, setFormulaires] = useState<FormulaireRempli[]>([])
-  const [chantiers, setChantiers] = useState<Chantier[]>([])
-  const [selectedChantierId, setSelectedChantierId] = useState<string | null>(null)
-
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterCategorie, setFilterCategorie] = useState<CategorieFormulaire | ''>('')
-  const [filterChantierId] = useState<number | null>(null)
-
-  // Modals
-  const [templateModalOpen, setTemplateModalOpen] = useState(false)
-  const [formulaireModalOpen, setFormulaireModalOpen] = useState(false)
-  const [newFormulaireModalOpen, setNewFormulaireModalOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateFormulaire | null>(null)
-  const [selectedFormulaire, setSelectedFormulaire] = useState<FormulaireRempli | null>(null)
-  const [formulaireReadOnly, setFormulaireReadOnly] = useState(false)
-
+  // Compose sub-hooks
+  const data = useFormulairesData()
+  const ui = useFormulairesUI()
+  const filters = useFormulairesFilters()
 
   // Permissions
   const canManageTemplates = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
 
-  // Load data
+  // Initial load with filters
+  useEffect(() => {
+    data.loadData({
+      activeTab: ui.activeTab,
+      searchQuery: filters.searchQuery,
+      filterCategorie: filters.filterCategorie,
+    })
+  }, [data, ui.activeTab, filters.searchQuery, filters.filterCategorie])
+
+  // Reload with current filters
   const loadData = useCallback(async () => {
-    setLoading(true)
-    setError('')
+    await data.loadData({
+      activeTab: ui.activeTab,
+      searchQuery: filters.searchQuery,
+      filterCategorie: filters.filterCategorie,
+    })
+  }, [data, ui.activeTab, filters.searchQuery, filters.filterCategorie])
 
-    try {
-      // Load templates
-      const templatesResponse = await formulairesService.listTemplates({
-        query: activeTab === 'templates' ? searchQuery : undefined,
-        categorie: filterCategorie || undefined,
-        active_only: activeTab === 'formulaires',
-      })
-      const loadedTemplates = templatesResponse?.templates || []
-      setTemplates(loadedTemplates.length > 0 ? loadedTemplates : MOCK_TEMPLATES)
+  // ===== TEMPLATE ACTIONS =====
 
-      // Load formulaires
-      const formulairesResponse = await formulairesService.listFormulaires({
-        chantier_id: filterChantierId || undefined,
-        template_id: undefined,
-      })
-      const loadedFormulaires = formulairesResponse?.formulaires || []
-      setFormulaires(loadedFormulaires.length > 0 ? loadedFormulaires : MOCK_FORMULAIRES)
-
-      // Load chantiers
-      const chantiersResponse = await chantiersService.list({ size: 100 })
-      const loadedChantiers = chantiersResponse?.items || []
-      setChantiers(loadedChantiers.length > 0 ? loadedChantiers : MOCK_CHANTIERS)
-    } catch (err) {
-      logger.error('Error loading data, using mocks', err, { context: 'useFormulaires' })
-      setTemplates(MOCK_TEMPLATES)
-      setFormulaires(MOCK_FORMULAIRES)
-      setChantiers(MOCK_CHANTIERS)
-    } finally {
-      setLoading(false)
-    }
-  }, [activeTab, searchQuery, filterCategorie, filterChantierId])
-
-  // Initial load
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  // URL management
-  useEffect(() => {
-    const tab = searchParams.get('tab')
-    if (tab === 'templates' || tab === 'formulaires') {
-      setActiveTab(tab)
-    }
-  }, [searchParams])
-
-  const handleTabChange = useCallback((tab: TabType) => {
-    setActiveTab(tab)
-    setSearchParams({ tab })
-  }, [setSearchParams])
-
-  // ===== TEMPLATES =====
-
-  const openNewTemplateModal = useCallback(() => {
-    setSelectedTemplate(null)
-    setTemplateModalOpen(true)
-  }, [])
-
-  const closeTemplateModal = useCallback(() => {
-    setTemplateModalOpen(false)
-    setSelectedTemplate(null)
-  }, [])
-
-  const handleSaveTemplate = useCallback(async (data: TemplateFormulaireCreate | TemplateFormulaireUpdate) => {
-    if (selectedTemplate) {
-      await formulairesService.updateTemplate(selectedTemplate.id, data)
+  const handleSaveTemplate = useCallback(async (
+    templateData: TemplateFormulaireCreate | TemplateFormulaireUpdate
+  ) => {
+    if (ui.selectedTemplate) {
+      await data.updateTemplate(ui.selectedTemplate.id, templateData)
     } else {
-      await formulairesService.createTemplate(data as TemplateFormulaireCreate)
+      await data.createTemplate(templateData as TemplateFormulaireCreate)
     }
-    await loadData()
-    setTemplateModalOpen(false)
-    setSelectedTemplate(null)
-  }, [selectedTemplate, loadData])
+    ui.closeTemplateModal()
+  }, [ui, data])
 
   const handleEditTemplate = useCallback((template: TemplateFormulaire) => {
-    setSelectedTemplate(template)
-    setTemplateModalOpen(true)
-  }, [])
+    ui.openEditTemplateModal(template)
+  }, [ui])
 
   const handleDeleteTemplate = useCallback(async (template: TemplateFormulaire) => {
     if (!confirm(`Supprimer le template "${template.nom}" ?`)) return
 
     try {
-      await formulairesService.deleteTemplate(template.id)
-      await loadData()
+      await data.deleteTemplate(template.id)
     } catch (err) {
-      setError('Erreur lors de la suppression')
+      data.setError('Erreur lors de la suppression')
     }
-  }, [loadData])
+  }, [data])
 
   const handleDuplicateTemplate = useCallback(async (template: TemplateFormulaire) => {
     try {
-      await formulairesService.createTemplate({
-        nom: `${template.nom} (copie)`,
-        categorie: template.categorie,
-        description: template.description,
-        champs: template.champs,
-      })
-      await loadData()
+      await data.duplicateTemplate(template)
     } catch (err) {
-      setError('Erreur lors de la duplication')
+      data.setError('Erreur lors de la duplication')
     }
-  }, [loadData])
+  }, [data])
 
   const handleToggleTemplateActive = useCallback(async (template: TemplateFormulaire) => {
     try {
-      await formulairesService.updateTemplate(template.id, {
-        is_active: !template.is_active,
-      })
-      await loadData()
+      await data.toggleTemplateActive(template.id, template.is_active)
     } catch (err) {
-      setError('Erreur lors de la mise a jour')
+      data.setError('Erreur lors de la mise à jour')
     }
-  }, [loadData])
+  }, [data])
 
   const handlePreviewTemplate = useCallback((template: TemplateFormulaire) => {
-    setSelectedTemplate(template)
-    setSelectedFormulaire(null)
-    setFormulaireReadOnly(true)
-    setFormulaireModalOpen(true)
-  }, [])
+    ui.openPreviewTemplateModal(template)
+  }, [ui])
 
-  // ===== FORMULAIRES =====
+  // ===== FORMULAIRE ACTIONS =====
 
-  const openNewFormulaireModal = useCallback(() => {
-    setNewFormulaireModalOpen(true)
-  }, [])
-
-  const closeNewFormulaireModal = useCallback(() => {
-    setNewFormulaireModalOpen(false)
-  }, [])
-
-  const closeFormulaireModal = useCallback(() => {
-    setFormulaireModalOpen(false)
-    setSelectedFormulaire(null)
-    setSelectedTemplate(null)
-  }, [])
-
-  // Create formulaire (without geolocation)
   const handleCreateFormulaire = useCallback(async (templateId: number) => {
-    if (!selectedChantierId) {
-      setError('Veuillez selectionner un chantier')
+    if (!ui.selectedChantierId) {
+      data.setError('Veuillez sélectionner un chantier')
       return
     }
 
     try {
-      const formulaire = await formulairesService.createFormulaire({
-        template_id: templateId,
-        chantier_id: parseInt(selectedChantierId!, 10),
-      })
+      const formulaire = await data.createFormulaire(
+        templateId,
+        parseInt(ui.selectedChantierId, 10)
+      )
+      const template = data.templates.find((t) => t.id === templateId)
 
-      const template = templates.find((t) => t.id === templateId)
-      setSelectedTemplate(template || null)
-      setSelectedFormulaire(formulaire)
-      setFormulaireReadOnly(false)
-      setFormulaireModalOpen(true)
-      setNewFormulaireModalOpen(false)
-      await loadData()
+      if (template) {
+        ui.openCreatedFormulaireModal(formulaire, template)
+      }
     } catch (err) {
-      setError('Erreur lors de la creation du formulaire')
+      data.setError('Erreur lors de la création du formulaire')
     }
-  }, [selectedChantierId, templates, loadData])
+  }, [ui, data])
 
-  // View formulaire
   const handleViewFormulaire = useCallback(async (formulaire: FormulaireRempli) => {
     try {
-      const fullFormulaire = await formulairesService.getFormulaire(formulaire.id)
-      const template = await formulairesService.getTemplate(formulaire.template_id)
-      setSelectedTemplate(template)
-      setSelectedFormulaire(fullFormulaire)
-      setFormulaireReadOnly(true)
-      setFormulaireModalOpen(true)
+      const fullFormulaire = await data.getFormulaire(formulaire.id)
+      const template = await data.getTemplate(formulaire.template_id)
+      ui.openViewFormulaireModal(fullFormulaire, template)
     } catch (err) {
-      setError('Erreur lors du chargement du formulaire')
+      data.setError('Erreur lors du chargement du formulaire')
     }
-  }, [])
+  }, [data, ui])
 
-  // Edit formulaire
   const handleEditFormulaire = useCallback(async (formulaire: FormulaireRempli) => {
     try {
-      const fullFormulaire = await formulairesService.getFormulaire(formulaire.id)
-      const template = await formulairesService.getTemplate(formulaire.template_id)
-      setSelectedTemplate(template)
-      setSelectedFormulaire(fullFormulaire)
-      setFormulaireReadOnly(false)
-      setFormulaireModalOpen(true)
+      const fullFormulaire = await data.getFormulaire(formulaire.id)
+      const template = await data.getTemplate(formulaire.template_id)
+      ui.openEditFormulaireModal(fullFormulaire, template)
     } catch (err) {
-      setError('Erreur lors du chargement du formulaire')
+      data.setError('Erreur lors du chargement du formulaire')
     }
-  }, [])
+  }, [data, ui])
 
-  // Save formulaire
-  const handleSaveFormulaire = useCallback(async (data: FormulaireUpdate) => {
-    if (!selectedFormulaire) return
+  const handleSaveFormulaire = useCallback(async (formulaireData: FormulaireUpdate) => {
+    if (!ui.selectedFormulaire) return
 
-    const updated = await formulairesService.updateFormulaire(selectedFormulaire.id, data)
-    setSelectedFormulaire(updated)
-    await loadData()
-  }, [selectedFormulaire, loadData])
+    const updated = await data.updateFormulaire(ui.selectedFormulaire.id, formulaireData)
+    ui.setSelectedFormulaire(updated)
+  }, [ui, data])
 
-  // Submit formulaire
-  const handleSubmitFormulaire = useCallback(async (signatureUrl?: string, signatureNom?: string) => {
-    if (!selectedFormulaire) return
+  const handleSubmitFormulaire = useCallback(async (
+    signatureUrl?: string,
+    signatureNom?: string
+  ) => {
+    if (!ui.selectedFormulaire) return
 
-    await formulairesService.submitFormulaire(
-      selectedFormulaire.id,
-      signatureUrl,
-      signatureNom
-    )
-    await loadData()
-  }, [selectedFormulaire, loadData])
+    await data.submitFormulaire(ui.selectedFormulaire.id, signatureUrl, signatureNom)
+  }, [ui, data])
 
-  // Validate formulaire
   const handleValidateFormulaire = useCallback(async (formulaire: FormulaireRempli) => {
     if (!confirm('Valider ce formulaire ?')) return
 
     try {
-      await formulairesService.validateFormulaire(formulaire.id)
-      await loadData()
+      await data.validateFormulaire(formulaire.id)
     } catch (err) {
-      setError('Erreur lors de la validation')
+      data.setError('Erreur lors de la validation')
     }
-  }, [loadData])
+  }, [data])
 
-  // Reject formulaire
   const handleRejectFormulaire = useCallback(async (formulaire: FormulaireRempli) => {
     if (!confirm('Refuser ce formulaire et le renvoyer en brouillon ?')) return
 
     try {
-      await formulairesService.rejectFormulaire(formulaire.id)
-      await loadData()
+      await data.rejectFormulaire(formulaire.id)
     } catch (err) {
-      setError('Erreur lors du refus du formulaire')
+      data.setError('Erreur lors du refus du formulaire')
     }
-  }, [loadData])
+  }, [data])
 
-  // Export PDF
   const handleExportPDF = useCallback(async (formulaire: FormulaireRempli) => {
     try {
-      await formulairesService.downloadPDF(formulaire.id)
+      await data.exportPDF(formulaire.id)
     } catch (err) {
-      setError("Erreur lors de l'export PDF")
+      data.setError("Erreur lors de l'export PDF")
     }
-  }, [])
+  }, [data])
 
-  // Filter templates
-  const filteredTemplates = templates.filter((t) => {
-    if (searchQuery && !t.nom.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false
-    }
-    return true
-  })
+  // Filtered templates (using filter hook)
+  const filteredTemplates = filters.filterTemplates(data.templates)
 
   return {
     // State
-    activeTab,
-    loading,
-    error,
+    activeTab: ui.activeTab,
+    loading: data.loading,
+    error: data.error,
 
     // Data
-    templates,
-    formulaires,
-    chantiers,
+    templates: data.templates,
+    formulaires: data.formulaires,
+    chantiers: data.chantiers,
     filteredTemplates,
 
     // Filters
-    searchQuery,
-    filterCategorie,
-    setSearchQuery,
-    setFilterCategorie,
+    searchQuery: filters.searchQuery,
+    filterCategorie: filters.filterCategorie,
+    setSearchQuery: filters.setSearchQuery,
+    setFilterCategorie: filters.setFilterCategorie,
 
     // Selection
-    selectedChantierId,
-    setSelectedChantierId,
-    selectedTemplate,
-    selectedFormulaire,
+    selectedChantierId: ui.selectedChantierId,
+    setSelectedChantierId: ui.setSelectedChantierId,
+    selectedTemplate: ui.selectedTemplate,
+    selectedFormulaire: ui.selectedFormulaire,
 
     // Permissions
     canManageTemplates,
 
     // Modal states
-    templateModalOpen,
-    formulaireModalOpen,
-    newFormulaireModalOpen,
-    formulaireReadOnly,
+    templateModalOpen: ui.templateModalOpen,
+    formulaireModalOpen: ui.formulaireModalOpen,
+    newFormulaireModalOpen: ui.newFormulaireModalOpen,
+    formulaireReadOnly: ui.formulaireReadOnly,
 
     // Tab actions
-    handleTabChange,
+    handleTabChange: ui.handleTabChange,
 
     // Template actions
-    openNewTemplateModal,
-    closeTemplateModal,
+    openNewTemplateModal: ui.openNewTemplateModal,
+    closeTemplateModal: ui.closeTemplateModal,
     handleSaveTemplate,
     handleEditTemplate,
     handleDeleteTemplate,
@@ -428,9 +302,9 @@ export function useFormulaires(): UseFormulairesReturn {
     handlePreviewTemplate,
 
     // Formulaire actions
-    openNewFormulaireModal,
-    closeNewFormulaireModal,
-    closeFormulaireModal,
+    openNewFormulaireModal: ui.openNewFormulaireModal,
+    closeNewFormulaireModal: ui.closeNewFormulaireModal,
+    closeFormulaireModal: ui.closeFormulaireModal,
     handleCreateFormulaire,
     handleViewFormulaire,
     handleEditFormulaire,
