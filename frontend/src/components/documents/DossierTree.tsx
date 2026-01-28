@@ -5,6 +5,23 @@
 import React, { useState } from 'react';
 import type { DossierTree as DossierTreeType, NiveauAcces } from '../../types/documents';
 import { NIVEAU_ACCES_LABELS } from '../../types/documents';
+import {
+  Folder,
+  FolderOpen,
+  Pencil,
+  Camera,
+  FileText,
+  Package,
+  ShieldCheck,
+  ClipboardCheck,
+  Lock,
+  LockKeyhole,
+  HardHat,
+  Users,
+  Plus,
+  Edit,
+  Trash2
+} from 'lucide-react';
 
 interface DossierTreeProps {
   dossiers: DossierTreeType[];
@@ -51,21 +68,22 @@ const DossierNode: React.FC<DossierNodeProps> = ({
     return colors[niveau] || 'bg-gray-100 text-gray-800';
   };
 
-  const getFolderIcon = (): string => {
-    if (dossier.type_dossier === '01_plans') return '📐';
-    if (dossier.type_dossier === '02_administratif') return '📋';
-    if (dossier.type_dossier === '03_securite') return '🦺';
-    if (dossier.type_dossier === '04_qualite') return '✅';
-    if (dossier.type_dossier === '05_photos') return '📷';
-    if (dossier.type_dossier === '06_comptes_rendus') return '📝';
-    if (dossier.type_dossier === '07_livraisons') return '📦';
-    return '📁';
+  const getFolderIcon = () => {
+    const iconClass = "w-4 h-4";
+    if (dossier.type_dossier === '01_plans') return <Pencil className={iconClass} />;
+    if (dossier.type_dossier === '02_administratif') return <ClipboardCheck className={iconClass} />;
+    if (dossier.type_dossier === '03_securite') return <ShieldCheck className={iconClass} />;
+    if (dossier.type_dossier === '04_qualite') return <ClipboardCheck className={iconClass} />;
+    if (dossier.type_dossier === '05_photos') return <Camera className={iconClass} />;
+    if (dossier.type_dossier === '06_comptes_rendus') return <FileText className={iconClass} />;
+    if (dossier.type_dossier === '07_livraisons') return <Package className={iconClass} />;
+    return isSelected ? <FolderOpen className={iconClass} /> : <Folder className={iconClass} />;
   };
 
   return (
     <div className="select-none">
       <div
-        className={`flex items-center py-2 px-2 rounded cursor-pointer hover:bg-gray-100 ${
+        className={`group flex items-center py-2 px-2 rounded cursor-pointer hover:bg-gray-100 transition-colors ${
           isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
         }`}
         style={{ paddingLeft: `${level * 20 + 8}px` }}
@@ -85,25 +103,27 @@ const DossierNode: React.FC<DossierNodeProps> = ({
         </button>
 
         {/* Icon */}
-        <span className="mr-2 text-lg">{getFolderIcon()}</span>
+        <span className="mr-2 text-gray-600">{getFolderIcon()}</span>
 
         {/* Nom */}
         <span className="flex-1 font-medium truncate">{dossier.nom}</span>
 
         {/* Badge niveau d'accès */}
         <span
-          className={`text-xs px-2 py-0.5 rounded-full ${getNiveauAccesColor(
+          className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${getNiveauAccesColor(
             dossier.niveau_acces
           )}`}
           title={NIVEAU_ACCES_LABELS[dossier.niveau_acces]}
         >
-          {dossier.niveau_acces === 'admin'
-            ? '🔒'
-            : dossier.niveau_acces === 'conducteur'
-            ? '🔐'
-            : dossier.niveau_acces === 'chef_chantier'
-            ? '👷'
-            : '👥'}
+          {dossier.niveau_acces === 'admin' ? (
+            <><Lock className="w-3 h-3" /><span className="hidden sm:inline">Admin</span></>
+          ) : dossier.niveau_acces === 'conducteur' ? (
+            <><LockKeyhole className="w-3 h-3" /><span className="hidden sm:inline">Cond.</span></>
+          ) : dossier.niveau_acces === 'chef_chantier' ? (
+            <><HardHat className="w-3 h-3" /><span className="hidden sm:inline">Chef</span></>
+          ) : (
+            <><Users className="w-3 h-3" /><span className="hidden sm:inline">Tous</span></>
+          )}
         </span>
 
         {/* Compteur documents */}
@@ -118,38 +138,38 @@ const DossierNode: React.FC<DossierNodeProps> = ({
           <div className="ml-2 flex gap-1 opacity-0 group-hover:opacity-100">
             {onCreateDossier && (
               <button
-                className="p-1 text-gray-400 hover:text-blue-500"
+                className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onCreateDossier(dossier.id);
                 }}
                 title="Créer un sous-dossier"
               >
-                +
+                <Plus className="w-4 h-4" />
               </button>
             )}
             {onEditDossier && (
               <button
-                className="p-1 text-gray-400 hover:text-blue-500"
+                className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEditDossier(dossier);
                 }}
                 title="Modifier"
               >
-                ✏️
+                <Edit className="w-4 h-4" />
               </button>
             )}
             {onDeleteDossier && dossier.type_dossier === 'custom' && (
               <button
-                className="p-1 text-gray-400 hover:text-red-500"
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteDossier(dossier);
                 }}
                 title="Supprimer"
               >
-                🗑️
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>
