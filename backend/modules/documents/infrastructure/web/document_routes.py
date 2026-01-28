@@ -269,9 +269,12 @@ def init_arborescence(
     chantier_id: int,
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
     """Initialise l'arborescence type d'un chantier (GED-02)."""
-    return controller.init_arborescence(chantier_id)
+    result = controller.init_arborescence(chantier_id)
+    db.commit()
+    return result
 
 
 # ============ DOCUMENTS ============

@@ -1,25 +1,10 @@
 """Use Case ExportFormulairePDF - Export PDF d'un formulaire (FOR-09)."""
 
-import base64
-import io
-import urllib.request
 from dataclasses import dataclass, field
-from typing import Optional, List, Callable
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle,
-    HRFlowable,
-    Image,
-)
+from shared.infrastructure.pdf import PdfGeneratorService
 
 from ...domain.repositories import (
     FormulaireRempliRepository,
@@ -85,9 +70,11 @@ class ExportFormulairePDFUseCase:
         self,
         formulaire_repo: FormulaireRempliRepository,
         template_repo: TemplateFormulaireRepository,
+        pdf_service: Optional[PdfGeneratorService] = None,
     ):
         self._formulaire_repo = formulaire_repo
         self._template_repo = template_repo
+        self.pdf_service = pdf_service or PdfGeneratorService()
 
     def execute(self, formulaire_id: int) -> PDFContent:
         """Prepare le contenu structure pour le PDF."""
@@ -173,7 +160,7 @@ class ExportFormulairePDFUseCase:
             content.user_nom = names.get("user_nom")
             content.valideur_nom = names.get("valideur_nom")
 
-        pdf_bytes = self._generate_pdf_bytes(content)
+        pdf_bytes = self._generate_pdf_bytes_with_service(content)
         pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
 
         filename = f"formulaire_{formulaire_id}_{content.template_nom.lower().replace(' ', '_')}.pdf"
@@ -185,215 +172,110 @@ class ExportFormulairePDFUseCase:
             content_base64=pdf_base64,
         )
 
-    def _download_image(self, url: str) -> io.BytesIO | None:
-        """Telecharge une image depuis une URL. Retourne None si echec."""
-        try:
-            import ssl
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-            req = urllib.request.Request(url, headers={"User-Agent": "Hub-Chantier/1.0"})
-            with urllib.request.urlopen(req, timeout=8, context=ctx) as response:
-                data = response.read()
-                return io.BytesIO(data)
-        except Exception:
-            return None
+    def _generate_pdf_bytes_with_service(self, content: PDFContent) -> bytes:
+        """Génère les bytes du PDF en utilisant le service PDF centralisé.
+
+        Cette fonction remplace l'ancienne _generate_pdf_bytes (196 lignes)
+        par un appel au PdfGeneratorService qui utilise des templates Jinja2.
+        """
+        # Préparer les champs pour le template
+        champs_formatted = self._format_champs_for_template(content.champs, content.photos)
+
+        # Appeler le service PDF
+        return self.pdf_service.generate_formulaire_pdf(
+            titre=content.titre,
+            chantier_nom=content.chantier_nom,
+            categorie=content.categorie,
+            statut=content.statut,
+            version=content.version,
+            user_nom=content.user_nom,
+            created_at=content.created_at,
+            soumis_at=content.soumis_at,
+            valide_at=content.valide_at,
+            valideur_nom=content.valideur_nom,
+            champs=champs_formatted,
+            commentaires=content.commentaires if hasattr(content, 'commentaires') else None,
+        )
+
+    def _format_champs_for_template(
+        self,
+        champs: List[Dict[str, Any]],
+        photos: Optional[List[Dict[str, Any]]] = None
+    ) -> List[Dict[str, Any]]:
+        """Formate les champs du formulaire pour le template Jinja2.
+
+        Args:
+            champs: Liste des champs du formulaire.
+            photos: Liste des photos (optionnel).
+
+        Returns:
+            Liste des champs formatés avec leurs labels, types et valeurs.
+        """
+        formatted_champs = []
+
+        # Mapping des types de champs
+        type_labels = {
+            "texte": "Texte",
+            "nombre": "Nombre",
+            "date": "Date",
+            "heure": "Heure",
+            "textarea": "Texte long",
+            "checkbox": "Cases à cocher",
+            "radio": "Choix unique",
+            "select": "Liste déroulante",
+            "photo": "Photo",
+            "signature": "Signature",
+        }
+
+        for champ in champs:
+            label = champ.get("label", champ.get("nom", ""))
+            type_champ = champ.get("type", "texte")
+            valeur = champ.get("valeur")
+
+            formatted_champ = {
+                "label": label,
+                "type": type_champ,
+                "type_label": type_labels.get(type_champ, type_champ.capitalize()),
+                "valeur": str(valeur) if valeur is not None and valeur != "" else None,
+                "options": champ.get("options", []),
+                "valeurs_selectionnees": champ.get("valeurs_selectionnees", []),
+            }
+
+            # Pour les photos, ajouter les URLs
+            if type_champ == "photo" and photos:
+                champ_photos = [
+                    {
+                        "url": photo.get("url", ""),
+                        "nom": photo.get("nom_fichier", "photo"),
+                    }
+                    for photo in photos
+                    if photo.get("champ_nom") == champ.get("nom")
+                ]
+                formatted_champ["photos"] = champ_photos
+
+            # Pour les signatures
+            if type_champ == "signature" and champ.get("signature"):
+                sig = champ["signature"]
+                formatted_champ["signature_url"] = sig.get("url", "")
+                formatted_champ["signature_signataire"] = sig.get("nom", "")
+                formatted_champ["signature_date"] = (
+                    sig["timestamp"].strftime("%d/%m/%Y %H:%M")
+                    if sig.get("timestamp") and isinstance(sig["timestamp"], datetime)
+                    else ""
+                )
+
+            formatted_champs.append(formatted_champ)
+
+        return formatted_champs
 
     def _generate_pdf_bytes(self, content: PDFContent) -> bytes:
-        """Genere les bytes du PDF a partir du contenu structure."""
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=A4,
-            topMargin=20 * mm,
-            bottomMargin=20 * mm,
-            leftMargin=15 * mm,
-            rightMargin=15 * mm,
-        )
+        """Genere les bytes du PDF a partir du contenu structure.
 
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            "CustomTitle",
-            parent=styles["Title"],
-            fontSize=18,
-            spaceAfter=6 * mm,
-            textColor=colors.HexColor("#1a1a2e"),
-        )
-        heading_style = ParagraphStyle(
-            "CustomHeading",
-            parent=styles["Heading2"],
-            fontSize=13,
-            spaceBefore=6 * mm,
-            spaceAfter=3 * mm,
-            textColor=colors.HexColor("#16213e"),
-        )
-        normal_style = styles["Normal"]
-        small_style = ParagraphStyle(
-            "Small",
-            parent=normal_style,
-            fontSize=8,
-            textColor=colors.HexColor("#888888"),
-        )
-
-        elements = []
-
-        # === TITRE ===
-        elements.append(Paragraph(content.titre, title_style))
-
-        # === CHANTIER (en gros, bien visible) ===
-        if content.chantier_nom:
-            chantier_style = ParagraphStyle(
-                "ChantierStyle",
-                parent=styles["Heading3"],
-                fontSize=14,
-                textColor=colors.HexColor("#2563eb"),
-                spaceAfter=4 * mm,
-            )
-            elements.append(Paragraph(f"Chantier : {content.chantier_nom}", chantier_style))
-
-        # === METADATA TABLE ===
-        statut_label = {
-            "brouillon": "Brouillon",
-            "soumis": "Soumis",
-            "valide": "Valide",
-            "refuse": "Refuse",
-        }.get(content.statut, content.statut)
-
-        meta_data = [
-            ["Categorie", content.categorie],
-            ["Statut", statut_label],
-            ["Version", str(content.version)],
-        ]
-
-        if content.user_nom:
-            meta_data.append(["Rempli par", content.user_nom])
-
-        meta_data.append([
-            "Cree le",
-            content.created_at.strftime("%d/%m/%Y %H:%M") if content.created_at else "-",
-        ])
-
-        if content.soumis_at:
-            meta_data.append(["Soumis le", content.soumis_at.strftime("%d/%m/%Y %H:%M")])
-
-        if content.valide_at:
-            valide_info = content.valide_at.strftime("%d/%m/%Y %H:%M")
-            if content.valideur_nom:
-                valide_info += f" par {content.valideur_nom}"
-            meta_data.append(["Valide le", valide_info])
-
-        meta_table = Table(meta_data, colWidths=[45 * mm, 125 * mm])
-        meta_table.setStyle(TableStyle([
-            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 9),
-            ("TEXTCOLOR", (0, 0), (0, -1), colors.HexColor("#555555")),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ]))
-        elements.append(meta_table)
-        elements.append(Spacer(1, 4 * mm))
-        elements.append(HRFlowable(width="100%", color=colors.HexColor("#e0e0e0")))
-
-        # === CHAMPS DU FORMULAIRE ===
-        elements.append(Paragraph("Champs du formulaire", heading_style))
-
-        for champ in content.champs:
-            label = champ.get("label", champ.get("nom", ""))
-            valeur = champ.get("valeur", "")
-            if valeur is None or valeur == "":
-                valeur = "-"
-            else:
-                valeur = str(valeur)
-
-            champ_data = [[label, valeur]]
-            champ_table = Table(champ_data, colWidths=[60 * mm, 110 * mm])
-            champ_table.setStyle(TableStyle([
-                ("FONTNAME", (0, 0), (0, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, -1), 10),
-                ("TEXTCOLOR", (0, 0), (0, 0), colors.HexColor("#333333")),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.HexColor("#eeeeee")),
-            ]))
-            elements.append(champ_table)
-
-        # === PHOTOS (images intégrées) ===
-        if content.photos:
-            elements.append(Spacer(1, 4 * mm))
-            elements.append(HRFlowable(width="100%", color=colors.HexColor("#e0e0e0")))
-            elements.append(Paragraph(f"Photos ({len(content.photos)})", heading_style))
-
-            # Max largeur pour les images dans le PDF
-            max_width = 160 * mm
-            max_height = 100 * mm
-
-            for photo in content.photos:
-                nom = photo.get("nom_fichier", "photo")
-                url = photo.get("url", "")
-
-                # Tenter de telecharger et integrer l'image
-                img_buffer = self._download_image(url) if url else None
-
-                if img_buffer:
-                    try:
-                        img = Image(img_buffer)
-                        # Redimensionner proportionnellement
-                        aspect = img.imageWidth / img.imageHeight if img.imageHeight else 1
-                        if aspect > 1:
-                            img.drawWidth = min(max_width, img.imageWidth)
-                            img.drawHeight = img.drawWidth / aspect
-                        else:
-                            img.drawHeight = min(max_height, img.imageHeight)
-                            img.drawWidth = img.drawHeight * aspect
-                        # Limiter
-                        if img.drawWidth > max_width:
-                            img.drawWidth = max_width
-                            img.drawHeight = max_width / aspect
-                        if img.drawHeight > max_height:
-                            img.drawHeight = max_height
-                            img.drawWidth = max_height * aspect
-
-                        elements.append(Spacer(1, 2 * mm))
-                        elements.append(img)
-                        elements.append(Paragraph(nom, small_style))
-                        elements.append(Spacer(1, 3 * mm))
-                    except Exception:
-                        # Fallback si l'image ne peut pas etre integree
-                        elements.append(Paragraph(f"• {nom} (image non disponible)", normal_style))
-                else:
-                    elements.append(Paragraph(f"• {nom} (image non disponible)", normal_style))
-
-        # === SIGNATURE ===
-        if content.signature:
-            elements.append(Spacer(1, 4 * mm))
-            elements.append(HRFlowable(width="100%", color=colors.HexColor("#e0e0e0")))
-            elements.append(Paragraph("Signature", heading_style))
-            nom_sig = content.signature.get("nom", "")
-            ts_sig = content.signature.get("timestamp", "")
-            if ts_sig and isinstance(ts_sig, datetime):
-                ts_sig = ts_sig.strftime("%d/%m/%Y %H:%M")
-            elements.append(Paragraph(f"Signe par: {nom_sig}", normal_style))
-            if ts_sig:
-                elements.append(Paragraph(f"Le: {ts_sig}", normal_style))
-
-        # === FOOTER ===
-        elements.append(Spacer(1, 10 * mm))
-        elements.append(HRFlowable(width="100%", color=colors.HexColor("#cccccc")))
-        footer_style = ParagraphStyle(
-            "Footer",
-            parent=normal_style,
-            fontSize=8,
-            textColor=colors.HexColor("#999999"),
-            spaceBefore=3 * mm,
-        )
-        elements.append(Paragraph(
-            f"Document genere automatiquement - Hub Chantier - {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-            footer_style,
-        ))
-
-        doc.build(elements)
-        return buffer.getvalue()
+        DEPRECATED: Cette méthode est obsolète. Utilisez _generate_pdf_bytes_with_service().
+        Conservée temporairement pour compatibilité arrière.
+        """
+        # Rediriger vers la nouvelle implémentation
+        return self._generate_pdf_bytes_with_service(content)
 
     def get_dto(self, formulaire_id: int) -> FormulaireRempliDTO:
         """Retourne le DTO du formulaire pour export."""

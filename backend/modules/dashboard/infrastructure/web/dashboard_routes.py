@@ -252,7 +252,10 @@ def get_post(
         if result.liked_by_user_ids:
             all_user_ids.extend(result.liked_by_user_ids)
         users_cache = _load_users_by_ids(all_user_ids)
-        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids, users_cache=users_cache)
+        return _post_dto_to_frontend_response(
+            result.post, result.medias, result.comments,
+            result.liked_by_user_ids, users_cache=users_cache
+        )
 
     except PostNotFoundError as e:
         raise HTTPException(

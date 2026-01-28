@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titre }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm;
+            @bottom-center {
+                content: "Page " counter(page) " / " counter(pages);
+                font-size: 8pt;
+                color: #888;
+            }
+        }
+
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 10pt;
+            color: #1a1a2e;
+            line-height: 1.4;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 8mm;
+        }
+
+        h1 {
+            font-size: 18pt;
+            color: #1a1a2e;
+            margin: 0 0 4mm 0;
+            font-weight: bold;
+        }
+
+        .chantier {
+            font-size: 14pt;
+            color: #2563eb;
+            font-weight: 600;
+            margin: 0 0 6mm 0;
+        }
+
+        .metadata {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6mm;
+        }
+
+        .metadata th {
+            text-align: left;
+            font-weight: bold;
+            color: #555;
+            padding: 2mm 0;
+            width: 40%;
+        }
+
+        .metadata td {
+            padding: 2mm 0;
+            color: #1a1a2e;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 4mm 0 6mm 0;
+        }
+
+        h2 {
+            font-size: 13pt;
+            color: #16213e;
+            margin: 6mm 0 3mm 0;
+            font-weight: 600;
+        }
+
+        .champ {
+            margin-bottom: 5mm;
+            padding: 3mm;
+            background-color: #f9f9f9;
+            border-left: 3px solid #3b82f6;
+            page-break-inside: avoid;
+        }
+
+        .champ-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 1mm;
+            display: block;
+        }
+
+        .champ-type {
+            font-size: 8pt;
+            color: #888;
+            font-style: italic;
+            margin-left: 2mm;
+        }
+
+        .champ-value {
+            color: #1a1a2e;
+            margin-top: 1mm;
+            white-space: pre-wrap;
+        }
+
+        .champ-empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .checkbox-list {
+            margin: 1mm 0 0 4mm;
+        }
+
+        .checkbox-item {
+            margin: 1mm 0;
+        }
+
+        .checkbox-checked::before {
+            content: "☑ ";
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .checkbox-unchecked::before {
+            content: "☐ ";
+            color: #999;
+        }
+
+        .radio-checked {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .radio-checked::before {
+            content: "● ";
+        }
+
+        .radio-unchecked::before {
+            content: "○ ";
+            color: #999;
+        }
+
+        .photo-container {
+            margin: 2mm 0;
+            text-align: center;
+        }
+
+        .photo {
+            max-width: 100%;
+            max-height: 120mm;
+            border: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+
+        .photo-caption {
+            font-size: 8pt;
+            color: #888;
+            margin-top: 1mm;
+        }
+
+        .signature-section {
+            margin-top: 10mm;
+            page-break-inside: avoid;
+        }
+
+        .signature-container {
+            margin: 2mm 0;
+            text-align: center;
+        }
+
+        .signature-image {
+            max-width: 60mm;
+            max-height: 30mm;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+
+        .signature-info {
+            font-size: 8pt;
+            color: #666;
+            margin-top: 1mm;
+        }
+
+        .commentaires-section {
+            margin-top: 8mm;
+            padding: 4mm;
+            background-color: #fffbeb;
+            border: 1px solid #fbbf24;
+            page-break-inside: avoid;
+        }
+
+        .commentaires-title {
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 2mm;
+        }
+
+        .commentaires-content {
+            color: #1a1a2e;
+            white-space: pre-wrap;
+        }
+
+        .footer-info {
+            margin-top: 8mm;
+            padding-top: 4mm;
+            border-top: 1px solid #e0e0e0;
+            font-size: 8pt;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ titre }}</h1>
+        {% if chantier_nom %}
+        <p class="chantier">Chantier : {{ chantier_nom }}</p>
+        {% endif %}
+    </div>
+
+    <table class="metadata">
+        <tr>
+            <th>Catégorie</th>
+            <td>{{ categorie }}</td>
+        </tr>
+        <tr>
+            <th>Statut</th>
+            <td>{{ statut_label }}</td>
+        </tr>
+        <tr>
+            <th>Version</th>
+            <td>{{ version }}</td>
+        </tr>
+        {% if user_nom %}
+        <tr>
+            <th>Rempli par</th>
+            <td>{{ user_nom }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <th>Créé le</th>
+            <td>{{ created_at }}</td>
+        </tr>
+        {% if soumis_at %}
+        <tr>
+            <th>Soumis le</th>
+            <td>{{ soumis_at }}</td>
+        </tr>
+        {% endif %}
+        {% if valide_at %}
+        <tr>
+            <th>Validé le</th>
+            <td>{{ valide_at }}{% if valideur_nom %} par {{ valideur_nom }}{% endif %}</td>
+        </tr>
+        {% endif %}
+    </table>
+
+    <hr>
+
+    <h2>Champs du formulaire</h2>
+
+    {% for champ in champs %}
+    <div class="champ">
+        <span class="champ-label">
+            {{ champ.label }}
+            <span class="champ-type">({{ champ.type_label }})</span>
+        </span>
+
+        {% if champ.type == 'texte' or champ.type == 'nombre' or champ.type == 'date' or champ.type == 'heure' %}
+            {% if champ.valeur %}
+            <div class="champ-value">{{ champ.valeur }}</div>
+            {% else %}
+            <div class="champ-value champ-empty">Non renseigné</div>
+            {% endif %}
+
+        {% elif champ.type == 'textarea' %}
+            {% if champ.valeur %}
+            <div class="champ-value">{{ champ.valeur }}</div>
+            {% else %}
+            <div class="champ-value champ-empty">Non renseigné</div>
+            {% endif %}
+
+        {% elif champ.type == 'checkbox' %}
+            <div class="checkbox-list">
+            {% if champ.options %}
+                {% for option in champ.options %}
+                <div class="checkbox-item {% if option in champ.valeurs_selectionnees %}checkbox-checked{% else %}checkbox-unchecked{% endif %}">
+                    {{ option }}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="champ-value champ-empty">Aucune option disponible</div>
+            {% endif %}
+            </div>
+
+        {% elif champ.type == 'radio' or champ.type == 'select' %}
+            {% if champ.valeur %}
+            <div class="champ-value radio-checked">{{ champ.valeur }}</div>
+            {% if champ.options %}
+                {% for option in champ.options %}
+                    {% if option != champ.valeur %}
+                    <div class="champ-value radio-unchecked">{{ option }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% else %}
+            <div class="champ-value champ-empty">Non sélectionné</div>
+            {% if champ.options %}
+                {% for option in champ.options %}
+                <div class="champ-value radio-unchecked">{{ option }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endif %}
+
+        {% elif champ.type == 'photo' %}
+            {% if champ.photos %}
+                {% for photo in champ.photos %}
+                <div class="photo-container">
+                    <img src="{{ photo.url }}" alt="{{ photo.nom }}" class="photo">
+                    <div class="photo-caption">{{ photo.nom }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="champ-value champ-empty">Aucune photo</div>
+            {% endif %}
+
+        {% elif champ.type == 'signature' %}
+            {% if champ.signature_url %}
+            <div class="signature-container">
+                <img src="{{ champ.signature_url }}" alt="Signature" class="signature-image">
+                {% if champ.signature_signataire %}
+                <div class="signature-info">Signé par : {{ champ.signature_signataire }}</div>
+                {% endif %}
+                {% if champ.signature_date %}
+                <div class="signature-info">Date : {{ champ.signature_date }}</div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="champ-value champ-empty">Non signé</div>
+            {% endif %}
+
+        {% else %}
+            <div class="champ-value champ-empty">Type de champ non supporté</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if commentaires %}
+    <div class="commentaires-section">
+        <div class="commentaires-title">📝 Commentaires généraux</div>
+        <div class="commentaires-content">{{ commentaires }}</div>
+    </div>
+    {% endif %}
+
+    <div class="footer-info">
+        Document généré le {{ generation_date }} par Hub Chantier
+    </div>
+</body>
+</html>
