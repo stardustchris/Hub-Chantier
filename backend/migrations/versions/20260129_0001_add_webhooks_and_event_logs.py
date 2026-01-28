@@ -33,20 +33,31 @@ def upgrade() -> None:
 
     conn = op.get_bind()
     inspector = inspect(conn)
+    dialect_name = conn.dialect.name
+
+    # Types compatibles SQLite/PostgreSQL
+    if dialect_name == 'postgresql':
+        id_type = postgresql.UUID(as_uuid=True)
+        events_type = postgresql.ARRAY(sa.String())
+        json_type = postgresql.JSONB()
+    else:  # SQLite
+        id_type = sa.String(36)  # UUID as string
+        events_type = sa.Text()  # JSON array as text
+        json_type = sa.Text()  # JSON as text
 
     # Table 1 : webhooks
     if 'webhooks' not in inspector.get_table_names():
         op.create_table(
             'webhooks',
-            sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+            sa.Column('id', id_type, primary_key=True, nullable=False),
             sa.Column('user_id', sa.Integer(), nullable=False,
                      comment='Utilisateur propriétaire du webhook'),
 
             # Configuration
             sa.Column('url', sa.String(500), nullable=False,
                      comment='URL destination du webhook'),
-            sa.Column('events', postgresql.ARRAY(sa.String()), nullable=False,
-                     comment='Patterns d\'événements à écouter (ex: chantier.*, heures.validated)'),
+            sa.Column('events', events_type, nullable=False,
+                     comment='Patterns d\'événements à écouter (ex: chantier.*, heures.validated) - JSON pour SQLite'),
             sa.Column('secret', sa.String(64), nullable=False,
                      comment='Secret pour signatures HMAC-SHA256'),
             sa.Column('description', sa.Text(), nullable=True,
@@ -97,14 +108,14 @@ def upgrade() -> None:
     if 'webhook_deliveries' not in inspector.get_table_names():
         op.create_table(
             'webhook_deliveries',
-            sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
-            sa.Column('webhook_id', postgresql.UUID(as_uuid=True), nullable=False,
+            sa.Column('id', id_type, primary_key=True, nullable=False),
+            sa.Column('webhook_id', id_type, nullable=False,
                      comment='Webhook concerné'),
 
             # Événement
             sa.Column('event_type', sa.String(100), nullable=False,
                      comment='Type d\'événement (ex: chantier.created)'),
-            sa.Column('payload', postgresql.JSONB(), nullable=False,
+            sa.Column('payload', json_type, nullable=False,
                      comment='Payload JSON de l\'événement'),
 
             # Résultat delivery
@@ -155,14 +166,14 @@ def upgrade() -> None:
     if 'event_logs' not in inspector.get_table_names():
         op.create_table(
             'event_logs',
-            sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+            sa.Column('id', id_type, primary_key=True, nullable=False),
             sa.Column('event_type', sa.String(100), nullable=False,
                      comment='Type d\'événement (ex: chantier.created)'),
             sa.Column('aggregate_id', sa.String(100), nullable=True,
                      comment='ID de la ressource concernée (chantier_id, user_id, etc.)'),
-            sa.Column('payload', postgresql.JSONB(), nullable=False,
+            sa.Column('payload', json_type, nullable=False,
                      comment='Données complètes de l\'événement'),
-            sa.Column('metadata', postgresql.JSONB(), nullable=True,
+            sa.Column('metadata', json_type, nullable=True,
                      comment='Métadonnées (user_id, ip_address, user_agent)'),
             sa.Column('occurred_at', sa.DateTime(), nullable=False,
                      server_default=sa.func.now(),
