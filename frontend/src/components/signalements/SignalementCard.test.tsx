@@ -15,7 +15,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementCard from './SignalementCard'
 import { createMockSignalement } from '../../fixtures'
-import type { Signalement } from '../../types/signalements'
 
 // Mock services
 vi.mock('../../services/signalements', () => ({

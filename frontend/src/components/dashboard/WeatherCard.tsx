@@ -11,7 +11,7 @@ import { useWeather, type WeatherData } from '../../hooks/useWeather'
 /**
  * Ouvre l'application météo native ou une alternative web
  */
-function openWeatherApp(location: string, postalCode?: string, coordinates?: { latitude: number; longitude: number }): void {
+function openWeatherApp(location: string, postalCode?: string, _coordinates?: { latitude: number; longitude: number }): void {
   const userAgent = navigator.userAgent.toLowerCase()
   const isIOS = /iphone|ipad|ipod/.test(userAgent)
   const isAndroid = /android/.test(userAgent)

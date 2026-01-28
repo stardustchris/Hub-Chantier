@@ -95,9 +95,6 @@ describe('EditUserModal', () => {
         />
       )
 
-      const phoneInputs = screen.getAllByRole('textbox').filter(
-        input => (input as HTMLInputElement).type === 'tel'
-      )
       // Use getAllByRole for tel inputs - fallback to checking values
       const phoneInput = screen.getAllByRole('textbox').find(
         input => (input as HTMLInputElement).value === '0612345678'

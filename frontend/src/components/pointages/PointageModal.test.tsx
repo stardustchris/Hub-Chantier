@@ -130,8 +130,6 @@ describe('PointageModal', () => {
   const mockOnDelete = vi.fn()
   const mockOnSign = vi.fn()
   const mockOnSubmit = vi.fn()
-  const mockOnValidate = vi.fn()
-  const mockOnReject = vi.fn()
 
   const defaultProps = {
     isOpen: true,

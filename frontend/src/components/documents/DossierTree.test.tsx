@@ -35,8 +35,6 @@ const createMockDossier = (overrides: Partial<DossierTreeType> = {}): DossierTre
 describe('DossierTree', () => {
   const mockOnSelect = vi.fn()
   const mockOnCreate = vi.fn()
-  const mockOnEdit = vi.fn()
-  const mockOnDelete = vi.fn()
 
   const defaultProps = {
     dossiers: [createMockDossier()],

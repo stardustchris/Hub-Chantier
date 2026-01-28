@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
 import { planningService } from '../services/planning'

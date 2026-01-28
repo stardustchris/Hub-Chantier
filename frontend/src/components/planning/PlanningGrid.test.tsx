@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import PlanningGrid from './PlanningGrid'
 import type { Affectation, User } from '../../types'
@@ -71,7 +71,6 @@ describe('PlanningGrid', () => {
   const mockOnDuplicate = vi.fn()
   const mockOnToggleMetier = vi.fn()
   const mockOnAffectationMove = vi.fn()
-  const mockOnAffectationResize = vi.fn()
 
   const defaultProps = {
     currentDate: new Date('2024-01-15'),
