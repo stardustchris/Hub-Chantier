@@ -157,8 +157,8 @@ export const TYPE_DOSSIER_LABELS: Record<TypeDossier, string> = {
   custom: 'Personnalisé',
 };
 
-// Taille max en bytes (10 Go)
-export const MAX_FILE_SIZE = 10 * 1024 * 1024 * 1024;
+// Taille max en bytes (50 Mo)
+export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 // Nombre max de fichiers simultanés
 export const MAX_FILES_UPLOAD = 10;
