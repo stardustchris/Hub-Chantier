@@ -9,10 +9,13 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams} from 'react-router-dom'
 import type { TemplateFormulaire, FormulaireRempli } from '../types'
 
-export type TabType = 'templates' | 'formulaires'
+// Type exporté pour réutilisation dans d'autres hooks/composants
+export type FormulairesTabType = 'templates' | 'formulaires'
+// Alias pour compatibilité
+export type TabType = FormulairesTabType
 
 export interface UseFormulairesUIReturn {
   // Tab state

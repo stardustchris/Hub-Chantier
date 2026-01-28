@@ -3,9 +3,9 @@
 ## Résumé Exécutif
 
 **Date** : 28 janvier 2026
-**Durée** : ~3h
-**Objectif** : Implémenter corrections sécurité CRITIQUE et HAUTE priorité
-**Statut** : ✅ **RÉUSSI** - Toutes les priorités CRITIQUE et HAUTE terminées
+**Durée** : ~5h
+**Objectif** : Corrections sécurité + Refactoring maintenabilité
+**Statut** : ✅ **RÉUSSI** - CRITIQUE, HAUTE et 2 MOYENNE terminées
 
 ---
 
@@ -291,7 +291,18 @@ refactor(frontend): migration localStorage → cache mémoire (weatherNotificati
 ```
 **Fichiers** : 1 changed, +13/-10
 
-**Total** : 14 fichiers modifiés, +1141 insertions, -116 suppressions
+### 5. 8323c4f - useFormulaires Refactoring
+```
+refactor(frontend): split useFormulaires en 3 hooks spécialisés
+
+- useFormulairesData.ts (228 lignes): CRUD + API
+- useFormulairesUI.ts (189 lignes): Modals + Tabs
+- useFormulairesFilters.ts (57 lignes): Filtres
+- useFormulaires.ts (322 lignes): Composition
+```
+**Fichiers** : 5 changed, +1042/-257
+
+**Total** : 19 fichiers modifiés, +2196 insertions, -383 suppressions
 
 ---
 
@@ -303,10 +314,12 @@ Tous les commits ont été poussés sur `origin/main` :
 git push origin main
 # d804f9a..181e58f  main -> main
 # 181e58f..3ad0301  main -> main
+# 3ad0301..8323c4f  main -> main
 ```
 
 **Branche** : `main`
 **Statut** : ✅ Up to date with origin/main
+**Total commits** : 5
 
 ---
 
@@ -315,7 +328,7 @@ git push origin main
 ### Tâches Restantes (~24h)
 
 **Code Refactoring** :
-1. Refactoriser useFormulaires.ts (448→200 lignes) - 4h
+1. ~~Refactoriser useFormulaires.ts (448→322 lignes)~~ - ✅ TERMINÉ
 2. Refactoriser usePlanning.ts (429→250 lignes) - 4h
 3. Splitter ChantierDetailPage.tsx (619 lignes) - 4h
 4. Splitter PlanningGrid.tsx (618 lignes) - 4h

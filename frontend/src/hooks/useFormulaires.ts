@@ -12,7 +12,7 @@
 import { useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useFormulairesData } from './useFormulairesData'
-import { useFormulairesUI } from './useFormulairesUI'
+import { useFormulairesUI, type FormulairesTabType } from './useFormulairesUI'
 import { useFormulairesFilters } from './useFormulairesFilters'
 import type {
   TemplateFormulaire,
@@ -24,9 +24,11 @@ import type {
   Chantier,
 } from '../types'
 
-type TabType = 'templates' | 'formulaires'
+// Import type unifié depuis useFormulairesUI
+type TabType = FormulairesTabType
 
-interface UseFormulairesReturn {
+// Interface publique exportée pour réutilisation
+export interface UseFormulairesReturn {
   // State
   activeTab: TabType
   loading: boolean
@@ -107,7 +109,8 @@ export function useFormulaires(): UseFormulairesReturn {
       searchQuery: filters.searchQuery,
       filterCategorie: filters.filterCategorie,
     })
-  }, [data, ui.activeTab, filters.searchQuery, filters.filterCategorie])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.loadData, ui.activeTab, filters.searchQuery, filters.filterCategorie])
 
   // Reload with current filters
   const loadData = useCallback(async () => {
@@ -116,7 +119,7 @@ export function useFormulaires(): UseFormulairesReturn {
       searchQuery: filters.searchQuery,
       filterCategorie: filters.filterCategorie,
     })
-  }, [data, ui.activeTab, filters.searchQuery, filters.filterCategorie])
+  }, [data.loadData, ui.activeTab, filters.searchQuery, filters.filterCategorie])
 
   // ===== TEMPLATE ACTIONS =====
 
