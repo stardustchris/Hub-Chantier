@@ -8,6 +8,8 @@ ARCHITECTURE CLEAN RESPECTEE:
 - EventBus actif pour la communication par evenements
 """
 
+from typing import Any, Dict
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -127,7 +129,7 @@ def get_delete_affectation_use_case(
 
 def _wrap_user_info(entity_info: EntityInfoService):
     """Wrap EntityInfoService.get_user_info pour retourner un dict."""
-    def get_user_info(user_id: int):
+    def get_user_info(user_id: int) -> Dict[str, Any]:
         info = entity_info.get_user_info(user_id)
         if info:
             return {
@@ -143,7 +145,7 @@ def _wrap_user_info(entity_info: EntityInfoService):
 
 def _wrap_chantier_info(entity_info: EntityInfoService):
     """Wrap EntityInfoService.get_chantier_info pour retourner un dict."""
-    def get_chantier_info(chantier_id: int):
+    def get_chantier_info(chantier_id: int) -> Dict[str, Any]:
         info = entity_info.get_chantier_info(chantier_id)
         if info:
             return {"nom": info.nom, "couleur": info.couleur}

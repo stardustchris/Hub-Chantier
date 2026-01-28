@@ -1,0 +1,32 @@
+{
+  "session_id": "claude/refactor-backend-functions-zhaHE",
+  "timestamp": "2026-01-28T06:00:00Z",
+  "files_modified": [
+    "backend/modules/planning/adapters/controllers/planning_controller.py",
+    "backend/modules/taches/application/use_cases/export_pdf.py"
+  ],
+  "validations": {
+    "architect_reviewer": {
+      "status": "not_run",
+      "required": true,
+      "agent_output": null
+    },
+    "test_automator": {
+      "status": "not_run",
+      "required": true,
+      "coverage": null
+    },
+    "code_reviewer": {
+      "status": "not_run",
+      "required": true,
+      "findings": []
+    },
+    "security_auditor": {
+      "status": "not_run",
+      "required": true,
+      "critical_issues": null
+    }
+  },
+  "commit_allowed": false,
+  "reason": "Agents de validation non exécutés"
+}

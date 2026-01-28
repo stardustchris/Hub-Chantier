@@ -122,7 +122,14 @@ class TestExportTachesPDFUseCase:
     def setup_method(self):
         """Setup pour chaque test."""
         self.tache_repo = Mock(spec=TacheRepository)
-        self.use_case = ExportTachesPDFUseCase(tache_repo=self.tache_repo)
+        self.pdf_service = Mock()
+        self.pdf_service.generate_taches_pdf.return_value = b"PDF content"
+        self.audit_service = Mock()
+        self.use_case = ExportTachesPDFUseCase(
+            tache_repo=self.tache_repo,
+            pdf_service=self.pdf_service,
+            audit_service=self.audit_service,
+        )
 
     def test_export_pdf_success(self):
         """Test export PDF réussi."""
@@ -148,10 +155,13 @@ class TestExportTachesPDFUseCase:
         result = self.use_case.execute(
             chantier_id=1,
             chantier_nom="Chantier Test",
+            current_user_id=1,
         )
 
         assert result is not None
         assert len(result) > 0  # Retourne des bytes
+        # Vérifier que l'audit trail a été créé
+        self.audit_service.log_pdf_exported.assert_called_once()
 
     def test_export_pdf_exclude_completed(self):
         """Test export PDF sans tâches terminées."""
@@ -181,6 +191,7 @@ class TestExportTachesPDFUseCase:
         result = self.use_case.execute(
             chantier_id=1,
             chantier_nom="Test",
+            current_user_id=1,
             include_completed=False,
         )
 
@@ -200,6 +211,7 @@ class TestExportTachesPDFUseCase:
         result = self.use_case.execute(
             chantier_id=1,
             chantier_nom="Chantier Vide",
+            current_user_id=1,
         )
 
         assert result is not None

@@ -232,3 +232,39 @@ class AuditService:
             },
             ip_address=ip_address,
         )
+
+    def log_pdf_exported(
+        self,
+        chantier_id: int,
+        user_id: int,
+        chantier_nom: str,
+        include_completed: bool,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> AuditLog:
+        """
+        Log l'export PDF d'un chantier (RGPD Article 30 - traçabilité).
+
+        Args:
+            chantier_id: ID du chantier exporté.
+            user_id: ID de l'utilisateur effectuant l'export.
+            chantier_nom: Nom du chantier.
+            include_completed: Si les tâches terminées sont incluses.
+            ip_address: Adresse IP de l'utilisateur.
+            user_agent: User-Agent du navigateur/client.
+
+        Returns:
+            L'entrée AuditLog créée.
+        """
+        return self.log_action(
+            entity_type="chantier",
+            entity_id=chantier_id,
+            action="pdf_exported",
+            user_id=user_id,
+            new_values={
+                "chantier_nom": chantier_nom,
+                "include_completed": include_completed,
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )

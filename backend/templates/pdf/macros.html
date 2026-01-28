@@ -31,7 +31,7 @@
 
 <tr class="{{ 'subtask' if level > 0 else '' }}">
     <td class="{{ status_class }}">{{ status_icon }}</td>
-    <td>{{ indent|safe }}<span class="color-indicator" style="background: {{ tache.couleur_hex }};"></span>{{ tache.titre }}</td>
+    <td>{{ indent|safe }}<span class="color-indicator" style="background: {{ tache.couleur_hex }};"></span>{{ tache.titre|e }}</td>
     <td>{{ echeance }}</td>
     <td>{{ heures }}</td>
     <td>{{ quantite }}</td>

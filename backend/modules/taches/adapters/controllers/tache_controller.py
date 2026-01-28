@@ -3,6 +3,8 @@
 from typing import Optional, List, Callable
 from dataclasses import asdict
 
+from shared.application.ports import PdfGeneratorPort
+from shared.infrastructure.audit import AuditService
 from ...domain.repositories import (
     TacheRepository,
     TemplateModeleRepository,
@@ -46,6 +48,8 @@ class TacheController:
         template_repo: Repository pour les templates.
         feuille_repo: Repository pour les feuilles de taches.
         event_publisher: Fonction pour publier les events.
+        pdf_service: Service de génération PDF (pour export).
+        audit_service: Service d'audit (pour traçabilité RGPD).
     """
 
     def __init__(
@@ -53,6 +57,8 @@ class TacheController:
         tache_repo: TacheRepository,
         template_repo: TemplateModeleRepository,
         feuille_repo: FeuilleTacheRepository,
+        pdf_service: PdfGeneratorPort,
+        audit_service: AuditService,
         event_publisher: Optional[Callable] = None,
     ):
         """
@@ -62,11 +68,15 @@ class TacheController:
             tache_repo: Repository taches.
             template_repo: Repository templates.
             feuille_repo: Repository feuilles.
+            pdf_service: Service de génération PDF.
+            audit_service: Service d'audit pour traçabilité.
             event_publisher: Fonction pour publier les events.
         """
         self.tache_repo = tache_repo
         self.template_repo = template_repo
         self.feuille_repo = feuille_repo
+        self.pdf_service = pdf_service
+        self.audit_service = audit_service
         self.event_publisher = event_publisher
 
     # ==========================================================================
@@ -368,14 +378,20 @@ class TacheController:
     def export_pdf(
         self,
         chantier_id: int,
+        current_user_id: int,
         include_completed: bool = True,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
     ) -> tuple:
         """
         Exporte les taches d'un chantier en PDF (TAC-16).
 
         Args:
             chantier_id: ID du chantier.
+            current_user_id: ID de l'utilisateur effectuant l'export.
             include_completed: Inclure les taches terminees.
+            ip_address: Adresse IP de l'utilisateur (pour audit RGPD).
+            user_agent: User-Agent du navigateur/client (pour audit RGPD).
 
         Returns:
             Tuple (pdf_bytes, chantier_nom).
@@ -387,10 +403,17 @@ class TacheController:
             # On utilise l'ID du chantier comme nom par defaut
             chantier_nom = f"chantier-{chantier_id}"
 
-        use_case = ExportTachesPDFUseCase(tache_repo=self.tache_repo)
+        use_case = ExportTachesPDFUseCase(
+            tache_repo=self.tache_repo,
+            pdf_service=self.pdf_service,
+            audit_service=self.audit_service,
+        )
         pdf_bytes = use_case.execute(
             chantier_id=chantier_id,
             chantier_nom=chantier_nom,
+            current_user_id=current_user_id,
             include_completed=include_completed,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
         return pdf_bytes, chantier_nom
