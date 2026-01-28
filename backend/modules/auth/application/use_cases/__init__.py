@@ -7,6 +7,8 @@ from .update_user import UpdateUserUseCase
 from .deactivate_user import DeactivateUserUseCase, ActivateUserUseCase
 from .list_users import ListUsersUseCase, GetUserByIdUseCase
 from .export_user_data import ExportUserDataUseCase
+from .get_consents import GetConsentsUseCase
+from .update_consents import UpdateConsentsUseCase
 
 __all__ = [
     # Use Cases
@@ -19,6 +21,8 @@ __all__ = [
     "ListUsersUseCase",
     "GetUserByIdUseCase",
     "ExportUserDataUseCase",
+    "GetConsentsUseCase",
+    "UpdateConsentsUseCase",
     # Exceptions
     "InvalidCredentialsError",
     "UserInactiveError",

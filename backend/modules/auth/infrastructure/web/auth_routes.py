@@ -126,6 +126,9 @@ class ConsentPreferences(BaseModel):
     geolocation: bool = False
     notifications: bool = False
     analytics: bool = False
+    timestamp: Optional[datetime] = None  # RGPD Art. 7: preuve du consentement
+    ip_address: Optional[str] = None  # RGPD Art. 7: contexte du consentement
+    user_agent: Optional[str] = None  # RGPD Art. 7: contexte du consentement
 
 
 class ConsentUpdateRequest(BaseModel):
@@ -335,6 +338,7 @@ def logout(response: Response):
 @router.get("/consents", response_model=ConsentPreferences)
 def get_consents(
     request: Request,
+    controller: AuthController = Depends(get_auth_controller),
 ):
     """
     Récupère les préférences de consentement RGPD.
@@ -344,21 +348,58 @@ def get_consents(
 
     Args:
         request: Requête HTTP.
+        controller: Controller d'authentification.
 
     Returns:
-        Préférences de consentement.
+        Préférences de consentement avec métadonnées RGPD.
 
     Note:
         Les consentements sont stockés en session pour les non-authentifiés.
-        Pour les utilisateurs authentifiés, ils seront stockés en base (TODO).
+        Pour les utilisateurs authentifiés, ils sont récupérés depuis la base.
     """
-    # Pour l'instant, retourner des valeurs par défaut
-    # TODO: Vérifier si utilisateur authentifié et récupérer depuis base
-    # TODO: Pour non-authentifiés, utiliser le session storage (côté client)
+    # Essayer de récupérer l'utilisateur authentifié (optionnel)
+    try:
+        # Extraire le token depuis le cookie ou header
+        token = request.cookies.get(AUTH_COOKIE_NAME)
+        if not token:
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.replace("Bearer ", "")
+
+        if token:
+            # Décoder le token pour récupérer l'user_id
+            from ...adapters.providers.jwt_token_service import JWTTokenService
+            from ...application.use_cases import GetConsentsUseCase
+            from ...infrastructure.persistence import SQLAlchemyUserRepository
+            from shared.infrastructure.database import SessionLocal
+
+            token_service = JWTTokenService()
+            payload = token_service.decode_token(token)
+            user_id = payload.get("user_id")
+
+            if user_id:
+                # Récupérer les consentements depuis la base
+                db = SessionLocal()
+                try:
+                    user_repo = SQLAlchemyUserRepository(db)
+                    use_case = GetConsentsUseCase(user_repo)
+                    consents = use_case.execute(user_id)
+
+                    return ConsentPreferences(**consents)
+                finally:
+                    db.close()
+    except Exception:
+        # Si erreur (token invalide, etc.), retourner valeurs par défaut
+        pass
+
+    # Pour utilisateurs non authentifiés : valeurs par défaut
     return ConsentPreferences(
         geolocation=False,
         notifications=False,
         analytics=False,
+        timestamp=None,
+        ip_address=None,
+        user_agent=None,
     )
 
 
@@ -366,34 +407,79 @@ def get_consents(
 def update_consents(
     consent_request: ConsentUpdateRequest,
     http_request: Request,
+    controller: AuthController = Depends(get_auth_controller),
 ):
     """
     Met à jour les préférences de consentement RGPD.
 
-    Conformité RGPD : permet de modifier les consentements même avant login.
-    Pour les utilisateurs non authentifiés, accepte les consentements mais ne les persiste pas.
+    Conformité RGPD Article 7 - Conditions applicables au consentement.
+    Enregistre le consentement avec contexte (timestamp, IP, user agent).
+
+    Pour les utilisateurs non authentifiés, accepte les consentements mais ne les persiste pas
+    (stockage côté client uniquement).
 
     Args:
         consent_request: Nouvelles préférences de consentement.
-        http_request: Requête HTTP.
+        http_request: Requête HTTP (pour extraire IP et user agent).
+        controller: Controller d'authentification.
 
     Returns:
-        Préférences de consentement mises à jour.
-
-    Note:
-        Les consentements sont stockés côté client pour les non-authentifiés.
-        Pour les utilisateurs authentifiés, ils seront stockés en base (TODO).
-        Audit trail sera ajouté pour tracer les modifications (TODO).
+        Préférences de consentement mises à jour avec métadonnées RGPD.
     """
-    # Pour l'instant, retourner les valeurs envoyées (accepter les consentements)
-    # TODO: Vérifier si utilisateur authentifié et stocker en base
-    # TODO: Ajouter un audit trail pour tracer les modifications de consentement
+    # Extraire métadonnées RGPD
+    ip_address = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("User-Agent")
 
-    # Construire la réponse en utilisant les valeurs fournies ou les valeurs par défaut
+    # Essayer de récupérer l'utilisateur authentifié (optionnel)
+    try:
+        # Extraire le token depuis le cookie ou header
+        token = http_request.cookies.get(AUTH_COOKIE_NAME)
+        if not token:
+            auth_header = http_request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.replace("Bearer ", "")
+
+        if token:
+            # Décoder le token pour récupérer l'user_id
+            from ...adapters.providers.jwt_token_service import JWTTokenService
+            from ...application.use_cases import UpdateConsentsUseCase
+            from ...infrastructure.persistence import SQLAlchemyUserRepository
+            from shared.infrastructure.database import SessionLocal
+
+            token_service = JWTTokenService()
+            payload = token_service.decode_token(token)
+            user_id = payload.get("user_id")
+
+            if user_id:
+                # Mettre à jour les consentements en base avec métadonnées RGPD
+                db = SessionLocal()
+                try:
+                    user_repo = SQLAlchemyUserRepository(db)
+                    use_case = UpdateConsentsUseCase(user_repo)
+                    consents = use_case.execute(
+                        user_id=user_id,
+                        geolocation=consent_request.geolocation,
+                        notifications=consent_request.notifications,
+                        analytics=consent_request.analytics,
+                        ip_address=ip_address,
+                        user_agent=user_agent,
+                    )
+
+                    return ConsentPreferences(**consents)
+                finally:
+                    db.close()
+    except Exception:
+        # Si erreur (token invalide, etc.), continuer en mode non-authentifié
+        pass
+
+    # Pour utilisateurs non authentifiés : retourner les valeurs avec timestamp
     return ConsentPreferences(
         geolocation=consent_request.geolocation if consent_request.geolocation is not None else False,
         notifications=consent_request.notifications if consent_request.notifications is not None else False,
         analytics=consent_request.analytics if consent_request.analytics is not None else False,
+        timestamp=datetime.now(),
+        ip_address=ip_address,
+        user_agent=user_agent,
     )
 
 

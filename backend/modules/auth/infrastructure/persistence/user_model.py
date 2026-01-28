@@ -64,5 +64,13 @@ class UserModel(Base):
     # Soft delete - RGPD Art. 17 (Droit a l'oubli) avec conservation audit
     deleted_at = Column(DateTime, nullable=True, default=None, index=True)
 
+    # Consentements RGPD Art. 7 (preuve du consentement)
+    consent_geolocation = Column(Boolean, nullable=False, default=False)
+    consent_notifications = Column(Boolean, nullable=False, default=False)
+    consent_analytics = Column(Boolean, nullable=False, default=False)
+    consent_timestamp = Column(DateTime, nullable=True, index=True)  # Date du consentement
+    consent_ip_address = Column(String(45), nullable=True)  # IPv4/IPv6
+    consent_user_agent = Column(String(500), nullable=True)  # User agent navigateur
+
     def __repr__(self) -> str:
         return f"<UserModel(id={self.id}, email={self.email}, role={self.role})>"
