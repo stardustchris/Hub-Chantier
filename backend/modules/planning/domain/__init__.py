@@ -18,8 +18,6 @@ from .events import (
     AffectationCreatedEvent,
     AffectationUpdatedEvent,
     AffectationDeletedEvent,
-    AffectationBulkCreatedEvent,
-    AffectationBulkDeletedEvent,
 )
 
 __all__ = [
@@ -35,6 +33,4 @@ __all__ = [
     "AffectationCreatedEvent",
     "AffectationUpdatedEvent",
     "AffectationDeletedEvent",
-    "AffectationBulkCreatedEvent",
-    "AffectationBulkDeletedEvent",
 ]

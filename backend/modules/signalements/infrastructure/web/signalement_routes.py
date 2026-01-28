@@ -20,6 +20,9 @@ from ...application.use_cases import (
     InvalidStatusTransitionError,
     AccessDeniedError,
 )
+from ...domain.events.signalement_created import SignalementCreatedEvent
+from shared.infrastructure.event_bus.dependencies import get_event_bus
+from shared.infrastructure.event_bus import EventBus
 
 
 router = APIRouter(prefix="/signalements", tags=["Signalements"])
@@ -167,8 +170,9 @@ class SignalementStatsResponse(BaseModel):
 # ============ SIGNALEMENTS ============
 
 @router.post("", response_model=SignalementResponse, status_code=status.HTTP_201_CREATED)
-def create_signalement(
+async def create_signalement(
     request: SignalementCreateRequest,
+    event_bus: EventBus = Depends(get_event_bus),
     controller: SignalementController = Depends(get_signalement_controller),
     current_user: dict = Depends(get_current_user),
 ):
@@ -185,7 +189,19 @@ def create_signalement(
             photo_url=request.photo_url,
             localisation=request.localisation,
         )
-        return controller.create_signalement(dto)
+        result = controller.create_signalement(dto)
+
+        # Publish event after database commit
+        await event_bus.publish(SignalementCreatedEvent(
+            signalement_id=result["id"],
+            chantier_id=result["chantier_id"],
+            user_id=current_user["id"],
+            titre=result["titre"],
+            gravite=result.get("gravite", "moyenne"),
+            metadata={"priorite": result.get("priorite", "moyenne")}
+        ))
+
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -26,8 +26,11 @@ from ...application.use_cases import (
     InvalidDateRangeError,
     NoAffectationsToDuplicateError,
 )
+from ...domain.events.affectation_created import AffectationCreatedEvent
 from .dependencies import get_planning_controller
 from shared.infrastructure.web import get_current_user_id, get_current_user_role
+from shared.infrastructure.event_bus.dependencies import get_event_bus
+from shared.infrastructure.event_bus import EventBus
 
 router = APIRouter(prefix="/planning", tags=["Planning"])
 
@@ -48,10 +51,11 @@ router = APIRouter(prefix="/planning", tags=["Planning"])
         403: {"description": "Non autorise"},
     },
 )
-def create_affectation(
+async def create_affectation(
     request: CreateAffectationRequest,
     current_user_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
+    event_bus: EventBus = Depends(get_event_bus),
     controller: PlanningController = Depends(get_planning_controller),
 ):
     """
@@ -67,6 +71,7 @@ def create_affectation(
         request: Donnees de creation de l'affectation.
         current_user_id: ID de l'utilisateur connecte.
         current_user_role: Role de l'utilisateur.
+        event_bus: Event bus for publishing domain events.
         controller: Controller du planning.
 
     Returns:
@@ -85,6 +90,17 @@ def create_affectation(
 
     try:
         result = controller.create(request, current_user_id)
+
+        # Publish event after database commit
+        from datetime import datetime
+        await event_bus.publish(AffectationCreatedEvent(
+            affectation_id=result["id"],
+            user_id=result["utilisateur_id"],
+            chantier_id=result["chantier_id"],
+            date_affectation=datetime.fromisoformat(result["date"]).date() if isinstance(result["date"], str) else result["date"],
+            metadata={"created_by": current_user_id}
+        ))
+
         return result
     except AffectationConflictError as e:
         raise HTTPException(

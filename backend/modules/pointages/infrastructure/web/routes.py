@@ -19,6 +19,7 @@ from ..persistence import (
 )
 from ..event_bus_impl import get_event_bus
 from ...adapters.controllers import PointageController
+from ...domain.events.heures_validated import HeuresValidatedEvent
 
 
 router = APIRouter(prefix="/pointages", tags=["Feuilles d'heures"])
@@ -444,14 +445,34 @@ def submit_pointage(
 
 
 @router.post("/{pointage_id}/validate")
-def validate_pointage(
+async def validate_pointage(
     pointage_id: int,
     validateur_id: int = Depends(get_current_user_id),
+    event_bus = Depends(get_event_bus),
     controller: PointageController = Depends(get_controller),
 ):
-    """Valide un pointage soumis."""
+    """Valide un pointage soumis. ⚡ CRITIQUE: Déclenche la synchronisation avec la paie."""
     try:
-        return controller.validate_pointage(pointage_id, validateur_id)
+        result = controller.validate_pointage(pointage_id, validateur_id)
+
+        # Publish event after database commit (CRITICAL for payroll sync)
+        from datetime import datetime
+        await event_bus.publish(HeuresValidatedEvent(
+            heures_id=result.get("id", pointage_id),
+            user_id=result.get("utilisateur_id"),
+            chantier_id=result.get("chantier_id"),
+            date=result.get("date_pointage") if isinstance(result.get("date_pointage"), date) else date.today(),
+            heures_travaillees=float(result.get("heures_normales", "0:0").split(":")[0]) if isinstance(result.get("heures_normales"), str) else float(result.get("heures_normales", 0)),
+            heures_supplementaires=float(result.get("heures_supplementaires", "0:0").split(":")[0]) if isinstance(result.get("heures_supplementaires"), str) else float(result.get("heures_supplementaires", 0)),
+            validated_by=validateur_id,
+            validated_at=datetime.now(),
+            metadata={
+                'user_id': validateur_id,
+                'pointage_id': pointage_id,
+            }
+        ))
+
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

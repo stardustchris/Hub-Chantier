@@ -16,12 +16,15 @@ from ...application.use_cases import (
     ChantierActifError,
     TransitionNonAutoriseeError,
 )
+from ...domain.events.chantier_created import ChantierCreatedEvent
 from .dependencies import get_chantier_controller, get_user_repository
 from shared.infrastructure.web import (
     get_current_user_id,
     require_conducteur_or_admin,
     require_admin,
 )
+from shared.infrastructure.event_bus.dependencies import get_event_bus
+from shared.infrastructure.event_bus import EventBus
 from modules.auth.domain.repositories import UserRepository
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
@@ -233,8 +236,9 @@ class DeleteResponse(BaseModel):
 
 
 @router.post("", response_model=ChantierResponse, status_code=status.HTTP_201_CREATED)
-def create_chantier(
+async def create_chantier(
     request: CreateChantierRequest,
+    event_bus: EventBus = Depends(get_event_bus),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: UserRepository = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
@@ -248,6 +252,7 @@ def create_chantier(
 
     Args:
         request: Données de création.
+        event_bus: Event bus for publishing domain events.
         controller: Controller des chantiers.
         user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
@@ -284,6 +289,21 @@ def create_chantier(
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
         )
+
+        # Publish event after database commit
+        await event_bus.publish(ChantierCreatedEvent(
+            chantier_id=result["id"],
+            nom=result.get("nom", ""),
+            adresse=result.get("adresse", ""),
+            statut=result.get("statut", "ouvert"),
+            metadata={
+                "code": result.get("code", ""),
+                "conducteur_ids": result.get("conducteur_ids", []),
+                "chef_chantier_ids": result.get("chef_chantier_ids", []),
+                "created_by": current_user_id
+            }
+        ))
+
         return _transform_chantier_response(result, controller, user_repo)
     except CodeChantierAlreadyExistsError as e:
         raise HTTPException(

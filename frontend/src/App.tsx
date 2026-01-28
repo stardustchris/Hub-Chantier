@@ -17,6 +17,7 @@ const ChantierDetailPage = lazy(() => import('./pages/ChantierDetailPage'))
 const UsersListPage = lazy(() => import('./pages/UsersListPage'))
 const UserDetailPage = lazy(() => import('./pages/UserDetailPage'))
 const APIKeysPage = lazy(() => import('./pages/APIKeysPage'))
+const WebhooksPage = lazy(() => import('./pages/WebhooksPage'))
 const PlanningPage = lazy(() => import('./pages/PlanningPage'))
 const FeuillesHeuresPage = lazy(() => import('./pages/FeuillesHeuresPage'))
 const FormulairesPage = lazy(() => import('./pages/FormulairesPage'))
@@ -89,6 +90,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <APIKeysPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/webhooks"
+            element={
+              <ProtectedRoute>
+                <WebhooksPage />
               </ProtectedRoute>
             }
           />

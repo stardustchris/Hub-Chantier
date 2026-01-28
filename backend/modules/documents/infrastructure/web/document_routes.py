@@ -28,6 +28,9 @@ from ...application.use_cases import (
     AutorisationAlreadyExistsError,
     AutorisationNotFoundError,
 )
+from ...domain.events.document_uploaded import DocumentUploadedEvent
+from shared.infrastructure.event_bus.dependencies import get_event_bus
+from shared.infrastructure.event_bus import EventBus
 
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -287,6 +290,7 @@ async def upload_document(
     file: UploadFile = File(...),
     description: Optional[str] = Query(None),
     niveau_acces: Optional[str] = Query(None),
+    event_bus: EventBus = Depends(get_event_bus),
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
     audit: AuditService = Depends(get_audit_service),
@@ -327,6 +331,15 @@ async def upload_document(
             },
             ip_address=http_request.client.host if http_request.client else None,
         )
+
+        # Publish event after database commit
+        await event_bus.publish(DocumentUploadedEvent(
+            document_id=result.get("id"),
+            nom=result.get("nom", file.filename or "document"),
+            type_document=result.get("type_document", "autre"),
+            chantier_id=chantier_id,
+            user_id=current_user_id,
+        ))
 
         return result
     except FileTooLargeError as e:

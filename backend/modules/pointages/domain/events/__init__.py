@@ -1,4 +1,4 @@
-"""Domain Events du module pointages."""
+"""Événements de domaine pour le module pointages."""
 
 from .pointage_events import (
     PointageCreatedEvent,
@@ -13,6 +13,10 @@ from .pointage_events import (
     FeuilleHeuresExportedEvent,
     VariablePaieCreatedEvent,
 )
+from .heures_created import HeuresCreatedEvent
+from .heures_updated import HeuresUpdatedEvent
+from .heures_validated import HeuresValidatedEvent
+from .heures_rejected import HeuresRejectedEvent
 
 __all__ = [
     "PointageCreatedEvent",
@@ -26,4 +30,8 @@ __all__ = [
     "FeuilleHeuresCreatedEvent",
     "FeuilleHeuresExportedEvent",
     "VariablePaieCreatedEvent",
+    "HeuresCreatedEvent",
+    "HeuresUpdatedEvent",
+    "HeuresValidatedEvent",
+    "HeuresRejectedEvent",
 ]
