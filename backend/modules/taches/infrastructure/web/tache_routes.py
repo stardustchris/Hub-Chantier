@@ -1,6 +1,6 @@
 """Routes FastAPI pour le module Taches - CDC Section 13."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
@@ -286,6 +286,7 @@ def get_taches_stats(
 
 @router.get("/chantier/{chantier_id}/export-pdf")
 def export_taches_pdf(
+    request: Request,
     chantier_id: int,
     include_completed: bool = Query(True, description="Inclure les taches terminees"),
     controller: TacheController = Depends(get_tache_controller),
@@ -300,7 +301,17 @@ def export_taches_pdf(
     from fastapi.responses import Response
 
     try:
-        pdf_bytes, chantier_nom = controller.export_pdf(chantier_id, include_completed)
+        # Extraire informations pour audit RGPD
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+
+        pdf_bytes, chantier_nom = controller.export_pdf(
+            chantier_id=chantier_id,
+            current_user_id=current_user_id,
+            include_completed=include_completed,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
 
         # Detecter si c'est du vrai PDF ou du HTML fallback
         is_pdf = pdf_bytes[:4] == b'%PDF'

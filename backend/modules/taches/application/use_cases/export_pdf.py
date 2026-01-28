@@ -3,8 +3,10 @@
 from datetime import datetime
 from io import BytesIO
 import re
+from typing import Optional
 
 from shared.application.ports import PdfGeneratorPort
+from shared.infrastructure.audit import AuditService
 from ...domain.repositories import TacheRepository
 
 
@@ -17,12 +19,14 @@ class ExportTachesPDFUseCase:
     Attributes:
         tache_repo: Repository pour les taches.
         pdf_service: Service de génération PDF (utilise templates Jinja2).
+        audit_service: Service d'audit pour traçabilité RGPD.
     """
 
     def __init__(
         self,
         tache_repo: TacheRepository,
         pdf_service: PdfGeneratorPort,
+        audit_service: AuditService,
     ):
         """
         Initialise le use case.
@@ -30,15 +34,20 @@ class ExportTachesPDFUseCase:
         Args:
             tache_repo: Repository taches (interface).
             pdf_service: Service PDF (injecté via DI).
+            audit_service: Service audit pour traçabilité RGPD.
         """
         self.tache_repo = tache_repo
         self.pdf_service = pdf_service
+        self.audit_service = audit_service
 
     def execute(
         self,
         chantier_id: int,
         chantier_nom: str,
+        current_user_id: int,
         include_completed: bool = True,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
     ) -> bytes:
         """
         Genere un PDF des taches d'un chantier.
@@ -46,7 +55,10 @@ class ExportTachesPDFUseCase:
         Args:
             chantier_id: ID du chantier.
             chantier_nom: Nom du chantier pour le titre (max 200 caractères alphanumériques).
+            current_user_id: ID de l'utilisateur effectuant l'export (pour audit RGPD).
             include_completed: Inclure les taches terminees.
+            ip_address: Adresse IP de l'utilisateur (pour audit RGPD).
+            user_agent: User-Agent du navigateur/client (pour audit RGPD).
 
         Returns:
             Contenu PDF en bytes.
@@ -90,6 +102,16 @@ class ExportTachesPDFUseCase:
             taches=taches,
             chantier_nom=chantier_nom,
             stats=stats,
+        )
+
+        # Audit trail pour conformité RGPD Article 30
+        self.audit_service.log_pdf_exported(
+            chantier_id=chantier_id,
+            user_id=current_user_id,
+            chantier_nom=chantier_nom,
+            include_completed=include_completed,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
         return pdf_bytes
