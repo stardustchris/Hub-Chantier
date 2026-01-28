@@ -25,6 +25,7 @@ import {
   WeatherBulletinPost,
 } from '../components/dashboard'
 import { weatherNotificationService } from '../services/weatherNotifications'
+import { consentService } from '../services/consent'
 import MentionInput from '../components/common/MentionInput'
 import {
   MessageCircle,
@@ -73,19 +74,32 @@ export default function DashboardPage() {
   // Hook pour la météo réelle avec alertes
   const { weather, alert: weatherAlert } = useWeather()
 
-  // Demander la permission pour les notifications et envoyer les alertes météo
+  // Demander la permission pour les notifications (uniquement si consentement donné)
   useEffect(() => {
-    // Demander la permission au premier chargement
-    if (weatherNotificationService.areNotificationsSupported()) {
-      weatherNotificationService.requestNotificationPermission()
+    const requestNotifications = async () => {
+      // Vérifier le consentement utilisateur RGPD avant de demander la permission
+      const hasConsent = await consentService.hasConsent('notifications')
+
+      if (hasConsent && weatherNotificationService.areNotificationsSupported()) {
+        weatherNotificationService.requestNotificationPermission()
+      }
     }
+
+    requestNotifications()
   }, [])
 
-  // Envoyer une notification si alerte météo
+  // Envoyer une notification si alerte météo (uniquement si consentement donné)
   useEffect(() => {
-    if (weatherAlert) {
-      weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
+    const sendAlert = async () => {
+      // Vérifier le consentement avant d'envoyer une notification
+      const hasConsent = await consentService.hasConsent('notifications')
+
+      if (weatherAlert && hasConsent) {
+        weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
+      }
     }
+
+    sendAlert()
   }, [weatherAlert])
 
   // Déterminer le slot en cours ou le prochain (synchro équipe avec planning)

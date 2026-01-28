@@ -5,6 +5,7 @@
  */
 
 import { logger } from './logger'
+import { consentService } from './consent'
 
 export interface WeatherData {
   location: string
@@ -120,8 +121,16 @@ const generateBulletin = (data: WeatherData): string => {
 
 /**
  * Obtient la position géographique de l'utilisateur
+ * Vérifie le consentement RGPD avant d'accéder à la géolocalisation
  */
 export async function getCurrentPosition(): Promise<GeoPosition> {
+  // Vérifier le consentement utilisateur avant d'accéder à la géolocalisation
+  const hasConsent = await consentService.hasConsent('geolocation')
+
+  if (!hasConsent) {
+    throw new Error('Consentement géolocalisation requis')
+  }
+
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Géolocalisation non supportée'))

@@ -7,6 +7,7 @@ import ToastContainer from './components/Toast'
 import LoggerToastBridge from './components/LoggerToastBridge'
 import ProtectedRoute from './components/ProtectedRoute'
 import OfflineIndicator from './components/OfflineIndicator'
+import { GDPRBanner } from './components/common/GDPRBanner'
 
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -129,6 +130,7 @@ function App() {
         </Suspense>
         <LoggerToastBridge />
         <ToastContainer />
+        <GDPRBanner />
         <OfflineIndicator />
         </ToastProvider>
       </AuthProvider>

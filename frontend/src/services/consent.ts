@@ -1,132 +1,184 @@
 /**
- * Service de gestion du consentement RGPD
- * Gère le stockage et la validation des consentements utilisateur
+ * Service de gestion des consentements RGPD
+ *
+ * Gère les consentements utilisateur pour :
+ * - Géolocalisation (navigator.geolocation)
+ * - Notifications push (weatherNotificationService)
+ * - Analytics (futur)
+ *
+ * Conformité RGPD :
+ * - Consentement explicite requis avant toute collecte de données
+ * - Consentements stockés côté serveur (pas en localStorage pour éviter XSS)
+ * - Possibilité de retirer le consentement à tout moment
+ * - Cache en mémoire pour éviter appels API répétés
  */
 
-export type ConsentType = 'geolocation' | 'analytics' | 'notifications'
+import api from './api'
+import { logger } from './logger'
 
-interface ConsentRecord {
-  type: ConsentType
-  granted: boolean
-  timestamp: string
-  version: string
+export type ConsentType = 'geolocation' | 'notifications' | 'analytics'
+
+export interface ConsentPreferences {
+  geolocation: boolean
+  notifications: boolean
+  analytics: boolean
 }
-
-interface ConsentStorage {
-  consents: ConsentRecord[]
-  lastUpdated: string
-}
-
-const CONSENT_STORAGE_KEY = 'hub_chantier_rgpd_consents'
-const CONSENT_VERSION = '1.0'
 
 /**
- * Charge les consentements depuis le localStorage
+ * État des consentements en mémoire (cache session)
+ * Évite les appels API répétés pendant la session
  */
-function loadConsents(): ConsentStorage | null {
-  try {
-    const stored = localStorage.getItem(CONSENT_STORAGE_KEY)
-    if (!stored) return null
+let consentCache: ConsentPreferences | null = null
+let hasBannerBeenShown = false
 
-    const parsed = JSON.parse(stored) as ConsentStorage
-    // Validation basique du schema
-    if (!parsed.consents || !Array.isArray(parsed.consents)) {
-      localStorage.removeItem(CONSENT_STORAGE_KEY)
-      return null
+/**
+ * Réinitialise le cache (utile pour les tests)
+ */
+export function resetConsentCache(): void {
+  consentCache = null
+  hasBannerBeenShown = false
+}
+
+/**
+ * Récupère les consentements depuis le serveur
+ */
+async function getConsents(): Promise<ConsentPreferences> {
+  // Utiliser le cache si disponible
+  if (consentCache !== null) {
+    return consentCache
+  }
+
+  try {
+    const response = await api.get<ConsentPreferences>('/api/auth/consents')
+    consentCache = response.data
+    return response.data
+  } catch (error) {
+    logger.error('Error fetching consents', error)
+    // Valeurs par défaut : aucun consentement
+    return {
+      geolocation: false,
+      notifications: false,
+      analytics: false,
     }
-    return parsed
-  } catch {
-    localStorage.removeItem(CONSENT_STORAGE_KEY)
-    return null
   }
 }
 
 /**
- * Sauvegarde les consentements dans le localStorage
+ * Enregistre un consentement côté serveur
  */
-function saveConsents(storage: ConsentStorage): void {
+async function setConsent(type: ConsentType, value: boolean): Promise<void> {
   try {
-    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(storage))
-  } catch {
-    // Silently fail si localStorage non disponible
+    await api.post('/api/auth/consents', {
+      [type]: value,
+    })
+
+    // Mettre à jour le cache
+    if (consentCache) {
+      consentCache[type] = value
+    } else {
+      consentCache = {
+        geolocation: type === 'geolocation' ? value : false,
+        notifications: type === 'notifications' ? value : false,
+        analytics: type === 'analytics' ? value : false,
+      }
+    }
+
+    logger.info('Consent updated', { type, value })
+  } catch (error) {
+    logger.error('Error setting consent', error)
+    throw error
+  }
+}
+
+/**
+ * Enregistre plusieurs consentements en une seule fois
+ */
+async function setConsents(consents: Partial<ConsentPreferences>): Promise<void> {
+  try {
+    await api.post('/api/auth/consents', consents)
+
+    // Mettre à jour le cache
+    if (consentCache) {
+      consentCache = { ...consentCache, ...consents }
+    } else {
+      consentCache = {
+        geolocation: consents.geolocation ?? false,
+        notifications: consents.notifications ?? false,
+        analytics: consents.analytics ?? false,
+      }
+    }
+
+    logger.info('Consents updated', consents)
+  } catch (error) {
+    logger.error('Error setting consents', error)
+    throw error
   }
 }
 
 export const consentService = {
   /**
-   * Vérifie si un consentement a été donné
+   * Vérifie si un consentement spécifique a été donné
    */
-  hasConsent(type: ConsentType): boolean {
-    const storage = loadConsents()
-    if (!storage) return false
-
-    const consent = storage.consents.find(c => c.type === type && c.version === CONSENT_VERSION)
-    return consent?.granted ?? false
+  hasConsent: async (type: ConsentType): Promise<boolean> => {
+    const consents = await getConsents()
+    return consents[type]
   },
 
   /**
-   * Vérifie si un consentement a déjà été demandé (peu importe la réponse)
+   * Vérifie si l'utilisateur a donné au moins un consentement
+   * (utilisé pour déterminer si le banner doit être affiché)
    */
-  wasAsked(type: ConsentType): boolean {
-    const storage = loadConsents()
-    if (!storage) return false
-
-    return storage.consents.some(c => c.type === type && c.version === CONSENT_VERSION)
+  hasAnyConsent: async (): Promise<boolean> => {
+    const consents = await getConsents()
+    return consents.geolocation || consents.notifications || consents.analytics
   },
 
   /**
-   * Enregistre un consentement
+   * Enregistre un consentement côté serveur
    */
-  setConsent(type: ConsentType, granted: boolean): void {
-    const storage = loadConsents() || { consents: [], lastUpdated: '' }
+  setConsent,
 
-    // Retirer l'ancien consentement de ce type
-    storage.consents = storage.consents.filter(c => c.type !== type)
+  /**
+   * Enregistre plusieurs consentements en une seule fois
+   */
+  setConsents,
 
-    // Ajouter le nouveau
-    storage.consents.push({
-      type,
-      granted,
-      timestamp: new Date().toISOString(),
-      version: CONSENT_VERSION,
+  /**
+   * Révoque tous les consentements
+   */
+  revokeAllConsents: async (): Promise<void> => {
+    await setConsents({
+      geolocation: false,
+      notifications: false,
+      analytics: false,
     })
-
-    storage.lastUpdated = new Date().toISOString()
-    saveConsents(storage)
   },
 
   /**
-   * Révoque un consentement
+   * Récupère tous les consentements
    */
-  revokeConsent(type: ConsentType): void {
-    this.setConsent(type, false)
+  getAllConsents: async (): Promise<ConsentPreferences> => {
+    return await getConsents()
   },
 
   /**
-   * Révoque tous les consentements (droit à l'oubli)
+   * Marque le banner comme affiché (en mémoire, ne persiste pas entre rechargements)
    */
-  revokeAllConsents(): void {
-    localStorage.removeItem(CONSENT_STORAGE_KEY)
+  markBannerAsShown: (): void => {
+    hasBannerBeenShown = true
   },
 
   /**
-   * Récupère tous les consentements pour affichage
+   * Vérifie si le banner a déjà été affiché dans cette session
    */
-  getAllConsents(): ConsentRecord[] {
-    const storage = loadConsents()
-    return storage?.consents ?? []
+  wasBannerShown: (): boolean => {
+    return hasBannerBeenShown
   },
 
   /**
-   * Récupère le timestamp du dernier consentement pour un type
+   * Réinitialise le cache (pour tests uniquement)
    */
-  getConsentTimestamp(type: ConsentType): string | null {
-    const storage = loadConsents()
-    if (!storage) return null
-
-    const consent = storage.consents.find(c => c.type === type && c.version === CONSENT_VERSION)
-    return consent?.timestamp ?? null
-  },
+  resetCache: resetConsentCache,
 }
 
 export default consentService
