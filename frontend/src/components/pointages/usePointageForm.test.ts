@@ -49,8 +49,12 @@ const mockPointage: Pointage = {
   date_pointage: '2026-01-25',
   heures_normales: '08:00',
   heures_supplementaires: '02:00',
+  total_heures: '10:00',
+  total_heures_decimal: 10.0,
   commentaire: 'Test commentaire',
   statut: 'brouillon',
+  created_at: '2026-01-25T08:00:00',
+  updated_at: '2026-01-25T08:00:00',
 }
 
 describe('usePointageForm', () => {

@@ -39,9 +39,12 @@ const createMockReponse = (overrides: Partial<Reponse> = {}): Reponse => ({
   id: 1,
   signalement_id: 1,
   contenu: 'Je vais verifier',
-  cree_par: 2,
-  cree_par_nom: 'Marie Martin',
+  auteur_id: 2,
+  auteur_nom: 'Marie Martin',
+  photo_url: null,
   created_at: '2024-01-15T11:00:00',
+  updated_at: '2024-01-15T11:00:00',
+  est_resolution: false,
   ...overrides,
 })
 

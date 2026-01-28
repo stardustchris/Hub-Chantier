@@ -14,7 +14,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ReservationModal from './ReservationModal'
 import { createMockRessource, createMockReservation, createMockChantier } from '../../fixtures'
-import type { Reservation } from '../../types/logistique'
+// Types imported but managed by fixtures
 
 // Mock useReservationModal hook
 const mockHandleSubmit = vi.fn((e: React.FormEvent) => e.preventDefault())

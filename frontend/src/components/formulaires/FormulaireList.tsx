@@ -6,7 +6,6 @@
 import { formatDateDayMonthYear, formatDateTimeShort } from '../../utils/dates'
 import {
   FileText,
-  Eye,
   Download,
   CheckCircle,
   Clock,

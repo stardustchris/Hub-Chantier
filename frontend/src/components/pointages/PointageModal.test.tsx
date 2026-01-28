@@ -119,6 +119,7 @@ const createMockChantier = (overrides: Partial<Chantier> = {}): Chantier => ({
   statut: 'en_cours',
   couleur: '#3498db',
   conducteurs: [],
+  chefs: [],
   phases: [],
   created_at: '2024-01-01T00:00:00',
   ...overrides,

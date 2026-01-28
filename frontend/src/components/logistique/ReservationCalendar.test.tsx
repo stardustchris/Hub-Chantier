@@ -16,7 +16,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ReservationCalendar from './ReservationCalendar'
 import { createMockRessource, createMockReservation } from '../../fixtures'
-import type { Ressource, PlanningRessource } from '../../types/logistique'
+import type { PlanningRessource } from '../../types/logistique'
 
 // Mock API
 vi.mock('../../api/logistique', () => ({
