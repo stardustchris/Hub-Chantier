@@ -26,33 +26,64 @@ cd ../frontend && npm install && npm run build
 
 ### 2. Workflow fonctionnalite (7 agents)
 
-```
-1. Lire .claude/agents.md (workflow agents)
-2. Lire docs/SPECIFICATIONS.md (specs de la feature)
-3. sql-pro : schema DB et migrations (si nouvelles tables)
-4. python-pro/typescript-pro : implementer
-5. architect-reviewer : valider architecture
-6. test-automator : generer tests (couverture >= 85%)
-7. code-reviewer : valider qualite
-8. security-auditor : audit securite/RGPD
-9. Mettre a jour SPECIFICATIONS.md (statut -> done)
-10. Mettre a jour .claude/history.md (resume session)
-```
+Voir `.claude/agents.md` pour le workflow detaille complet.
 
-### 3. Avant commit (code *.py, *.ts, *.tsx, *.sql)
+**Resume** :
+1. Lire SPECIFICATIONS.md (specs feature)
+2. sql-pro : schema DB (si nouvelles tables)
+3. python-pro/typescript-pro : implementer
+4. architect-reviewer, test-automator, code-reviewer, security-auditor : valider
+5. Mettre a jour SPECIFICATIONS.md + .claude/history.md
 
+### 3. Validation AVANT commit (code *.py, *.ts, *.tsx, *.sql)
+
+**CRITIQUE : Utiliser `Task(subagent_type="...")` pour TOUS les agents**
+
+**Checklist obligatoire** :
 - [ ] sql-pro : migrations OK (si modifs DB)
 - [ ] architect-reviewer : PASS
-- [ ] test-automator : tests generes
+- [ ] test-automator : tests generes (>= 85% couverture)
 - [ ] code-reviewer : APPROVED
-- [ ] security-auditor : PASS (aucun finding critique/haute)
-- [ ] Couverture >= 90% sur code modifie
+- [ ] security-auditor : PASS (0 finding critique/haute)
 - [ ] SPECIFICATIONS.md mis a jour
 - [ ] .claude/history.md mis a jour
+
+**NE JAMAIS** :
+- ❌ Analyser le code soi-meme sans les agents
+- ❌ Dire "je vais verifier la qualite"
+- ❌ Committer sans validation agents
+
+**TOUJOURS** :
+- ✅ `Task(subagent_type="architect-reviewer", prompt="...")`
+- ✅ `Task(subagent_type="code-reviewer", prompt="...")`
+- ✅ `Task(subagent_type="security-auditor", prompt="...")`
+- ✅ Attendre le retour agent
+- ✅ Afficher le rapport
+
+**Exceptions** (validation optionnelle) :
+- Documentation seule (*.md)
+- Configuration (*.json, *.yaml, *.toml)
+- Scripts utilitaires simples
 
 ### 4. Apres validation
 
 Committer, pousser, puis **proposer automatiquement** merge/PR vers main.
+
+---
+
+## AGENTS DISPONIBLES (7)
+
+| Agent | Role | Quand utiliser |
+|-------|------|----------------|
+| **sql-pro** | Expert PostgreSQL | Nouvelles tables/colonnes/migrations |
+| **python-pro** | Expert FastAPI/SQLAlchemy | Implementation backend |
+| **typescript-pro** | Expert React/TypeScript | Implementation frontend |
+| **architect-reviewer** | Validation Clean Architecture | AVANT commit code |
+| **test-automator** | Generation tests pytest/vitest | AVANT commit code |
+| **code-reviewer** | Qualite + conventions code | AVANT commit code |
+| **security-auditor** | Audit securite + RGPD | AVANT commit code |
+
+**Workflow complet** : Voir `.claude/agents.md` (301 lignes)
 
 ---
 
@@ -72,8 +103,8 @@ Clean Architecture 4 layers : `Domain -> Application -> Adapters -> Infrastructu
 
 | Fichier | Description |
 |---------|-------------|
+| `.claude/agents.md` | Workflow agents (7 agents detailles) |
 | `docs/SPECIFICATIONS.md` | CDC fonctionnel (177 features) |
-| `.claude/agents.md` | Workflow agents detaille |
 | `.claude/project-status.md` | Etat modules + prochaines taches |
 | `.claude/history.md` | Historique sessions |
 | `CONTRIBUTING.md` | Conventions code |

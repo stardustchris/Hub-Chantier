@@ -53,18 +53,25 @@ export const initFirebase = (): FirebaseApp | null => {
   if (app) return app
 
   if (!isFirebaseConfigured()) {
-    console.warn(
-      'Firebase non configuré. Définir les variables VITE_FIREBASE_* dans .env'
-    )
+    // Firebase non configuré - ne pas logger en production
+    if (import.meta.env.DEV) {
+      console.warn(
+        'Firebase non configuré. Définir les variables VITE_FIREBASE_* dans .env'
+      )
+    }
     return null
   }
 
   try {
     app = initializeApp(firebaseConfig)
-    console.log('Firebase initialisé')
+    if (import.meta.env.DEV) {
+      console.log('Firebase initialisé')
+    }
     return app
   } catch (error) {
-    console.error('Erreur initialisation Firebase:', error)
+    if (import.meta.env.DEV) {
+      console.error('Erreur initialisation Firebase:', error)
+    }
     return null
   }
 }
@@ -82,7 +89,9 @@ export const getFirebaseMessaging = (): Messaging | null => {
     messaging = getMessaging(firebaseApp)
     return messaging
   } catch (error) {
-    console.error('Erreur initialisation Messaging:', error)
+    if (import.meta.env.DEV) {
+      console.error('Erreur initialisation Messaging:', error)
+    }
     return null
   }
 }
@@ -95,21 +104,27 @@ export const getFirebaseMessaging = (): Messaging | null => {
 export const requestNotificationPermission = async (): Promise<string | null> => {
   // Vérifier support
   if (!('Notification' in window)) {
-    console.warn('Notifications non supportées par ce navigateur')
+    if (import.meta.env.DEV) {
+      console.warn('Notifications non supportées par ce navigateur')
+    }
     return null
   }
 
   // Demander permission
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') {
-    console.warn('Permission notifications refusée')
+    if (import.meta.env.DEV) {
+      console.warn('Permission notifications refusée')
+    }
     return null
   }
 
   // Récupérer le token
   const msg = getFirebaseMessaging()
   if (!msg) {
-    console.warn('Firebase Messaging non disponible')
+    if (import.meta.env.DEV) {
+      console.warn('Firebase Messaging non disponible')
+    }
     return null
   }
 
@@ -119,14 +134,20 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     })
 
     if (token) {
-      console.log('Token FCM obtenu:', token.substring(0, 20) + '...')
+      if (import.meta.env.DEV) {
+        console.log('Token FCM obtenu:', token.substring(0, 20) + '...')
+      }
       return token
     } else {
-      console.warn('Aucun token FCM disponible')
+      if (import.meta.env.DEV) {
+        console.warn('Aucun token FCM disponible')
+      }
       return null
     }
   } catch (error) {
-    console.error('Erreur récupération token FCM:', error)
+    if (import.meta.env.DEV) {
+      console.error('Erreur récupération token FCM:', error)
+    }
     return null
   }
 }
@@ -148,7 +169,9 @@ export const onForegroundMessage = (
   if (!msg) return null
 
   return onMessage(msg, (payload) => {
-    console.log('Message reçu (foreground):', payload)
+    if (import.meta.env.DEV) {
+      console.log('Message reçu (foreground):', payload)
+    }
     callback({
       title: payload.notification?.title,
       body: payload.notification?.body,

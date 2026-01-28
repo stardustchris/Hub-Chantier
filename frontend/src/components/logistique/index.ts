@@ -6,6 +6,7 @@
 
 export { default as RessourceCard } from './RessourceCard'
 export { default as RessourceList } from './RessourceList'
+export { default as RessourceModal } from './RessourceModal'
 export { default as ReservationCalendar } from './ReservationCalendar'
 export { default as ReservationModal } from './ReservationModal'
 export { default as ReservationFormFields } from './ReservationFormFields'

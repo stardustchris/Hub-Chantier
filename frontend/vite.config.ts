@@ -41,6 +41,12 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
+          // Endpoints sensibles : jamais en cache (sécurité)
+          {
+            urlPattern: /\/api\/(auth|pointages|users|feuilles-heures)\/.*/i,
+            handler: 'NetworkOnly',
+          },
+          // Autres endpoints API : cache court (1h) avec NetworkFirst
           {
             urlPattern: /^https:\/\/api\..*/i,
             handler: 'NetworkFirst',
@@ -48,7 +54,7 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24, // 24 hours
+                maxAgeSeconds: 60 * 60, // 1 hour (réduit de 24h)
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -62,7 +68,7 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxAgeSeconds: 60 * 60, // 1 hour (réduit de 24h)
               },
               cacheableResponse: {
                 statuses: [0, 200],

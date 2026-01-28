@@ -11,7 +11,7 @@ LOG-18: Historique par ressource
 """
 
 from datetime import datetime, date, timedelta
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from ..ports.event_bus import EventBus
 
@@ -22,6 +22,8 @@ from ...domain.entities.reservation import (
 )
 from ...domain.repositories import RessourceRepository, ReservationRepository
 from ...domain.value_objects import StatutReservation
+from ....auth.domain.repositories import UserRepository
+from ....auth.domain.entities import User
 from ...domain.events import (
     ReservationCreatedEvent,
     ReservationValideeEvent,
@@ -422,9 +424,11 @@ class GetPlanningRessourceUseCase:
         self,
         reservation_repository: ReservationRepository,
         ressource_repository: RessourceRepository,
+        user_repository: UserRepository,
     ):
         self._reservation_repository = reservation_repository
         self._ressource_repository = ressource_repository
+        self._user_repository = user_repository
 
     def execute(
         self,
@@ -440,7 +444,7 @@ class GetPlanningRessourceUseCase:
             date_fin: Date de fin (dimanche de la semaine par défaut)
 
         Returns:
-            Le planning avec les réservations
+            Le planning avec les réservations enrichies (ressource + utilisateurs)
         """
         ressource = self._ressource_repository.find_by_id(ressource_id)
         if not ressource:
@@ -457,6 +461,36 @@ class GetPlanningRessourceUseCase:
             statuts=[StatutReservation.EN_ATTENTE, StatutReservation.VALIDEE],
         )
 
+        # Enrichir avec les infos utilisateurs (demandeurs et valideurs)
+        users_cache: Dict[int, Optional[User]] = {}
+        enriched_reservations = []
+
+        for r in reservations:
+            # Récupérer le demandeur
+            if r.demandeur_id not in users_cache:
+                users_cache[r.demandeur_id] = self._user_repository.find_by_id(r.demandeur_id)
+            demandeur = users_cache[r.demandeur_id]
+            demandeur_nom = f"{demandeur.prenom} {demandeur.nom}" if demandeur else None
+
+            # Récupérer le valideur si présent
+            valideur_nom = None
+            if r.valideur_id:
+                if r.valideur_id not in users_cache:
+                    users_cache[r.valideur_id] = self._user_repository.find_by_id(r.valideur_id)
+                valideur = users_cache[r.valideur_id]
+                valideur_nom = f"{valideur.prenom} {valideur.nom}" if valideur else None
+
+            enriched_reservations.append(
+                ReservationDTO.from_entity(
+                    r,
+                    ressource_nom=ressource.nom,
+                    ressource_code=ressource.code,
+                    ressource_couleur=ressource.couleur,
+                    demandeur_nom=demandeur_nom,
+                    valideur_nom=valideur_nom,
+                )
+            )
+
         return PlanningRessourceDTO(
             ressource_id=ressource.id,
             ressource_nom=ressource.nom,
@@ -464,15 +498,7 @@ class GetPlanningRessourceUseCase:
             ressource_couleur=ressource.couleur,
             date_debut=date_debut,
             date_fin=date_fin,
-            reservations=[
-                ReservationDTO.from_entity(
-                    r,
-                    ressource_nom=ressource.nom,
-                    ressource_code=ressource.code,
-                    ressource_couleur=ressource.couleur,
-                )
-                for r in reservations
-            ],
+            reservations=enriched_reservations,
         )
 
 

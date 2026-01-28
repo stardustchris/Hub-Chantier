@@ -28,6 +28,8 @@ class Settings:
     # Security
     SECRET_KEY: str = "dev-secret-key-change-in-production-min-32-chars"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_HOURS: int = 24  # 24h pour refresh token
+    ADMIN_TOKEN_EXPIRE_MINUTES: int = 60  # 1h pour admins (plus strict)
 
     # CORS
     CORS_ORIGINS: list = None
@@ -48,6 +50,12 @@ class Settings:
         self.SECRET_KEY = os.getenv("SECRET_KEY", self.SECRET_KEY)
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(self.ACCESS_TOKEN_EXPIRE_MINUTES))
+        )
+        self.REFRESH_TOKEN_EXPIRE_HOURS = int(
+            os.getenv("REFRESH_TOKEN_EXPIRE_HOURS", str(self.REFRESH_TOKEN_EXPIRE_HOURS))
+        )
+        self.ADMIN_TOKEN_EXPIRE_MINUTES = int(
+            os.getenv("ADMIN_TOKEN_EXPIRE_MINUTES", str(self.ADMIN_TOKEN_EXPIRE_MINUTES))
         )
 
         cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173")

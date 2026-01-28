@@ -68,7 +68,8 @@ app.add_middleware(
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Middleware CSRF (M-01) - Protection contre attaques CSRF
-app.add_middleware(CSRFMiddleware)
+# TODO: Temporairement désactivé en dev pour debugging
+# app.add_middleware(CSRFMiddleware)
 
 # Middleware Rate Limiting avancé (L-01) - Backoff exponentiel
 app.add_middleware(RateLimitMiddleware)

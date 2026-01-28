@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "20260124_0002"
-down_revision = "20260124_0001"
+down_revision = "0002"  # Référence '0002' de 20260124_0002_security_and_performance.py
 branch_labels = None
 depends_on = None
 

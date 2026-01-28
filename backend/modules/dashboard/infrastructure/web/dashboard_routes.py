@@ -252,7 +252,10 @@ def get_post(
         if result.liked_by_user_ids:
             all_user_ids.extend(result.liked_by_user_ids)
         users_cache = _load_users_by_ids(all_user_ids)
-        return _post_dto_to_frontend_response(result.post, result.medias, result.comments, result.liked_by_user_ids, users_cache=users_cache)
+        return _post_dto_to_frontend_response(
+            result.post, result.medias, result.comments,
+            result.liked_by_user_ids, users_cache=users_cache
+        )
 
     except PostNotFoundError as e:
         raise HTTPException(
@@ -469,7 +472,7 @@ def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
     if not user_ids:
         return {}
 
-    from modules.auth.infrastructure.persistence.models import UserModel
+    from modules.auth.infrastructure.persistence.user_model import UserModel
 
     db = SessionLocal()
     try:

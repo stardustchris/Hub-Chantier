@@ -25,6 +25,8 @@ import {
   WeatherBulletinPost,
 } from '../components/dashboard'
 import { weatherNotificationService } from '../services/weatherNotifications'
+import { consentService } from '../services/consent'
+import { openNavigationApp } from '../utils/navigation'
 import MentionInput from '../components/common/MentionInput'
 import {
   MessageCircle,
@@ -73,19 +75,32 @@ export default function DashboardPage() {
   // Hook pour la météo réelle avec alertes
   const { weather, alert: weatherAlert } = useWeather()
 
-  // Demander la permission pour les notifications et envoyer les alertes météo
+  // Demander la permission pour les notifications (uniquement si consentement donné)
   useEffect(() => {
-    // Demander la permission au premier chargement
-    if (weatherNotificationService.areNotificationsSupported()) {
-      weatherNotificationService.requestNotificationPermission()
+    const requestNotifications = async () => {
+      // Vérifier le consentement utilisateur RGPD avant de demander la permission
+      const hasConsent = await consentService.hasConsent('notifications')
+
+      if (hasConsent && weatherNotificationService.areNotificationsSupported()) {
+        weatherNotificationService.requestNotificationPermission()
+      }
     }
+
+    requestNotifications()
   }, [])
 
-  // Envoyer une notification si alerte météo
+  // Envoyer une notification si alerte météo (uniquement si consentement donné)
   useEffect(() => {
-    if (weatherAlert) {
-      weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
+    const sendAlert = async () => {
+      // Vérifier le consentement avant d'envoyer une notification
+      const hasConsent = await consentService.hasConsent('notifications')
+
+      if (weatherAlert && hasConsent) {
+        weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
+      }
     }
+
+    sendAlert()
   }, [weatherAlert])
 
   // Déterminer le slot en cours ou le prochain (synchro équipe avec planning)
@@ -143,40 +158,7 @@ export default function DashboardPage() {
   const handleNavigate = useCallback((_slotId: string) => {
     // Adresse demo - en prod, recuperer depuis le slot
     const address = '45 rue de la Republique, Lyon 3eme, France'
-    const encodedAddress = encodeURIComponent(address)
-
-    // Detecter la plateforme
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    const isAndroid = /Android/.test(navigator.userAgent)
-
-    // Priorite: Waze > Google Maps > Apple Maps (iOS) > Google Maps web
-    if (isIOS) {
-      const wazeUrl = `waze://?q=${encodedAddress}&navigate=yes`
-      const appleMapsUrl = `maps://maps.apple.com/?q=${encodedAddress}`
-      const googleMapsWeb = `https://maps.google.com/?q=${encodedAddress}`
-
-      window.location.href = wazeUrl
-      setTimeout(() => {
-        window.location.href = appleMapsUrl
-        setTimeout(() => {
-          window.open(googleMapsWeb, '_blank')
-        }, 500)
-      }, 500)
-    } else if (isAndroid) {
-      const wazeUrl = `waze://?q=${encodedAddress}&navigate=yes`
-      const googleMapsUrl = `google.navigation:q=${encodedAddress}`
-      const googleMapsWeb = `https://maps.google.com/?q=${encodedAddress}`
-
-      window.location.href = wazeUrl
-      setTimeout(() => {
-        window.location.href = googleMapsUrl
-        setTimeout(() => {
-          window.open(googleMapsWeb, '_blank')
-        }, 500)
-      }, 500)
-    } else {
-      window.open(`https://maps.google.com/?q=${encodedAddress}`, '_blank')
-    }
+    openNavigationApp(address)
   }, [])
 
   const handleCall = useCallback((_slotId: string) => {

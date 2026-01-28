@@ -189,3 +189,75 @@ class PdfGeneratorService(PdfGeneratorPort):
                 "WeasyPrint est requis pour générer des PDF. "
                 "Installez-le avec: pip install weasyprint"
             ) from e
+
+    def generate_formulaire_pdf(
+        self,
+        titre: str,
+        chantier_nom: Optional[str],
+        categorie: str,
+        statut: str,
+        version: int,
+        user_nom: Optional[str],
+        created_at: datetime,
+        soumis_at: Optional[datetime],
+        valide_at: Optional[datetime],
+        valideur_nom: Optional[str],
+        champs: list[Dict[str, Any]],
+        commentaires: Optional[str] = None,
+    ) -> bytes:
+        """Génère un PDF de formulaire rempli.
+
+        Args:
+            titre: Titre du formulaire.
+            chantier_nom: Nom du chantier (optionnel).
+            categorie: Catégorie du formulaire.
+            statut: Statut (brouillon, soumis, valide, refuse).
+            version: Version du formulaire.
+            user_nom: Nom de l'utilisateur ayant rempli le formulaire.
+            created_at: Date de création.
+            soumis_at: Date de soumission (optionnel).
+            valide_at: Date de validation (optionnel).
+            valideur_nom: Nom du valideur (optionnel).
+            champs: Liste des champs avec leurs valeurs.
+            commentaires: Commentaires généraux (optionnel).
+
+        Returns:
+            Contenu PDF en bytes.
+        """
+        # Mapping des statuts
+        statut_labels = {
+            "brouillon": "Brouillon",
+            "soumis": "Soumis",
+            "valide": "Validé",
+            "refuse": "Refusé",
+        }
+
+        # Formater les dates
+        def format_date(dt: Optional[datetime]) -> str:
+            return dt.strftime("%d/%m/%Y %H:%M") if dt else "-"
+
+        # Préparer le contexte pour le template
+        context = {
+            "titre": titre,
+            "chantier_nom": chantier_nom,
+            "categorie": categorie,
+            "statut_label": statut_labels.get(statut, statut),
+            "version": version,
+            "user_nom": user_nom,
+            "created_at": format_date(created_at),
+            "soumis_at": format_date(soumis_at) if soumis_at else None,
+            "valide_at": format_date(valide_at) if valide_at else None,
+            "valideur_nom": valideur_nom,
+            "champs": champs,
+            "commentaires": commentaires,
+            "generation_date": datetime.now().strftime("%d/%m/%Y à %H:%M"),
+        }
+
+        # Charger le template
+        template = self.env.get_template("formulaire_rapport.html")
+
+        # Générer le HTML
+        html_content = template.render(**context)
+
+        # Convertir en PDF
+        return self._html_to_pdf(html_content)

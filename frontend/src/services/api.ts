@@ -13,6 +13,13 @@ if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
   )
 }
 
+// Validation HTTPS en production (sécurité)
+if (import.meta.env.PROD && baseURL && !baseURL.startsWith('https://')) {
+  throw new Error(
+    `[API] VITE_API_URL doit utiliser HTTPS en production. Valeur actuelle: ${baseURL}`
+  )
+}
+
 const api = axios.create({
   baseURL,
   headers: {
@@ -24,13 +31,8 @@ const api = axios.create({
 
 // Intercepteur pour ajouter le token d'authentification et CSRF
 api.interceptors.request.use(async (config) => {
-  // Token d'authentification
-  // Préférence: Cookie HttpOnly (géré automatiquement par le navigateur via withCredentials)
-  // Fallback: sessionStorage pour compatibilité ascendante pendant la transition
-  const token = sessionStorage.getItem('access_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  // Token d'authentification géré automatiquement par cookie HttpOnly
+  // avec withCredentials: true - Pas besoin de header Authorization manuel
 
   // Token CSRF pour les méthodes mutables (POST, PUT, DELETE, PATCH)
   if (config.method && requiresCsrf(config.method)) {
@@ -81,8 +83,7 @@ api.interceptors.response.use(
       // Ne déclencher la déconnexion qu'après plusieurs 401 consécutifs
       // Cela évite les déconnexions sur erreurs transitoires (hot-reload, race conditions)
       if (consecutive401Count >= MAX_CONSECUTIVE_401) {
-        sessionStorage.removeItem('access_token')
-        // Notifie AuthContext pour mettre à jour l'état user
+        // Notifie AuthContext pour mettre à jour l'état user et nettoyer le cookie
         emitSessionExpired()
         consecutive401Count = 0
       }

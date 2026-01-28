@@ -1,4 +1,4 @@
-// Types pour Hub Chantier
+// Types pour Hub Chantier - Réexportation centralisée
 
 // ===== UTILISATEURS =====
 export type UserRole = 'admin' | 'conducteur' | 'chef_chantier' | 'compagnon'
@@ -48,6 +48,54 @@ export interface UserUpdate {
   couleur?: string
   contact_urgence_nom?: string
   contact_urgence_telephone?: string
+}
+
+// Couleurs disponibles pour les utilisateurs
+export const USER_COLORS = [
+  { name: 'Rouge', code: '#E74C3C' },
+  { name: 'Orange', code: '#E67E22' },
+  { name: 'Jaune', code: '#F1C40F' },
+  { name: 'Vert clair', code: '#2ECC71' },
+  { name: 'Vert fonce', code: '#27AE60' },
+  { name: 'Marron', code: '#795548' },
+  { name: 'Corail', code: '#FF7043' },
+  { name: 'Magenta', code: '#EC407A' },
+  { name: 'Bleu fonce', code: '#2C3E50' },
+  { name: 'Bleu clair', code: '#3498DB' },
+  { name: 'Cyan', code: '#1ABC9C' },
+  { name: 'Violet', code: '#9B59B6' },
+  { name: 'Rose', code: '#E91E63' },
+  { name: 'Gris', code: '#607D8B' },
+  { name: 'Indigo', code: '#3F51B5' },
+  { name: 'Lime', code: '#CDDC39' },
+] as const
+
+// Metiers avec labels et couleurs
+export const METIERS: Record<Metier, { label: string; color: string }> = {
+  macon: { label: 'Macon', color: '#795548' },
+  coffreur: { label: 'Coffreur', color: '#F1C40F' },
+  ferrailleur: { label: 'Ferrailleur', color: '#607D8B' },
+  grutier: { label: 'Grutier', color: '#1ABC9C' },
+  charpentier: { label: 'Charpentier', color: '#2ECC71' },
+  couvreur: { label: 'Couvreur', color: '#E67E22' },
+  electricien: { label: 'Electricien', color: '#EC407A' },
+  plombier: { label: 'Plombier', color: '#3498DB' },
+  autre: { label: 'Autre', color: '#607D8B' },
+}
+
+// Roles avec labels et couleurs
+export const ROLES: Record<UserRole, { label: string; color: string }> = {
+  admin: { label: 'Administrateur', color: '#9B59B6' },
+  conducteur: { label: 'Conducteur de travaux', color: '#3498DB' },
+  chef_chantier: { label: 'Chef de chantier', color: '#27AE60' },
+  compagnon: { label: 'Compagnon', color: '#607D8B' },
+}
+
+// Types d'utilisateur avec labels et couleurs
+export const TYPES_UTILISATEUR: Record<UserType, { label: string; color: string }> = {
+  employe: { label: 'Employe', color: '#3498DB' },
+  interimaire: { label: 'Interimaire', color: '#FF9800' },
+  sous_traitant: { label: 'Sous-traitant', color: '#9C27B0' },
 }
 
 // ===== CHANTIERS =====
@@ -141,7 +189,15 @@ export interface ChantierUpdate {
   description?: string
 }
 
-// ===== DASHBOARD / FEED =====
+// Statuts de chantier avec labels, couleurs et icones
+export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: string; icon: string }> = {
+  ouvert: { label: 'A lancer', color: '#3498DB', icon: 'circle' },
+  en_cours: { label: 'En cours', color: '#27AE60', icon: 'play' },
+  receptionne: { label: 'Receptionne', color: '#F1C40F', icon: 'check' },
+  ferme: { label: 'Ferme', color: '#E74C3C', icon: 'lock' },
+}
+
+// ===== DASHBOARD / FEED (voir aussi dashboard.ts pour les types avancés) =====
 export type PostType = 'message' | 'photo' | 'urgent'
 export type TargetType = 'tous' | 'chantiers' | 'utilisateurs'
 
@@ -206,76 +262,10 @@ export interface PaginatedResponse<T> {
   pages: number
 }
 
-// ===== COULEURS UTILISATEURS =====
-export const USER_COLORS = [
-  { name: 'Rouge', code: '#E74C3C' },
-  { name: 'Orange', code: '#E67E22' },
-  { name: 'Jaune', code: '#F1C40F' },
-  { name: 'Vert clair', code: '#2ECC71' },
-  { name: 'Vert fonce', code: '#27AE60' },
-  { name: 'Marron', code: '#795548' },
-  { name: 'Corail', code: '#FF7043' },
-  { name: 'Magenta', code: '#EC407A' },
-  { name: 'Bleu fonce', code: '#2C3E50' },
-  { name: 'Bleu clair', code: '#3498DB' },
-  { name: 'Cyan', code: '#1ABC9C' },
-  { name: 'Violet', code: '#9B59B6' },
-  { name: 'Rose', code: '#E91E63' },
-  { name: 'Gris', code: '#607D8B' },
-  { name: 'Indigo', code: '#3F51B5' },
-  { name: 'Lime', code: '#CDDC39' },
-] as const
-
-// ===== METIERS =====
-export const METIERS: Record<Metier, { label: string; color: string }> = {
-  macon: { label: 'Macon', color: '#795548' },
-  coffreur: { label: 'Coffreur', color: '#F1C40F' },
-  ferrailleur: { label: 'Ferrailleur', color: '#607D8B' },
-  grutier: { label: 'Grutier', color: '#1ABC9C' },
-  charpentier: { label: 'Charpentier', color: '#2ECC71' },
-  couvreur: { label: 'Couvreur', color: '#E67E22' },
-  electricien: { label: 'Electricien', color: '#EC407A' },
-  plombier: { label: 'Plombier', color: '#3498DB' },
-  autre: { label: 'Autre', color: '#607D8B' },
-}
-
-// ===== ROLES =====
-export const ROLES: Record<UserRole, { label: string; color: string }> = {
-  admin: { label: 'Administrateur', color: '#9B59B6' },
-  conducteur: { label: 'Conducteur de travaux', color: '#3498DB' },
-  chef_chantier: { label: 'Chef de chantier', color: '#27AE60' },
-  compagnon: { label: 'Compagnon', color: '#607D8B' },
-}
-
-// ===== TYPES UTILISATEUR =====
-export const TYPES_UTILISATEUR: Record<UserType, { label: string; color: string }> = {
-  employe: { label: 'Employe', color: '#3498DB' },
-  interimaire: { label: 'Interimaire', color: '#FF9800' },
-  sous_traitant: { label: 'Sous-traitant', color: '#9C27B0' },
-}
-
-// ===== CATEGORIES PLANNING (pour groupement) =====
-export type PlanningCategory = 'conducteur' | 'chef_chantier' | 'compagnon' | 'interimaire' | 'sous_traitant'
-
-export const PLANNING_CATEGORIES: Record<PlanningCategory, { label: string; color: string; order: number }> = {
-  conducteur: { label: 'Conducteurs de travaux', color: '#3498DB', order: 1 },
-  chef_chantier: { label: 'Chefs de chantier', color: '#27AE60', order: 2 },
-  compagnon: { label: 'Compagnons', color: '#607D8B', order: 3 },
-  interimaire: { label: 'Interimaires', color: '#FF9800', order: 4 },
-  sous_traitant: { label: 'Sous-traitants', color: '#9C27B0', order: 5 },
-}
-
-// ===== STATUTS CHANTIER =====
-export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: string; icon: string }> = {
-  ouvert: { label: 'A lancer', color: '#3498DB', icon: 'circle' },
-  en_cours: { label: 'En cours', color: '#27AE60', icon: 'play' },
-  receptionne: { label: 'Receptionne', color: '#F1C40F', icon: 'check' },
-  ferme: { label: 'Ferme', color: '#E74C3C', icon: 'lock' },
-}
-
 // ===== PLANNING / AFFECTATIONS =====
 export type TypeAffectation = 'unique' | 'recurrente'
 export type JourSemaine = 0 | 1 | 2 | 3 | 4 | 5 | 6
+export type PlanningCategory = 'conducteur' | 'chef_chantier' | 'compagnon' | 'interimaire' | 'sous_traitant'
 
 export interface Affectation {
   id: string
@@ -337,7 +327,7 @@ export interface DuplicateAffectationsRequest {
   target_date_debut: string
 }
 
-// Jours de la semaine
+// Jours de la semaine avec labels
 export const JOURS_SEMAINE: Record<JourSemaine, { label: string; short: string }> = {
   0: { label: 'Lundi', short: 'Lun' },
   1: { label: 'Mardi', short: 'Mar' },
@@ -348,7 +338,16 @@ export const JOURS_SEMAINE: Record<JourSemaine, { label: string; short: string }
   6: { label: 'Dimanche', short: 'Dim' },
 }
 
-// ===== TACHES (TAC-01 à TAC-20) =====
+// Categories de planning
+export const PLANNING_CATEGORIES: Record<PlanningCategory, { label: string; color: string; order: number }> = {
+  conducteur: { label: 'Conducteurs de travaux', color: '#3498DB', order: 1 },
+  chef_chantier: { label: 'Chefs de chantier', color: '#27AE60', order: 2 },
+  compagnon: { label: 'Compagnons', color: '#607D8B', order: 3 },
+  interimaire: { label: 'Interimaires', color: '#FF9800', order: 4 },
+  sous_traitant: { label: 'Sous-traitants', color: '#9C27B0', order: 5 },
+}
+
+// ===== TACHES =====
 export type StatutTache = 'a_faire' | 'termine'
 export type UniteMesure = 'm2' | 'm3' | 'ml' | 'kg' | 'litre' | 'unite' | 'forfait'
 export type CouleurProgression = 'gris' | 'vert' | 'jaune' | 'rouge'
@@ -509,7 +508,7 @@ export const STATUTS_TACHE: Record<StatutTache, { label: string; icon: string; c
   termine: { label: 'Termine', icon: '✅', color: '#4CAF50' },
 }
 
-// ===== FEUILLES D'HEURES / POINTAGES (FDH-01 à FDH-20) =====
+// ===== FEUILLES D'HEURES / POINTAGES =====
 export type StatutPointage = 'brouillon' | 'soumis' | 'valide' | 'rejete'
 export type TypeVariablePaie =
   | 'heures_normales' | 'heures_supplementaires' | 'heures_nuit' | 'heures_dimanche' | 'heures_ferie'
@@ -698,7 +697,7 @@ export interface FeuilleHeuresFilters {
   page_size?: number
 }
 
-// Constantes
+// Constantes de pointages
 export const STATUTS_POINTAGE: Record<StatutPointage, { label: string; color: string; bgColor: string }> = {
   brouillon: { label: 'Brouillon', color: '#9E9E9E', bgColor: '#F5F5F5' },
   soumis: { label: 'En attente', color: '#FFC107', bgColor: '#FFF8E1' },
@@ -740,7 +739,7 @@ export const JOURS_SEMAINE_LABELS: Record<string, string> = {
 // Tableau ordonne des jours de la semaine (pour iteration)
 export const JOURS_SEMAINE_ARRAY = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
 
-// ===== FORMULAIRES (FOR-01 à FOR-11) =====
+// ===== FORMULAIRES =====
 export type TypeChamp = 'texte' | 'texte_long' | 'nombre' | 'date' | 'heure' | 'date_heure' | 'select' | 'checkbox' | 'radio' | 'multi_select' | 'auto_date' | 'auto_heure' | 'auto_localisation' | 'auto_intervenant' | 'photo' | 'photo_multiple' | 'signature' | 'titre_section' | 'separateur'
 export type CategorieFormulaire = 'intervention' | 'reception' | 'securite' | 'incident' | 'approvisionnement' | 'administratif' | 'gros_oeuvre' | 'autre'
 export type StatutFormulaire = 'brouillon' | 'soumis' | 'valide'
@@ -904,3 +903,17 @@ export const STATUTS_FORMULAIRE: Record<StatutFormulaire, { label: string; color
   soumis: { label: 'Soumis', color: '#FFC107', bgColor: '#FFF8E1' },
   valide: { label: 'Valide', color: '#4CAF50', bgColor: '#E8F5E9' },
 }
+
+// ===== RÉEXPORTS DES TYPES DEPUIS LES MODULES SÉPARÉS =====
+// Les types de dashboard, documents, logistique et signalements sont définis dans des fichiers séparés
+export type {
+  TargetType as DashboardTargetType,
+  PostStatus,
+  PostDetail,
+  Comment,
+  Like,
+  CreatePostData,
+  CreateCommentData,
+  FeedResponse,
+  Author,
+} from './dashboard'
