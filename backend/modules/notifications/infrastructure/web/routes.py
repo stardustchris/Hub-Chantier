@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from modules.auth.infrastructure.web.dependencies import get_current_user_id
+from shared.infrastructure.web import get_current_user_id
 from shared.infrastructure.database import get_db
 from shared.infrastructure.config import settings
 from ...application.dtos import NotificationListDTO, MarkAsReadDTO

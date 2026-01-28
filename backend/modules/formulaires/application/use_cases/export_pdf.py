@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Any, Dict, Callable
 from datetime import datetime
 
-from shared.infrastructure.pdf import PdfGeneratorService
+from shared.application.ports import PdfGeneratorPort
 
 from ...domain.repositories import (
     FormulaireRempliRepository,
@@ -70,11 +70,11 @@ class ExportFormulairePDFUseCase:
         self,
         formulaire_repo: FormulaireRempliRepository,
         template_repo: TemplateFormulaireRepository,
-        pdf_service: Optional[PdfGeneratorService] = None,
+        pdf_service: PdfGeneratorPort,
     ):
         self._formulaire_repo = formulaire_repo
         self._template_repo = template_repo
-        self.pdf_service = pdf_service or PdfGeneratorService()
+        self.pdf_service = pdf_service
 
     def execute(self, formulaire_id: int) -> PDFContent:
         """Prepare le contenu structure pour le PDF."""
