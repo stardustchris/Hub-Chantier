@@ -20,6 +20,9 @@ export function GDPRBanner() {
     geolocation: false,
     notifications: false,
     analytics: false,
+    timestamp: null,
+    ip_address: null,
+    user_agent: null,
   })
 
   useEffect(() => {

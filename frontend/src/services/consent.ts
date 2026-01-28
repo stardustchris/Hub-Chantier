@@ -22,6 +22,9 @@ export interface ConsentPreferences {
   geolocation: boolean
   notifications: boolean
   analytics: boolean
+  timestamp: string | null
+  ip_address: string | null
+  user_agent: string | null
 }
 
 /**
@@ -59,6 +62,9 @@ async function getConsents(): Promise<ConsentPreferences> {
       geolocation: false,
       notifications: false,
       analytics: false,
+      timestamp: null,
+      ip_address: null,
+      user_agent: null,
     }
   }
 }
@@ -80,6 +86,9 @@ async function setConsent(type: ConsentType, value: boolean): Promise<void> {
         geolocation: type === 'geolocation' ? value : false,
         notifications: type === 'notifications' ? value : false,
         analytics: type === 'analytics' ? value : false,
+        timestamp: new Date().toISOString(),
+        ip_address: null,
+        user_agent: null,
       }
     }
 
@@ -105,6 +114,9 @@ async function setConsents(consents: Partial<ConsentPreferences>): Promise<void>
         geolocation: consents.geolocation ?? false,
         notifications: consents.notifications ?? false,
         analytics: consents.analytics ?? false,
+        timestamp: consents.timestamp ?? new Date().toISOString(),
+        ip_address: consents.ip_address ?? null,
+        user_agent: consents.user_agent ?? null,
       }
     }
 
@@ -139,7 +151,7 @@ export const consentService = {
    */
   hasAnswered: async (): Promise<boolean> => {
     const consents = await getConsents()
-    return consents.has_answered === true
+    return consents.timestamp !== null
   },
 
   /**

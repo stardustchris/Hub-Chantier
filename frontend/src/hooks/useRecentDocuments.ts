@@ -172,7 +172,7 @@ export function useRecentDocuments(): UseRecentDocumentsReturn {
             4          // limit - 4 docs par chantier max
           )
 
-          for (const doc of docsResponse.items) {
+          for (const doc of docsResponse.documents) {
             recentDocs.push({
               id: `${chantier.id}-${doc.id}`,
               name: doc.nom,

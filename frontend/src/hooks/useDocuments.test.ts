@@ -122,7 +122,7 @@ describe('useDocuments', () => {
     })
     vi.mocked(documentsApi.getArborescence).mockResolvedValue(mockArborescence)
     vi.mocked(documentsApi.listDocuments).mockResolvedValue({
-      items: mockDocuments,
+      documents: mockDocuments,
       total: 1,
       skip: 0,
       limit: 50,
