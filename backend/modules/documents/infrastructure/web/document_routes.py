@@ -494,8 +494,25 @@ def download_document(
 ):
     """Télécharge un document."""
     try:
-        url, filename, mime_type = controller.download_document(document_id)
-        return {"url": url, "filename": filename, "mime_type": mime_type}
+        # Récupérer le document pour avoir le chemin de stockage
+        document = controller.get_document(document_id)
+
+        # Ouvrir le fichier depuis le stockage
+        from modules.documents.adapters.providers.local_file_storage import LocalFileStorageService
+        storage = LocalFileStorageService()
+        file_content = storage.get(document.chemin_stockage)
+
+        if not file_content:
+            raise HTTPException(status_code=404, detail="Fichier non trouvé")
+
+        # Retourner le fichier en streaming
+        return StreamingResponse(
+            file_content,
+            media_type=document.mime_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{document.nom}"'
+            }
+        )
     except DocumentNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
