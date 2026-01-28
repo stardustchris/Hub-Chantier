@@ -36,13 +36,24 @@ def upgrade() -> None:
 
     conn = op.get_bind()
     inspector = inspect(conn)
+    dialect_name = conn.dialect.name
 
     # Vérifier si la table existe déjà
     if 'api_keys' not in inspector.get_table_names():
+        # Types compatibles SQLite/PostgreSQL
+        if dialect_name == 'postgresql':
+            id_type = postgresql.UUID(as_uuid=True)
+            scopes_type = postgresql.ARRAY(sa.String())
+            scopes_default = "ARRAY['read']::text[]"
+        else:  # SQLite
+            id_type = sa.String(36)  # UUID as string
+            scopes_type = sa.Text()  # JSON array as text
+            scopes_default = '["read"]'  # JSON format
+
         # Créer la table api_keys
         op.create_table(
             'api_keys',
-            sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+            sa.Column('id', id_type, primary_key=True, nullable=False),
             sa.Column('key_hash', sa.String(64), unique=True, nullable=False,
                      comment='SHA256 hash du secret API (jamais stocké en clair)'),
             sa.Column('key_prefix', sa.String(8), nullable=False,
@@ -53,9 +64,9 @@ def upgrade() -> None:
                      comment='Nom descriptif de la clé'),
             sa.Column('description', sa.Text(), nullable=True,
                      comment='Description détaillée (optionnel)'),
-            sa.Column('scopes', postgresql.ARRAY(sa.String()), nullable=False,
-                     server_default="ARRAY['read']::text[]",
-                     comment='Permissions accordées (read, write, admin)'),
+            sa.Column('scopes', scopes_type, nullable=False,
+                     server_default=scopes_default,
+                     comment='Permissions accordées (read, write, admin) - ARRAY pour PostgreSQL, JSON pour SQLite'),
             sa.Column('rate_limit_per_hour', sa.Integer(), nullable=False,
                      server_default='1000',
                      comment='Limite de requêtes par heure'),
@@ -87,12 +98,17 @@ def upgrade() -> None:
         op.create_index('idx_api_keys_user_id', 'api_keys', ['user_id'])
 
         # Index partiel pour clés actives (optimisation requêtes)
-        op.create_index(
-            'idx_api_keys_active',
-            'api_keys',
-            ['is_active'],
-            postgresql_where=sa.text('is_active = true')
-        )
+        # SQLite ne supporte pas les index partiels avec WHERE, on le crée seulement pour PostgreSQL
+        if dialect_name == 'postgresql':
+            op.create_index(
+                'idx_api_keys_active',
+                'api_keys',
+                ['is_active'],
+                postgresql_where=sa.text('is_active = true')
+            )
+        else:
+            # Pour SQLite, index normal sans clause WHERE
+            op.create_index('idx_api_keys_active', 'api_keys', ['is_active'])
 
         # Index pour audit/cleanup des clés expirées
         op.create_index('idx_api_keys_expires_at', 'api_keys', ['expires_at'])
