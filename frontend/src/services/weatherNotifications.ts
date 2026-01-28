@@ -6,8 +6,12 @@
 import type { WeatherAlert } from './weather'
 import { logger } from './logger'
 
-/** Clé localStorage pour le dernier alerte notifiée */
-const LAST_ALERT_KEY = 'hubchantier_last_weather_alert'
+/**
+ * Cache en mémoire pour les alertes notifiées (session uniquement)
+ * Pas de localStorage pour éviter persistance entre sessions et vulnérabilité XSS
+ */
+let lastAlertKey: string | null = null
+let lastBulletinDate: string | null = null
 
 /**
  * Vérifie si les notifications sont supportées et autorisées
@@ -51,8 +55,7 @@ export function sendWeatherAlertNotification(alert: WeatherAlert): void {
     return
   }
 
-  // Vérifier si on a déjà notifié cette alerte récemment
-  const lastAlertKey = localStorage.getItem(LAST_ALERT_KEY)
+  // Vérifier si on a déjà notifié cette alerte récemment (cache mémoire)
   const alertKey = `${alert.type}_${alert.title}_${alert.startTime}`
 
   if (lastAlertKey === alertKey) {
@@ -78,8 +81,8 @@ export function sendWeatherAlertNotification(alert: WeatherAlert): void {
       data: { alert },
     })
 
-    // Enregistrer qu'on a notifié cette alerte
-    localStorage.setItem(LAST_ALERT_KEY, alertKey)
+    // Enregistrer qu'on a notifié cette alerte (cache mémoire)
+    lastAlertKey = alertKey
 
     // Gérer le clic sur la notification
     notification.onclick = () => {
@@ -109,11 +112,10 @@ export function sendMorningBulletinNotification(
     return
   }
 
-  // Vérifier si on a déjà envoyé le bulletin aujourd'hui
+  // Vérifier si on a déjà envoyé le bulletin aujourd'hui (cache mémoire)
   const today = new Date().toISOString().split('T')[0]
-  const lastBulletinKey = localStorage.getItem('hubchantier_last_bulletin')
 
-  if (lastBulletinKey === today) {
+  if (lastBulletinDate === today) {
     return
   }
 
@@ -124,7 +126,8 @@ export function sendMorningBulletinNotification(
       tag: 'weather-bulletin',
     })
 
-    localStorage.setItem('hubchantier_last_bulletin', today)
+    // Enregistrer la date du bulletin (cache mémoire)
+    lastBulletinDate = today
 
     notification.onclick = () => {
       window.focus()
