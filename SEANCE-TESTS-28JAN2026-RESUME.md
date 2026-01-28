@@ -82,7 +82,29 @@ from modules.auth.infrastructure.persistence.user_model import UserModel
 - ✅ Retourne l'objet complet avec auteur, likes, commentaires
 - ✅ Champ correct : `contenu` (pas `content`)
 
-### 5. Documentation Créée
+### 5. Tri Feed Corrigé
+**Problème** : Bulletin météo d'aujourd'hui (épinglé) apparaît après les posts d'hier
+
+**Cause** : Tri alphabétique sur le statut
+```python
+# ❌ AVANT (ordre alphabétique)
+query.order_by(PostModel.status.desc(), PostModel.created_at.desc())
+# "published" > "pinned" en ASCII → mauvais ordre
+
+# ✅ APRÈS (priorité numérique)
+status_priority = case(
+    (PostModel.status == PostStatus.PINNED.value, 1),
+    else_=2
+)
+query.order_by(status_priority.asc(), PostModel.created_at.desc())
+```
+
+**Tests de validation** :
+- ✅ Posts épinglés (PINNED) en premier
+- ✅ Puis posts normaux par date décroissante
+- ✅ Bulletin météo d'aujourd'hui maintenant en tête du feed
+
+### 6. Documentation Créée
 - ✅ `RAPPORT-FINAL-SESSION-TESTS.md` - Rapport complet tests fonctionnels
 - ✅ `TEST-CONNEXION-BACKEND-FRONTEND.md` - Détails connexion
 - ✅ `backend/debug_login.py` - Script de test authentification
@@ -132,24 +154,26 @@ from modules.auth.infrastructure.persistence.user_model import UserModel
 
 ## 📝 Commits Créés
 
-### Commit principal
+### Commit 1: CSRF et documentation
 ```
 fix(backend): corrections CSRF et ajout endpoint /csrf-token pour tests
-
-- CSRF middleware compatible dev (secure=False, samesite=lax)
-- Nouvel endpoint GET /api/auth/csrf-token
-- CSRF temporairement désactivé pour debugging
-- Documentation complète session tests
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ```
-
 **Hash** : `ef4d0d5`
-**Fichiers modifiés** :
-- `backend/main.py`
-- `backend/modules/auth/infrastructure/web/auth_routes.py`
-- `backend/shared/infrastructure/web/csrf_middleware.py`
-- `RAPPORT-FINAL-SESSION-TESTS.md` (nouveau)
+**Fichiers** : main.py, auth_routes.py, csrf_middleware.py, documentation
+
+### Commit 2: Publication feed
+```
+fix(dashboard): correction import UserModel pour publication feed
+```
+**Hash** : `3c71386`
+**Fichiers** : dashboard_routes.py, SEANCE-TESTS-28JAN2026-RESUME.md
+
+### Commit 3: Tri feed
+```
+fix(dashboard): correction tri feed - posts épinglés en premier
+```
+**Hash** : `23312fc`
+**Fichiers** : sqlalchemy_post_repository.py
 
 ---
 
