@@ -758,6 +758,7 @@ def activate_user(
 
 @users_router.get("/me/export-data")
 def export_user_data_rgpd(
+    db: Session = Depends(get_db),
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
 ) -> dict[str, Any]:
@@ -785,18 +786,13 @@ def export_user_data_rgpd(
     """
     from ...application.use_cases import ExportUserDataUseCase
     from ...infrastructure.persistence import SQLAlchemyUserRepository
-    from shared.infrastructure.database import SessionLocal
 
-    db = SessionLocal()
-    try:
-        user_repo = SQLAlchemyUserRepository(db)
-        use_case = ExportUserDataUseCase(user_repo)
+    user_repo = SQLAlchemyUserRepository(db)
+    use_case = ExportUserDataUseCase(user_repo)
 
-        export_data = use_case.execute(current_user_id)
+    export_data = use_case.execute(current_user_id)
 
-        return export_data
-    finally:
-        db.close()
+    return export_data
 
 
 # =============================================================================

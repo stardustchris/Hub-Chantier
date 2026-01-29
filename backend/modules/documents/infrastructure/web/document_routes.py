@@ -410,14 +410,13 @@ async def upload_document(
         )
 
         # Publish event after database commit
-        # TEMPORAIRE: Désactivé car erreur avec event_bus
-        # await event_bus.publish(DocumentUploadedEvent(
-        #     document_id=result.id,
-        #     nom=result.nom,
-        #     type_document=result.type_document,
-        #     chantier_id=chantier_id,
-        #     user_id=current_user_id,
-        # ))
+        await event_bus.publish(DocumentUploadedEvent(
+            document_id=result.id,
+            nom=result.nom,
+            type_document=result.type_document,
+            chantier_id=chantier_id,
+            user_id=current_user_id,
+        ))
 
         return result
     except FileTooLargeError as e:
