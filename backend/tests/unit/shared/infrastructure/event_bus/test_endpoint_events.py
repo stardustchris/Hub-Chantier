@@ -361,6 +361,7 @@ async def test_upload_document_publishes_event():
         file=mock_file,
         description=None,
         niveau_acces=None,
+        db=Mock(),
         event_bus=mock_event_bus,
         controller=mock_controller,
         current_user_id=1,
@@ -420,18 +421,22 @@ async def test_upload_document_event_after_controller():
     mock_request.client = Mock()
     mock_request.client.host = "127.0.0.1"
 
+    mock_db = Mock()
+
     await upload_document(
         dossier_id=10,
         http_request=mock_request,
         chantier_id=25,
         file=mock_file,
+        db=mock_db,
         event_bus=mock_event_bus,
         controller=mock_controller,
         current_user_id=1,
         audit=mock_audit,
     )
 
-    # Verify order: controller first (commits), then event (synchronous)
+    # Verify order: controller first, then db.commit, then event
+    assert mock_db.commit.called
     assert call_order == ["controller.upload_document", "event_bus.publish"]
 
 

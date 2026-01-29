@@ -209,14 +209,18 @@ class GetArborescenceUseCase:
         """
         all_dossiers = self._dossier_repo.get_arborescence(chantier_id)
 
-        # Construire l'arbre
+        # Construire l'arbre et accumuler le total des documents
         {d.id: d for d in all_dossiers}
         root_dossiers = []
+        total_docs_count = 0
 
         def build_tree(dossier: Dossier) -> DossierTreeDTO:
+            nonlocal total_docs_count
             children = [
                 build_tree(d) for d in all_dossiers if d.parent_id == dossier.id
             ]
+            nb_docs = self._document_repo.count_by_dossier(dossier.id)  # type: ignore
+            total_docs_count += nb_docs
             return DossierTreeDTO(
                 id=dossier.id,  # type: ignore
                 chantier_id=dossier.chantier_id,
@@ -226,7 +230,7 @@ class GetArborescenceUseCase:
                 parent_id=dossier.parent_id,
                 ordre=dossier.ordre,
                 chemin_complet=dossier.chemin_complet,
-                nombre_documents=self._document_repo.count_by_dossier(dossier.id),  # type: ignore
+                nombre_documents=nb_docs,
                 children=sorted(children, key=lambda x: x.ordre),
             )
 
@@ -240,7 +244,7 @@ class GetArborescenceUseCase:
         return ArborescenceDTO(
             chantier_id=chantier_id,
             dossiers=root_dossiers,
-            total_documents=self._document_repo.count_by_chantier(chantier_id),
+            total_documents=total_docs_count,
             total_taille=self._document_repo.get_total_size_by_chantier(chantier_id),
         )
 
