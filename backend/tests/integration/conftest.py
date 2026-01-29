@@ -27,7 +27,7 @@ from modules.planning.infrastructure.persistence.affectation_model import Base a
 from modules.formulaires.infrastructure.persistence import Base as FormulairesBase
 from modules.signalements.infrastructure.persistence import Base as SignalementsBase
 from modules.documents.infrastructure.persistence.models import Base as DocumentsBase
-from modules.planning_charge.infrastructure.persistence import BesoinChargeModel
+from modules.planning.infrastructure.persistence import BesoinChargeModel
 
 
 @pytest.fixture(scope="function")

@@ -1,7 +1,7 @@
 """Routes FastAPI pour la gestion des chantiers."""
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy.orm import Session
 
@@ -192,27 +192,149 @@ UserSummary = UserPublicSummary
 class ChantierResponse(BaseModel):
     """Réponse chantier complète selon CDC - format frontend."""
 
-    id: str  # String pour frontend
-    code: str
-    nom: str
-    adresse: str
-    statut: str
-    couleur: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    contact_nom: Optional[str] = None  # Legacy field
-    contact_telephone: Optional[str] = None  # Legacy field
-    contacts: List[ContactResponse] = []  # Multi-contacts
-    phases: List[PhaseChantierResponse] = []  # Phases/étapes du chantier
-    heures_estimees: Optional[float] = None
-    date_debut_prevue: Optional[str] = None  # Renommé pour frontend
-    date_fin_prevue: Optional[str] = None  # Renommé pour frontend
-    description: Optional[str] = None
-    conducteurs: List[UserPublicSummary] = []  # Objets User publics (sans email/tel)
-    chefs: List[UserPublicSummary] = []  # Objets User publics (sans email/tel)
-    ouvriers: List[UserPublicSummary] = []  # Ouvriers/intérimaires/sous-traitants
-    created_at: str
-    updated_at: Optional[str] = None
+    id: str = Field(
+        ...,
+        description="Identifiant unique du chantier",
+        example="42"
+    )
+    code: str = Field(
+        ...,
+        description="Code unique du chantier (auto-généré si non fourni)",
+        min_length=3,
+        max_length=20,
+        example="CHT-2026-001"
+    )
+    nom: str = Field(
+        ...,
+        description="Nom du chantier",
+        min_length=3,
+        max_length=255,
+        example="Villa Lyon 3ème - Construction neuve"
+    )
+    adresse: str = Field(
+        ...,
+        description="Adresse complète du chantier",
+        example="45 Avenue Lacassagne, 69003 Lyon"
+    )
+    statut: str = Field(
+        ...,
+        description="Statut actuel du chantier",
+        pattern="^(ouvert|en_cours|receptionne|ferme)$",
+        example="en_cours"
+    )
+    couleur: Optional[str] = Field(
+        None,
+        description="Couleur d'identification (hex)",
+        pattern="^#[0-9A-Fa-f]{6}$",
+        example="#3B82F6"
+    )
+    latitude: Optional[float] = Field(
+        None,
+        description="Latitude GPS du chantier",
+        ge=-90,
+        le=90,
+        example=45.7578
+    )
+    longitude: Optional[float] = Field(
+        None,
+        description="Longitude GPS du chantier",
+        ge=-180,
+        le=180,
+        example=4.8320
+    )
+    contact_nom: Optional[str] = Field(
+        None,
+        description="Nom du contact principal (legacy field)",
+        example="Jean Dupont"
+    )
+    contact_telephone: Optional[str] = Field(
+        None,
+        description="Téléphone du contact principal (legacy field)",
+        example="06 12 34 56 78"
+    )
+    contacts: List[ContactResponse] = Field(
+        default_factory=list,
+        description="Liste des contacts sur place"
+    )
+    phases: List[PhaseChantierResponse] = Field(
+        default_factory=list,
+        description="Phases/étapes du chantier"
+    )
+    heures_estimees: Optional[float] = Field(
+        None,
+        description="Nombre d'heures estimées pour le chantier",
+        ge=0,
+        example=320.5
+    )
+    date_debut_prevue: Optional[str] = Field(
+        None,
+        description="Date de début prévue (format ISO 8601)",
+        example="2026-01-15"
+    )
+    date_fin_prevue: Optional[str] = Field(
+        None,
+        description="Date de fin prévue (format ISO 8601)",
+        example="2026-02-28"
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Description détaillée du chantier",
+        example="Construction d'une villa individuelle de 150m² avec garage et piscine"
+    )
+    conducteurs: List[UserPublicSummary] = Field(
+        default_factory=list,
+        description="Conducteurs de travaux assignés (sans données sensibles)"
+    )
+    chefs: List[UserPublicSummary] = Field(
+        default_factory=list,
+        description="Chefs de chantier assignés (sans données sensibles)"
+    )
+    ouvriers: List[UserPublicSummary] = Field(
+        default_factory=list,
+        description="Ouvriers, intérimaires et sous-traitants assignés"
+    )
+    created_at: str = Field(
+        ...,
+        description="Date de création de la fiche chantier (ISO 8601)",
+        example="2026-01-10T08:30:00Z"
+    )
+    updated_at: Optional[str] = Field(
+        None,
+        description="Date de dernière modification (ISO 8601)",
+        example="2026-01-28T14:22:00Z"
+    )
+
+    class Config:
+        from_attributes = True
+        schema_extra = {
+            "example": {
+                "id": "42",
+                "code": "CHT-2026-001",
+                "nom": "Villa Lyon 3ème - Construction neuve",
+                "adresse": "45 Avenue Lacassagne, 69003 Lyon",
+                "statut": "en_cours",
+                "couleur": "#3B82F6",
+                "latitude": 45.7578,
+                "longitude": 4.8320,
+                "contact_nom": "Jean Dupont",
+                "contact_telephone": "06 12 34 56 78",
+                "contacts": [
+                    {"nom": "Jean Dupont", "profession": "Architecte", "telephone": "06 12 34 56 78"}
+                ],
+                "phases": [],
+                "heures_estimees": 320.5,
+                "date_debut_prevue": "2026-01-15",
+                "date_fin_prevue": "2026-02-28",
+                "description": "Construction d'une villa individuelle de 150m² avec garage et piscine",
+                "conducteurs": [
+                    {"id": "5", "nom": "Martin", "prenom": "Sophie", "role": "conducteur", "type_utilisateur": "salarie", "metier": "Conducteur de travaux", "couleur": "#10B981", "is_active": True}
+                ],
+                "chefs": [],
+                "ouvriers": [],
+                "created_at": "2026-01-10T08:30:00Z",
+                "updated_at": "2026-01-28T14:22:00Z"
+            }
+        }
 
 
 class ChantierListResponse(BaseModel):

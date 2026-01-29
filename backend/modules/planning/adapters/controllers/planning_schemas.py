@@ -190,26 +190,88 @@ class AffectationResponse(BaseModel):
         chantier_couleur: Couleur du chantier (enrichissement).
     """
 
-    id: int
-    utilisateur_id: int
-    chantier_id: int
-    date: str
-    heure_debut: Optional[str] = None
-    heure_fin: Optional[str] = None
-    note: Optional[str] = None
-    type_affectation: str
-    jours_recurrence: Optional[List[int]] = None
-    created_at: str
-    updated_at: str
-    created_by: int
+    id: int = Field(..., description="Identifiant unique de l'affectation", example=42)
+    utilisateur_id: int = Field(..., description="ID de l'utilisateur affecté", example=5)
+    chantier_id: int = Field(..., description="ID du chantier", example=12)
+    date: str = Field(..., description="Date de l'affectation (format ISO 8601)", example="2026-01-22")
+    heure_debut: Optional[str] = Field(
+        None,
+        description="Heure de début (format HH:MM)",
+        pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+        example="08:00"
+    )
+    heure_fin: Optional[str] = Field(
+        None,
+        description="Heure de fin (format HH:MM)",
+        pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+        example="17:00"
+    )
+    note: Optional[str] = Field(
+        None,
+        description="Commentaire privé pour l'affectation",
+        max_length=500,
+        example="Travaux de fondation - prévoir béton"
+    )
+    type_affectation: str = Field(
+        ...,
+        description="Type d'affectation (unique ou recurrente)",
+        pattern="^(unique|recurrente)$",
+        example="unique"
+    )
+    jours_recurrence: Optional[List[int]] = Field(
+        None,
+        description="Jours de récurrence (0=Lundi, 6=Dimanche) pour affectations récurrentes",
+        example=[1, 3, 5]
+    )
+    created_at: str = Field(
+        ...,
+        description="Date de création de l'affectation (format ISO 8601)",
+        example="2026-01-21T10:00:00Z"
+    )
+    updated_at: str = Field(
+        ...,
+        description="Date de dernière modification (format ISO 8601)",
+        example="2026-01-21T14:30:00Z"
+    )
+    created_by: int = Field(..., description="ID de l'utilisateur créateur", example=3)
     # Enrichissement pour l'UI
-    utilisateur_nom: Optional[str] = None
-    utilisateur_couleur: Optional[str] = None
-    utilisateur_metier: Optional[str] = None
-    utilisateur_role: Optional[str] = None
-    utilisateur_type: Optional[str] = None
-    chantier_nom: Optional[str] = None
-    chantier_couleur: Optional[str] = None
+    utilisateur_nom: Optional[str] = Field(
+        None,
+        description="Nom complet de l'utilisateur (enrichissement UI)",
+        example="Jean Dupont"
+    )
+    utilisateur_couleur: Optional[str] = Field(
+        None,
+        description="Couleur d'identification de l'utilisateur (hex)",
+        pattern="^#[0-9A-Fa-f]{6}$",
+        example="#FF5733"
+    )
+    utilisateur_metier: Optional[str] = Field(
+        None,
+        description="Métier de l'utilisateur (enrichissement UI)",
+        example="Maçon"
+    )
+    utilisateur_role: Optional[str] = Field(
+        None,
+        description="Rôle de l'utilisateur dans l'application",
+        example="ouvrier"
+    )
+    utilisateur_type: Optional[str] = Field(
+        None,
+        description="Type d'utilisateur (salarié, intérimaire, sous-traitant)",
+        example="salarie"
+    )
+    chantier_nom: Optional[str] = Field(
+        None,
+        description="Nom du chantier (enrichissement UI)",
+        example="Villa Lyon 3ème"
+    )
+    chantier_couleur: Optional[str] = Field(
+        None,
+        description="Couleur d'identification du chantier (hex)",
+        pattern="^#[0-9A-Fa-f]{6}$",
+        example="#33FF57"
+    )
 
     model_config = {
         "json_schema_extra": {
