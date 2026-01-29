@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import ChantiersListPage from './ChantiersListPage'
 import type { Chantier } from '../types'
@@ -206,15 +207,16 @@ describe('ChantiersListPage', () => {
       })
     })
 
-    // TODO: fireEvent.change on select doesn't trigger onChange reliably in jsdom
-    // The filter works via stat cards (tested below) and manually
-    it.skip('filtre par statut via le selecteur', async () => {
+    it('filtre par statut via le selecteur', async () => {
+      const user = userEvent.setup()
       renderPage()
 
       await waitFor(() => {
-        const select = screen.getByRole('combobox')
-        fireEvent.change(select, { target: { value: 'en_cours' } })
+        expect(screen.getByRole('combobox')).toBeInTheDocument()
       })
+
+      const select = screen.getByRole('combobox')
+      await user.selectOptions(select, 'en_cours')
 
       await waitFor(() => {
         expect(chantiersService.list).toHaveBeenCalledWith(
@@ -263,8 +265,8 @@ describe('ChantiersListPage', () => {
       })
     })
 
-    // TODO: Filter state isn't propagating correctly in test environment
-    it.skip('affiche le bouton effacer filtres quand filtres actifs et aucun resultat', async () => {
+    it('affiche le bouton effacer filtres quand filtres actifs et aucun resultat', async () => {
+      const user = userEvent.setup()
       vi.mocked(chantiersService.list)
         .mockResolvedValueOnce({
           items: mockChantiers,
@@ -291,9 +293,11 @@ describe('ChantiersListPage', () => {
       renderPage()
 
       await waitFor(() => {
-        const searchInput = screen.getByPlaceholderText('Rechercher un chantier...')
-        fireEvent.change(searchInput, { target: { value: 'xyz' } })
+        expect(screen.getByPlaceholderText('Rechercher un chantier...')).toBeInTheDocument()
       })
+
+      const searchInput = screen.getByPlaceholderText('Rechercher un chantier...')
+      await user.type(searchInput, 'xyz')
 
       await waitFor(() => {
         expect(screen.getByText('Effacer les filtres')).toBeInTheDocument()

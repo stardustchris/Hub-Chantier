@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import UsersListPage from './UsersListPage'
 import type { User } from '../types'
@@ -230,16 +231,17 @@ describe('UsersListPage', () => {
       })
     })
 
-    // TODO: fireEvent.change on select doesn't trigger onChange reliably in jsdom
-    // The filter works via stat cards (tested below) and manually
-    it.skip('filtre par role via le selecteur', async () => {
+    it('filtre par role via le selecteur', async () => {
+      const user = userEvent.setup()
       renderPage()
 
       await waitFor(() => {
-        const selects = screen.getAllByRole('combobox')
-        // Premier select = role
-        fireEvent.change(selects[0], { target: { value: 'conducteur' } })
+        expect(screen.getAllByRole('combobox').length).toBeGreaterThan(0)
       })
+
+      const selects = screen.getAllByRole('combobox')
+      // Premier select = role
+      await user.selectOptions(selects[0], 'conducteur')
 
       await waitFor(() => {
         expect(usersService.list).toHaveBeenCalledWith(
@@ -248,15 +250,17 @@ describe('UsersListPage', () => {
       })
     })
 
-    // TODO: fireEvent.change on select doesn't trigger onChange reliably in jsdom
-    it.skip('filtre par statut actif', async () => {
+    it('filtre par statut actif', async () => {
+      const user = userEvent.setup()
       renderPage()
 
       await waitFor(() => {
-        const selects = screen.getAllByRole('combobox')
-        // Deuxieme select = actif
-        fireEvent.change(selects[1], { target: { value: 'active' } })
+        expect(screen.getAllByRole('combobox').length).toBeGreaterThan(1)
       })
+
+      const selects = screen.getAllByRole('combobox')
+      // Deuxieme select = actif
+      await user.selectOptions(selects[1], 'active')
 
       await waitFor(() => {
         expect(usersService.list).toHaveBeenCalledWith(
