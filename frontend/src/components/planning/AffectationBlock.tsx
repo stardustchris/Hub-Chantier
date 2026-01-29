@@ -80,8 +80,8 @@ const AffectationBlock = memo(function AffectationBlock({
   if (compact) {
     return (
       <div
-        className={`w-full max-w-full rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
-        style={{ backgroundColor, ...heightStyle }}
+        className={`w-full min-w-0 max-w-full rounded px-2 py-1 text-xs text-white cursor-pointer hover:opacity-90 transition-opacity truncate ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        style={{ backgroundColor, ...heightStyle, maxWidth: '100%' }}
         onClick={onClick}
         title={`${affectation.chantier_nom || 'Chantier'} ${affectation.heure_debut ? `${affectation.heure_debut} - ${affectation.heure_fin}` : ''}`}
         draggable={draggable}

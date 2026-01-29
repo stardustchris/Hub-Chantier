@@ -420,26 +420,27 @@ export default function PlanningGrid({
       // Pour le mois, colonne fixe pour utilisateurs + colonnes dynamiques pour les jours
       return { gridTemplateColumns: `200px repeat(${numDays}, minmax(40px, 1fr))` }
     }
-    // Mobile-responsive: 120px pour la colonne utilisateurs sur petit écran, 250px sur grand écran
-    const userColWidth = window.innerWidth < 768 ? '120px' : '250px'
-    const dayColWidth = window.innerWidth < 768 ? 'minmax(80px, 1fr)' : '1fr'
-    return { gridTemplateColumns: showWeekend ? `${userColWidth} repeat(7, ${dayColWidth})` : `${userColWidth} repeat(5, ${dayColWidth})` }
+    // Vue semaine : largeurs fixes pour éviter que le contenu dicte la taille
+    // Largeur disponible = 100% - 250px (colonne utilisateurs)
+    // On utilise CSS calc() pour distribuer équitablement
+    const numCols = showWeekend ? 7 : 5
+    return { gridTemplateColumns: `250px repeat(${numCols}, calc((100% - 250px) / ${numCols}))` }
   }, [days.length, viewMode, showWeekend])
 
   // Mode mois = affichage compact
   const isMonthView = viewMode === 'mois'
 
   return (
-    <div ref={gridRef} className={`bg-white rounded-lg shadow overflow-hidden overflow-x-auto ${resizeState ? 'select-none' : ''}`}>
+    <div ref={gridRef} className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''} ${resizeState ? 'select-none' : ''}`}>
       {/* Header - Jours */}
-      <div className={`grid border-b bg-gray-50 min-w-max`} style={gridStyle}>
+      <div className={`grid border-b bg-gray-50 ${isMonthView ? 'min-w-max' : ''}`} style={gridStyle}>
         <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
           Utilisateurs
         </div>
         {days.map(day => (
           <div
             key={day.toISOString()}
-            className={`px-1 py-2 text-center border-r last:border-r-0 ${
+            className={`px-1 py-2 text-center border-r last:border-r-0 overflow-hidden ${
               isToday(day) ? 'bg-primary-50' : ''
             }`}
           >
@@ -464,7 +465,7 @@ export default function PlanningGrid({
               {/* Header du groupe (catégorie) */}
               <button
                 onClick={() => onToggleMetier(category)}
-                className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors min-w-max" style={gridStyle}
+                className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors" style={gridStyle}
               >
                 <div className="px-4 py-2 flex items-center gap-2 border-r">
                   {isExpanded ? (
@@ -490,7 +491,7 @@ export default function PlanningGrid({
               {isExpanded && users.map(user => (
                 <div
                   key={user.id}
-                  className="group/row grid hover:bg-gray-50 transition-colors min-w-max" style={gridStyle}
+                  className="group/row grid hover:bg-gray-50 transition-colors" style={gridStyle}
                 >
                   {/* Colonne utilisateur */}
                   <div className="px-4 py-3 flex items-center gap-3 border-r">
