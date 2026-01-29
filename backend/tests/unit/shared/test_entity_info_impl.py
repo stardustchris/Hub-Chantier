@@ -26,36 +26,42 @@ class TestGetUserInfo:
         assert result is None
         assert "Erreur recuperation user 1" in caplog.text
 
-    def test_returns_user_info_with_real_db(self):
-        """Test retourne les infos utilisateur avec vraie DB."""
-        from shared.infrastructure.database import SessionLocal
+    def test_returns_none_for_nonexistent_user(self):
+        """Test retourne None pour un utilisateur inexistant."""
+        mock_session = Mock()
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = None
 
-        db = SessionLocal()
-        try:
-            service = SQLAlchemyEntityInfoService(db)
-            # Recherche un utilisateur inexistant
-            result = service.get_user_info(99999)
-            assert result is None
-        finally:
-            db.close()
+        service = SQLAlchemyEntityInfoService(mock_session)
+        result = service.get_user_info(99999)
+        assert result is None
 
     def test_returns_user_info_with_existing_user(self):
         """Test avec un utilisateur existant."""
-        from shared.infrastructure.database import SessionLocal
-        from modules.auth.infrastructure.persistence import UserModel
+        mock_session = Mock()
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
 
-        db = SessionLocal()
-        try:
-            # Trouver un utilisateur existant
-            user = db.query(UserModel).first()
-            if user:
-                service = SQLAlchemyEntityInfoService(db)
-                result = service.get_user_info(user.id)
+        mock_user = Mock()
+        mock_user.id = 1
+        mock_user.prenom = "Jean"
+        mock_user.nom = "Dupont"
+        mock_user.couleur = "#FF0000"
+        mock_user.metier = "Macon"
+        mock_user.role = "compagnon"
+        mock_user.type_utilisateur = "salarie"
+        mock_query.first.return_value = mock_user
 
-                assert result is not None
-                assert result.id == user.id
-        finally:
-            db.close()
+        service = SQLAlchemyEntityInfoService(mock_session)
+        result = service.get_user_info(1)
+
+        assert result is not None
+        assert result.id == 1
+        assert result.nom == "Jean Dupont"
+        assert result.couleur == "#FF0000"
 
 
 class TestGetChantierInfo:
@@ -76,33 +82,35 @@ class TestGetChantierInfo:
 
     def test_returns_none_when_chantier_not_found(self):
         """Test retourne None quand chantier non trouve."""
-        from shared.infrastructure.database import SessionLocal
+        mock_session = Mock()
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = None
 
-        db = SessionLocal()
-        try:
-            service = SQLAlchemyEntityInfoService(db)
-            result = service.get_chantier_info(99999)
-            assert result is None
-        finally:
-            db.close()
+        service = SQLAlchemyEntityInfoService(mock_session)
+        result = service.get_chantier_info(99999)
+        assert result is None
 
     def test_returns_chantier_info_with_existing_chantier(self):
         """Test avec un chantier existant."""
-        from shared.infrastructure.database import SessionLocal
-        from modules.chantiers.infrastructure.persistence import ChantierModel
+        mock_session = Mock()
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
 
-        db = SessionLocal()
-        try:
-            # Trouver un chantier existant
-            chantier = db.query(ChantierModel).first()
-            if chantier:
-                service = SQLAlchemyEntityInfoService(db)
-                result = service.get_chantier_info(chantier.id)
+        mock_chantier = Mock()
+        mock_chantier.id = 10
+        mock_chantier.nom = "Chantier Tour Eiffel"
+        mock_chantier.couleur = "#00FF00"
+        mock_query.first.return_value = mock_chantier
 
-                assert result is not None
-                assert result.id == chantier.id
-        finally:
-            db.close()
+        service = SQLAlchemyEntityInfoService(mock_session)
+        result = service.get_chantier_info(10)
+
+        assert result is not None
+        assert result.id == 10
+        assert result.nom == "Chantier Tour Eiffel"
 
 
 class TestGetActiveUserIds:
@@ -123,17 +131,22 @@ class TestGetActiveUserIds:
 
     def test_returns_list_of_ids(self):
         """Test retourne une liste d'IDs."""
-        from shared.infrastructure.database import SessionLocal
+        mock_session = Mock()
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
 
-        db = SessionLocal()
-        try:
-            service = SQLAlchemyEntityInfoService(db)
-            result = service.get_active_user_ids()
+        mock_row1 = Mock()
+        mock_row1.id = 1
+        mock_row2 = Mock()
+        mock_row2.id = 2
+        mock_query.all.return_value = [mock_row1, mock_row2]
 
-            # Doit retourner une liste (peut etre vide)
-            assert isinstance(result, list)
-        finally:
-            db.close()
+        service = SQLAlchemyEntityInfoService(mock_session)
+        result = service.get_active_user_ids()
+
+        assert isinstance(result, list)
+        assert result == [1, 2]
 
 
 class TestGetUserChantierIds:
@@ -154,17 +167,17 @@ class TestGetUserChantierIds:
 
     def test_returns_empty_list_for_nonexistent_user(self):
         """Test retourne liste vide pour utilisateur inexistant."""
-        from shared.infrastructure.database import SessionLocal
+        mock_session = Mock()
+        mock_query = Mock()
+        mock_session.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.all.return_value = []
 
-        db = SessionLocal()
-        try:
-            service = SQLAlchemyEntityInfoService(db)
-            result = service.get_user_chantier_ids(99999)
+        service = SQLAlchemyEntityInfoService(mock_session)
+        result = service.get_user_chantier_ids(99999)
 
-            # Utilisateur inexistant -> liste vide
-            assert isinstance(result, list)
-        finally:
-            db.close()
+        assert isinstance(result, list)
+        assert result == []
 
 
 class TestGetEntityInfoService:

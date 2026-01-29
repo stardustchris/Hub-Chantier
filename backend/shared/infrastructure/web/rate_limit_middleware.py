@@ -4,7 +4,8 @@ Middleware de rate limiting avancé avec backoff exponentiel.
 Amélioration L-01 du rapport d'audit sécurité.
 """
 
-from typing import Callable
+import os
+from typing import Callable, Set
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,6 +15,20 @@ from ..rate_limiter_advanced import (
     get_limit_for_endpoint,
     ENDPOINT_LIMITS
 )
+
+
+def _load_trusted_proxies() -> Set[str]:
+    """Charge les IPs de reverse proxy de confiance depuis l'environnement.
+
+    Variable: TRUSTED_PROXIES (IPs séparées par des virgules).
+    Défaut: 127.0.0.1, ::1, 172.17.0.1, 10.0.0.1
+
+    Returns:
+        Set d'adresses IP de confiance.
+    """
+    default = "127.0.0.1,::1,172.17.0.1,10.0.0.1"
+    raw = os.getenv("TRUSTED_PROXIES", default)
+    return {ip.strip() for ip in raw.split(",") if ip.strip()}
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -76,8 +91,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    # IPs de reverse proxy de confiance (Docker bridge, localhost)
-    TRUSTED_PROXIES = {"127.0.0.1", "::1", "172.17.0.1", "10.0.0.1"}
+    # IPs de reverse proxy de confiance (configurable via env TRUSTED_PROXIES)
+    TRUSTED_PROXIES = _load_trusted_proxies()
 
     def _get_client_ip(self, request: Request) -> str:
         """

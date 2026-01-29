@@ -73,8 +73,7 @@ class TestRegisterUseCase:
     def test_register_success_with_all_fields(self):
         """Test: inscription réussie avec tous les champs CDC.
 
-        Sécurité: même si role="chef_chantier" est passé, le use case
-        force toujours COMPAGNON pour self-registration.
+        Le rôle n'est plus un champ du DTO — forcé côté serveur à COMPAGNON.
         """
         # Arrange
         self.mock_user_repo.save.side_effect = self._create_saved_user
@@ -84,7 +83,6 @@ class TestRegisterUseCase:
             password="Password123!",
             nom="Martin",
             prenom="Marie",
-            role="chef_chantier",  # Ignored — forced to compagnon
             type_utilisateur="employe",
             telephone="+33612345678",
             metier="Maçon",
@@ -97,7 +95,7 @@ class TestRegisterUseCase:
 
         # Assert
         assert result.user.email == "complet@example.com"
-        assert result.user.role == "compagnon"  # Forced, not chef_chantier
+        assert result.user.role == "compagnon"  # Forced server-side
         assert result.user.type_utilisateur == "employe"
         assert result.user.telephone == "+33612345678"
         assert result.user.metier == "Maçon"
@@ -186,8 +184,8 @@ class TestRegisterUseCase:
         with pytest.raises(ValueError):
             self.use_case.execute(dto)
 
-    def test_register_ignores_role_parameter(self):
-        """Test: le champ role du DTO est ignoré (toujours compagnon)."""
+    def test_register_always_compagnon(self):
+        """Test: le rôle est toujours COMPAGNON (pas de champ role dans DTO)."""
         self.mock_user_repo.save.side_effect = self._create_saved_user
 
         dto = RegisterDTO(
@@ -195,7 +193,6 @@ class TestRegisterUseCase:
             password="Password123!",
             nom="Dupont",
             prenom="Jean",
-            role="admin",  # Should be ignored
         )
 
         result = self.use_case.execute(dto)
@@ -252,11 +249,11 @@ class TestRegisterUseCase:
         assert event.nom == "DUPONT"
         assert event.prenom == "Jean"
 
-    def test_register_all_roles_forced_compagnon(self):
-        """Test: quelle que soit la valeur de role, le résultat est compagnon."""
-        roles = ["admin", "conducteur", "chef_chantier", "compagnon"]
+    def test_register_multiple_users_all_compagnon(self):
+        """Test: toutes les inscriptions produisent le rôle compagnon."""
+        emails = ["user1@example.com", "user2@example.com", "user3@example.com"]
 
-        for role in roles:
+        for email in emails:
             # Reset mock
             self.mock_user_repo.reset_mock()
             self.mock_user_repo.exists_by_email.return_value = False
@@ -264,11 +261,10 @@ class TestRegisterUseCase:
             self.mock_user_repo.save.side_effect = self._create_saved_user
 
             dto = RegisterDTO(
-                email=f"{role}@example.com",
+                email=email,
                 password="Password123!",
                 nom="Test",
                 prenom="User",
-                role=role,
             )
 
             result = self.use_case.execute(dto)

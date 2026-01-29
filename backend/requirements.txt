@@ -28,6 +28,9 @@ httpx>=0.26.0
 # Image processing
 Pillow>=10.0.0
 
+# PDF generation
+weasyprint>=61.0
+
 # Scheduling (jobs planifiés)
 apscheduler>=3.10.0
 
