@@ -23,25 +23,51 @@
 
 ## INSTRUCTIONS OBLIGATOIRES
 
+### ⚠️ CRITIQUE : WORKFLOW AGENTS AVANT COMMIT/PUSH
+
+**NE JAMAIS** committer ou pusher du code SANS validation complète des 7 agents.
+
+**BLOCKER** : Si un agent retourne FAIL/REJECTED/Findings critiques → **NE PAS COMMITTER**.
+
 ### 1. Workflow agents (7 agents - `.claude/agents.md`)
 
 **POUR CHAQUE FEATURE** :
 ```
 1. [SPECS] Lire docs/SPECIFICATIONS.md pour contexte
-2. [sql-pro] Concevoir schema DB (si nouvelles tables)
-   → Task(subagent_type="sql-pro", prompt="...")
-3. [python-pro] Implementer selon Clean Architecture
+
+2. [IMPLEMENTATION]
+   → Task(subagent_type="sql-pro", prompt="...") (si modifs DB)
    → Task(subagent_type="python-pro", prompt="...")
-4. [architect-reviewer] VALIDER conformite architecture
+   → ATTENDRE retour agents AVANT de continuer
+
+3. [VALIDATION OBLIGATOIRE - AVANT TOUT COMMIT]
    → Task(subagent_type="architect-reviewer", prompt="...")
-5. [test-automator] Generer tests unitaires (>85% couverture)
+      ❌ Si FAIL → corriger AVANT commit
+
    → Task(subagent_type="test-automator", prompt="...")
-6. [code-reviewer] VALIDER qualite code
+      ❌ Si couverture < 85% → ajouter tests AVANT commit
+
    → Task(subagent_type="code-reviewer", prompt="...")
-7. [security-auditor] VALIDER securite + RGPD
+      ❌ Si REJECTED → corriger AVANT commit
+
    → Task(subagent_type="security-auditor", prompt="...")
-8. [SPECS] Mettre a jour SPECIFICATIONS.md (API-XX: ✅)
+      ❌ Si findings critiques/hautes → corriger AVANT commit
+
+4. [COMMIT AUTORISÉ UNIQUEMENT SI]
+   ✅ architect-reviewer: PASS
+   ✅ test-automator: >85% couverture
+   ✅ code-reviewer: APPROVED
+   ✅ security-auditor: PASS (0 critiques/hautes)
+
+5. [SPECS] Mettre a jour SPECIFICATIONS.md (API-XX: ✅)
 ```
+
+**Séquence STRICTE** :
+1. Coder (sql-pro, python-pro)
+2. **VALIDER avec les 4 agents de validation**
+3. **CORRIGER si nécessaire**
+4. **RECOMMENCER validation si corrections**
+5. **Commit UNIQUEMENT si tous PASS**
 
 ### 2. Règles critiques
 
@@ -50,6 +76,7 @@
 - ✅ **Tests unitaires obligatoires** (>85% couverture)
 - ✅ **Security audit PASS** avant commit (0 finding critique/haute)
 - ✅ **Backward compatibility** totale
+- ⛔ **JAMAIS commit sans validation 7 agents complète**
 
 ---
 
@@ -1517,12 +1544,44 @@ bandit -r modules/ shared/ -f json -o security-report.json
 
 ## COMMIT & DÉPLOIEMENT
 
-**Après validation complète** :
+### ⛔ CHECKLIST PRÉ-COMMIT OBLIGATOIRE
+
+**AVANT TOUT `git commit`**, vérifier que **TOUS** ces points sont ✅ :
+
+```
+□ Task(subagent_type="architect-reviewer") exécuté → Rapport PASS
+□ Task(subagent_type="test-automator") exécuté → Couverture >85%
+□ Task(subagent_type="code-reviewer") exécuté → Rapport APPROVED
+□ Task(subagent_type="security-auditor") exécuté → 0 findings critiques/hautes
+□ Tests pytest passent 100%
+□ SPECIFICATIONS.md mis à jour
+```
+
+**Si UN SEUL ❌ → NE PAS COMMITTER. Corriger d'abord.**
+
+---
+
+### Séquence validation → commit
 
 ```bash
-# Commit atomiques par phase
+# 1. VALIDATION AGENTS (OBLIGATOIRE)
+# Lancer les 4 agents de validation avec Task()
+# Attendre les rapports PASS de chacun
+
+# 2. TESTS MANUELS (si agents passent)
+cd backend
+pytest tests/unit -v
+pytest tests/integration/api -v
+
+# 3. COMMIT (SEULEMENT si validation OK)
 git add backend/modules/oauth2/ backend/tests/unit/oauth2/
 git commit -m "feat(api): Phase 5 - OAuth2 Authorization Code Flow
+
+✅ VALIDATION AGENTS:
+- architect-reviewer: PASS
+- test-automator: 90% couverture (125 tests)
+- code-reviewer: APPROVED
+- security-auditor: PASS (0 critiques, 0 hautes)
 
 - Entities OAuth clients, authorization codes, tokens
 - Use cases authorize, exchange, refresh
@@ -1531,7 +1590,7 @@ git commit -m "feat(api): Phase 5 - OAuth2 Authorization Code Flow
 
 API-15: ✅"
 
-# Push branche
+# 4. PUSH (après validation locale)
 git push origin feature/api-publique-phases-4-7
 
 # Créer PR (après tous commits)
