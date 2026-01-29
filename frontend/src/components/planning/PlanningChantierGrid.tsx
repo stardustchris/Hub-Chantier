@@ -125,9 +125,12 @@ export default function PlanningChantierGrid({
   const gridStyle = useMemo(() => {
     const numDays = days.length
     if (viewMode === 'mois') {
-      // Pour le mois, colonnes égales avec calc() pour éviter l'impact du contenu
-      // Utilise la même technique que pour la semaine
-      return { gridTemplateColumns: `220px repeat(${numDays}, calc((100% - 220px) / ${numDays}))` }
+      // Mode mois : utiliser minmax(0, 1fr) pour des colonnes égales qui s'adaptent à l'écran
+      // minmax(0, 1fr) force les colonnes à respecter la contrainte même avec du contenu long
+      return {
+        gridTemplateColumns: `220px repeat(${numDays}, minmax(0, 1fr))`,
+        width: '100%'
+      }
     }
     // Vue semaine : largeur fixe calculée pour forcer des colonnes PARFAITEMENT égales
     const numDaysToShow = showWeekend ? 7 : 5
