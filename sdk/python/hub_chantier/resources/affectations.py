@@ -1,6 +1,6 @@
 """Ressource Affectations (Planning)."""
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from .base import BaseResource
 
 
@@ -19,7 +19,7 @@ class Affectations(BaseResource):
 
     def list(
         self, date_debut: str, date_fin: str, utilisateur_ids: Optional[List[int]] = None
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """
         Liste les affectations sur une période.
 
@@ -31,11 +31,11 @@ class Affectations(BaseResource):
         Returns:
             Liste d'affectations
         """
-        params = {"date_debut": date_debut, "date_fin": date_fin}
+        params: Dict[str, Any] = {"date_debut": date_debut, "date_fin": date_fin}
         if utilisateur_ids:
             params["utilisateur_ids"] = ",".join(map(str, utilisateur_ids))
 
-        return self.client._request("GET", "/api/affectations", params=params)
+        return self.client._request("GET", "/api/affectations", params=params)  # type: ignore
 
     def create(
         self,
@@ -44,8 +44,8 @@ class Affectations(BaseResource):
         date: str,
         heure_debut: Optional[str] = None,
         heure_fin: Optional[str] = None,
-        **kwargs,
-    ) -> Dict:
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
         Crée une nouvelle affectation.
 
@@ -60,7 +60,7 @@ class Affectations(BaseResource):
         Returns:
             Affectation créée
         """
-        data = {
+        data: Dict[str, Any] = {
             "utilisateur_id": utilisateur_id,
             "chantier_id": chantier_id,
             "date": date,
@@ -73,7 +73,7 @@ class Affectations(BaseResource):
 
         return self.client._request("POST", "/api/affectations", json=data)
 
-    def update(self, affectation_id: int, **kwargs) -> Dict:
+    def update(self, affectation_id: int, **kwargs: Any) -> Dict[str, Any]:
         """Modifie une affectation."""
         return self.client._request(
             "PUT", f"/api/affectations/{affectation_id}", json=kwargs

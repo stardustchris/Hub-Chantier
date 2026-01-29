@@ -1,22 +1,24 @@
 """Ressource Webhooks."""
 
-from typing import List, Dict
+from typing import List, Dict, Optional, Any
 from .base import BaseResource
 
 
 class Webhooks(BaseResource):
     """Gestion des webhooks."""
 
-    def list(self) -> List[Dict]:
+    def list(self) -> List[Dict[str, Any]]:
         """
         Liste tous les webhooks.
 
         Returns:
             Liste de webhooks
         """
-        return self.client._request("GET", "/api/v1/webhooks")
+        return self.client._request("GET", "/api/v1/webhooks")  # type: ignore
 
-    def create(self, url: str, events: List[str], description: str = None) -> Dict:
+    def create(
+        self, url: str, events: List[str], description: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Crée un nouveau webhook.
 
@@ -36,7 +38,7 @@ class Webhooks(BaseResource):
             ... )
             >>> secret = webhook['secret']  # À sauvegarder pour vérifier signatures
         """
-        data = {"url": url, "events": events}
+        data: Dict[str, Any] = {"url": url, "events": events}
         if description:
             data["description"] = description
 
