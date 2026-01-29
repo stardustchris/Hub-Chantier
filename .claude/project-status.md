@@ -37,9 +37,17 @@
 
 ### Tests
 
-- **Tests backend** : 140+ fichiers (unit + integration)
+- **Tests backend** : 155+ fichiers (unit + integration), 2932 tests (2932 pass, 0 fail, 0 xfail), **85% couverture**
 - **Tests frontend** : 116 fichiers, 2259 tests (2253 pass, 0 fail, 6 skip)
 - **Integration tests** : 10 suites API completes
+
+### Qualite (audit agents — 29 janvier 2026)
+
+- **Findings CRITICAL/HIGH** : 0 (tous corriges en rounds 1-5)
+- **architect-reviewer** : 8/10 PASS — 0 violation de layer, imports cross-module corriges
+- **code-reviewer** : 8/10 APPROVED — DI conforme, conventions respectees
+- **security-auditor** : 8/10 PASS — RGPD PASS, OWASP PASS, 0 HIGH, 1 MEDIUM, 3 LOW
+- **SessionLocal() dans routes** : 0 (toutes migrees vers Depends(get_db))
 
 ## Features recentes (Sessions 26-27 janvier)
 
@@ -88,6 +96,7 @@
 - Page dediee interventions (actuellement backend only pour le frontend)
 - Couverture tests frontend > 50% (actuellement ~29%)
 - Mode offline complet (PWA)
+- 17 TODO/FIXME restants dans le code (surtout export RGPD — sources de donnees manquantes)
 
 ## Infrastructure disponible
 
@@ -105,6 +114,13 @@
 
 Session 27 janvier 2026 : correction des 91 tests en echec sur 12 fichiers.
 Causes corrigees : MemoryRouter manquant, mocks de services/hooks obsoletes, assertions sur textes/props modifies.
+
+## Tests backend
+
+**Tous les tests passent : 155+ fichiers, 2932 tests, 2932 pass, 0 fail, 0 xfail, 85% couverture.**
+
+Session 29 janvier 2026 : correction de 9 findings prioritaires + 3 findings residuels.
+EventBus reecrit, DI SessionLocal() eliminee des routes, 12 nouveaux fichiers de tests crees.
 
 ## Deploiement production
 
@@ -135,6 +151,15 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-01-29 - Review docs et agents — Quality Rounds 4-5
+- **Objectif**: Audit qualite complet backend avec 7 agents, correction iterative de tous les findings
+- **Round 4** (commit `71a885d`): 9 corrections — EventBus rewrite, DI fixes, role supprime, TRUSTED_PROXIES env, N+1 query, 12 fichiers tests, couverture 78% → 85%
+- **Round 5** (commit `f67fd1a`): 3 corrections — derniers SessionLocal() elimines, event publishing document reactive, 2 xfail → pass
+- **Tests**: 2932 pass, 0 fail, 0 xfail, 85% couverture
+- **Agents R4**: architect 8/10 PASS, code-reviewer 8/10 APPROVED, security 8/10 PASS
+- **Findings**: 0 CRITICAL, 0 HIGH
+- Verdict : ✅ **BACKEND QUALITE VALIDEE — 0 finding bloquant**
 
 Session 2026-01-28 - Refactoring Frontend TypeScript (152 → 0 erreurs)
 - **Objectif**: Éliminer toutes les erreurs TypeScript dans le frontend (mode strict)

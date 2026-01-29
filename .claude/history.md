@@ -3,6 +3,102 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-29 (Review docs et agents — Quality Rounds 4-5)
+
+**Duree**: ~4h
+**Modules**: Shared, Auth, Dashboard, Documents, Planning, tous modules (tests)
+**Branche**: `claude/review-docs-and-agents-pmw3b`
+
+### Objectif
+
+Audit qualite complet du backend avec les 7 agents, puis correction iterative de tous les findings critiques, high et medium jusqu'a atteindre 0 findings bloquants et 85% de couverture.
+
+### Travail effectue
+
+#### Rounds 1-3 : Audit initial + corrections prioritaires
+- Lancement des 7 agents de validation (sql-pro, python-pro, typescript-pro, architect-reviewer, test-automator, code-reviewer, security-auditor)
+- Correction du top 10 des findings (securite, architecture, tests)
+- Fix escalade de privileges via /api/auth/register (role=admin accepte)
+- Fix path traversal incomplet (exists/move/copy non proteges)
+- Fix IDOR sur GET /users/{id} (controle d'acces manquant)
+- Fix rate limiting bypassable via X-Forwarded-For spoofing
+- Fix 11 imports cross-module dans planning providers
+
+#### Round 4 (commit `71a885d`) : 9 corrections prioritaires
+1. **weasyprint** ajoute dans requirements.txt (7 tests PDF debloques)
+2. **test_entity_info_impl** reecrit avec mocks (plus de fixtures DB directes)
+3. **EventBus** reecrit en API statique class-level (subscribe/publish/clear/enable/disable)
+4. **SessionLocal** remplace par `Depends(get_db)` dans routes consent
+5. **Champ role** supprime de RegisterDTO/RegisterRequest/Controller (privilege escalation)
+6. **TRUSTED_PROXIES** externalise via variable d'environnement
+7. **N+1 query** corrige dans chantier_provider avec batch WHERE IN
+8. **12 nouveaux fichiers de tests** : couverture 78% → 85%
+9. **EventBus test isolation** : clear/enable/disable pour tests unitaires
+
+#### Round 5 (commit `f67fd1a`) : 3 derniers findings
+1. **SessionLocal()** → `Depends(get_db)` dans `export_user_data_rgpd` (auth_routes.py)
+2. **SessionLocal()** → `Depends(get_db)` dans 3 routes dashboard + helper `_load_users_by_ids`
+3. **Event publishing document** reactive (etait temporairement desactive), 2 xfail → pass
+
+### Resultats
+
+| Metrique | Avant | Apres |
+|----------|-------|-------|
+| Tests pass | 2781 | **2932** |
+| Tests fail | 9 | **0** |
+| Tests error | 21 | **0** |
+| Tests xfail | 2 | **0** |
+| Couverture | 78% | **85%** |
+| SessionLocal dans routes | 4 | **0** |
+| Findings HIGH/CRITICAL | 3 | **0** |
+
+### Scores agents (evolution sur 4 rounds)
+
+| Agent | R1 | R2 | R3 | R4 |
+|-------|----|----|----|----|
+| sql-pro | 7/10 | 10/10 | — | — |
+| python-pro | 8/10 | 9/10 | — | — |
+| typescript-pro | 9/10 | 9/10 | — | — |
+| architect-reviewer | 7/10 | 6/10 | 8/10 | **8/10 PASS** |
+| test-automator | 6/10 | 7/10 | — | — |
+| code-reviewer | 7.5/10 | 8/10 | 8/10 | **8/10 APPROVED** |
+| security-auditor | 6/10 | 7.5/10 | 8/10 | **8/10 PASS** |
+
+### Fichiers modifies (source)
+- `backend/requirements.txt` — weasyprint
+- `backend/shared/infrastructure/event_bus/__init__.py` — EventBus rewrite complet
+- `backend/shared/infrastructure/web/rate_limit_middleware.py` — TRUSTED_PROXIES env
+- `backend/shared/infrastructure/chantier_queries.py` — batch query WHERE IN
+- `backend/modules/auth/infrastructure/web/auth_routes.py` — DI consent + RGPD export + role supprime
+- `backend/modules/auth/application/dtos/user_dto.py` — role supprime
+- `backend/modules/auth/adapters/controllers/auth_controller.py` — role supprime
+- `backend/modules/dashboard/infrastructure/web/dashboard_routes.py` — DI _load_users_by_ids
+- `backend/modules/documents/infrastructure/web/document_routes.py` — event publishing reactive
+- `backend/modules/planning/infrastructure/providers/chantier_provider.py` — batch query
+
+### Fichiers crees (tests)
+- `tests/unit/shared/test_rate_limiter_advanced.py` (19 tests)
+- `tests/unit/shared/test_csrf_middleware.py` (8 tests)
+- `tests/unit/shared/test_rate_limit_middleware.py` (11 tests)
+- `tests/unit/shared/test_scheduler_service.py` (14 tests)
+- `tests/unit/shared/test_rappel_reservation_job.py` (8 tests)
+- `tests/unit/taches/test_couleur_progression.py` (12 tests)
+- `tests/unit/logistique/test_dto_enrichment.py` (7 tests)
+- `tests/unit/logistique/test_mappers.py` (6 tests)
+- `tests/unit/logistique/test_categorie_ressource.py` (5 tests)
+- `tests/unit/documents/test_dependencies.py` (3 tests)
+- `tests/unit/auth/test_update_consents.py` (4 tests)
+- `tests/unit/dashboard/test_dependencies.py` (12 tests)
+
+### Commits
+- `71a885d` fix(quality): resolve 9 priority issues — EventBus, DI, security, coverage 85%
+- `f67fd1a` fix(DI+events): eliminate last SessionLocal() violations, re-enable document event publishing
+
+### Verdict
+✅ **BACKEND QUALITE VALIDEE** — 0 finding critique/high, 85% couverture, 2932 tests pass
+
+---
+
 ## Session 2026-01-28 (API Publique v1 - Authentication par API Keys)
 
 **Durée**: ~6h
