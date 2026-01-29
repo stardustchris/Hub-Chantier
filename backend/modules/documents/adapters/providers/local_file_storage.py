@@ -94,7 +94,9 @@ class LocalFileStorageService(FileStorageService):
 
     def exists(self, chemin_stockage: str) -> bool:
         """Vérifie si un fichier existe."""
-        file_path = self._base_path / chemin_stockage
+        file_path = self._validate_path(chemin_stockage)
+        if not file_path:
+            return False
         return file_path.exists()
 
     def get_url(self, chemin_stockage: str, expires_in: int = 3600) -> str:
@@ -108,15 +110,19 @@ class LocalFileStorageService(FileStorageService):
 
     def get_size(self, chemin_stockage: str) -> int:
         """Retourne la taille d'un fichier."""
-        file_path = self._base_path / chemin_stockage
+        file_path = self._validate_path(chemin_stockage)
+        if not file_path:
+            return 0
         if file_path.exists():
             return file_path.stat().st_size
         return 0
 
     def move(self, ancien_chemin: str, nouveau_chemin: str) -> bool:
         """Déplace un fichier."""
-        source = self._base_path / ancien_chemin
-        dest = self._base_path / nouveau_chemin
+        source = self._validate_path(ancien_chemin)
+        dest = self._validate_path(nouveau_chemin)
+        if not source or not dest:
+            return False
 
         if not source.exists():
             return False
@@ -127,8 +133,10 @@ class LocalFileStorageService(FileStorageService):
 
     def copy(self, source_chemin: str, destination_chemin: str) -> bool:
         """Copie un fichier."""
-        source = self._base_path / source_chemin
-        dest = self._base_path / destination_chemin
+        source = self._validate_path(source_chemin)
+        dest = self._validate_path(destination_chemin)
+        if not source or not dest:
+            return False
 
         if not source.exists():
             return False
@@ -172,9 +180,9 @@ class LocalFileStorageService(FileStorageService):
             return f"{safe_name}.{safe_ext}"
         return safe_name
 
-    def get_full_path(self, chemin_stockage: str) -> Path:
-        """Retourne le chemin complet d'un fichier."""
-        return self._base_path / chemin_stockage
+    def get_full_path(self, chemin_stockage: str) -> Optional[Path]:
+        """Retourne le chemin complet d'un fichier (validé contre path traversal)."""
+        return self._validate_path(chemin_stockage)
 
     def _validate_path(self, chemin_stockage: str) -> Optional[Path]:
         """
@@ -193,7 +201,10 @@ class LocalFileStorageService(FileStorageService):
             base_resolved = self._base_path.resolve()
 
             # Vérifier que le chemin résolu est bien dans base_path
-            if not str(file_path).startswith(str(base_resolved)):
+            # Utiliser os.sep pour éviter le bypass par préfixe
+            # (ex: /app/uploads_evil matcherait /app/uploads sans le sep)
+            base_str = str(base_resolved) + "/"
+            if not (str(file_path) + "/").startswith(base_str):
                 logger.warning(f"Tentative d'accès path traversal: {chemin_stockage}")
                 return None
 

@@ -110,10 +110,10 @@ class RegisterUseCase:
         # Hasher le mot de passe
         password_hash = self.password_service.hash(dto.password)
 
-        # Déterminer le rôle (défaut: COMPAGNON)
+        # Sécurité: self-registration toujours COMPAGNON.
+        # Les rôles supérieurs (admin, conducteur, chef_chantier) sont
+        # attribués uniquement par un admin via PUT /users/{id}.
         role = Role.COMPAGNON
-        if dto.role:
-            role = Role.from_string(dto.role)
 
         # Déterminer le type utilisateur (défaut: EMPLOYE)
         type_utilisateur = TypeUtilisateur.EMPLOYE

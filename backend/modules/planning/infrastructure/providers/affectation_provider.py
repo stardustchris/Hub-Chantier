@@ -3,11 +3,13 @@
 from typing import Dict, List, Tuple
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import text
 
 from ...application.use_cases.charge.get_planning_charge import AffectationProvider
 from ...application.use_cases.charge.get_occupation_details import AffectationProviderForOccupation
 from ...domain.value_objects import Semaine
+
+from shared.infrastructure.user_queries import count_active_users
 
 
 class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForOccupation):
@@ -15,7 +17,8 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
     Implementation SQLAlchemy de l'AffectationProvider.
 
     Recupere les heures planifiees depuis le module planning
-    sans creer de dependance directe.
+    sans creer de dependance directe vers les modules auth/chantiers.
+    Utilise des requetes SQL brutes via shared helpers.
     """
 
     # Heures par jour de travail
@@ -61,7 +64,8 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
         date_debut, _ = semaine_debut.date_range()
         _, date_fin = semaine_fin.date_range()
 
-        # Grouper par chantier et date
+        # Use ORM for affectations (same module, no cross-module import)
+        from sqlalchemy import func
         results = self.session.query(
             AffectationModel.chantier_id,
             AffectationModel.date,
@@ -102,12 +106,8 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
         Returns:
             Dict {semaine_code: capacite_heures}.
         """
-        from modules.auth.infrastructure.persistence import UserModel
-
-        # Compter les utilisateurs actifs
-        count_actifs = self.session.query(func.count(UserModel.id)).filter(
-            UserModel.is_active == True,
-        ).scalar() or 0
+        # Use shared helper instead of UserModel
+        count_actifs = count_active_users(self.session)
 
         # Generer les semaines
         semaines = self._generate_semaines(semaine_debut, semaine_fin)
@@ -132,26 +132,22 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
         Returns:
             Dict {semaine_code: nombre_non_planifies}.
         """
-        from modules.auth.infrastructure.persistence import UserModel
-        from ..persistence import AffectationModel
-
         semaines = self._generate_semaines(semaine_debut, semaine_fin)
 
-        # Compter le total d'utilisateurs actifs
-        total_actifs = self.session.query(func.count(UserModel.id)).filter(
-            UserModel.is_active == True,
-        ).scalar() or 0
+        # Total active users via shared helper
+        total_actifs = count_active_users(self.session)
 
         result = {}
         for semaine in semaines:
             date_debut, date_fin = semaine.date_range()
 
-            # Compter les utilisateurs ayant au moins une affectation cette semaine
-            utilisateurs_planifies = self.session.query(
-                func.count(func.distinct(AffectationModel.utilisateur_id))
-            ).filter(
-                AffectationModel.date >= date_debut,
-                AffectationModel.date <= date_fin,
+            # Count distinct users with affectations this week (raw SQL)
+            utilisateurs_planifies = self.session.execute(
+                text(
+                    "SELECT COUNT(DISTINCT utilisateur_id) FROM affectations "
+                    "WHERE date >= :debut AND date <= :fin"
+                ),
+                {"debut": date_debut, "fin": date_fin},
             ).scalar() or 0
 
             # Non planifies = total - planifies
@@ -171,32 +167,31 @@ class SQLAlchemyAffectationProvider(AffectationProvider, AffectationProviderForO
         """
         Recupere les heures planifiees par type de metier.
 
+        Uses raw SQL JOIN between affectations and users to avoid
+        importing UserModel cross-module.
+
         Args:
             semaine: La semaine.
 
         Returns:
             Dict {type_metier: heures_planifiees}.
         """
-        from ..persistence import AffectationModel
-        from modules.auth.infrastructure.persistence import UserModel
-
         date_debut, date_fin = semaine.date_range()
 
-        # Joindre affectations avec users pour avoir le metier
-        results = self.session.query(
-            UserModel.metier,
-            func.count(AffectationModel.id),
-        ).join(
-            AffectationModel,
-            AffectationModel.utilisateur_id == UserModel.id,
-        ).filter(
-            AffectationModel.date >= date_debut,
-            AffectationModel.date <= date_fin,
-        ).group_by(UserModel.metier).all()
+        # Raw SQL JOIN between affectations and users
+        rows = self.session.execute(
+            text(
+                "SELECT u.metier, COUNT(a.id) "
+                "FROM affectations a "
+                "JOIN users u ON a.utilisateur_id = u.id "
+                "WHERE a.date >= :debut AND a.date <= :fin "
+                "GROUP BY u.metier"
+            ),
+            {"debut": date_debut, "fin": date_fin},
+        ).fetchall()
 
         heures_par_type: Dict[str, float] = {}
-        for metier, count in results:
-            # Mapper le metier vers le type_metier
+        for metier, count in rows:
             type_metier = self._map_metier_to_type(metier)
             heures = count * self.HEURES_PAR_JOUR
             heures_par_type[type_metier] = heures_par_type.get(type_metier, 0.0) + heures

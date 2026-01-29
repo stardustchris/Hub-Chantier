@@ -2,10 +2,14 @@
 
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from ...application.use_cases.charge.get_planning_charge import ChantierProvider
 from ...domain.value_objects import Semaine
+
+from shared.infrastructure.chantier_queries import (
+    get_chantiers_actifs,
+    get_chantier_by_id_dict,
+)
 
 
 class SQLAlchemyChantierProvider(ChantierProvider):
@@ -35,34 +39,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         Returns:
             Liste de dicts avec id, code, nom, couleur, heures_estimees.
         """
-        # Import differe pour eviter dependance circulaire
-        from modules.chantiers.infrastructure.persistence import ChantierModel
-
-        query = self.session.query(ChantierModel).filter(
-            ChantierModel.statut.in_(["ouvert", "en_cours"]),
-            ChantierModel.deleted_at.is_(None),
-        )
-
-        # Appliquer le filtre de recherche si present
-        if search:
-            search_term = f"%{search}%"
-            query = query.filter(
-                (ChantierModel.nom.ilike(search_term)) |
-                (ChantierModel.code.ilike(search_term))
-            )
-
-        models = query.order_by(ChantierModel.code).all()
-
-        return [
-            {
-                "id": m.id,
-                "code": m.code,
-                "nom": m.nom,
-                "couleur": m.couleur or "#3498DB",
-                "heures_estimees": m.heures_estimees or 0.0,
-            }
-            for m in models
-        ]
+        return get_chantiers_actifs(self.session, search=search)
 
     def get_chantier_by_id(self, chantier_id: int) -> Optional[Dict]:
         """
@@ -74,23 +51,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         Returns:
             Dict avec infos chantier ou None.
         """
-        from modules.chantiers.infrastructure.persistence import ChantierModel
-
-        model = self.session.query(ChantierModel).filter(
-            ChantierModel.id == chantier_id,
-            ChantierModel.deleted_at.is_(None),
-        ).first()
-
-        if not model:
-            return None
-
-        return {
-            "id": model.id,
-            "code": model.code,
-            "nom": model.nom,
-            "couleur": model.couleur or "#3498DB",
-            "heures_estimees": model.heures_estimees or 0.0,
-        }
+        return get_chantier_by_id_dict(self.session, chantier_id)
 
     def search_chantiers(self, query: str) -> List[Dict]:
         """
@@ -102,27 +63,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         Returns:
             Liste de chantiers correspondants.
         """
-        from modules.chantiers.infrastructure.persistence import ChantierModel
-
-        search_term = f"%{query}%"
-
-        models = self.session.query(ChantierModel).filter(
-            ChantierModel.deleted_at.is_(None),
-            ChantierModel.statut.in_(["ouvert", "en_cours"]),
-            (ChantierModel.nom.ilike(search_term)) |
-            (ChantierModel.code.ilike(search_term)),
-        ).order_by(ChantierModel.code).all()
-
-        return [
-            {
-                "id": m.id,
-                "code": m.code,
-                "nom": m.nom,
-                "couleur": m.couleur or "#3498DB",
-                "heures_estimees": m.heures_estimees or 0.0,
-            }
-            for m in models
-        ]
+        return get_chantiers_actifs(self.session, search=query)
 
     def get_chantiers_by_ids(self, chantier_ids: List[int]) -> List[Dict]:
         """
@@ -137,20 +78,14 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         if not chantier_ids:
             return []
 
-        from modules.chantiers.infrastructure.persistence import ChantierModel
+        from shared.infrastructure.chantier_queries import get_chantiers_basic_info_by_ids
 
-        models = self.session.query(ChantierModel).filter(
-            ChantierModel.id.in_(chantier_ids),
-            ChantierModel.deleted_at.is_(None),
-        ).order_by(ChantierModel.code).all()
-
-        return [
-            {
-                "id": m.id,
-                "code": m.code,
-                "nom": m.nom,
-                "couleur": m.couleur or "#3498DB",
-                "heures_estimees": m.heures_estimees or 0.0,
-            }
-            for m in models
-        ]
+        info_map = get_chantiers_basic_info_by_ids(self.session, chantier_ids)
+        # Enrich with couleur and heures_estimees via individual lookups
+        # The basic_info only has id/nom, so we use get_chantier_by_id_dict
+        result = []
+        for cid in chantier_ids:
+            detail = get_chantier_by_id_dict(self.session, cid)
+            if detail:
+                result.append(detail)
+        return result
