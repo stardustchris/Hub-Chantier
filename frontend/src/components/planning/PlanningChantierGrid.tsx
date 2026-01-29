@@ -125,8 +125,9 @@ export default function PlanningChantierGrid({
   const gridStyle = useMemo(() => {
     const numDays = days.length
     if (viewMode === 'mois') {
-      // Pour le mois, colonne fixe pour chantiers + colonnes égales pour les jours
-      return { gridTemplateColumns: `220px repeat(${numDays}, minmax(50px, 1fr))` }
+      // Pour le mois, colonnes égales avec calc() pour éviter l'impact du contenu
+      // Utilise la même technique que pour la semaine
+      return { gridTemplateColumns: `220px repeat(${numDays}, calc((100% - 220px) / ${numDays}))` }
     }
     // Vue semaine : largeur fixe calculée pour forcer des colonnes PARFAITEMENT égales
     const numDaysToShow = showWeekend ? 7 : 5
@@ -154,7 +155,7 @@ export default function PlanningChantierGrid({
   return (
     <div className={`bg-white rounded-lg shadow overflow-hidden overflow-x-auto`}>
       {/* Header - Jours */}
-      <div className={`grid border-b bg-gray-50`} style={{ ...gridStyle, minWidth: viewMode === 'mois' ? 'max-content' : '1200px' }}>
+      <div className={`grid border-b bg-gray-50`} style={gridStyle}>
         <div className={`${isMonthView ? 'px-2' : 'px-4'} py-3 font-medium text-gray-700 border-r`}>
           Chantiers
         </div>
@@ -184,7 +185,7 @@ export default function PlanningChantierGrid({
           return (
             <div
               key={chantier.id}
-              className="group grid hover:bg-gray-50 transition-colors" style={{ ...gridStyle, minWidth: viewMode === 'mois' ? 'max-content' : '1200px' }}
+              className="group grid hover:bg-gray-50 transition-colors" style={gridStyle}
             >
               {/* Colonne chantier */}
               <div className="px-4 py-3 flex items-center gap-3 border-r">
