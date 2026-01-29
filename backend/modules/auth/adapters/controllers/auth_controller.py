@@ -110,7 +110,6 @@ class AuthController:
         password: str,
         nom: str,
         prenom: str,
-        role: Optional[str] = None,
         type_utilisateur: Optional[str] = None,
         telephone: Optional[str] = None,
         metier: Optional[str] = None,
@@ -120,12 +119,13 @@ class AuthController:
         """
         Traite une requête d'inscription (USR-01).
 
+        Le rôle est forcé à COMPAGNON côté serveur (sécurité).
+
         Args:
             email: Email du nouvel utilisateur.
             password: Mot de passe.
             nom: Nom de famille.
             prenom: Prénom.
-            role: Rôle (optionnel, défaut: compagnon).
             type_utilisateur: Type (optionnel, défaut: employe).
             telephone: Numéro de téléphone.
             metier: Métier/spécialité.
@@ -145,7 +145,6 @@ class AuthController:
             password=password,
             nom=nom,
             prenom=prenom,
-            role=role,
             type_utilisateur=type_utilisateur,
             telephone=telephone,
             metier=metier,

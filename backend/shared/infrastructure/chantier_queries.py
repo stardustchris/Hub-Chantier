@@ -104,3 +104,42 @@ def get_chantiers_basic_info_by_ids(db: Session, chantier_ids: list[int]) -> dic
     ).fetchall()
 
     return {row[0]: {"id": row[0], "nom": row[1]} for row in rows}
+
+
+def get_chantiers_by_ids_full(db: Session, chantier_ids: list[int]) -> list[dict]:
+    """Get full chantier info for multiple IDs in a single query.
+
+    Avoids N+1 by fetching all at once with WHERE IN.
+
+    Args:
+        db: Database session.
+        chantier_ids: List of chantier IDs.
+
+    Returns:
+        List of dicts with id, code, nom, couleur, heures_estimees.
+    """
+    if not chantier_ids:
+        return []
+
+    unique_ids = list(set(chantier_ids))
+    params = {f"id_{i}": cid for i, cid in enumerate(unique_ids)}
+    placeholders = ", ".join(f":{k}" for k in params)
+
+    rows = db.execute(
+        text(
+            f"SELECT id, code, nom, couleur, heures_estimees FROM chantiers "
+            f"WHERE id IN ({placeholders}) AND deleted_at IS NULL"
+        ),
+        params,
+    ).fetchall()
+
+    return [
+        {
+            "id": r[0],
+            "code": r[1],
+            "nom": r[2],
+            "couleur": r[3] or "#3498DB",
+            "heures_estimees": r[4] or 0.0,
+        }
+        for r in rows
+    ]

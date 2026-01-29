@@ -107,16 +107,16 @@ class LoginDTO:
 @dataclass(frozen=True)
 class RegisterDTO:
     """
-    DTO pour la requête d'inscription.
+    DTO pour la requête d'inscription (self-registration).
 
-    Selon CDC Section 3 - tous les champs utilisateur.
+    Le rôle est forcé à COMPAGNON côté serveur (sécurité).
+    Seul un admin peut attribuer un rôle supérieur via PUT /users/{id}.
     """
 
     email: str
     password: str
     nom: str
     prenom: str
-    role: Optional[str] = None
     type_utilisateur: Optional[str] = None
     telephone: Optional[str] = None
     metier: Optional[str] = None

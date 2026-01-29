@@ -67,7 +67,7 @@ class SQLAlchemyChantierProvider(ChantierProvider):
 
     def get_chantiers_by_ids(self, chantier_ids: List[int]) -> List[Dict]:
         """
-        Recupere plusieurs chantiers par leurs IDs.
+        Recupere plusieurs chantiers par leurs IDs (requête unique).
 
         Args:
             chantier_ids: Liste d'IDs.
@@ -78,14 +78,6 @@ class SQLAlchemyChantierProvider(ChantierProvider):
         if not chantier_ids:
             return []
 
-        from shared.infrastructure.chantier_queries import get_chantiers_basic_info_by_ids
+        from shared.infrastructure.chantier_queries import get_chantiers_by_ids_full
 
-        info_map = get_chantiers_basic_info_by_ids(self.session, chantier_ids)
-        # Enrich with couleur and heures_estimees via individual lookups
-        # The basic_info only has id/nom, so we use get_chantier_by_id_dict
-        result = []
-        for cid in chantier_ids:
-            detail = get_chantier_by_id_dict(self.session, cid)
-            if detail:
-                result.append(detail)
-        return result
+        return get_chantiers_by_ids_full(self.session, chantier_ids)

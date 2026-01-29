@@ -44,18 +44,16 @@ def get_audit_service(db: Session = Depends(get_db)) -> AuditService:
 
 
 class RegisterRequest(BaseModel):
-    """Requête d'inscription avec tous les champs CDC.
+    """Requête d'inscription (self-registration).
 
-    Note: Le rôle par défaut est 'compagnon' (niveau le plus bas).
-    Les rôles supérieurs (chef_chantier, conducteur, admin) nécessitent
-    une création par un admin via l'endpoint /users.
+    Le rôle est forcé à COMPAGNON côté serveur.
+    Les rôles supérieurs nécessitent une création par un admin via PUT /users/{id}.
     """
 
     email: EmailStr
     password: str
     nom: str
     prenom: str
-    role: Optional[str] = "compagnon"  # Sécurité: rôle le plus bas par défaut
     type_utilisateur: Optional[str] = "salarie"
     telephone: Optional[str] = None
     metier: Optional[str] = None
@@ -246,7 +244,6 @@ def register(
             password=data.password,
             nom=data.nom,
             prenom=data.prenom,
-            role=data.role,
             type_utilisateur=data.type_utilisateur,
             telephone=data.telephone,
             metier=data.metier,
@@ -340,6 +337,7 @@ def logout(response: Response):
 @router.get("/consents", response_model=ConsentPreferences)
 def get_consents(
     request: Request,
+    db: Session = Depends(get_db),
     controller: AuthController = Depends(get_auth_controller),
 ):
     """
@@ -350,6 +348,7 @@ def get_consents(
 
     Args:
         request: Requête HTTP.
+        db: Session SQLAlchemy (injectée).
         controller: Controller d'authentification.
 
     Returns:
@@ -365,16 +364,11 @@ def get_consents(
         if user_id:
             from ...application.use_cases import GetConsentsUseCase
             from ...infrastructure.persistence import SQLAlchemyUserRepository
-            from shared.infrastructure.database import SessionLocal
 
-            db = SessionLocal()
-            try:
-                user_repo = SQLAlchemyUserRepository(db)
-                use_case = GetConsentsUseCase(user_repo)
-                consents = use_case.execute(user_id)
-                return ConsentPreferences(**consents)
-            finally:
-                db.close()
+            user_repo = SQLAlchemyUserRepository(db)
+            use_case = GetConsentsUseCase(user_repo)
+            consents = use_case.execute(user_id)
+            return ConsentPreferences(**consents)
     except Exception:
         # Si erreur (token invalide, etc.), retourner valeurs par défaut
         pass
@@ -394,6 +388,7 @@ def get_consents(
 def update_consents(
     consent_request: ConsentUpdateRequest,
     http_request: Request,
+    db: Session = Depends(get_db),
     controller: AuthController = Depends(get_auth_controller),
 ):
     """
@@ -408,6 +403,7 @@ def update_consents(
     Args:
         consent_request: Nouvelles préférences de consentement.
         http_request: Requête HTTP (pour extraire IP et user agent).
+        db: Session SQLAlchemy (injectée).
         controller: Controller d'authentification.
 
     Returns:
@@ -423,23 +419,18 @@ def update_consents(
         if user_id:
             from ...application.use_cases import UpdateConsentsUseCase
             from ...infrastructure.persistence import SQLAlchemyUserRepository
-            from shared.infrastructure.database import SessionLocal
 
-            db = SessionLocal()
-            try:
-                user_repo = SQLAlchemyUserRepository(db)
-                use_case = UpdateConsentsUseCase(user_repo)
-                consents = use_case.execute(
-                    user_id=user_id,
-                    geolocation=consent_request.geolocation,
-                    notifications=consent_request.notifications,
-                    analytics=consent_request.analytics,
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                )
-                return ConsentPreferences(**consents)
-            finally:
-                db.close()
+            user_repo = SQLAlchemyUserRepository(db)
+            use_case = UpdateConsentsUseCase(user_repo)
+            consents = use_case.execute(
+                user_id=user_id,
+                geolocation=consent_request.geolocation,
+                notifications=consent_request.notifications,
+                analytics=consent_request.analytics,
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
+            return ConsentPreferences(**consents)
     except Exception:
         # Si erreur (token invalide, etc.), continuer en mode non-authentifié
         pass
