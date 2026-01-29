@@ -24,6 +24,7 @@ import {
   DashboardPostCard,
   WeatherBulletinPost,
 } from '../components/dashboard'
+import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { weatherNotificationService } from '../services/weatherNotifications'
 import { consentService } from '../services/consent'
 import { openNavigationApp } from '../utils/navigation'
@@ -123,6 +124,9 @@ export default function DashboardPage() {
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
 
+  // State pour le modal de capture photo
+  const [isPhotoCaptureModalOpen, setIsPhotoCaptureModalOpen] = useState(false)
+
   // Refs pour les inputs file (ajout de photos)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -153,7 +157,7 @@ export default function DashboardPage() {
         navigate('/documents')
         break
       case 'photo':
-        addToast({ message: 'Ouverture de la camera...', type: 'info' })
+        setIsPhotoCaptureModalOpen(true)
         break
     }
   }, [navigate, addToast])
@@ -168,6 +172,29 @@ export default function DashboardPage() {
     addToast({ message: 'Appel du chef de chantier...', type: 'info' })
     // En prod: window.location.href = 'tel:+33612345678'
   }, [addToast])
+
+  // Handler pour soumettre une photo depuis le modal
+  const handlePhotoSubmit = useCallback(async (_photoBase64: string, description: string) => {
+    try {
+      // Créer le contenu du post (description + indication qu'il y a une photo)
+      const content = description || '📷 Photo ajoutée'
+
+      // TODO: Implémenter l'upload de la photo vers le backend
+      // Pour l'instant, on crée juste le post avec la description
+      // On met temporairement le contenu dans le state du feed puis on créer le post
+      feed.setNewPostContent(content)
+
+      // Attendre un peu pour que le state soit mis à jour
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      await feed.handleCreatePost()
+
+      addToast({ message: 'Photo publiée avec succès !', type: 'success' })
+    } catch (error) {
+      addToast({ message: 'Erreur lors de la publication de la photo', type: 'error' })
+      throw error
+    }
+  }, [feed, addToast])
 
   return (
     <Layout>
@@ -372,19 +399,51 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <>
-                      {feed.sortedPosts.map((post) => (
-                        <DashboardPostCard
-                          key={post.id}
-                          post={post}
-                          allAuthors={allUsers}
-                          onLike={feed.handleLike}
-                          onPin={feed.handlePin}
-                          onDelete={feed.handleDelete}
-                        />
-                      ))}
+                      {feed.sortedPosts.map((post, index) => {
+                        // Afficher le bulletin météo après les posts d'aujourd'hui mais avant ceux d'hier
+                        const isToday = (dateStr: string) => {
+                          const postDate = new Date(dateStr);
+                          const today = new Date();
+                          return postDate.toDateString() === today.toDateString();
+                        };
 
-                      {/* Bulletin météo du jour - lié au 1er chantier du planning */}
-                      {weather && (
+                        const shouldShowWeatherAfter = weather &&
+                          index < feed.sortedPosts.length - 1 &&
+                          isToday(post.created_at) &&
+                          !isToday(feed.sortedPosts[index + 1]?.created_at || '');
+
+                        return (
+                          <div key={`post-group-${post.id}`}>
+                            <DashboardPostCard
+                              post={post}
+                              allAuthors={allUsers}
+                              onLike={feed.handleLike}
+                              onPin={feed.handlePin}
+                              onDelete={feed.handleDelete}
+                            />
+
+                            {shouldShowWeatherAfter && (
+                              <div className="mt-4">
+                                <WeatherBulletinPost
+                                  weather={weather}
+                                  alert={weatherAlert}
+                                  chantierName={currentSlot?.siteName}
+                                  chantierAddress={currentSlot?.siteAddress}
+                                  chantierLatitude={currentSlot?.siteLatitude}
+                                  chantierLongitude={currentSlot?.siteLongitude}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Si aucun post d'hier, afficher le bulletin à la fin */}
+                      {weather && feed.sortedPosts.every(p => {
+                        const postDate = new Date(p.created_at);
+                        const today = new Date();
+                        return postDate.toDateString() === today.toDateString();
+                      }) && (
                         <WeatherBulletinPost
                           weather={weather}
                           alert={weatherAlert}
@@ -460,6 +519,13 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Modal pour capture photo */}
+      <PhotoCaptureModal
+        isOpen={isPhotoCaptureModalOpen}
+        onClose={() => setIsPhotoCaptureModalOpen(false)}
+        onSubmit={handlePhotoSubmit}
+      />
     </Layout>
   )
 }
