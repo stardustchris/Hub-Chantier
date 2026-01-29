@@ -591,12 +591,12 @@ def download_document(
         if not file_content:
             raise HTTPException(status_code=404, detail="Fichier non trouvé sur le disque")
 
-        # Retourner le fichier en streaming
+        # Retourner le fichier en streaming avec le nom original
         return StreamingResponse(
             file_content,
             media_type=document_entity.mime_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{document_entity.nom}"'
+                "Content-Disposition": f'attachment; filename="{document_entity.nom_original}"'
             }
         )
     except DocumentNotFoundError as e:
