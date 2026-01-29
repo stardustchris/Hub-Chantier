@@ -3,6 +3,138 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-29 (Fix telechargement documents)
+
+**Duree**: ~2h30
+**Modules**: Documents (GED)
+**Commit**: En cours
+
+### Objectif
+
+Corriger les bugs de telechargement de documents (individuel et ZIP) qui generaient des erreurs "Erreur lors du telechargement" et "Network Error".
+
+### Travail effectue
+
+#### Diagnostic initial
+- Telechargement individuel ne fonctionnait pas (erreur frontend)
+- Telechargement groupé ZIP ne fonctionnait pas (403 Forbidden puis 404 Not Found)
+- Investigation frontend/backend pour identifier les causes racines
+
+#### Corrections apportées
+
+**1. Frontend - Telechargement individuel (documents.ts, useDocuments.ts)**
+- **Probleme**: Frontend attendait JSON `{url, filename, mime_type}` mais backend retournait `StreamingResponse` (binaire)
+- **Solution**: Modifier `downloadDocument()` pour retourner `Blob` avec `responseType: 'blob'`
+- **Fichiers modifies**:
+  - `frontend/src/services/documents.ts:152-159` - Ajout `responseType: 'blob'`
+  - `frontend/src/hooks/useDocuments.ts:206-223` - Utilisation `window.URL.createObjectURL(blob)`
+  - Tests associes mis a jour (mocks Blob au lieu de JSON)
+
+**2. Frontend - Token CSRF (csrf.ts)**
+- **Probleme**: Token CSRF non envoye (403 Forbidden sur POST /download-zip)
+- **Cause**: Code essayait de recuperer token via endpoint API inexistant `/api/auth/csrf-token`
+- **Solution**: Lire token CSRF directement depuis cookie `csrf_token`
+- **Fichier modifie**: `frontend/src/services/csrf.ts:74-91`
+```typescript
+function getCsrfTokenFromCookie(): string | null {
+  const match = document.cookie.match(/csrf_token=([^;]+)/)
+  return match ? match[1] : null
+}
+```
+
+**3. Backend - Route telechargement ZIP (document_routes.py)**
+- **Probleme**: 404 Not Found sur POST `/api/documents/download-zip`
+- **Cause**: Route declaree `@router.post("/documents/download-zip")` avec prefix `/documents` → URL finale `/api/documents/documents/download-zip` (double "documents")
+- **Solution**: Corriger en `@router.post("/download-zip")` → URL correcte `/api/documents/download-zip`
+- **Fichier modifie**: `backend/modules/documents/infrastructure/web/document_routes.py:613`
+
+**4. Dette technique documentee**
+- Imports directs `SQLAlchemyDocumentRepository` et `LocalFileStorageService` violent Clean Architecture
+- TODO ajoute pour refactoriser via use cases (necessiterait modification DownloadDocumentUseCase pour retourner BinaryIO)
+- Compromis acceptable : fonctionnalite operationnelle, dette technique tracee
+
+#### Logs et debugging ajoutes
+- Logging temporaire dans endpoint ZIP pour diagnostiquer 404
+- Verification IDs documents dans base de donnees SQLite
+- Tests manuels via curl et navigateur (Chrome DevTools)
+
+### Resultats
+
+| Fonctionnalite | Avant | Apres |
+|----------------|-------|-------|
+| Telechargement individuel | ❌ Erreur | ✅ Fonctionne (200 OK) |
+| Telechargement ZIP | ❌ 403/404 | ✅ Fonctionne (200 OK, 105 KB) |
+| Token CSRF | ❌ Non envoye | ✅ Lu depuis cookie |
+| Architecture | ✅ Clean | ⚠️  Dette technique documentee |
+
+**Fichiers telecharges avec succes**:
+- `Devis-Chritophe DELALAIN-EPSILON CONSEIL... (2).pdf` (123 KB)
+- `documents (1).zip` (105 KB)
+
+### Dette technique
+
+**TODO**: Refactoriser `DownloadDocumentUseCase` pour retourner `BinaryIO` au lieu de `(url, nom, mime_type)`, permettant de supprimer les imports directs dans les routes.
+
+
+## Session 2026-01-29 (Fix telechargement documents + Clean Architecture)
+
+**Duree**: ~3h
+**Modules**: Documents (GED)
+**Commits**:
+- `03381d7` - refactor(documents): respect Clean Architecture in download endpoints
+- `0ea0799` - fix(frontend): update NotificationDropdown to handle blob downloads
+- `28af548` - chore(frontend): update package-lock.json with peer dependencies
+- `0572af4` - docs: update specifications with Clean Architecture refactoring
+
+### Objectif
+
+Corriger les bugs de telechargement de documents (individuel et ZIP) qui generaient des erreurs "Erreur lors du telechargement" et "Network Error", puis refactoriser pour respecter la Clean Architecture.
+
+### Travail effectue
+
+#### Phase 1: Diagnostic et corrections initiales
+- Telechargement individuel ne fonctionnait pas (erreur frontend)
+- Telechargement groupé ZIP ne fonctionnait pas (403 Forbidden puis 404 Not Found)
+- Investigation frontend/backend pour identifier les causes racines
+
+#### Phase 2: Corrections apportées
+
+**1. Frontend - Telechargement individuel (documents.ts, useDocuments.ts)**
+- **Probleme**: Frontend attendait JSON `{url, filename, mime_type}` mais backend retournait `StreamingResponse` (binaire)
+- **Solution**: Modifier `downloadDocument()` pour retourner `Blob` avec `responseType: 'blob'`
+- **Fichiers modifies**:
+  - `frontend/src/services/documents.ts:152-159` - Ajout `responseType: 'blob'`
+  - `frontend/src/hooks/useDocuments.ts:206-223` - Utilisation `window.URL.createObjectURL(blob)`
+  - `frontend/src/components/notifications/NotificationDropdown.tsx` - Creation URL depuis blob
+  - Tests associes mis a jour (mocks Blob au lieu de JSON)
+
+**2. Frontend - Token CSRF (csrf.ts)**
+- **Probleme**: Token CSRF non envoye (403 Forbidden sur POST /download-zip)
+- **Cause**: Code essayait de recuperer token via endpoint API inexistant `/api/auth/csrf-token`
+- **Solution**: Lire token CSRF directement depuis cookie `csrf_token`
+
+**3. Backend - Route telechargement ZIP (document_routes.py)**
+- **Probleme**: 404 Not Found sur POST `/api/documents/download-zip`
+- **Cause**: Route declaree `@router.post("/documents/download-zip")` avec prefix `/documents`
+- **Solution**: Corriger en `@router.post("/download-zip")`
+
+#### Phase 3: Refactorisation Clean Architecture
+
+**Solution complete**:
+1. **Use Case**: Modifie pour retourner `tuple[BinaryIO, str, str]`
+2. **Controller**: Signature mise a jour
+3. **Routes**: Simplification, suppression imports directs
+
+### Resultats
+
+| Fonctionnalite | Avant | Apres |
+|----------------|-------|-------|
+| Telechargement individuel | ❌ Erreur | ✅ 200 OK |
+| Telechargement ZIP | ❌ 403/404 | ✅ 200 OK |
+| Token CSRF | ❌ Non envoye | ✅ Lu cookie |
+| Architecture | ❌ Violations | ✅ Clean |
+
+
 ## Session 2026-01-29 (Review docs et agents — Quality Rounds 4-5)
 
 **Duree**: ~4h
