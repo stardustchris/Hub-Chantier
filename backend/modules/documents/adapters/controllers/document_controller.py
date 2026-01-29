@@ -142,8 +142,8 @@ class DocumentController:
         """Supprime un document."""
         return self._delete_document.execute(document_id)
 
-    def download_document(self, document_id: int) -> tuple[str, str, str]:
-        """Télécharge un document."""
+    def download_document(self, document_id: int) -> tuple[BinaryIO, str, str]:
+        """Télécharge un document - retourne (file_content, filename, mime_type)."""
         return self._download_document.execute(document_id)
 
     def download_documents_zip(self, document_ids: List[int]) -> BinaryIO:

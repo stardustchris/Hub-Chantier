@@ -385,15 +385,15 @@ class DownloadDocumentUseCase:
         self._document_repo = document_repository
         self._file_storage = file_storage
 
-    def execute(self, document_id: int) -> tuple[str, str, str]:
+    def execute(self, document_id: int) -> tuple[BinaryIO, str, str]:
         """
-        Génère une URL de téléchargement.
+        Récupère le contenu binaire d'un document pour téléchargement.
 
         Args:
             document_id: ID du document.
 
         Returns:
-            Tuple (url, nom_fichier, mime_type).
+            Tuple (file_content, nom_fichier, mime_type).
 
         Raises:
             DocumentNotFoundError: Si le document n'existe pas.
@@ -402,9 +402,14 @@ class DownloadDocumentUseCase:
         if not document:
             raise DocumentNotFoundError(f"Document {document_id} non trouvé")
 
-        url = self._file_storage.get_url(document.chemin_stockage)
+        # Récupérer le contenu du fichier
+        file_content = self._file_storage.get(document.chemin_stockage)
+        if not file_content:
+            raise DocumentNotFoundError(
+                f"Fichier non trouvé sur le disque: {document.chemin_stockage}"
+            )
 
-        return url, document.nom, document.mime_type
+        return file_content, document.nom_original, document.mime_type
 
 
 class DownloadMultipleDocumentsUseCase:

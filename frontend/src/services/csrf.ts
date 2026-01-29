@@ -69,10 +69,24 @@ export async function fetchCsrfToken(): Promise<string> {
 }
 
 /**
+ * Récupère le token CSRF depuis le cookie
+ */
+function getCsrfTokenFromCookie(): string | null {
+  const match = document.cookie.match(/csrf_token=([^;]+)/)
+  return match ? match[1] : null
+}
+
+/**
  * Récupère le token CSRF actuel (synchrone)
  * Retourne null si le token n'a pas encore été récupéré
  */
 export function getCsrfToken(): string | null {
+  // Essayer d'abord le cookie (plus fiable)
+  const cookieToken = getCsrfTokenFromCookie()
+  if (cookieToken) {
+    return cookieToken
+  }
+  // Fallback sur le token en mémoire
   return csrfToken
 }
 

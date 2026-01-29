@@ -213,9 +213,9 @@ export function useRecentDocuments(): UseRecentDocumentsReturn {
       if (doc.demoUrl) {
         url = doc.demoUrl
       } else {
-        // Sinon, récupérer l'URL via l'API
-        const downloadInfo = await documentsService.downloadDocument(doc.documentId)
-        url = downloadInfo.url
+        // Sinon, récupérer le blob via l'API et créer une URL
+        const blob = await documentsService.downloadDocument(doc.documentId)
+        url = window.URL.createObjectURL(blob)
       }
 
       const platform = detectPlatform()

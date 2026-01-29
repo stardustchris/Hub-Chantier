@@ -575,53 +575,51 @@ def download_document(
 ):
     """Télécharge un document."""
     try:
-        # Récupérer le chemin du fichier
-        from modules.documents.infrastructure.persistence.document_repository import SQLAlchemyDocumentRepository
-        from modules.documents.adapters.providers.local_file_storage import LocalFileStorageService
-        from shared.infrastructure.database import get_db
+        # Utiliser le contrôleur qui respecte Clean Architecture
+        file_content, filename, mime_type = controller.download_document(document_id)
 
-        db = next(get_db())
-        repo = SQLAlchemyDocumentRepository(db)
-        document_entity = repo.find_by_id(document_id)
-
-        if not document_entity:
-            raise HTTPException(status_code=404, detail="Document non trouvé")
-
-        # Ouvrir le fichier depuis le stockage
-        storage = LocalFileStorageService()
-        file_content = storage.get(document_entity.chemin_stockage)
-
-        if not file_content:
-            raise HTTPException(status_code=404, detail="Fichier non trouvé sur le disque")
-
-        # Retourner le fichier en streaming avec le nom original
+        # Retourner le fichier en streaming
         return StreamingResponse(
             file_content,
-            media_type=document_entity.mime_type,
+            media_type=mime_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{document_entity.nom_original}"'
+                "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
     except DocumentNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        # Log l'erreur pour debug
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Erreur lors du téléchargement du document {document_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
 
-@router.post("/documents/download-zip")
+@router.post("/download-zip")
 def download_documents_zip(
     request: DownloadZipRequest,
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
 ):
     """Télécharge plusieurs documents en archive ZIP (GED-16)."""
+    import logging
+    logger = logging.getLogger(__name__)
     try:
+        logger.info(f"[ZIP] Demande téléchargement ZIP pour documents: {request.document_ids}")
         zip_content = controller.download_documents_zip(request.document_ids)
+        logger.info(f"[ZIP] Archive créée avec succès")
         return StreamingResponse(
             zip_content,
             media_type="application/zip",
             headers={"Content-Disposition": "attachment; filename=documents.zip"},
         )
     except DocumentNotFoundError as e:
+        logger.error(f"[ZIP] Document non trouvé: {e}")
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"[ZIP] Erreur inattendue: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
 
 @router.get("/documents/{document_id}/preview", response_model=PreviewResponse)

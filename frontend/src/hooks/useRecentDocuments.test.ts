@@ -246,11 +246,8 @@ describe('useRecentDocuments', () => {
     mockGetByUtilisateur.mockResolvedValue([])
     mockSearchDocuments.mockResolvedValue({ documents: [], total: 0 } as any)
 
-    mockDownloadDocument.mockResolvedValue({
-      url: 'https://api.example.com/doc/42',
-      filename: 'plan.pdf',
-      mime_type: 'application/pdf',
-    })
+    const mockBlob = new Blob(['test pdf content'], { type: 'application/pdf' })
+    mockDownloadDocument.mockResolvedValue(mockBlob)
 
     const mockOpen = vi.fn()
     vi.stubGlobal('open', mockOpen)

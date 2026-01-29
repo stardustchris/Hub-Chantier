@@ -205,16 +205,17 @@ export function useDocuments() {
 
   const handleDownloadDocument = useCallback(async (doc: Document) => {
     try {
-      const { url } = await documentsApi.downloadDocument(doc.id)
+      const blob = await documentsApi.downloadDocument(doc.id)
 
       // Créer un lien temporaire pour forcer le téléchargement avec le nom original
+      const url = window.URL.createObjectURL(blob)
       const link = window.document.createElement('a')
       link.href = url
       link.download = doc.nom_original || doc.nom
-      link.target = '_blank'
       window.document.body.appendChild(link)
       link.click()
       window.document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       logger.error('Error downloading document', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du telechargement', type: 'error' })

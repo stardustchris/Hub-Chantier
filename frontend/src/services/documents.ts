@@ -151,8 +151,10 @@ export const deleteDocument = async (documentId: number): Promise<void> => {
 
 export const downloadDocument = async (
   documentId: number
-): Promise<{ url: string; filename: string; mime_type: string }> => {
-  const response = await api.get(`/api/documents/${documentId}/download`)
+): Promise<Blob> => {
+  const response = await api.get(`/api/documents/documents/${documentId}/download`, {
+    responseType: 'blob',
+  })
   return response.data
 }
 
