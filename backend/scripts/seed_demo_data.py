@@ -328,100 +328,344 @@ CHANTIERS_SPECIAUX = [
 ]
 
 CHANTIERS_DATA = [
+    # === CHANTIERS 2024-2025 (terminés ou en cours) ===
     {
-        "code": "A001",
-        "nom": "Residence Les Jardins",
-        "adresse": "15 Avenue des Fleurs, 75001 Paris",
-        "description": "Construction d'un immeuble de 24 logements sur 4 etages avec parking souterrain",
-        "statut": "en_cours",
+        "code": "2024-10-MONTMELIAN",
+        "nom": "Ensemble immobilier Montmélian",
+        "adresse": "Montmélian, 73800",
+        "description": "Ensemble immobilier de bureaux et 4 logements - ACE Solution",
+        "statut": "receptionne",
         "couleur": "#3498DB",
-        "latitude": 48.8566,
-        "longitude": 2.3522,
-        "contact_nom": "M. Lefevre",
-        "contact_telephone": "01 23 45 67 89",
-        "heures_estimees": 2400,
-        "date_debut": date.today() - timedelta(days=60),
-        "date_fin": date.today() + timedelta(days=120),
+        "contact_nom": "ACE Solution",
+        "contact_telephone": "04 79 00 00 01",
+        "heures_estimees": 5900,  # 886k€ / 150€/h
+        "date_debut": date(2024, 10, 1),
+        "date_fin": date(2025, 6, 30),
     },
     {
-        "code": "A002",
-        "nom": "Centre Commercial Grand Place",
-        "adresse": "Zone Commerciale Nord, 93100 Montreuil",
-        "description": "Extension du centre commercial - 2000m2 de surface commerciale",
-        "statut": "en_cours",
+        "code": "2025-01-CHALLES-REHAB",
+        "nom": "Réhabilitation 6 logements Challes",
+        "adresse": "Challes-les-Eaux, 73190",
+        "description": "Réhabilitation 6 logements - OPAC (Déconstruction 67k€ + Maçonnerie 80k€)",
+        "statut": "receptionne",
         "couleur": "#E74C3C",
-        "latitude": 48.8634,
-        "longitude": 2.4437,
-        "contact_nom": "Mme Dubois",
-        "contact_telephone": "01 34 56 78 90",
-        "heures_estimees": 3600,
-        "date_debut": date.today() - timedelta(days=30),
-        "date_fin": date.today() + timedelta(days=180),
+        "contact_nom": "OPAC Savoie",
+        "contact_telephone": "04 79 00 00 02",
+        "heures_estimees": 980,  # 147k€ / 150€/h
+        "date_debut": date(2025, 1, 15),
+        "date_fin": date(2025, 9, 30),
     },
     {
-        "code": "A003",
-        "nom": "Ecole Primaire Jean Jaures",
-        "adresse": "8 Rue de la Republique, 94200 Ivry-sur-Seine",
-        "description": "Renovation complete et extension - nouveau batiment de 6 classes",
-        "statut": "ouvert",
+        "code": "2025-01-CHAMBERY-MEDICAL",
+        "nom": "Pôle médical Chambéry",
+        "adresse": "Chambéry, 73000",
+        "description": "Pôle médical - Cristal Habitat (Démolition & Maçonnerie)",
+        "statut": "receptionne",
         "couleur": "#27AE60",
-        "latitude": 48.8156,
-        "longitude": 2.3847,
-        "contact_nom": "Direction Education",
-        "contact_telephone": "01 45 67 89 01",
-        "heures_estimees": 1800,
-        "date_debut": date.today() + timedelta(days=30),
-        "date_fin": date.today() + timedelta(days=150),
+        "contact_nom": "Cristal Habitat",
+        "contact_telephone": "04 79 00 00 03",
+        "heures_estimees": 187,  # 28k€ / 150€/h
+        "date_debut": date(2025, 1, 20),
+        "date_fin": date(2025, 5, 31),
     },
     {
-        "code": "A004",
-        "nom": "Villa Moderne Duplex",
-        "adresse": "42 Chemin des Vignes, 78000 Versailles",
-        "description": "Construction villa contemporaine 180m2 avec piscine",
-        "statut": "en_cours",
+        "code": "2025-01-STE-MARIE-SALLE",
+        "nom": "Salle polyvalente Ste Marie de Cuines",
+        "adresse": "Sainte-Marie-de-Cuines, 73130",
+        "description": "Rénovation salle polyvalente - Commune",
+        "statut": "receptionne",
         "couleur": "#9B59B6",
-        "latitude": 48.8049,
-        "longitude": 2.1204,
-        "contact_nom": "M. et Mme Fontaine",
-        "contact_telephone": "06 12 34 56 78",
-        "heures_estimees": 1200,
-        "date_debut": date.today() - timedelta(days=45),
-        "date_fin": date.today() + timedelta(days=75),
+        "contact_nom": "Mairie Ste Marie de Cuines",
+        "contact_telephone": "04 79 00 00 04",
+        "heures_estimees": 1467,  # 220k€ / 150€/h
+        "date_debut": date(2025, 1, 10),
+        "date_fin": date(2025, 8, 31),
     },
     {
-        "code": "A005",
-        "nom": "Bureaux Tech Valley",
-        "adresse": "Tech Park, 92100 Boulogne-Billancourt",
-        "description": "Amenagement de 500m2 de bureaux en open space avec salles de reunion",
+        "code": "2025-02-EPIERRE-GYMNASE",
+        "nom": "Extension gymnase Epierre",
+        "adresse": "Epierre, 73220",
+        "description": "Extension + rénovation Gymnase - Commune (Terrassement 51.7k€ + Démolition & Maçonnerie 147k€)",
         "statut": "receptionne",
         "couleur": "#F1C40F",
-        "latitude": 48.8397,
-        "longitude": 2.2399,
-        "contact_nom": "StartupCorp SAS",
-        "contact_telephone": "01 56 78 90 12",
-        "heures_estimees": 600,
-        "date_debut": date.today() - timedelta(days=90),
-        "date_fin": date.today() - timedelta(days=15),
+        "contact_nom": "Mairie d'Epierre",
+        "contact_telephone": "04 79 00 00 05",
+        "heures_estimees": 1325,  # 198.7k€ / 150€/h
+        "date_debut": date(2025, 2, 1),
+        "date_fin": date(2025, 10, 31),
+    },
+    {
+        "code": "2025-03-ALPESPACE-EXECO",
+        "nom": "Bâtiment industriel EXECO",
+        "adresse": "Alpespace, Sainte-Hélène-du-Lac, 73800",
+        "description": "Bâtiment industriel - EXECO",
+        "statut": "receptionne",
+        "couleur": "#E67E22",
+        "contact_nom": "EXECO",
+        "contact_telephone": "04 79 00 00 06",
+        "heures_estimees": 860,  # 129k€ / 150€/h
+        "date_debut": date(2025, 3, 1),
+        "date_fin": date(2025, 9, 30),
+    },
+    {
+        "code": "2025-03-ALPESPACE-SOUDEM",
+        "nom": "Bâtiment industriel SOUDEM",
+        "adresse": "Alpespace, Sainte-Hélène-du-Lac, 73800",
+        "description": "Bâtiment industriel - SOUDEM",
+        "statut": "receptionne",
+        "couleur": "#16A085",
+        "contact_nom": "SOUDEM",
+        "contact_telephone": "04 79 00 00 07",
+        "heures_estimees": 660,  # 99k€ / 150€/h
+        "date_debut": date(2025, 3, 15),
+        "date_fin": date(2025, 10, 31),
+    },
+    {
+        "code": "2025-03-BEAUFORT-FERME",
+        "nom": "Réhabilitation ferme Beaufort",
+        "adresse": "Beaufort, 73270",
+        "description": "Réhabilitation de la ferme - Commune",
+        "statut": "receptionne",
+        "couleur": "#D35400",
+        "contact_nom": "Mairie de Beaufort",
+        "contact_telephone": "04 79 00 00 08",
+        "heures_estimees": 1445,  # 216.8k€ / 150€/h
+        "date_debut": date(2025, 3, 10),
+        "date_fin": date(2025, 11, 30),
+    },
+    {
+        "code": "2025-03-CHAMOUX-AGRICOLE",
+        "nom": "Bâtiment agricole Chamoux",
+        "adresse": "Chamoux-sur-Gelon, 73390",
+        "description": "Bâtiment agricole - Particulier",
+        "statut": "receptionne",
+        "couleur": "#8E44AD",
+        "contact_nom": "Particulier",
+        "contact_telephone": "04 79 00 00 09",
+        "heures_estimees": 380,  # 57k€ / 150€/h
+        "date_debut": date(2025, 3, 20),
+        "date_fin": date(2025, 7, 31),
+    },
+    {
+        "code": "2025-03-TOURNON-COMMERCIAL",
+        "nom": "Bâtiment commercial Tournon",
+        "adresse": "Tournon, 73460",
+        "description": "Bâtiment commercial - Particulier",
+        "statut": "en_cours",
+        "couleur": "#C0392B",
+        "contact_nom": "Particulier",
+        "contact_telephone": "04 79 00 00 10",
+        "heures_estimees": 6666,  # 999.9k€ / 150€/h
+        "date_debut": date(2025, 3, 1),
+        "date_fin": date(2026, 3, 31),
+    },
+    {
+        "code": "2025-04-CHIGNIN-AGRICOLE",
+        "nom": "2 bâtiments agricoles Chignin",
+        "adresse": "Chignin, 73800",
+        "description": "2 bâtiments agricoles - Particulier",
+        "statut": "en_cours",
+        "couleur": "#E84393",
+        "contact_nom": "Particulier",
+        "contact_telephone": "04 79 00 00 11",
+        "heures_estimees": 2800,  # 420k€ / 150€/h
+        "date_debut": date(2025, 4, 1),
+        "date_fin": date(2026, 2, 28),
+    },
+    {
+        "code": "2025-04-UGINE-MAISONS",
+        "nom": "Constructions maisons Ugine",
+        "adresse": "Ugine, 73400",
+        "description": "Constructions de maisons - OPAC",
+        "statut": "en_cours",
+        "couleur": "#2980B9",
+        "contact_nom": "OPAC Savoie",
+        "contact_telephone": "04 79 00 00 12",
+        "heures_estimees": 900,  # 135k€ / 150€/h
+        "date_debut": date(2025, 4, 15),
+        "date_fin": date(2026, 1, 31),
+    },
+    {
+        "code": "2025-05-CHATEAUNEUF-DENTAIRE",
+        "nom": "Cabinet dentaire Châteauneuf",
+        "adresse": "Châteauneuf, 73390",
+        "description": "Cabinet dentaire - Particulier",
+        "statut": "en_cours",
+        "couleur": "#1ABC9C",
+        "contact_nom": "Particulier",
+        "contact_telephone": "04 79 00 00 13",
+        "heures_estimees": 853,  # 128k€ / 150€/h
+        "date_debut": date(2025, 5, 1),
+        "date_fin": date(2025, 12, 31),
+    },
+    {
+        "code": "2025-05-CHATEAUNEUF-MAIRIE",
+        "nom": "Rénovation Mairie Châteauneuf",
+        "adresse": "Châteauneuf, 73390",
+        "description": "Rénovation de la Mairie - Commune (Démolition & Maçonnerie)",
+        "statut": "en_cours",
+        "couleur": "#EC407A",
+        "contact_nom": "Mairie de Châteauneuf",
+        "contact_telephone": "04 79 00 00 14",
+        "heures_estimees": 1153,  # 173k€ / 150€/h
+        "date_debut": date(2025, 5, 15),
+        "date_fin": date(2026, 2, 28),
+    },
+    {
+        "code": "2025-06-RAVOIRE-LOGEMENTS",
+        "nom": "Logements La Ravoire",
+        "adresse": "La Ravoire, 73490",
+        "description": "Logements - Particulier",
+        "statut": "en_cours",
+        "couleur": "#3F51B5",
+        "contact_nom": "Particulier",
+        "contact_telephone": "04 79 00 00 15",
+        "heures_estimees": 3393,  # 509k€ / 150€/h
+        "date_debut": date(2025, 6, 1),
+        "date_fin": date(2026, 6, 30),
+    },
+    {
+        "code": "2025-07-FAVERGES-IME",
+        "nom": "IME Faverges",
+        "adresse": "Faverges, 74210",
+        "description": "IME - Fondation OVE",
+        "statut": "en_cours",
+        "couleur": "#FF9800",
+        "contact_nom": "Fondation OVE",
+        "contact_telephone": "04 50 00 00 01",
+        "heures_estimees": 580,  # 87k€ / 150€/h
+        "date_debut": date(2025, 7, 1),
+        "date_fin": date(2026, 3, 31),
+    },
+    {
+        "code": "2025-07-TOUR-LOGEMENTS",
+        "nom": "20 logements Tour-en-Savoie",
+        "adresse": "Tour-en-Savoie, 73170",
+        "description": "20 logements - CIS PROMOTION",
+        "statut": "en_cours",
+        "couleur": "#FF5722",
+        "contact_nom": "CIS PROMOTION",
+        "contact_telephone": "04 79 00 00 16",
+        "heures_estimees": 5920,  # 888k€ / 150€/h
+        "date_debut": date(2025, 7, 1),
+        "date_fin": date(2026, 9, 30),
+    },
+    {
+        "code": "2025-07-HAUTEVILLE-MAIRIE",
+        "nom": "Réhabilitation mairie Hauteville",
+        "adresse": "Hauteville, 73390",
+        "description": "Réhabilitation mairie - Commune",
+        "statut": "en_cours",
+        "couleur": "#795548",
+        "contact_nom": "Mairie d'Hauteville",
+        "contact_telephone": "04 79 00 00 17",
+        "heures_estimees": 740,  # 111k€ / 150€/h
+        "date_debut": date(2025, 7, 15),
+        "date_fin": date(2026, 4, 30),
+    },
+    {
+        "code": "2025-11-TRIALP",
+        "nom": "Reconstruction hall de tri TRIALP",
+        "adresse": "TRIALP, 73000",
+        "description": "Reconstruction hall de tri et bureaux - VALTRI",
+        "statut": "en_cours",
+        "couleur": "#607D8B",
+        "contact_nom": "VALTRI",
+        "contact_telephone": "04 79 00 00 18",
+        "heures_estimees": 10353,  # 1552.9k€ / 150€/h
+        "date_debut": date(2025, 11, 1),
+        "date_fin": date(2027, 6, 30),
+    },
+
+    # === CHANTIERS 2026 (ouverts/à venir) ===
+    {
+        "code": "2026-02-BISSY-COLLEGE",
+        "nom": "Restructuration collège Bissy",
+        "adresse": "Bissy, Chambéry, 73000",
+        "description": "Restructuration du collège - Public",
+        "statut": "ouvert",
+        "couleur": "#00BCD4",
+        "contact_nom": "Département Savoie",
+        "contact_telephone": "04 79 00 00 19",
+        "heures_estimees": 5293,  # 794k€ / 150€/h
+        "date_debut": date(2026, 2, 1),
+        "date_fin": date(2027, 2, 28),
+    },
+    {
+        "code": "2026-02-BISSY-DECONSTRUCTION",
+        "nom": "Déconstruction collège Bissy",
+        "adresse": "Bissy, Chambéry, 73000",
+        "description": "Restructuration du collège - Public (Déconstruction)",
+        "statut": "ouvert",
+        "couleur": "#009688",
+        "contact_nom": "Département Savoie",
+        "contact_telephone": "04 79 00 00 20",
+        "heures_estimees": 2049,  # 307.3k€ / 150€/h
+        "date_debut": date(2027, 2, 1),
+        "date_fin": date(2027, 8, 31),
+    },
+    {
+        "code": "2026-03-RAVOIRE-CAPITE",
+        "nom": "Logements sociaux La Capite",
+        "adresse": "La Ravoire, 73490",
+        "description": "Logements sociaux et villas - SCCV La Capite",
+        "statut": "ouvert",
+        "couleur": "#8BC34A",
+        "contact_nom": "SCCV La Capite",
+        "contact_telephone": "04 79 00 00 21",
+        "heures_estimees": 4780,  # 717k€ / 150€/h
+        "date_debut": date(2026, 3, 1),
+        "date_fin": date(2027, 3, 31),
+    },
+    {
+        "code": "2026-BOURGET-LOGEMENTS",
+        "nom": "Construction logements Bourget-du-Lac",
+        "adresse": "Bourget-du-Lac, 73370",
+        "description": "Construction de logements - OPAC",
+        "statut": "ouvert",
+        "couleur": "#CDDC39",
+        "contact_nom": "OPAC Savoie",
+        "contact_telephone": "04 79 00 00 22",
+        "heures_estimees": 3708,  # 556.2k€ / 150€/h
+        "date_debut": date(2026, 4, 1),
+        "date_fin": date(2027, 6, 30),
     },
 ]
 
 TACHES_DATA = [
-    # Taches pour chantier A001 (Residence Les Jardins)
-    {"chantier_code": "A001", "titre": "Terrassement et fondations", "description": "Excavation et coulage des fondations", "statut": "termine", "heures_estimees": 400},
-    {"chantier_code": "A001", "titre": "Gros oeuvre RDC", "description": "Murs porteurs et plancher RDC", "statut": "termine", "heures_estimees": 300},
-    {"chantier_code": "A001", "titre": "Gros oeuvre 1er etage", "description": "Murs et plancher 1er etage", "statut": "a_faire", "heures_estimees": 300},
-    {"chantier_code": "A001", "titre": "Gros oeuvre 2eme etage", "description": "Murs et plancher 2eme etage", "statut": "a_faire", "heures_estimees": 300},
-    {"chantier_code": "A001", "titre": "Toiture", "description": "Charpente et couverture", "statut": "a_faire", "heures_estimees": 250},
+    # Taches pour chantier Tournon (en cours - commercial)
+    {"chantier_code": "2025-03-TOURNON-COMMERCIAL", "titre": "Terrassement et fondations", "description": "Préparation du terrain et fondations", "statut": "termine", "heures_estimees": 800},
+    {"chantier_code": "2025-03-TOURNON-COMMERCIAL", "titre": "Gros oeuvre - Murs porteurs", "description": "Élévation des murs porteurs", "statut": "en_cours", "heures_estimees": 1200},
+    {"chantier_code": "2025-03-TOURNON-COMMERCIAL", "titre": "Structure planchers", "description": "Coffrage et coulage des planchers", "statut": "a_faire", "heures_estimees": 900},
+    {"chantier_code": "2025-03-TOURNON-COMMERCIAL", "titre": "Façades", "description": "Maçonnerie de façade", "statut": "a_faire", "heures_estimees": 700},
+    {"chantier_code": "2025-03-TOURNON-COMMERCIAL", "titre": "Finitions extérieures", "description": "Enduits et finitions", "statut": "a_faire", "heures_estimees": 500},
 
-    # Taches pour chantier A002 (Centre Commercial)
-    {"chantier_code": "A002", "titre": "Demolition zone est", "description": "Demolition des anciens locaux", "statut": "termine", "heures_estimees": 200},
-    {"chantier_code": "A002", "titre": "Fondations extension", "description": "Fondations de la nouvelle aile", "statut": "a_faire", "heures_estimees": 350},
-    {"chantier_code": "A002", "titre": "Structure metallique", "description": "Montage de l'ossature metallique", "statut": "a_faire", "heures_estimees": 500},
+    # Taches pour chantier Chignin (en cours - agricole)
+    {"chantier_code": "2025-04-CHIGNIN-AGRICOLE", "titre": "Fondations bâtiment 1", "description": "Fondations du premier bâtiment", "statut": "termine", "heures_estimees": 400},
+    {"chantier_code": "2025-04-CHIGNIN-AGRICOLE", "titre": "Gros oeuvre bâtiment 1", "description": "Murs et structure bâtiment 1", "statut": "en_cours", "heures_estimees": 800},
+    {"chantier_code": "2025-04-CHIGNIN-AGRICOLE", "titre": "Fondations bâtiment 2", "description": "Fondations du second bâtiment", "statut": "a_faire", "heures_estimees": 400},
+    {"chantier_code": "2025-04-CHIGNIN-AGRICOLE", "titre": "Gros oeuvre bâtiment 2", "description": "Murs et structure bâtiment 2", "statut": "a_faire", "heures_estimees": 800},
 
-    # Taches pour chantier A004 (Villa)
-    {"chantier_code": "A004", "titre": "Fondations villa", "description": "Terrassement et fondations", "statut": "termine", "heures_estimees": 100},
-    {"chantier_code": "A004", "titre": "Elevation murs", "description": "Construction des murs", "statut": "a_faire", "heures_estimees": 200},
-    {"chantier_code": "A004", "titre": "Piscine", "description": "Construction de la piscine", "statut": "a_faire", "heures_estimees": 150},
+    # Taches pour chantier 20 logements Tour-en-Savoie (en cours)
+    {"chantier_code": "2025-07-TOUR-LOGEMENTS", "titre": "Terrassement général", "description": "Préparation terrain et VRD", "statut": "termine", "heures_estimees": 600},
+    {"chantier_code": "2025-07-TOUR-LOGEMENTS", "titre": "Fondations bâtiment A", "description": "Fondations premier bâtiment", "statut": "termine", "heures_estimees": 800},
+    {"chantier_code": "2025-07-TOUR-LOGEMENTS", "titre": "Gros oeuvre bâtiment A", "description": "Élévation murs et planchers", "statut": "en_cours", "heures_estimees": 1500},
+    {"chantier_code": "2025-07-TOUR-LOGEMENTS", "titre": "Fondations bâtiment B", "description": "Fondations second bâtiment", "statut": "a_faire", "heures_estimees": 800},
+    {"chantier_code": "2025-07-TOUR-LOGEMENTS", "titre": "Gros oeuvre bâtiment B", "description": "Élévation murs et planchers", "statut": "a_faire", "heures_estimees": 1500},
+
+    # Taches pour chantier TRIALP (en cours - important)
+    {"chantier_code": "2025-11-TRIALP", "titre": "Démolition hall existant", "description": "Démolition de l'ancien hall de tri", "statut": "en_cours", "heures_estimees": 1200},
+    {"chantier_code": "2025-11-TRIALP", "titre": "Terrassement et VRD", "description": "Préparation du terrain", "statut": "a_faire", "heures_estimees": 800},
+    {"chantier_code": "2025-11-TRIALP", "titre": "Fondations hall", "description": "Fondations du nouveau hall", "statut": "a_faire", "heures_estimees": 1500},
+    {"chantier_code": "2025-11-TRIALP", "titre": "Structure hall", "description": "Structure métallique et maçonnerie", "statut": "a_faire", "heures_estimees": 2500},
+    {"chantier_code": "2025-11-TRIALP", "titre": "Bureaux", "description": "Construction des bureaux", "statut": "a_faire", "heures_estimees": 1200},
+    {"chantier_code": "2025-11-TRIALP", "titre": "Finitions", "description": "Finitions et aménagements", "statut": "a_faire", "heures_estimees": 1000},
+
+    # Taches pour chantier La Ravoire logements (en cours)
+    {"chantier_code": "2025-06-RAVOIRE-LOGEMENTS", "titre": "Fondations", "description": "Fondations de l'ensemble", "statut": "termine", "heures_estimees": 500},
+    {"chantier_code": "2025-06-RAVOIRE-LOGEMENTS", "titre": "Gros oeuvre RDC+R1", "description": "Murs et planchers RDC et R+1", "statut": "en_cours", "heures_estimees": 1200},
+    {"chantier_code": "2025-06-RAVOIRE-LOGEMENTS", "titre": "Gros oeuvre R+2+R3", "description": "Murs et planchers R+2 et R+3", "statut": "a_faire", "heures_estimees": 1200},
+    {"chantier_code": "2025-06-RAVOIRE-LOGEMENTS", "titre": "Toiture", "description": "Charpente et couverture", "statut": "a_faire", "heures_estimees": 400},
 ]
 
 
@@ -552,19 +796,41 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
     today = date.today()
     monday = today - timedelta(days=today.weekday())
 
-    # Compagnons a affecter
-    compagnons = [
-        ("lucas.moreau@greg-construction.fr", "A001"),
-        ("emma.garcia@greg-construction.fr", "A001"),
-        ("thomas.leroy@greg-construction.fr", "A002"),
-        ("julie.roux@greg-construction.fr", "A004"),
+    # Affectations pour les chantiers en cours - Distribution réaliste des compagnons
+    affectations_data = [
+        # TRIALP - Gros chantier (6 compagnons)
+        ("sebastien.achkar@greg-construction.fr", "2025-11-TRIALP"),
+        ("carlos.de-oliveira-covas@greg-construction.fr", "2025-11-TRIALP"),
+        ("abou.drame@greg-construction.fr", "2025-11-TRIALP"),
+        ("loic.duinat@greg-construction.fr", "2025-11-TRIALP"),
+        ("manuel.figueiredo-de-almeida@greg-construction.fr", "2025-11-TRIALP"),
+        ("babaker.haroun-moussa@greg-construction.fr", "2025-11-TRIALP"),
+
+        # 20 logements Tour-en-Savoie (4 compagnons)
+        ("jose.moreira-ferreira-da-silva@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("lhassan.achibane@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("gabriel.alonzo@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("ricardo.costa-silva@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+
+        # Logements La Ravoire (2 compagnons)
+        ("pedro.francisco@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),
+        ("anthony.mele@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),
+
+        # Grutier sur TRIALP
+        ("jose-alberto.borges@greg-construction.fr", "2025-11-TRIALP"),
+
+        # Chefs de chantier assignés
+        ("robert.bianchini@greg-construction.fr", "2025-11-TRIALP"),  # Chef sur TRIALP
+        ("nicolas.delsalle@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),  # Chef sur Tour
+        ("guillaume.louyer@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),  # Chef sur Ravoire
+        ("jeremy.montmayeur@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),  # Chef sur Tournon
     ]
 
     # Admin qui cree les affectations
-    admin_id = user_ids.get("admin@greg-construction.fr") or user_ids.get("greg@greg-construction.fr") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     created_count = 0
-    for email, chantier_code in compagnons:
+    for email, chantier_code in affectations_data:
         user_id = user_ids.get(email)
         chantier_id = chantier_ids.get(chantier_code)
 
