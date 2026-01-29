@@ -128,7 +128,9 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
   const hasConsent = await consentService.hasConsent('geolocation')
 
   if (!hasConsent) {
-    throw new Error('Consentement géolocalisation requis')
+    // Si pas de consentement, utiliser Chambéry comme position par défaut
+    logger.info('Consentement géolocalisation non donné, utilisation de la position par défaut (Chambéry)')
+    return { latitude: 45.5646, longitude: 5.9178, city: 'Chambéry', postalCode: '73000' }
   }
 
   return new Promise((resolve, reject) => {
