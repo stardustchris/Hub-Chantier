@@ -1,6 +1,6 @@
 """Ressource Chantiers."""
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from .base import BaseResource
 
 
@@ -40,16 +40,19 @@ class Chantiers(BaseResource):
             >>> for chantier in chantiers:
             ...     print(chantier['nom'])
         """
-        params = {"limit": limit, "offset": offset}
+        params: Dict[str, Any] = {"limit": limit, "offset": offset}
         if status:
             params["status"] = status
         if conducteur_id:
             params["conducteur_id"] = conducteur_id
 
         response = self.client._request("GET", "/api/chantiers", params=params)
-        return response.get("items", response)  # Handle both paginated and direct list
+        # Handle both paginated response (with "items") and direct list
+        if isinstance(response, dict) and "items" in response:
+            return response["items"]  # type: ignore
+        return response  # type: ignore
 
-    def get(self, chantier_id: int) -> Dict:
+    def get(self, chantier_id: int) -> Dict[str, Any]:
         """
         Récupère un chantier.
 
@@ -72,8 +75,8 @@ class Chantiers(BaseResource):
         statut: str = "ouvert",
         date_debut: Optional[str] = None,
         conducteur_id: Optional[int] = None,
-        **kwargs,
-    ) -> Dict:
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
         Crée un nouveau chantier.
 
@@ -105,7 +108,7 @@ class Chantiers(BaseResource):
 
         return self.client._request("POST", "/api/chantiers", json=data)
 
-    def update(self, chantier_id: int, **kwargs) -> Dict:
+    def update(self, chantier_id: int, **kwargs: Any) -> Dict[str, Any]:
         """
         Modifie un chantier.
 

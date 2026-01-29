@@ -1,13 +1,13 @@
 """Ressource Feuilles d'Heures."""
 
-from typing import List, Dict
+from typing import List, Dict, Any
 from .base import BaseResource
 
 
 class Heures(BaseResource):
     """Gestion des feuilles d'heures."""
 
-    def list(self, date_debut: str, date_fin: str) -> List[Dict]:
+    def list(self, date_debut: str, date_fin: str) -> List[Dict[str, Any]]:
         """
         Liste les feuilles d'heures sur une période.
 
@@ -18,12 +18,12 @@ class Heures(BaseResource):
         Returns:
             Liste de feuilles d'heures
         """
-        params = {"date_debut": date_debut, "date_fin": date_fin}
-        return self.client._request("GET", "/api/feuilles-heures", params=params)
+        params: Dict[str, str] = {"date_debut": date_debut, "date_fin": date_fin}
+        return self.client._request("GET", "/api/feuilles-heures", params=params)  # type: ignore
 
     def create(
         self, utilisateur_id: int, chantier_id: int, date: str, heures: float
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """
         Crée une feuille d'heures.
 
@@ -36,7 +36,7 @@ class Heures(BaseResource):
         Returns:
             Feuille d'heures créée
         """
-        data = {
+        data: Dict[str, Any] = {
             "utilisateur_id": utilisateur_id,
             "chantier_id": chantier_id,
             "date": date,

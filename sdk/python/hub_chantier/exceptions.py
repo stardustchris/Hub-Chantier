@@ -1,5 +1,7 @@
 """Exceptions custom du SDK Hub Chantier."""
 
+from typing import Optional, Dict, Any
+
 
 class HubChantierError(Exception):
     """Exception de base pour le SDK Hub Chantier."""
@@ -10,7 +12,12 @@ class HubChantierError(Exception):
 class APIError(HubChantierError):
     """Erreur API générique."""
 
-    def __init__(self, message: str, status_code: int = None, response: dict = None):
+    def __init__(
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        response: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initialize API error.
 
@@ -33,7 +40,7 @@ class AuthenticationError(HubChantierError):
 class RateLimitError(HubChantierError):
     """Rate limit dépassé (429)."""
 
-    def __init__(self, message: str, reset_at: str = None):
+    def __init__(self, message: str, reset_at: Optional[str] = None):
         """
         Initialize rate limit error.
 
