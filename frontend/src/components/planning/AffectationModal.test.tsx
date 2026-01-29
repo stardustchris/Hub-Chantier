@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AffectationModal from './AffectationModal'
 import type { Affectation, User, Chantier } from '../../types'
@@ -328,24 +328,24 @@ describe('AffectationModal', () => {
       })
     })
 
-    it.skip('inclut jours_recurrence pour les affectations récurrentes', async () => {
+    it('inclut jours_recurrence pour les affectations récurrentes', async () => {
       const user = userEvent.setup()
       render(<AffectationModal {...defaultProps} />)
 
-      // Sélectionner utilisateur
-      const userSelect = screen.getAllByRole('combobox')[0]
-      await user.selectOptions(userSelect, 'user-1')
+      // Sélectionner utilisateur via fireEvent (optgroup incompatible avec selectOptions)
+      const userSelect = getFieldByLabel('Utilisateur *') as HTMLSelectElement
+      fireEvent.change(userSelect, { target: { value: 'user-1' } })
 
       // Sélectionner chantier
-      const chantierSelect = screen.getAllByRole('combobox')[1]
-      await user.selectOptions(chantierSelect, 'ch-1')
+      const chantierSelect = getFieldByLabel('Chantier / Absence *') as HTMLSelectElement
+      fireEvent.change(chantierSelect, { target: { value: 'ch-1' } })
 
       // Entrer la date
       const dateInput = getFieldByLabel('Date début *')
-      await user.type(dateInput, '2024-03-15')
+      fireEvent.change(dateInput, { target: { value: '2024-03-15' } })
 
       // Passer en mode récurrent
-      const recurrenteRadio = screen.getByLabelText('Récurrente')
+      const recurrenteRadio = screen.getByDisplayValue('recurrente')
       await user.click(recurrenteRadio)
 
       // Sélectionner lundi et mercredi
@@ -354,7 +354,7 @@ describe('AffectationModal', () => {
 
       // Date fin récurrence
       const dateFinInput = getFieldByLabel('Date fin de récurrence *')
-      await user.type(dateFinInput, '2024-04-15')
+      fireEvent.change(dateFinInput, { target: { value: '2024-04-15' } })
 
       // Soumettre
       const submitButton = screen.getByRole('button', { name: 'Créer' })
@@ -536,25 +536,25 @@ describe('AffectationModal', () => {
   })
 
   describe('Affectation multi-jours', () => {
-    it.skip('inclut date_fin pour les affectations uniques multi-jours', async () => {
+    it('inclut date_fin pour les affectations uniques multi-jours', async () => {
       const user = userEvent.setup()
       render(<AffectationModal {...defaultProps} />)
 
-      // Sélectionner utilisateur
-      const userSelect = screen.getAllByRole('combobox')[0]
-      await user.selectOptions(userSelect, 'user-1')
+      // Sélectionner utilisateur via fireEvent (optgroup incompatible avec selectOptions)
+      const userSelect = getFieldByLabel('Utilisateur *') as HTMLSelectElement
+      fireEvent.change(userSelect, { target: { value: 'user-1' } })
 
       // Sélectionner chantier
-      const chantierSelect = screen.getAllByRole('combobox')[1]
-      await user.selectOptions(chantierSelect, 'ch-1')
+      const chantierSelect = getFieldByLabel('Chantier / Absence *') as HTMLSelectElement
+      fireEvent.change(chantierSelect, { target: { value: 'ch-1' } })
 
       // Entrer la date début
       const dateDebutInput = getFieldByLabel('Date début *')
-      await user.type(dateDebutInput, '2024-03-15')
+      fireEvent.change(dateDebutInput, { target: { value: '2024-03-15' } })
 
       // Entrer la date fin
       const dateFinInput = getFieldByLabel('Date fin')
-      await user.type(dateFinInput, '2024-03-20')
+      fireEvent.change(dateFinInput, { target: { value: '2024-03-20' } })
 
       // Soumettre
       const submitButton = screen.getByRole('button', { name: 'Créer' })

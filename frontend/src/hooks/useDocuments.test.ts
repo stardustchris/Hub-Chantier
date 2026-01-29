@@ -425,16 +425,36 @@ describe('useDocuments', () => {
 
     it('handleDownloadDocument ouvre le document', async () => {
       vi.mocked(documentsApi.downloadDocument).mockResolvedValue({ url: 'https://example.com/doc.pdf', filename: 'doc.pdf', mime_type: 'application/pdf' })
-      const mockOpen = vi.spyOn(window, 'open').mockImplementation(() => null)
 
       const { result } = renderHook(() => useDocuments())
+
+      // Mock createElement('a') after renderHook to avoid breaking DOM setup
+      const mockClick = vi.fn()
+      const mockLink = {
+        href: '',
+        download: '',
+        target: '',
+        click: mockClick,
+      }
+      const originalCreateElement = document.createElement.bind(document)
+      vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+        if (tag === 'a') return mockLink as unknown as HTMLAnchorElement
+        return originalCreateElement(tag)
+      })
+      vi.spyOn(document.body, 'appendChild').mockImplementationOnce(() => mockLink as unknown as Node)
+      vi.spyOn(document.body, 'removeChild').mockImplementationOnce(() => mockLink as unknown as Node)
 
       await act(async () => {
         await result.current.handleDownloadDocument(mockDocuments[0])
       })
 
       expect(documentsApi.downloadDocument).toHaveBeenCalledWith(mockDocuments[0].id)
-      expect(mockOpen).toHaveBeenCalledWith('https://example.com/doc.pdf', '_blank')
+      expect(mockLink.href).toBe('https://example.com/doc.pdf')
+      expect(mockLink.download).toBe('Plan RDC.pdf')
+      expect(mockLink.target).toBe('_blank')
+      expect(mockClick).toHaveBeenCalled()
+
+      vi.restoreAllMocks()
     })
 
     it('handleDeleteDocument supprime le document', async () => {
