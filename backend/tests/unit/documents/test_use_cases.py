@@ -234,7 +234,6 @@ class TestGetArborescenceUseCase:
         ]
         mock_dossier_repo.get_arborescence.return_value = dossiers
         mock_document_repo.count_by_dossier.return_value = 3
-        mock_document_repo.count_by_chantier.return_value = 10
         mock_document_repo.get_total_size_by_chantier.return_value = 1024000
 
         use_case = GetArborescenceUseCase(
@@ -246,7 +245,8 @@ class TestGetArborescenceUseCase:
 
         assert result.chantier_id == 1
         assert len(result.dossiers) == 1  # 1 dossier racine
-        assert result.total_documents == 10
+        # total_documents = sum of count_by_dossier for all folders (2 folders x 3 = 6)
+        assert result.total_documents == 6
         assert result.total_taille == 1024000
 
     def test_get_arborescence_nested(self):

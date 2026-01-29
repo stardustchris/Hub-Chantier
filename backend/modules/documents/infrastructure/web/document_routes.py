@@ -367,6 +367,7 @@ async def upload_document(
     file: UploadFile = File(...),
     description: Optional[str] = Query(None),
     niveau_acces: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
     event_bus: EventBus = Depends(get_event_bus),
     controller: DocumentController = Depends(get_document_controller),
     current_user_id: int = Depends(get_current_user_id),
@@ -408,6 +409,9 @@ async def upload_document(
             },
             ip_address=http_request.client.host if http_request.client else None,
         )
+
+        # Commit the transaction before publishing events
+        db.commit()
 
         # Publish event after database commit
         await event_bus.publish(DocumentUploadedEvent(
