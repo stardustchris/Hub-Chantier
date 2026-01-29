@@ -28,16 +28,6 @@ export default function FeuillesHeuresPage() {
             <h1 className="text-2xl font-bold text-gray-900">Feuilles d'heures</h1>
             <p className="text-gray-600">Saisie et validation des heures travaillees</p>
           </div>
-          {isAdmin && (
-            <button
-              onClick={() => setShowMacrosConfig(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
-              aria-label="Configurer les macros de paie"
-            >
-              <Settings className="w-4 h-4" />
-              Macros de paie
-            </button>
-          )}
         </div>
 
         {/* Onglets de vue */}
@@ -91,6 +81,18 @@ export default function FeuillesHeuresPage() {
             />
             <span className="text-gray-700">Weekend</span>
           </label>
+
+          {/* Bouton Variables de paie - visible uniquement sur l'onglet Compagnons */}
+          {isAdmin && fh.viewTab === 'compagnons' && (
+            <button
+              onClick={() => setShowMacrosConfig(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              aria-label="Configurer les variables de paie"
+            >
+              <Settings className="w-4 h-4" />
+              Variables de paie
+            </button>
+          )}
         </div>
 
         {/* Filtres dépliables */}
@@ -223,7 +225,7 @@ export default function FeuillesHeuresPage() {
           isValidateur={fh.isValidateur}
         />
 
-        {/* Modal Macros de paie */}
+        {/* Modal Variables de paie */}
         <PayrollMacrosConfig
           isOpen={showMacrosConfig}
           onClose={() => setShowMacrosConfig(false)}
