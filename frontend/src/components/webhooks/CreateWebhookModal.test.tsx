@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CreateWebhookModal from './CreateWebhookModal'
-import type { Webhook, CreateWebhookResponse } from '../../api/webhooks'
+import type { CreateWebhookResponse } from '../../api/webhooks'
 
 vi.mock('../../api/webhooks', () => ({
   webhooksApi: {

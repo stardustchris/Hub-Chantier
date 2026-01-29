@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   Loader2,
   ImagePlus,
+  Camera,
   X,
 } from 'lucide-react'
 import type { TargetType, User } from '../types'
@@ -122,8 +123,10 @@ export default function DashboardPage() {
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
 
-  // Ref pour l'input file (ajout de photos)
+  // Refs pour les inputs file (ajout de photos)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const [showComposer, setShowComposer] = useState(false)
 
   // Handler pour la sélection de photos
   const handlePhotoSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,89 +222,144 @@ export default function DashboardPage() {
 
                 {/* Post Composer */}
                 <div className="mb-6">
-                  <div className="flex gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-                      style={{ backgroundColor: user?.couleur || '#f97316' }}
+                  {!showComposer ? (
+                    /* Collapsed: bouton "Rediger un message" */
+                    <button
+                      onClick={() => setShowComposer(true)}
+                      className="w-full flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      {user?.prenom?.[0]}{user?.nom?.[0]}
-                    </div>
-                    <div className="flex-1">
-                      <MentionInput
-                        value={feed.newPostContent}
-                        onChange={feed.setNewPostContent}
-                        placeholder="Partager une photo, signaler un probleme... Utilisez @ pour mentionner"
-                        rows={2}
-                        className="border-gray-200 rounded-xl focus:ring-green-500"
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                        style={{ backgroundColor: user?.couleur || '#f97316' }}
+                      >
+                        {user?.prenom?.[0]}{user?.nom?.[0]}
+                      </div>
+                      <span className="text-gray-400 text-left flex-1">
+                        Rediger un message, partager une photo...
+                      </span>
+                      <MessageCircle className="w-5 h-5 text-gray-400" />
+                    </button>
+                  ) : (
+                    /* Expanded: composeur complet */
+                    <div className="bg-white border border-gray-200 rounded-xl p-4">
+                      <div className="flex gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                          style={{ backgroundColor: user?.couleur || '#f97316' }}
+                        >
+                          {user?.prenom?.[0]}{user?.nom?.[0]}
+                        </div>
+                        <div className="flex-1">
+                          <MentionInput
+                            value={feed.newPostContent}
+                            onChange={feed.setNewPostContent}
+                            placeholder="Partager une photo, signaler un probleme... Utilisez @ pour mentionner"
+                            rows={3}
+                            className="border-gray-200 rounded-xl focus:ring-green-500"
+                          />
+                        </div>
+                      </div>
+
+                      {isDirectionOrConducteur && feed.newPostContent && (
+                        <div className="flex flex-wrap items-center gap-3 mt-3 ml-13">
+                          <select
+                            value={feed.targetType}
+                            onChange={(e) => feed.setTargetType(e.target.value as TargetType)}
+                            className="text-sm border rounded-lg px-2 py-1"
+                          >
+                            <option value="tous">Tout le monde</option>
+                            <option value="chantiers">Chantiers specifiques</option>
+                          </select>
+                          {feed.targetType === 'chantiers' && (
+                            <select
+                              multiple
+                              value={feed.selectedChantiers}
+                              onChange={(e) =>
+                                feed.setSelectedChantiers(
+                                  Array.from(e.target.selectedOptions, (opt) => opt.value)
+                                )
+                              }
+                              className="text-sm border rounded-lg px-2 py-1 max-w-xs"
+                            >
+                              {feed.chantiers.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.code} - {c.nom}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={feed.isUrgent}
+                              onChange={(e) => feed.setIsUrgent(e.target.checked)}
+                              className="rounded text-red-500"
+                            />
+                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                            Urgent
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Actions: Publier + Photo (camera ou galerie) */}
+                      <div className="flex gap-3 mt-3">
+                        <button
+                          onClick={() => {
+                            feed.handleCreatePost()
+                            setShowComposer(false)
+                          }}
+                          disabled={!feed.newPostContent.trim() || feed.isPosting}
+                          className="flex-1 bg-green-600 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 font-medium disabled:opacity-50"
+                        >
+                          {feed.isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier'}
+                        </button>
+                        <button
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="bg-orange-500 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-600 font-medium"
+                          title="Prendre une photo"
+                        >
+                          <Camera className="w-5 h-5" />
+                          <span className="hidden sm:inline">Camera</span>
+                        </button>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="bg-blue-500 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-600 font-medium"
+                          title="Choisir une photo"
+                        >
+                          <ImagePlus className="w-5 h-5" />
+                          <span className="hidden sm:inline">Galerie</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            feed.setNewPostContent('')
+                            setShowComposer(false)
+                          }}
+                          className="text-gray-400 hover:text-gray-600 py-2.5 px-3 rounded-xl"
+                          title="Annuler"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Hidden file inputs */}
+                      <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handlePhotoSelect}
+                        className="hidden"
+                      />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handlePhotoSelect}
+                        className="hidden"
                       />
                     </div>
-                  </div>
-
-                  {isDirectionOrConducteur && feed.newPostContent && (
-                    <div className="flex flex-wrap items-center gap-3 mt-3 ml-13">
-                      <select
-                        value={feed.targetType}
-                        onChange={(e) => feed.setTargetType(e.target.value as TargetType)}
-                        className="text-sm border rounded-lg px-2 py-1"
-                      >
-                        <option value="tous">Tout le monde</option>
-                        <option value="chantiers">Chantiers specifiques</option>
-                      </select>
-                      {feed.targetType === 'chantiers' && (
-                        <select
-                          multiple
-                          value={feed.selectedChantiers}
-                          onChange={(e) =>
-                            feed.setSelectedChantiers(
-                              Array.from(e.target.selectedOptions, (opt) => opt.value)
-                            )
-                          }
-                          className="text-sm border rounded-lg px-2 py-1 max-w-xs"
-                        >
-                          {feed.chantiers.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.code} - {c.nom}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={feed.isUrgent}
-                          onChange={(e) => feed.setIsUrgent(e.target.checked)}
-                          className="rounded text-red-500"
-                        />
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                        Urgent
-                      </label>
-                    </div>
                   )}
-
-                  <div className="flex gap-3 mt-3">
-                    <button
-                      onClick={feed.handleCreatePost}
-                      disabled={!feed.newPostContent.trim() || feed.isPosting}
-                      className="flex-1 bg-green-600 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 font-medium disabled:opacity-50"
-                    >
-                      {feed.isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier'}
-                    </button>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="bg-orange-500 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-600 font-medium"
-                    >
-                      <ImagePlus className="w-5 h-5" />
-                      Ajouter une photo
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoSelect}
-                      className="hidden"
-                    />
-                  </div>
                 </div>
 
                 {/* Posts */}
