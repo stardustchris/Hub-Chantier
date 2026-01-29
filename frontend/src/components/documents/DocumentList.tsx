@@ -200,7 +200,14 @@ const DocumentList: React.FC<DocumentListProps> = ({
                     {getDocumentIcon(doc.type_document)}
                   </span>
                   <div>
-                    <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate max-w-xs hover:text-blue-600 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDocumentDownload?.(doc);
+                      }}
+                      title="Cliquez pour télécharger"
+                    >
                       {doc.nom}
                     </div>
                     {doc.description && (

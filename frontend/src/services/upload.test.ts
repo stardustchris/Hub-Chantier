@@ -156,6 +156,67 @@ describe('uploadService', () => {
     })
   })
 
+  // ===== UPLOAD POST MEDIA - edge cases =====
+
+  describe('uploadPostMedia edge cases', () => {
+    it('gere un tableau vide de fichiers', async () => {
+      vi.mocked(api.post).mockResolvedValue({ data: { files: [] } })
+      const result = await uploadService.uploadPostMedia('post-1', [])
+      expect(result.files).toEqual([])
+    })
+
+    it('rejette si un fichier du lot est trop volumineux', async () => {
+      const largeContent = new Array(3 * 1024 * 1024).fill('a').join('')
+      const files = [
+        new File(['content'], 'ok.jpg', { type: 'image/jpeg' }),
+        new File([largeContent], 'big.jpg', { type: 'image/jpeg' }),
+      ]
+      await expect(uploadService.uploadPostMedia('post-1', files)).rejects.toThrow(
+        UploadValidationError
+      )
+      expect(api.post).not.toHaveBeenCalled()
+    })
+  })
+
+  // ===== UPLOAD CHANTIER PHOTO - edge cases =====
+
+  describe('uploadChantierPhoto edge cases', () => {
+    it('rejette un fichier trop volumineux', async () => {
+      const largeContent = new Array(5 * 1024 * 1024).fill('a').join('')
+      const file = new File([largeContent], 'huge.png', { type: 'image/png' })
+      await expect(uploadService.uploadChantierPhoto('chantier-1', file)).rejects.toThrow(
+        'trop volumineux'
+      )
+    })
+
+    it('retourne la thumbnail_url si presente', async () => {
+      vi.mocked(api.post).mockResolvedValue({
+        data: { url: '/uploads/chantier.jpg', thumbnail_url: '/uploads/thumb.jpg' },
+      })
+      const file = new File(['content'], 'chantier.jpg', { type: 'image/jpeg' })
+      const result = await uploadService.uploadChantierPhoto('c1', file)
+      expect(result.thumbnail_url).toBe('/uploads/thumb.jpg')
+    })
+  })
+
+  // ===== BOUNDARY VALIDATION =====
+
+  describe('file size boundary', () => {
+    it('accepte un fichier exactement a la limite (2Mo)', async () => {
+      vi.mocked(api.post).mockResolvedValue({ data: { url: 'test.jpg' } })
+      const buffer = new ArrayBuffer(2 * 1024 * 1024)
+      const file = new File([buffer], 'exact.jpg', { type: 'image/jpeg' })
+      const result = await uploadService.uploadProfilePhoto(file)
+      expect(result).toEqual({ url: 'test.jpg' })
+    })
+
+    it('rejette un fichier juste au-dessus de la limite', async () => {
+      const buffer = new ArrayBuffer(2 * 1024 * 1024 + 1)
+      const file = new File([buffer], 'over.jpg', { type: 'image/jpeg' })
+      await expect(uploadService.uploadProfilePhoto(file)).rejects.toThrow(UploadValidationError)
+    })
+  })
+
   // ===== COMPRESS IMAGE =====
 
   describe('compressImage', () => {

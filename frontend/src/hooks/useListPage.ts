@@ -139,7 +139,7 @@ export function useListPage<T, TCreate = Partial<T>>(
   // Create item
   const create = useCallback(async (data: TCreate): Promise<T | null> => {
     if (!createItem) {
-      console.warn('createItem not provided to useListPage')
+      logger.warn('createItem not provided to useListPage')
       return null
     }
 
@@ -158,7 +158,7 @@ export function useListPage<T, TCreate = Partial<T>>(
   // Delete item
   const remove = useCallback(async (id: string): Promise<boolean> => {
     if (!deleteItem) {
-      console.warn('deleteItem not provided to useListPage')
+      logger.warn('deleteItem not provided to useListPage')
       return false
     }
 

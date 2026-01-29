@@ -3,6 +3,8 @@
  * Convertit une adresse en coordonnées GPS (latitude, longitude)
  */
 
+import { logger } from './logger'
+
 interface GeocodingResult {
   latitude: number
   longitude: number
@@ -37,7 +39,7 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
     )
 
     if (!response.ok) {
-      console.error('Erreur geocoding:', response.status)
+      logger.error('Erreur geocoding', response.status, { context: 'geocoding' })
       return null
     }
 
@@ -54,7 +56,7 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       displayName: result.display_name,
     }
   } catch (error) {
-    console.error('Erreur geocoding:', error)
+    logger.error('Erreur geocoding', error, { context: 'geocoding' })
     return null
   }
 }

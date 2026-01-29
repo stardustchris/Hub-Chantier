@@ -1,8 +1,13 @@
 /**
  * Tests unitaires pour AuthContext
+ *
+ * Architecture: cookies HttpOnly (withCredentials: true)
+ * - L'authentification repose sur un cookie HttpOnly positionné par le serveur
+ * - getCurrentUser est toujours appelé au mount (le cookie est envoyé automatiquement)
+ * - Pas de sessionStorage/localStorage pour les tokens
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from './AuthContext'
@@ -32,6 +37,7 @@ vi.mock('../services/csrf', () => ({
 
 import { authService } from '../services/auth'
 import { onSessionExpired, emitLogout } from '../services/authEvents'
+import { clearCsrfToken } from '../services/csrf'
 
 // Mock user complet pour eviter les erreurs TS
 const createMockUser = (overrides = {}) => ({
@@ -71,23 +77,16 @@ function TestConsumer({ onLoginError }: { onLoginError?: (error: Error) => void 
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    sessionStorage.clear()
-  })
-
-  afterEach(() => {
-    sessionStorage.clear()
   })
 
   describe('AuthProvider', () => {
     it('demarre en mode loading puis passe a false', async () => {
-      // Simuler un delai pour observer isLoading=true
       vi.mocked(authService.getCurrentUser).mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(() => resolve(createMockUser()), 50)
           )
       )
-      sessionStorage.setItem('access_token', 'test-token')
 
       render(
         <AuthProvider>
@@ -104,9 +103,8 @@ describe('AuthContext', () => {
       })
     })
 
-    it('charge l\'utilisateur si un token existe', async () => {
+    it('charge l\'utilisateur si le cookie HttpOnly est valide', async () => {
       const mockUser = createMockUser()
-      sessionStorage.setItem('access_token', 'valid-token')
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser)
 
       render(
@@ -119,27 +117,12 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('isAuthenticated').textContent).toBe('true')
         expect(screen.getByTestId('user').textContent).toBe('test@example.com')
       })
-    })
 
-    it('supprime le token si getCurrentUser echoue', async () => {
-      sessionStorage.setItem('access_token', 'invalid-token')
-      vi.mocked(authService.getCurrentUser).mockRejectedValue(new Error('Unauthorized'))
-
-      render(
-        <AuthProvider>
-          <TestConsumer />
-        </AuthProvider>
-      )
-
-      await waitFor(() => {
-        expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
-        expect(sessionStorage.getItem('access_token')).toBeNull()
-      })
+      // getCurrentUser est appelé au mount (cookie envoyé automatiquement)
+      expect(authService.getCurrentUser).toHaveBeenCalled()
     })
 
     it('reste non authentifie si getCurrentUser echoue (pas de cookie valide)', async () => {
-      // Avec HttpOnly cookies, getCurrentUser est toujours appele
-      // car le cookie est envoye automatiquement avec la requete
       vi.mocked(authService.getCurrentUser).mockRejectedValue(new Error('Unauthorized'))
 
       render(
@@ -153,11 +136,12 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
       })
 
-      // getCurrentUser doit avoir ete appele (le cookie est envoye automatiquement)
       expect(authService.getCurrentUser).toHaveBeenCalled()
     })
 
     it('s\'abonne aux evenements de session expiree', async () => {
+      vi.mocked(authService.getCurrentUser).mockRejectedValue(new Error('Unauthorized'))
+
       render(
         <AuthProvider>
           <TestConsumer />
@@ -169,12 +153,13 @@ describe('AuthContext', () => {
   })
 
   describe('login', () => {
-    it('stocke le token et l\'utilisateur apres login', async () => {
+    it('met a jour l\'utilisateur apres login reussi', async () => {
       const user = userEvent.setup()
       const mockUser = createMockUser()
+      vi.mocked(authService.getCurrentUser).mockRejectedValue(new Error('Unauthorized'))
       vi.mocked(authService.login).mockResolvedValue({
         user: mockUser,
-        access_token: 'new-token',
+        access_token: 'token-in-cookie',
         token_type: 'bearer',
       })
 
@@ -192,13 +177,16 @@ describe('AuthContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('isAuthenticated').textContent).toBe('true')
-        expect(sessionStorage.getItem('access_token')).toBe('new-token')
       })
+
+      // Le token est dans le cookie HttpOnly, pas dans sessionStorage
+      expect(sessionStorage.getItem('access_token')).toBeNull()
     })
 
     it('propage l\'erreur si login echoue', async () => {
       const user = userEvent.setup()
       const loginError = new Error('Invalid credentials')
+      vi.mocked(authService.getCurrentUser).mockRejectedValue(new Error('Unauthorized'))
       vi.mocked(authService.login).mockRejectedValue(loginError)
 
       const onLoginError = vi.fn()
@@ -215,21 +203,18 @@ describe('AuthContext', () => {
 
       await user.click(screen.getByText('Login'))
 
-      // Attendre que l'erreur soit propagee
       await waitFor(() => {
         expect(onLoginError).toHaveBeenCalledWith(loginError)
       })
 
-      // L'utilisateur doit rester non authentifie
       expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
     })
   })
 
   describe('logout', () => {
-    it('supprime le token et reset l\'utilisateur', async () => {
+    it('appelle l\'API logout et reset l\'utilisateur', async () => {
       const user = userEvent.setup()
       const mockUser = createMockUser()
-      sessionStorage.setItem('access_token', 'valid-token')
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser)
 
       render(
@@ -244,18 +229,19 @@ describe('AuthContext', () => {
 
       await user.click(screen.getByText('Logout'))
 
-      // Attendre que le logout async se termine
       await waitFor(() => {
         expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
         expect(screen.getByTestId('user').textContent).toBe('null')
-        expect(sessionStorage.getItem('access_token')).toBeNull()
       })
+
+      // Le cookie est supprimé côté serveur via POST /api/auth/logout
+      // Le token CSRF est nettoyé
+      expect(clearCsrfToken).toHaveBeenCalled()
     })
 
     it('emet un evenement de logout pour sync multi-onglets', async () => {
       const user = userEvent.setup()
       const mockUser = createMockUser()
-      sessionStorage.setItem('access_token', 'valid-token')
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser)
 
       render(
@@ -270,7 +256,6 @@ describe('AuthContext', () => {
 
       await user.click(screen.getByText('Logout'))
 
-      // Attendre que le logout async se termine
       await waitFor(() => {
         expect(emitLogout).toHaveBeenCalled()
       })
@@ -279,7 +264,6 @@ describe('AuthContext', () => {
 
   describe('useAuth hook', () => {
     it('throw si utilise hors du AuthProvider', () => {
-      // Supprimer le console.error pour ce test
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       expect(() => {

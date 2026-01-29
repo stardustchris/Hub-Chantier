@@ -152,7 +152,7 @@ export const deleteDocument = async (documentId: number): Promise<void> => {
 export const downloadDocument = async (
   documentId: number
 ): Promise<{ url: string; filename: string; mime_type: string }> => {
-  const response = await api.get(`/api/documents/documents/${documentId}/download`)
+  const response = await api.get(`/api/documents/${documentId}/download`)
   return response.data
 }
 
@@ -161,7 +161,7 @@ export const downloadDocument = async (
  */
 export const downloadDocumentsZip = async (documentIds: number[]): Promise<Blob> => {
   const response = await api.post(
-    '/api/documents/documents/download-zip',
+    '/api/documents/download-zip',
     { document_ids: documentIds },
     { responseType: 'blob' }
   )

@@ -9,6 +9,7 @@
  */
 
 import api from './api'
+import { logger } from './logger'
 import {
   isFirebaseConfigured,
   requestNotificationPermission,
@@ -41,7 +42,7 @@ const subscribers: NotificationCallback[] = []
  */
 export const initNotifications = async (): Promise<boolean> => {
   if (!isFirebaseConfigured()) {
-    console.info('Firebase non configuré - mode simulation')
+    logger.info('Firebase non configuré - mode simulation')
     return false
   }
 
@@ -80,9 +81,9 @@ export const initNotifications = async (): Promise<boolean> => {
 const registerToken = async (token: string): Promise<void> => {
   try {
     await api.post('/users/me/push-token', { token })
-    console.log('Token FCM enregistré auprès du backend')
+    logger.info('Token FCM enregistré auprès du backend')
   } catch (error) {
-    console.error('Erreur enregistrement token:', error)
+    logger.error('Erreur enregistrement token', error, { context: 'notifications' })
   }
 }
 
@@ -135,7 +136,7 @@ const handleNotificationClick = (data?: NotificationData): void => {
       }
       break
     default:
-      console.log('Type de notification non géré:', data.type)
+      logger.info('Type de notification non géré:', data.type)
   }
 }
 
@@ -163,9 +164,9 @@ export const subscribeToNotifications = (
 export const disableNotifications = async (): Promise<void> => {
   try {
     await api.delete('/users/me/push-token')
-    console.log('Notifications désactivées')
+    logger.info('Notifications désactivées')
   } catch (error) {
-    console.error('Erreur désactivation notifications:', error)
+    logger.error('Erreur désactivation notifications', error, { context: 'notifications' })
   }
 }
 

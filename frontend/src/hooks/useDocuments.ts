@@ -203,10 +203,18 @@ export function useDocuments() {
     }
   }, [selectedDossier, selectedChantier, loadDocuments, addToast])
 
-  const handleDownloadDocument = useCallback(async (document: Document) => {
+  const handleDownloadDocument = useCallback(async (doc: Document) => {
     try {
-      const { url } = await documentsApi.downloadDocument(document.id)
-      window.open(url, '_blank')
+      const { url } = await documentsApi.downloadDocument(doc.id)
+
+      // Créer un lien temporaire pour forcer le téléchargement avec le nom original
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = doc.nom_original || doc.nom
+      link.target = '_blank'
+      window.document.body.appendChild(link)
+      link.click()
+      window.document.body.removeChild(link)
     } catch (error) {
       logger.error('Error downloading document', error, { context: 'DocumentsPage' })
       addToast({ message: 'Erreur lors du telechargement', type: 'error' })

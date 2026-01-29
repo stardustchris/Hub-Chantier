@@ -7,6 +7,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { consentService, type ConsentType } from './consent'
 import api from './api'
 
+// Mock logger service
+vi.mock('./logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
+
 // Mock de l'API
 vi.mock('./api')
 
@@ -151,11 +161,14 @@ describe('consentService', () => {
 
       const consents = await consentService.getAllConsents()
 
-      // Devrait retourner des valeurs par défaut (tous false)
+      // Devrait retourner des valeurs par défaut (tous false avec champs metadata)
       expect(consents).toEqual({
         geolocation: false,
-        analytics: false,
         notifications: false,
+        analytics: false,
+        timestamp: null,
+        ip_address: null,
+        user_agent: null,
       })
     })
   })

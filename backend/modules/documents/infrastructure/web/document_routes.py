@@ -3,7 +3,7 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from sqlalchemy.orm import Session
 
@@ -129,28 +129,105 @@ class DossierResponse(BaseModel):
 
 
 class DocumentResponse(BaseModel):
-    """Response pour un document."""
+    """Response pour un document de la GED (Gestion Electronique de Documents)."""
 
-    id: int
-    chantier_id: int
-    dossier_id: int
-    nom: str
-    nom_original: str
-    type_document: str
-    taille: int
-    taille_formatee: str
-    mime_type: str
-    uploaded_by: int
-    uploaded_by_nom: Optional[str]
-    uploaded_at: datetime
-    description: Optional[str]
-    version: int
-    icone: str
-    extension: str
-    niveau_acces: Optional[str]
+    id: int = Field(..., description="Identifiant unique du document", example=127)
+    chantier_id: int = Field(..., description="ID du chantier auquel appartient le document", example=42)
+    dossier_id: int = Field(..., description="ID du dossier parent contenant le document", example=15)
+    nom: str = Field(
+        ...,
+        description="Nom du fichier sur le serveur (unique)",
+        example="plan-etage1_v2_20260128.pdf"
+    )
+    nom_original: str = Field(
+        ...,
+        description="Nom original du fichier uploadé par l'utilisateur",
+        example="Plan étage 1 - Version finale.pdf"
+    )
+    type_document: str = Field(
+        ...,
+        description="Type de document (plan, facture, photo, etc.)",
+        example="plan"
+    )
+    taille: int = Field(
+        ...,
+        description="Taille du fichier en octets",
+        ge=0,
+        example=2547891
+    )
+    taille_formatee: str = Field(
+        ...,
+        description="Taille du fichier formatée pour l'affichage (ex: 2.4 MB)",
+        example="2.4 MB"
+    )
+    mime_type: str = Field(
+        ...,
+        description="Type MIME du fichier",
+        example="application/pdf"
+    )
+    uploaded_by: int = Field(..., description="ID de l'utilisateur ayant uploadé le document", example=5)
+    uploaded_by_nom: Optional[str] = Field(
+        None,
+        description="Nom complet de l'utilisateur ayant uploadé (enrichissement UI)",
+        example="Sophie Martin"
+    )
+    uploaded_at: datetime = Field(
+        ...,
+        description="Date et heure d'upload du document (format ISO 8601)",
+        example="2026-01-28T14:35:22Z"
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Description ou commentaire sur le document",
+        max_length=1000,
+        example="Plan d'étage validé par l'architecte le 28/01/2026"
+    )
+    version: int = Field(
+        ...,
+        description="Numéro de version du document (auto-incrémenté)",
+        ge=1,
+        example=2
+    )
+    icone: str = Field(
+        ...,
+        description="Icône pour l'affichage UI (nom d'icône ou emoji)",
+        example="📄"
+    )
+    extension: str = Field(
+        ...,
+        description="Extension du fichier (sans le point)",
+        example="pdf"
+    )
+    niveau_acces: Optional[str] = Field(
+        None,
+        description="Niveau d'accès requis (public, conducteur, admin)",
+        pattern="^(public|conducteur|admin)$",
+        example="conducteur"
+    )
 
     class Config:
         from_attributes = True
+        schema_extra = {
+            "example": {
+                "id": 127,
+                "chantier_id": 42,
+                "dossier_id": 15,
+                "nom": "plan-etage1_v2_20260128.pdf",
+                "nom_original": "Plan étage 1 - Version finale.pdf",
+                "type_document": "plan",
+                "taille": 2547891,
+                "taille_formatee": "2.4 MB",
+                "mime_type": "application/pdf",
+                "uploaded_by": 5,
+                "uploaded_by_nom": "Sophie Martin",
+                "uploaded_at": "2026-01-28T14:35:22Z",
+                "description": "Plan d'étage validé par l'architecte le 28/01/2026",
+                "version": 2,
+                "icone": "📄",
+                "extension": "pdf",
+                "niveau_acces": "conducteur"
+            }
+        }
 
 
 class AutorisationResponse(BaseModel):
@@ -513,12 +590,12 @@ def download_document(
         if not file_content:
             raise HTTPException(status_code=404, detail="Fichier non trouvé sur le disque")
 
-        # Retourner le fichier en streaming
+        # Retourner le fichier en streaming avec le nom original
         return StreamingResponse(
             file_content,
             media_type=document_entity.mime_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{document_entity.nom}"'
+                "Content-Disposition": f'attachment; filename="{document_entity.nom_original}"'
             }
         )
     except DocumentNotFoundError as e:

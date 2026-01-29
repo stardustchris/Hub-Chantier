@@ -11,8 +11,7 @@
 | dashboard (feed) | 2 | FEED-01 a FEED-20 | 18/20 | 1 | **COMPLET** (1 future) |
 | dashboard (cards) | 2 | DASH-01 a DASH-15 | 15/15 | 0 | **COMPLET** |
 | chantiers | 4 | CHT-01 a CHT-21 | 19/21 | 1 | **COMPLET** (1 future) |
-| planning | 5 | PLN-01 a PLN-28 | 26/28 | 2 | **COMPLET** (2 infra) |
-| planning_charge | 6 | PDC-01 a PDC-17 | 17/17 | 0 | **COMPLET** |
+| planning (+ charge) | 5-6 | PLN-01 a PLN-28 + PDC-01 a PDC-17 | 43/45 | 2 | **COMPLET** (2 infra) |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | 16/20 | 4 | **COMPLET** (4 infra) |
 | formulaires | 8 | FOR-01 a FOR-11 | 11/11 | 0 | **COMPLET** |
 | documents | 9 | GED-01 a GED-17 | 15/17 | 2 | **COMPLET** (2 infra) |
@@ -23,11 +22,13 @@
 
 ## Statistiques globales
 
-- **Modules complets** : 13/13 (incluant dashboard cards)
+- **Modules complets** : 12/12 (dashboard cards + planning unifié)
 - **Fonctionnalites totales** : 237
 - **Fonctionnalites done** : 219 (92%)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 2 (prevues pour versions futures)
+
+**Note**: Le module `planning_charge` a été fusionné dans `planning` (28 jan 2026) pour conformité Clean Architecture. Score architect review: 87/100, 186 tests unitaires passent.
 
 ### Code source
 
@@ -160,6 +161,36 @@ Session 2026-01-29 - Review docs et agents — Quality Rounds 4-5
 - **Agents R4**: architect 8/10 PASS, code-reviewer 8/10 APPROVED, security 8/10 PASS
 - **Findings**: 0 CRITICAL, 0 HIGH
 - Verdict : ✅ **BACKEND QUALITE VALIDEE — 0 finding bloquant**
+
+Session 2026-01-29 - Phase 3 - Documentation & Developer Experience (SDK Python)
+- **Objectif**: Créer SDK Python officiel pour faciliter intégration API v1
+- **Étape 1 - OpenAPI enrichi**: openapi_config.py (203 lignes) + 3 schémas enrichis (ChantierResponse, AffectationResponse, DocumentResponse)
+- **Étape 2 - SDK Python**: 15 fichiers créés (1100+ lignes), 5 ressources (Chantiers, Affectations, Heures, Documents, Webhooks)
+- **Étape 3 - SDK JavaScript**: ⏳ Optionnel (non implémenté)
+- **Étape 4 - Code Review**: ✅ Score 9.5/10 - APPROVED - Production Ready
+  - Sécurité: 10/10 (0 vulnérabilité, HMAC timing-safe)
+  - Qualité: 10/10 (PEP8 parfait, 100% docstrings, 100% type hints)
+  - Performance: 9/10 (complexité max: 6)
+  - Design: 10/10 (SOLID, DRY)
+  - **11 corrections mypy appliquées** (Optional[], Dict[str, Any])
+- **Étape 5 - Docusaurus**: ⏳ Optionnel (non implémenté)
+- **PyPI**: Packages buildés (tar.gz + wheel), PUBLISHING.md créé
+- **Documentation**: 3 rapports review (CODE_REVIEW.md, CODE_REVIEW_AGENT.md, CODE_REVIEW_DETAILED.json)
+- **Architecture SDK**: Resource-based (BaseResource), 4 exceptions custom, webhooks HMAC
+- **Tests SDK**: 7 tests unitaires, 2 exemples (quickstart.py, webhook_receiver.py)
+- **Commits**: 3 commits (6f09218 OpenAPI+SDK, 0dcbafc review+fixes, 18cb4d6 PyPI prep)
+- Verdict : ✅ **SDK PYTHON PRODUCTION-READY** (9.5/10)
+
+Session 2026-01-28 - Fusion planning_charge → planning (Phase 2.5 P1)
+- **Objectif**: Fusionner planning_charge dans planning pour conformité Clean Architecture
+- **Résultat**: 32 violations → 0 (-100%) ✅
+- **Architecture**: Score 87/100 (objectif 75+ dépassé)
+- **Tests**: 186/186 tests unitaires passent (100%)
+- **Déplacement**: 43 fichiers reorganisés en sous-répertoires charge/
+- **Corrections**: 17 fichiers modifiés (imports, exports, TYPE_CHECKING)
+- **Router**: Combiné affectations + charge (17 routes API)
+- **Commits**: 4 commits sur branche claude/merge-planning-charge-5PfT3
+- Verdict : ✅ **MODULE PLANNING CONFORME CLEAN ARCHITECTURE**
 
 Session 2026-01-28 - Refactoring Frontend TypeScript (152 → 0 erreurs)
 - **Objectif**: Éliminer toutes les erreurs TypeScript dans le frontend (mode strict)

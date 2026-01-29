@@ -100,7 +100,7 @@ describe('SignalementDetail', () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Fuite d eau')).toBeInTheDocument()
+        expect(screen.getByText('Signalement Test')).toBeInTheDocument()
       })
     })
 
@@ -109,7 +109,7 @@ describe('SignalementDetail', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Description')).toBeInTheDocument()
-        expect(screen.getByText('Il y a une fuite au niveau du plafond')).toBeInTheDocument()
+        expect(screen.getByText('Description du signalement')).toBeInTheDocument()
       })
     })
 
@@ -117,7 +117,7 @@ describe('SignalementDetail', () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Haute')).toBeInTheDocument()
+        expect(screen.getByText('Moyenne')).toBeInTheDocument()
       })
     })
 
@@ -175,6 +175,7 @@ describe('SignalementDetail', () => {
 
   describe('Barre de progression', () => {
     it('affiche le pourcentage de temps ecoule', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ pourcentage_temps: 30, temps_restant: '2j 5h' }))
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -183,6 +184,7 @@ describe('SignalementDetail', () => {
     })
 
     it('affiche le temps restant', async () => {
+      mockGetSignalement.mockResolvedValueOnce(createMockSignalement({ pourcentage_temps: 30, temps_restant: '2j 5h' }))
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
@@ -279,7 +281,7 @@ describe('SignalementDetail', () => {
       render(<SignalementDetail {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Fuite d eau')).toBeInTheDocument()
+        expect(screen.getByText('Signalement Test')).toBeInTheDocument()
       })
 
       await user.click(screen.getByLabelText('Fermer'))

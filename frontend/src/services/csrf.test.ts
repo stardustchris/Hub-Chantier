@@ -127,18 +127,14 @@ describe('csrf service', () => {
       expect(api.default.get).toHaveBeenCalledTimes(1)
     })
 
-    it('génère un token client si l\'endpoint échoue', async () => {
+    it('lance une erreur si l\'endpoint échoue', async () => {
       const { fetchCsrfToken } = await import('./csrf')
       const api = await import('./api')
 
       vi.mocked(api.default.get).mockRejectedValue(new Error('Network error'))
-      vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       clearCsrfToken()
-      const token = await fetchCsrfToken()
-
-      // Le token généré doit être une chaîne hexadécimale de 64 caractères (32 bytes)
-      expect(token).toMatch(/^[0-9a-f]{64}$/)
+      await expect(fetchCsrfToken()).rejects.toThrow('Network error')
     })
   })
 

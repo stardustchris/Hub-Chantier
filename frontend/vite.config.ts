@@ -85,7 +85,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '0.0.0.0',
-    allowedHosts: 'all',
+    allowedHosts: true,
     hmr: false,
     watch: {
       ignored: ['**/*'],

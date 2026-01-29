@@ -43,10 +43,14 @@ class SQLAlchemyChantierRepository(ChantierRepository):
 
     @property
     def _eager_options(self):
-        """Options de chargement eager (lazy property pour éviter résolution mapper prématurée)."""
+        """Options de chargement eager (lazy property pour éviter résolution mapper prématurée).
+
+        Note: conducteurs_rel et chefs_rel utilisent lazy='dynamic' donc ne peuvent pas être
+        eagerly loaded avec selectinload. Ces relations sont chargées à la demande.
+        """
         return (
-            selectinload(ChantierModel.conducteurs_rel),
-            selectinload(ChantierModel.chefs_rel),
+            # selectinload(ChantierModel.conducteurs_rel),  # Incompatible avec lazy='dynamic'
+            # selectinload(ChantierModel.chefs_rel),        # Incompatible avec lazy='dynamic'
         )
 
     def _not_deleted(self):

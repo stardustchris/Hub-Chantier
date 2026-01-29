@@ -1,17 +1,51 @@
 /**
  * Tests unitaires pour le service API
+ *
+ * Architecture: cookies HttpOnly (withCredentials: true)
+ * - Le token d'auth est gere cote serveur via cookie HttpOnly
+ * - Pas de sessionStorage/localStorage pour les tokens
+ * - CSRF token gere en memoire via le service csrf.ts
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import axios from 'axios'
+import type { InternalAxiosRequestConfig, AxiosHeaders } from 'axios'
 
-// Mock axios avant l'import de api
+// Mock des dependances AVANT import de api.ts
+const mockEmitSessionExpired = vi.fn()
+vi.mock('./authEvents', () => ({
+  emitSessionExpired: mockEmitSessionExpired,
+}))
+
+const mockGetCsrfToken = vi.fn()
+const mockRequiresCsrf = vi.fn()
+const mockFetchCsrfToken = vi.fn()
+vi.mock('./csrf', () => ({
+  getCsrfToken: mockGetCsrfToken,
+  requiresCsrf: mockRequiresCsrf,
+  CSRF_HEADER: 'X-CSRF-Token',
+  fetchCsrfToken: mockFetchCsrfToken,
+}))
+
+// Capture the interceptor callbacks
+let requestInterceptor: ((config: InternalAxiosRequestConfig) => Promise<InternalAxiosRequestConfig>) | null = null
+let responseSuccessInterceptor: ((response: unknown) => unknown) | null = null
+let responseErrorInterceptor: ((error: unknown) => Promise<unknown>) | null = null
+
 vi.mock('axios', () => {
   const mockAxios = {
     create: vi.fn(() => mockAxios),
     interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() },
+      request: {
+        use: vi.fn((onFulfilled: (config: InternalAxiosRequestConfig) => Promise<InternalAxiosRequestConfig>) => {
+          requestInterceptor = onFulfilled
+        }),
+      },
+      response: {
+        use: vi.fn((onSuccess: (response: unknown) => unknown, onError: (error: unknown) => Promise<unknown>) => {
+          responseSuccessInterceptor = onSuccess
+          responseErrorInterceptor = onError
+        }),
+      },
     },
     defaults: { headers: { common: {} } },
     get: vi.fn(),
@@ -22,10 +56,29 @@ vi.mock('axios', () => {
   return { default: mockAxios }
 })
 
+function makeConfig(overrides: Partial<InternalAxiosRequestConfig> = {}): InternalAxiosRequestConfig {
+  return {
+    headers: {
+      set: vi.fn(),
+      get: vi.fn(),
+      has: vi.fn(),
+      delete: vi.fn(),
+      clear: vi.fn(),
+    } as unknown as AxiosHeaders,
+    method: 'get',
+    url: '',
+    ...overrides,
+  } as InternalAxiosRequestConfig
+}
+
 describe('api service', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    sessionStorage.clear()
+    requestInterceptor = null
+    responseSuccessInterceptor = null
+    responseErrorInterceptor = null
+    // Import the module to trigger interceptor registration
+    await import('./api')
   })
 
   afterEach(() => {
@@ -33,257 +86,303 @@ describe('api service', () => {
   })
 
   it('cree une instance axios avec la bonne configuration', async () => {
-    // Re-import pour trigger la creation
-    await import('./api')
-
+    const axios = (await import('axios')).default
     expect(axios.create).toHaveBeenCalledWith({
       baseURL: expect.any(String),
       headers: {
         'Content-Type': 'application/json',
       },
       timeout: 30000,
-      withCredentials: true, // HttpOnly cookies support
+      withCredentials: true,
     })
   })
 
-  it('configure les intercepteurs', async () => {
-    await import('./api')
-
-    expect(axios.create).toHaveBeenCalled()
+  it('configure les intercepteurs request et response', async () => {
+    const axios = (await import('axios')).default
     const mockInstance = axios.create()
     expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
     expect(mockInstance.interceptors.response.use).toHaveBeenCalled()
   })
 })
 
-describe('api interceptors behavior', () => {
-  beforeEach(() => {
-    sessionStorage.clear()
+describe('Request interceptor - CSRF token injection', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    requestInterceptor = null
+    responseSuccessInterceptor = null
+    responseErrorInterceptor = null
+    await import('./api')
   })
 
-  describe('request interceptor', () => {
-    it('ajoute le token Authorization si present dans sessionStorage', () => {
-      sessionStorage.setItem('access_token', 'test-token-123')
-
-      const config = {
-        headers: {} as Record<string, string>,
-      }
-
-      // Simule le comportement de l'intercepteur
-      const token = sessionStorage.getItem('access_token')
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-
-      expect(config.headers.Authorization).toBe('Bearer test-token-123')
-    })
-
-    it('n\'ajoute pas d\'Authorization si pas de token', () => {
-      const config = {
-        headers: {} as Record<string, string>,
-      }
-
-      const token = sessionStorage.getItem('access_token')
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-
-      expect(config.headers.Authorization).toBeUndefined()
-    })
+  afterEach(() => {
+    vi.resetModules()
   })
 
-  describe('response interceptor (error handling)', () => {
-    it('supprime le token et redirige sur erreur 401', () => {
-      sessionStorage.setItem('access_token', 'test-token')
+  it('ajoute le token CSRF pour les methodes POST', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('test-csrf-token')
 
-      // Mock window.location
-      const originalLocation = window.location
-      Object.defineProperty(window, 'location', {
-        value: { href: '' },
-        writable: true,
-      })
+    const config = makeConfig({ method: 'post', url: '/api/chantiers' })
+    const result = await requestInterceptor!(config)
 
-      // Simule le comportement de l'intercepteur sur 401
-      const error = { response: { status: 401 } }
-      if (error.response?.status === 401) {
-        sessionStorage.removeItem('access_token')
-        window.location.href = '/login'
-      }
+    expect(mockRequiresCsrf).toHaveBeenCalledWith('post')
+    expect(result.headers['X-CSRF-Token']).toBe('test-csrf-token')
+  })
 
-      expect(sessionStorage.getItem('access_token')).toBeNull()
-      expect(window.location.href).toBe('/login')
+  it('ajoute le token CSRF pour les methodes PUT', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('test-csrf-token')
 
-      // Restore
-      Object.defineProperty(window, 'location', {
-        value: originalLocation,
-        writable: true,
-      })
-    })
+    const config = makeConfig({ method: 'put', url: '/api/chantiers/1' })
+    const result = await requestInterceptor!(config)
 
-    it('ne redirige pas sur les autres erreurs', () => {
-      sessionStorage.setItem('access_token', 'test-token')
+    expect(result.headers['X-CSRF-Token']).toBe('test-csrf-token')
+  })
 
-      const error = { response: { status: 500 } }
-      if (error.response?.status === 401) {
-        sessionStorage.removeItem('access_token')
-      }
+  it('ajoute le token CSRF pour les methodes DELETE', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('test-csrf-token')
 
-      // Token doit rester intact
-      expect(sessionStorage.getItem('access_token')).toBe('test-token')
-    })
+    const config = makeConfig({ method: 'delete', url: '/api/chantiers/1' })
+    const result = await requestInterceptor!(config)
+
+    expect(result.headers['X-CSRF-Token']).toBe('test-csrf-token')
+  })
+
+  it('ajoute le token CSRF pour les methodes PATCH', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('test-csrf-token')
+
+    const config = makeConfig({ method: 'patch', url: '/api/chantiers/1' })
+    const result = await requestInterceptor!(config)
+
+    expect(result.headers['X-CSRF-Token']).toBe('test-csrf-token')
+  })
+
+  it('ne modifie pas le header CSRF pour les methodes GET', async () => {
+    mockRequiresCsrf.mockReturnValue(false)
+
+    const config = makeConfig({ method: 'get', url: '/api/chantiers' })
+    const result = await requestInterceptor!(config)
+
+    expect(result.headers['X-CSRF-Token']).toBeUndefined()
+  })
+
+  it('skip le CSRF pour /api/auth/login', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('test-csrf-token')
+
+    const config = makeConfig({ method: 'post', url: '/api/auth/login' })
+    const result = await requestInterceptor!(config)
+
+    expect(result.headers['X-CSRF-Token']).toBeUndefined()
+  })
+
+  it('skip le CSRF pour /api/csrf-token', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('test-csrf-token')
+
+    const config = makeConfig({ method: 'post', url: '/api/csrf-token' })
+    const result = await requestInterceptor!(config)
+
+    expect(result.headers['X-CSRF-Token']).toBeUndefined()
+  })
+
+  it('fetch le CSRF token si aucun token en memoire', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue(null)
+    mockFetchCsrfToken.mockResolvedValue('fetched-csrf-token')
+
+    const config = makeConfig({ method: 'post', url: '/api/chantiers' })
+    const result = await requestInterceptor!(config)
+
+    expect(mockFetchCsrfToken).toHaveBeenCalled()
+    expect(result.headers['X-CSRF-Token']).toBe('fetched-csrf-token')
+  })
+
+  it('ne fait pas de fetch CSRF si le token est deja en memoire', async () => {
+    mockRequiresCsrf.mockReturnValue(true)
+    mockGetCsrfToken.mockReturnValue('existing-token')
+
+    const config = makeConfig({ method: 'post', url: '/api/chantiers' })
+    await requestInterceptor!(config)
+
+    expect(mockFetchCsrfToken).not.toHaveBeenCalled()
+  })
+
+  it('gere le cas ou config.method est undefined', async () => {
+    mockRequiresCsrf.mockReturnValue(false)
+
+    const config = makeConfig({ method: undefined, url: '/api/chantiers' })
+    const result = await requestInterceptor!(config)
+
+    expect(mockRequiresCsrf).not.toHaveBeenCalled()
+    expect(result.headers['X-CSRF-Token']).toBeUndefined()
   })
 })
 
-describe('sessionStorage security', () => {
-  it('utilise sessionStorage au lieu de localStorage pour le token', () => {
-    // Verifie que le code utilise sessionStorage
-    const localStorageSpy = vi.spyOn(Storage.prototype, 'getItem')
+describe('Response interceptor - success', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    requestInterceptor = null
+    responseSuccessInterceptor = null
+    responseErrorInterceptor = null
+    await import('./api')
+  })
 
-    sessionStorage.setItem('access_token', 'secure-token')
-    const token = sessionStorage.getItem('access_token')
+  afterEach(() => {
+    vi.resetModules()
+  })
 
-    expect(token).toBe('secure-token')
-    // Le token ne doit pas etre dans localStorage
+  it('passe la reponse sans modification', () => {
+    const response = { data: { ok: true }, status: 200 }
+    const result = responseSuccessInterceptor!(response)
+    expect(result).toBe(response)
+  })
+})
+
+describe('Response interceptor - 401 handling', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    mockEmitSessionExpired.mockClear()
+    requestInterceptor = null
+    responseSuccessInterceptor = null
+    responseErrorInterceptor = null
+    await import('./api')
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+  })
+
+  it('ne declenche pas emitSessionExpired sur un seul 401 (non-auth URL)', async () => {
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/chantiers' },
+    }
+
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('declenche emitSessionExpired apres 2 erreurs 401 consecutives (non-auth)', async () => {
+    // Reset consecutive counter by sending a success first
+    responseSuccessInterceptor!({ data: {}, status: 200 })
+
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/chantiers' },
+    }
+
+    // First 401
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+
+    // Second 401 -> triggers session expired
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).toHaveBeenCalledTimes(1)
+  })
+
+  it('ne declenche pas emitSessionExpired pour 401 sur /api/auth/me', async () => {
+    // Reset counter
+    responseSuccessInterceptor!({ data: {}, status: 200 })
+
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/auth/me' },
+    }
+
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('ne declenche pas emitSessionExpired pour 401 sur /api/auth/login', async () => {
+    responseSuccessInterceptor!({ data: {}, status: 200 })
+
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/auth/login' },
+    }
+
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('ne declenche pas emitSessionExpired pour 401 sur /api/auth/logout', async () => {
+    responseSuccessInterceptor!({ data: {}, status: 200 })
+
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/auth/logout' },
+    }
+
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('ne declenche pas emitSessionExpired pour 401 sur /api/csrf-token', async () => {
+    responseSuccessInterceptor!({ data: {}, status: 200 })
+
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/csrf-token' },
+    }
+
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('reset le compteur 401 sur une reponse reussie', async () => {
+    // First 401
+    const error = {
+      response: { status: 401 },
+      config: { url: '/api/chantiers' },
+    }
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+
+    // Successful response resets counter
+    responseSuccessInterceptor!({ data: {}, status: 200 })
+
+    // Another 401 - should NOT trigger because counter was reset
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('rejette toujours l erreur meme pour les erreurs non-401', async () => {
+    const error = {
+      response: { status: 403 },
+      config: { url: '/api/chantiers' },
+    }
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('rejette les erreurs reseau (sans response)', async () => {
+    const error = {
+      message: 'Network Error',
+      config: { url: '/api/chantiers' },
+    }
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+    expect(mockEmitSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('gere les erreurs sans config', async () => {
+    const error = {
+      response: { status: 401 },
+    }
+    // No config.url -> falls into auth URL check with empty string
+    await expect(responseErrorInterceptor!(error)).rejects.toBe(error)
+  })
+})
+
+describe('HttpOnly cookie authentication', () => {
+  it('ne stocke aucun token dans sessionStorage ou localStorage', () => {
+    expect(sessionStorage.getItem('access_token')).toBeFalsy()
     expect(localStorage.getItem('access_token')).toBeFalsy()
-
-    localStorageSpy.mockRestore()
-  })
-
-  it('le token n\'est pas accessible apres fermeture du navigateur (sessionStorage behavior)', () => {
-    // Note: On ne peut pas vraiment tester la fermeture du navigateur,
-    // mais on peut verifier que sessionStorage est utilise
-    sessionStorage.setItem('access_token', 'test-token')
-
-    // Simule la "fermeture" en vidant sessionStorage
-    sessionStorage.clear()
-
-    expect(sessionStorage.getItem('access_token')).toBeNull()
-  })
-})
-
-describe('CSRF token handling', () => {
-  it('detecte les methodes qui necessitent CSRF', () => {
-    const mutatingMethods = ['POST', 'PUT', 'DELETE', 'PATCH']
-    const safeMethods = ['GET', 'HEAD', 'OPTIONS']
-
-    mutatingMethods.forEach((method) => {
-      expect(['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)).toBe(true)
-    })
-
-    safeMethods.forEach((method) => {
-      expect(['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)).toBe(false)
-    })
-  })
-
-  it('ne requiert pas CSRF pour GET', () => {
-    const method = 'GET'
-    const requiresCsrf = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())
-    expect(requiresCsrf).toBe(false)
-  })
-
-  it('requiert CSRF pour POST', () => {
-    const method = 'POST'
-    const requiresCsrf = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())
-    expect(requiresCsrf).toBe(true)
-  })
-})
-
-describe('error response handling', () => {
-  beforeEach(() => {
-    sessionStorage.clear()
-  })
-
-  it('gere les erreurs 403 Forbidden', () => {
-    const error = { response: { status: 403 } }
-    sessionStorage.setItem('access_token', 'test-token')
-    if (error.response?.status === 401) {
-      sessionStorage.removeItem('access_token')
-    }
-    expect(sessionStorage.getItem('access_token')).toBe('test-token')
-  })
-
-  it('gere les erreurs 404 Not Found', () => {
-    const error = { response: { status: 404 } }
-    sessionStorage.setItem('access_token', 'test-token')
-    if (error.response?.status === 401) {
-      sessionStorage.removeItem('access_token')
-    }
-    expect(sessionStorage.getItem('access_token')).toBe('test-token')
-  })
-
-  it('gere les erreurs reseau sans response', () => {
-    const error = { message: 'Network Error' }
-    sessionStorage.setItem('access_token', 'test-token')
-    if (error && (error as any).response?.status === 401) {
-      sessionStorage.removeItem('access_token')
-    }
-    expect(sessionStorage.getItem('access_token')).toBe('test-token')
-  })
-
-  it('gere les erreurs timeout', () => {
-    const error = { code: 'ECONNABORTED', message: 'timeout' }
-    sessionStorage.setItem('access_token', 'test-token')
-    if (error && (error as any).response?.status === 401) {
-      sessionStorage.removeItem('access_token')
-    }
-    expect(sessionStorage.getItem('access_token')).toBe('test-token')
-  })
-})
-
-describe('axios instance configuration', () => {
-  it('configure le timeout a 30 secondes', async () => {
-    const createCall = vi.mocked(axios.create).mock.calls[0]
-    if (createCall) {
-      expect(createCall[0]).toMatchObject({
-        timeout: 30000,
-      })
-    }
-  })
-
-  it('configure withCredentials pour les cookies HttpOnly', async () => {
-    const createCall = vi.mocked(axios.create).mock.calls[0]
-    if (createCall) {
-      expect(createCall[0]).toMatchObject({
-        withCredentials: true,
-      })
-    }
-  })
-
-  it('configure Content-Type JSON par defaut', async () => {
-    const createCall = vi.mocked(axios.create).mock.calls[0]
-    if (createCall) {
-      expect(createCall[0]).toMatchObject({
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    }
-  })
-})
-
-describe('authorization header', () => {
-  beforeEach(() => {
-    sessionStorage.clear()
-  })
-
-  it('formate correctement le header Bearer', () => {
-    const token = 'my-jwt-token-123'
-    const expectedHeader = `Bearer ${token}`
-    expect(expectedHeader).toBe('Bearer my-jwt-token-123')
-  })
-
-  it('gere les tokens avec caracteres speciaux', () => {
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test'
-    sessionStorage.setItem('access_token', token)
-    const storedToken = sessionStorage.getItem('access_token')
-    expect(storedToken).toBe(token)
-    expect(`Bearer ${storedToken}`).toBe(`Bearer ${token}`)
-  })
-
-  it('gere les tokens vides', () => {
-    sessionStorage.setItem('access_token', '')
-    const token = sessionStorage.getItem('access_token')
-    expect(token).toBe('')
-    expect(!token).toBe(true)
   })
 })
