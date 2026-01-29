@@ -590,6 +590,12 @@ Le module Documents offre une gestion documentaire complete avec arborescence pa
 
 **Module COMPLET** - Backend + Frontend implementes (15/17 fonctionnalites, 2 en attente infra)
 
+**Note technique (29/01/2026)** : Refactorisation et corrections du téléchargement de documents :
+- ✅ Clean Architecture respectée : use case retourne BinaryIO, routes utilisent le contrôleur
+- ✅ Frontend : Token CSRF lu depuis le cookie, gestion blob response avec `responseType: 'blob'`
+- ✅ Backend : Route `/download-zip` corrigée, téléchargements individuels et ZIP fonctionnels
+- Tests manuels validés : 120KB PDF téléchargé, 103KB ZIP avec 2 documents
+
 ### 9.3 Niveaux d'acces
 
 | Role minimum | Qui peut voir | Cas d'usage |
