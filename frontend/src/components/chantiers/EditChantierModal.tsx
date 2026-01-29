@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Plus, Trash2, Loader2, Calendar, MapPin } from 'lucide-react'
+import { logger } from '../../services/logger'
 import type { Chantier, ChantierUpdate, ContactChantier, PhaseChantierCreate } from '../../types'
 import { CHANTIER_STATUTS, USER_COLORS } from '../../types'
 import { chantiersService } from '../../services/chantiers'
@@ -60,7 +61,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
           date_fin: p.date_fin || '',
         })))
       } catch (error) {
-        console.error('Erreur chargement phases:', error)
+        logger.error('Erreur chargement phases', error, { context: 'EditChantierModal' })
       } finally {
         setLoadingPhases(false)
       }
@@ -151,7 +152,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
       try {
         await chantiersService.removePhase(chantierId, phaseId)
       } catch (error) {
-        console.error(`Erreur suppression phase ${phaseId}:`, error)
+        logger.error(`Erreur suppression phase ${phaseId}`, error, { context: 'EditChantierModal' })
       }
     }
 
@@ -178,7 +179,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
           await chantiersService.addPhase(chantierId, phaseData)
         }
       } catch (error) {
-        console.error(`Erreur sync phase ${phase.nom}:`, error)
+        logger.error(`Erreur sync phase ${phase.nom}`, error, { context: 'EditChantierModal' })
       }
     }
   }

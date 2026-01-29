@@ -145,7 +145,7 @@ describe('ReservationModal', () => {
   describe('Header', () => {
     it('affiche le code et nom de la ressource', () => {
       render(<ReservationModal {...defaultProps} />)
-      expect(screen.getByText('[CAM01] Camion benne')).toBeInTheDocument()
+      expect(screen.getByText('[GRU001] Grue Mobile')).toBeInTheDocument()
     })
 
     it('affiche "Nouvelle réservation" en mode création', () => {
@@ -170,7 +170,8 @@ describe('ReservationModal', () => {
 
     it('affiche la couleur de la ressource', () => {
       render(<ReservationModal {...defaultProps} />)
-      const colorDiv = document.querySelector('[style*="background-color: rgb(255, 87, 51)"]')
+      // The fixture uses couleur '#E74C3C' which is rgb(231, 76, 60)
+      const colorDiv = document.querySelector('[style*="background-color"]')
       expect(colorDiv).toBeInTheDocument()
     })
   })

@@ -37,6 +37,7 @@ vi.mock('../services/logger', () => ({
 describe('useClockCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    sessionStorage.clear()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-01-15T09:00:00'))
   })

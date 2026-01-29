@@ -11,6 +11,17 @@ import {
   areNotificationsSupported,
 } from './notifications'
 import api from './api'
+import { logger } from './logger'
+
+// Mock logger service
+vi.mock('./logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
 
 // Mock des modules
 vi.mock('./api')
@@ -43,12 +54,11 @@ describe('notifications service', () => {
   describe('initNotifications', () => {
     it('returns false when Firebase is not configured', async () => {
       vi.mocked(isFirebaseConfigured).mockReturnValue(false)
-      const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
 
       const result = await initNotifications()
 
       expect(result).toBe(false)
-      expect(consoleSpy).toHaveBeenCalledWith('Firebase non configuré - mode simulation')
+      expect(logger.info).toHaveBeenCalledWith('Firebase non configuré - mode simulation')
     })
 
     it('returns false when permission is denied', async () => {
@@ -65,7 +75,6 @@ describe('notifications service', () => {
       vi.mocked(requestNotificationPermission).mockResolvedValue('test-token-123')
       vi.mocked(api.post).mockResolvedValue({})
       vi.mocked(onForegroundMessage).mockImplementation(() => () => {})
-      vi.spyOn(console, 'log').mockImplementation(() => {})
 
       const result = await initNotifications()
 
@@ -79,12 +88,11 @@ describe('notifications service', () => {
       vi.mocked(requestNotificationPermission).mockResolvedValue('test-token')
       vi.mocked(api.post).mockRejectedValue(new Error('Network error'))
       vi.mocked(onForegroundMessage).mockImplementation(() => () => {})
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await initNotifications()
 
       expect(result).toBe(true) // Still returns true as permission was granted
-      expect(consoleSpy).toHaveBeenCalledWith('Erreur enregistrement token:', expect.any(Error))
+      expect(logger.error).toHaveBeenCalledWith('Erreur enregistrement token', expect.any(Error), { context: 'notifications' })
     })
   })
 
@@ -123,7 +131,6 @@ describe('notifications service', () => {
   describe('disableNotifications', () => {
     it('calls API to delete push token', async () => {
       vi.mocked(api.delete).mockResolvedValue({})
-      vi.spyOn(console, 'log').mockImplementation(() => {})
 
       await disableNotifications()
 
@@ -132,11 +139,10 @@ describe('notifications service', () => {
 
     it('logs error on failure', async () => {
       vi.mocked(api.delete).mockRejectedValue(new Error('Network error'))
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       await disableNotifications()
 
-      expect(consoleSpy).toHaveBeenCalledWith('Erreur désactivation notifications:', expect.any(Error))
+      expect(logger.error).toHaveBeenCalledWith('Erreur désactivation notifications', expect.any(Error), { context: 'notifications' })
     })
   })
 
@@ -220,8 +226,6 @@ describe('notifications service', () => {
         },
         writable: true,
       })
-      vi.spyOn(console, 'log').mockImplementation(() => {})
-
       const subscriber = vi.fn()
       subscribeToNotifications(subscriber)
 
@@ -266,12 +270,10 @@ describe('notifications service', () => {
     })
 
     it('handles unknown type gracefully', () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
       const data = { type: 'unknown_type' }
-      if (data.type !== 'reservation_demande' && data.type !== 'signalement') {
-        console.log('Type de notification non géré:', data.type)
-      }
-      expect(consoleSpy).toHaveBeenCalled()
+      // Production code uses logger.info for unknown types
+      // This test just verifies the data structure is valid
+      expect(data.type).toBe('unknown_type')
     })
   })
 

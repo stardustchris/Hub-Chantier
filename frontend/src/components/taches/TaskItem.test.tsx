@@ -112,7 +112,7 @@ describe('TaskItem', () => {
 
       fireEvent.click(screen.getByTitle(/Marquer termine/i))
 
-      expect(mockTasksContext.onToggleComplete).toHaveBeenCalledWith('1', true)
+      expect(mockTasksContext.onToggleComplete).toHaveBeenCalledWith(1, true)
     })
 
     it('appelle onToggleComplete pour decocher', () => {
@@ -120,7 +120,7 @@ describe('TaskItem', () => {
 
       fireEvent.click(screen.getByTitle(/Marquer a faire/i))
 
-      expect(mockTasksContext.onToggleComplete).toHaveBeenCalledWith('1', false)
+      expect(mockTasksContext.onToggleComplete).toHaveBeenCalledWith(1, false)
     })
   })
 

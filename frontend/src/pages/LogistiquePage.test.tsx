@@ -45,6 +45,19 @@ vi.mock('../hooks', () => ({
   useLogistique: () => mockUseLogistique,
 }))
 
+// Mock API and logger
+vi.mock('../api/logistique', () => ({
+  listRessources: vi.fn().mockResolvedValue({ items: [] }),
+}))
+
+vi.mock('../services/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  },
+}))
+
 // Mock child components
 vi.mock('../components/logistique', () => ({
   RessourceList: ({ isAdmin }: { isAdmin: boolean }) => (
@@ -52,6 +65,7 @@ vi.mock('../components/logistique', () => ({
       Ressource List
     </div>
   ),
+  RessourceModal: () => null,
   ReservationCalendar: ({ ressource }: { ressource: { nom: string } }) => (
     <div data-testid="reservation-calendar">
       Calendar for {ressource.nom}
@@ -145,41 +159,33 @@ describe('LogistiquePage', () => {
       mockUseLogistique.activeTab = 'planning'
     })
 
-    it('affiche message si pas de ressource selectionnee', () => {
+    it('affiche le selecteur de ressource', () => {
       render(<LogistiquePage />)
-      expect(screen.getByText('Selectionnez une ressource')).toBeInTheDocument()
+      expect(screen.getByLabelText('Ressource à afficher')).toBeInTheDocument()
     })
 
-    it('affiche le calendrier si ressource selectionnee', () => {
-      mockUseLogistique.selectedRessource = { id: 1, nom: 'Grue', code: 'GRU001' }
+    it('affiche le planning toutes ressources par defaut', () => {
       render(<LogistiquePage />)
-      expect(screen.getByTestId('reservation-calendar')).toBeInTheDocument()
-      expect(screen.getByText('Calendar for Grue')).toBeInTheDocument()
+      expect(screen.getByText('Planning : Toutes les ressources')).toBeInTheDocument()
     })
 
-    it('affiche bouton retour avec ressource selectionnee', () => {
-      mockUseLogistique.selectedRessource = { id: 1, nom: 'Grue', code: 'GRU001' }
+    it('affiche lien vers la liste des ressources', () => {
       render(<LogistiquePage />)
-      expect(screen.getByText('← Retour aux ressources')).toBeInTheDocument()
+      expect(screen.getByText('Voir la liste des ressources')).toBeInTheDocument()
     })
 
-    it('deselectionne ressource au clic sur retour', async () => {
-      const user = userEvent.setup()
-      mockUseLogistique.selectedRessource = { id: 1, nom: 'Grue', code: 'GRU001' }
-      render(<LogistiquePage />)
-
-      await user.click(screen.getByText('← Retour aux ressources'))
-
-      expect(mockUseLogistique.setSelectedRessource).toHaveBeenCalledWith(null)
-    })
-
-    it('affiche bouton voir ressources sans selection', async () => {
+    it('navigue vers onglet ressources au clic sur le lien', async () => {
       const user = userEvent.setup()
       render(<LogistiquePage />)
 
-      await user.click(screen.getByText('Voir les ressources'))
+      await user.click(screen.getByText('Voir la liste des ressources'))
 
       expect(mockUseLogistique.setActiveTab).toHaveBeenCalledWith('ressources')
+    })
+
+    it('affiche message si aucune ressource disponible', () => {
+      render(<LogistiquePage />)
+      expect(screen.getByText(/Aucune ressource disponible/)).toBeInTheDocument()
     })
   })
 

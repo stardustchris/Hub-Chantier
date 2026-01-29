@@ -371,7 +371,7 @@ describe('useFormulaires', () => {
         await result.current.handleCreateFormulaire(1)
       })
 
-      expect(result.current.error).toBe('Veuillez selectionner un chantier')
+      expect(result.current.error).toBe('Veuillez sélectionner un chantier')
     })
 
     it('view formulaire ouvre en mode lecture', async () => {

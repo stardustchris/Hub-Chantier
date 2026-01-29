@@ -11,13 +11,24 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { geocodeAddress } from './geocoding'
+import { logger } from './logger'
+
+// Mock logger service
+vi.mock('./logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
 
 describe('geocodeAddress', () => {
   const mockFetch = vi.fn()
 
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch)
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -121,7 +132,7 @@ describe('geocodeAddress', () => {
       const result = await geocodeAddress('Paris')
 
       expect(result).toBeNull()
-      expect(console.error).toHaveBeenCalledWith('Erreur geocoding:', 500)
+      expect(logger.error).toHaveBeenCalledWith('Erreur geocoding', 500, { context: 'geocoding' })
     })
 
     it('retourne null en cas d\'erreur réseau', async () => {
@@ -130,7 +141,7 @@ describe('geocodeAddress', () => {
       const result = await geocodeAddress('Paris')
 
       expect(result).toBeNull()
-      expect(console.error).toHaveBeenCalledWith('Erreur geocoding:', expect.any(Error))
+      expect(logger.error).toHaveBeenCalledWith('Erreur geocoding', expect.any(Error), { context: 'geocoding' })
     })
 
     it('retourne null en cas d\'erreur de parsing JSON', async () => {

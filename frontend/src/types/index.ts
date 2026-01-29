@@ -197,8 +197,18 @@ export const CHANTIER_STATUTS: Record<ChantierStatut, { label: string; color: st
   ferme: { label: 'Ferme', color: '#E74C3C', icon: 'lock' },
 }
 
-// ===== DASHBOARD / FEED (voir aussi dashboard.ts pour les types avancés) =====
+// ===== DASHBOARD / FEED =====
+// Types canoniques pour le dashboard : voir types/dashboard.ts (modèle API backend)
+// Les types ci-dessous sont le modèle "enrichi" côté frontend (objets imbriqués)
+// Ils seront unifiés avec dashboard.ts dans une future itération.
+
 export type PostType = 'message' | 'photo' | 'urgent'
+
+/**
+ * TargetType pour le modèle enrichi frontend (valeurs en français).
+ * Le modèle API backend utilise DashboardTargetType ('everyone' | 'specific_chantiers' | 'specific_people')
+ * défini dans types/dashboard.ts.
+ */
 export type TargetType = 'tous' | 'chantiers' | 'utilisateurs'
 
 export interface PostMedia {
@@ -220,6 +230,10 @@ export interface PostLike {
   user: User
 }
 
+/**
+ * Post enrichi côté frontend (avec objets User/Chantier imbriqués).
+ * Pour le modèle API brut, voir PostDetail dans types/dashboard.ts.
+ */
 export interface Post {
   id: string
   contenu: string

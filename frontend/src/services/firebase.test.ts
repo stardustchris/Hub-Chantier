@@ -21,7 +21,16 @@ vi.mock('firebase/messaging', () => ({
   onMessage: mockOnMessage,
 }))
 
-// Mock import.meta.env
+// Mock logger service
+const mockLogger = {
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+}
+vi.mock('./logger', () => ({
+  logger: mockLogger,
+}))
 
 describe('firebase service', () => {
   const mockFirebaseApp = { name: 'test-app' }
@@ -34,6 +43,9 @@ describe('firebase service', () => {
     // Reset singleton state by re-importing module
     mockInitializeApp.mockReturnValue(mockFirebaseApp)
     mockGetMessaging.mockReturnValue(mockMessaging)
+
+    // Ensure DEV mode is on so logger calls are actually executed
+    vi.stubEnv('DEV', true as any)
   })
 
   afterEach(() => {
@@ -84,17 +96,15 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', '')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '')
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { initFirebase } = await import('./firebase')
 
       const result = initFirebase()
 
       expect(result).toBeNull()
       expect(mockInitializeApp).not.toHaveBeenCalled()
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Firebase non configuré')
       )
-      consoleSpy.mockRestore()
     })
 
     it('initialise Firebase avec la configuration', async () => {
@@ -105,7 +115,6 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
       vi.stubEnv('VITE_FIREBASE_APP_ID', 'test-app-id')
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
       const { initFirebase } = await import('./firebase')
 
       const result = initFirebase()
@@ -119,8 +128,7 @@ describe('firebase service', () => {
         messagingSenderId: '123456',
         appId: 'test-app-id',
       })
-      expect(consoleSpy).toHaveBeenCalledWith('Firebase initialisé')
-      consoleSpy.mockRestore()
+      expect(mockLogger.info).toHaveBeenCalledWith('Firebase initialisé')
     })
 
     it('retourne singleton si deja initialise', async () => {
@@ -128,7 +136,6 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
       const { initFirebase } = await import('./firebase')
 
       const result1 = initFirebase()
@@ -147,17 +154,16 @@ describe('firebase service', () => {
         throw new Error('Init error')
       })
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { initFirebase } = await import('./firebase')
 
       const result = initFirebase()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Erreur initialisation Firebase:',
-        expect.any(Error)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Erreur initialisation Firebase',
+        expect.any(Error),
+        { context: 'firebase' }
       )
-      consoleSpy.mockRestore()
     })
   })
 
@@ -167,7 +173,6 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', '')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '')
 
-      vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { getFirebaseMessaging } = await import('./firebase')
 
       const result = getFirebaseMessaging()
@@ -181,7 +186,6 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
       const { getFirebaseMessaging } = await import('./firebase')
 
       const result = getFirebaseMessaging()
@@ -195,7 +199,6 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
       const { getFirebaseMessaging } = await import('./firebase')
 
       const result1 = getFirebaseMessaging()
@@ -214,18 +217,16 @@ describe('firebase service', () => {
         throw new Error('Messaging error')
       })
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { getFirebaseMessaging } = await import('./firebase')
 
       const result = getFirebaseMessaging()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Erreur initialisation Messaging:',
-        expect.any(Error)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Erreur initialisation Messaging',
+        expect.any(Error),
+        { context: 'firebase' }
       )
-      consoleSpy.mockRestore()
     })
   })
 
@@ -244,33 +245,32 @@ describe('firebase service', () => {
     })
 
     it('retourne null si Notification non supporte', async () => {
-      // @ts-expect-error - Setting to undefined to simulate unsupported environment
-      global.Notification = undefined
+      // Remove Notification from window to simulate unsupported environment
+      const savedNotification = window.Notification
+      delete (window as any).Notification
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
 
       const result = await requestNotificationPermission()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         'Notifications non supportées par ce navigateur'
       )
-      consoleSpy.mockRestore()
+
+      // Restore for other tests
+      ;(window as any).Notification = savedNotification
     })
 
     it('retourne null si permission refusee', async () => {
-
       global.Notification.requestPermission = vi.fn().mockResolvedValue('denied')
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
 
       const result = await requestNotificationPermission()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith('Permission notifications refusée')
-      consoleSpy.mockRestore()
+      expect(mockLogger.warn).toHaveBeenCalledWith('Permission notifications refusée')
     })
 
     it('retourne null si Firebase non configure', async () => {
@@ -278,17 +278,14 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', '')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '')
 
-
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
 
       const result = await requestNotificationPermission()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith('Firebase Messaging non disponible')
-      consoleSpy.mockRestore()
+      expect(mockLogger.warn).toHaveBeenCalledWith('Firebase Messaging non disponible')
     })
 
     it('retourne le token FCM si permission accordee', async () => {
@@ -297,11 +294,9 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
       vi.stubEnv('VITE_FIREBASE_VAPID_KEY', 'test-vapid-key')
 
-
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
       mockGetToken.mockResolvedValue('test-fcm-token-123456789')
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
 
       const result = await requestNotificationPermission()
@@ -317,19 +312,15 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
       mockGetToken.mockResolvedValue('')
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
 
       const result = await requestNotificationPermission()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith('Aucun token FCM disponible')
-      consoleSpy.mockRestore()
+      expect(mockLogger.warn).toHaveBeenCalledWith('Aucun token FCM disponible')
     })
 
     it('gere les erreurs de recuperation du token', async () => {
@@ -337,22 +328,19 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '123456')
 
-
       global.Notification.requestPermission = vi.fn().mockResolvedValue('granted')
       mockGetToken.mockRejectedValue(new Error('Token error'))
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { requestNotificationPermission } = await import('./firebase')
 
       const result = await requestNotificationPermission()
 
       expect(result).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Erreur récupération token FCM:',
-        expect.any(Error)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Erreur récupération token FCM',
+        expect.any(Error),
+        { context: 'firebase' }
       )
-      consoleSpy.mockRestore()
     })
   })
 
@@ -362,7 +350,6 @@ describe('firebase service', () => {
       vi.stubEnv('VITE_FIREBASE_PROJECT_ID', '')
       vi.stubEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '')
 
-      vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { onForegroundMessage } = await import('./firebase')
 
       const callback = vi.fn()
@@ -380,7 +367,6 @@ describe('firebase service', () => {
       const mockUnsubscribe = vi.fn()
       mockOnMessage.mockReturnValue(mockUnsubscribe)
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
       const { onForegroundMessage } = await import('./firebase')
 
       const callback = vi.fn()
@@ -401,7 +387,6 @@ describe('firebase service', () => {
         return vi.fn()
       })
 
-      vi.spyOn(console, 'log').mockImplementation(() => {})
       const { onForegroundMessage } = await import('./firebase')
 
       const callback = vi.fn()

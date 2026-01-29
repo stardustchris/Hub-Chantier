@@ -96,8 +96,8 @@ describe('SignalementModal', () => {
     it('preremplit les champs avec les valeurs existantes', () => {
       render(<SignalementModal {...defaultProps} signalement={createMockSignalement()} />)
 
-      expect(screen.getByDisplayValue('Signalement existant')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('Description existante')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Signalement Test')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Description du signalement')).toBeInTheDocument()
     })
 
     it('affiche le bouton Modifier', () => {
@@ -226,7 +226,7 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} signalement={createMockSignalement()} />)
 
-      const titreInput = screen.getByDisplayValue('Signalement existant')
+      const titreInput = screen.getByDisplayValue('Signalement Test')
       await user.clear(titreInput)
       await user.type(titreInput, 'Titre modifie')
 

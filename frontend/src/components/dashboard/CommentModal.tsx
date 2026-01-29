@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { X, Send, Loader2 } from 'lucide-react'
 import MentionInput from '../common/MentionInput'
 import { dashboardService } from '../../services/dashboard'
+import { logger } from '../../services/logger'
 
 interface CommentModalProps {
   isOpen: boolean
@@ -47,7 +48,7 @@ export default function CommentModal({
       onCommentAdded?.()
       onClose()
     } catch (err) {
-      console.error('Erreur ajout commentaire:', err)
+      logger.error('Erreur ajout commentaire', err, { context: 'CommentModal' })
       setError('Erreur lors de l\'ajout du commentaire')
     } finally {
       setLoading(false)

@@ -15,10 +15,11 @@ vi.mock('../../api/logistique', () => ({
 // Mock des types logistique
 vi.mock('../../types/logistique', () => ({
   CATEGORIES_RESSOURCES: {
-    materiel: { label: 'Matériel', color: '#3498DB' },
-    vehicule: { label: 'Véhicule', color: '#27AE60' },
-    espace: { label: 'Espace', color: '#9B59B6' },
-    humain: { label: 'Humain', color: '#E67E22' },
+    engin_levage: { label: 'Engin de levage', exemples: [], validationRequise: true, color: '#E74C3C' },
+    engin_terrassement: { label: 'Engin de terrassement', exemples: [], validationRequise: true, color: '#E67E22' },
+    vehicule: { label: 'Véhicule', exemples: [], validationRequise: false, color: '#3498DB' },
+    gros_outillage: { label: 'Gros outillage', exemples: [], validationRequise: false, color: '#9B59B6' },
+    equipement: { label: 'Équipement', exemples: [], validationRequise: true, color: '#27AE60' },
   },
 }))
 
@@ -120,7 +121,7 @@ describe('RessourceCard', () => {
 
       fireEvent.click(screen.getByText('Grue à tour 45m'))
 
-      expect(handleSelect).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }))
+      expect(handleSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
     })
 
     it('affiche le bouton editer si onEdit fourni', () => {
@@ -139,7 +140,7 @@ describe('RessourceCard', () => {
 
       fireEvent.click(screen.getByRole('button'))
 
-      expect(handleEdit).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }))
+      expect(handleEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
     })
 
     it('empeche la propagation du clic sur editer', () => {

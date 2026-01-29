@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react'
 import { Truck, Calendar, Clock, AlertCircle } from 'lucide-react'
 import { useLogistique } from '../hooks'
+import { logger } from '../services/logger'
 import { RessourceList, RessourceModal, ReservationCalendar, ReservationModal } from '../components/logistique'
 import Layout from '../components/Layout'
 import { listRessources } from '../api/logistique'
@@ -50,7 +51,7 @@ const LogistiquePage: React.FC = () => {
       const data = await listRessources({ limit: 1000 })
       setAllRessources(data?.items || [])
     } catch (error) {
-      console.error('Erreur chargement ressources:', error)
+      logger.error('Erreur chargement ressources', error, { context: 'LogistiquePage' })
     } finally {
       setLoadingRessources(false)
     }

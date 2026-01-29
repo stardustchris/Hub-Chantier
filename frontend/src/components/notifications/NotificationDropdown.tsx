@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { logger } from '../../services/logger'
 import {
   Bell,
   MessageCircle,
@@ -100,7 +101,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
           })
         })
         .catch((err) => {
-          console.error('Erreur chargement document:', err)
+          logger.error('Erreur chargement document', err, { context: 'NotificationDropdown' })
           setDocumentInfo({
             loading: false,
             error: 'Impossible de charger le document',
