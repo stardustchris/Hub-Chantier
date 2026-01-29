@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { Calendar, Clock, Loader2, AlertCircle } from 'lucide-react'
 import { planningService } from '../../services/planning'
+import { logger } from '../../services/logger'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDateFull } from '../../utils/dates'
 import type { Affectation } from '../../types'
@@ -57,7 +58,7 @@ export default function MesInterventions({ chantierId }: MesInterventionsProps) 
 
         setAffectations(sorted)
       } catch (err) {
-        console.error('Erreur chargement interventions:', err)
+        logger.error('Erreur chargement interventions', err, { context: 'MesInterventions' })
         setError('Impossible de charger vos interventions')
       } finally {
         setLoading(false)

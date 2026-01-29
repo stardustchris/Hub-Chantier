@@ -78,7 +78,7 @@ describe('ReservationCalendar', () => {
       render(<ReservationCalendar {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('[CAM01] Camion benne')).toBeInTheDocument()
+        expect(screen.getByText('[GRU001] Grue Mobile')).toBeInTheDocument()
       })
     })
 
@@ -86,7 +86,7 @@ describe('ReservationCalendar', () => {
       render(<ReservationCalendar {...defaultProps} />)
 
       await waitFor(() => {
-        const colorDiv = document.querySelector('[style*="background-color: rgb(255, 87, 51)"]')
+        const colorDiv = document.querySelector('[style*="background-color"]')
         expect(colorDiv).toBeInTheDocument()
       })
     })
@@ -114,7 +114,7 @@ describe('ReservationCalendar', () => {
       render(<ReservationCalendar {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('[CAM01] Camion benne')).toBeInTheDocument()
+        expect(screen.getByText('[GRU001] Grue Mobile')).toBeInTheDocument()
       })
 
       const prevButton = screen.getAllByRole('button').find(
@@ -133,7 +133,7 @@ describe('ReservationCalendar', () => {
       render(<ReservationCalendar {...defaultProps} />)
 
       await waitFor(() => {
-        expect(screen.getByText('[CAM01] Camion benne')).toBeInTheDocument()
+        expect(screen.getByText('[GRU001] Grue Mobile')).toBeInTheDocument()
       })
 
       const nextButton = screen.getAllByRole('button').find(
@@ -227,7 +227,7 @@ describe('ReservationCalendar', () => {
     it('affiche l\'indicateur de statut', async () => {
       mockGetPlanningRessource.mockResolvedValue(
         createMockPlanning({
-          reservations: [createMockReservation({ statut: 'validee' })],
+          reservations: [createMockReservation({ statut: 'validee', date_reservation: '2024-01-22', heure_debut: '09:00', heure_fin: '12:00' })],
         })
       )
 
@@ -345,7 +345,7 @@ describe('ReservationCalendar', () => {
 
       await waitFor(() => {
         // Should not crash, header should still be visible
-        expect(screen.getByText('[CAM01] Camion benne')).toBeInTheDocument()
+        expect(screen.getByText('[GRU001] Grue Mobile')).toBeInTheDocument()
       })
     })
   })

@@ -147,45 +147,53 @@ describe('DossierTree', () => {
 
   describe('Icones de type', () => {
     it('affiche l icone plans pour 01_plans', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '01_plans' })]} />)
-      expect(screen.getByText('📐')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '01_plans' })]} />)
+      // Component uses Lucide Pencil icon for 01_plans
+      expect(container.querySelector('.lucide-pencil')).toBeInTheDocument()
     })
 
     it('affiche l icone administratif pour 02_administratif', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '02_administratif', nom: 'Admin' })]} />)
-      expect(screen.getByText('📋')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '02_administratif', nom: 'Admin' })]} />)
+      // Component uses Lucide ClipboardCheck icon for 02_administratif
+      expect(container.querySelector('.lucide-clipboard-check')).toBeInTheDocument()
     })
 
     it('affiche l icone securite pour 03_securite', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '03_securite', nom: 'Securite' })]} />)
-      expect(screen.getByText('🦺')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '03_securite', nom: 'Securite' })]} />)
+      // Component uses Lucide ShieldCheck icon for 03_securite
+      expect(container.querySelector('.lucide-shield-check')).toBeInTheDocument()
     })
 
     it('affiche l icone photos pour 05_photos', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '05_photos', nom: 'Photos' })]} />)
-      expect(screen.getByText('📷')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: '05_photos', nom: 'Photos' })]} />)
+      // Component uses Lucide Camera icon for 05_photos
+      expect(container.querySelector('.lucide-camera')).toBeInTheDocument()
     })
 
     it('affiche l icone dossier generique pour custom', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: 'custom', nom: 'Custom' })]} />)
-      expect(screen.getByText('📁')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ type_dossier: 'custom', nom: 'Custom' })]} />)
+      // Component uses Lucide Folder icon for custom
+      expect(container.querySelector('.lucide-folder')).toBeInTheDocument()
     })
   })
 
   describe('Badges niveau d acces', () => {
     it('affiche le badge compagnon', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ niveau_acces: 'compagnon' })]} />)
-      expect(screen.getByText('👥')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ niveau_acces: 'compagnon' })]} />)
+      // Component uses Lucide Users icon for compagnon
+      expect(container.querySelector('.lucide-users')).toBeInTheDocument()
     })
 
     it('affiche le badge chef_chantier', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ niveau_acces: 'chef_chantier' })]} />)
-      expect(screen.getByText('👷')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ niveau_acces: 'chef_chantier' })]} />)
+      // Component uses Lucide HardHat icon for chef_chantier
+      expect(container.querySelector('.lucide-hard-hat')).toBeInTheDocument()
     })
 
     it('affiche le badge admin', () => {
-      render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ niveau_acces: 'admin' })]} />)
-      expect(screen.getByText('🔒')).toBeInTheDocument()
+      const { container } = render(<DossierTree {...defaultProps} dossiers={[createMockDossier({ niveau_acces: 'admin' })]} />)
+      // Component uses Lucide Lock icon for admin
+      expect(container.querySelector('.lucide-lock')).toBeInTheDocument()
     })
   })
 

@@ -36,16 +36,15 @@ api.interceptors.request.use(async (config) => {
 
   // Token CSRF pour les méthodes mutables (POST, PUT, DELETE, PATCH)
   if (config.method && requiresCsrf(config.method)) {
-    let csrfToken = getCsrfToken()
-    // Si pas de token CSRF, en récupérer un
-    if (!csrfToken) {
-      try {
+    // Exempter les endpoints d'authentification du CSRF (login initial, etc.)
+    const url = config.url || ''
+    const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/csrf-token')
+    if (!isAuthEndpoint) {
+      let csrfToken = getCsrfToken()
+      // Si pas de token CSRF, en récupérer un
+      if (!csrfToken) {
         csrfToken = await fetchCsrfToken()
-      } catch {
-        // Continuer sans token CSRF si impossible de le récupérer
       }
-    }
-    if (csrfToken) {
       config.headers[CSRF_HEADER] = csrfToken
     }
   }

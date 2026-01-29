@@ -20,6 +20,12 @@ export default defineConfig({
         '**/index.ts',
         'src/mocks/**',
       ],
+      thresholds: {
+        statements: 70,
+        branches: 65,
+        functions: 65,
+        lines: 70,
+      },
     },
   },
 })

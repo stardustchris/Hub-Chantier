@@ -10,6 +10,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { AtSign, Loader2 } from 'lucide-react'
 import { usersService } from '../../services/users'
+import { logger } from '../../services/logger'
 import type { User } from '../../types'
 import { DURATIONS, COLORS } from '../../constants'
 
@@ -77,7 +78,7 @@ export default function MentionInput({
       cacheTimestamp = now
       setSuggestions(users)
     } catch (error) {
-      console.error('Erreur chargement utilisateurs:', error)
+      logger.error('Erreur chargement utilisateurs', error, { context: 'MentionInput' })
       setSuggestions([])
     } finally {
       setLoading(false)

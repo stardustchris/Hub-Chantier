@@ -81,7 +81,7 @@ describe('SignalementList', () => {
       render(<SignalementList chantierId={1} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Signalement test')).toBeInTheDocument()
+        expect(screen.getByText('Signalement Test')).toBeInTheDocument()
       })
     })
 
@@ -90,10 +90,10 @@ describe('SignalementList', () => {
       render(<SignalementList chantierId={1} onSignalementClick={mockOnClick} />)
 
       await waitFor(() => {
-        expect(screen.getByText('Signalement test')).toBeInTheDocument()
+        expect(screen.getByText('Signalement Test')).toBeInTheDocument()
       })
 
-      await user.click(screen.getByText('Signalement test'))
+      await user.click(screen.getByText('Signalement Test'))
       expect(mockOnClick).toHaveBeenCalled()
     })
   })
@@ -224,7 +224,7 @@ describe('SignalementList', () => {
       render(<SignalementList chantierId={1} compact />)
 
       await waitFor(() => {
-        expect(screen.getByText('Signalement test')).toBeInTheDocument()
+        expect(screen.getByText('Signalement Test')).toBeInTheDocument()
       })
     })
   })

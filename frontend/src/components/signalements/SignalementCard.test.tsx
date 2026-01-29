@@ -40,17 +40,17 @@ describe('SignalementCard', () => {
   describe('Mode normal', () => {
     it('affiche le titre du signalement', () => {
       render(<SignalementCard signalement={createMockSignalement()} />)
-      expect(screen.getByText('Fuite eau')).toBeInTheDocument()
+      expect(screen.getByText('Signalement Test')).toBeInTheDocument()
     })
 
     it('affiche la description', () => {
       render(<SignalementCard signalement={createMockSignalement()} />)
-      expect(screen.getByText('Il y a une fuite au plafond')).toBeInTheDocument()
+      expect(screen.getByText('Description du signalement')).toBeInTheDocument()
     })
 
     it('affiche le badge de priorite', () => {
       render(<SignalementCard signalement={createMockSignalement()} />)
-      expect(screen.getByText('Haute')).toBeInTheDocument()
+      expect(screen.getByText('Moyenne')).toBeInTheDocument()
     })
 
     it('affiche le badge de statut', () => {
@@ -59,12 +59,12 @@ describe('SignalementCard', () => {
     })
 
     it('affiche le createur', () => {
-      render(<SignalementCard signalement={createMockSignalement()} />)
+      render(<SignalementCard signalement={createMockSignalement({ cree_par_nom: 'Jean Dupont' })} />)
       expect(screen.getByText('Jean Dupont')).toBeInTheDocument()
     })
 
     it('affiche l assignation', () => {
-      render(<SignalementCard signalement={createMockSignalement()} />)
+      render(<SignalementCard signalement={createMockSignalement({ assigne_a: 2, assigne_a_nom: 'Marie Martin' })} />)
       expect(screen.getByText('Marie Martin')).toBeInTheDocument()
     })
 
@@ -116,12 +116,12 @@ describe('SignalementCard', () => {
   describe('Mode compact', () => {
     it('affiche le titre en mode compact', () => {
       render(<SignalementCard signalement={createMockSignalement()} compact />)
-      expect(screen.getByText('Fuite eau')).toBeInTheDocument()
+      expect(screen.getByText('Signalement Test')).toBeInTheDocument()
     })
 
     it('n affiche pas la description en mode compact', () => {
       render(<SignalementCard signalement={createMockSignalement()} compact />)
-      expect(screen.queryByText('Il y a une fuite au plafond')).not.toBeInTheDocument()
+      expect(screen.queryByText('Description du signalement')).not.toBeInTheDocument()
     })
 
     it('affiche En retard en mode compact si applicable', () => {
@@ -186,9 +186,9 @@ describe('SignalementCard', () => {
       const user = userEvent.setup()
       render(<SignalementCard signalement={createMockSignalement()} onClick={mockOnClick} />)
 
-      await user.click(screen.getByText('Fuite eau'))
+      await user.click(screen.getByText('Signalement Test'))
 
-      expect(mockOnClick).toHaveBeenCalledWith(expect.objectContaining({ id: 1, titre: 'Fuite eau' }))
+      expect(mockOnClick).toHaveBeenCalledWith(expect.objectContaining({ id: 1, titre: 'Signalement Test' }))
     })
   })
 

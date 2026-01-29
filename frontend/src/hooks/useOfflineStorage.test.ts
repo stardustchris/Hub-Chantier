@@ -3,9 +3,16 @@
  * FDH-20: Mode Offline (PWA/Service Worker)
  */
 
+// @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useOfflineStorage } from './useOfflineStorage'
+
+// Mock logger to avoid console noise
+vi.mock('../services/logger', () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 describe('useOfflineStorage', () => {
   let originalOnLine: boolean
@@ -53,14 +60,16 @@ describe('useOfflineStorage', () => {
   })
 
   describe('Queue hors-ligne', () => {
-    it('ajoute un element a la queue', () => {
+    it('ajoute un element a la queue', async () => {
       const { result } = renderHook(() => useOfflineStorage())
 
       act(() => {
         result.current.addToQueue('create', '/api/pointages', 'POST', { data: 'test' })
       })
 
-      expect(result.current.pendingItems).toHaveLength(1)
+      await waitFor(() => {
+        expect(result.current.pendingItems).toHaveLength(1)
+      })
       expect(result.current.pendingCount).toBe(1)
     })
 
@@ -76,7 +85,7 @@ describe('useOfflineStorage', () => {
       expect(typeof id).toBe('string')
     })
 
-    it('supprime un element de la queue', () => {
+    it('supprime un element de la queue', async () => {
       const { result } = renderHook(() => useOfflineStorage())
 
       let id: string = ''
@@ -84,27 +93,37 @@ describe('useOfflineStorage', () => {
         id = result.current.addToQueue('create', '/api/test', 'POST', {})
       })
 
-      expect(result.current.pendingCount).toBe(1)
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(1)
+      })
 
       act(() => {
         result.current.removeFromQueue(id)
       })
 
-      expect(result.current.pendingCount).toBe(0)
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(0)
+      })
     })
 
-    it('vide toute la queue', () => {
+    it('vide toute la queue', async () => {
       const { result } = renderHook(() => useOfflineStorage())
 
       act(() => {
         result.current.addToQueue('create', '/api/test1', 'POST', {})
       })
 
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(1)
+      })
+
       act(() => {
         result.current.addToQueue('create', '/api/test2', 'POST', {})
       })
 
-      expect(result.current.pendingCount).toBe(2)
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(2)
+      })
 
       act(() => {
         result.current.clearQueue()
@@ -115,25 +134,32 @@ describe('useOfflineStorage', () => {
   })
 
   describe('Cache de donnees', () => {
-    it('retourne null pour une cle inexistante', () => {
+    it('retourne null pour une cle inexistante', async () => {
       const { result } = renderHook(() => useOfflineStorage())
 
-      const cached = result.current.getCachedData('nonexistent')
+      let cached: unknown = 'not-null'
+      await act(async () => {
+        cached = await result.current.getCachedData('nonexistent')
+      })
       expect(cached).toBeNull()
     })
 
-    it('vide tout le cache', () => {
+    it('vide tout le cache', async () => {
       const { result } = renderHook(() => useOfflineStorage())
 
-      act(() => {
-        result.current.cacheData('key1', { a: 1 })
+      await act(async () => {
+        await result.current.cacheData('key1', { a: 1 })
       })
 
       act(() => {
         result.current.clearCache()
       })
 
-      expect(result.current.getCachedData('key1')).toBeNull()
+      let cached: unknown = 'not-null'
+      await act(async () => {
+        cached = await result.current.getCachedData('key1')
+      })
+      expect(cached).toBeNull()
     })
   })
 
@@ -143,6 +169,10 @@ describe('useOfflineStorage', () => {
 
       act(() => {
         result.current.addToQueue('create', '/api/test', 'POST', {})
+      })
+
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(1)
       })
 
       const syncFn = vi.fn().mockResolvedValue(true)
@@ -163,6 +193,10 @@ describe('useOfflineStorage', () => {
 
       act(() => {
         result.current.addToQueue('create', '/api/test', 'POST', {})
+      })
+
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(1)
       })
 
       const syncFn = vi.fn().mockResolvedValue(false)
@@ -190,6 +224,10 @@ describe('useOfflineStorage', () => {
 
       act(() => {
         result.current.addToQueue('create', '/api/test', 'POST', {})
+      })
+
+      await waitFor(() => {
+        expect(result.current.pendingCount).toBe(1)
       })
 
       const syncFn = vi.fn().mockResolvedValue(true)

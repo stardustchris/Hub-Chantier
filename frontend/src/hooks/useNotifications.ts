@@ -8,6 +8,7 @@ import {
   type Notification,
   type NotificationList,
 } from '../services/notificationsApi'
+import { logger } from '../services/logger'
 
 interface UseNotificationsReturn {
   notifications: Notification[]
@@ -34,7 +35,7 @@ export function useNotifications(): UseNotificationsReturn {
       setNotifications(data.notifications)
       setUnreadCount(data.unread_count)
     } catch (err) {
-      console.error('Erreur chargement notifications:', err)
+      logger.error('Erreur chargement notifications', err, { context: 'useNotifications' })
       setError('Impossible de charger les notifications')
     } finally {
       setLoading(false)
@@ -59,7 +60,7 @@ export function useNotifications(): UseNotificationsReturn {
       )
       setUnreadCount((prev) => Math.max(0, prev - 1))
     } catch (err) {
-      console.error('Erreur marquage notification:', err)
+      logger.error('Erreur marquage notification', err, { context: 'useNotifications' })
     }
   }, [])
 
@@ -71,7 +72,7 @@ export function useNotifications(): UseNotificationsReturn {
       )
       setUnreadCount(0)
     } catch (err) {
-      console.error('Erreur marquage toutes notifications:', err)
+      logger.error('Erreur marquage toutes notifications', err, { context: 'useNotifications' })
     }
   }, [])
 
@@ -86,7 +87,7 @@ export function useNotifications(): UseNotificationsReturn {
         return prev
       })
     } catch (err) {
-      console.error('Erreur suppression notification:', err)
+      logger.error('Erreur suppression notification', err, { context: 'useNotifications' })
     }
   }, [])
 

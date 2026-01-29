@@ -9,6 +9,7 @@
  */
 
 import api from './api'
+import { logger } from './logger'
 
 // Stockage en mémoire du token CSRF (non accessible via XSS)
 let csrfToken: string | null = null
@@ -54,27 +55,17 @@ export async function fetchCsrfToken(): Promise<string> {
       csrfToken = response.data.csrf_token
       return csrfToken
     } catch (error) {
-      // En cas d'erreur (endpoint non disponible), on génère un token côté client
-      // Ce token sera validé si le backend implémente aussi un cookie CSRF
-      console.warn('[CSRF] Endpoint /api/csrf-token non disponible, utilisation du fallback')
-      csrfToken = generateClientToken()
-      return csrfToken
+      // Ne PAS générer un token client-side factice : il ne serait pas validé
+      // par le backend et donnerait un faux sentiment de sécurité.
+      // Les requêtes mutables seront bloquées si le token n'est pas disponible.
+      logger.warn('[CSRF] Endpoint /api/csrf-token non disponible, requêtes mutables bloquées', error)
+      throw error
     } finally {
       csrfTokenPromise = null
     }
   })()
 
   return csrfTokenPromise
-}
-
-/**
- * Génère un token CSRF côté client comme fallback
- * Utilisé si le backend n'expose pas d'endpoint CSRF
- */
-function generateClientToken(): string {
-  const array = new Uint8Array(32)
-  crypto.getRandomValues(array)
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
 /**
