@@ -92,12 +92,13 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
         getDocument(selectedNotification.related_document_id),
         downloadDocument(selectedNotification.related_document_id),
       ])
-        .then(([doc, downloadData]) => {
+        .then(([doc, blob]) => {
+          const url = window.URL.createObjectURL(blob)
           setDocumentInfo({
             loading: false,
             error: null,
             document: doc,
-            downloadUrl: downloadData.url,
+            downloadUrl: url,
           })
         })
         .catch((err) => {
