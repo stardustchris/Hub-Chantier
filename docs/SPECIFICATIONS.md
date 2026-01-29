@@ -998,6 +998,30 @@ L'application mobile permet de consulter le planning, saisir les heures, remplir
 | Confidentiel | Conducteurs + Admin | Budgets, contrats, situations |
 | Secret | Admin uniquement | Documents RH, donnees sensibles |
 
+### 15.5 Validation qualite (29 janvier 2026)
+
+Audit complet du backend realise avec 7 agents de validation (4 rounds iteratifs).
+
+| Metrique | Resultat |
+|----------|----------|
+| Tests unitaires backend | 2932 pass, 0 fail, 0 xfail |
+| Couverture backend | 85% |
+| Findings CRITICAL | 0 |
+| Findings HIGH | 0 |
+| architect-reviewer | 8/10 PASS |
+| code-reviewer | 8/10 APPROVED |
+| security-auditor | 8/10 PASS (RGPD PASS, OWASP PASS) |
+
+Corrections appliquees :
+- Escalade de privileges via register endpoint (champ role supprime)
+- Path traversal incomplet (exists/move/copy proteges)
+- IDOR sur GET /users/{id} (controle d'acces ajoute)
+- Rate limiting bypassable via X-Forwarded-For (TRUSTED_PROXIES externalise)
+- SessionLocal() dans routes (toutes migrees vers Depends(get_db))
+- EventBus reecrit en API statique class-level
+- N+1 query elimine dans chantier_provider
+- 12 fichiers de tests ajoutes pour atteindre 85% couverture
+
 ---
 
 ## 16. GLOSSAIRE

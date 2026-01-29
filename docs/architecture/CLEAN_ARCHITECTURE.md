@@ -441,7 +441,49 @@ def test_login_endpoint(client: TestClient, test_user):
 4. **Compréhension** - Structure claire et prévisible
 5. **Indépendance** - L'équipe peut travailler en parallèle sur différentes couches
 
-## Références
+## Event Bus (Architecture evenementielle)
+
+Le systeme d'evenements utilise deux implementations complementaires :
+
+### EventBus statique (`shared/infrastructure/event_bus/__init__.py`)
+
+API class-level synchrone pour le code applicatif et les tests unitaires.
+
+```python
+class EventBus:
+    _subscribers: Dict[Type, List[Callable]]  # Keyed by event class type
+    _enabled: bool = True
+
+    @classmethod
+    def subscribe(cls, event_type: Type, handler: Callable) -> None
+    def unsubscribe(cls, event_type: Type, handler: Callable) -> None
+    def publish(cls, event) -> None      # Synchrone, error-isolated
+    def clear(cls) -> None               # Isolation tests
+    def enable(cls) / disable(cls)       # Toggle publication
+```
+
+### EventBus singleton (`shared/infrastructure/event_bus/event_bus.py`)
+
+Instance async avec pattern matching (wildcards `chantier.*`, `*`), historique
+et execution parallele (`asyncio.gather`). Utilisee via `Depends(get_event_bus)`.
+
+### Regles d'injection
+
+- Les routes FastAPI recoivent l'event bus via `Depends(get_event_bus)`.
+- **Jamais** de `SessionLocal()` dans les routes — toujours `Depends(get_db)`.
+- Les events sont publies **apres** le commit DB (controller first, then event).
+
+## Validation architecture (29 janvier 2026)
+
+Audit complet par l'agent `architect-reviewer` (4 rounds) :
+
+- **Score final** : 8/10 PASS
+- **Violations de layer** : 0
+- **Imports cross-module** : tous corriges (planning providers, event handlers)
+- **DI conforme** : 0 `SessionLocal()` dans les routes (toutes migrees vers `Depends(get_db)`)
+- **Tests** : 2932 pass, 0 fail, 85% couverture
+
+## References
 
 - Robert C. Martin, "Clean Architecture" (2017)
 - [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
