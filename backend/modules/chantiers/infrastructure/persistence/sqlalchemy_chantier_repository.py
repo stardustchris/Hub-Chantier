@@ -537,6 +537,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             coordonnees_gps=coordonnees_gps,
             photo_couverture=model.photo_couverture,
             contact=contact,
+            maitre_ouvrage=model.maitre_ouvrage,
             heures_estimees=model.heures_estimees,
             date_debut=model.date_debut,
             date_fin=model.date_fin,
@@ -579,6 +580,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             contact_telephone=(
                 chantier.contact.telephone if chantier.contact else None
             ),
+            maitre_ouvrage=chantier.maitre_ouvrage,
             heures_estimees=chantier.heures_estimees,
             date_debut=chantier.date_debut,
             date_fin=chantier.date_fin,

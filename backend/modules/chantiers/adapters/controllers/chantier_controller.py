@@ -79,6 +79,7 @@ class ChantierController:
             "photo_couverture": dto.photo_couverture,
             "contact": dto.contact,
             "contacts": contacts,
+            "maitre_ouvrage": dto.maitre_ouvrage,
             "heures_estimees": dto.heures_estimees,
             "date_debut": dto.date_debut,
             "date_fin": dto.date_fin,

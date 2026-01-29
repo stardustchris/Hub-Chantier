@@ -146,6 +146,7 @@ export interface Chantier {
   contact_telephone?: string  // Legacy
   contacts?: ContactChantier[]  // Multi-contacts
   phases?: PhaseChantier[]  // Phases du chantier
+  maitre_ouvrage?: string  // Maître d'ouvrage
   heures_estimees?: number
   date_debut_prevue?: string
   date_fin_prevue?: string

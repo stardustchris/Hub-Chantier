@@ -773,6 +773,7 @@ def seed_chantiers(db: Session, user_ids: dict) -> dict:
             longitude=chantier_data.get("longitude"),
             contact_nom=chantier_data.get("contact_nom"),
             contact_telephone=chantier_data.get("contact_telephone"),
+            maitre_ouvrage=chantier_data.get("contact_nom"),  # Utiliser contact_nom comme maître d'ouvrage
             heures_estimees=chantier_data.get("heures_estimees"),
             date_debut=chantier_data.get("date_debut"),
             date_fin=chantier_data.get("date_fin"),

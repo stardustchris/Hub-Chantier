@@ -34,6 +34,7 @@ class ChantierDTO:
     coordonnees_gps: Optional[dict]  # {"latitude": float, "longitude": float}
     photo_couverture: Optional[str]
     contact: Optional[dict]  # {"nom": str, "profession": str, "telephone": str} - legacy single contact
+    maitre_ouvrage: Optional[str]
     heures_estimees: Optional[float]
     date_debut: Optional[str]  # ISO format
     date_fin: Optional[str]  # ISO format
@@ -75,6 +76,7 @@ class ChantierDTO:
                 if chantier.contact
                 else None
             ),
+            maitre_ouvrage=chantier.maitre_ouvrage,
             heures_estimees=chantier.heures_estimees,
             date_debut=(
                 chantier.date_debut.isoformat()

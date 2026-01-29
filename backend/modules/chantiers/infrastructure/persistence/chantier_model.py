@@ -54,6 +54,9 @@ class ChantierModel(Base):
     contact_nom = Column(String(200), nullable=True)
     contact_telephone = Column(String(20), nullable=True)
 
+    # Maître d'ouvrage
+    maitre_ouvrage = Column(String(200), nullable=True)
+
     # Relation avec les phases (chantiers en plusieurs étapes) - utilise backref
     phases = relationship(
         "PhaseChantierModel",

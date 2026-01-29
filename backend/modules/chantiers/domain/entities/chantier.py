@@ -53,6 +53,7 @@ class Chantier:
     coordonnees_gps: Optional[CoordonneesGPS] = None
     photo_couverture: Optional[str] = None
     contact: Optional[ContactChantier] = None
+    maitre_ouvrage: Optional[str] = None
     heures_estimees: Optional[float] = None
     date_debut: Optional[date] = None
     date_fin: Optional[date] = None
