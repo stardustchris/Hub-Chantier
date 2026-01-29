@@ -50,8 +50,8 @@ export async function fetchCsrfToken(): Promise<string> {
   // Sinon, faire la requête
   csrfTokenPromise = (async () => {
     try {
-      // Le backend doit exposer cet endpoint
-      const response = await api.get<{ csrf_token: string }>('/api/csrf-token')
+      // Le backend expose cet endpoint sur /api/auth/csrf-token
+      const response = await api.get<{ csrf_token: string }>('/api/auth/csrf-token')
       csrfToken = response.data.csrf_token
       return csrfToken
     } catch (error) {

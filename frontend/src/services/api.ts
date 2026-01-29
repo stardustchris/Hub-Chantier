@@ -38,7 +38,7 @@ api.interceptors.request.use(async (config) => {
   if (config.method && requiresCsrf(config.method)) {
     // Exempter les endpoints d'authentification du CSRF (login initial, etc.)
     const url = config.url || ''
-    const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/csrf-token')
+    const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/csrf-token')
     if (!isAuthEndpoint) {
       let csrfToken = getCsrfToken()
       // Si pas de token CSRF, en récupérer un
@@ -53,7 +53,7 @@ api.interceptors.request.use(async (config) => {
 })
 
 // URLs à exclure de la logique de session expirée (authentification et vérifications)
-const AUTH_URLS = ['/api/auth/me', '/api/auth/login', '/api/auth/logout', '/api/csrf-token']
+const AUTH_URLS = ['/api/auth/me', '/api/auth/login', '/api/auth/logout', '/api/auth/csrf-token']
 
 // Compteur pour détecter les 401 répétés (évite déconnexion sur erreur transitoire)
 let consecutive401Count = 0

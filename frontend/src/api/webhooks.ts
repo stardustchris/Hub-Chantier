@@ -48,8 +48,8 @@ export const webhooksApi = {
    * @returns Liste des webhooks
    */
   async list(): Promise<Webhook[]> {
-    const response = await api.get<Webhook[]>('/api/v1/webhooks')
-    return response.data
+    const response = await api.get<{ total: number; webhooks: Webhook[] }>('/api/v1/webhooks')
+    return response.data.webhooks
   },
 
   /**
@@ -62,8 +62,29 @@ export const webhooksApi = {
    * @returns Webhook créé avec secret (une fois)
    */
   async create(data: CreateWebhookRequest): Promise<CreateWebhookResponse> {
-    const response = await api.post<CreateWebhookResponse>('/api/v1/webhooks', data)
-    return response.data
+    const response = await api.post<{
+      id: string
+      url: string
+      events: string[]
+      description?: string
+      secret: string
+      created_at: string
+    }>('/api/v1/webhooks', data)
+
+    // Transformer la réponse backend pour correspondre à l'interface frontend
+    return {
+      secret: response.data.secret,
+      webhook: {
+        id: response.data.id,
+        url: response.data.url,
+        events: response.data.events,
+        description: response.data.description,
+        is_active: true,
+        last_triggered_at: undefined,
+        consecutive_failures: 0,
+        created_at: response.data.created_at,
+      },
+    }
   },
 
   /**
@@ -92,10 +113,10 @@ export const webhooksApi = {
    * @returns Liste des deliveries
    */
   async deliveries(id: string, limit = 50): Promise<WebhookDelivery[]> {
-    const response = await api.get<WebhookDelivery[]>(
+    const response = await api.get<{ total: number; deliveries: WebhookDelivery[] }>(
       `/api/v1/webhooks/${id}/deliveries?limit=${limit}`
     )
-    return response.data
+    return response.data.deliveries
   },
 }
 
