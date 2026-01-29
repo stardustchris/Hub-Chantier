@@ -321,7 +321,6 @@ async def test_create_signalement_publishes_event():
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="Event publishing temporarily disabled in document_routes.py")
 async def test_upload_document_publishes_event():
     """Test that upload_document publishes DocumentUploadedEvent."""
     from modules.documents.infrastructure.web.document_routes import upload_document
@@ -368,7 +367,7 @@ async def test_upload_document_publishes_event():
         audit=mock_audit,
     )
 
-    # Verify event was published
+    # Verify event was published (synchronous call)
     assert mock_event_bus.publish.called
     published_event = mock_event_bus.publish.call_args[0][0]
 
@@ -379,7 +378,6 @@ async def test_upload_document_publishes_event():
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="Event publishing temporarily disabled in document_routes.py")
 async def test_upload_document_event_after_controller():
     """Test that DocumentUploadedEvent is published after controller.upload_document."""
     from modules.documents.infrastructure.web.document_routes import upload_document
@@ -390,12 +388,13 @@ async def test_upload_document_event_after_controller():
 
     def upload_with_tracking(*args, **kwargs):
         call_order.append("controller.upload_document")
-        return {
-            "id": 150,
-            "nom": "test.pdf",
-            "type_document": "pdf",
-            "chantier_id": 25,
-        }
+        result = Mock()
+        result.id = 150
+        result.nom = "test.pdf"
+        result.type_document = "pdf"
+        result.chantier_id = 25
+        result.taille = 512
+        return result
 
     mock_controller.upload_document = Mock(side_effect=upload_with_tracking)
 
@@ -432,7 +431,7 @@ async def test_upload_document_event_after_controller():
         audit=mock_audit,
     )
 
-    # Verify order: controller first (commits), then event
+    # Verify order: controller first (commits), then event (synchronous)
     assert call_order == ["controller.upload_document", "event_bus.publish"]
 
 
