@@ -17,7 +17,14 @@ export function useFeuillesHeures() {
 
   // État principal
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewTab, setViewTab] = useState<ViewTab>('compagnons')
+
+  // Lire l'onglet depuis l'URL au démarrage
+  const getInitialTab = (): ViewTab => {
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab') as ViewTab | null
+    return (tab && ['compagnons', 'chantiers'].includes(tab)) ? tab : 'compagnons'
+  }
+  const [viewTab, setViewTab] = useState<ViewTab>(getInitialTab())
 
   // Données
   const [vueCompagnons, setVueCompagnons] = useState<VueCompagnon[]>([])
@@ -129,6 +136,14 @@ export function useFeuillesHeures() {
   useEffect(() => {
     localStorage.setItem('timesheet-show-weekend', String(showWeekend))
   }, [showWeekend])
+
+  // Synchroniser l'onglet avec l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', viewTab)
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }, [viewTab])
 
   const handleCellClick = useCallback((utilisateurId: number, chantierId: number | null, date: Date) => {
     if (!canEdit) return

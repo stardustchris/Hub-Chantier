@@ -18,7 +18,14 @@ export function usePlanning() {
   // État principal
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<ViewMode>('semaine')
-  const [viewTab, setViewTab] = useState<ViewTab>('utilisateurs')
+
+  // Lire l'onglet depuis l'URL au démarrage
+  const getInitialTab = (): ViewTab => {
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab') as ViewTab | null
+    return (tab && ['utilisateurs', 'chantiers'].includes(tab)) ? tab : 'utilisateurs'
+  }
+  const [viewTab, setViewTab] = useState<ViewTab>(getInitialTab())
 
   // Données
   const [affectations, setAffectations] = useState<Affectation[]>([])
@@ -122,6 +129,14 @@ export function usePlanning() {
   useEffect(() => {
     localStorage.setItem('planning-show-weekend', String(showWeekend))
   }, [showWeekend])
+
+  // Synchroniser l'onglet avec l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', viewTab)
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }, [viewTab])
 
   // Filter affectations by chantier
   const filteredAffectations = useMemo(() => {

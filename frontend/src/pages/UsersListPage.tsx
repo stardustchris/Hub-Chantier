@@ -109,7 +109,24 @@ export default function UsersListPage() {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          {/* Bouton "Tous" - vue par défaut */}
+          <button
+            onClick={() => handleSetRoleFilter('')}
+            className={`card text-left transition-all ${
+              roleFilter === '' ? 'ring-2 ring-primary-500' : ''
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-gray-400" />
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                <p className="text-xs text-gray-500">Tous</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Boutons par rôle */}
           {(Object.entries(ROLES) as [UserRole, typeof ROLES[UserRole]][]).map(([role, info]) => (
             <button
               key={role}
