@@ -31,7 +31,7 @@ export interface ReservationCalendarProps {
   /** Ressource dont on affiche le planning */
   ressource: Ressource
   /** Callback appelé lors du clic sur une cellule vide pour créer une réservation */
-  onCreateReservation?: (date: string, heureDebut: string, heureFin: string) => void
+  onCreateReservation?: (date: string, heureDebut: string, heureFin: string, ressource: Ressource) => void
   /** Callback appelé lors du clic sur une réservation existante */
   onSelectReservation?: (reservation: Reservation) => void
 }
@@ -136,7 +136,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
     const dateStr = planning.jours[dayIndex]
     const heureDebut = heure
     const heureFin = `${String(parseInt(heure.split(':')[0]) + 1).padStart(2, '0')}:00`
-    onCreateReservation(dateStr, heureDebut, heureFin)
+    onCreateReservation(dateStr, heureDebut, heureFin, ressource)
   }
 
   const formatDayHeader = (dayIndex: number): { day: string; date: string } => {
@@ -260,7 +260,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
                           </div>
                         ))}
                         {!hasReservation && onCreateReservation && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
                             <Plus size={16} className="text-blue-500" />
                           </div>
                         )}

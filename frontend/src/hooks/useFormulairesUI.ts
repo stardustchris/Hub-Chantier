@@ -57,8 +57,12 @@ export interface UseFormulairesUIReturn {
 export function useFormulairesUI(): UseFormulairesUIReturn {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>('formulaires')
+  // Tab state - lire depuis l'URL au démarrage
+  const getInitialTab = (): TabType => {
+    const tab = searchParams.get('tab')
+    return (tab === 'templates' || tab === 'formulaires') ? tab : 'formulaires'
+  }
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
 
   // Selection state
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateFormulaire | null>(null)

@@ -46,7 +46,13 @@ export default function ChantierDetailPage() {
   const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | 'ouvrier' | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
-  const [activeTab, setActiveTab] = useState<TabType>('infos')
+  // Tab state - lire depuis l'URL au démarrage
+  const getInitialTab = (): TabType => {
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab') as TabType | null
+    return (tab && ['infos', 'documents', 'taches', 'planning'].includes(tab)) ? tab : 'infos'
+  }
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
   const [planningAffectations, setPlanningAffectations] = useState<Affectation[]>([])
 
   const isAdmin = currentUser?.role === 'admin'
@@ -103,6 +109,14 @@ export default function ChantierDetailPage() {
       loadPlanningUsers()
     }
   }, [id])
+
+  // Synchroniser l'onglet actif avec l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', activeTab)
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }, [activeTab])
 
   const loadNavigation = async () => {
     try {

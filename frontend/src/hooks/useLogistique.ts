@@ -49,7 +49,7 @@ interface UseLogistiqueReturn {
 
   // Actions
   handleSelectRessource: (ressource: Ressource) => void
-  handleCreateReservation: (date: string, heureDebut: string, heureFin: string) => void
+  handleCreateReservation: (date: string, heureDebut: string, heureFin: string, ressource?: Ressource) => void
   handleSelectReservation: (reservation: Reservation) => void
   handleSelectPendingReservation: (reservation: Reservation) => Promise<void>
   handleModalClose: () => void
@@ -66,8 +66,13 @@ export function useLogistique(): UseLogistiqueReturn {
   const isAdmin = user?.role === 'admin'
   const canValidate = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>('ressources')
+  // Tab state - lire depuis l'URL au démarrage
+  const getInitialTab = (): TabType => {
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab') as TabType | null
+    return (tab && ['ressources', 'planning', 'en-attente'].includes(tab)) ? tab : 'ressources'
+  }
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
 
   // Data state
   const [chantiers, setChantiers] = useState<Chantier[]>([])
@@ -84,6 +89,14 @@ export function useLogistique(): UseLogistiqueReturn {
     heureDebut?: string
     heureFin?: string
   }>({})
+
+  // Synchroniser l'onglet actif avec l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', activeTab)
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }, [activeTab])
 
   // Load chantiers
   const loadChantiers = useCallback(async () => {
@@ -120,9 +133,13 @@ export function useLogistique(): UseLogistiqueReturn {
   }, [])
 
   // Handle create reservation (from calendar click)
-  const handleCreateReservation = useCallback((date: string, heureDebut: string, heureFin: string) => {
+  const handleCreateReservation = useCallback((date: string, heureDebut: string, heureFin: string, ressource?: Ressource) => {
     setModalInitialData({ date, heureDebut, heureFin })
     setSelectedReservation(null)
+    // Si une ressource est passée (depuis la vue "Toutes les ressources"), la sélectionner
+    if (ressource) {
+      setSelectedRessource(ressource)
+    }
     setShowModal(true)
   }, [])
 
