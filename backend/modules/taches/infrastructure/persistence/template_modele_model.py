@@ -115,7 +115,7 @@ class SousTacheModeleModel(Base):
     __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    template_id = Column(Integer, ForeignKey("templates_modeles.id"), nullable=False)
+    template_id = Column(Integer, ForeignKey("templates_modeles.id", ondelete="CASCADE"), nullable=False)
     titre = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     ordre = Column(Integer, nullable=False, default=0)

@@ -27,20 +27,20 @@ class AffectationModel(Base):
     # Relations (references vers autres tables)
     utilisateur_id = Column(
         Integer,
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     chantier_id = Column(
         Integer,
-        ForeignKey("chantiers.id"),
+        ForeignKey("chantiers.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     created_by = Column(
         Integer,
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     # Date de l'affectation

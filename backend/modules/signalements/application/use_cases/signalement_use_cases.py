@@ -75,46 +75,7 @@ class CreateSignalementUseCase:
 
         signalement = self._signalement_repo.save(signalement)
 
-        return self._to_dto(signalement)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, get_user_name=self._get_user_name)
 
 
 class GetSignalementUseCase:
@@ -149,46 +110,7 @@ class GetSignalementUseCase:
 
         nb_reponses = self._reponse_repo.count_by_signalement(signalement_id)
 
-        return self._to_dto(signalement, nb_reponses)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, nb_reponses, self._get_user_name)
 
 
 class ListSignalementsUseCase:
@@ -236,52 +158,13 @@ class ListSignalementsUseCase:
         dtos = []
         for sig in signalements:
             nb_reponses = self._reponse_repo.count_by_signalement(sig.id)  # type: ignore
-            dtos.append(self._to_dto(sig, nb_reponses))
+            dtos.append(SignalementDTO.from_entity(sig, nb_reponses, self._get_user_name))
 
         return SignalementListDTO(
             signalements=dtos,
             total=total,
             skip=skip,
             limit=limit,
-        )
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
         )
 
 
@@ -349,52 +232,13 @@ class SearchSignalementsUseCase:
         dtos = []
         for sig in signalements:
             nb_reponses = self._reponse_repo.count_by_signalement(sig.id)  # type: ignore
-            dtos.append(self._to_dto(sig, nb_reponses))
+            dtos.append(SignalementDTO.from_entity(sig, nb_reponses, self._get_user_name))
 
         return SignalementListDTO(
             signalements=dtos,
             total=total,
             skip=search_dto.skip,
             limit=search_dto.limit,
-        )
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
         )
 
 
@@ -465,46 +309,7 @@ class UpdateSignalementUseCase:
         signalement = self._signalement_repo.save(signalement)
         nb_reponses = self._reponse_repo.count_by_signalement(signalement_id)
 
-        return self._to_dto(signalement, nb_reponses)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, nb_reponses, self._get_user_name)
 
 
 class DeleteSignalementUseCase:
@@ -599,46 +404,7 @@ class AssignerSignalementUseCase:
         signalement = self._signalement_repo.save(signalement)
         nb_reponses = self._reponse_repo.count_by_signalement(signalement_id)
 
-        return self._to_dto(signalement, nb_reponses)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, nb_reponses, self._get_user_name)
 
 
 class MarquerTraiteUseCase:
@@ -687,46 +453,7 @@ class MarquerTraiteUseCase:
         signalement = self._signalement_repo.save(signalement)
         nb_reponses = self._reponse_repo.count_by_signalement(signalement_id)
 
-        return self._to_dto(signalement, nb_reponses)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, nb_reponses, self._get_user_name)
 
 
 class CloturerSignalementUseCase:
@@ -777,46 +504,7 @@ class CloturerSignalementUseCase:
         signalement = self._signalement_repo.save(signalement)
         nb_reponses = self._reponse_repo.count_by_signalement(signalement_id)
 
-        return self._to_dto(signalement, nb_reponses)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, nb_reponses, self._get_user_name)
 
 
 class ReouvrirsignalementUseCase:
@@ -868,46 +556,7 @@ class ReouvrirsignalementUseCase:
         signalement = self._signalement_repo.save(signalement)
         nb_reponses = self._reponse_repo.count_by_signalement(signalement_id)
 
-        return self._to_dto(signalement, nb_reponses)
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
-        )
+        return SignalementDTO.from_entity(signalement, nb_reponses, self._get_user_name)
 
 
 class GetStatistiquesUseCase:
@@ -985,50 +634,11 @@ class GetSignalementsEnRetardUseCase:
         dtos = []
         for sig in signalements:
             nb_reponses = self._reponse_repo.count_by_signalement(sig.id)  # type: ignore
-            dtos.append(self._to_dto(sig, nb_reponses))
+            dtos.append(SignalementDTO.from_entity(sig, nb_reponses, self._get_user_name))
 
         return SignalementListDTO(
             signalements=dtos,
             total=len(dtos),
             skip=skip,
             limit=limit,
-        )
-
-    def _to_dto(self, sig: Signalement, nb_reponses: int = 0) -> SignalementDTO:
-        """Convertit une entité en DTO."""
-        cree_par_nom = None
-        assigne_a_nom = None
-        if self._get_user_name:
-            cree_par_nom = self._get_user_name(sig.cree_par)
-            if sig.assigne_a:
-                assigne_a_nom = self._get_user_name(sig.assigne_a)
-
-        return SignalementDTO(
-            id=sig.id,  # type: ignore
-            chantier_id=sig.chantier_id,
-            titre=sig.titre,
-            description=sig.description,
-            priorite=sig.priorite.value,
-            priorite_label=sig.priorite.label,
-            priorite_couleur=sig.priorite.couleur,
-            statut=sig.statut.value,
-            statut_label=sig.statut.label,
-            statut_couleur=sig.statut.couleur,
-            cree_par=sig.cree_par,
-            cree_par_nom=cree_par_nom,
-            assigne_a=sig.assigne_a,
-            assigne_a_nom=assigne_a_nom,
-            date_resolution_souhaitee=sig.date_resolution_souhaitee,
-            date_traitement=sig.date_traitement,
-            date_cloture=sig.date_cloture,
-            commentaire_traitement=sig.commentaire_traitement,
-            photo_url=sig.photo_url,
-            localisation=sig.localisation,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at,
-            est_en_retard=sig.est_en_retard,
-            temps_restant=sig.temps_restant_formatte if not sig.statut.est_resolu else None,
-            pourcentage_temps=sig.pourcentage_temps_ecoule,
-            nb_reponses=nb_reponses,
-            nb_escalades=sig.nb_escalades,
         )

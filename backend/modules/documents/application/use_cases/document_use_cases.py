@@ -1,5 +1,6 @@
 """Use Cases pour la gestion des documents."""
 
+import mimetypes
 from typing import Optional, BinaryIO
 
 from ..dtos import (
@@ -50,6 +51,14 @@ class AccessDeniedError(Exception):
     """Erreur levée quand l'accès est refusé."""
 
     pass
+
+
+ALLOWED_EXTENSIONS = {
+    "pdf", "png", "jpg", "jpeg", "gif", "webp",
+    "xls", "xlsx", "doc", "docx",
+    "mp4", "webm", "mov",
+    "txt", "csv",
+}
 
 
 class UploadDocumentUseCase:
@@ -112,9 +121,19 @@ class UploadDocumentUseCase:
             raise FileTooLargeError("Le fichier dépasse la limite de 10 Go")
 
         # Valider l'extension (GED-12)
-        extension = filename.rsplit(".", 1)[-1] if "." in filename else ""
-        if extension and not Document.valider_extension(extension):
+        extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        if not extension or extension not in ALLOWED_EXTENSIONS:
             raise InvalidFileTypeError(f"Type de fichier non supporté: .{extension}")
+
+        # Valider la cohérence MIME type / extension
+        guessed_type, _ = mimetypes.guess_type(filename)
+        if guessed_type and mime_type != "application/octet-stream":
+            # Vérifier que le MIME déclaré est cohérent avec l'extension
+            expected_type, _ = mimetypes.guess_type(f"file.{extension}")
+            if expected_type and guessed_type != mime_type and expected_type != mime_type:
+                raise InvalidFileTypeError(
+                    f"Le type MIME '{mime_type}' ne correspond pas à l'extension '.{extension}'"
+                )
 
         # Vérifier que le dossier existe
         dossier = self._dossier_repo.find_by_id(dossier_id)
@@ -156,29 +175,7 @@ class UploadDocumentUseCase:
         # Persister
         document = self._document_repo.save(document)
 
-        return self._to_dto(document)
-
-    def _to_dto(self, document: Document, uploaded_by_nom: Optional[str] = None) -> DocumentDTO:
-        """Convertit une entité en DTO."""
-        return DocumentDTO(
-            id=document.id,  # type: ignore
-            chantier_id=document.chantier_id,
-            dossier_id=document.dossier_id,
-            nom=document.nom,
-            nom_original=document.nom_original,
-            type_document=document.type_document.value,
-            taille=document.taille,
-            taille_formatee=document.taille_formatee,
-            mime_type=document.mime_type,
-            uploaded_by=document.uploaded_by,
-            uploaded_by_nom=uploaded_by_nom,
-            uploaded_at=document.uploaded_at,
-            description=document.description,
-            version=document.version,
-            icone=document.icone,
-            extension=document.extension,
-            niveau_acces=document.niveau_acces.value if document.niveau_acces else None,
-        )
+        return DocumentDTO.from_entity(document)
 
 
 class GetDocumentUseCase:
@@ -205,25 +202,7 @@ class GetDocumentUseCase:
         if not document:
             raise DocumentNotFoundError(f"Document {document_id} non trouvé")
 
-        return DocumentDTO(
-            id=document.id,  # type: ignore
-            chantier_id=document.chantier_id,
-            dossier_id=document.dossier_id,
-            nom=document.nom,
-            nom_original=document.nom_original,
-            type_document=document.type_document.value,
-            taille=document.taille,
-            taille_formatee=document.taille_formatee,
-            mime_type=document.mime_type,
-            uploaded_by=document.uploaded_by,
-            uploaded_by_nom=None,
-            uploaded_at=document.uploaded_at,
-            description=document.description,
-            version=document.version,
-            icone=document.icone,
-            extension=document.extension,
-            niveau_acces=document.niveau_acces.value if document.niveau_acces else None,
-        )
+        return DocumentDTO.from_entity(document)
 
 
 class ListDocumentsUseCase:
@@ -251,28 +230,7 @@ class ListDocumentsUseCase:
         total = self._document_repo.count_by_dossier(dossier_id)
 
         return DocumentListDTO(
-            documents=[
-                DocumentDTO(
-                    id=d.id,  # type: ignore
-                    chantier_id=d.chantier_id,
-                    dossier_id=d.dossier_id,
-                    nom=d.nom,
-                    nom_original=d.nom_original,
-                    type_document=d.type_document.value,
-                    taille=d.taille,
-                    taille_formatee=d.taille_formatee,
-                    mime_type=d.mime_type,
-                    uploaded_by=d.uploaded_by,
-                    uploaded_by_nom=None,
-                    uploaded_at=d.uploaded_at,
-                    description=d.description,
-                    version=d.version,
-                    icone=d.icone,
-                    extension=d.extension,
-                    niveau_acces=d.niveau_acces.value if d.niveau_acces else None,
-                )
-                for d in documents
-            ],
+            documents=[DocumentDTO.from_entity(d) for d in documents],
             total=total,
             skip=skip,
             limit=limit,
@@ -313,28 +271,7 @@ class SearchDocumentsUseCase:
         )
 
         return DocumentListDTO(
-            documents=[
-                DocumentDTO(
-                    id=d.id,  # type: ignore
-                    chantier_id=d.chantier_id,
-                    dossier_id=d.dossier_id,
-                    nom=d.nom,
-                    nom_original=d.nom_original,
-                    type_document=d.type_document.value,
-                    taille=d.taille,
-                    taille_formatee=d.taille_formatee,
-                    mime_type=d.mime_type,
-                    uploaded_by=d.uploaded_by,
-                    uploaded_by_nom=None,
-                    uploaded_at=d.uploaded_at,
-                    description=d.description,
-                    version=d.version,
-                    icone=d.icone,
-                    extension=d.extension,
-                    niveau_acces=d.niveau_acces.value if d.niveau_acces else None,
-                )
-                for d in documents
-            ],
+            documents=[DocumentDTO.from_entity(d) for d in documents],
             total=total,
             skip=search_dto.skip,
             limit=search_dto.limit,
@@ -392,25 +329,7 @@ class UpdateDocumentUseCase:
 
         document = self._document_repo.save(document)
 
-        return DocumentDTO(
-            id=document.id,  # type: ignore
-            chantier_id=document.chantier_id,
-            dossier_id=document.dossier_id,
-            nom=document.nom,
-            nom_original=document.nom_original,
-            type_document=document.type_document.value,
-            taille=document.taille,
-            taille_formatee=document.taille_formatee,
-            mime_type=document.mime_type,
-            uploaded_by=document.uploaded_by,
-            uploaded_by_nom=None,
-            uploaded_at=document.uploaded_at,
-            description=document.description,
-            version=document.version,
-            icone=document.icone,
-            extension=document.extension,
-            niveau_acces=document.niveau_acces.value if document.niveau_acces else None,
-        )
+        return DocumentDTO.from_entity(document)
 
 
 class DeleteDocumentUseCase:

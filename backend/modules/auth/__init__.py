@@ -11,6 +11,16 @@ Usage:
     app.include_router(router, prefix="/api")
 """
 
-from .infrastructure.web import router
+# NE PAS importer router ici au top-level pour eviter de charger
+# toute la chaine infrastructure (jose -> cryptography) quand seul
+# le domain est necessaire (ex: tests unitaires).
+# Le router est importe directement dans main.py via:
+#   from modules.auth.infrastructure.web import router
 
-__all__ = ["router"]
+
+def __getattr__(name):
+    """Import paresseux pour eviter le chargement de l'infrastructure au top-level."""
+    if name == "router":
+        from .infrastructure.web import router
+        return router
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

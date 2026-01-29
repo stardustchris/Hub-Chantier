@@ -13,11 +13,11 @@ class DossierModel(Base):
     __tablename__ = "dossiers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    chantier_id = Column(Integer, ForeignKey("chantiers.id"), nullable=False, index=True)
+    chantier_id = Column(Integer, ForeignKey("chantiers.id", ondelete="CASCADE"), nullable=False, index=True)
     nom = Column(String(255), nullable=False)
     type_dossier = Column(String(50), nullable=False, default="custom")
     niveau_acces = Column(String(50), nullable=False, default="compagnon")
-    parent_id = Column(Integer, ForeignKey("dossiers.id"), nullable=True)
+    parent_id = Column(Integer, ForeignKey("dossiers.id", ondelete="SET NULL"), nullable=True)
     ordre = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
@@ -36,8 +36,8 @@ class DocumentModel(Base):
     __tablename__ = "documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    chantier_id = Column(Integer, ForeignKey("chantiers.id"), nullable=False, index=True)
-    dossier_id = Column(Integer, ForeignKey("dossiers.id"), nullable=False, index=True)
+    chantier_id = Column(Integer, ForeignKey("chantiers.id", ondelete="CASCADE"), nullable=False, index=True)
+    dossier_id = Column(Integer, ForeignKey("dossiers.id", ondelete="SET NULL"), nullable=True, index=True)
     nom = Column(String(255), nullable=False)
     nom_original = Column(String(255), nullable=False)
     type_document = Column(String(50), nullable=False, default="autre")
@@ -45,7 +45,7 @@ class DocumentModel(Base):
     chemin_stockage = Column(String(500), nullable=False)
     mime_type = Column(String(100), nullable=False)
     niveau_acces = Column(String(50), nullable=True)
-    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     description = Column(Text, nullable=True)
     version = Column(Integer, nullable=False, default=1)
     uploaded_at = Column(DateTime, nullable=False, default=datetime.now)
@@ -64,11 +64,11 @@ class AutorisationDocumentModel(Base):
     __tablename__ = "autorisations_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     type_autorisation = Column(String(50), nullable=False)
-    dossier_id = Column(Integer, ForeignKey("dossiers.id"), nullable=True, index=True)
-    document_id = Column(Integer, ForeignKey("documents.id"), nullable=True, index=True)
-    accorde_par = Column(Integer, ForeignKey("users.id"), nullable=False)
+    dossier_id = Column(Integer, ForeignKey("dossiers.id", ondelete="CASCADE"), nullable=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=True, index=True)
+    accorde_par = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     expire_at = Column(DateTime, nullable=True)
 

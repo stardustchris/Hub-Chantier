@@ -43,7 +43,7 @@ class FormulaireRempliModel(Base):
     __tablename__ = "formulaires_remplis"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    template_id: Mapped[int] = mapped_column(ForeignKey("templates_formulaire.id"))
+    template_id: Mapped[Optional[int]] = mapped_column(ForeignKey("templates_formulaire.id", ondelete="SET NULL"), nullable=True)
     chantier_id: Mapped[int] = mapped_column(Integer)
     user_id: Mapped[int] = mapped_column(Integer)
     statut: Mapped[str] = mapped_column(String(50), default="brouillon")
@@ -66,7 +66,7 @@ class FormulaireRempliModel(Base):
 
     # Historique (FOR-08)
     version: Mapped[int] = mapped_column(default=1)
-    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("formulaires_remplis.id"), nullable=True)
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("formulaires_remplis.id", ondelete="SET NULL"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)

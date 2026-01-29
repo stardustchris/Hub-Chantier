@@ -253,6 +253,24 @@ def get_is_moderator(
     return current_user_role in moderator_roles
 
 
+def require_admin_or_conducteur(
+    current_user_role: str = Depends(get_current_user_role),
+) -> str:
+    """
+    Vérifie que l'utilisateur connecté est admin ou conducteur.
+
+    Raises:
+        HTTPException 403: Si l'utilisateur n'a pas les droits suffisants.
+    """
+    admin_roles = {"admin", "conducteur"}
+    if current_user_role not in admin_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Droits insuffisants. Rôle admin ou conducteur requis.",
+        )
+    return current_user_role
+
+
 def get_current_user(
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),

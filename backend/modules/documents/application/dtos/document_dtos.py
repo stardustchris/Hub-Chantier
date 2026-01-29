@@ -1,8 +1,13 @@
 """DTOs pour les documents."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...domain.entities import Document
 
 
 @dataclass
@@ -26,6 +31,41 @@ class DocumentDTO:
     icone: str
     extension: str
     niveau_acces: Optional[str]
+
+    @classmethod
+    def from_entity(
+        cls,
+        entity: Document,
+        uploaded_by_nom: Optional[str] = None,
+    ) -> DocumentDTO:
+        """Convertit une entité Document en DTO.
+
+        Args:
+            entity: L'entité Document source.
+            uploaded_by_nom: Nom de l'utilisateur ayant uploadé (optionnel).
+
+        Returns:
+            Le DTO correspondant.
+        """
+        return cls(
+            id=entity.id,  # type: ignore
+            chantier_id=entity.chantier_id,
+            dossier_id=entity.dossier_id,
+            nom=entity.nom,
+            nom_original=entity.nom_original,
+            type_document=entity.type_document.value,
+            taille=entity.taille,
+            taille_formatee=entity.taille_formatee,
+            mime_type=entity.mime_type,
+            uploaded_by=entity.uploaded_by,
+            uploaded_by_nom=uploaded_by_nom,
+            uploaded_at=entity.uploaded_at,
+            description=entity.description,
+            version=entity.version,
+            icone=entity.icone,
+            extension=entity.extension,
+            niveau_acces=entity.niveau_acces.value if entity.niveau_acces else None,
+        )
 
 
 @dataclass

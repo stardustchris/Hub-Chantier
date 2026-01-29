@@ -12,6 +12,8 @@ from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from shared.infrastructure.config import settings
+
 
 class CSRFMiddleware(BaseHTTPMiddleware):
     """
@@ -30,6 +32,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS = {
         "/api/auth/login",
         "/api/auth/register",
+        "/api/auth/consents",
         "/docs",
         "/redoc",
         "/openapi.json",
@@ -113,7 +116,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             key="csrf_token",
             value=csrf_token,
             httponly=False,  # Doit être accessible en JavaScript
-            secure=False,    # HTTPS uniquement en production (False en dev)
+            secure=settings.COOKIE_SECURE,  # HTTPS uniquement en production
             samesite="lax",  # "strict" bloque certains POST, "lax" est plus permissif
             max_age=3600,    # 1 heure
         )

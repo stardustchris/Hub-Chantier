@@ -10,10 +10,14 @@ import hashlib
 import os
 from typing import Optional
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
 from sqlalchemy import TypeDecorator, String
+
+
+def _get_cipher_modules():
+    """Import paresseux des modules cryptography pour eviter le crash au chargement."""
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    return Cipher, algorithms, modes, default_backend
 
 
 class EncryptionService:
@@ -60,6 +64,7 @@ class EncryptionService:
         nonce = os.urandom(self.NONCE_SIZE)
 
         # Cree le cipher AES-256-GCM
+        Cipher, algorithms, modes, default_backend = _get_cipher_modules()
         cipher = Cipher(
             algorithms.AES(self._key),
             modes.GCM(nonce),
@@ -100,6 +105,7 @@ class EncryptionService:
             ciphertext = data[self.NONCE_SIZE : -self.TAG_SIZE]
 
             # Cree le cipher pour dechiffrement
+            Cipher, algorithms, modes, default_backend = _get_cipher_modules()
             cipher = Cipher(
                 algorithms.AES(self._key),
                 modes.GCM(nonce, tag),

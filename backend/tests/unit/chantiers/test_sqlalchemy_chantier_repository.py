@@ -41,6 +41,7 @@ class TestFindById:
 
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = mock_model
 
@@ -56,6 +57,7 @@ class TestFindById:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = None
 
@@ -96,6 +98,7 @@ class TestFindByCode:
 
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = mock_model
 
@@ -149,6 +152,7 @@ class TestFindAll:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.offset.return_value = mock_query
@@ -187,6 +191,7 @@ class TestFindByStatut:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.offset.return_value = mock_query
@@ -207,6 +212,7 @@ class TestFindActive:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.offset.return_value = mock_query
@@ -227,6 +233,7 @@ class TestFindByConducteur:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.join.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
@@ -248,6 +255,7 @@ class TestFindByChefChantier:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.join.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
@@ -358,6 +366,7 @@ class TestSearch:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.offset.return_value = mock_query
@@ -374,6 +383,7 @@ class TestSearch:
         mock_session = Mock()
         mock_query = Mock()
         mock_session.query.return_value = mock_query
+        mock_query.options.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.offset.return_value = mock_query

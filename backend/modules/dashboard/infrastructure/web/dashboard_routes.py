@@ -463,6 +463,8 @@ def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
     """
     Charge les données utilisateur depuis la DB pour un ensemble d'IDs.
 
+    Uses shared user_queries helpers to avoid importing UserModel from auth module.
+
     Args:
         user_ids: Liste des IDs utilisateurs à charger.
 
@@ -472,26 +474,23 @@ def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
     if not user_ids:
         return {}
 
-    from modules.auth.infrastructure.persistence.user_model import UserModel
+    from shared.infrastructure.user_queries import get_users_basic_info_by_ids
 
     db = SessionLocal()
     try:
-        # Utiliser l'ORM SQLAlchemy pour éviter l'injection SQL
-        users_query = db.query(UserModel).filter(
-            UserModel.id.in_(set(user_ids))
-        ).all()
+        raw_users = get_users_basic_info_by_ids(db, list(user_ids))
 
         users = {}
-        for user in users_query:
-            users[user.id] = {
-                "id": str(user.id),
-                "email": user.email or "",
-                "nom": user.nom or "",
-                "prenom": user.prenom or "",
-                "role": user.role or "compagnon",
-                "type_utilisateur": user.type_utilisateur or "employe",
-                "is_active": bool(user.is_active),
-                "couleur": user.couleur or "",
+        for uid, u in raw_users.items():
+            users[uid] = {
+                "id": str(u["id"]),
+                "email": u.get("email") or "",
+                "nom": u.get("nom") or "",
+                "prenom": u.get("prenom") or "",
+                "role": u.get("role") or "compagnon",
+                "type_utilisateur": u.get("type_utilisateur") or "employe",
+                "is_active": u.get("is_active", False),
+                "couleur": u.get("couleur") or "",
             }
         return users
     finally:

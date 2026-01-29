@@ -75,7 +75,9 @@ class LocalFileStorageService(FileStorageService):
 
     def delete(self, chemin_stockage: str) -> bool:
         """Supprime un fichier."""
-        file_path = self._base_path / chemin_stockage
+        file_path = self._validate_path(chemin_stockage)
+        if not file_path:
+            return False
         if file_path.exists():
             file_path.unlink()
             return True
@@ -83,7 +85,9 @@ class LocalFileStorageService(FileStorageService):
 
     def get(self, chemin_stockage: str) -> Optional[BinaryIO]:
         """Récupère le contenu d'un fichier."""
-        file_path = self._base_path / chemin_stockage
+        file_path = self._validate_path(chemin_stockage)
+        if not file_path:
+            return None
         if file_path.exists():
             return open(file_path, "rb")
         return None
