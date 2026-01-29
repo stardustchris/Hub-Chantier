@@ -32,8 +32,9 @@ from .dependencies import (
     get_remove_like_use_case,
 )
 from shared.infrastructure.web import get_current_user_id, get_is_moderator, get_current_user_chantier_ids
-from shared.infrastructure.database import SessionLocal
+from shared.infrastructure.database import get_db
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -141,6 +142,7 @@ class CreateCommentRequest(BaseModel):
 def get_feed(
     page: int = Query(default=1, ge=1, description="Numéro de page"),
     size: int = Query(default=20, ge=1, le=100, description="Nombre d'éléments par page"),
+    db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
     user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
     use_case: GetFeedUseCase = Depends(get_feed_use_case),
@@ -168,7 +170,7 @@ def get_feed(
 
     # Charger les données utilisateur pour tous les auteurs des posts
     author_ids = list({p.author_id for p in result.posts})
-    users_cache = _load_users_by_ids(author_ids)
+    users_cache = _load_users_by_ids(author_ids, db)
 
     # Convertir au format frontend
     total = result.total
@@ -186,6 +188,7 @@ def get_feed(
 @router.post("/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 def create_post(
     request: CreatePostRequest,
+    db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
     use_case: PublishPostUseCase = Depends(get_publish_post_use_case),
 ):
@@ -221,7 +224,7 @@ def create_post(
             is_urgent=request.is_urgent or request.type == "urgent",
         )
         result = use_case.execute(dto, author_id=current_user_id)
-        users_cache = _load_users_by_ids([current_user_id])
+        users_cache = _load_users_by_ids([current_user_id], db)
         return _post_dto_to_frontend_response(result, users_cache=users_cache)
 
     except PostContentEmptyError as e:
@@ -239,6 +242,7 @@ def create_post(
 @router.get("/posts/{post_id}", response_model=PostResponse)
 def get_post(
     post_id: int,
+    db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
     use_case: GetPostUseCase = Depends(get_post_use_case),
 ):
@@ -251,7 +255,7 @@ def get_post(
             all_user_ids.extend(c.author_id for c in result.comments)
         if result.liked_by_user_ids:
             all_user_ids.extend(result.liked_by_user_ids)
-        users_cache = _load_users_by_ids(all_user_ids)
+        users_cache = _load_users_by_ids(all_user_ids, db)
         return _post_dto_to_frontend_response(
             result.post, result.medias, result.comments,
             result.liked_by_user_ids, users_cache=users_cache
@@ -459,7 +463,7 @@ def unlike_post(
 # =============================================================================
 
 
-def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
+def _load_users_by_ids(user_ids: list[int], db: Session) -> dict[int, dict]:
     """
     Charge les données utilisateur depuis la DB pour un ensemble d'IDs.
 
@@ -467,6 +471,7 @@ def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
 
     Args:
         user_ids: Liste des IDs utilisateurs à charger.
+        db: Session SQLAlchemy injectée par le route handler.
 
     Returns:
         Dictionnaire {user_id: données_utilisateur}.
@@ -476,25 +481,21 @@ def _load_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
 
     from shared.infrastructure.user_queries import get_users_basic_info_by_ids
 
-    db = SessionLocal()
-    try:
-        raw_users = get_users_basic_info_by_ids(db, list(user_ids))
+    raw_users = get_users_basic_info_by_ids(db, list(user_ids))
 
-        users = {}
-        for uid, u in raw_users.items():
-            users[uid] = {
-                "id": str(u["id"]),
-                "email": u.get("email") or "",
-                "nom": u.get("nom") or "",
-                "prenom": u.get("prenom") or "",
-                "role": u.get("role") or "compagnon",
-                "type_utilisateur": u.get("type_utilisateur") or "employe",
-                "is_active": u.get("is_active", False),
-                "couleur": u.get("couleur") or "",
-            }
-        return users
-    finally:
-        db.close()
+    users = {}
+    for uid, u in raw_users.items():
+        users[uid] = {
+            "id": str(u["id"]),
+            "email": u.get("email") or "",
+            "nom": u.get("nom") or "",
+            "prenom": u.get("prenom") or "",
+            "role": u.get("role") or "compagnon",
+            "type_utilisateur": u.get("type_utilisateur") or "employe",
+            "is_active": u.get("is_active", False),
+            "couleur": u.get("couleur") or "",
+        }
+    return users
 
 
 def _get_user_summary(user_id: int, users_cache: dict[int, dict] | None = None) -> UserSummary:
