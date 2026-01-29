@@ -35,6 +35,8 @@ def get_user_id_by_email_or_name(db, identifier: str) -> int | None:
     """
     Trouve l'ID d'un utilisateur par son email ou nom.
 
+    Uses shared user_queries helper to avoid importing UserModel from auth module.
+
     Args:
         db: Session de base de donnees.
         identifier: Email ou nom d'utilisateur.
@@ -42,16 +44,9 @@ def get_user_id_by_email_or_name(db, identifier: str) -> int | None:
     Returns:
         ID de l'utilisateur ou None.
     """
-    from modules.auth.infrastructure.persistence import UserModel
+    from shared.infrastructure.user_queries import find_user_id_by_email_or_name
 
-    # Chercher par email complet ou partiel
-    user = db.query(UserModel).filter(
-        (UserModel.email.ilike(f"{identifier}%")) |
-        (UserModel.nom.ilike(f"%{identifier}%")) |
-        (UserModel.prenom.ilike(f"%{identifier}%"))
-    ).first()
-
-    return user.id if user else None
+    return find_user_id_by_email_or_name(db, identifier)
 
 
 def get_user_name(db, user_id: int) -> str:

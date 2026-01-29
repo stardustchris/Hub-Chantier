@@ -1,8 +1,13 @@
 """DTOs pour les signalements."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...domain.entities import Signalement
 
 
 @dataclass
@@ -36,6 +41,60 @@ class SignalementDTO:
     pourcentage_temps: float
     nb_reponses: int
     nb_escalades: int
+
+    @classmethod
+    def from_entity(
+        cls,
+        entity: Signalement,
+        nb_reponses: int = 0,
+        get_user_name: Optional[Callable[[int], Optional[str]]] = None,
+    ) -> SignalementDTO:
+        """Convertit une entité Signalement en DTO.
+
+        Args:
+            entity: L'entité Signalement source.
+            nb_reponses: Nombre de réponses associées.
+            get_user_name: Fonction optionnelle pour résoudre les noms d'utilisateurs.
+
+        Returns:
+            Le DTO correspondant.
+        """
+        cree_par_nom = None
+        assigne_a_nom = None
+        if get_user_name:
+            cree_par_nom = get_user_name(entity.cree_par)
+            if entity.assigne_a:
+                assigne_a_nom = get_user_name(entity.assigne_a)
+
+        return cls(
+            id=entity.id,  # type: ignore
+            chantier_id=entity.chantier_id,
+            titre=entity.titre,
+            description=entity.description,
+            priorite=entity.priorite.value,
+            priorite_label=entity.priorite.label,
+            priorite_couleur=entity.priorite.couleur,
+            statut=entity.statut.value,
+            statut_label=entity.statut.label,
+            statut_couleur=entity.statut.couleur,
+            cree_par=entity.cree_par,
+            cree_par_nom=cree_par_nom,
+            assigne_a=entity.assigne_a,
+            assigne_a_nom=assigne_a_nom,
+            date_resolution_souhaitee=entity.date_resolution_souhaitee,
+            date_traitement=entity.date_traitement,
+            date_cloture=entity.date_cloture,
+            commentaire_traitement=entity.commentaire_traitement,
+            photo_url=entity.photo_url,
+            localisation=entity.localisation,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
+            est_en_retard=entity.est_en_retard,
+            temps_restant=entity.temps_restant_formatte if not entity.statut.est_resolu else None,
+            pourcentage_temps=entity.pourcentage_temps_ecoule,
+            nb_reponses=nb_reponses,
+            nb_escalades=entity.nb_escalades,
+        )
 
 
 @dataclass

@@ -77,25 +77,7 @@ class CreateReponseUseCase:
 
         reponse = self._reponse_repo.save(reponse)
 
-        return self._to_dto(reponse)
-
-    def _to_dto(self, rep: Reponse) -> ReponseDTO:
-        """Convertit une entité en DTO."""
-        auteur_nom = None
-        if self._get_user_name:
-            auteur_nom = self._get_user_name(rep.auteur_id)
-
-        return ReponseDTO(
-            id=rep.id,  # type: ignore
-            signalement_id=rep.signalement_id,
-            contenu=rep.contenu,
-            auteur_id=rep.auteur_id,
-            auteur_nom=auteur_nom,
-            photo_url=rep.photo_url,
-            created_at=rep.created_at,
-            updated_at=rep.updated_at,
-            est_resolution=rep.est_resolution,
-        )
+        return ReponseDTO.from_entity(reponse, self._get_user_name)
 
 
 class ListReponsesUseCase:
@@ -131,31 +113,13 @@ class ListReponsesUseCase:
         )
         total = self._reponse_repo.count_by_signalement(signalement_id)
 
-        dtos = [self._to_dto(rep) for rep in reponses]
+        dtos = [ReponseDTO.from_entity(rep, self._get_user_name) for rep in reponses]
 
         return ReponseListDTO(
             reponses=dtos,
             total=total,
             skip=skip,
             limit=limit,
-        )
-
-    def _to_dto(self, rep: Reponse) -> ReponseDTO:
-        """Convertit une entité en DTO."""
-        auteur_nom = None
-        if self._get_user_name:
-            auteur_nom = self._get_user_name(rep.auteur_id)
-
-        return ReponseDTO(
-            id=rep.id,  # type: ignore
-            signalement_id=rep.signalement_id,
-            contenu=rep.contenu,
-            auteur_id=rep.auteur_id,
-            auteur_nom=auteur_nom,
-            photo_url=rep.photo_url,
-            created_at=rep.created_at,
-            updated_at=rep.updated_at,
-            est_resolution=rep.est_resolution,
         )
 
 
@@ -210,25 +174,7 @@ class UpdateReponseUseCase:
 
         reponse = self._reponse_repo.save(reponse)
 
-        return self._to_dto(reponse)
-
-    def _to_dto(self, rep: Reponse) -> ReponseDTO:
-        """Convertit une entité en DTO."""
-        auteur_nom = None
-        if self._get_user_name:
-            auteur_nom = self._get_user_name(rep.auteur_id)
-
-        return ReponseDTO(
-            id=rep.id,  # type: ignore
-            signalement_id=rep.signalement_id,
-            contenu=rep.contenu,
-            auteur_id=rep.auteur_id,
-            auteur_nom=auteur_nom,
-            photo_url=rep.photo_url,
-            created_at=rep.created_at,
-            updated_at=rep.updated_at,
-            est_resolution=rep.est_resolution,
-        )
+        return ReponseDTO.from_entity(reponse, self._get_user_name)
 
 
 class DeleteReponseUseCase:

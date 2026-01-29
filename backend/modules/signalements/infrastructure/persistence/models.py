@@ -13,13 +13,13 @@ class SignalementModel(Base):
     __tablename__ = "signalements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    chantier_id = Column(Integer, ForeignKey("chantiers.id"), nullable=False, index=True)
+    chantier_id = Column(Integer, ForeignKey("chantiers.id", ondelete="CASCADE"), nullable=False, index=True)
     titre = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     priorite = Column(String(50), nullable=False, default="moyenne")
     statut = Column(String(50), nullable=False, default="ouvert")
-    cree_par = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    assigne_a = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    cree_par = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    assigne_a = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     date_resolution_souhaitee = Column(DateTime, nullable=True)
     date_traitement = Column(DateTime, nullable=True)
     date_cloture = Column(DateTime, nullable=True)
@@ -43,9 +43,9 @@ class ReponseModel(Base):
     __tablename__ = "reponses_signalements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    signalement_id = Column(Integer, ForeignKey("signalements.id"), nullable=False, index=True)
+    signalement_id = Column(Integer, ForeignKey("signalements.id", ondelete="CASCADE"), nullable=False, index=True)
     contenu = Column(Text, nullable=False)
-    auteur_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    auteur_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     photo_url = Column(String(500), nullable=True)
     est_resolution = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=datetime.now)

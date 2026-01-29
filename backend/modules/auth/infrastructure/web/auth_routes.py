@@ -24,7 +24,7 @@ from ...application.use_cases import (
     WeakPasswordError,
     UserNotFoundError,
 )
-from .dependencies import get_auth_controller, get_current_user_id
+from .dependencies import get_auth_controller, get_current_user_id, require_admin_or_conducteur
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
@@ -162,7 +162,7 @@ def get_csrf_token(request: Request):
 
 
 @router.post("/login", response_model=AuthResponse)
-@limiter.limit("60/minute")  # Protection brute force: 60 tentatives/minute par IP (dev)
+@limiter.limit("10/minute")  # Protection brute force: 10 tentatives/minute par IP
 def login(
     request: Request,  # Requis par slowapi
     response: Response,
@@ -172,7 +172,7 @@ def login(
     """
     Authentifie un utilisateur et retourne un token JWT.
 
-    Rate limited: 5 requêtes par minute par IP pour protection brute force.
+    Rate limited: 10 requêtes par minute par IP pour protection brute force.
     Le token est aussi envoyé via cookie HttpOnly pour une sécurité renforcée.
 
     Args:
@@ -219,7 +219,9 @@ def login(
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")  # Protection contre creation de comptes en masse
 def register(
+    request: Request,  # Requis par slowapi
     data: RegisterRequest,
     response: Response,
     controller: AuthController = Depends(get_auth_controller),
@@ -359,35 +361,20 @@ def get_consents(
     """
     # Essayer de récupérer l'utilisateur authentifié (optionnel)
     try:
-        # Extraire le token depuis le cookie ou header
-        token = request.cookies.get(AUTH_COOKIE_NAME)
-        if not token:
-            auth_header = request.headers.get("Authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                token = auth_header.replace("Bearer ", "")
-
-        if token:
-            # Décoder le token pour récupérer l'user_id
-            from ...adapters.providers.jwt_token_service import JWTTokenService
+        user_id = _extract_user_id_from_request(request)
+        if user_id:
             from ...application.use_cases import GetConsentsUseCase
             from ...infrastructure.persistence import SQLAlchemyUserRepository
             from shared.infrastructure.database import SessionLocal
 
-            token_service = JWTTokenService()
-            payload = token_service.decode_token(token)
-            user_id = payload.get("user_id")
-
-            if user_id:
-                # Récupérer les consentements depuis la base
-                db = SessionLocal()
-                try:
-                    user_repo = SQLAlchemyUserRepository(db)
-                    use_case = GetConsentsUseCase(user_repo)
-                    consents = use_case.execute(user_id)
-
-                    return ConsentPreferences(**consents)
-                finally:
-                    db.close()
+            db = SessionLocal()
+            try:
+                user_repo = SQLAlchemyUserRepository(db)
+                use_case = GetConsentsUseCase(user_repo)
+                consents = use_case.execute(user_id)
+                return ConsentPreferences(**consents)
+            finally:
+                db.close()
     except Exception:
         # Si erreur (token invalide, etc.), retourner valeurs par défaut
         pass
@@ -432,42 +419,27 @@ def update_consents(
 
     # Essayer de récupérer l'utilisateur authentifié (optionnel)
     try:
-        # Extraire le token depuis le cookie ou header
-        token = http_request.cookies.get(AUTH_COOKIE_NAME)
-        if not token:
-            auth_header = http_request.headers.get("Authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                token = auth_header.replace("Bearer ", "")
-
-        if token:
-            # Décoder le token pour récupérer l'user_id
-            from ...adapters.providers.jwt_token_service import JWTTokenService
+        user_id = _extract_user_id_from_request(http_request)
+        if user_id:
             from ...application.use_cases import UpdateConsentsUseCase
             from ...infrastructure.persistence import SQLAlchemyUserRepository
             from shared.infrastructure.database import SessionLocal
 
-            token_service = JWTTokenService()
-            payload = token_service.decode_token(token)
-            user_id = payload.get("user_id")
-
-            if user_id:
-                # Mettre à jour les consentements en base avec métadonnées RGPD
-                db = SessionLocal()
-                try:
-                    user_repo = SQLAlchemyUserRepository(db)
-                    use_case = UpdateConsentsUseCase(user_repo)
-                    consents = use_case.execute(
-                        user_id=user_id,
-                        geolocation=consent_request.geolocation,
-                        notifications=consent_request.notifications,
-                        analytics=consent_request.analytics,
-                        ip_address=ip_address,
-                        user_agent=user_agent,
-                    )
-
-                    return ConsentPreferences(**consents)
-                finally:
-                    db.close()
+            db = SessionLocal()
+            try:
+                user_repo = SQLAlchemyUserRepository(db)
+                use_case = UpdateConsentsUseCase(user_repo)
+                consents = use_case.execute(
+                    user_id=user_id,
+                    geolocation=consent_request.geolocation,
+                    notifications=consent_request.notifications,
+                    analytics=consent_request.analytics,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                )
+                return ConsentPreferences(**consents)
+            finally:
+                db.close()
     except Exception:
         # Si erreur (token invalide, etc.), continuer en mode non-authentifié
         pass
@@ -498,6 +470,7 @@ def list_users(
     is_active: Optional[bool] = Query(None, description="Filtrer par statut actif"),
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_admin_or_conducteur),
 ):
     """
     Liste les utilisateurs avec pagination (USR-09).
@@ -581,6 +554,7 @@ def update_user(
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
     audit: AuditService = Depends(get_audit_service),
+    _role: str = Depends(require_admin_or_conducteur),
 ):
     """
     Met à jour un utilisateur.
@@ -674,6 +648,7 @@ def deactivate_user(
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
     audit: AuditService = Depends(get_audit_service),
+    _role: str = Depends(require_admin_or_conducteur),
 ):
     """
     Désactive un utilisateur (USR-10 - révocation instantanée).
@@ -730,6 +705,7 @@ def activate_user(
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
     audit: AuditService = Depends(get_audit_service),
+    _role: str = Depends(require_admin_or_conducteur),
 ):
     """
     Réactive un utilisateur précédemment désactivé.
@@ -823,6 +799,37 @@ def export_user_data_rgpd(
 # =============================================================================
 # Helpers
 # =============================================================================
+
+
+def _extract_user_id_from_request(request: Request) -> Optional[int]:
+    """
+    Extrait l'ID utilisateur depuis un token JWT dans la requête.
+
+    Cherche le token dans le cookie HttpOnly puis dans l'en-tête Authorization.
+    Utilise le service JWT correctement initialisé via settings.
+
+    Args:
+        request: Requête HTTP.
+
+    Returns:
+        L'ID utilisateur ou None si non authentifié/token invalide.
+    """
+    token = request.cookies.get(AUTH_COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "")
+
+    if not token:
+        return None
+
+    from ...adapters.providers.jwt_token_service import JWTTokenService
+
+    token_service = JWTTokenService(
+        secret_key=settings.SECRET_KEY,
+        expires_minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
+    )
+    return token_service.get_user_id(token)
 
 
 def _transform_user_response(user_dict: dict) -> UserResponse:

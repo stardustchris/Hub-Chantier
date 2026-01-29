@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_
 
 from shared.domain.value_objects import Couleur
@@ -41,6 +41,14 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         self.session = session
 
+    @property
+    def _eager_options(self):
+        """Options de chargement eager (lazy property pour éviter résolution mapper prématurée)."""
+        return (
+            selectinload(ChantierModel.conducteurs_rel),
+            selectinload(ChantierModel.chefs_rel),
+        )
+
     def _not_deleted(self):
         """Filtre pour exclure les enregistrements supprimés (soft delete)."""
         return ChantierModel.deleted_at.is_(None)
@@ -57,6 +65,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         model = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .filter(ChantierModel.id == chantier_id)
             .filter(self._not_deleted())
             .first()
@@ -75,6 +84,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         model = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .filter(ChantierModel.code == str(code))
             .filter(self._not_deleted())
             .first()
@@ -187,6 +197,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         models = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .filter(self._not_deleted())
             .order_by(ChantierModel.code)
             .offset(skip)
@@ -220,6 +231,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         models = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .filter(ChantierModel.statut == str(statut))
             .filter(self._not_deleted())
             .order_by(ChantierModel.code)
@@ -242,6 +254,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         """
         models = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .filter(ChantierModel.statut != StatutChantierEnum.FERME.value)
             .filter(self._not_deleted())
             .order_by(ChantierModel.code)
@@ -271,6 +284,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         # Requete optimisee via table de jointure
         models = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .join(
                 ChantierConducteurModel,
                 ChantierModel.id == ChantierConducteurModel.chantier_id,
@@ -304,6 +318,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         # Requete optimisee via table de jointure
         models = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .join(
                 ChantierChefModel,
                 ChantierModel.id == ChantierChefModel.chantier_id,
@@ -354,6 +369,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         # Requete finale avec les chantiers
         models = (
             self.session.query(ChantierModel)
+            .options(*self._eager_options)
             .filter(ChantierModel.id.in_(select(all_chantier_ids)))
             .filter(self._not_deleted())
             .order_by(ChantierModel.code)
@@ -450,7 +466,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             Liste des entités Chantier correspondantes.
         """
         search_pattern = f"%{query}%"
-        base_query = self.session.query(ChantierModel).filter(
+        base_query = self.session.query(ChantierModel).options(*self._eager_options).filter(
             or_(
                 ChantierModel.nom.ilike(search_pattern),
                 ChantierModel.code.ilike(search_pattern),

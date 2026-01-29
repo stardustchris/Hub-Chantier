@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Optional, List
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ...domain.entities import FormulaireRempli, ChampRempli, PhotoFormulaire
 from ...domain.repositories import FormulaireRempliRepository
@@ -88,7 +88,15 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         Returns:
             Le formulaire ou None si non trouve.
         """
-        model = self._session.query(FormulaireRempliModel).filter_by(id=formulaire_id).first()
+        model = (
+            self._session.query(FormulaireRempliModel)
+            .options(
+                selectinload(FormulaireRempliModel.champs),
+                selectinload(FormulaireRempliModel.photos),
+            )
+            .filter_by(id=formulaire_id)
+            .first()
+        )
         return self._to_entity(model) if model else None
 
     def save(self, formulaire: FormulaireRempli) -> FormulaireRempli:
@@ -232,6 +240,10 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         """
         models = (
             self._session.query(FormulaireRempliModel)
+            .options(
+                selectinload(FormulaireRempliModel.champs),
+                selectinload(FormulaireRempliModel.photos),
+            )
             .filter_by(chantier_id=chantier_id)
             .order_by(FormulaireRempliModel.created_at.desc())
             .offset(skip)
@@ -259,6 +271,10 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         """
         models = (
             self._session.query(FormulaireRempliModel)
+            .options(
+                selectinload(FormulaireRempliModel.champs),
+                selectinload(FormulaireRempliModel.photos),
+            )
             .filter_by(template_id=template_id)
             .order_by(FormulaireRempliModel.created_at.desc())
             .offset(skip)
@@ -286,6 +302,10 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         """
         models = (
             self._session.query(FormulaireRempliModel)
+            .options(
+                selectinload(FormulaireRempliModel.champs),
+                selectinload(FormulaireRempliModel.photos),
+            )
             .filter_by(user_id=user_id)
             .order_by(FormulaireRempliModel.created_at.desc())
             .offset(skip)
@@ -313,6 +333,10 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         """
         models = (
             self._session.query(FormulaireRempliModel)
+            .options(
+                selectinload(FormulaireRempliModel.champs),
+                selectinload(FormulaireRempliModel.photos),
+            )
             .filter_by(statut=statut.value)
             .order_by(FormulaireRempliModel.created_at.desc())
             .offset(skip)
@@ -350,14 +374,30 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         result = []
 
         # Ajouter le formulaire courant
-        current = self._session.query(FormulaireRempliModel).filter_by(id=formulaire_id).first()
+        current = (
+            self._session.query(FormulaireRempliModel)
+            .options(
+                selectinload(FormulaireRempliModel.champs),
+                selectinload(FormulaireRempliModel.photos),
+            )
+            .filter_by(id=formulaire_id)
+            .first()
+        )
         if current:
             result.append(self._to_entity(current))
 
             # Remonter la chaine des parents
             parent_id = current.parent_id
             while parent_id:
-                parent = self._session.query(FormulaireRempliModel).filter_by(id=parent_id).first()
+                parent = (
+                    self._session.query(FormulaireRempliModel)
+                    .options(
+                        selectinload(FormulaireRempliModel.champs),
+                        selectinload(FormulaireRempliModel.photos),
+                    )
+                    .filter_by(id=parent_id)
+                    .first()
+                )
                 if parent:
                     result.append(self._to_entity(parent))
                     parent_id = parent.parent_id
@@ -393,7 +433,10 @@ class SQLAlchemyFormulaireRempliRepository(FormulaireRempliRepository):
         Returns:
             Tuple contenant la liste des formulaires et le total.
         """
-        q = self._session.query(FormulaireRempliModel)
+        q = self._session.query(FormulaireRempliModel).options(
+            selectinload(FormulaireRempliModel.champs),
+            selectinload(FormulaireRempliModel.photos),
+        )
 
         if chantier_id:
             q = q.filter_by(chantier_id=chantier_id)

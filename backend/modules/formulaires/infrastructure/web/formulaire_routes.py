@@ -14,13 +14,17 @@ from ...application.dtos.formulaire_dto import FormulaireRempliDTO
 
 
 def _enrich_formulaires(formulaires: List[FormulaireRempliDTO], db: Session) -> None:
-    """Enrichit les formulaires avec template_nom, chantier_nom, user_nom."""
+    """Enrichit les formulaires avec template_nom, chantier_nom, user_nom.
+
+    Uses shared query helpers to avoid importing ChantierModel and UserModel
+    from other modules (Clean Architecture boundary).
+    """
     if not formulaires:
         return
 
     from ...infrastructure.persistence.template_model import TemplateFormulaireModel
-    from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
-    from modules.auth.infrastructure.persistence.user_model import UserModel
+    from shared.infrastructure.chantier_queries import get_chantiers_basic_info_by_ids
+    from shared.infrastructure.user_queries import get_users_basic_info_by_ids
 
     template_ids = {f.template_id for f in formulaires}
     chantier_ids = {f.chantier_id for f in formulaires}
@@ -31,16 +35,8 @@ def _enrich_formulaires(formulaires: List[FormulaireRempliDTO], db: Session) -> 
             TemplateFormulaireModel.id.in_(template_ids)
         ).all()
     }
-    chantiers = {
-        c.id: c for c in db.query(ChantierModel).filter(
-            ChantierModel.id.in_(chantier_ids)
-        ).all()
-    }
-    users = {
-        u.id: u for u in db.query(UserModel).filter(
-            UserModel.id.in_(user_ids)
-        ).all()
-    }
+    chantiers = get_chantiers_basic_info_by_ids(db, list(chantier_ids))
+    users = get_users_basic_info_by_ids(db, list(user_ids))
 
     for f in formulaires:
         tmpl = templates.get(f.template_id)
@@ -49,10 +45,10 @@ def _enrich_formulaires(formulaires: List[FormulaireRempliDTO], db: Session) -> 
             f.template_categorie = tmpl.categorie
         chantier = chantiers.get(f.chantier_id)
         if chantier:
-            f.chantier_nom = chantier.nom
+            f.chantier_nom = chantier["nom"]
         user = users.get(f.user_id)
         if user:
-            f.user_nom = f"{user.prenom} {user.nom}"
+            f.user_nom = f"{user['prenom']} {user['nom']}"
 
 
 # ===== SCHEMAS PYDANTIC =====
@@ -497,22 +493,22 @@ async def export_pdf(
 ):
     """Exporte un formulaire en PDF (FOR-09)."""
     try:
-        from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
-        from modules.auth.infrastructure.persistence.user_model import UserModel
+        from shared.infrastructure.chantier_queries import get_chantier_basic_info
+        from shared.infrastructure.user_queries import get_user_display_name
 
         # Resoudre les noms pour le PDF
         def resolve_names(chantier_id: int, user_id: int, valide_by: int | None) -> dict:
             result = {}
-            chantier = db.query(ChantierModel).filter_by(id=chantier_id).first()
+            chantier = get_chantier_basic_info(db, chantier_id)
             if chantier:
-                result["chantier_nom"] = chantier.nom
-            user = db.query(UserModel).filter_by(id=user_id).first()
-            if user:
-                result["user_nom"] = f"{user.prenom} {user.nom}"
+                result["chantier_nom"] = chantier["nom"]
+            user_name = get_user_display_name(db, user_id)
+            if user_name:
+                result["user_nom"] = user_name
             if valide_by:
-                valideur = db.query(UserModel).filter_by(id=valide_by).first()
-                if valideur:
-                    result["valideur_nom"] = f"{valideur.prenom} {valideur.nom}"
+                valideur_name = get_user_display_name(db, valide_by)
+                if valideur_name:
+                    result["valideur_nom"] = valideur_name
             return result
 
         return controller.export_pdf_download(formulaire_id, resolve_names)
