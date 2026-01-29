@@ -71,7 +71,11 @@ class TestRegisterUseCase:
         assert result.token.access_token == "jwt_token_123"
 
     def test_register_success_with_all_fields(self):
-        """Test: inscription réussie avec tous les champs CDC."""
+        """Test: inscription réussie avec tous les champs CDC.
+
+        Sécurité: même si role="chef_chantier" est passé, le use case
+        force toujours COMPAGNON pour self-registration.
+        """
         # Arrange
         self.mock_user_repo.save.side_effect = self._create_saved_user
 
@@ -80,7 +84,7 @@ class TestRegisterUseCase:
             password="Password123!",
             nom="Martin",
             prenom="Marie",
-            role="chef_chantier",
+            role="chef_chantier",  # Ignored — forced to compagnon
             type_utilisateur="employe",
             telephone="+33612345678",
             metier="Maçon",
@@ -93,7 +97,7 @@ class TestRegisterUseCase:
 
         # Assert
         assert result.user.email == "complet@example.com"
-        assert result.user.role == "chef_chantier"
+        assert result.user.role == "compagnon"  # Forced, not chef_chantier
         assert result.user.type_utilisateur == "employe"
         assert result.user.telephone == "+33612345678"
         assert result.user.metier == "Maçon"
@@ -182,8 +186,8 @@ class TestRegisterUseCase:
         with pytest.raises(ValueError):
             self.use_case.execute(dto)
 
-    def test_register_invalid_role(self):
-        """Test: échec si rôle invalide."""
+    def test_register_ignores_role_parameter(self):
+        """Test: le champ role du DTO est ignoré (toujours compagnon)."""
         self.mock_user_repo.save.side_effect = self._create_saved_user
 
         dto = RegisterDTO(
@@ -191,11 +195,11 @@ class TestRegisterUseCase:
             password="Password123!",
             nom="Dupont",
             prenom="Jean",
-            role="invalid_role",
+            role="admin",  # Should be ignored
         )
 
-        with pytest.raises(ValueError):
-            self.use_case.execute(dto)
+        result = self.use_case.execute(dto)
+        assert result.user.role == "compagnon"
 
     def test_register_any_valid_hex_couleur(self):
         """Test: accepte toute couleur hexadécimale valide.
@@ -248,8 +252,8 @@ class TestRegisterUseCase:
         assert event.nom == "DUPONT"
         assert event.prenom == "Jean"
 
-    def test_register_all_roles(self):
-        """Test: inscription avec tous les rôles possibles."""
+    def test_register_all_roles_forced_compagnon(self):
+        """Test: quelle que soit la valeur de role, le résultat est compagnon."""
         roles = ["admin", "conducteur", "chef_chantier", "compagnon"]
 
         for role in roles:
@@ -268,4 +272,4 @@ class TestRegisterUseCase:
             )
 
             result = self.use_case.execute(dto)
-            assert result.user.role == role
+            assert result.user.role == "compagnon"

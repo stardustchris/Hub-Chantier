@@ -24,7 +24,7 @@ from ...application.use_cases import (
     WeakPasswordError,
     UserNotFoundError,
 )
-from .dependencies import get_auth_controller, get_current_user_id, require_admin_or_conducteur
+from .dependencies import get_auth_controller, get_current_user_id, get_current_user_role, require_admin_or_conducteur
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
@@ -522,21 +522,33 @@ def get_user(
     user_id: int,
     controller: AuthController = Depends(get_auth_controller),
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
 ):
     """
     Récupère un utilisateur par son ID.
+
+    Sécurité: Un compagnon/chef ne peut consulter que son propre profil.
+    Admin et conducteur peuvent consulter tout profil.
 
     Args:
         user_id: ID de l'utilisateur.
         controller: Controller d'authentification.
         current_user_id: ID de l'utilisateur connecté.
+        current_user_role: Rôle de l'utilisateur connecté.
 
     Returns:
         Informations de l'utilisateur.
 
     Raises:
+        HTTPException 403: Accès interdit.
         HTTPException 404: Utilisateur non trouvé.
     """
+    # IDOR protection: non-admin ne peut voir que son propre profil
+    if current_user_role not in {"admin", "conducteur"} and user_id != current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous ne pouvez consulter que votre propre profil.",
+        )
     try:
         return controller.get_user_by_id(user_id)
     except UserNotFoundError as e:

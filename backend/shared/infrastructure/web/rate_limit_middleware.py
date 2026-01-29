@@ -76,9 +76,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return response
 
+    # IPs de reverse proxy de confiance (Docker bridge, localhost)
+    TRUSTED_PROXIES = {"127.0.0.1", "::1", "172.17.0.1", "10.0.0.1"}
+
     def _get_client_ip(self, request: Request) -> str:
         """
         Extrait l'adresse IP du client.
+
+        Sécurité: N'utilise X-Forwarded-For que si la requête provient
+        d'un reverse proxy de confiance (TRUSTED_PROXIES), sinon un
+        attaquant pourrait spoofer l'en-tête pour contourner le rate limiting.
 
         Args:
             request: Requête HTTP.
@@ -86,21 +93,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         Returns:
             Adresse IP du client.
         """
-        # Vérifier headers de proxy (X-Forwarded-For, X-Real-IP)
-        forwarded_for = request.headers.get("X-Forwarded-For")
-        if forwarded_for:
-            # Prendre la première IP (client réel)
-            return forwarded_for.split(",")[0].strip()
+        direct_ip = request.client.host if request.client else "unknown"
 
-        real_ip = request.headers.get("X-Real-IP")
-        if real_ip:
-            return real_ip
+        # Ne faire confiance aux headers proxy QUE si la connexion
+        # provient d'un reverse proxy connu
+        if direct_ip in self.TRUSTED_PROXIES:
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                return forwarded_for.split(",")[0].strip()
 
-        # Fallback : IP directe
-        if request.client:
-            return request.client.host
+            real_ip = request.headers.get("X-Real-IP")
+            if real_ip:
+                return real_ip
 
-        return "unknown"
+        return direct_ip
 
     def _is_sensitive_endpoint(self, path: str) -> bool:
         """

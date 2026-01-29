@@ -86,6 +86,76 @@ def get_users_basic_info_by_ids(db: Session, user_ids: list[int]) -> dict[int, d
     return result
 
 
+def count_active_users(db: Session) -> int:
+    """Count total active users without importing UserModel."""
+    result = db.execute(
+        text("SELECT COUNT(id) FROM users WHERE is_active = true"),
+    ).scalar()
+    return result or 0
+
+
+def count_active_users_by_metier(db: Session) -> dict[str, int]:
+    """Count active users grouped by metier without importing UserModel.
+
+    Returns:
+        Dict mapping metier -> count (metier can be None).
+    """
+    rows = db.execute(
+        text(
+            "SELECT metier, COUNT(id) FROM users "
+            "WHERE is_active = true GROUP BY metier"
+        ),
+    ).fetchall()
+    return {row[0]: row[1] for row in rows}
+
+
+def count_active_users_not_in_ids(db: Session, exclude_user_ids: list[int]) -> int:
+    """Count active users NOT in the given ID list.
+
+    Used to find users without affectations for a given period.
+
+    Args:
+        db: Database session.
+        exclude_user_ids: User IDs to exclude.
+
+    Returns:
+        Count of active users not in the list.
+    """
+    if not exclude_user_ids:
+        return count_active_users(db)
+
+    params = {f"id_{i}": uid for i, uid in enumerate(set(exclude_user_ids))}
+    placeholders = ", ".join(f":{k}" for k in params)
+
+    result = db.execute(
+        text(
+            f"SELECT COUNT(id) FROM users "
+            f"WHERE is_active = true AND id NOT IN ({placeholders})"
+        ),
+        params,
+    ).scalar()
+    return result or 0
+
+
+def get_metier_for_user_ids(db: Session, user_ids: list[int]) -> dict[int, Optional[str]]:
+    """Get metier for a list of user IDs.
+
+    Returns:
+        Dict mapping user_id -> metier (or None).
+    """
+    if not user_ids:
+        return {}
+
+    params = {f"id_{i}": uid for i, uid in enumerate(set(user_ids))}
+    placeholders = ", ".join(f":{k}" for k in params)
+
+    rows = db.execute(
+        text(f"SELECT id, metier FROM users WHERE id IN ({placeholders})"),
+        params,
+    ).fetchall()
+    return {row[0]: row[1] for row in rows}
+
+
 def find_user_id_by_email_or_name(db: Session, identifier: str) -> Optional[int]:
     """Find a user ID by email prefix or name match, without importing UserModel.
 
