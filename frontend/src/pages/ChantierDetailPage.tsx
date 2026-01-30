@@ -566,6 +566,14 @@ export default function ChantierDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
 
+              {/* Maître d'ouvrage */}
+              {chantier.maitre_ouvrage && (
+                <div className="card">
+                  <h2 className="font-semibold text-gray-900 mb-4">Maître d'ouvrage</h2>
+                  <p className="text-gray-700">{chantier.maitre_ouvrage}</p>
+                </div>
+              )}
+
               {/* Contacts */}
               {contacts.length > 0 && (
                 <div className="card">
