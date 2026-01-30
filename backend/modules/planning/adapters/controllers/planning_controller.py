@@ -8,6 +8,7 @@ from ...domain.entities import Affectation
 from ...application.use_cases import (
     CreateAffectationUseCase,
     UpdateAffectationUseCase,
+    UpdateAffectationNoteUseCase,
     DeleteAffectationUseCase,
     GetPlanningUseCase,
     DuplicateAffectationsUseCase,
@@ -24,6 +25,7 @@ from ...application.dtos import (
 from .planning_schemas import (
     CreateAffectationRequest,
     UpdateAffectationRequest,
+    UpdateAffectationNoteRequest,
     PlanningFiltersRequest,
     DuplicateAffectationsRequest,
     ResizeAffectationRequest,
@@ -46,6 +48,7 @@ class PlanningController:
     Attributes:
         create_affectation_uc: Use case de creation d'affectation.
         update_affectation_uc: Use case de mise a jour d'affectation.
+        update_affectation_note_uc: Use case de mise a jour de note uniquement.
         delete_affectation_uc: Use case de suppression d'affectation.
         get_planning_uc: Use case de recuperation du planning.
         duplicate_affectations_uc: Use case de duplication d'affectations.
@@ -57,6 +60,7 @@ class PlanningController:
         self,
         create_affectation_uc: CreateAffectationUseCase,
         update_affectation_uc: UpdateAffectationUseCase,
+        update_affectation_note_uc: UpdateAffectationNoteUseCase,
         delete_affectation_uc: DeleteAffectationUseCase,
         get_planning_uc: GetPlanningUseCase,
         duplicate_affectations_uc: DuplicateAffectationsUseCase,
@@ -70,6 +74,7 @@ class PlanningController:
         Args:
             create_affectation_uc: Use case de creation.
             update_affectation_uc: Use case de mise a jour.
+            update_affectation_note_uc: Use case de mise a jour de note.
             delete_affectation_uc: Use case de suppression.
             get_planning_uc: Use case de recuperation planning.
             duplicate_affectations_uc: Use case de duplication.
@@ -79,6 +84,7 @@ class PlanningController:
         """
         self.create_affectation_uc = create_affectation_uc
         self.update_affectation_uc = update_affectation_uc
+        self.update_affectation_note_uc = update_affectation_note_uc
         self.delete_affectation_uc = delete_affectation_uc
         self.get_planning_uc = get_planning_uc
         self.duplicate_affectations_uc = duplicate_affectations_uc
@@ -302,6 +308,48 @@ class PlanningController:
         )
 
         logger.info(f"Affectation mise a jour: id={affectation.id}")
+
+        return self._entity_to_response(affectation)
+
+    def update_note(
+        self,
+        affectation_id: int,
+        request: UpdateAffectationNoteRequest,
+        current_user_id: int,
+    ) -> Dict[str, Any]:
+        """
+        Met a jour uniquement la note d'une affectation.
+
+        Cette methode est specifiquement concue pour les Chefs de Chantier
+        qui peuvent ajouter/modifier des notes sur les affectations de leurs
+        chantiers (PLN-25, matrice des droits section 5.5).
+
+        Args:
+            affectation_id: ID de l'affectation a modifier.
+            request: Donnees de mise a jour (note seulement).
+            current_user_id: ID de l'utilisateur modificateur.
+
+        Returns:
+            Dictionnaire de l'affectation mise a jour.
+
+        Raises:
+            AffectationNotFoundError: Si affectation non trouvee.
+
+        Example:
+            >>> result = controller.update_note(42, request, current_user_id=5)
+        """
+        logger.info(
+            f"Mise a jour note affectation: id={affectation_id}, "
+            f"updated_by={current_user_id}"
+        )
+
+        affectation = self.update_affectation_note_uc.execute(
+            affectation_id=affectation_id,
+            note=request.note,
+            modified_by=current_user_id,
+        )
+
+        logger.info(f"Note affectation mise a jour: id={affectation.id}")
 
         return self._entity_to_response(affectation)
 

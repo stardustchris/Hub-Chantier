@@ -18,6 +18,7 @@ from ...adapters.presenters import AffectationPresenter
 from ...application.use_cases import (
     CreateAffectationUseCase,
     UpdateAffectationUseCase,
+    UpdateAffectationNoteUseCase,
     DeleteAffectationUseCase,
     GetPlanningUseCase,
     DuplicateAffectationsUseCase,
@@ -116,6 +117,17 @@ def get_update_affectation_use_case(
     )
 
 
+def get_update_affectation_note_use_case(
+    affectation_repo: SQLAlchemyAffectationRepository = Depends(get_affectation_repository),
+    event_bus: EventBusImpl = Depends(get_event_bus),
+) -> UpdateAffectationNoteUseCase:
+    """Retourne le use case de mise a jour de note d'affectation (Chef de Chantier)."""
+    return UpdateAffectationNoteUseCase(
+        affectation_repo=affectation_repo,
+        event_bus=event_bus,
+    )
+
+
 def get_delete_affectation_use_case(
     affectation_repo: SQLAlchemyAffectationRepository = Depends(get_affectation_repository),
     event_bus: EventBusImpl = Depends(get_event_bus),
@@ -205,6 +217,7 @@ def get_resize_affectation_use_case(
 def get_planning_controller(
     create_uc: CreateAffectationUseCase = Depends(get_create_affectation_use_case),
     update_uc: UpdateAffectationUseCase = Depends(get_update_affectation_use_case),
+    update_note_uc: UpdateAffectationNoteUseCase = Depends(get_update_affectation_note_use_case),
     delete_uc: DeleteAffectationUseCase = Depends(get_delete_affectation_use_case),
     get_planning_uc: GetPlanningUseCase = Depends(get_get_planning_use_case),
     duplicate_uc: DuplicateAffectationsUseCase = Depends(get_duplicate_affectations_use_case),
@@ -218,6 +231,7 @@ def get_planning_controller(
     Args:
         create_uc: Use case de creation.
         update_uc: Use case de mise a jour.
+        update_note_uc: Use case de mise a jour de note (Chef de Chantier).
         delete_uc: Use case de suppression.
         get_planning_uc: Use case de recuperation.
         duplicate_uc: Use case de duplication.
@@ -231,6 +245,7 @@ def get_planning_controller(
     return PlanningController(
         create_affectation_uc=create_uc,
         update_affectation_uc=update_uc,
+        update_affectation_note_uc=update_note_uc,
         delete_affectation_uc=delete_uc,
         get_planning_uc=get_planning_uc,
         duplicate_affectations_uc=duplicate_uc,

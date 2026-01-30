@@ -13,6 +13,7 @@ from ...adapters.controllers import PlanningController
 from ...adapters.controllers.planning_schemas import (
     CreateAffectationRequest,
     UpdateAffectationRequest,
+    UpdateAffectationNoteRequest,
     AffectationResponse,
     PlanningFiltersRequest,
     DuplicateAffectationsRequest,
@@ -27,10 +28,11 @@ from ...application.use_cases import (
     NoAffectationsToDuplicateError,
 )
 from ...domain.events.affectation_created import AffectationCreatedEvent
-from .dependencies import get_planning_controller
+from .dependencies import get_planning_controller, get_entity_info
 from shared.infrastructure.web import get_current_user_id, get_current_user_role
 from shared.infrastructure.event_bus.dependencies import get_event_bus
 from shared.infrastructure.event_bus import EventBus
+from shared.application.ports import EntityInfoService
 
 router = APIRouter(prefix="/planning", tags=["Planning"])
 
@@ -283,6 +285,98 @@ def update_affectation(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
+        )
+
+
+@router.patch(
+    "/affectations/{affectation_id}/note",
+    response_model=AffectationResponse,
+    summary="Modifier la note d'une affectation (Chef de Chantier)",
+    responses={
+        200: {"description": "Note mise a jour"},
+        403: {"description": "Non autorise - Chef non responsable de ce chantier"},
+        404: {"description": "Affectation non trouvee"},
+    },
+)
+def update_affectation_note(
+    affectation_id: int,
+    request: UpdateAffectationNoteRequest,
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    controller: PlanningController = Depends(get_planning_controller),
+    entity_info: EntityInfoService = Depends(get_entity_info),
+):
+    """
+    Met a jour uniquement la note d'une affectation (PLN-25).
+
+    Cette route est specifiquement concue pour les Chefs de Chantier qui peuvent
+    ajouter ou modifier des notes sur les affectations de LEURS chantiers uniquement,
+    sans pouvoir modifier les autres attributs (matrice des droits section 5.5).
+
+    Les Admin et Conducteur peuvent egalement utiliser cette route.
+
+    Args:
+        affectation_id: ID de l'affectation a modifier.
+        request: Donnees de mise a jour (note seulement).
+        current_user_id: ID de l'utilisateur connecte.
+        current_user_role: Role de l'utilisateur.
+        controller: Controller du planning.
+        entity_info: Service d'information des entites.
+
+    Returns:
+        L'affectation avec la note mise a jour.
+
+    Raises:
+        HTTPException 403: Utilisateur non autorise (Chef non responsable du chantier).
+        HTTPException 404: Affectation non trouvee.
+    """
+    # Les Admin et Conducteur ont acces total
+    if current_user_role not in ("admin", "conducteur", "chef"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seuls les admin, conducteur et chef de chantier peuvent modifier les notes",
+        )
+
+    try:
+        # Si c'est un Chef, verifier qu'il est responsable du chantier
+        if current_user_role == "chef":
+            # Recuperer l'affectation pour connaitre le chantier_id
+            from datetime import timedelta
+            today = date.today()
+            filters = PlanningFiltersRequest(
+                date_debut=today - timedelta(days=365),
+                date_fin=today + timedelta(days=365),
+            )
+            affectations = controller.get_planning(filters, current_user_id, current_user_role)
+
+            # Trouver l'affectation
+            affectation = None
+            for aff in affectations:
+                if aff["id"] == affectation_id:
+                    affectation = aff
+                    break
+
+            if not affectation:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Affectation {affectation_id} non trouvee ou non accessible",
+                )
+
+            # Verifier que le Chef est responsable de ce chantier
+            chantier_ids = entity_info.get_user_chantier_ids(current_user_id)
+            if affectation["chantier_id"] not in chantier_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Vous ne pouvez modifier que les notes des affectations de vos chantiers",
+                )
+
+        # Mettre a jour la note
+        result = controller.update_note(affectation_id, request, current_user_id)
+        return result
+    except AffectationNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message,
         )
 
 

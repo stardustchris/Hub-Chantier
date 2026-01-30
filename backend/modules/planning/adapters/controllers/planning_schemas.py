@@ -179,6 +179,38 @@ class UpdateAffectationRequest(BaseModel):
     }
 
 
+class UpdateAffectationNoteRequest(BaseModel):
+    """
+    Schema de requete pour mettre a jour uniquement la note d'une affectation.
+
+    Ce schema est specifiquement concu pour les Chefs de Chantier qui peuvent
+    ajouter ou modifier des notes sur les affectations de leurs chantiers,
+    sans pouvoir modifier les autres attributs (PLN-25, matrice des droits section 5.5).
+
+    Attributes:
+        note: Nouvelle note (vide ou null pour supprimer).
+
+    Example:
+        >>> request = UpdateAffectationNoteRequest(
+        ...     note="Apporter outils specifiques"
+        ... )
+    """
+
+    note: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Note privee pour l'utilisateur affecte (null ou vide pour supprimer)",
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "note": "Apporter outils specifiques pour fondations"
+            }
+        }
+    }
+
+
 class AffectationResponse(BaseModel):
     """
     Schema de reponse pour une affectation.

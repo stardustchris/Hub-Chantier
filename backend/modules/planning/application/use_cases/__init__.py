@@ -2,6 +2,7 @@
 
 from .create_affectation import CreateAffectationUseCase
 from .update_affectation import UpdateAffectationUseCase
+from .update_affectation_note import UpdateAffectationNoteUseCase
 from .delete_affectation import DeleteAffectationUseCase
 from .get_planning import GetPlanningUseCase
 from .duplicate_affectations import DuplicateAffectationsUseCase
@@ -29,6 +30,7 @@ __all__ = [
     # Use Cases - Affectations
     "CreateAffectationUseCase",
     "UpdateAffectationUseCase",
+    "UpdateAffectationNoteUseCase",
     "DeleteAffectationUseCase",
     "GetPlanningUseCase",
     "DuplicateAffectationsUseCase",
