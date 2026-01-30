@@ -24,6 +24,10 @@ from ...application.use_cases import (
     WeakPasswordError,
     UserNotFoundError,
 )
+from ...domain.exceptions import (
+    InvalidResetTokenError,
+    InvalidInvitationTokenError,
+)
 from ...application.use_cases.delete_user_data import DeleteUserDataUseCase
 from .dependencies import get_auth_controller, get_current_user_id, get_current_user_role, require_admin_or_conducteur
 
@@ -342,6 +346,315 @@ def logout(response: Response) -> dict[str, str]:
         domain=settings.COOKIE_DOMAIN,
     )
     return {"message": "Déconnexion réussie"}
+
+
+# =============================================================================
+# Routes de gestion des mots de passe
+# =============================================================================
+
+
+class ResetPasswordRequestModel(BaseModel):
+    """Requête de demande de réinitialisation de mot de passe."""
+
+    email: EmailStr
+
+
+class ResetPasswordModel(BaseModel):
+    """Requête de réinitialisation de mot de passe avec token."""
+
+    token: str
+    new_password: str
+
+
+class ChangePasswordModel(BaseModel):
+    """Requête de changement de mot de passe."""
+
+    old_password: str
+    new_password: str
+
+
+class InviteUserModel(BaseModel):
+    """Requête d'invitation d'un utilisateur."""
+
+    email: EmailStr
+    nom: str
+    prenom: str
+    role: str
+    type_utilisateur: Optional[str] = "employe"
+    code_utilisateur: Optional[str] = None
+    metier: Optional[str] = None
+
+
+class AcceptInvitationModel(BaseModel):
+    """Requête d'acceptation d'invitation."""
+
+    token: str
+    password: str
+
+
+@router.post("/reset-password/request")
+@limiter.limit("3/minute")
+def request_password_reset(
+    request: Request,
+    request_body: ResetPasswordRequestModel,
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Demande une réinitialisation de mot de passe.
+
+    Génère un token de réinitialisation et envoie un email.
+    Retourne toujours succès pour éviter l'énumération des comptes.
+
+    Args:
+        request: Requête HTTP (pour rate limiting).
+        request_body: Requête contenant l'email.
+        db: Session SQLAlchemy.
+
+    Returns:
+        Message de confirmation.
+    """
+    from ...application.use_cases.request_password_reset import RequestPasswordResetUseCase
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+
+    user_repository = SQLAlchemyUserRepository(db)
+    use_case = RequestPasswordResetUseCase(user_repository)
+
+    # Toujours retourner succès pour éviter l'énumération
+    use_case.execute(email=request_body.email)
+
+    return {
+        "message": "Si votre email est enregistré, vous recevrez un lien de réinitialisation"
+    }
+
+
+@router.post("/reset-password")
+@limiter.limit("5/minute")
+def reset_password(
+    request: Request,
+    request_body: ResetPasswordModel,
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Réinitialise le mot de passe avec un token.
+
+    Args:
+        request: Requête HTTP (pour rate limiting).
+        request_body: Requête contenant le token et le nouveau mot de passe.
+        db: Session SQLAlchemy.
+
+    Returns:
+        Message de confirmation.
+
+    Raises:
+        HTTPException 400: Token invalide ou mot de passe faible.
+    """
+    from ...application.use_cases.reset_password import ResetPasswordUseCase
+    from ...domain.exceptions import InvalidResetTokenError, WeakPasswordError
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+    from shared.infrastructure.password_hasher import PasswordHasher
+
+    user_repository = SQLAlchemyUserRepository(db)
+    password_hasher = PasswordHasher()
+    use_case = ResetPasswordUseCase(user_repository, password_hasher)
+
+    try:
+        use_case.execute(
+            token=request_body.token,
+            new_password=request_body.new_password,
+        )
+        return {"message": "Mot de passe réinitialisé avec succès"}
+    except InvalidResetTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except WeakPasswordError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+
+
+@router.post("/change-password")
+@limiter.limit("5/minute")
+def change_password(
+    request: Request,
+    request_body: ChangePasswordModel,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Change le mot de passe d'un utilisateur connecté.
+
+    Args:
+        request: Requête HTTP (pour rate limiting).
+        request_body: Requête contenant l'ancien et le nouveau mot de passe.
+        current_user_id: ID de l'utilisateur connecté.
+        db: Session SQLAlchemy.
+
+    Returns:
+        Message de confirmation.
+
+    Raises:
+        HTTPException 400: Ancien mot de passe incorrect ou nouveau mot de passe faible.
+        HTTPException 404: Utilisateur non trouvé.
+    """
+    from ...application.use_cases.change_password import ChangePasswordUseCase
+    from ...domain.exceptions import InvalidCredentialsError, WeakPasswordError
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+    from shared.infrastructure.password_hasher import PasswordHasher
+
+    user_repository = SQLAlchemyUserRepository(db)
+    password_hasher = PasswordHasher()
+    use_case = ChangePasswordUseCase(user_repository, password_hasher)
+
+    try:
+        use_case.execute(
+            user_id=current_user_id,
+            old_password=request_body.old_password,
+            new_password=request_body.new_password,
+        )
+        return {"message": "Mot de passe modifié avec succès"}
+    except InvalidCredentialsError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except WeakPasswordError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except UserNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message,
+        )
+
+
+# =============================================================================
+# Routes d'invitation utilisateur
+# =============================================================================
+
+
+@router.post("/invite", status_code=status.HTTP_201_CREATED)
+def invite_user(
+    request_body: InviteUserModel,
+    current_user_id: int = Depends(get_current_user_id),
+    _role: str = Depends(require_admin_or_conducteur),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Invite un nouvel utilisateur (Admin ou Conducteur uniquement).
+
+    Crée un compte pré-rempli et envoie un email d'invitation.
+
+    Args:
+        request_body: Requête contenant les informations de l'utilisateur.
+        current_user_id: ID de l'utilisateur connecté.
+        _role: Rôle de l'utilisateur (vérifié par dépendance).
+        db: Session SQLAlchemy.
+
+    Returns:
+        Message de confirmation.
+
+    Raises:
+        HTTPException 400: Email ou code utilisateur déjà existant.
+    """
+    from ...application.use_cases.invite_user import InviteUserUseCase
+    from ...domain.value_objects import Role, TypeUtilisateur
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+
+    user_repository = SQLAlchemyUserRepository(db)
+
+    # Récupérer le nom de l'inviteur
+    inviter = user_repository.find_by_id(current_user_id)
+    inviter_name = inviter.nom_complet if inviter else "L'équipe Hub Chantier"
+
+    use_case = InviteUserUseCase(user_repository)
+
+    try:
+        # Convertir le rôle string en enum
+        role_enum = Role(request_body.role.lower())
+        type_enum = TypeUtilisateur(request_body.type_utilisateur.lower())
+
+        use_case.execute(
+            email=request_body.email,
+            nom=request_body.nom,
+            prenom=request_body.prenom,
+            role=role_enum,
+            type_utilisateur=type_enum,
+            code_utilisateur=request_body.code_utilisateur,
+            metier=request_body.metier,
+            inviter_name=inviter_name,
+        )
+
+        return {"message": f"Invitation envoyée à {request_body.email}"}
+    except EmailAlreadyExistsError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except CodeAlreadyExistsError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Rôle ou type utilisateur invalide: {str(e)}",
+        )
+
+
+@router.post("/accept-invitation")
+def accept_invitation(
+    request_body: AcceptInvitationModel,
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Accepte une invitation et active le compte.
+
+    Args:
+        request_body: Requête contenant le token et le mot de passe.
+        db: Session SQLAlchemy.
+
+    Returns:
+        Message de confirmation.
+
+    Raises:
+        HTTPException 400: Token invalide ou mot de passe faible.
+    """
+    from ...application.use_cases.accept_invitation import AcceptInvitationUseCase
+    from ...domain.exceptions import InvalidInvitationTokenError, WeakPasswordError
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+    from shared.infrastructure.password_hasher import PasswordHasher
+
+    user_repository = SQLAlchemyUserRepository(db)
+    password_hasher = PasswordHasher()
+    use_case = AcceptInvitationUseCase(user_repository, password_hasher)
+
+    try:
+        use_case.execute(
+            token=request_body.token,
+            password=request_body.password,
+        )
+        return {"message": "Invitation acceptée, votre compte est maintenant actif"}
+    except InvalidInvitationTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except WeakPasswordError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+
+
+# =============================================================================
+# Routes de consentement RGPD
+# =============================================================================
 
 
 @router.get("/consents", response_model=ConsentPreferences)
