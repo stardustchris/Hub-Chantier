@@ -92,13 +92,6 @@ function affectationToSlot(
       }
     : undefined
 
-  // DEBUG: Log pour vérifier les données
-  console.log(`[useTodayPlanning] Chantier "${chantier?.nom}":`, {
-    hasChantier: !!chantier,
-    chefsCount: chantier?.chefs?.length || 0,
-    chefChantier,
-  })
-
   return {
     id: affectation.id,
     chantierId: affectation.chantier_id,

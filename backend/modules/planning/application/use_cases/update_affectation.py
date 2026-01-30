@@ -8,7 +8,11 @@ from ...domain.value_objects import HeureAffectation
 from ...domain.events import AffectationUpdatedEvent
 from ..dtos import UpdateAffectationDTO
 from ..ports import EventBus
-from .exceptions import AffectationNotFoundError
+from .exceptions import (
+    AffectationNotFoundError,
+    ChantierInactifError,
+    UtilisateurInactifError,
+)
 
 
 class UpdateAffectationUseCase:
@@ -28,6 +32,8 @@ class UpdateAffectationUseCase:
         self,
         affectation_repo: AffectationRepository,
         event_bus: Optional[EventBus] = None,
+        chantier_repo = None,  # Injection optionnelle pour RG-PLN-004
+        user_repo = None,      # Injection optionnelle pour RG-PLN-005
     ):
         """
         Initialise le use case.
@@ -35,9 +41,13 @@ class UpdateAffectationUseCase:
         Args:
             affectation_repo: Repository affectations (interface).
             event_bus: Bus d'evenements (optionnel).
+            chantier_repo: Repository chantiers (optionnel, pour RG-PLN-004).
+            user_repo: Repository utilisateurs (optionnel, pour RG-PLN-005).
         """
         self.affectation_repo = affectation_repo
         self.event_bus = event_bus
+        self.chantier_repo = chantier_repo
+        self.user_repo = user_repo
 
     def execute(
         self,
@@ -99,6 +109,12 @@ class UpdateAffectationUseCase:
     ) -> None:
         """Modifie l'utilisateur si fourni (PLN-27: drag & drop)."""
         if dto.utilisateur_id is not None:
+            # RG-PLN-005: Valider que le nouvel utilisateur est actif
+            if self.user_repo:
+                user = self.user_repo.find_by_id(dto.utilisateur_id)
+                if user and not user.is_active:
+                    raise UtilisateurInactifError(dto.utilisateur_id)
+
             affectation.changer_utilisateur(dto.utilisateur_id)
             changes["utilisateur_id"] = dto.utilisateur_id
 
@@ -141,6 +157,12 @@ class UpdateAffectationUseCase:
     ) -> None:
         """Modifie le chantier si fourni."""
         if dto.chantier_id is not None:
+            # RG-PLN-004: Valider que le nouveau chantier est actif
+            if self.chantier_repo:
+                chantier = self.chantier_repo.find_by_id(dto.chantier_id)
+                if chantier and not chantier.is_actif:
+                    raise ChantierInactifError(dto.chantier_id)
+
             affectation.changer_chantier(dto.chantier_id)
             changes["chantier_id"] = dto.chantier_id
 

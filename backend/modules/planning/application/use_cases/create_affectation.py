@@ -9,7 +9,12 @@ from ...domain.value_objects import HeureAffectation, TypeAffectation, JourSemai
 from ...domain.events import AffectationCreatedEvent, AffectationBulkCreatedEvent
 from ..dtos import CreateAffectationDTO
 from ..ports import EventBus
-from .exceptions import AffectationConflictError, InvalidDateRangeError, ChantierInactifError
+from .exceptions import (
+    AffectationConflictError,
+    InvalidDateRangeError,
+    ChantierInactifError,
+    UtilisateurInactifError,
+)
 
 
 class CreateAffectationUseCase:
@@ -30,6 +35,8 @@ class CreateAffectationUseCase:
         self,
         affectation_repo: AffectationRepository,
         event_bus: Optional[EventBus] = None,
+        chantier_repo = None,  # Injection optionnelle pour RG-PLN-004
+        user_repo = None,      # Injection optionnelle pour RG-PLN-005
     ):
         """
         Initialise le use case.
@@ -37,9 +44,13 @@ class CreateAffectationUseCase:
         Args:
             affectation_repo: Repository affectations (interface).
             event_bus: Bus d'evenements (optionnel).
+            chantier_repo: Repository chantiers (optionnel, pour RG-PLN-004).
+            user_repo: Repository utilisateurs (optionnel, pour RG-PLN-005).
         """
         self.affectation_repo = affectation_repo
         self.event_bus = event_bus
+        self.chantier_repo = chantier_repo
+        self.user_repo = user_repo
 
     def execute(self, dto: CreateAffectationDTO, created_by: int) -> List[Affectation]:
         """
@@ -59,12 +70,26 @@ class CreateAffectationUseCase:
         Raises:
             AffectationConflictError: Si une affectation existe deja.
             InvalidDateRangeError: Si la plage de dates est invalide.
+            ChantierInactifError: Si le chantier est inactif (RG-PLN-004).
+            UtilisateurInactifError: Si l'utilisateur est inactif (RG-PLN-005).
             ValueError: Si les donnees sont invalides.
 
         Example:
             >>> affectations = use_case.execute(dto, created_by=1)
             >>> print(f"Cree {len(affectations)} affectation(s)")
         """
+        # RG-PLN-004: Valider que le chantier est actif
+        if self.chantier_repo:
+            chantier = self.chantier_repo.find_by_id(dto.chantier_id)
+            if chantier and not chantier.is_actif:
+                raise ChantierInactifError(dto.chantier_id)
+
+        # RG-PLN-005: Valider que l'utilisateur est actif
+        if self.user_repo:
+            user = self.user_repo.find_by_id(dto.utilisateur_id)
+            if user and not user.is_active:
+                raise UtilisateurInactifError(dto.utilisateur_id)
+
         # Convertir les heures si fournies
         heure_debut = None
         heure_fin = None
