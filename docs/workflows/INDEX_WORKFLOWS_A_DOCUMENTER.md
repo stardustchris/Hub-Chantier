@@ -27,6 +27,10 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | **Signalements** | `WORKFLOW_SIGNALEMENTS.md` | ✅ Complet | 100% - Machine à états, SLA, escalade, réponses, statistiques |
 | **Logistique Matériel** | `WORKFLOW_LOGISTIQUE_MATERIEL.md` | ✅ Complet | 100% - Catalogue, réservation, validation N+1, conflits, calendrier |
 | **Planning de Charge** | `WORKFLOW_PLANNING_CHARGE.md` | ✅ Complet | 100% - Taux occupation, besoins, capacité, métiers, footer |
+| **Interventions SAV** | `WORKFLOW_INTERVENTIONS_SAV.md` | ✅ Complet | 100% - Machine à états, signatures, rapport PDF/PV, fil d'activité |
+| **Gestion des Tâches** | `WORKFLOW_GESTION_TACHES.md` | ✅ Complet | 100% - Hiérarchie, templates, feuilles tâches, validation, progression |
+| **Dashboard & Feed** | `WORKFLOW_DASHBOARD_FEED.md` | ✅ Complet | 100% - Posts, ciblage, likes, commentaires, @mentions, archivage |
+| **Notifications** | `WORKFLOW_NOTIFICATIONS.md` | ✅ Complet | 100% - EventBus, handlers, Firebase FCM, polling 30s |
 
 ---
 
@@ -189,37 +193,45 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 
 ## 🟢 WORKFLOWS SECONDAIRES (Basse Priorité)
 
-### 9. **Interventions SAV**
+### 9. **Interventions SAV** ✅ DOCUMENTÉ
 **Module** : `backend/modules/interventions/`
 
-**Workflow** : Gestion interventions ponctuelles post-livraison
-
-**Complexité** : ⭐⭐ (Faible)
-
----
-
-### 10. **Gestion des Tâches**
-**Module** : `backend/modules/taches/`
-
-**Workflow** : Todo list par chantier avec affectations
-
-**Complexité** : ⭐⭐ (Faible)
-
----
-
-### 11. **Dashboard & Feed Social**
-**Module** : `backend/modules/dashboard/`
-
-**Workflow** : Publication posts, likes, commentaires, ciblage
+**Workflow documenté** : `WORKFLOW_INTERVENTIONS_SAV.md`
+- Machine à états (A_PLANIFIER→PLANIFIÉE→EN_COURS→TERMINÉE/ANNULÉE), 5 types, 4 priorités
+- Signatures client/technicien (géoloc + IP + horodatage), rapport PDF/PV client, fil d'activité
 
 **Complexité** : ⭐⭐⭐ (Moyenne)
 
 ---
 
-### 12. **Notifications**
+### 10. **Gestion des Tâches** ✅ DOCUMENTÉ
+**Module** : `backend/modules/taches/`
+
+**Workflow documenté** : `WORKFLOW_GESTION_TACHES.md`
+- Tâches hiérarchiques, 9 unités de mesure, templates Gros Oeuvre (7 modèles)
+- Feuilles de tâches avec validation N+1, code couleur progression, export PDF
+
+**Complexité** : ⭐⭐⭐ (Moyenne)
+
+---
+
+### 11. **Dashboard & Feed Social** ✅ DOCUMENTÉ
+**Module** : `backend/modules/dashboard/`
+
+**Workflow documenté** : `WORKFLOW_DASHBOARD_FEED.md`
+- Posts avec ciblage (tous/chantiers/personnes), likes, commentaires, @mentions
+- Posts urgents auto-épinglés 48h, archivage 7 jours, max 5 photos/2MB, scroll infini
+
+**Complexité** : ⭐⭐⭐ (Moyenne)
+
+---
+
+### 12. **Notifications** ✅ DOCUMENTÉ
 **Module** : `backend/modules/notifications/`
 
-**Workflow** : Push, email, SMS selon types d'événements
+**Workflow documenté** : `WORKFLOW_NOTIFICATIONS.md`
+- EventBus event-driven, 10 types de notifications, 2 handlers câblés (comment, like)
+- Firebase Cloud Messaging push, polling 30s frontend, handlers restants à implémenter
 
 **Complexité** : ⭐⭐⭐ (Moyenne)
 
@@ -237,10 +249,10 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | 6 | **Signalements** | ✅ FAIT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ✅ Complet (WORKFLOW_SIGNALEMENTS.md) |
 | 7 | **Logistique** | ✅ FAIT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ✅ Complet (WORKFLOW_LOGISTIQUE_MATERIEL.md) |
 | 8 | **Planning Charge** | ✅ FAIT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ✅ Complet (WORKFLOW_PLANNING_CHARGE.md) |
-| 9 | **Interventions** | 🟢 NICE | ⭐⭐ | ℹ️ UTILE | 0.5j | ❌ À faire |
-| 10 | **Tâches** | 🟢 NICE | ⭐⭐ | ℹ️ UTILE | 0.5j | ❌ À faire |
-| 11 | **Dashboard/Feed** | 🟢 NICE | ⭐⭐⭐ | ℹ️ UTILE | 1j | ❌ À faire |
-| 12 | **Notifications** | 🟢 NICE | ⭐⭐⭐ | ℹ️ UTILE | 1j | ❌ À faire |
+| 9 | **Interventions** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 0.5j | ✅ Complet (WORKFLOW_INTERVENTIONS_SAV.md) |
+| 10 | **Tâches** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 0.5j | ✅ Complet (WORKFLOW_GESTION_TACHES.md) |
+| 11 | **Dashboard/Feed** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 1j | ✅ Complet (WORKFLOW_DASHBOARD_FEED.md) |
+| 12 | **Notifications** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 1j | ✅ Complet (WORKFLOW_NOTIFICATIONS.md) |
 | | **Authentification** | ✅ FAIT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 2j | ✅ Complet |
 | | **Feuilles Heures (saisie)** | ✅ FAIT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 1j | ✅ Complet |
 
@@ -367,18 +379,14 @@ Description concise du workflow
 
 ## 📞 CONCLUSION
 
-**Statut actuel** : 12 workflows documentés sur 16 (75%)
+**Statut actuel** : 16 workflows documentés sur 16 (100%) ✅
 
 **Fait** :
 1. ✅ **3 workflows critiques** documentés (Planning, Cycle Vie Chantier, Validation FdH)
 2. ✅ **5 workflows importants** documentés (GED, Formulaires, Signalements, Logistique, Planning Charge)
-3. ✅ **4 workflows supports** documentés (Authentification, Feuilles Heures données, Refactoring, Nettoyage)
+3. ✅ **4 workflows secondaires** documentés (Interventions SAV, Gestion Tâches, Dashboard/Feed, Notifications)
+4. ✅ **4 workflows supports** documentés (Authentification, Feuilles Heures données, Refactoring, Nettoyage)
 
-**Reste à faire** :
-1. Finaliser les **4 workflows secondaires** (Sprint 3 - Interventions, Tâches, Dashboard, Notifications)
+**Documentation complète.** Tous les workflows métier de Hub Chantier sont documentés.
 
-**ROI** : 20 jours d'investissement → Gain estimé 50j/an (réduction bugs, onboarding, support)
-
----
-
-**Prochaine action recommandée** : Commencer le Sprint 3 par les workflows secondaires (Interventions, Tâches, Dashboard, Notifications) ?
+**ROI** : 21 jours d'investissement → Gain estimé 50j/an (réduction bugs, onboarding, support)
