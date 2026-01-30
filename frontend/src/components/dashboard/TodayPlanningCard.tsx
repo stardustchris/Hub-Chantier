@@ -47,14 +47,14 @@ const priorityStyles = {
 /** Styles pour le statut réel du chantier */
 const chantierStatutStyles = {
   ouvert: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'A lancer' },
-  en_cours: { bg: 'bg-green-100', text: 'text-green-700', label: 'En cours' },
+  en_cours: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'En cours' },
   receptionne: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Receptionne' },
   ferme: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Ferme' },
 }
 
 const periodStyles = {
-  morning: { border: 'border-orange-500', bg: 'bg-orange-50', badge: 'bg-orange-500' },
-  afternoon: { border: 'border-blue-500', bg: 'bg-blue-50', badge: 'bg-blue-500' },
+  morning: { border: 'border-slate-600', bg: 'bg-slate-50', badge: 'bg-slate-600' },
+  afternoon: { border: 'border-blue-600', bg: 'bg-blue-50', badge: 'bg-blue-600' },
   break: { border: 'border-gray-400', bg: 'bg-gray-50', badge: 'bg-gray-400' },
 }
 
@@ -159,14 +159,18 @@ export default function TodayPlanningCard({
             <div
               key={slot.id}
               onClick={() => handleChantierClick(slot)}
-              className={`border-l-4 ${period.border} rounded-xl ${period.bg} p-4 cursor-pointer hover:shadow-md transition-shadow`}
+              className={`border-l-4 rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow ${
+                slot.period === 'morning' ? 'border-slate-600 bg-slate-50' : 'border-blue-600 bg-blue-50'
+              }`}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && handleChantierClick(slot)}
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <span className={`text-xs px-2 py-1 rounded-md font-semibold ${period.badge} text-white`}>
+                  <span className={`text-xs px-2 py-1 rounded-md font-semibold text-white ${
+                    slot.period === 'morning' ? 'bg-slate-600' : 'bg-blue-600'
+                  }`}>
                     {slot.startTime} - {slot.endTime}
                   </span>
                   <span className="ml-2 text-sm text-gray-600">
@@ -224,7 +228,7 @@ export default function TodayPlanningCard({
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <button
                   onClick={(e) => { e.stopPropagation(); onNavigate?.(slot.id) }}
-                  className="bg-green-600 text-white py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 font-medium"
+                  className="bg-blue-500 text-white py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-600 font-medium"
                 >
                   <Navigation className="w-4 h-4" />
                   Itineraire

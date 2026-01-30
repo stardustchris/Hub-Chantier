@@ -240,7 +240,7 @@ export default function DashboardPage() {
               />
 
               {/* Actualites Section */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg">
+              <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200">
                 <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
                   <MessageCircle className="w-5 h-5 text-blue-600" />
                   Actualites
@@ -391,7 +391,19 @@ export default function DashboardPage() {
 
                 {/* Posts */}
                 <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-                  {feed.sortedPosts.length === 0 && !feed.isLoading && !weather ? (
+                  {/* Afficher le bulletin météo en premier si disponible */}
+                  {weather && (
+                    <WeatherBulletinPost
+                      weather={weather}
+                      alert={weatherAlert}
+                      chantierName={currentSlot?.siteName}
+                      chantierAddress={currentSlot?.siteAddress}
+                      chantierLatitude={currentSlot?.siteLatitude}
+                      chantierLongitude={currentSlot?.siteLongitude}
+                    />
+                  )}
+
+                  {feed.sortedPosts.length === 0 && !feed.isLoading ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Aucune publication pour le moment</p>
@@ -399,60 +411,16 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <>
-                      {feed.sortedPosts.map((post, index) => {
-                        // Afficher le bulletin météo après les posts d'aujourd'hui mais avant ceux d'hier
-                        const isToday = (dateStr: string) => {
-                          const postDate = new Date(dateStr);
-                          const today = new Date();
-                          return postDate.toDateString() === today.toDateString();
-                        };
-
-                        const shouldShowWeatherAfter = weather &&
-                          index < feed.sortedPosts.length - 1 &&
-                          isToday(post.created_at) &&
-                          !isToday(feed.sortedPosts[index + 1]?.created_at || '');
-
-                        return (
-                          <div key={`post-group-${post.id}`}>
-                            <DashboardPostCard
-                              post={post}
-                              allAuthors={allUsers}
-                              onLike={feed.handleLike}
-                              onPin={feed.handlePin}
-                              onDelete={feed.handleDelete}
-                            />
-
-                            {shouldShowWeatherAfter && (
-                              <div className="mt-4">
-                                <WeatherBulletinPost
-                                  weather={weather}
-                                  alert={weatherAlert}
-                                  chantierName={currentSlot?.siteName}
-                                  chantierAddress={currentSlot?.siteAddress}
-                                  chantierLatitude={currentSlot?.siteLatitude}
-                                  chantierLongitude={currentSlot?.siteLongitude}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* Si aucun post d'hier, afficher le bulletin à la fin */}
-                      {weather && feed.sortedPosts.every(p => {
-                        const postDate = new Date(p.created_at);
-                        const today = new Date();
-                        return postDate.toDateString() === today.toDateString();
-                      }) && (
-                        <WeatherBulletinPost
-                          weather={weather}
-                          alert={weatherAlert}
-                          chantierName={currentSlot?.siteName}
-                          chantierAddress={currentSlot?.siteAddress}
-                          chantierLatitude={currentSlot?.siteLatitude}
-                          chantierLongitude={currentSlot?.siteLongitude}
+                      {feed.sortedPosts.map((post) => (
+                        <DashboardPostCard
+                          key={post.id}
+                          post={post}
+                          allAuthors={allUsers}
+                          onLike={feed.handleLike}
+                          onPin={feed.handlePin}
+                          onDelete={feed.handleDelete}
                         />
-                      )}
+                      ))}
                     </>
                   )}
 
