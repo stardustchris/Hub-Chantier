@@ -28,16 +28,12 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
     date_debut_prevue: chantier.date_debut_prevue,
     date_fin_prevue: chantier.date_fin_prevue,
     description: chantier.description,
+    maitre_ouvrage: chantier.maitre_ouvrage,
   })
 
-  // Initialiser les contacts depuis les données existantes
-  const initialContacts: ContactChantier[] = chantier.contacts?.length
-    ? chantier.contacts
-    : chantier.contact_nom
-      ? [{ nom: chantier.contact_nom, profession: '', telephone: chantier.contact_telephone || '' }]
-      : [{ nom: '', profession: '', telephone: '' }]
-
-  const [contacts, setContacts] = useState<ContactChantier[]>(initialContacts)
+  // Les contacts seront chargés depuis l'API
+  const [contacts, setContacts] = useState<ContactChantier[]>([{ nom: '', profession: '', telephone: '' }])
+  const [initialContactIds, setInitialContactIds] = useState<number[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -47,10 +43,23 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
   const [deletedPhaseIds, setDeletedPhaseIds] = useState<number[]>([])
   const [_loadingPhases, setLoadingPhases] = useState(true)
 
-  // Charger les phases existantes depuis l'API
+  // Charger les contacts et phases existants depuis l'API
   useEffect(() => {
-    const loadPhases = async () => {
+    const loadData = async () => {
       try {
+        // Charger les contacts
+        const existingContacts = await chantiersService.listContacts(String(chantier.id))
+        if (existingContacts.length > 0) {
+          setContacts(existingContacts.map(c => ({
+            id: c.id,
+            nom: c.nom,
+            profession: c.profession || '',
+            telephone: c.telephone || '',
+          })))
+          setInitialContactIds(existingContacts.map(c => c.id).filter((id): id is number => id !== undefined))
+        }
+
+        // Charger les phases
         const existingPhases = await chantiersService.listPhases(String(chantier.id))
         setPhases(existingPhases.map(p => ({
           id: p.id,
@@ -61,12 +70,12 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
           date_fin: p.date_fin || '',
         })))
       } catch (error) {
-        logger.error('Erreur chargement phases', error, { context: 'EditChantierModal' })
+        logger.error('Erreur chargement données', error, { context: 'EditChantierModal' })
       } finally {
         setLoadingPhases(false)
       }
     }
-    loadPhases()
+    loadData()
   }, [chantier.id])
 
   // Geocoder automatiquement l'adresse quand elle change (avec debounce)
@@ -143,6 +152,52 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
     setPhases(updated)
   }
 
+  // Synchroniser les contacts avec l'API
+  const syncContacts = async () => {
+    const chantierId = chantier.id
+    const currentContactIds = contacts.filter(c => c.id).map(c => c.id!)
+
+    // 1. Supprimer les contacts qui ont été retirés
+    const deletedContactIds = initialContactIds.filter(id => !currentContactIds.includes(id))
+    for (const contactId of deletedContactIds) {
+      try {
+        await chantiersService.removeContact(chantierId, contactId)
+      } catch (error) {
+        logger.error(`Erreur suppression contact ${contactId}`, error, { context: 'EditChantierModal' })
+      }
+    }
+
+    // 2. Créer ou mettre à jour les contacts
+    for (const contact of contacts) {
+      // Ignorer les contacts vides ou sans nom et téléphone
+      if (!contact.nom.trim() || !contact.telephone?.trim()) {
+        continue
+      }
+
+      const contactData: any = {
+        nom: contact.nom,
+        telephone: contact.telephone,
+      }
+
+      // Ajouter profession uniquement si présente
+      if (contact.profession?.trim()) {
+        contactData.profession = contact.profession
+      }
+
+      try {
+        if (contact.id) {
+          // Mise à jour d'un contact existant
+          await chantiersService.updateContact(chantierId, contact.id, contactData)
+        } else {
+          // Création d'un nouveau contact
+          await chantiersService.addContact(chantierId, contactData)
+        }
+      } catch (error) {
+        logger.error(`Erreur sync contact ${contact.nom}`, error, { context: 'EditChantierModal' })
+      }
+    }
+  }
+
   // Synchroniser les phases avec l'API
   const syncPhases = async () => {
     const chantierId = chantier.id
@@ -199,10 +254,17 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         contact_nom: validContacts[0]?.nom || undefined,
         contact_telephone: validContacts[0]?.telephone || undefined,
       }
+
       await onSubmit(dataToSubmit)
 
-      // Synchroniser les phases via l'API dédiée
+      // Synchroniser les contacts et phases via l'API dédiée
+      await syncContacts()
       await syncPhases()
+
+      // Fermer le modal après synchronisation réussie
+      onClose()
+    } catch (error) {
+      logger.error('Erreur lors de la soumission', error, { context: 'EditChantierModal' })
     } finally {
       setIsSubmitting(false)
     }
@@ -270,6 +332,19 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
                 </div>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Maitre d'ouvrage
+            </label>
+            <input
+              type="text"
+              value={formData.maitre_ouvrage || ''}
+              onChange={(e) => setFormData({ ...formData, maitre_ouvrage: e.target.value })}
+              className="input"
+              placeholder="Ex: OPAC Savoie"
+            />
           </div>
 
           <div>

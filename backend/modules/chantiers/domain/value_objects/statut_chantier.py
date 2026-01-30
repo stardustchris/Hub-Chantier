@@ -89,7 +89,7 @@ class StatutChantier:
 
     def allows_modifications(self) -> bool:
         """Vérifie si le statut permet des modifications opérationnelles."""
-        return self.value in [StatutChantierEnum.OUVERT, StatutChantierEnum.EN_COURS]
+        return self.value in [StatutChantierEnum.OUVERT, StatutChantierEnum.EN_COURS, StatutChantierEnum.RECEPTIONNE]
 
     def allows_planning(self) -> bool:
         """Vérifie si le statut permet la planification d'équipes."""

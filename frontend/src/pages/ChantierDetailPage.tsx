@@ -30,7 +30,7 @@ import {
   Users,
 } from 'lucide-react'
 import { formatDateFull } from '../utils/dates'
-import type { Chantier, ChantierUpdate, User, Affectation } from '../types'
+import type { Chantier, ChantierUpdate, User, Affectation, ContactChantier } from '../types'
 import { CHANTIER_STATUTS } from '../types'
 
 type TabType = 'infos' | 'taches' | 'equipe'
@@ -54,6 +54,7 @@ export default function ChantierDetailPage() {
   }
   const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
   const [planningAffectations, setPlanningAffectations] = useState<Affectation[]>([])
+  const [contacts, setContacts] = useState<ContactChantier[]>([])
 
   const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
@@ -151,6 +152,14 @@ export default function ChantierDetailPage() {
       setIsLoading(true)
       const data = await chantiersService.getById(id!)
       setChantier(data)
+
+      // Charger les contacts depuis l'API dédiée
+      try {
+        const contactsData = await chantiersService.listContacts(id!)
+        setContacts(contactsData)
+      } catch (error) {
+        logger.error('Error loading contacts', error, { context: 'ChantierDetailPage' })
+      }
     } catch (error) {
       logger.error('Error loading chantier', error, { context: 'ChantierDetailPage' })
       addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
@@ -188,11 +197,14 @@ export default function ChantierDetailPage() {
     try {
       const updated = await chantiersService.update(id!, data)
       setChantier(updated)
-      setShowEditModal(false)
+      // NE PAS fermer le modal ici - le modal se fermera lui-même après avoir synchronisé les contacts et phases
+      // setShowEditModal(false)
       addToast({ message: 'Chantier mis a jour', type: 'success' })
     } catch (error) {
       logger.error('Error updating chantier', error, { context: 'ChantierDetailPage' })
       addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
+      // Relancer l'exception pour que le modal sache qu'il y a eu une erreur
+      throw error
     }
   }
 
@@ -554,22 +566,29 @@ export default function ChantierDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
 
-              {/* Contact */}
-              {(chantier.contact_nom || chantier.contact_telephone) && (
+              {/* Contacts */}
+              {contacts.length > 0 && (
                 <div className="card">
-                  <h2 className="font-semibold text-gray-900 mb-4">Contact sur place</h2>
-                  {chantier.contact_nom && (
-                    <p className="font-medium text-gray-900">{chantier.contact_nom}</p>
-                  )}
-                  {chantier.contact_telephone && (
-                    <a
-                      href={`tel:${chantier.contact_telephone}`}
-                      className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mt-2"
-                    >
-                      <Phone className="w-4 h-4" />
-                      {chantier.contact_telephone}
-                    </a>
-                  )}
+                  <h2 className="font-semibold text-gray-900 mb-4">Contacts</h2>
+                  <div className="space-y-3">
+                    {contacts.map((contact, index) => (
+                      <div key={contact.id || index} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
+                        <p className="font-medium text-gray-900">{contact.nom}</p>
+                        {contact.profession && (
+                          <p className="text-sm text-gray-600">{contact.profession}</p>
+                        )}
+                        {contact.telephone && (
+                          <a
+                            href={`tel:${contact.telephone}`}
+                            className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mt-1 text-sm"
+                          >
+                            <Phone className="w-4 h-4" />
+                            {contact.telephone}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -613,7 +632,11 @@ export default function ChantierDetailPage() {
         {showEditModal && (
           <EditChantierModal
             chantier={chantier}
-            onClose={() => setShowEditModal(false)}
+            onClose={() => {
+              setShowEditModal(false)
+              // Recharger le chantier et les contacts après fermeture du modal
+              loadChantier()
+            }}
             onSubmit={handleUpdateChantier}
           />
         )}
