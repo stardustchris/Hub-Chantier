@@ -22,6 +22,11 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | **Planning Opérationnel** | `WORKFLOW_PLANNING_OPERATIONNEL.md` | ✅ Complet | 100% - Affectations, absences, drag&drop, conflits |
 | **Cycle de Vie Chantier** | `WORKFLOW_CYCLE_VIE_CHANTIER.md` | ✅ Complet | 100% - Machine à états, création, transitions, RGPD |
 | **Validation Feuilles d'Heures** | `WORKFLOW_VALIDATION_FEUILLES_HEURES.md` | ✅ Complet | 100% - Workflow validation, signature manuscrite, verrouillage mensuel, export paie |
+| **Gestion Documentaire (GED)** | `WORKFLOW_GESTION_DOCUMENTAIRE.md` | ✅ Complet | 100% - Upload, arborescence, permissions, versionnage, prévisualisation |
+| **Formulaires Dynamiques** | `WORKFLOW_FORMULAIRES_DYNAMIQUES.md` | ✅ Complet | 100% - Templates, machine à états, auto-fill, signature, export PDF |
+| **Signalements** | `WORKFLOW_SIGNALEMENTS.md` | ✅ Complet | 100% - Machine à états, SLA, escalade, réponses, statistiques |
+| **Logistique Matériel** | `WORKFLOW_LOGISTIQUE_MATERIEL.md` | ✅ Complet | 100% - Catalogue, réservation, validation N+1, conflits, calendrier |
+| **Planning de Charge** | `WORKFLOW_PLANNING_CHARGE.md` | ✅ Complet | 100% - Taux occupation, besoins, capacité, métiers, footer |
 
 ---
 
@@ -127,145 +132,58 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 
 ## 🟡 WORKFLOWS IMPORTANTS (Priorité Moyenne)
 
-### 4. **Gestion Documentaire (GED)**
+### 4. **Gestion Documentaire (GED)** ✅ DOCUMENTÉ
 **Module** : `backend/modules/documents/`
 
-**Workflow à documenter** :
-- Structure arborescente (Chantiers → Dossiers → Documents)
-- Upload de fichiers (types autorisés, taille max)
-- Gestion des versions
-- Permissions d'accès (rôles)
-- Tags et recherche
-- Prévisualisation (PDF, images)
-- Partage avec externes
-- Signature électronique documents
-
-**Enjeux** :
-- ⚠️ Compliance légale (conservation documents BTP)
-- ⚠️ Volumétrie importante (photos, plans, PV)
-- ⚠️ Sécurité (documents sensibles)
+**Workflow documenté** : `WORKFLOW_GESTION_DOCUMENTAIRE.md`
+- Structure arborescente (7 dossiers standards), upload (10GB max), permissions 4 niveaux
+- Versionnage, prévisualisation, téléchargement ZIP, audit trail
 
 **Complexité** : ⭐⭐⭐⭐ (Élevée)
 
-**Fichier recommandé** : `WORKFLOW_GESTION_DOCUMENTAIRE.md`
-
 ---
 
-### 5. **Formulaires Chantier Dynamiques**
+### 5. **Formulaires Chantier Dynamiques** ✅ DOCUMENTÉ
 **Module** : `backend/modules/formulaires/`
 
-**Workflow à documenter** :
-1. **Création Templates** (Admin) :
-   - Définition des champs (texte, date, photo, signature)
-   - Validation (champs obligatoires)
-   - Workflow d'approbation
-   - Visibilité (tous/chantiers spécifiques)
-
-2. **Remplissage** (Terrain) :
-   - Sélection template
-   - Saisie des données
-   - Upload photos
-   - Géolocalisation automatique
-   - Signature électronique
-   - Mode offline
-
-3. **Validation** :
-   - Soumission
-   - Validation N+1
-   - Génération PDF
-   - Stockage GED
-
-**Exemples** : PPSPS, Compte-rendu réunion, Rapport incident, PV réception
-
-**Enjeux** :
-- ⚠️ Conformité réglementaire (PPSPS obligatoire)
-- ⚠️ Traçabilité complète
-- ⚠️ Mode offline essentiel
+**Workflow documenté** : `WORKFLOW_FORMULAIRES_DYNAMIQUES.md`
+- Templates (8 catégories, 21 types de champs), machine à états (BROUILLON→SOUMIS→VALIDÉ→ARCHIVÉ)
+- Auto-fill GPS/date/user, signature manuscrite, photos géolocalisées, export PDF
 
 **Complexité** : ⭐⭐⭐⭐ (Élevée)
 
-**Fichier recommandé** : `WORKFLOW_FORMULAIRES_DYNAMIQUES.md`
-
 ---
 
-### 6. **Signalements / Memos**
+### 6. **Signalements / Memos** ✅ DOCUMENTÉ
 **Module** : `backend/modules/signalements/`
 
-**Workflow à documenter** :
-- Création signalement (urgence, problème, question)
-- Niveaux de priorité (Bas, Moyen, Haut, Critique)
-- Affectation automatique (chef chantier du chantier)
-- Réaffectation manuelle
-- Commentaires et historique
-- Résolution et clôture
-- Notifications push temps réel
-- Pièces jointes (photos)
-
-**Enjeux** :
-- ⚠️ Communication terrain/bureau
-- ⚠️ Traçabilité problèmes
-- ⚠️ SLA résolution
+**Workflow documenté** : `WORKFLOW_SIGNALEMENTS.md`
+- Machine à états (OUVERT→EN_COURS→TRAITÉ→CLÔTURÉ), 4 priorités avec SLA (4h/24h/48h/72h)
+- Escalade lazy (50%→chef, 100%→conducteur, 200%→admin), fil de réponses, statistiques
 
 **Complexité** : ⭐⭐⭐ (Moyenne)
 
-**Fichier recommandé** : `WORKFLOW_SIGNALEMENTS.md`
-
 ---
 
-### 7. **Logistique - Réservation Matériel**
+### 7. **Logistique - Réservation Matériel** ✅ DOCUMENTÉ
 **Module** : `backend/modules/logistique/`
 
-**Workflow à documenter** :
-1. **Création Ressource** (Admin) :
-   - Type (engin, gros matériel)
-   - Caractéristiques
-   - Photo
-   - Disponibilité
-   - Besoin validation N+1
-
-2. **Réservation** (Chef/Conducteur) :
-   - Consultation calendrier disponibilité
-   - Demande réservation (chantier, dates)
-   - Validation N+1 (si requis)
-   - Confirmation automatique
-   - Annulation
-
-3. **Gestion** :
-   - Statuts (En attente, Validée, Refusée, Terminée)
-   - Historique des réservations
-   - Conflits de planning
-   - Maintenance/indisponibilité
-
-**Enjeux** :
-- ⚠️ Optimisation ressources coûteuses
-- ⚠️ Conflits de planning
-- ⚠️ Traçabilité utilisation
+**Workflow documenté** : `WORKFLOW_LOGISTIQUE_MATERIEL.md`
+- Catalogue (5 catégories), réservation (EN_ATTENTE→VALIDÉE/REFUSÉE/ANNULÉE)
+- Validation N+1 configurable, détection conflits, calendrier 7 jours, rappel J-1
 
 **Complexité** : ⭐⭐⭐ (Moyenne)
 
-**Fichier recommandé** : `WORKFLOW_LOGISTIQUE_MATERIEL.md`
-
 ---
 
-### 8. **Planning de Charge**
-**Module** : `backend/modules/planning_charge/`
+### 8. **Planning de Charge** ✅ DOCUMENTÉ
+**Module** : `backend/modules/planning/` (sous-module charge)
 
-**Workflow à documenter** :
-- Vue capacitaire par métier
-- Calcul besoins vs disponibilités
-- Identification surcharges/sous-charges
-- Projection sur plusieurs semaines
-- Alertes déséquilibre
-- Aide à la décision affectations
-
-**Enjeux** :
-- ⚠️ Optimisation RH
-- ⚠️ Prévision besoins recrutement/intérim
-- ⚠️ Calculs complexes
+**Workflow documenté** : `WORKFLOW_PLANNING_CHARGE.md`
+- Vue tabulaire chantiers x semaines, taux d'occupation (5 niveaux), 9 types de métiers
+- Besoins manuels, capacité auto (35h/sem), footer "À recruter" / "À placer"
 
 **Complexité** : ⭐⭐⭐⭐ (Élevée)
-
-**Fichier recommandé** : `WORKFLOW_PLANNING_CHARGE.md`
 
 ---
 
@@ -314,11 +232,11 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | 1 | **Planning Opérationnel** | ✅ FAIT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ✅ Complet (WORKFLOW_PLANNING_OPERATIONNEL.md) |
 | 2 | **Cycle Vie Chantier** | ✅ FAIT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 2j | ✅ Complet (WORKFLOW_CYCLE_VIE_CHANTIER.md) |
 | 3 | **Validation Feuilles Heures** | ✅ FAIT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ✅ Complet (WORKFLOW_VALIDATION_FEUILLES_HEURES.md) |
-| 4 | **GED** | 🟡 IMPORTANT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ❌ À faire |
-| 5 | **Formulaires Dynamiques** | 🟡 IMPORTANT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ❌ À faire |
-| 6 | **Signalements** | 🟡 IMPORTANT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ❌ À faire |
-| 7 | **Logistique** | 🟡 IMPORTANT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ❌ À faire |
-| 8 | **Planning Charge** | 🟡 IMPORTANT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ❌ À faire |
+| 4 | **GED** | ✅ FAIT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ✅ Complet (WORKFLOW_GESTION_DOCUMENTAIRE.md) |
+| 5 | **Formulaires Dynamiques** | ✅ FAIT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ✅ Complet (WORKFLOW_FORMULAIRES_DYNAMIQUES.md) |
+| 6 | **Signalements** | ✅ FAIT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ✅ Complet (WORKFLOW_SIGNALEMENTS.md) |
+| 7 | **Logistique** | ✅ FAIT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ✅ Complet (WORKFLOW_LOGISTIQUE_MATERIEL.md) |
+| 8 | **Planning Charge** | ✅ FAIT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ✅ Complet (WORKFLOW_PLANNING_CHARGE.md) |
 | 9 | **Interventions** | 🟢 NICE | ⭐⭐ | ℹ️ UTILE | 0.5j | ❌ À faire |
 | 10 | **Tâches** | 🟢 NICE | ⭐⭐ | ℹ️ UTILE | 0.5j | ❌ À faire |
 | 11 | **Dashboard/Feed** | 🟢 NICE | ⭐⭐⭐ | ℹ️ UTILE | 1j | ❌ À faire |
@@ -449,18 +367,18 @@ Description concise du workflow
 
 ## 📞 CONCLUSION
 
-**Statut actuel** : 7 workflows documentés sur 16 (44%)
+**Statut actuel** : 12 workflows documentés sur 16 (75%)
 
 **Fait** :
 1. ✅ **3 workflows critiques** documentés (Planning, Cycle Vie Chantier, Validation FdH)
-2. ✅ **4 workflows supports** documentés (Authentification, Feuilles Heures données, Refactoring, Nettoyage)
+2. ✅ **5 workflows importants** documentés (GED, Formulaires, Signalements, Logistique, Planning Charge)
+3. ✅ **4 workflows supports** documentés (Authentification, Feuilles Heures données, Refactoring, Nettoyage)
 
 **Reste à faire** :
-1. Compléter les **5 workflows importants** (Sprint 2 - GED, Formulaires, Signalements, Logistique, Planning Charge)
-2. Finaliser les **4 workflows secondaires** (Sprint 3 - Interventions, Tâches, Dashboard, Notifications)
+1. Finaliser les **4 workflows secondaires** (Sprint 3 - Interventions, Tâches, Dashboard, Notifications)
 
 **ROI** : 20 jours d'investissement → Gain estimé 50j/an (réduction bugs, onboarding, support)
 
 ---
 
-**Prochaine action recommandée** : Commencer le Sprint 2 par **WORKFLOW_GESTION_DOCUMENTAIRE.md** ?
+**Prochaine action recommandée** : Commencer le Sprint 3 par les workflows secondaires (Interventions, Tâches, Dashboard, Notifications) ?
