@@ -100,7 +100,7 @@ class TestRegisterNotificationHandlers:
         with patch("modules.notifications.infrastructure.event_handlers.logger") as mock_logger:
             register_notification_handlers()
 
-            mock_logger.info.assert_called_with("Notification event handlers registered")
+            mock_logger.info.assert_called_with("Notification event handlers registered (comment, like, heures.validated)")
 
     def test_register_handlers_no_exception(self):
         """Test que la fonction ne lève pas d'exception."""

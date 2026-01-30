@@ -88,8 +88,12 @@ class StatutChantier:
         return self.value != StatutChantierEnum.FERME
 
     def allows_modifications(self) -> bool:
-        """Vérifie si le statut permet des modifications opérationnelles."""
-        return self.value in [StatutChantierEnum.OUVERT, StatutChantierEnum.EN_COURS, StatutChantierEnum.RECEPTIONNE]
+        """Vérifie si le statut permet des modifications opérationnelles.
+
+        Un chantier réceptionné est en lecture seule (travaux terminés,
+        en attente de clôture administrative).
+        """
+        return self.value in [StatutChantierEnum.OUVERT, StatutChantierEnum.EN_COURS]
 
     def allows_planning(self) -> bool:
         """Vérifie si le statut permet la planification d'équipes."""

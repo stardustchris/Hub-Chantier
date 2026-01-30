@@ -18,6 +18,13 @@ from ..application.use_cases import BulkCreateFromPlanningUseCase
 logger = logging.getLogger(__name__)
 
 
+def _extract_event_field(event, field: str, default=None):
+    """Extrait un champ depuis un DomainEvent (event.data) ou un ancien event (attribut direct)."""
+    if hasattr(event, 'data') and isinstance(event.data, dict):
+        return event.data.get(field, default)
+    return getattr(event, field, default)
+
+
 def handle_affectation_created(
     event,
     session: Session,
@@ -26,14 +33,25 @@ def handle_affectation_created(
     Handler pour l'événement AffectationCreatedEvent du module Planning.
 
     Crée automatiquement un pointage pré-rempli depuis l'affectation (FDH-10).
+    Compatible avec les deux styles d'événements (DomainEvent et frozen dataclass).
 
     Args:
-        event: L'événement AffectationCreatedEvent.
+        event: L'événement AffectationCreatedEvent (DomainEvent ou dataclass).
         session: Session SQLAlchemy.
     """
+    from datetime import date as date_type
+
+    affectation_id = _extract_event_field(event, 'affectation_id')
+    utilisateur_id = _extract_event_field(event, 'user_id') or _extract_event_field(event, 'utilisateur_id')
+    chantier_id = _extract_event_field(event, 'chantier_id')
+    date_val = _extract_event_field(event, 'date') or _extract_event_field(event, 'date_affectation')
+    created_by = (_extract_event_field(event, 'created_by')
+                  or (event.metadata.get('created_by') if hasattr(event, 'metadata') and isinstance(event.metadata, dict) else None)
+                  or 0)
+
     logger.info(
-        f"Handling AffectationCreatedEvent: affectation_id={event.affectation_id}, "
-        f"utilisateur_id={event.utilisateur_id}, chantier_id={event.chantier_id}"
+        f"Handling AffectationCreatedEvent: affectation_id={affectation_id}, "
+        f"utilisateur_id={utilisateur_id}, chantier_id={chantier_id}"
     )
 
     try:
@@ -48,24 +66,26 @@ def handle_affectation_created(
         )
 
         # Détermine les heures prévues (depuis l'événement ou par défaut)
-        heures_prevues = getattr(event, "heures_prevues", "08:00")
-        if not heures_prevues:
-            heures_prevues = "08:00"
+        heures_prevues = _extract_event_field(event, 'heures_prevues') or "08:00"
+
+        # Convertir la date si c'est une string ISO
+        if isinstance(date_val, str):
+            date_val = date_type.fromisoformat(date_val)
 
         # Crée le pointage depuis l'événement
         result = use_case.execute_from_event(
-            utilisateur_id=event.utilisateur_id,
-            chantier_id=event.chantier_id,
-            date_affectation=event.date,
+            utilisateur_id=utilisateur_id,
+            chantier_id=chantier_id,
+            date_affectation=date_val,
             heures_prevues=heures_prevues,
-            affectation_id=event.affectation_id,
-            created_by=event.created_by,
+            affectation_id=affectation_id,
+            created_by=created_by,
         )
 
         if result:
-            logger.info(f"Pointage créé: id={result.id} depuis affectation={event.affectation_id}")
+            logger.info(f"Pointage créé: id={result.id} depuis affectation={affectation_id}")
         else:
-            logger.debug(f"Pointage non créé (déjà existant) pour affectation={event.affectation_id}")
+            logger.debug(f"Pointage non créé (déjà existant) pour affectation={affectation_id}")
 
     except Exception as e:
         logger.error(f"Erreur lors de la création du pointage depuis affectation: {e}")

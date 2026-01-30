@@ -9,6 +9,7 @@ from shared.infrastructure.database import SessionLocal
 from shared.application.ports import EntityInfoService
 from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from modules.dashboard.domain.events import CommentAddedEvent, LikeAddedEvent
+from modules.pointages.domain.events.heures_validated import HeuresValidatedEvent
 from ..domain.entities import Notification
 from ..domain.value_objects import NotificationType
 from .persistence import SQLAlchemyNotificationRepository
@@ -154,6 +155,58 @@ def handle_like_added(event: LikeAddedEvent) -> None:
         db.close()
 
 
+@event_handler('heures.validated')
+def handle_heures_validated(event) -> None:
+    """
+    Gere l'evenement HeuresValidatedEvent.
+
+    Notifie le compagnon que ses heures ont ete validees et journalise
+    l'evenement pour le systeme de paie.
+    """
+    data = event.data if hasattr(event, 'data') and isinstance(event.data, dict) else {}
+    user_id = data.get('user_id')
+    validated_by = data.get('validated_by')
+    heures = data.get('heures_travaillees', 0)
+    heures_sup = data.get('heures_supplementaires', 0)
+    chantier_id = data.get('chantier_id')
+    date_str = data.get('date', '')
+
+    if not user_id or not validated_by:
+        logger.warning(f"HeuresValidatedEvent sans user_id ou validated_by: {data}")
+        return
+
+    # Ne pas notifier le validateur s'il valide ses propres heures
+    if user_id == validated_by:
+        logger.info(f"Auto-validation heures user_id={user_id}, pas de notification")
+        return
+
+    logger.info(f"Handling heures.validated: user_id={user_id}, validated_by={validated_by}")
+
+    db = SessionLocal()
+    try:
+        repo = SQLAlchemyNotificationRepository(db)
+        validator_name = get_user_name(db, validated_by)
+
+        total_heures = heures + heures_sup
+        message = f"{validator_name} a valide vos heures du {date_str} ({total_heures}h)"
+
+        notification = Notification(
+            user_id=user_id,
+            type=NotificationType.SYSTEM,
+            title="Heures validees",
+            message=message,
+            related_chantier_id=chantier_id,
+            triggered_by_user_id=validated_by,
+        )
+        repo.save(notification)
+        logger.info(f"Created heures validated notification for user {user_id}")
+
+    except Exception as e:
+        logger.error(f"Error handling heures.validated: {e}")
+    finally:
+        db.close()
+
+
 def register_notification_handlers() -> None:
     """
     Enregistre tous les handlers de notifications.
@@ -162,4 +215,4 @@ def register_notification_handlers() -> None:
     Les decorateurs @event_handler font l'enregistrement automatiquement,
     mais cette fonction force leur import.
     """
-    logger.info("Notification event handlers registered")
+    logger.info("Notification event handlers registered (comment, like, heures.validated)")
