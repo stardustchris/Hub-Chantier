@@ -351,6 +351,60 @@ class SQLAlchemyUserRepository(UserRepository):
 
         return [self._to_entity(m) for m in models], total
 
+    def find_by_password_reset_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token de réinitialisation de mot de passe.
+
+        Args:
+            token: Le token de réinitialisation.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.password_reset_token == token)
+            .filter(self._not_deleted())
+            .first()
+        )
+        return self._to_entity(model) if model else None
+
+    def find_by_invitation_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token d'invitation.
+
+        Args:
+            token: Le token d'invitation.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.invitation_token == token)
+            .filter(self._not_deleted())
+            .first()
+        )
+        return self._to_entity(model) if model else None
+
+    def find_by_email_verification_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token de vérification d'email.
+
+        Args:
+            token: Le token de vérification.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.email_verification_token == token)
+            .filter(self._not_deleted())
+            .first()
+        )
+        return self._to_entity(model) if model else None
+
     def _to_entity(self, model: UserModel) -> User:
         """
         Convertit un modèle SQLAlchemy en entité Domain.
@@ -379,6 +433,19 @@ class SQLAlchemyUserRepository(UserRepository):
             contact_urgence_tel=model.contact_urgence_tel,
             created_at=model.created_at,
             updated_at=model.updated_at,
+            # Password reset
+            password_reset_token=model.password_reset_token,
+            password_reset_expires_at=model.password_reset_expires_at,
+            # Invitation
+            invitation_token=model.invitation_token,
+            invitation_expires_at=model.invitation_expires_at,
+            # Email verification
+            email_verified_at=model.email_verified_at,
+            email_verification_token=model.email_verification_token,
+            # Account lockout
+            failed_login_attempts=model.failed_login_attempts,
+            last_failed_login_at=model.last_failed_login_at,
+            locked_until=model.locked_until,
         )
 
     def _to_model(self, user: User) -> UserModel:
@@ -409,4 +476,17 @@ class SQLAlchemyUserRepository(UserRepository):
             contact_urgence_tel=user.contact_urgence_tel,
             created_at=user.created_at,
             updated_at=user.updated_at,
+            # Password reset
+            password_reset_token=user.password_reset_token,
+            password_reset_expires_at=user.password_reset_expires_at,
+            # Invitation
+            invitation_token=user.invitation_token,
+            invitation_expires_at=user.invitation_expires_at,
+            # Email verification
+            email_verified_at=user.email_verified_at,
+            email_verification_token=user.email_verification_token,
+            # Account lockout
+            failed_login_attempts=user.failed_login_attempts,
+            last_failed_login_at=user.last_failed_login_at,
+            locked_until=user.locked_until,
         )

@@ -204,3 +204,42 @@ class UserRepository(ABC):
             Tuple (liste des utilisateurs, total count).
         """
         pass
+
+    @abstractmethod
+    def find_by_password_reset_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token de réinitialisation de mot de passe.
+
+        Args:
+            token: Le token de réinitialisation.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        pass
+
+    @abstractmethod
+    def find_by_invitation_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token d'invitation.
+
+        Args:
+            token: Le token d'invitation.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        pass
+
+    @abstractmethod
+    def find_by_email_verification_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token de vérification d'email.
+
+        Args:
+            token: Le token de vérification.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        pass

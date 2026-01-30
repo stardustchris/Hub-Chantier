@@ -153,6 +153,7 @@ class UpdateChantierRequest(BaseModel):
     date_debut_prevue: Optional[str] = None  # Renommé pour frontend
     date_fin_prevue: Optional[str] = None  # Renommé pour frontend
     description: Optional[str] = None
+    maitre_ouvrage: Optional[str] = None
 
 
 class ChangeStatutRequest(BaseModel):
@@ -201,7 +202,7 @@ class ChantierResponse(BaseModel):
         ...,
         description="Code unique du chantier (auto-généré si non fourni)",
         min_length=3,
-        max_length=20,
+        max_length=50,
         example="CHT-2026-001"
     )
     nom: str = Field(
@@ -259,6 +260,12 @@ class ChantierResponse(BaseModel):
     phases: List[PhaseChantierResponse] = Field(
         default_factory=list,
         description="Phases/étapes du chantier"
+    )
+    maitre_ouvrage: Optional[str] = Field(
+        None,
+        description="Nom du maître d'ouvrage",
+        max_length=255,
+        example="OPAC Savoie"
     )
     heures_estimees: Optional[float] = Field(
         None,
@@ -591,6 +598,8 @@ def update_chantier(
         HTTPException 400: Chantier fermé ou données invalides.
         HTTPException 403: Accès non autorisé.
     """
+    print(f"[DEBUG] update_chantier called with request: {request}")
+    print(f"[DEBUG] request dict: {request.dict()}")
     try:
         # Convertir les contacts en liste de dicts
         contacts_data = None
@@ -600,6 +609,7 @@ def update_chantier(
                 for c in request.contacts
             ]
 
+        print(f"[DEBUG] Calling controller.update with chantier_id={chantier_id}")
         result = controller.update(
             chantier_id=chantier_id,
             nom=request.nom,
@@ -616,8 +626,13 @@ def update_chantier(
             date_debut=request.date_debut_prevue,  # Mapping frontend -> backend
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
+            maitre_ouvrage=request.maitre_ouvrage,
         )
-        return _transform_chantier_response(result, controller, user_repo)
+        print(f"[DEBUG] controller.update returned: {result}")
+        print(f"[DEBUG] Calling _transform_chantier_response")
+        response = _transform_chantier_response(result, controller, user_repo)
+        print(f"[DEBUG] _transform_chantier_response returned successfully")
+        return response
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -632,6 +647,13 @@ def update_chantier(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error updating chantier: {type(e).__name__}: {str(e)}",
         )
 
 
@@ -1489,6 +1511,7 @@ def _transform_chantier_response(
         contact_nom=contact_nom,
         contact_telephone=contact_telephone,
         contacts=contacts,
+        maitre_ouvrage=chantier_dict.get("maitre_ouvrage"),
         heures_estimees=chantier_dict.get("heures_estimees"),
         date_debut_prevue=chantier_dict.get("date_debut"),
         date_fin_prevue=chantier_dict.get("date_fin"),
