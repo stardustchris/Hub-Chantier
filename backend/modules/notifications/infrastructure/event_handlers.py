@@ -4,9 +4,8 @@ import re
 import logging
 from typing import List, Optional
 
-from shared.infrastructure.event_bus import event_handler, EventBus
+from shared.infrastructure.event_bus import event_handler
 from shared.infrastructure.database import SessionLocal
-from shared.application.ports import EntityInfoService
 from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from modules.dashboard.domain.events import CommentAddedEvent, LikeAddedEvent
 from modules.pointages.domain.events.heures_validated import HeuresValidatedEvent
@@ -207,6 +206,118 @@ def handle_heures_validated(event) -> None:
         db.close()
 
 
+def _get_chantier_users(db, chantier_id: int) -> list[int]:
+    """Recupere les IDs des utilisateurs affectes a un chantier (conducteurs + chefs)."""
+    from modules.chantiers.infrastructure.persistence import (
+        ChantierConducteurModel,
+        ChantierChefModel,
+    )
+
+    user_ids = set()
+
+    conducteurs = (
+        db.query(ChantierConducteurModel.user_id)
+        .filter(ChantierConducteurModel.chantier_id == chantier_id)
+        .all()
+    )
+    for (uid,) in conducteurs:
+        user_ids.add(uid)
+
+    chefs = (
+        db.query(ChantierChefModel.user_id)
+        .filter(ChantierChefModel.chantier_id == chantier_id)
+        .all()
+    )
+    for (uid,) in chefs:
+        user_ids.add(uid)
+
+    return list(user_ids)
+
+
+@event_handler('chantier.created')
+def handle_chantier_created(event) -> None:
+    """Notifie les conducteurs et chefs assignes lors de la creation d'un chantier."""
+    data = event.data if hasattr(event, 'data') and isinstance(event.data, dict) else {}
+    chantier_id = data.get('chantier_id') or getattr(event, 'chantier_id', None)
+    nom = data.get('nom') or getattr(event, 'nom', 'Nouveau chantier')
+    metadata = event.metadata if hasattr(event, 'metadata') and isinstance(event.metadata, dict) else {}
+    created_by = metadata.get('created_by', 0)
+
+    logger.info(f"Handling chantier.created: chantier_id={chantier_id}, nom={nom}")
+
+    db = SessionLocal()
+    try:
+        repo = SQLAlchemyNotificationRepository(db)
+        creator_name = get_user_name(db, created_by) if created_by else "Le systeme"
+
+        # Notifier les conducteurs et chefs listes dans les metadata
+        conducteur_ids = metadata.get('conducteur_ids', [])
+        chef_ids = metadata.get('chef_chantier_ids', [])
+        destinataires = set(conducteur_ids + chef_ids) - {created_by}
+
+        for user_id in destinataires:
+            notification = Notification(
+                user_id=user_id,
+                type=NotificationType.CHANTIER_ASSIGNMENT,
+                title="Nouveau chantier",
+                message=f"{creator_name} vous a assigne au chantier {nom}",
+                related_chantier_id=chantier_id,
+                triggered_by_user_id=created_by if created_by else None,
+            )
+            repo.save(notification)
+            logger.info(f"Created chantier assignment notification for user {user_id}")
+
+    except Exception as e:
+        logger.error(f"Error handling chantier.created: {e}")
+    finally:
+        db.close()
+
+
+@event_handler('chantier.statut_changed')
+def handle_chantier_statut_changed(event) -> None:
+    """Notifie l'equipe du chantier lors d'un changement de statut."""
+    from modules.chantiers.domain.value_objects.statut_chantier import StatutChantier
+
+    data = event.data if hasattr(event, 'data') and isinstance(event.data, dict) else {}
+    chantier_id = data.get('chantier_id') or getattr(event, 'chantier_id', None)
+    nouveau_statut = data.get('nouveau_statut') or getattr(event, 'nouveau_statut', '')
+    metadata = event.metadata if hasattr(event, 'metadata') and isinstance(event.metadata, dict) else {}
+    changed_by = metadata.get('changed_by', 0)
+
+    if not chantier_id:
+        return
+
+    logger.info(f"Handling chantier.statut_changed: chantier_id={chantier_id}, nouveau_statut={nouveau_statut}")
+
+    db = SessionLocal()
+    try:
+        repo = SQLAlchemyNotificationRepository(db)
+        changer_name = get_user_name(db, changed_by) if changed_by else "Le systeme"
+        destinataires = set(_get_chantier_users(db, chantier_id)) - {changed_by}
+
+        # Utilise le value object pour le label d'affichage (pas de dict duplique)
+        try:
+            label = StatutChantier.from_string(nouveau_statut).display_name
+        except ValueError:
+            label = nouveau_statut
+
+        for user_id in destinataires:
+            notification = Notification(
+                user_id=user_id,
+                type=NotificationType.SYSTEM,
+                title="Changement de statut chantier",
+                message=f"{changer_name} a change le statut du chantier en {label}",
+                related_chantier_id=chantier_id,
+                triggered_by_user_id=changed_by if changed_by else None,
+            )
+            repo.save(notification)
+
+    except Exception as e:
+        logger.error(f"Error handling chantier.statut_changed: {e}")
+    finally:
+        db.close()
+
+
 def register_notification_handlers() -> None:
     """
     Enregistre tous les handlers de notifications.
@@ -215,4 +326,7 @@ def register_notification_handlers() -> None:
     Les decorateurs @event_handler font l'enregistrement automatiquement,
     mais cette fonction force leur import.
     """
-    logger.info("Notification event handlers registered (comment, like, heures.validated)")
+    logger.info(
+        "Notification event handlers registered "
+        "(comment, like, heures.validated, chantier.created, chantier.statut_changed)"
+    )
