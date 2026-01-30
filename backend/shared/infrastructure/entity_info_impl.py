@@ -131,17 +131,35 @@ class SQLAlchemyEntityInfoService(EntityInfoService):
             Liste des IDs des chantiers.
         """
         try:
-            from modules.chantiers.infrastructure.persistence import ChantierModel
+            from modules.chantiers.infrastructure.persistence.chantier_responsable_model import (
+                ChantierConducteurModel,
+                ChantierChefModel,
+            )
 
-            # Cherche les chantiers ou l'utilisateur est conducteur ou chef
-            chantiers = self._session.query(ChantierModel.id).filter(
-                (ChantierModel.conducteur_id == user_id) |
-                (ChantierModel.chef_chantier_id == user_id)
+            # Cherche les chantiers ou l'utilisateur est conducteur
+            conducteur_chantiers = self._session.query(
+                ChantierConducteurModel.chantier_id
+            ).filter(
+                ChantierConducteurModel.user_id == user_id
             ).all()
 
-            return [c.id for c in chantiers]
+            # Cherche les chantiers ou l'utilisateur est chef
+            chef_chantiers = self._session.query(
+                ChantierChefModel.chantier_id
+            ).filter(
+                ChantierChefModel.user_id == user_id
+            ).all()
+
+            # Combiner les deux listes et dedupliquer
+            chantier_ids = set(
+                [c.chantier_id for c in conducteur_chantiers] +
+                [c.chantier_id for c in chef_chantiers]
+            )
+
+            return list(chantier_ids)
         except Exception as e:
             logger.warning(f"Erreur recuperation chantiers user {user_id}: {e}")
+            logger.exception(e)  # Log complet pour debug
 
         return []
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { loginSchema, validateForm } from '../schemas'
 
@@ -83,9 +83,17 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Mot de passe
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Mot de passe
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-primary-600 hover:text-primary-500"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"

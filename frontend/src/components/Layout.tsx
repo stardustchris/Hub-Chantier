@@ -254,12 +254,12 @@ export default function Layout({ children }: LayoutProps) {
                           <p className="text-xs text-gray-500">{user?.email}</p>
                         </div>
                         <Link
-                          to="/parametres"
+                          to="/security"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4" />
-                          Parametres
+                          Sécurité
                         </Link>
                         <button
                           onClick={() => {

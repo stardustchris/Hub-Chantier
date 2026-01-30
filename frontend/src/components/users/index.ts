@@ -1,3 +1,4 @@
 export { UserCard } from './UserCard'
 export { CreateUserModal } from './CreateUserModal'
 export { EditUserModal } from './EditUserModal'
+export { InviteUserModal } from './InviteUserModal'

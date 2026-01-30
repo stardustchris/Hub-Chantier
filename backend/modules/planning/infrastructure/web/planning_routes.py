@@ -164,16 +164,22 @@ def get_planning(
     Returns:
         Liste des affectations avec enrichissement (noms, couleurs).
     """
-    filters = PlanningFiltersRequest(
-        date_debut=date_debut,
-        date_fin=date_fin,
-        utilisateur_ids=utilisateur_ids,
-        chantier_ids=chantier_ids,
-        metiers=metiers,
-        planifies_only=False,
-        non_planifies_only=False,
-    )
-    return controller.get_planning(filters, current_user_id, current_user_role)
+    try:
+        filters = PlanningFiltersRequest(
+            date_debut=date_debut,
+            date_fin=date_fin,
+            utilisateur_ids=utilisateur_ids,
+            chantier_ids=chantier_ids,
+            metiers=metiers,
+            planifies_only=False,
+            non_planifies_only=False,
+        )
+        return controller.get_planning(filters, current_user_id, current_user_role)
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] get_planning failed: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erreur lors du chargement du planning: {str(e)}")
 
 
 @router.get(

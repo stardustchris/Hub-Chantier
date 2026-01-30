@@ -38,4 +38,19 @@ export const authService = {
     const response = await api.get<User>('/api/auth/me')
     return response.data
   },
+
+  async inviteUser(data: {
+    email: string
+    nom: string
+    prenom: string
+    role: string
+  }): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/api/auth/invite', data)
+    return response.data
+  },
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/api/auth/request-password-reset', { email })
+    return response.data
+  },
 }

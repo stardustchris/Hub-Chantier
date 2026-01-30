@@ -22,6 +22,7 @@ class AffectationDTO:
         utilisateur_id: ID de l'utilisateur affecte.
         chantier_id: ID du chantier.
         date: Date de l'affectation au format ISO.
+        heures_prevues: Nombre d'heures prevues pour l'affectation (defaut: 8.0).
         heure_debut: Heure de debut au format "HH:MM" (optionnel).
         heure_fin: Heure de fin au format "HH:MM" (optionnel).
         note: Commentaire prive (optionnel).
@@ -46,6 +47,7 @@ class AffectationDTO:
     utilisateur_id: int
     chantier_id: int
     date: str  # ISO format YYYY-MM-DD
+    heures_prevues: float
     heure_debut: Optional[str]
     heure_fin: Optional[str]
     note: Optional[str]
@@ -106,6 +108,7 @@ class AffectationDTO:
             utilisateur_id=affectation.utilisateur_id,
             chantier_id=affectation.chantier_id,
             date=affectation.date.isoformat(),
+            heures_prevues=affectation.heures_prevues,
             heure_debut=str(affectation.heure_debut) if affectation.heure_debut else None,
             heure_fin=str(affectation.heure_fin) if affectation.heure_fin else None,
             note=affectation.note,

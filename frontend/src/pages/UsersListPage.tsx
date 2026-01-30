@@ -1,22 +1,26 @@
 import { useState, useCallback } from 'react'
 import { usersService } from '../services/users'
+import { authService } from '../services/auth'
 import { useAuth } from '../contexts/AuthContext'
 import { useListPage } from '../hooks/useListPage'
 import { logger } from '../services/logger'
+import { useToast } from '../contexts/ToastContext'
 import Layout from '../components/Layout'
-import { UserCard, CreateUserModal } from '../components/users'
+import { UserCard, CreateUserModal, InviteUserModal } from '../components/users'
 import {
   Users,
   Plus,
   Search,
   Loader2,
   X,
+  Mail,
 } from 'lucide-react'
 import type { User, UserRole, UserCreate } from '../types'
 import { ROLES } from '../types'
 
 export default function UsersListPage() {
   const { user: currentUser } = useAuth()
+  const { showToast } = useToast()
   const isAdmin = currentUser?.role === 'admin'
 
   // Use the reusable list hook for pagination, search, and loading
@@ -44,6 +48,7 @@ export default function UsersListPage() {
   })
 
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   const roleFilter = (filters.role as UserRole | undefined) || ''
   const activeFilter = filters.is_active as boolean | null ?? null
@@ -52,12 +57,25 @@ export default function UsersListPage() {
     try {
       await usersService.create(data)
       setShowCreateModal(false)
+      showToast('Utilisateur créé avec succès', 'success')
       reload()
     } catch (error) {
       logger.error('Error creating user', error, { context: 'UsersListPage' })
       throw error
     }
-  }, [reload])
+  }, [reload, showToast])
+
+  const handleInviteUser = useCallback(async (data: { email: string; nom: string; prenom: string; role: string }) => {
+    try {
+      await authService.inviteUser(data)
+      setShowInviteModal(false)
+      showToast(`Invitation envoyée à ${data.email}`, 'success')
+      reload()
+    } catch (error) {
+      logger.error('Error inviting user', error, { context: 'UsersListPage', showToast: true })
+      throw error
+    }
+  }, [reload, showToast])
 
   const handleToggleActive = useCallback(async (user: User) => {
     try {
@@ -98,13 +116,22 @@ export default function UsersListPage() {
             <p className="text-gray-600">Gerez les membres de votre equipe</p>
           </div>
           {isAdmin && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Nouvel utilisateur
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="btn btn-outline flex items-center gap-2"
+              >
+                <Mail className="w-5 h-5" />
+                Inviter
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Créer
+              </button>
+            </div>
           )}
         </div>
 
@@ -259,6 +286,14 @@ export default function UsersListPage() {
           <CreateUserModal
             onClose={() => setShowCreateModal(false)}
             onSubmit={handleCreateUser}
+          />
+        )}
+
+        {/* Invite Modal */}
+        {showInviteModal && (
+          <InviteUserModal
+            onClose={() => setShowInviteModal(false)}
+            onSubmit={handleInviteUser}
           />
         )}
       </div>
