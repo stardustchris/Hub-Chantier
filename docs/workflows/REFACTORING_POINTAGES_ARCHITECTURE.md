@@ -91,9 +91,58 @@ def _enrich_affectations(self, affectations: List[Affectation]) -> List[Affectat
 
 ---
 
+## 🔍 DÉCOUVERTE POST-PHASE 1
+
+**Date** : 30 janvier 2026
+**Commit** : 33956a1
+
+### Situation Actuelle
+
+Après nettoyage du Repository (Phase 1), les noms s'affichent **TOUJOURS correctement** dans l'UI !
+
+**Explication** : Le **Controller enrichit les données APRÈS le Use Case**.
+
+**Fichier** : `backend/modules/pointages/adapters/controllers/pointage_controller.py`
+
+**Architecture actuelle** :
+```
+Repository (sans JOINs)
+  → Use Case (retourne DTOs avec propriétés vides)
+  → Controller (lignes 282-341) enrichit avec EntityInfoService
+  → API (retourne données enrichies au frontend)
+  → Frontend (affiche les vrais noms)
+```
+
+**Code clé** :
+```python
+# Ligne 282-293 : get_vue_chantiers()
+if self.entity_info_service:
+    for v in result:
+        cinfo = self.entity_info_service.get_chantier_info(v.chantier_id)
+        # ...
+        info = self.entity_info_service.get_user_info(p.utilisateur_id)
+
+# Ligne 307 : Injection dans le dictionnaire retourné
+"utilisateur_nom": user_names.get(p.utilisateur_id, p.utilisateur_nom)
+```
+
+### Problème Architectural
+
+❌ **Le Controller (Adapters layer) fait de la logique métier/orchestration**
+✅ **Cette logique devrait être dans le Use Case (Application layer)**
+
+### Plan Ajusté
+
+- ~~Phase 2 : Supprimer propriétés de l'entité~~ → **REPORTER** (Controller les utilise actuellement)
+- **Phase 3 : PRIORISER** → Déplacer enrichissement Controller → Use Case
+- Phase 2 : Supprimer propriétés APRÈS Phase 3
+- Phases 4-5 : Adapter en conséquence
+
+---
+
 ## 📝 PLAN DE REFACTORING
 
-### Phase 1 : Nettoyer Infrastructure (Repository)
+### Phase 1 : Nettoyer Infrastructure (Repository) ✅ COMPLÉTÉE
 
 **Fichier** : `backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py`
 
@@ -115,7 +164,33 @@ def _enrich_affectations(self, affectations: List[Affectation]) -> List[Affectat
 - `find_pending_validation()`
 - `search()`
 
-### Phase 2 : Nettoyer Domain (Entité)
+#### 3.3 Nettoyer Controller (APRÈS enrichissement Use Case)
+
+**Fichier** : `backend/modules/pointages/adapters/controllers/pointage_controller.py`
+
+**Actions** :
+1. ❌ Supprimer enrichissement dans `get_vue_chantiers()` (lignes 279-294)
+2. ❌ Supprimer enrichissement dans `get_vue_compagnons()` (lignes 328-341)
+3. ✅ Retourner directement les DTOs enrichis depuis Use Case
+4. ✅ Simplifier la conversion DTO → Dict
+
+**Code pattern** :
+```python
+def get_vue_chantiers(
+    self, semaine_debut: date, chantier_ids: List[int] = None
+) -> List[Dict[str, Any]]:
+    """Retourne la vue par chantiers."""
+    result = self._vue_semaine_uc.get_vue_chantiers(semaine_debut, chantier_ids)
+
+    # ❌ SUPPRIMER tout le bloc d'enrichissement (lignes 279-294)
+
+    # ✅ Retourner directement (les DTOs sont déjà enrichis)
+    return [asdict(v) for v in result]  # Conversion DTO → dict simplifiée
+```
+
+---
+
+### Phase 2 : Nettoyer Domain (Entité) **[APRÈS Phase 3]**
 
 **Fichier** : `backend/modules/pointages/domain/entities/pointage.py`
 
@@ -132,7 +207,11 @@ def _enrich_affectations(self, affectations: List[Affectation]) -> List[Affectat
 
 **Résultat** : Entité Domain pure, sans données de présentation.
 
-### Phase 3 : Enrichir dans Application (Use Cases)
+### Phase 3 : Déplacer enrichissement Controller → Use Case **[PRIORITÉ]**
+
+**Objectif** : Déplacer la logique d'enrichissement du Controller vers les Use Cases.
+
+**Principe** : Le Controller (Adapters) ne doit QUE transformer les données (DTOs → JSON), pas orchestrer.
 
 **Use Cases à modifier** :
 
