@@ -58,6 +58,23 @@ class User:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
+    # Password reset
+    password_reset_token: Optional[str] = None
+    password_reset_expires_at: Optional[datetime] = None
+
+    # Invitation
+    invitation_token: Optional[str] = None
+    invitation_expires_at: Optional[datetime] = None
+
+    # Email verification
+    email_verified_at: Optional[datetime] = None
+    email_verification_token: Optional[str] = None
+
+    # Account lockout (protection brute force)
+    failed_login_attempts: int = 0
+    last_failed_login_at: Optional[datetime] = None
+    locked_until: Optional[datetime] = None
+
     def __post_init__(self) -> None:
         """Valide les données à la création."""
         if not self.nom or not self.nom.strip():
@@ -154,6 +171,104 @@ class User:
         """
         self.password_hash = new_password_hash
         self.updated_at = datetime.now()
+        # Reset des tokens de réinitialisation si existants
+        self.password_reset_token = None
+        self.password_reset_expires_at = None
+
+    def set_password_reset_token(self, token: str, expires_at: datetime) -> None:
+        """
+        Définit le token de réinitialisation de mot de passe.
+
+        Args:
+            token: Le token de réinitialisation.
+            expires_at: Date d'expiration du token.
+        """
+        self.password_reset_token = token
+        self.password_reset_expires_at = expires_at
+        self.updated_at = datetime.now()
+
+    def is_password_reset_token_valid(self) -> bool:
+        """Vérifie si le token de reset est valide (non expiré)."""
+        if not self.password_reset_token or not self.password_reset_expires_at:
+            return False
+        return datetime.now() < self.password_reset_expires_at
+
+    def set_invitation_token(self, token: str, expires_at: datetime) -> None:
+        """
+        Définit le token d'invitation.
+
+        Args:
+            token: Le token d'invitation.
+            expires_at: Date d'expiration du token.
+        """
+        self.invitation_token = token
+        self.invitation_expires_at = expires_at
+        self.is_active = False  # Compte inactif tant que non accepté
+        self.updated_at = datetime.now()
+
+    def is_invitation_token_valid(self) -> bool:
+        """Vérifie si le token d'invitation est valide (non expiré)."""
+        if not self.invitation_token or not self.invitation_expires_at:
+            return False
+        return datetime.now() < self.invitation_expires_at
+
+    def accept_invitation(self, password_hash: PasswordHash) -> None:
+        """
+        Accepte une invitation et active le compte.
+
+        Args:
+            password_hash: Hash du mot de passe choisi par l'utilisateur.
+        """
+        self.password_hash = password_hash
+        self.invitation_token = None
+        self.invitation_expires_at = None
+        self.is_active = True
+        self.updated_at = datetime.now()
+
+    def verify_email(self) -> None:
+        """Marque l'email comme vérifié."""
+        self.email_verified_at = datetime.now()
+        self.email_verification_token = None
+        self.updated_at = datetime.now()
+
+    def set_email_verification_token(self, token: str) -> None:
+        """
+        Définit le token de vérification d'email.
+
+        Args:
+            token: Le token de vérification.
+        """
+        self.email_verification_token = token
+        self.updated_at = datetime.now()
+
+    def is_email_verified(self) -> bool:
+        """Vérifie si l'email a été vérifié."""
+        return self.email_verified_at is not None
+
+    def record_failed_login(self) -> None:
+        """Enregistre une tentative de connexion échouée."""
+        self.failed_login_attempts += 1
+        self.last_failed_login_at = datetime.now()
+        # Lock account après 5 tentatives échouées (15 minutes)
+        if self.failed_login_attempts >= 5:
+            from datetime import timedelta
+            self.locked_until = datetime.now() + timedelta(minutes=15)
+
+    def reset_failed_login_attempts(self) -> None:
+        """Réinitialise les tentatives de connexion échouées."""
+        self.failed_login_attempts = 0
+        self.last_failed_login_at = None
+        self.locked_until = None
+
+    def is_locked(self) -> bool:
+        """Vérifie si le compte est verrouillé."""
+        if not self.locked_until:
+            return False
+        if datetime.now() >= self.locked_until:
+            # Débloquer automatiquement si la période est passée
+            self.reset_failed_login_attempts()
+            return False
+        return True
 
     def update_profile(
         self,

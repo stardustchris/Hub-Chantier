@@ -11,6 +11,7 @@ import {
   Clock,
   ChevronRight,
   Calendar,
+  Building2,
 } from 'lucide-react'
 import { formatDateDayMonth } from '../../utils/dates'
 import type { Chantier } from '../../types'
@@ -55,6 +56,14 @@ export const ChantierCard = memo(function ChantierCard({ chantier }: ChantierCar
         <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
         <span className="line-clamp-2">{chantier.adresse}</span>
       </div>
+
+      {/* Maitre d'ouvrage */}
+      {chantier.maitre_ouvrage && (
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+          <Building2 className="w-4 h-4 shrink-0" />
+          <span className="line-clamp-1">{chantier.maitre_ouvrage}</span>
+        </div>
+      )}
 
       {/* Info */}
       <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">

@@ -1,0 +1,27 @@
+{
+  "module": "auth",
+  "global_status": "PASS",
+  "timestamp": "2026-01-30T18:31:58.974638",
+  "duration_seconds": 0.019772,
+  "agents_executed": 1,
+  "total_findings": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "reports": [
+    {
+      "agent": "architectreviewer",
+      "status": "PASS",
+      "summary": "✅ Architecture Clean respectée",
+      "score": {
+        "clean_architecture": "10/10",
+        "modularity": "10/10",
+        "files_analyzed": 61
+      },
+      "findings_count": 0,
+      "findings": []
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 /**
  * PhotoCapture - Composant de capture/upload de photo (FOR-04)
  * Supporte la prise de photo camera ou l'upload de fichier
+ * Solution hybride : détecte mobile/desktop et adapte le comportement
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Camera, X, Upload, Image as ImageIcon } from 'lucide-react'
 import { logger } from '../../services/logger'
 
@@ -20,6 +21,13 @@ interface PhotoCaptureProps {
   attachedPhotos?: AttachedPhoto[]
 }
 
+// Détection de l'environnement
+const isMobileDevice = (): boolean => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  ) || ('ontouchstart' in window && navigator.maxTouchPoints > 0)
+}
+
 export default function PhotoCapture({
   value,
   onChange,
@@ -29,8 +37,24 @@ export default function PhotoCapture({
 }: PhotoCaptureProps) {
   const [preview, setPreview] = useState<string | null>(value || null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [showCameraModal, setShowCameraModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  useEffect(() => {
+    setIsMobile(isMobileDevice())
+  }, [])
+
+  useEffect(() => {
+    // Cleanup du stream vidéo au démontage
+    return () => {
+      stopCamera()
+    }
+  }, [])
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -84,8 +108,74 @@ export default function PhotoCapture({
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
 
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+  }
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }, // Caméra arrière sur mobile
+        audio: false,
+      })
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setShowCameraModal(true)
+      }
+    } catch (err) {
+      logger.error('Impossible d\'accéder à la caméra', err, {
+        context: 'PhotoCapture',
+        showToast: true
+      })
+      // Fallback vers l'input file
+      cameraInputRef.current?.click()
+    }
+  }
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+
+    // Configurer la taille du canvas
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    // Dessiner l'image
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Convertir en base64
+      const base64 = canvas.toDataURL('image/jpeg', 0.9)
+      setPreview(base64)
+      onChange(base64)
+
+      // Fermer la caméra
+      stopCamera()
+      setShowCameraModal(false)
+    }
+  }
+
+  const cancelCamera = () => {
+    stopCamera()
+    setShowCameraModal(false)
+  }
+
   const triggerCamera = () => {
-    cameraInputRef.current?.click()
+    if (isMobile) {
+      // Sur mobile : utiliser l'input natif (fonctionne mieux)
+      cameraInputRef.current?.click()
+    } else {
+      // Sur desktop : ouvrir la modal avec preview vidéo
+      startCamera()
+    }
   }
 
   const triggerFileUpload = () => {
@@ -154,6 +244,54 @@ export default function PhotoCapture({
         onChange={handleFileChange}
         className="hidden"
       />
+
+      {/* Canvas caché pour capture desktop */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* Modal caméra desktop */}
+      {showCameraModal && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Prendre une photo</h3>
+              <button
+                onClick={cancelCamera}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Vidéo preview */}
+            <div className="relative bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full h-[400px] object-cover"
+              />
+            </div>
+
+            {/* Footer avec bouton capture */}
+            <div className="p-4 flex justify-center gap-3">
+              <button
+                onClick={cancelCamera}
+                className="px-6 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={capturePhoto}
+                className="px-6 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors flex items-center gap-2"
+              >
+                <Camera className="w-5 h-5" />
+                Capturer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Zone de preview ou upload */}
       <div className="border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">

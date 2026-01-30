@@ -30,6 +30,23 @@ class UserModel(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
 
+    # Password reset
+    password_reset_token = Column(String(255), nullable=True, index=True)
+    password_reset_expires_at = Column(DateTime, nullable=True)
+
+    # Invitation
+    invitation_token = Column(String(255), nullable=True, index=True)
+    invitation_expires_at = Column(DateTime, nullable=True)
+
+    # Email verification
+    email_verified_at = Column(DateTime, nullable=True)
+    email_verification_token = Column(String(255), nullable=True, index=True)
+
+    # Account lockout (protection brute force)
+    failed_login_attempts = Column(Integer, nullable=False, default=0)
+    last_failed_login_at = Column(DateTime, nullable=True)
+    locked_until = Column(DateTime, nullable=True)
+
     # Informations personnelles
     nom = Column(String(100), nullable=False)
     prenom = Column(String(100), nullable=False)

@@ -141,6 +141,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
                 model.heures_estimees = chantier.heures_estimees
                 model.date_debut = chantier.date_debut
                 model.date_fin = chantier.date_fin
+                model.maitre_ouvrage = chantier.maitre_ouvrage
                 model.conducteur_ids = list(chantier.conducteur_ids)
                 model.chef_chantier_ids = list(chantier.chef_chantier_ids)
                 model.updated_at = chantier.updated_at
