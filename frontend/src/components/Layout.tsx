@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
   Home,
-  Building2,
   Users,
   Calendar,
   Clock,
@@ -17,6 +16,7 @@ import {
   Bell,
   ChevronDown,
   Webhook,
+  Building2,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -113,7 +113,10 @@ export default function Layout({ children }: LayoutProps) {
         }`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
-          <span className="text-xl font-bold text-primary-600">Hub Chantier</span>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-20 h-20 object-contain" />
+            <span className="text-xl font-bold text-primary-600">Hub Chantier</span>
+          </div>
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-2 rounded-lg hover:bg-gray-100"
@@ -132,7 +135,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex flex-col flex-grow bg-white border-r">
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b">
-            <Building2 className="w-8 h-8 text-primary-600" />
+            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-20 h-20 object-contain" />
             <span className="ml-3 text-xl font-bold text-primary-600">Hub Chantier</span>
           </div>
 
@@ -191,9 +194,10 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             {/* Mobile logo */}
-            <span className="lg:hidden text-lg font-bold text-primary-600">
-              Hub Chantier
-            </span>
+            <div className="lg:hidden flex items-center gap-3">
+              <img src="/logo.png?v=2" alt="Hub Chantier" className="w-20 h-20 object-contain" />
+              <span className="text-lg font-bold text-primary-600">Hub Chantier</span>
+            </div>
 
             {/* Right side */}
             <div className="flex items-center gap-2">
