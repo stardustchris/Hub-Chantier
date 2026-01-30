@@ -4,16 +4,11 @@ from datetime import date, timedelta
 from typing import Optional, List, Tuple
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository
 from ...domain.value_objects import StatutPointage, Duree
 from .models import PointageModel
-
-# Imports pour enrichissement (JOIN sans FK - Clean Architecture)
-from modules.auth.infrastructure.persistence.user_model import UserModel
-from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
 
 
 class SQLAlchemyPointageRepository(PointageRepository):
@@ -30,10 +25,10 @@ class SQLAlchemyPointageRepository(PointageRepository):
 
     def find_by_id(self, pointage_id: int) -> Optional[Pointage]:
         """Trouve un pointage par son ID."""
-        result = self._query_with_joins().filter(
+        model = self.session.query(PointageModel).filter(
             PointageModel.id == pointage_id
         ).first()
-        return self._to_entity_enriched(result) if result else None
+        return self._to_entity(model) if model else None
 
     def save(self, pointage: Pointage) -> Pointage:
         """Persiste un pointage."""
@@ -68,63 +63,63 @@ class SQLAlchemyPointageRepository(PointageRepository):
         self, utilisateur_id: int, date_pointage: date
     ) -> List[Pointage]:
         """Trouve les pointages d'un utilisateur pour une date."""
-        results = self._query_with_joins().filter(
+        models = self.session.query(PointageModel).filter(
             PointageModel.utilisateur_id == utilisateur_id,
             PointageModel.date_pointage == date_pointage,
         ).all()
-        return [self._to_entity_enriched(r) for r in results]
+        return [self._to_entity(m) for m in models]
 
     def find_by_utilisateur_and_semaine(
         self, utilisateur_id: int, semaine_debut: date
     ) -> List[Pointage]:
         """Trouve les pointages d'un utilisateur pour une semaine."""
         semaine_fin = semaine_debut + timedelta(days=6)
-        results = self._query_with_joins().filter(
+        models = self.session.query(PointageModel).filter(
             PointageModel.utilisateur_id == utilisateur_id,
             PointageModel.date_pointage >= semaine_debut,
             PointageModel.date_pointage <= semaine_fin,
         ).order_by(PointageModel.date_pointage).all()
-        return [self._to_entity_enriched(r) for r in results]
+        return [self._to_entity(m) for m in models]
 
     def find_by_chantier_and_date(
         self, chantier_id: int, date_pointage: date
     ) -> List[Pointage]:
         """Trouve les pointages d'un chantier pour une date."""
-        results = self._query_with_joins().filter(
+        models = self.session.query(PointageModel).filter(
             PointageModel.chantier_id == chantier_id,
             PointageModel.date_pointage == date_pointage,
         ).all()
-        return [self._to_entity_enriched(r) for r in results]
+        return [self._to_entity(m) for m in models]
 
     def find_by_chantier_and_semaine(
         self, chantier_id: int, semaine_debut: date
     ) -> List[Pointage]:
         """Trouve les pointages d'un chantier pour une semaine."""
         semaine_fin = semaine_debut + timedelta(days=6)
-        results = self._query_with_joins().filter(
+        models = self.session.query(PointageModel).filter(
             PointageModel.chantier_id == chantier_id,
             PointageModel.date_pointage >= semaine_debut,
             PointageModel.date_pointage <= semaine_fin,
         ).order_by(PointageModel.date_pointage).all()
-        return [self._to_entity_enriched(r) for r in results]
+        return [self._to_entity(m) for m in models]
 
     def find_by_utilisateur_chantier_date(
         self, utilisateur_id: int, chantier_id: int, date_pointage: date
     ) -> Optional[Pointage]:
         """Trouve un pointage unique par utilisateur, chantier et date."""
-        result = self._query_with_joins().filter(
+        model = self.session.query(PointageModel).filter(
             PointageModel.utilisateur_id == utilisateur_id,
             PointageModel.chantier_id == chantier_id,
             PointageModel.date_pointage == date_pointage,
         ).first()
-        return self._to_entity_enriched(result) if result else None
+        return self._to_entity(model) if model else None
 
     def find_by_affectation(self, affectation_id: int) -> Optional[Pointage]:
         """Trouve un pointage par son affectation source."""
-        result = self._query_with_joins().filter(
+        model = self.session.query(PointageModel).filter(
             PointageModel.affectation_id == affectation_id
         ).first()
-        return self._to_entity_enriched(result) if result else None
+        return self._to_entity(model) if model else None
 
     def find_pending_validation(
         self,
@@ -133,17 +128,13 @@ class SQLAlchemyPointageRepository(PointageRepository):
         limit: int = 100,
     ) -> Tuple[List[Pointage], int]:
         """Trouve les pointages en attente de validation."""
-        query = self._query_with_joins().filter(
+        query = self.session.query(PointageModel).filter(
             PointageModel.statut == StatutPointage.SOUMIS.value
         )
 
-        # Count total (sur la sous-query pour optimiser)
-        total = self.session.query(PointageModel).filter(
-            PointageModel.statut == StatutPointage.SOUMIS.value
-        ).count()
-
-        results = query.offset(skip).limit(limit).all()
-        return [self._to_entity_enriched(r) for r in results], total
+        total = query.count()
+        models = query.offset(skip).limit(limit).all()
+        return [self._to_entity(m) for m in models], total
 
     def search(
         self,
@@ -155,8 +146,8 @@ class SQLAlchemyPointageRepository(PointageRepository):
         skip: int = 0,
         limit: int = 100,
     ) -> Tuple[List[Pointage], int]:
-        """Recherche des pointages avec filtres (ENRICHIS avec noms users/chantiers)."""
-        query = self._query_with_joins()
+        """Recherche des pointages avec filtres."""
+        query = self.session.query(PointageModel)
 
         if utilisateur_id:
             query = query.filter(PointageModel.utilisateur_id == utilisateur_id)
@@ -169,22 +160,9 @@ class SQLAlchemyPointageRepository(PointageRepository):
         if statut:
             query = query.filter(PointageModel.statut == statut.value)
 
-        # Count total (sur une query simple pour optimiser)
-        count_query = self.session.query(PointageModel)
-        if utilisateur_id:
-            count_query = count_query.filter(PointageModel.utilisateur_id == utilisateur_id)
-        if chantier_id:
-            count_query = count_query.filter(PointageModel.chantier_id == chantier_id)
-        if date_debut:
-            count_query = count_query.filter(PointageModel.date_pointage >= date_debut)
-        if date_fin:
-            count_query = count_query.filter(PointageModel.date_pointage <= date_fin)
-        if statut:
-            count_query = count_query.filter(PointageModel.statut == statut.value)
-        total = count_query.count()
-
-        results = query.order_by(PointageModel.date_pointage.desc()).offset(skip).limit(limit).all()
-        return [self._to_entity_enriched(r) for r in results], total
+        total = query.count()
+        models = query.order_by(PointageModel.date_pointage.desc()).offset(skip).limit(limit).all()
+        return [self._to_entity(m) for m in models], total
 
     def count_by_utilisateur_semaine(
         self, utilisateur_id: int, semaine_debut: date
@@ -213,73 +191,6 @@ class SQLAlchemyPointageRepository(PointageRepository):
         return [self._to_entity(m) for m in models]
 
     # ===== Helpers =====
-
-    def _query_with_joins(self):
-        """
-        Crée une query avec JOINs sur users et chantiers pour enrichir les pointages.
-
-        IMPORTANT: Respecte la Clean Architecture - pas de FK en base,
-        mais JOIN en lecture pour enrichir les entités avec les noms.
-
-        Returns:
-            Query SQLAlchemy avec JOINs sur UserModel et ChantierModel.
-        """
-        return (
-            self.session.query(
-                PointageModel,
-                UserModel.prenom,
-                UserModel.nom,
-                ChantierModel.nom.label('chantier_nom'),
-                ChantierModel.couleur
-            )
-            .outerjoin(UserModel, PointageModel.utilisateur_id == UserModel.id)
-            .outerjoin(ChantierModel, PointageModel.chantier_id == ChantierModel.id)
-        )
-
-    def _to_entity_enriched(self, result: tuple) -> Pointage:
-        """
-        Convertit un résultat de query avec JOINs en entité enrichie.
-
-        Args:
-            result: Tuple (PointageModel, user_prenom, user_nom, chantier_nom, chantier_couleur)
-
-        Returns:
-            Entité Pointage avec champs enrichis (utilisateur_nom, chantier_nom, chantier_couleur).
-        """
-        model, user_prenom, user_nom, chantier_nom, chantier_couleur = result
-
-        # Construire le nom complet de l'utilisateur
-        utilisateur_nom = None
-        if user_prenom and user_nom:
-            utilisateur_nom = f"{user_prenom} {user_nom}"
-
-        # Créer l'entité
-        entity = Pointage(
-            id=model.id,
-            utilisateur_id=model.utilisateur_id,
-            chantier_id=model.chantier_id,
-            date_pointage=model.date_pointage,
-            heures_normales=Duree.from_minutes(model.heures_normales_minutes),
-            heures_supplementaires=Duree.from_minutes(model.heures_supplementaires_minutes),
-            statut=StatutPointage.from_string(model.statut),
-            commentaire=model.commentaire,
-            signature_utilisateur=model.signature_utilisateur,
-            signature_date=model.signature_date,
-            validateur_id=model.validateur_id,
-            validation_date=model.validation_date,
-            motif_rejet=model.motif_rejet,
-            affectation_id=model.affectation_id,
-            created_by=model.created_by,
-            created_at=model.created_at,
-            updated_at=model.updated_at,
-        )
-
-        # Enrichir avec les données chargées via JOIN
-        entity.utilisateur_nom = utilisateur_nom
-        entity.chantier_nom = chantier_nom
-        entity.chantier_couleur = chantier_couleur
-
-        return entity
 
     def _to_entity(self, model: PointageModel) -> Pointage:
         """Convertit un modèle en entité."""
