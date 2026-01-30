@@ -8,7 +8,6 @@ import logging
 
 from shared.infrastructure.event_bus import event_handler
 from shared.infrastructure.database import SessionLocal
-from shared.application.ports import EntityInfoService
 from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from modules.notifications.domain.entities import Notification
 from modules.notifications.domain.value_objects import NotificationType
@@ -26,15 +25,15 @@ def _get_user_name(db, user_id: int) -> str:
 
 def _get_chantier_users(db, chantier_id: int) -> list[int]:
     """Récupère les IDs des utilisateurs affectés à un chantier (conducteurs + chefs)."""
-    from modules.chantiers.infrastructure.persistence.models import (
+    from modules.chantiers.infrastructure.persistence import (
         ChantierConducteurModel,
-        ChantierChefChantierModel,
+        ChantierChefModel,
     )
 
     user_ids = set()
 
     conducteurs = (
-        db.query(ChantierConducteurModel.utilisateur_id)
+        db.query(ChantierConducteurModel.user_id)
         .filter(ChantierConducteurModel.chantier_id == chantier_id)
         .all()
     )
@@ -42,8 +41,8 @@ def _get_chantier_users(db, chantier_id: int) -> list[int]:
         user_ids.add(uid)
 
     chefs = (
-        db.query(ChantierChefChantierModel.utilisateur_id)
-        .filter(ChantierChefChantierModel.chantier_id == chantier_id)
+        db.query(ChantierChefModel.user_id)
+        .filter(ChantierChefModel.chantier_id == chantier_id)
         .all()
     )
     for (uid,) in chefs:
