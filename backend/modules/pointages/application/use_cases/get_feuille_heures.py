@@ -1,7 +1,7 @@
 """Use Case: Récupérer une feuille d'heures."""
 
 from datetime import date, timedelta
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from ...domain.entities import FeuilleHeures
 from ...domain.repositories import FeuilleHeuresRepository, PointageRepository
@@ -11,6 +11,7 @@ from ..dtos import (
     VariablePaieSemaineDTO,
     NavigationSemaineDTO,
 )
+from shared.application.ports.entity_info_service import EntityInfoService
 
 
 JOURS_SEMAINE = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -28,6 +29,7 @@ class GetFeuilleHeuresUseCase:
         self,
         feuille_repo: FeuilleHeuresRepository,
         pointage_repo: PointageRepository,
+        entity_info_service: Optional[EntityInfoService] = None,
     ):
         """
         Initialise le use case.
@@ -35,9 +37,11 @@ class GetFeuilleHeuresUseCase:
         Args:
             feuille_repo: Repository des feuilles d'heures.
             pointage_repo: Repository des pointages.
+            entity_info_service: Service pour enrichir les noms utilisateurs/chantiers.
         """
         self.feuille_repo = feuille_repo
         self.pointage_repo = pointage_repo
+        self.entity_info_service = entity_info_service
 
     def execute(self, feuille_id: int) -> Optional[FeuilleHeuresDTO]:
         """
@@ -59,6 +63,11 @@ class GetFeuilleHeuresUseCase:
             semaine_debut=feuille.semaine_debut,
         )
         feuille.pointages = pointages
+
+        # Enrichir les pointages avec les noms
+        self._enrich_pointages(pointages)
+        # Enrichir la feuille avec le nom utilisateur
+        self._enrich_feuille(feuille)
 
         return self._to_dto(feuille)
 
@@ -98,6 +107,11 @@ class GetFeuilleHeuresUseCase:
             semaine_debut=semaine_debut,
         )
         feuille.pointages = pointages
+
+        # Enrichir les pointages avec les noms
+        self._enrich_pointages(pointages)
+        # Enrichir la feuille avec le nom utilisateur
+        self._enrich_feuille(feuille)
 
         return self._to_dto(feuille)
 
@@ -203,3 +217,49 @@ class GetFeuilleHeuresUseCase:
             totaux_par_jour=totaux_par_jour,
             totaux_par_chantier=totaux_par_chantier,
         )
+
+    def _enrich_pointages(self, pointages: List) -> None:
+        """
+        Enrichit les pointages avec les noms utilisateurs et chantiers.
+
+        Pattern inspiré de GetPlanningUseCase avec cache local.
+        """
+        if not self.entity_info_service or not pointages:
+            return
+
+        # Collecter les IDs uniques
+        user_ids = {p.utilisateur_id for p in pointages}
+        chantier_ids = {p.chantier_id for p in pointages}
+
+        # Cache local pour éviter requêtes répétées
+        user_cache = {}
+        for uid in user_ids:
+            info = self.entity_info_service.get_user_info(uid)
+            if info:
+                user_cache[uid] = info
+
+        chantier_cache = {}
+        for cid in chantier_ids:
+            info = self.entity_info_service.get_chantier_info(cid)
+            if info:
+                chantier_cache[cid] = info
+
+        # Enrichir chaque pointage
+        for p in pointages:
+            user_info = user_cache.get(p.utilisateur_id)
+            if user_info:
+                p.utilisateur_nom = user_info.nom
+
+            chantier_info = chantier_cache.get(p.chantier_id)
+            if chantier_info:
+                p.chantier_nom = chantier_info.nom
+                p.chantier_couleur = chantier_info.couleur or "#808080"
+
+    def _enrich_feuille(self, feuille: FeuilleHeures) -> None:
+        """Enrichit la feuille avec le nom de l'utilisateur."""
+        if not self.entity_info_service:
+            return
+
+        user_info = self.entity_info_service.get_user_info(feuille.utilisateur_id)
+        if user_info:
+            feuille.utilisateur_nom = user_info.nom

@@ -85,7 +85,7 @@ class PointageController:
         self._reject_uc = RejectPointageUseCase(pointage_repo, event_bus)
         self._get_uc = GetPointageUseCase(pointage_repo)
         self._list_uc = ListPointagesUseCase(pointage_repo, entity_info_service)
-        self._get_feuille_uc = GetFeuilleHeuresUseCase(feuille_repo, pointage_repo)
+        self._get_feuille_uc = GetFeuilleHeuresUseCase(feuille_repo, pointage_repo, entity_info_service)
         self._list_feuille_uc = ListFeuillesHeuresUseCase(feuille_repo, pointage_repo)
         self._vue_semaine_uc = GetVueSemaineUseCase(pointage_repo, entity_info_service)
         self._bulk_create_uc = BulkCreateFromPlanningUseCase(
