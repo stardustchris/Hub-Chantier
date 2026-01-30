@@ -159,6 +159,22 @@ class CreateAffectationUseCase:
             ):
                 raise AffectationConflictError(dto.utilisateur_id, date_aff)
 
+        # RG-PLN-007: Verifier conflit avec absences (CONGES, MALADIE, RTT, FORMATION)
+        # Si c'est une affectation réelle, vérifier qu'il n'y a pas d'absence ce jour-là
+        if self.chantier_repo:
+            CHANTIERS_ABSENCES = {'CONGES', 'MALADIE', 'RTT', 'FORMATION'}
+            chantier_cible = self.chantier_repo.find_by_id(dto.chantier_id)
+            if chantier_cible and chantier_cible.code not in CHANTIERS_ABSENCES:
+                # C'est une affectation réelle, vérifier absences
+                for date_aff in dates_affectation:
+                    affectations_jour = self.affectation_repo.find_by_utilisateur_and_date(
+                        dto.utilisateur_id, date_aff
+                    )
+                    for aff_existante in affectations_jour:
+                        chantier_existant = self.chantier_repo.find_by_id(aff_existante.chantier_id)
+                        if chantier_existant and chantier_existant.code in CHANTIERS_ABSENCES:
+                            raise AffectationConflictError(dto.utilisateur_id, date_aff)
+
         # Creer les affectations
         affectations = []
         for date_aff in dates_affectation:
@@ -247,6 +263,22 @@ class CreateAffectationUseCase:
                 dto.utilisateur_id, date_aff
             ):
                 raise AffectationConflictError(dto.utilisateur_id, date_aff)
+
+        # RG-PLN-007: Verifier conflit avec absences (CONGES, MALADIE, RTT, FORMATION)
+        # Si c'est une affectation réelle, vérifier qu'il n'y a pas d'absence ce jour-là
+        if self.chantier_repo:
+            CHANTIERS_ABSENCES = {'CONGES', 'MALADIE', 'RTT', 'FORMATION'}
+            chantier_cible = self.chantier_repo.find_by_id(dto.chantier_id)
+            if chantier_cible and chantier_cible.code not in CHANTIERS_ABSENCES:
+                # C'est une affectation réelle, vérifier absences
+                for date_aff in dates_affectation:
+                    affectations_jour = self.affectation_repo.find_by_utilisateur_and_date(
+                        dto.utilisateur_id, date_aff
+                    )
+                    for aff_existante in affectations_jour:
+                        chantier_existant = self.chantier_repo.find_by_id(aff_existante.chantier_id)
+                        if chantier_existant and chantier_existant.code in CHANTIERS_ABSENCES:
+                            raise AffectationConflictError(dto.utilisateur_id, date_aff)
 
         # Creer les affectations
         affectations = []
