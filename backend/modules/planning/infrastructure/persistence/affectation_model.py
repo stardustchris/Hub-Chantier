@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, Index, JSON
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, Index, JSON, Float
 
 from shared.infrastructure.database_base import Base
 from ...domain.value_objects import TypeAffectation
@@ -45,6 +45,9 @@ class AffectationModel(Base):
 
     # Date de l'affectation
     date = Column(Date, nullable=False, index=True)
+
+    # Heures prevues pour l'affectation (defaut: 8.0 pour journee standard)
+    heures_prevues = Column(Float, nullable=False, default=8.0)
 
     # Horaires (format "HH:MM")
     heure_debut = Column(String(5), nullable=True)

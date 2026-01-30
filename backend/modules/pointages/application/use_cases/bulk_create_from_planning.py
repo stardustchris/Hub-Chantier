@@ -10,6 +10,9 @@ from ...domain.events import PointageBulkCreatedEvent
 from ..dtos import BulkCreatePointageDTO, PointageDTO
 from ..ports import EventBus, NullEventBus
 
+# Chantiers système à exclure de la synchronisation Planning → Pointages
+CHANTIERS_SYSTEME = {'CONGES', 'MALADIE', 'RTT', 'FORMATION'}
+
 
 class BulkCreateFromPlanningUseCase:
     """
@@ -24,6 +27,7 @@ class BulkCreateFromPlanningUseCase:
         pointage_repo: PointageRepository,
         feuille_repo: FeuilleHeuresRepository,
         event_bus: Optional[EventBus] = None,
+        chantier_repo = None,  # Injection optionnelle pour filtrage chantiers système
     ):
         """
         Initialise le use case.
@@ -32,10 +36,12 @@ class BulkCreateFromPlanningUseCase:
             pointage_repo: Repository des pointages.
             feuille_repo: Repository des feuilles d'heures.
             event_bus: Bus d'événements (optionnel).
+            chantier_repo: Repository des chantiers (optionnel, pour filtrage).
         """
         self.pointage_repo = pointage_repo
         self.feuille_repo = feuille_repo
         self.event_bus = event_bus or NullEventBus()
+        self.chantier_repo = chantier_repo
 
     def execute(self, dto: BulkCreatePointageDTO, created_by: int) -> List[PointageDTO]:
         """
@@ -54,6 +60,13 @@ class BulkCreateFromPlanningUseCase:
         pointages_to_save = []
 
         for affectation in dto.affectations:
+            # Filtre les chantiers système (CONGES, MALADIE, RTT, FORMATION)
+            # Gap 2: Ces chantiers ne doivent pas générer de pointages
+            if self.chantier_repo:
+                chantier = self.chantier_repo.find_by_id(affectation.chantier_id)
+                if chantier and chantier.code in CHANTIERS_SYSTEME:
+                    continue  # Skip les chantiers système
+
             # Vérifie qu'un pointage n'existe pas déjà pour cette affectation
             existing = self.pointage_repo.find_by_affectation(affectation.affectation_id)
             if existing:
@@ -129,8 +142,15 @@ class BulkCreateFromPlanningUseCase:
             created_by: ID du créateur.
 
         Returns:
-            DTO du pointage créé ou None si déjà existant.
+            DTO du pointage créé ou None si déjà existant ou chantier système.
         """
+        # Filtre les chantiers système (CONGES, MALADIE, RTT, FORMATION)
+        # Gap 2: Ces chantiers ne doivent pas générer de pointages
+        if self.chantier_repo:
+            chantier = self.chantier_repo.find_by_id(chantier_id)
+            if chantier and chantier.code in CHANTIERS_SYSTEME:
+                return None  # Pas de pointage pour les chantiers système
+
         # Vérifie qu'un pointage n'existe pas déjà
         existing = self.pointage_repo.find_by_affectation(affectation_id)
         if existing:

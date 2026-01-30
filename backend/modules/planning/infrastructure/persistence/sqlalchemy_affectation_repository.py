@@ -52,6 +52,7 @@ class SQLAlchemyAffectationRepository(AffectationRepository):
                 model.utilisateur_id = affectation.utilisateur_id
                 model.chantier_id = affectation.chantier_id
                 model.date = affectation.date
+                model.heures_prevues = affectation.heures_prevues
                 model.heure_debut = (
                     str(affectation.heure_debut) if affectation.heure_debut else None
                 )
@@ -514,6 +515,7 @@ class SQLAlchemyAffectationRepository(AffectationRepository):
             utilisateur_id=model.utilisateur_id,
             chantier_id=model.chantier_id,
             date=model.date,
+            heures_prevues=model.heures_prevues,
             heure_debut=heure_debut,
             heure_fin=heure_fin,
             note=model.note,
@@ -539,6 +541,7 @@ class SQLAlchemyAffectationRepository(AffectationRepository):
             utilisateur_id=affectation.utilisateur_id,
             chantier_id=affectation.chantier_id,
             date=affectation.date,
+            heures_prevues=affectation.heures_prevues,
             heure_debut=(
                 str(affectation.heure_debut) if affectation.heure_debut else None
             ),

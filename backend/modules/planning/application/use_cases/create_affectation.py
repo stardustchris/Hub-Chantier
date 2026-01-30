@@ -9,7 +9,7 @@ from ...domain.value_objects import HeureAffectation, TypeAffectation, JourSemai
 from ...domain.events import AffectationCreatedEvent, AffectationBulkCreatedEvent
 from ..dtos import CreateAffectationDTO
 from ..ports import EventBus
-from .exceptions import AffectationConflictError, InvalidDateRangeError
+from .exceptions import AffectationConflictError, InvalidDateRangeError, ChantierInactifError
 
 
 class CreateAffectationUseCase:

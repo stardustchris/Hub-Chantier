@@ -19,6 +19,7 @@ class CreateAffectationRequest(BaseModel):
         utilisateur_id: ID de l'utilisateur a affecter.
         chantier_id: ID du chantier cible.
         date: Date de l'affectation (YYYY-MM-DD).
+        heures_prevues: Nombre d'heures prevues (defaut: 8.0 pour journee standard).
         heure_debut: Heure de debut au format "HH:MM" (optionnel).
         heure_fin: Heure de fin au format "HH:MM" (optionnel).
         note: Commentaire prive pour l'affectation (optionnel, max 500 chars).
@@ -42,6 +43,12 @@ class CreateAffectationRequest(BaseModel):
     date_fin: Optional[datetime.date] = Field(
         None,
         description="Date de fin pour affectation unique multi-jours (incluse)",
+    )
+    heures_prevues: float = Field(
+        8.0,
+        gt=0,
+        le=24,
+        description="Nombre d'heures prevues pour l'affectation (defaut: 8.0)",
     )
     heure_debut: Optional[str] = Field(
         None,
@@ -91,6 +98,7 @@ class CreateAffectationRequest(BaseModel):
                 "utilisateur_id": 1,
                 "chantier_id": 2,
                 "date": "2026-01-22",
+                "heures_prevues": 8.0,
                 "heure_debut": "08:00",
                 "heure_fin": "17:00",
                 "note": "Travaux de fondation",
@@ -109,6 +117,7 @@ class UpdateAffectationRequest(BaseModel):
     Attributes:
         date: Nouvelle date de l'affectation (pour drag & drop PLN-27).
         utilisateur_id: Nouvel ID utilisateur (pour drag & drop PLN-27).
+        heures_prevues: Nouveau nombre d'heures prevues.
         heure_debut: Nouvelle heure de debut au format "HH:MM".
         heure_fin: Nouvelle heure de fin au format "HH:MM".
         note: Nouveau commentaire prive.
@@ -129,6 +138,12 @@ class UpdateAffectationRequest(BaseModel):
         None,
         gt=0,
         description="Nouvel ID utilisateur (pour drag & drop)",
+    )
+    heures_prevues: Optional[float] = Field(
+        None,
+        gt=0,
+        le=24,
+        description="Nouveau nombre d'heures prevues",
     )
     heure_debut: Optional[str] = Field(
         None,
@@ -175,6 +190,7 @@ class AffectationResponse(BaseModel):
         utilisateur_id: ID de l'utilisateur affecte.
         chantier_id: ID du chantier.
         date: Date de l'affectation (ISO format).
+        heures_prevues: Nombre d'heures prevues pour l'affectation.
         heure_debut: Heure de debut (format HH:MM).
         heure_fin: Heure de fin (format HH:MM).
         note: Commentaire prive.
@@ -194,6 +210,7 @@ class AffectationResponse(BaseModel):
     utilisateur_id: int = Field(..., description="ID de l'utilisateur affecté", example=5)
     chantier_id: int = Field(..., description="ID du chantier", example=12)
     date: str = Field(..., description="Date de l'affectation (format ISO 8601)", example="2026-01-22")
+    heures_prevues: float = Field(..., description="Nombre d'heures prévues pour l'affectation", example=8.0)
     heure_debut: Optional[str] = Field(
         None,
         description="Heure de début (format HH:MM)",
@@ -280,6 +297,7 @@ class AffectationResponse(BaseModel):
                 "utilisateur_id": 1,
                 "chantier_id": 2,
                 "date": "2026-01-22",
+                "heures_prevues": 8.0,
                 "heure_debut": "08:00",
                 "heure_fin": "17:00",
                 "note": "Travaux de fondation",

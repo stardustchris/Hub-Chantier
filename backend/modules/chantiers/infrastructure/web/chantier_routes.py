@@ -173,7 +173,7 @@ class UserPublicSummary(BaseModel):
     Résumé public d'un utilisateur (sans données sensibles RGPD).
 
     Utilisé pour l'affichage des conducteurs/chefs dans les chantiers.
-    Ne contient PAS email ni téléphone pour conformité RGPD.
+    Le téléphone est inclus UNIQUEMENT pour les chefs de chantier (besoin opérationnel).
     """
 
     id: str
@@ -183,6 +183,7 @@ class UserPublicSummary(BaseModel):
     type_utilisateur: str
     metier: Optional[str] = None
     couleur: Optional[str] = None
+    telephone: Optional[str] = None  # Inclus uniquement pour les chefs de chantier
     is_active: bool
 
 
@@ -1392,17 +1393,17 @@ def delete_phase(
 # =============================================================================
 
 
-def _get_user_summary(user_id: int, user_repo: "UserRepository") -> Optional[UserPublicSummary]:
+def _get_user_summary(user_id: int, user_repo: "UserRepository", include_telephone: bool = False) -> Optional[UserPublicSummary]:
     """
     Récupère les infos publiques d'un utilisateur pour l'inclusion dans un chantier.
 
-    RGPD: Ne retourne PAS l'email ni le téléphone des utilisateurs.
-    Ces données sensibles ne doivent pas être exposées dans les réponses API
-    pour les autres utilisateurs.
+    RGPD: Le téléphone est inclus UNIQUEMENT si include_telephone=True (chefs de chantier).
+    Besoin opérationnel légitime: permettre aux ouvriers d'appeler leur chef sur chantier.
 
     Args:
         user_id: ID de l'utilisateur à récupérer.
         user_repo: Repository pour accéder aux utilisateurs.
+        include_telephone: Si True, inclut le numéro de téléphone (pour chefs uniquement).
 
     Returns:
         UserPublicSummary avec les données publiques, ou None si non trouvé.
@@ -1418,6 +1419,7 @@ def _get_user_summary(user_id: int, user_repo: "UserRepository") -> Optional[Use
                 type_utilisateur=user.type_utilisateur.value,
                 metier=user.metier,
                 couleur=str(user.couleur) if user.couleur else None,
+                telephone=user.telephone if include_telephone else None,
                 is_active=user.is_active,
             )
         return None
@@ -1490,7 +1492,7 @@ def _transform_chantier_response(
                 conducteurs.append(user_summary)
 
         for uid in chef_chantier_ids:
-            user_summary = _get_user_summary(uid, user_repo)
+            user_summary = _get_user_summary(uid, user_repo, include_telephone=True)
             if user_summary:
                 chefs.append(user_summary)
 

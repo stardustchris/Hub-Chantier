@@ -60,9 +60,17 @@ def handle_affectation_created(
         feuille_repo = SQLAlchemyFeuilleHeuresRepository(session)
         event_bus = get_event_bus()
 
+        # Injecte le repository chantier pour filtrage des chantiers système (Gap 2)
+        chantier_repo = None
+        try:
+            from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
+            chantier_repo = SQLAlchemyChantierRepository(session)
+        except ImportError:
+            logger.warning("ChantierRepository not available, système chantiers filtering disabled")
+
         # Initialise le use case
         use_case = BulkCreateFromPlanningUseCase(
-            pointage_repo, feuille_repo, event_bus
+            pointage_repo, feuille_repo, event_bus, chantier_repo
         )
 
         # Détermine les heures prévues (depuis l'événement ou par défaut)

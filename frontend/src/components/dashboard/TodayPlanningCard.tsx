@@ -27,6 +27,13 @@ interface PlanningSlot {
   chantierStatut?: 'ouvert' | 'en_cours' | 'receptionne' | 'ferme'
   tasks?: Task[]
   isPersonalAffectation?: boolean // true si l'utilisateur est personnellement affecté
+  /** Chef de chantier principal */
+  chefChantier?: {
+    id: string
+    prenom: string
+    nom: string
+    telephone?: string
+  }
 }
 
 interface TodayPlanningCardProps {
@@ -233,13 +240,26 @@ export default function TodayPlanningCard({
                   <Navigation className="w-4 h-4" />
                   Itineraire
                 </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onCall?.(slot.id) }}
-                  className="border-2 border-gray-200 py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 font-medium"
-                >
-                  <Phone className="w-4 h-4" />
-                  Appeler chef
-                </button>
+                {slot.chefChantier && slot.chefChantier.telephone ? (
+                  <a
+                    href={`tel:${slot.chefChantier.telephone}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="border-2 border-gray-200 py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 font-medium"
+                    title={`Appeler ${slot.chefChantier.prenom} ${slot.chefChantier.nom}`}
+                  >
+                    <Phone className="w-4 h-4" />
+                    {slot.chefChantier.prenom} {slot.chefChantier.nom}
+                  </a>
+                ) : (
+                  <button
+                    disabled
+                    className="border-2 border-gray-200 py-2 px-4 rounded-xl flex items-center justify-center gap-2 font-medium opacity-50 cursor-not-allowed"
+                    title="Aucun chef de chantier assigné"
+                  >
+                    <Phone className="w-4 h-4" />
+                    Pas de chef
+                  </button>
+                )}
               </div>
             </div>
           )

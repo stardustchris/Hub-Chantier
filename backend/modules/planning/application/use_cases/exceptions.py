@@ -102,3 +102,43 @@ class NoAffectationsToDuplicateError(Exception):
             f"entre le {date_debut} et le {date_fin}"
         )
         super().__init__(self.message)
+
+
+class ChantierInactifError(Exception):
+    """Exception levee quand on tente d'affecter sur un chantier inactif (RG-PLN-004).
+
+    Attributes:
+        chantier_id: ID du chantier inactif.
+        message: Message d'erreur descriptif.
+    """
+
+    def __init__(self, chantier_id: int):
+        """
+        Initialise l'exception.
+
+        Args:
+            chantier_id: ID du chantier inactif.
+        """
+        self.chantier_id = chantier_id
+        self.message = f"Le chantier {chantier_id} est inactif et ne peut pas recevoir d'affectations"
+        super().__init__(self.message)
+
+
+class UtilisateurInactifError(Exception):
+    """Exception levee quand on tente d'affecter un utilisateur inactif (RG-PLN-005).
+
+    Attributes:
+        utilisateur_id: ID de l'utilisateur inactif.
+        message: Message d'erreur descriptif.
+    """
+
+    def __init__(self, utilisateur_id: int):
+        """
+        Initialise l'exception.
+
+        Args:
+            utilisateur_id: ID de l'utilisateur inactif.
+        """
+        self.utilisateur_id = utilisateur_id
+        self.message = f"L'utilisateur {utilisateur_id} est inactif et ne peut pas etre affecte"
+        super().__init__(self.message)

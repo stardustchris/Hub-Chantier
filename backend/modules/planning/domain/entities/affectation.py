@@ -21,6 +21,7 @@ class Affectation:
         utilisateur_id: ID de l'utilisateur affecte (reference User).
         chantier_id: ID du chantier concerne (reference Chantier).
         date: Date de l'affectation.
+        heures_prevues: Nombre d'heures prevues pour cette affectation (defaut: 8.0).
         heure_debut: Heure de debut optionnelle.
         heure_fin: Heure de fin optionnelle.
         note: Commentaire prive pour l'utilisateur affecte.
@@ -50,6 +51,7 @@ class Affectation:
 
     # Champs avec valeurs par defaut
     id: Optional[int] = None
+    heures_prevues: float = 8.0  # Nombre d'heures prevues (defaut: journee standard)
     heure_debut: Optional[HeureAffectation] = None
     heure_fin: Optional[HeureAffectation] = None
     note: Optional[str] = None
@@ -225,6 +227,7 @@ class Affectation:
             utilisateur_id=self.utilisateur_id,
             chantier_id=self.chantier_id,
             date=nouvelle_date,
+            heures_prevues=self.heures_prevues,
             heure_debut=self.heure_debut,
             heure_fin=self.heure_fin,
             note=self.note,

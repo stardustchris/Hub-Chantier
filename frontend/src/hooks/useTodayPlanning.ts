@@ -29,6 +29,13 @@ interface PlanningSlot {
   siteLongitude?: number
   tasks?: { id: string; name: string; priority: 'urgent' | 'high' | 'medium' | 'low' }[]
   isPersonalAffectation?: boolean // true si l'utilisateur est personnellement affecté
+  /** Chef de chantier principal */
+  chefChantier?: {
+    id: string
+    prenom: string
+    nom: string
+    telephone?: string
+  }
 }
 
 export interface UseTodayPlanningReturn {
@@ -75,6 +82,23 @@ function affectationToSlot(
   const heureDebut = affectation.heure_debut || '08:00'
   const heureFin = affectation.heure_fin || '17:00'
 
+  // Récupérer le premier chef de chantier s'il existe
+  const chefChantier = chantier?.chefs?.[0]
+    ? {
+        id: chantier.chefs[0].id,
+        prenom: chantier.chefs[0].prenom,
+        nom: chantier.chefs[0].nom,
+        telephone: chantier.chefs[0].telephone,
+      }
+    : undefined
+
+  // DEBUG: Log pour vérifier les données
+  console.log(`[useTodayPlanning] Chantier "${chantier?.nom}":`, {
+    hasChantier: !!chantier,
+    chefsCount: chantier?.chefs?.length || 0,
+    chefChantier,
+  })
+
   return {
     id: affectation.id,
     chantierId: affectation.chantier_id,
@@ -91,6 +115,7 @@ function affectationToSlot(
       ? [{ id: '1', name: affectation.note, priority: 'medium' as const }]
       : undefined,
     isPersonalAffectation: isPersonal,
+    chefChantier,
   }
 }
 
