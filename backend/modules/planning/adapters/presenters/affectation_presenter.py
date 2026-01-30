@@ -63,6 +63,8 @@ class AffectationPresenter:
             "utilisateur_nom": user_info.get("nom"),
             "utilisateur_couleur": user_info.get("couleur"),
             "utilisateur_metier": user_info.get("metier"),
+            "utilisateur_role": user_info.get("role"),
+            "utilisateur_type": user_info.get("type_utilisateur"),
             "chantier_id": affectation.chantier_id,
             "chantier_nom": chantier_info.get("nom"),
             "chantier_couleur": chantier_info.get("couleur"),
@@ -116,6 +118,8 @@ class AffectationPresenter:
                     "nom": info.nom,
                     "couleur": info.couleur,
                     "metier": info.metier,
+                    "role": info.role,
+                    "type_utilisateur": info.type_utilisateur,
                 }
             else:
                 self._user_cache[user_id] = {}
