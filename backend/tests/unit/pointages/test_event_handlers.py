@@ -18,8 +18,8 @@ class TestHandleAffectationCreated:
 
     @pytest.fixture
     def mock_event(self):
-        """Cree un evenement mock."""
-        event = Mock()
+        """Cree un evenement mock (ancien style, attributs directs)."""
+        event = Mock(spec=["affectation_id", "utilisateur_id", "chantier_id", "date", "heures_prevues", "created_by"])
         event.affectation_id = 1
         event.utilisateur_id = 10
         event.chantier_id = 100
@@ -66,7 +66,7 @@ class TestHandleAffectationCreated:
         mock_session
     ):
         """Test heures prevues par defaut si non fournies."""
-        event = Mock()
+        event = Mock(spec=["affectation_id", "utilisateur_id", "chantier_id", "date", "heures_prevues", "created_by"])
         event.affectation_id = 1
         event.utilisateur_id = 10
         event.chantier_id = 100
