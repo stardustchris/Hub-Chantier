@@ -913,12 +913,14 @@ def seed_pointages(db: Session, user_ids: dict, chantier_ids: dict):
     current_monday = today - timedelta(days=today.weekday())
     last_monday = current_monday - timedelta(days=7)
 
-    # Compagnons avec leurs chantiers
+    # Compagnons avec leurs chantiers (VRAIS compagnons du seed)
     compagnons = [
-        ("lucas.moreau@greg-construction.fr", "A001"),
-        ("emma.garcia@greg-construction.fr", "A001"),
-        ("thomas.leroy@greg-construction.fr", "A002"),
-        ("julie.roux@greg-construction.fr", "A004"),
+        ("sebastien.achkar@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),
+        ("carlos.de-oliveira-covas@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),
+        ("abou.drame@greg-construction.fr", "2025-04-CHIGNIN-AGRICOLE"),
+        ("loic.duinat@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("manuel.figueiredo-de-almeida@greg-construction.fr", "2025-11-TRIALP"),
+        ("babaker.haroun-moussa@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),
     ]
 
     created_count = 0
