@@ -248,17 +248,44 @@ Le module Utilisateurs permet de gerer l'ensemble des collaborateurs (employes e
 | USR-11 | Metier/Specialite | Classification par corps de metier | ✅ |
 | USR-12 | Email professionnel | Adresse email (requis pour l'authentification) | ✅ |
 | USR-13 | Coordonnees d'urgence | Contact en cas d'accident | ✅ |
+| USR-14 | Invitation utilisateur | Envoi email invitation avec lien activation compte | ✅ |
+| USR-15 | Reset password | Reinitialisation mot de passe via email avec token | ✅ |
+| USR-16 | Change password | Modification mot de passe depuis parametres compte | ✅ |
+| USR-17 | Statut is_active | Activation/desactivation compte apres invitation | ✅ |
 
-### 3.3 Matrice des roles et permissions
+### 3.3 Authentification et securite
+
+| ID | Fonctionnalite | Description | Status |
+|----|----------------|-------------|--------|
+| AUTH-01 | Login email/password | Connexion avec email professionnel et mot de passe | ✅ |
+| AUTH-02 | JWT tokens | Authentification par tokens (access + refresh) | ✅ |
+| AUTH-03 | Invitation utilisateur | Admin envoie invitation avec lien activation 7j | ✅ |
+| AUTH-04 | Acceptation invitation | Utilisateur cree mot de passe et active compte | ✅ |
+| AUTH-05 | Reset password request | Demande reinitialisation avec envoi email token | ✅ |
+| AUTH-06 | Reset password | Reinitialisation avec token valide 1h | ✅ |
+| AUTH-07 | Change password | Modification depuis parametres (mot de passe actuel requis) | ✅ |
+| AUTH-08 | Email verification | Templates HTML pour invitation, reset, verification | ✅ |
+| AUTH-09 | Token expiration | Tokens invitation (7j), reset (1h) avec validation | ✅ |
+| AUTH-10 | Password strength | Validation force mot de passe (8+ car, maj, min, chiffre) | ✅ |
+| AUTH-11 | Droit a l'oubli RGPD | Suppression definitive donnees utilisateur (Art. 17 RGPD) | ✅ |
+
+**AUTH-11 - Détails technique** :
+- Endpoint: `DELETE /api/auth/users/{user_id}/gdpr`
+- Permissions: Admin ou utilisateur lui-même uniquement
+- Action: Hard delete définitif de toutes les données personnelles
+- Conformité: RGPD Article 17 (Right to erasure)
+- Auditabilité: Horodatage de suppression retourné
+
+### 3.4 Matrice des roles et permissions
 
 | Role | Web | Mobile | Perimetre | Droits principaux |
 |------|-----|--------|-----------|-------------------|
-| Administrateur | ✅ | ✅ | Global | Tous droits, configuration systeme |
+| Administrateur | ✅ | ✅ | Global | Tous droits, configuration systeme, invitation utilisateurs |
 | Conducteur | ✅ | ✅ | Ses chantiers | Planification, validation, export |
 | Chef de Chantier | ❌ | ✅ | Ses chantiers assignes | Saisie, consultation, publication |
 | Compagnon | ❌ | ✅ | Planning perso | Consultation, saisie heures |
 
-### 3.4 Palette de couleurs utilisateurs
+### 3.5 Palette de couleurs utilisateurs
 
 16 couleurs disponibles pour l'identification visuelle des utilisateurs. Ces couleurs sont utilisees de maniere coherente dans tout l'ecosysteme : planning, feuilles d'heures, fil d'actualite, affectations.
 
@@ -303,7 +330,7 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 | CHT-16 | Liste equipe affectee | Visualisation des collaborateurs assignes | ✅ |
 | CHT-17 | Alertes signalements | Indicateur visuel si signalement actif | ⏳ Module signalements |
 | CHT-18 | Heures estimees | Budget temps previsionnel du chantier | ✅ |
-| CHT-19 | Code chantier | Identifiant unique (ex: A001, B023) | ✅ |
+| CHT-19 | Code chantier | Identifiant unique (ex: A001, B023, 2026-01-MONTMELIAN) | ✅ |
 | CHT-20 | Dates debut/fin previsionnelles | Planning macro du projet | ✅ |
 | CHT-21 | Onglet Logistique | Reservations materiel, stats et planning dans la fiche | ✅ |
 
@@ -323,7 +350,22 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 | 8 | Logistique | Reservations materiel, stats et planning | Tous |
 | 9 | Arrivees/Departs | Pointage et geolocalisation | Conducteur+ |
 
-### 4.4 Statuts de chantier
+### 4.4 Codes chantier
+
+Le code chantier est l'identifiant unique obligatoire de chaque chantier. Deux formats sont supportes :
+
+| Format | Pattern | Exemples | Usage |
+|--------|---------|----------|-------|
+| **Legacy** | `[A-Z]\d{3}` | A001, B023, Z999 | Chantiers anciens, absences (CONGES, MALADIE) |
+| **Standard** | `\d{4}-[A-Z0-9_-]+` | 2026-01-MONTMELIAN, 2024-10-TOURNON-COMMERCIAL | Chantiers depuis 2024 |
+
+**Regles** :
+- Code unique par chantier (contrainte DB)
+- Auto-generation si non fourni (A001, A002, ..., A999, B001, ...)
+- Codes speciaux pour absences : CONGES, MALADIE, FORMATION, RTT, ABSENT
+- Format annee-numero-nom recommande pour nouveaux chantiers
+
+### 4.5 Statuts de chantier
 
 | Statut | Icone | Description | Actions possibles |
 |--------|-------|-------------|-------------------|
@@ -331,6 +373,12 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 | En cours | 🟢 | Travaux en cours d'execution | Toutes actions operationnelles |
 | Receptionne | 🟡 | Travaux termines, en attente cloture | SAV, levee reserves |
 | Ferme | 🔴 | Chantier cloture definitivement | Consultation uniquement |
+
+**Transitions autorisees** :
+- Ouvert → En cours, Ferme
+- En cours → Receptionne, Ferme
+- Receptionne → En cours (reouverture exceptionnelle), Ferme
+- Ferme → (aucune transition, etat terminal)
 
 ---
 
