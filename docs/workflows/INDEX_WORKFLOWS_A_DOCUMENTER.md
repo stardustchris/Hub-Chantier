@@ -16,15 +16,18 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | Workflow | Fichier | Statut | Complétude |
 |----------|---------|--------|------------|
 | **Authentification** | `WORKFLOW_AUTHENTIFICATION.md` | ✅ Complet | 100% - Audit + Gap Analysis |
-| **Feuilles d'Heures** | `WORKFLOW_FEUILLES_HEURES.md` | ✅ Complet | 100% - Workflow + Fix |
+| **Feuilles d'Heures (données)** | `WORKFLOW_FEUILLES_HEURES.md` | ✅ Complet | 100% - Diagnostic données + Fix |
 | **Refactoring Pointages** | `REFACTORING_POINTAGES_ARCHITECTURE.md` | ✅ Complet | 100% - Clean Architecture |
 | **Nettoyage Données** | `NETTOYAGE_DONNEES_DEMO.md` | ✅ Complet | 100% - Suppression mocks |
+| **Planning Opérationnel** | `WORKFLOW_PLANNING_OPERATIONNEL.md` | ✅ Complet | 100% - Affectations, absences, drag&drop, conflits |
+| **Cycle de Vie Chantier** | `WORKFLOW_CYCLE_VIE_CHANTIER.md` | ✅ Complet | 100% - Machine à états, création, transitions, RGPD |
+| **Validation Feuilles d'Heures** | `WORKFLOW_VALIDATION_FEUILLES_HEURES.md` | ✅ Complet | 100% - Workflow validation, signature manuscrite, verrouillage mensuel, export paie |
 
 ---
 
 ## 🔴 WORKFLOWS CRITIQUES (Haute Priorité)
 
-### 1. **Planning Opérationnel** 🔴 URGENT
+### 1. **Planning Opérationnel** ✅ DOCUMENTÉ
 **Module** : `backend/modules/planning/`
 
 **Workflow à documenter** :
@@ -49,7 +52,7 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 
 ---
 
-### 2. **Cycle de Vie d'un Chantier** 🔴 URGENT
+### 2. **Cycle de Vie d'un Chantier** ✅ DOCUMENTÉ
 **Module** : `backend/modules/chantiers/`
 
 **Workflow à documenter** :
@@ -89,7 +92,7 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 
 ---
 
-### 3. **Validation Feuilles d'Heures** 🔴 URGENT
+### 3. **Validation Feuilles d'Heures** ✅ DOCUMENTÉ
 **Module** : `backend/modules/pointages/`
 
 **Workflow à documenter** :
@@ -308,9 +311,9 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 
 | # | Workflow | Priorité | Complexité | Impact Business | Effort | Statut |
 |---|----------|----------|------------|-----------------|--------|--------|
-| 1 | **Planning Opérationnel** | 🔴 URGENT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ❌ À faire |
-| 2 | **Cycle Vie Chantier** | 🔴 URGENT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 2j | ❌ À faire |
-| 3 | **Validation Feuilles Heures** | 🔴 URGENT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ⚠️ Partiel (WORKFLOW_FEUILLES_HEURES.md) |
+| 1 | **Planning Opérationnel** | ✅ FAIT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ✅ Complet (WORKFLOW_PLANNING_OPERATIONNEL.md) |
+| 2 | **Cycle Vie Chantier** | ✅ FAIT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 2j | ✅ Complet (WORKFLOW_CYCLE_VIE_CHANTIER.md) |
+| 3 | **Validation Feuilles Heures** | ✅ FAIT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ✅ Complet (WORKFLOW_VALIDATION_FEUILLES_HEURES.md) |
 | 4 | **GED** | 🟡 IMPORTANT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ❌ À faire |
 | 5 | **Formulaires Dynamiques** | 🟡 IMPORTANT | ⭐⭐⭐⭐ | ⚠️ IMPORTANT | 2j | ❌ À faire |
 | 6 | **Signalements** | 🟡 IMPORTANT | ⭐⭐⭐ | ⚠️ IMPORTANT | 1j | ❌ À faire |
@@ -446,15 +449,18 @@ Description concise du workflow
 
 ## 📞 CONCLUSION
 
-**Statut actuel** : 4 workflows documentés sur 16 (25%)
+**Statut actuel** : 7 workflows documentés sur 16 (44%)
 
-**Recommandation** :
-1. Prioriser les **3 workflows critiques** (Sprint 1 - 8j)
-2. Compléter les **workflows importants** (Sprint 2 - 8j)
-3. Finaliser les **workflows secondaires** (Sprint 3 - 4j)
+**Fait** :
+1. ✅ **3 workflows critiques** documentés (Planning, Cycle Vie Chantier, Validation FdH)
+2. ✅ **4 workflows supports** documentés (Authentification, Feuilles Heures données, Refactoring, Nettoyage)
+
+**Reste à faire** :
+1. Compléter les **5 workflows importants** (Sprint 2 - GED, Formulaires, Signalements, Logistique, Planning Charge)
+2. Finaliser les **4 workflows secondaires** (Sprint 3 - Interventions, Tâches, Dashboard, Notifications)
 
 **ROI** : 20 jours d'investissement → Gain estimé 50j/an (réduction bugs, onboarding, support)
 
 ---
 
-**Prochaine action recommandée** : Commencer par **WORKFLOW_PLANNING_OPERATIONNEL.md** ?
+**Prochaine action recommandée** : Commencer le Sprint 2 par **WORKFLOW_GESTION_DOCUMENTAIRE.md** ?
