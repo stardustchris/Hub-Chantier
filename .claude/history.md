@@ -3,6 +3,151 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-30 (Authentification complete + Documentation workflows)
+
+**Duree**: ~4h
+**Modules**: Auth, Chantiers, Documentation
+**Commits**:
+- `aec8603` - Workflow Cycle de Vie Chantier
+- `5df51a4` - Features auth + améliorations chantiers
+
+### Objectif
+
+1. Implémenter les fonctionnalités d'authentification manquantes identifiées dans WORKFLOW_AUTHENTIFICATION.md
+2. Documenter le workflow Cycle de Vie d'un Chantier
+3. Synchroniser avec le remote GitHub (6 nouveaux workflows documentés)
+4. Mettre à jour les specs et la documentation projet
+
+### Travail effectué
+
+#### 1. Module Auth - Features manquantes (Gap analysis résolu)
+
+**Use Cases implémentés (5 nouveaux)**:
+- `request_password_reset.py` - Demande réinitialisation avec envoi email token (expire 1h)
+- `reset_password.py` - Réinitialisation avec token valide
+- `invite_user.py` - Invitation utilisateur avec email et token (expire 7j)
+- `accept_invitation.py` - Acceptation invitation et activation compte
+- `change_password.py` - Modification mot de passe (mot de passe actuel requis)
+
+**Domain**:
+- User entity: ajout `reset_token`, `reset_token_expires`, `invitation_token`, `is_active`
+- User repository: méthodes `find_by_reset_token()`, `find_by_invitation_token()`
+- Exceptions: `InvalidTokenError`, `ExpiredTokenError`, `InvalidPasswordError`
+
+**Infrastructure**:
+- Email service: `EmailService` avec templates HTML (invitation, reset password, verification)
+- Routes: `/reset-password/request`, `/reset-password/reset`, `/change-password`
+- Migration DB: `20260130_1630_670f48881d6d_add_password_reset_invitation_and_email_.py`
+- Templates email HTML: 3 templates professionnels
+
+**Frontend**:
+- `ResetPasswordPage.tsx` - Page réinitialisation mot de passe
+- `AcceptInvitationPage.tsx` - Page acceptation invitation
+- `SecuritySettingsPage.tsx` - Page paramètres sécurité (change password)
+
+**Tests unitaires (5 fichiers)**:
+- `test_request_password_reset.py`
+- `test_reset_password.py`
+- `test_invite_user.py`
+- `test_accept_invitation.py`
+- `test_change_password.py`
+
+**Validation**: ⚠️ WARN (1 HIGH: rate limiting à implémenter)
+
+#### 2. Module Chantiers - Améliorations
+
+**CodeChantier étendu**:
+- Support format `AAAA-NN-NOM` (ex: 2026-01-MONTMELIAN) en plus de `A001`
+- Pattern validation: `^([A-Z]\d{3}|\d{4}-[A-Z0-9_-]+)$`
+- Message erreur détaillé avec exemples
+
+**Maître d'ouvrage**:
+- Ajout `maitre_ouvrage_id` dans `ChantierDTO`
+- Route PATCH `/api/chantiers/{id}/maitre-ouvrage`
+- Affichage dans `ChantierCard.tsx`
+
+**Validation**: ⚠️ WARN (1 HIGH: import cross-module auth dans routes)
+
+#### 3. Infrastructure Claude - Scripts validation
+
+**Orchestrateur agents**:
+- 7 agents spécialisés : sql-pro, architect-reviewer, code-reviewer, security-auditor, test-automator, python-pro, typescript-pro
+- Validation incrémentale par module
+- Reports JSON sauvegardés dans `.claude/reports/`
+- Checksums fichiers pour validation incrémentale
+
+**Documentation**:
+- `ORCHESTRATION_PERIODIQUE.md` - Guide orchestration agents
+
+#### 4. Documentation workflows (11 workflows documentés)
+
+**Session actuelle**:
+- `WORKFLOW_CYCLE_VIE_CHANTIER.md` (1710 lignes) - Machine à états, transitions, use cases, tests
+
+**Synchronisés depuis remote**:
+- `WORKFLOW_VALIDATION_FEUILLES_HEURES.md` (1685 lignes)
+- `WORKFLOW_GESTION_DOCUMENTAIRE.md` (515 lignes)
+- `WORKFLOW_FORMULAIRES_DYNAMIQUES.md` (527 lignes)
+- `WORKFLOW_SIGNALEMENTS.md` (1068 lignes)
+- `WORKFLOW_LOGISTIQUE_MATERIEL.md` (964 lignes)
+- `WORKFLOW_PLANNING_CHARGE.md` (986 lignes)
+
+**Total documentation workflows**: ~6920 lignes sur 11 workflows
+
+#### 5. Mise à jour documentation projet
+
+**SPECIFICATIONS.md**:
+- Ajout USR-14 à USR-17 (invitation, reset password, change password, is_active)
+- Nouvelle section 3.3 "Authentification et sécurité" (AUTH-01 à AUTH-10)
+- Section 4.4 "Codes chantier" détaillée (formats, règles, exemples)
+- Section 4.5 "Statuts de chantier" avec transitions autorisées
+- CHT-19 mis à jour pour refléter nouveau format codes
+
+**project-status.md**:
+- Module auth: 13/13 → 27/27 fonctionnalités
+- Fonctionnalités totales: 237 → 251 (+14 auth)
+- Fonctionnalités done: 219 → 233 (93%)
+- Features récentes: ajout authentification complète, codes chantiers étendus, workflows documentés
+
+**history.md**:
+- Ajout session 2026-01-30 (cette session)
+
+### Statistiques
+
+- **56 fichiers** modifiés/ajoutés
+- **+9024 lignes** de code
+- **Backend**: +490 lignes (auth + chantiers)
+- **Frontend**: +150 lignes (pages + components)
+- **Tests**: 5 nouveaux fichiers tests unitaires
+- **Documentation**: +6920 lignes (11 workflows)
+
+### Validation pre-commit
+
+**Module auth**: ⚠️ WARN
+- sql-pro: 47 findings (migrations DROP TABLE)
+- architect-reviewer: ✅ PASS
+- code-reviewer: ✅ PASS (17 findings mineurs)
+- security-auditor: ⚠️ WARN (1 HIGH: rate limiting login)
+
+**Module chantiers**: ⚠️ WARN
+- sql-pro: 41 findings (migrations DROP TABLE)
+- architect-reviewer: ⚠️ WARN (1 HIGH: import auth)
+- code-reviewer: ✅ PASS (32 findings mineurs)
+- security-auditor: ✅ PASS (2 MEDIUM: RGPD)
+
+**Statut global**: ✅ Commit autorisé
+
+### Impact métier
+
+**Résout gap analysis WORKFLOW_AUTHENTIFICATION.md**:
+- ✅ Reset Password (estimé 2j) → Implémenté
+- ✅ Invitation Utilisateur (estimé 3j) → Implémenté
+- ✅ Change Password (estimé 1j) → Implémenté
+
+**Total effort économisé**: 6 jours
+
+---
+
 ## Session 2026-01-29 (Fix telechargement documents)
 
 **Duree**: ~2h30
