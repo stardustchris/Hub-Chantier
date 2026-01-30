@@ -283,6 +283,7 @@ class Chantier:
         adresse: Optional[str] = None,
         description: Optional[str] = None,
         couleur: Optional[Couleur] = None,
+        maitre_ouvrage: Optional[str] = None,
     ) -> None:
         """
         Met à jour les informations générales du chantier.
@@ -292,6 +293,7 @@ class Chantier:
             adresse: Nouvelle adresse.
             description: Nouvelle description.
             couleur: Nouvelle couleur.
+            maitre_ouvrage: Nouveau maître d'ouvrage.
         """
         if nom is not None:
             if not nom.strip():
@@ -308,6 +310,9 @@ class Chantier:
 
         if couleur is not None:
             self.couleur = couleur
+
+        if maitre_ouvrage is not None:
+            self.maitre_ouvrage = maitre_ouvrage.strip() if maitre_ouvrage.strip() else None
 
         self.updated_at = datetime.now()
 

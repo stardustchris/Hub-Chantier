@@ -267,6 +267,7 @@ class ChantierController:
         date_debut: Optional[str] = None,
         date_fin: Optional[str] = None,
         description: Optional[str] = None,
+        maitre_ouvrage: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Met à jour un chantier.
@@ -287,6 +288,7 @@ class ChantierController:
             date_debut: Nouvelle date début.
             date_fin: Nouvelle date fin.
             description: Nouvelle description.
+            maitre_ouvrage: Nouveau maître d'ouvrage.
 
         Returns:
             Dictionnaire avec le chantier mis à jour.
@@ -322,6 +324,7 @@ class ChantierController:
             date_debut=date_debut,
             date_fin=date_fin,
             description=description,
+            maitre_ouvrage=maitre_ouvrage,
         )
         result = self.update_use_case.execute(chantier_id, dto)
 

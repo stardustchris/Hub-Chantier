@@ -52,9 +52,29 @@ const ROLE_LABELS: Record<string, string> = {
   admin: 'Direction',
   conducteur: 'Conducteur de travaux',
   chef_chantier: 'Chef de chantier',
+  compagnon: 'Compagnon',
   ouvrier: 'Ouvrier',
   interimaire: 'Interimaire',
   sous_traitant: 'Sous-traitant',
+}
+
+/** Labels des métiers en français */
+const METIER_LABELS: Record<string, string> = {
+  assistante_administrative: 'Assistante administrative',
+  chef_chantier: 'Chef de chantier',
+  chef_equipe: 'Chef d\'équipe',
+  macon: 'Maçon',
+  macon_coffreur: 'Maçon-coffreur',
+  coffreur: 'Coffreur',
+  ferrailleur: 'Ferrailleur',
+  manoeuvre: 'Manœuvre',
+  grutier: 'Grutier',
+  charpentier: 'Charpentier',
+  couvreur: 'Couvreur',
+  electricien: 'Électricien',
+  plombier: 'Plombier',
+  peintre: 'Peintre',
+  carreleur: 'Carreleur',
 }
 
 function sortMembers(members: TeamMember[]): TeamMember[] {
@@ -126,18 +146,33 @@ export function useTodayTeam(): UseTodayTeamReturn {
         if (seen.has(key)) continue
         seen.add(key)
 
-        const fullName = affectation.utilisateur_nom || 'Utilisateur'
+        // Le backend retourne "Prénom NOM" (ex: "Jean DUPONT")
+        const fullName = affectation.utilisateur_nom || 'Utilisateur Inconnu'
+
+        // DEBUG: Log pour investiguer
+        if (teamMembers.length === 0) {
+          console.log('DEBUG affectation:', {
+            utilisateur_nom: affectation.utilisateur_nom,
+            utilisateur_metier: affectation.utilisateur_metier,
+            utilisateur_role: affectation.utilisateur_role,
+            utilisateur_couleur: affectation.utilisateur_couleur,
+          })
+        }
+
         const nameParts = fullName.split(' ')
         const prenom = nameParts[0] || 'Utilisateur'
         const nom = nameParts.slice(1).join(' ') || ''
-        const role = affectation.utilisateur_role || 'ouvrier'
+
+        // Afficher le métier plutôt que le rôle système
+        const metier = affectation.utilisateur_metier || affectation.utilisateur_role || 'ouvrier'
+        const metierLabel = METIER_LABELS[metier] || ROLE_LABELS[metier] || metier
 
         teamMembers.push({
           id: affectation.utilisateur_id,
           firstName: prenom,
           lastName: nom,
-          role: ROLE_LABELS[role] || role,
-          color: affectation.utilisateur_couleur || ROLE_COLORS[role] || '#6b7280',
+          role: metierLabel,
+          color: affectation.utilisateur_couleur || ROLE_COLORS[metier] || '#6b7280',
           phone: undefined,
           chantierId: affectation.chantier_id,
           chantierName: affectation.chantier_nom || 'Chantier',

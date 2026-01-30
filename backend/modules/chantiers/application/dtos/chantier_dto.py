@@ -167,6 +167,7 @@ class UpdateChantierDTO:
     date_debut: Optional[str] = None
     date_fin: Optional[str] = None
     description: Optional[str] = None
+    maitre_ouvrage: Optional[str] = None
 
 
 @dataclass(frozen=True)

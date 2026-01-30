@@ -24,6 +24,7 @@ from ...application.use_cases import (
     WeakPasswordError,
     UserNotFoundError,
 )
+from ...application.use_cases.delete_user_data import DeleteUserDataUseCase
 from .dependencies import get_auth_controller, get_current_user_id, get_current_user_role, require_admin_or_conducteur
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -143,12 +144,21 @@ class ConsentUpdateRequest(BaseModel):
 
 
 @router.get("/csrf-token")
-def get_csrf_token(request: Request):
+def get_csrf_token(request: Request) -> dict[str, str]:
     """
     Retourne le token CSRF depuis le cookie.
 
     Le middleware CSRF génère automatiquement un token lors des requêtes GET.
     Cette route permet au frontend de récupérer explicitement ce token.
+
+    Args:
+        request: Requête HTTP contenant le cookie CSRF.
+
+    Returns:
+        Dictionnaire contenant le token CSRF.
+
+    Raises:
+        HTTPException 400: Aucun token CSRF trouvé.
     """
     csrf_token = request.cookies.get("csrf_token")
     if not csrf_token:
@@ -314,7 +324,7 @@ def get_current_user(
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(response: Response) -> dict[str, str]:
     """
     Déconnecte l'utilisateur en supprimant le cookie d'authentification.
 
@@ -322,7 +332,7 @@ def logout(response: Response):
         response: Réponse HTTP (pour supprimer le cookie).
 
     Returns:
-        Message de confirmation.
+        Message de confirmation de déconnexion.
     """
     response.delete_cookie(
         key=AUTH_COOKIE_NAME,
@@ -858,3 +868,53 @@ def _transform_user_response(user_dict: dict) -> UserResponse:
         created_at=user_dict.get("created_at"),
         updated_at=user_dict.get("updated_at"),
     )
+
+
+# =============================================================================
+# Routes RGPD - Droit à l'oubli
+# =============================================================================
+
+
+@users_router.delete("/{user_id}/gdpr")
+def delete_user_gdpr(
+    user_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Supprime définitivement toutes les données d'un utilisateur (RGPD Art. 17).
+
+    Cette route implémente le droit à l'oubli du RGPD. La suppression est
+    définitive et irréversible. Seuls les administrateurs ou l'utilisateur
+    lui-même peuvent effectuer cette action.
+
+    Args:
+        user_id: ID de l'utilisateur à supprimer.
+        current_user_id: ID de l'utilisateur connecté.
+        db: Session de base de données.
+
+    Returns:
+        Message de confirmation avec horodatage.
+
+    Raises:
+        HTTPException 403: Permission refusée.
+        HTTPException 404: Utilisateur non trouvé.
+    """
+    from ...infrastructure.persistence import SQLAlchemyUserRepository
+
+    user_repository = SQLAlchemyUserRepository(db)
+    use_case = DeleteUserDataUseCase(user_repository)
+
+    try:
+        result = use_case.execute(user_id=user_id, requester_id=current_user_id)
+        return result
+    except UserNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message,
+        )
+    except PermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e),
+        )

@@ -1,0 +1,1240 @@
+{
+  "module": "auth",
+  "global_status": "FAIL",
+  "timestamp": "2026-01-30T18:36:52.986472",
+  "duration_seconds": 0.159348,
+  "agents_executed": 7,
+  "total_findings": {
+    "CRITICAL": 13,
+    "HIGH": 59,
+    "MEDIUM": 30,
+    "LOW": 60
+  },
+  "reports": [
+    {
+      "agent": "sqlpro",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 7 problème(s) haute(s) priorité DB",
+      "score": {
+        "db_quality": "0/10",
+        "total_findings": 47
+      },
+      "findings_count": 47,
+      "findings": [
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0001_initial_chantiers.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260125_0001_add_chantier_ouvriers.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260128_0001_add_rgpd_consent_fields.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0002_security_and_performance.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260124_0002_security_and_performance.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260129_0001_add_webhooks_and_event_logs.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0002_create_besoins_charge.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260130_0001_add_maitre_ouvrage_to_chantiers.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260128_0002_add_api_keys_table.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260130_1630_670f48881d6d_add_password_reset_invitation_and_email_.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0003_logistique_schema.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Modèle sans colonne updated_at",
+          "file": "backend/modules/auth/infrastructure/persistence/api_key_model.py",
+          "suggestion": "Ajouter updated_at = Column(DateTime(timezone=True), onupdate=func.now())",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'is_active' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_api_key_repository.py",
+          "suggestion": "Vérifier si index existe sur 'is_active' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'key_hash' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_api_key_repository.py",
+          "suggestion": "Vérifier si index existe sur 'key_hash' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'is_active' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'is_active' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'invitation_token' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'invitation_token' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'role' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'role' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'code_utilisateur' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'code_utilisateur' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'type_utilisateur' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'type_utilisateur' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'password_reset_token' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'password_reset_token' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'email_verification_token' utilisée dans filter sans index apparent",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Vérifier si index existe sur 'email_verification_token' pour optimiser les recherches",
+          "category": "database"
+        }
+      ]
+    },
+    {
+      "agent": "pythonpro",
+      "status": "PASS",
+      "summary": "✅ Code Python conforme aux standards",
+      "score": {
+        "python_quality": "10/10",
+        "total_findings": 6
+      },
+      "findings_count": 6,
+      "findings": [
+        {
+          "severity": "LOW",
+          "message": "Entité sans __eq__ défini",
+          "file": "backend/modules/auth/domain/entities/api_key.py",
+          "suggestion": "Implémenter __eq__ basé sur l'ID",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/auth/application/use_cases/register.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/auth/application/use_cases/deactivate_user.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/auth/application/use_cases/get_current_user.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/auth/application/use_cases/login.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/auth/application/use_cases/update_user.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        }
+      ]
+    },
+    {
+      "agent": "typescriptpro",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 25 problème(s) haute(s) priorité TypeScript",
+      "score": {
+        "typescript_quality": "0/10",
+        "total_findings": 36
+      },
+      "findings_count": 36,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Fichier src/types/api.ts manquant",
+          "file": "frontend/src/types/api.ts",
+          "suggestion": "Créer types/api.ts avec les interfaces pour l'API",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'ToastProvider' sans interface Props",
+          "file": "frontend/src/contexts/ToastContext.tsx",
+          "suggestion": "Créer interface ToastProviderProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'AuthProvider' sans interface Props",
+          "file": "frontend/src/contexts/AuthContext.tsx",
+          "suggestion": "Créer interface AuthProviderProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'MiniMapStatic' sans interface Props",
+          "file": "frontend/src/components/MiniMap.tsx",
+          "suggestion": "Créer interface MiniMapStaticProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'MapPlaceholder' sans interface Props",
+          "file": "frontend/src/components/MiniMap.tsx",
+          "suggestion": "Créer interface MapPlaceholderProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/LoggerToastBridge.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/ChantiersListPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/UsersListPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/WebhooksPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/APIKeysPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/DashboardPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/taches/TaskModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/taches/TemplateImportModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/planning/PlanningToolbar.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/planning/AffectationBlock.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/chantiers/EditChantierModal.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/chantiers/ChantierLogistiqueSection.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/pointages/SignatureSection.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/pointages/PointageFormFields.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/dashboard/WeatherBulletinPost.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/dashboard/PostComposer.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/FormulaireList.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/NewFormulaireModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/TemplateList.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/TemplateModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/ReservationActions.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/RessourceModal.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/ReservationFormFields.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/RessourceModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/documents/DocumentPreviewModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useDocuments' sans type de retour explicite",
+          "file": "frontend/src/hooks/useDocuments.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useAPIKeys' sans type de retour explicite",
+          "file": "frontend/src/hooks/useAPIKeys.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useWebhooks' sans type de retour explicite",
+          "file": "frontend/src/hooks/useWebhooks.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useFeuillesHeures' sans type de retour explicite",
+          "file": "frontend/src/hooks/useFeuillesHeures.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useOfflineStorage' sans type de retour explicite",
+          "file": "frontend/src/hooks/useOfflineStorage.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'usePlanning' sans type de retour explicite",
+          "file": "frontend/src/hooks/usePlanning.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        }
+      ]
+    },
+    {
+      "agent": "architectreviewer",
+      "status": "PASS",
+      "summary": "✅ Architecture Clean respectée",
+      "score": {
+        "clean_architecture": "10/10",
+        "modularity": "10/10",
+        "files_analyzed": 61
+      },
+      "findings_count": 0,
+      "findings": []
+    },
+    {
+      "agent": "testautomator",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 17 tests, couverture à améliorer (100%)",
+      "score": {
+        "coverage_estimate": "100%",
+        "tests_count": 17,
+        "use_cases_count": 17,
+        "test_quality": "0/10",
+        "target_coverage": "85%"
+      },
+      "findings_count": 41,
+      "findings": [
+        {
+          "severity": "HIGH",
+          "message": "Use case 'change_password' sans tests",
+          "file": "backend/modules/auth/application/use_cases/change_password.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_change_password.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'accept_invitation' sans tests",
+          "file": "backend/modules/auth/application/use_cases/accept_invitation.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_accept_invitation.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'get_consents' sans tests",
+          "file": "backend/modules/auth/application/use_cases/get_consents.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_get_consents.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'list_api_keys' sans tests",
+          "file": "backend/modules/auth/application/use_cases/list_api_keys.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_list_api_keys.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'create_api_key' sans tests",
+          "file": "backend/modules/auth/application/use_cases/create_api_key.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_create_api_key.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'revoke_api_key' sans tests",
+          "file": "backend/modules/auth/application/use_cases/revoke_api_key.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_revoke_api_key.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'reset_password' sans tests",
+          "file": "backend/modules/auth/application/use_cases/reset_password.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_reset_password.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'export_user_data' sans tests",
+          "file": "backend/modules/auth/application/use_cases/export_user_data.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_export_user_data.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'invite_user' sans tests",
+          "file": "backend/modules/auth/application/use_cases/invite_user.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_invite_user.py",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case 'request_password_reset' sans tests",
+          "file": "backend/modules/auth/application/use_cases/request_password_reset.py",
+          "suggestion": "Créer /Users/aptsdae/Hub-Chantier/backend/tests/unit/auth/test_request_password_reset.py",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_hash_password_no_uppercase_raises_error' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_bcrypt_password_service.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_hash_password_no_uppercase_raises_error' sans assertion",
+          "file": "backend/tests/unit/auth/test_bcrypt_password_service.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_hash_password_no_lowercase_raises_error' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_bcrypt_password_service.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_hash_password_no_lowercase_raises_error' sans assertion",
+          "file": "backend/tests/unit/auth/test_bcrypt_password_service.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_hash_password_no_digit_raises_error' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_bcrypt_password_service.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_hash_password_no_digit_raises_error' sans assertion",
+          "file": "backend/tests/unit/auth/test_bcrypt_password_service.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_login_invalid_email' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_login_invalid_email' sans assertion",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_login_user_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_login_user_not_found' sans assertion",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_login_wrong_password' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_login_wrong_password' sans assertion",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_login_inactive_user' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_login_inactive_user' sans assertion",
+          "file": "backend/tests/unit/auth/test_login.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_init_empty_secret_raises_error' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_jwt_token_service.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_init_empty_secret_raises_error' sans assertion",
+          "file": "backend/tests/unit/auth/test_jwt_token_service.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_revoke_api_key_calls_entity_revoke_method' sans assertion",
+          "file": "backend/tests/unit/auth/test_revoke_api_key_use_case.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_user_not_found_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_update_consents.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_user_not_found_raises' sans assertion",
+          "file": "backend/tests/unit/auth/test_update_consents.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_get_current_user_invalid_token' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_get_current_user.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_get_current_user_invalid_token' sans assertion",
+          "file": "backend/tests/unit/auth/test_get_current_user.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_execute_from_id_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_get_current_user.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_execute_from_id_not_found' sans assertion",
+          "file": "backend/tests/unit/auth/test_get_current_user.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_register_weak_password' sans assertion",
+          "file": "backend/tests/unit/auth/test_register.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_register_invalid_email_format' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_register.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_register_invalid_email_format' sans assertion",
+          "file": "backend/tests/unit/auth/test_register.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_couleur_is_frozen' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_value_objects_couleur.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_couleur_is_frozen' sans assertion",
+          "file": "backend/tests/unit/auth/test_value_objects_couleur.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_save_new_user' sans pattern AAA clair",
+          "file": "backend/tests/unit/auth/test_sqlalchemy_user_repository.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_save_new_user' sans assertion",
+          "file": "backend/tests/unit/auth/test_sqlalchemy_user_repository.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fichier conftest.py manquant",
+          "file": "backend/tests/unit/conftest.py",
+          "suggestion": "Créer conftest.py avec fixtures partagées (db_session, client)",
+          "category": "testing"
+        }
+      ]
+    },
+    {
+      "agent": "codereviewer",
+      "status": "PASS",
+      "summary": "✅ Code de qualité acceptable",
+      "score": {
+        "quality": "10/10",
+        "maintainability": "0/10",
+        "files_reviewed": 61,
+        "issues_found": 17
+      },
+      "findings_count": 17,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/auth/domain/exceptions.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction 'get_csrf_token' sans annotation de retour",
+          "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+          "suggestion": "Ajouter -> ReturnType ou -> None",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction 'logout' sans annotation de retour",
+          "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+          "suggestion": "Ajouter -> ReturnType ou -> None",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/auth/domain/value_objects/couleur.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'import' ne suit pas PascalCase",
+          "file": "backend/modules/auth/domain/value_objects/email.py",
+          "suggestion": "Renommer en Import",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/auth/domain/entities/user.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/auth/domain/entities/api_key.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/auth/domain/entities/api_key.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/dtos/user_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/dtos/api_key_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/dtos/api_key_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/dtos/api_key_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/dtos/api_key_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/dtos/api_key_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/auth/application/ports/token_service.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (22)",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '_not_deleted' a une complexité cyclomatique élevée (22)",
+          "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        }
+      ]
+    },
+    {
+      "agent": "securityauditor",
+      "status": "FAIL",
+      "summary": "❌ ÉCHEC : 13 vulnérabilité(s) critique(s)",
+      "score": {
+        "security": "0/10",
+        "critical_issues": 13,
+        "high_issues": 1,
+        "total_findings": 15
+      },
+      "findings_count": 15,
+      "findings": [
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : api_key",
+          "file": "backend/modules/auth/infrastructure/web/api_keys_routes.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : password",
+          "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : token",
+          "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : token",
+          "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : password",
+          "file": "backend/modules/auth/infrastructure/web/password_routes.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : password",
+          "file": "backend/modules/auth/infrastructure/web/password_routes.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : password",
+          "file": "backend/modules/auth/application/use_cases/change_password.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : api_key",
+          "file": "backend/modules/auth/application/use_cases/create_api_key.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : api_key",
+          "file": "backend/modules/auth/application/use_cases/create_api_key.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : secret",
+          "file": "backend/modules/auth/application/use_cases/create_api_key.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : api_key",
+          "file": "backend/modules/auth/application/use_cases/revoke_api_key.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : password",
+          "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "CRITICAL",
+          "message": "Secret potentiel en dur : password",
+          "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+          "suggestion": "Utiliser des variables d'environnement (os.getenv)",
+          "category": "security"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Endpoint de login sans rate limiting",
+          "file": "backend/modules/auth/infrastructure/web/dependencies.py",
+          "suggestion": "Implémenter rate limiting (slowapi ou similar)",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit à l'oubli non implémenté",
+          "file": "backend/modules/auth",
+          "suggestion": "Implémenter la suppression complète des données",
+          "category": "security"
+        }
+      ]
+    }
+  ]
+}

@@ -22,8 +22,8 @@ class CodeChantier:
 
     value: str
 
-    # Pattern de validation: lettre + 3 chiffres
-    PATTERN: ClassVar[str] = r"^[A-Z]\d{3}$"
+    # Pattern de validation: lettre + 3 chiffres OU format année-nom ou année-numéro-nom
+    PATTERN: ClassVar[str] = r"^([A-Z]\d{3}|\d{4}-[A-Z0-9_-]+)$"
 
     # Codes spéciaux pour les absences (chantiers virtuels)
     CODES_SPECIAUX: ClassVar[Set[str]] = {"CONGES", "MALADIE", "FORMATION", "RTT", "ABSENT"}
@@ -37,10 +37,11 @@ class CodeChantier:
         normalized = self.value.upper().strip()
 
         # Accepter les codes spéciaux ou le pattern standard
-        if normalized not in self.CODES_SPECIAUX and not re.match(self.PATTERN, normalized):
+        if normalized not in self.CODES_SPECIAUX and not re.match(self.PATTERN, self.value):
             raise ValueError(
                 f"Format de code chantier invalide: {self.value}. "
-                f"Format attendu: Une lettre suivie de 3 chiffres (ex: A001, B023) "
+                f"Format attendu: Une lettre suivie de 3 chiffres (ex: A001, B023), "
+                f"format année-numéro-nom (ex: 2024-10-MONTMELIAN) "
                 f"ou un code spécial ({', '.join(sorted(self.CODES_SPECIAUX))})"
             )
 

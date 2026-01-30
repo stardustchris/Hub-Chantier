@@ -188,6 +188,7 @@ export interface ChantierUpdate {
   date_debut_prevue?: string
   date_fin_prevue?: string
   description?: string
+  maitre_ouvrage?: string
 }
 
 // Statuts de chantier avec labels, couleurs et icones

@@ -351,6 +351,96 @@ class SQLAlchemyUserRepository(UserRepository):
 
         return [self._to_entity(m) for m in models], total
 
+    def find_by_password_reset_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token de réinitialisation de mot de passe.
+
+        Args:
+            token: Le token de réinitialisation.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.password_reset_token == token)
+            .filter(self._not_deleted())
+            .first()
+        )
+        return self._to_entity(model) if model else None
+
+    def find_by_invitation_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token d'invitation.
+
+        Args:
+            token: Le token d'invitation.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.invitation_token == token)
+            .filter(self._not_deleted())
+            .first()
+        )
+        return self._to_entity(model) if model else None
+
+    def find_by_email_verification_token(self, token: str) -> Optional[User]:
+        """
+        Trouve un utilisateur par son token de vérification d'email.
+
+        Args:
+            token: Le token de vérification.
+
+        Returns:
+            L'utilisateur trouvé ou None.
+        """
+        model = (
+            self.session.query(UserModel)
+            .filter(UserModel.email_verification_token == token)
+            .filter(self._not_deleted())
+            .first()
+        )
+        return self._to_entity(model) if model else None
+
+    def _extract_base_attributes(self, model: UserModel) -> dict:
+        """Extrait les attributs de base du modèle."""
+        return {
+            "id": model.id,
+            "email": Email(model.email),
+            "password_hash": PasswordHash(model.password_hash),
+            "nom": model.nom,
+            "prenom": model.prenom,
+            "role": Role.from_string(model.role),
+            "type_utilisateur": TypeUtilisateur.from_string(model.type_utilisateur),
+            "is_active": model.is_active,
+            "couleur": Couleur(model.couleur) if model.couleur else Couleur.default(),
+            "photo_profil": model.photo_profil,
+            "code_utilisateur": model.code_utilisateur,
+            "telephone": model.telephone,
+            "metier": model.metier,
+            "contact_urgence_nom": model.contact_urgence_nom,
+            "contact_urgence_tel": model.contact_urgence_tel,
+            "created_at": model.created_at,
+            "updated_at": model.updated_at,
+        }
+
+    def _extract_security_attributes(self, model: UserModel) -> dict:
+        """Extrait les attributs de sécurité et tokens du modèle."""
+        return {
+            "password_reset_token": model.password_reset_token,
+            "password_reset_expires_at": model.password_reset_expires_at,
+            "invitation_token": model.invitation_token,
+            "invitation_expires_at": model.invitation_expires_at,
+            "email_verified_at": model.email_verified_at,
+            "email_verification_token": model.email_verification_token,
+            "failed_login_attempts": model.failed_login_attempts,
+            "last_failed_login_at": model.last_failed_login_at,
+            "locked_until": model.locked_until,
+        }
+
     def _to_entity(self, model: UserModel) -> User:
         """
         Convertit un modèle SQLAlchemy en entité Domain.
@@ -361,25 +451,47 @@ class SQLAlchemyUserRepository(UserRepository):
         Returns:
             L'entité User.
         """
-        return User(
-            id=model.id,
-            email=Email(model.email),
-            password_hash=PasswordHash(model.password_hash),
-            nom=model.nom,
-            prenom=model.prenom,
-            role=Role.from_string(model.role),
-            type_utilisateur=TypeUtilisateur.from_string(model.type_utilisateur),
-            is_active=model.is_active,
-            couleur=Couleur(model.couleur) if model.couleur else Couleur.default(),
-            photo_profil=model.photo_profil,
-            code_utilisateur=model.code_utilisateur,
-            telephone=model.telephone,
-            metier=model.metier,
-            contact_urgence_nom=model.contact_urgence_nom,
-            contact_urgence_tel=model.contact_urgence_tel,
-            created_at=model.created_at,
-            updated_at=model.updated_at,
-        )
+        attributes = {
+            **self._extract_base_attributes(model),
+            **self._extract_security_attributes(model),
+        }
+        return User(**attributes)
+
+    def _prepare_base_model_data(self, user: User) -> dict:
+        """Prépare les données de base pour le modèle."""
+        return {
+            "id": user.id,
+            "email": str(user.email),
+            "password_hash": user.password_hash.value,
+            "nom": user.nom,
+            "prenom": user.prenom,
+            "role": user.role.value,
+            "type_utilisateur": user.type_utilisateur.value,
+            "is_active": user.is_active,
+            "couleur": str(user.couleur) if user.couleur else Couleur.DEFAULT,
+            "photo_profil": user.photo_profil,
+            "code_utilisateur": user.code_utilisateur,
+            "telephone": user.telephone,
+            "metier": user.metier,
+            "contact_urgence_nom": user.contact_urgence_nom,
+            "contact_urgence_tel": user.contact_urgence_tel,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+        }
+
+    def _prepare_security_model_data(self, user: User) -> dict:
+        """Prépare les données de sécurité pour le modèle."""
+        return {
+            "password_reset_token": user.password_reset_token,
+            "password_reset_expires_at": user.password_reset_expires_at,
+            "invitation_token": user.invitation_token,
+            "invitation_expires_at": user.invitation_expires_at,
+            "email_verified_at": user.email_verified_at,
+            "email_verification_token": user.email_verification_token,
+            "failed_login_attempts": user.failed_login_attempts,
+            "last_failed_login_at": user.last_failed_login_at,
+            "locked_until": user.locked_until,
+        }
 
     def _to_model(self, user: User) -> UserModel:
         """
@@ -391,22 +503,8 @@ class SQLAlchemyUserRepository(UserRepository):
         Returns:
             Le modèle UserModel.
         """
-        return UserModel(
-            id=user.id,
-            email=str(user.email),
-            password_hash=user.password_hash.value,
-            nom=user.nom,
-            prenom=user.prenom,
-            role=user.role.value,
-            type_utilisateur=user.type_utilisateur.value,
-            is_active=user.is_active,
-            couleur=str(user.couleur) if user.couleur else Couleur.DEFAULT,
-            photo_profil=user.photo_profil,
-            code_utilisateur=user.code_utilisateur,
-            telephone=user.telephone,
-            metier=user.metier,
-            contact_urgence_nom=user.contact_urgence_nom,
-            contact_urgence_tel=user.contact_urgence_tel,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
-        )
+        model_data = {
+            **self._prepare_base_model_data(user),
+            **self._prepare_security_model_data(user),
+        }
+        return UserModel(**model_data)
