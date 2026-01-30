@@ -1,7 +1,7 @@
 """Use Case: Obtenir les vues Chantiers et Compagnons (FDH-01)."""
 
 from datetime import date, timedelta
-from typing import List, Dict
+from typing import List, Dict, Optional
 from collections import defaultdict
 
 from ...domain.repositories import PointageRepository
@@ -13,6 +13,7 @@ from ..dtos import (
     ChantierPointageDTO,
     PointageJourCompagnonDTO,
 )
+from shared.application.ports.entity_info_service import EntityInfoService
 
 
 JOURS_SEMAINE = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -25,14 +26,20 @@ class GetVueSemaineUseCase:
     Implémente FDH-01: 2 onglets de vue [Chantiers] [Compagnons/Sous-traitants].
     """
 
-    def __init__(self, pointage_repo: PointageRepository):
+    def __init__(
+        self,
+        pointage_repo: PointageRepository,
+        entity_info_service: Optional[EntityInfoService] = None,
+    ):
         """
         Initialise le use case.
 
         Args:
             pointage_repo: Repository des pointages.
+            entity_info_service: Service pour enrichir les noms utilisateurs/chantiers.
         """
         self.pointage_repo = pointage_repo
+        self.entity_info_service = entity_info_service
 
     def get_vue_chantiers(
         self,
@@ -52,6 +59,9 @@ class GetVueSemaineUseCase:
         # Préparer la période et récupérer les pointages
         semaine_debut, semaine_fin = self._get_semaine_range(semaine_debut)
         pointages = self._fetch_pointages_chantiers(semaine_debut, semaine_fin, chantier_ids)
+
+        # Enrichir les pointages avec les noms
+        self._enrich_pointages(pointages)
 
         # Grouper par chantier
         by_chantier = self._group_by_chantier(pointages)
@@ -164,6 +174,9 @@ class GetVueSemaineUseCase:
         # Préparer la période et récupérer les pointages
         semaine_debut, semaine_fin = self._get_semaine_range(semaine_debut)
         pointages = self._fetch_pointages_semaine(semaine_debut, semaine_fin, utilisateur_ids)
+
+        # Enrichir les pointages avec les noms
+        self._enrich_pointages(pointages)
 
         # Grouper par utilisateur
         by_utilisateur = self._group_by_utilisateur(pointages)
@@ -299,3 +312,40 @@ class GetVueSemaineUseCase:
             )
             totaux_par_jour[jour_nom] = str(Duree.from_minutes(jour_total))
         return totaux_par_jour
+
+    def _enrich_pointages(self, pointages: List) -> None:
+        """
+        Enrichit les pointages avec les noms utilisateurs et chantiers.
+
+        Pattern inspiré de GetPlanningUseCase avec cache local.
+        """
+        if not self.entity_info_service or not pointages:
+            return
+
+        # Collecter les IDs uniques
+        user_ids = {p.utilisateur_id for p in pointages}
+        chantier_ids = {p.chantier_id for p in pointages}
+
+        # Cache local pour éviter requêtes répétées
+        user_cache = {}
+        for uid in user_ids:
+            info = self.entity_info_service.get_user_info(uid)
+            if info:
+                user_cache[uid] = info
+
+        chantier_cache = {}
+        for cid in chantier_ids:
+            info = self.entity_info_service.get_chantier_info(cid)
+            if info:
+                chantier_cache[cid] = info
+
+        # Enrichir chaque pointage
+        for p in pointages:
+            user_info = user_cache.get(p.utilisateur_id)
+            if user_info:
+                p.utilisateur_nom = user_info.nom
+
+            chantier_info = chantier_cache.get(p.chantier_id)
+            if chantier_info:
+                p.chantier_nom = chantier_info.nom
+                p.chantier_couleur = chantier_info.couleur or "#808080"

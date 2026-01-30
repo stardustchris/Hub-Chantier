@@ -87,7 +87,7 @@ class PointageController:
         self._list_uc = ListPointagesUseCase(pointage_repo, entity_info_service)
         self._get_feuille_uc = GetFeuilleHeuresUseCase(feuille_repo, pointage_repo)
         self._list_feuille_uc = ListFeuillesHeuresUseCase(feuille_repo, pointage_repo)
-        self._vue_semaine_uc = GetVueSemaineUseCase(pointage_repo)
+        self._vue_semaine_uc = GetVueSemaineUseCase(pointage_repo, entity_info_service)
         self._bulk_create_uc = BulkCreateFromPlanningUseCase(
             pointage_repo, feuille_repo, event_bus
         )
@@ -273,30 +273,15 @@ class PointageController:
     def get_vue_chantiers(
         self, semaine_debut: date, chantier_ids: List[int] = None
     ) -> List[Dict[str, Any]]:
-        """Retourne la vue par chantiers."""
+        """Retourne la vue par chantiers (enrichie par le Use Case)."""
         result = self._vue_semaine_uc.get_vue_chantiers(semaine_debut, chantier_ids)
 
-        # Enrichir les noms via entity_info_service
-        user_names: Dict[int, str] = {}
-        chantier_enriched: Dict[int, Dict[str, str]] = {}
-        if self.entity_info_service:
-            for v in result:
-                if v.chantier_id not in chantier_enriched:
-                    cinfo = self.entity_info_service.get_chantier_info(v.chantier_id)
-                    if cinfo:
-                        chantier_enriched[v.chantier_id] = {"nom": cinfo.nom, "couleur": cinfo.couleur or "#808080"}
-                for jour, pointages in v.pointages_par_jour.items():
-                    for p in pointages:
-                        if p.utilisateur_id not in user_names:
-                            info = self.entity_info_service.get_user_info(p.utilisateur_id)
-                            if info:
-                                user_names[p.utilisateur_id] = info.nom
-
+        # Conversion DTO → dict (les DTOs sont déjà enrichis par le Use Case)
         return [
             {
                 "chantier_id": v.chantier_id,
-                "chantier_nom": chantier_enriched.get(v.chantier_id, {}).get("nom", v.chantier_nom),
-                "chantier_couleur": chantier_enriched.get(v.chantier_id, {}).get("couleur", v.chantier_couleur),
+                "chantier_nom": v.chantier_nom,
+                "chantier_couleur": v.chantier_couleur,
                 "total_heures": v.total_heures,
                 "total_heures_decimal": v.total_heures_decimal,
                 "pointages_par_jour": {
@@ -304,7 +289,7 @@ class PointageController:
                         {
                             "pointage_id": p.pointage_id,
                             "utilisateur_id": p.utilisateur_id,
-                            "utilisateur_nom": user_names.get(p.utilisateur_id, p.utilisateur_nom),
+                            "utilisateur_nom": p.utilisateur_nom,
                             "heures_normales": p.heures_normales,
                             "heures_supplementaires": p.heures_supplementaires,
                             "total_heures": p.total_heures,
@@ -322,35 +307,21 @@ class PointageController:
     def get_vue_compagnons(
         self, semaine_debut: date, utilisateur_ids: List[int] = None
     ) -> List[Dict[str, Any]]:
-        """Retourne la vue par compagnons."""
+        """Retourne la vue par compagnons (enrichie par le Use Case)."""
         result = self._vue_semaine_uc.get_vue_compagnons(semaine_debut, utilisateur_ids)
 
-        # Enrichir les noms d'utilisateurs et chantiers via entity_info_service
-        user_names: Dict[int, str] = {}
-        chantier_info: Dict[int, Dict[str, str]] = {}
-        if self.entity_info_service:
-            for v in result:
-                if v.utilisateur_id not in user_names:
-                    info = self.entity_info_service.get_user_info(v.utilisateur_id)
-                    if info:
-                        user_names[v.utilisateur_id] = info.nom
-                for c in v.chantiers:
-                    if c.chantier_id not in chantier_info:
-                        cinfo = self.entity_info_service.get_chantier_info(c.chantier_id)
-                        if cinfo:
-                            chantier_info[c.chantier_id] = {"nom": cinfo.nom, "couleur": cinfo.couleur or "#808080"}
-
+        # Conversion DTO → dict (les DTOs sont déjà enrichis par le Use Case)
         return [
             {
                 "utilisateur_id": v.utilisateur_id,
-                "utilisateur_nom": user_names.get(v.utilisateur_id, v.utilisateur_nom),
+                "utilisateur_nom": v.utilisateur_nom,
                 "total_heures": v.total_heures,
                 "total_heures_decimal": v.total_heures_decimal,
                 "chantiers": [
                     {
                         "chantier_id": c.chantier_id,
-                        "chantier_nom": chantier_info.get(c.chantier_id, {}).get("nom", c.chantier_nom),
-                        "chantier_couleur": chantier_info.get(c.chantier_id, {}).get("couleur", c.chantier_couleur),
+                        "chantier_nom": c.chantier_nom,
+                        "chantier_couleur": c.chantier_couleur,
                         "total_heures": c.total_heures,
                         "pointages_par_jour": {
                             jour: [
