@@ -157,7 +157,7 @@ Hub-Chantier/
 
 | Module | Status | Description |
 |--------|--------|-------------|
-| auth | **Complet** (13/13) | Authentification JWT, roles, permissions |
+| auth | **Complet** (28/28) | Authentification JWT, reset password, invitation, change password, RGPD |
 | dashboard | **Complet** (32/35) | Feed social, KPI, meteo, planning du jour |
 | chantiers | **Complet** (19/21) | CRUD chantiers, geocodage, statut |
 | planning | **Complet** (26/28) | Affectations, drag & drop, multi-jours |

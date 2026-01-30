@@ -55,7 +55,8 @@
 
 | Feature | Description | Session |
 |---------|-------------|---------|
-| **Authentification complete** | Reset password, invitation utilisateur, change password (AUTH-01 a AUTH-10) | 30 jan |
+| **Routes API Auth (Phase 1)** | 5 routes HTTP exposees : /reset-password/request, /reset-password, /change-password, /invite, /accept-invitation + 5 modeles Pydantic + rate limiting (3-5 req/min) | 30 jan PM |
+| **Authentification complete** | Reset password, invitation utilisateur, change password (AUTH-01 a AUTH-10) | 30 jan AM |
 | **Codes chantiers etendus** | Support format AAAA-NN-NOM (ex: 2026-01-MONTMELIAN) en plus de A001 | 30 jan |
 | **Workflows documentes** | 11 workflows documentes (6920 lignes) : Auth, Cycle Vie Chantier, Planning, Validation FdH, GED, Formulaires, Signalements, Logistique, Planning Charge | 30 jan |
 | **Scripts validation agents** | Orchestrateur 7 agents (sql-pro, architect, code-reviewer, security, test-automator, python-pro, typescript-pro) | 30 jan |
