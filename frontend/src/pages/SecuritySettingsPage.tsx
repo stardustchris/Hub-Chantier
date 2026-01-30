@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { api } from '../services/api';
+import type { ApiError } from '../types/api';
 
 export function SecuritySettingsPage(): JSX.Element {
   const { user } = useAuth();
@@ -88,7 +89,8 @@ export function SecuritySettingsPage(): JSX.Element {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       if (error.response?.status === 400) {
         setErrors({ oldPassword: 'L\'ancien mot de passe est incorrect' });
       } else {
