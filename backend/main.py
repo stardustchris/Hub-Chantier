@@ -42,7 +42,6 @@ from modules.interventions.infrastructure.web import router as interventions_rou
 from modules.notifications.infrastructure.web import router as notifications_router
 from modules.notifications.infrastructure.event_handlers import register_notification_handlers
 from modules.pointages.infrastructure.event_handlers import setup_planning_integration
-from modules.chantiers.infrastructure.event_handlers import register_chantier_handlers
 from shared.infrastructure.web.upload_routes import router as upload_router
 from shared.infrastructure.webhooks import (
     router as webhooks_router,
@@ -133,11 +132,8 @@ async def startup_event():
     init_db()
     logger.info("Base de données initialisée")
 
-    # Enregistrer les handlers de notifications
+    # Enregistrer les handlers de notifications (comment, like, heures, chantier)
     register_notification_handlers()
-
-    # Enregistrer les handlers d'événements chantier
-    register_chantier_handlers()
 
     # Câbler l'intégration Planning → Pointages (FDH-10)
     setup_planning_integration(SessionLocal)
