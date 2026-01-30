@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { api } from '../services/api';
+import type { ApiError } from '../types/api';
 
 export function ResetPasswordPage(): JSX.Element {
   const [searchParams] = useSearchParams();
@@ -80,7 +81,8 @@ export function ResetPasswordPage(): JSX.Element {
 
       showToast('Mot de passe réinitialisé avec succès !', 'success');
       navigate('/login');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       if (error.response?.status === 400) {
         showToast('Le lien de réinitialisation est invalide ou expiré', 'error');
       } else {

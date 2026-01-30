@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { api } from '../services/api';
+import type { ApiError, InvitationInfo } from '../types/api';
 
 export function AcceptInvitationPage(): JSX.Element {
   const [searchParams] = useSearchParams();
@@ -14,12 +15,7 @@ export function AcceptInvitationPage(): JSX.Element {
   const { showToast } = useToast();
 
   const [token, setToken] = useState<string>('');
-  const [invitationInfo, setInvitationInfo] = useState<{
-    email: string;
-    nom: string;
-    prenom: string;
-    role: string;
-  } | null>(null);
+  const [invitationInfo, setInvitationInfo] = useState<InvitationInfo | null>(null);
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +41,8 @@ export function AcceptInvitationPage(): JSX.Element {
     try {
       const response = await api.get(`/auth/invitation/${invitationToken}`);
       setInvitationInfo(response.data);
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       if (error.response?.status === 404 || error.response?.status === 400) {
         showToast('Cette invitation est invalide ou a expiré.', 'error');
         navigate('/login');
@@ -107,7 +104,8 @@ export function AcceptInvitationPage(): JSX.Element {
 
       showToast('Compte créé avec succès ! Bienvenue à Hub Chantier.', 'success');
       navigate('/login');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as ApiError;
       if (error.response?.status === 400) {
         showToast('L\'invitation est invalide ou a expiré', 'error');
       } else if (error.response?.status === 409) {
