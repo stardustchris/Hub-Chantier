@@ -3,6 +3,87 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-30 (Audit executabilite workflows + refactoring Clean Architecture)
+
+**Duree**: ~3h
+**Modules**: Notifications, Chantiers, Pointages, Planning
+**Commits**: 6332317, 39e85fe, 9080439, e02aeb1, e71b129
+
+### Objectif
+
+1. Documenter les 4 derniers workflows (Sprint 3 — 100% complete)
+2. Auditer l'executabilite end-to-end des 3 workflows critiques
+3. Corriger les gaps trouves + validation 7 agents
+
+### Travail effectue
+
+#### Sprint 3 — Documentation workflows (4/4)
+- `WORKFLOW_INTERVENTIONS_SAV.md` — Creation, escalade, cloture interventions
+- `WORKFLOW_GESTION_TACHES.md` — Cycle de vie taches, Kanban, sous-taches
+- `WORKFLOW_DASHBOARD_FEED.md` — Posts, ciblage, likes, commentaires, @mentions, archivage 7j
+- `WORKFLOW_NOTIFICATIONS.md` — EventBus, Firebase FCM, polling 30s, handlers
+- `INDEX_WORKFLOWS_A_DOCUMENTER.md` mis a jour : 16/16 (100%)
+
+#### Audit executabilite — 3 workflows critiques
+- **Planning operationnel** : Gap #1 (handler non compatible DomainEvent)
+- **Cycle de vie chantier** : Gap #2 (pas de handlers notifications chantier)
+- **Validation FdH** : Gap #3 (handler heures.validated manquant)
+- **Statut chantier** : Gap #4 (allows_modifications incluait RECEPTIONNE)
+- **Signature manuscrite** : Gap #5 (feature a developper, documente)
+- **Events dual-style** : Gap #6 (cohabitation documente)
+
+#### Corrections gaps (commit 39e85fe)
+- Rewrote `_extract_event_field()` dans pointages/event_handlers.py (dual-style events)
+- Cree `chantiers/infrastructure/event_handlers.py` (handlers chantier.created + statut_changed)
+- Ajoute `handle_heures_validated` dans notifications/event_handlers.py
+- Fix `allows_modifications()` : exclut RECEPTIONNE
+- Wire `setup_planning_integration()` + `register_chantier_handlers()` dans main.py
+
+#### Validation 7 agents — Round 1 (commit e02aeb1)
+- **sql-pro** : FAIL → Fix 3 bugs (import path, model name, column name)
+- **python-pro** : PASS (2 medium non-bloquants)
+- **typescript-pro** : PASS (pas de frontend modifie)
+- **architect-reviewer** : CONDITIONAL PASS (couplage cross-module)
+- **test-automator** : FAIL → Fix (9 tests ajoutes)
+- **code-reviewer** : CHANGES_REQUESTED (DRY violations)
+- **security-auditor** : PASS (0 critique/haute)
+
+#### Refactoring Clean Architecture (commit e71b129)
+- **architect-reviewer corrige** : Deplace handlers chantier dans `notifications/infrastructure/event_handlers.py` (le module notifications ecoute passivement les events chantier)
+- **code-reviewer CR-01 corrige** : Supprime `_get_user_name` duplique, reutilise `get_user_name()`
+- **code-reviewer CR-02 corrige** : Remplace dict `statut_labels` par `StatutChantier.from_string().display_name`
+- **security-auditor** : Retire imports inutilises (`EntityInfoService`, `EventBus`)
+- Supprime `chantiers/infrastructure/event_handlers.py` (couplage elimine)
+- Nettoye `main.py` (un seul appel `register_notification_handlers()`)
+- 10 tests chantier deplaces dans `tests/unit/notifications/test_event_handlers.py`
+
+#### Validation 7 agents — Round 2 (post-refactoring)
+| Agent | Resultat |
+|-------|----------|
+| sql-pro | PASS |
+| python-pro | PASS |
+| typescript-pro | PASS |
+| architect-reviewer | PASS |
+| test-automator | PASS |
+| code-reviewer | APPROVED |
+| security-auditor | PASS (0 critique/haute, 2 low, 2 info) |
+
+### Tests
+- **Backend** : 2940 pass, 1 fail (preexisting documents mock)
+- **Notifications** : 30 tests (dont 10 nouveaux chantier handlers)
+
+### Fichiers modifies
+- `backend/main.py` — Startup simplifie
+- `backend/modules/notifications/infrastructure/event_handlers.py` — +5 handlers chantier
+- `backend/modules/pointages/infrastructure/event_handlers.py` — _extract_event_field()
+- `backend/modules/chantiers/domain/value_objects/statut_chantier.py` — allows_modifications fix
+- `backend/modules/chantiers/domain/events/__init__.py` — Docstring dual-style
+- `backend/modules/planning/domain/events/__init__.py` — Docstring dual-style
+- `backend/tests/unit/notifications/test_event_handlers.py` — +10 tests
+- `backend/tests/unit/pointages/test_event_handlers.py` — Mock spec fix
+- `docs/workflows/` — 4 fichiers Sprint 3 + index mis a jour
+- DELETE `backend/modules/chantiers/infrastructure/event_handlers.py`
+
 ## Session 2026-01-29 (Fix telechargement documents)
 
 **Duree**: ~2h30
