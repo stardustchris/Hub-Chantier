@@ -124,6 +124,48 @@ export default function DashboardPage() {
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
 
+  // Fusionner les posts avec le bulletin météo pour un tri unifié
+  const feedItemsWithWeather = useMemo(() => {
+    // Trier les posts par date (déjà trié normalement)
+    const sortedPosts = [...feed.sortedPosts]
+
+    // Si pas de météo, retourner juste les posts
+    if (!weather) {
+      return sortedPosts.map(post => ({ type: 'post' as const, data: post, sortDate: new Date(post.created_at) }))
+    }
+
+    // Trouver le premier post créé il y a plus de 6 heures
+    // Le bulletin météo apparaîtra après les posts récents (< 6h) et avant les posts plus anciens
+    const sixHoursAgo = new Date()
+    sixHoursAgo.setHours(sixHoursAgo.getHours() - 6)
+
+    const firstOldPostIndex = sortedPosts.findIndex(post => {
+      const postDate = new Date(post.created_at)
+      return postDate.getTime() < sixHoursAgo.getTime()
+    })
+
+    const result: Array<{ type: 'post' | 'weather'; data: any; sortDate: Date }> = []
+
+    // Si tous les posts sont récents (< 6h), mettre le bulletin après tous les posts
+    if (firstOldPostIndex === -1) {
+      sortedPosts.forEach(post => {
+        result.push({ type: 'post', data: post, sortDate: new Date(post.created_at) })
+      })
+      result.push({ type: 'weather', data: { weather, alert: weatherAlert }, sortDate: sixHoursAgo })
+    } else {
+      // Insérer le bulletin météo juste après les posts récents (< 6h)
+      sortedPosts.slice(0, firstOldPostIndex).forEach(post => {
+        result.push({ type: 'post', data: post, sortDate: new Date(post.created_at) })
+      })
+      result.push({ type: 'weather', data: { weather, alert: weatherAlert }, sortDate: sixHoursAgo })
+      sortedPosts.slice(firstOldPostIndex).forEach(post => {
+        result.push({ type: 'post', data: post, sortDate: new Date(post.created_at) })
+      })
+    }
+
+    return result
+  }, [feed.sortedPosts, weather, weatherAlert])
+
   // State pour le modal de capture photo
   const [isPhotoCaptureModalOpen, setIsPhotoCaptureModalOpen] = useState(false)
 
@@ -391,19 +433,7 @@ export default function DashboardPage() {
 
                 {/* Posts */}
                 <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-                  {/* Afficher le bulletin météo en premier si disponible */}
-                  {weather && (
-                    <WeatherBulletinPost
-                      weather={weather}
-                      alert={weatherAlert}
-                      chantierName={currentSlot?.siteName}
-                      chantierAddress={currentSlot?.siteAddress}
-                      chantierLatitude={currentSlot?.siteLatitude}
-                      chantierLongitude={currentSlot?.siteLongitude}
-                    />
-                  )}
-
-                  {feed.sortedPosts.length === 0 && !feed.isLoading ? (
+                  {feedItemsWithWeather.length === 0 && !feed.isLoading ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Aucune publication pour le moment</p>
@@ -411,15 +441,27 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <>
-                      {feed.sortedPosts.map((post) => (
-                        <DashboardPostCard
-                          key={post.id}
-                          post={post}
-                          allAuthors={allUsers}
-                          onLike={feed.handleLike}
-                          onPin={feed.handlePin}
-                          onDelete={feed.handleDelete}
-                        />
+                      {feedItemsWithWeather.map((item, index) => (
+                        item.type === 'post' ? (
+                          <DashboardPostCard
+                            key={item.data.id}
+                            post={item.data}
+                            allAuthors={allUsers}
+                            onLike={feed.handleLike}
+                            onPin={feed.handlePin}
+                            onDelete={feed.handleDelete}
+                          />
+                        ) : (
+                          <WeatherBulletinPost
+                            key="weather-bulletin"
+                            weather={item.data.weather}
+                            alert={item.data.alert}
+                            chantierName={currentSlot?.siteName}
+                            chantierAddress={currentSlot?.siteAddress}
+                            chantierLatitude={currentSlot?.siteLatitude}
+                            chantierLongitude={currentSlot?.siteLongitude}
+                          />
+                        )
                       ))}
                     </>
                   )}
