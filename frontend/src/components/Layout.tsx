@@ -18,6 +18,9 @@ import {
   Webhook,
   Building2,
   Handshake,
+  Euro,
+  ShoppingCart,
+  BarChart3,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -41,6 +44,9 @@ const navigation: NavItem[] = [
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
   { name: 'Planning', href: '/planning', icon: Calendar },
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
+  { name: 'Budgets', href: '/budgets', icon: Euro },
+  { name: 'Achats', href: '/achats', icon: ShoppingCart },
+  { name: 'Dashboard Financier', href: '/finances', icon: BarChart3 },
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
   { name: 'Logistique', href: '/logistique', icon: Truck },
@@ -127,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <nav className="px-2 py-4 space-y-1">
+        <nav className="px-2 py-4 space-y-1 overflow-y-auto flex-1">
           <NavLinks currentPath={location.pathname} onItemClick={() => setSidebarOpen(false)} />
         </nav>
       </div>
@@ -142,7 +148,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1">
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <NavLinks currentPath={location.pathname} />
           </nav>
 
