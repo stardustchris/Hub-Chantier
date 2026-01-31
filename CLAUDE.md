@@ -30,21 +30,35 @@ Voir `.claude/agents.md` pour le workflow detaille complet.
 
 **Resume** :
 1. Lire SPECIFICATIONS.md (specs feature)
-2. sql-pro : schema DB (si nouvelles tables)
-3. python-pro/typescript-pro : implementer
-4. architect-reviewer, test-automator, code-reviewer, security-auditor : valider
-5. Mettre a jour SPECIFICATIONS.md + .claude/history.md
+2. **IMPLEMENTATION** (3 agents selon contexte) :
+   - sql-pro : schema DB et migrations (si nouvelles tables/colonnes)
+   - python-pro : implementation backend (si code *.py)
+   - typescript-pro : implementation frontend (si code *.ts, *.tsx)
+3. **VALIDATION** (4 agents obligatoires) :
+   - architect-reviewer : conformite Clean Architecture
+   - test-automator : tests >= 85% couverture
+   - code-reviewer : qualite et conventions code
+   - security-auditor : securite + RGPD (0 CRITICAL/HIGH)
+4. Mettre a jour SPECIFICATIONS.md + .claude/history.md
 
 ### 3. Validation AVANT commit (code *.py, *.ts, *.tsx, *.sql)
 
 **CRITIQUE : Utiliser `Task(subagent_type="...")` pour TOUS les agents**
 
-**Checklist obligatoire** :
-- [ ] sql-pro : migrations OK (si modifs DB)
-- [ ] architect-reviewer : PASS
+**Checklist obligatoire (7 agents)** :
+
+**Phase IMPLEMENTATION** :
+- [ ] sql-pro : migrations OK (si modifs DB — nouvelles tables/colonnes)
+- [ ] python-pro : implementation backend (si code *.py)
+- [ ] typescript-pro : implementation frontend (si code *.ts, *.tsx)
+
+**Phase VALIDATION** :
+- [ ] architect-reviewer : PASS (0 violation Clean Architecture)
 - [ ] test-automator : tests generes (>= 85% couverture)
-- [ ] code-reviewer : APPROVED
-- [ ] security-auditor : PASS (0 finding critique/haute)
+- [ ] code-reviewer : APPROVED (qualite + conventions)
+- [ ] security-auditor : PASS (0 finding CRITICAL/HIGH)
+
+**Documentation** :
 - [ ] SPECIFICATIONS.md mis a jour
 - [ ] .claude/history.md mis a jour
 
@@ -52,9 +66,14 @@ Voir `.claude/agents.md` pour le workflow detaille complet.
 - ❌ Analyser le code soi-meme sans les agents
 - ❌ Dire "je vais verifier la qualite"
 - ❌ Committer sans validation agents
+- ❌ Sauter sql-pro, python-pro ou typescript-pro selon le contexte
 
 **TOUJOURS** :
+- ✅ `Task(subagent_type="sql-pro", prompt="...")` (si modifs DB)
+- ✅ `Task(subagent_type="python-pro", prompt="...")` (si code *.py)
+- ✅ `Task(subagent_type="typescript-pro", prompt="...")` (si code *.ts, *.tsx)
 - ✅ `Task(subagent_type="architect-reviewer", prompt="...")`
+- ✅ `Task(subagent_type="test-automator", prompt="...")`
 - ✅ `Task(subagent_type="code-reviewer", prompt="...")`
 - ✅ `Task(subagent_type="security-auditor", prompt="...")`
 - ✅ Attendre le retour agent
