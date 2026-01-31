@@ -154,11 +154,6 @@ export function usePlanning() {
 
   // Filtrer les utilisateurs
   const filteredUtilisateurs = useMemo(() => utilisateurs.filter(user => {
-    // Exclure les employés du planning
-    if (user.type_utilisateur === 'employe') {
-      return false
-    }
-
     if (filterMetiers.length > 0 && !filterMetiers.includes(user.metier || 'autre')) {
       return false
     }
