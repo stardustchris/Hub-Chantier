@@ -21,6 +21,7 @@ from sqlalchemy import (
     Enum as SQLEnum,
     ForeignKey,
     CheckConstraint,
+    Numeric,
     text,
 )
 
@@ -56,6 +57,9 @@ class RessourceModel(LogistiqueBase):
     validation_requise = Column(Boolean, nullable=False, default=True)
     actif = Column(Boolean, nullable=False, default=True, index=True)
     description = Column(Text, nullable=True)
+    tarif_journalier = Column(
+        Numeric(10, 2), nullable=True
+    )  # FIN-10: Tarif journalier materiel
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
     created_by = Column(

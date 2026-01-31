@@ -11,6 +11,7 @@ import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
 import { TaskList } from '../components/taches'
 import { EditChantierModal, AddUserModal, ChantierEquipeTab, MesInterventions, ChantierLogistiqueSection } from '../components/chantiers'
+import BudgetTab from '../components/financier/BudgetTab'
 import {
   ArrowLeft,
   MapPin,
@@ -28,12 +29,13 @@ import {
   ListTodo,
   Info,
   Users,
+  DollarSign,
 } from 'lucide-react'
 import { formatDateFull } from '../utils/dates'
 import type { Chantier, ChantierUpdate, User, Affectation, ContactChantier } from '../types'
 import { CHANTIER_STATUTS } from '../types'
 
-type TabType = 'infos' | 'taches' | 'equipe'
+type TabType = 'infos' | 'taches' | 'equipe' | 'budget'
 
 export default function ChantierDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -50,7 +52,7 @@ export default function ChantierDetailPage() {
   const getInitialTab = (): TabType => {
     const params = new URLSearchParams(window.location.search)
     const tab = params.get('tab') as TabType | null
-    return (tab && ['infos', 'documents', 'taches', 'planning'].includes(tab)) ? tab : 'infos'
+    return (tab && ['infos', 'documents', 'taches', 'planning', 'budget'].includes(tab)) ? tab : 'infos'
   }
   const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
   const [planningAffectations, setPlanningAffectations] = useState<Affectation[]>([])
@@ -488,10 +490,27 @@ export default function ChantierDetailPage() {
             <Users className="w-4 h-4" />
             Equipe
           </button>
+          {currentUser?.role !== 'compagnon' && (
+            <button
+              onClick={() => setActiveTab('budget')}
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === 'budget'
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+              role="tab"
+              aria-selected={activeTab === 'budget'}
+            >
+              <DollarSign className="w-4 h-4" />
+              Budget
+            </button>
+          )}
         </div>
 
         {/* Contenu selon l'onglet actif */}
-        {activeTab === 'taches' ? (
+        {activeTab === 'budget' ? (
+          <BudgetTab chantierId={parseInt(id!)} />
+        ) : activeTab === 'taches' ? (
           <TaskList chantierId={parseInt(id!)} chantierNom={chantier.nom} />
         ) : activeTab === 'equipe' ? (
           <ChantierEquipeTab

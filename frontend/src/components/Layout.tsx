@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Webhook,
   Building2,
+  Handshake,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -43,6 +44,7 @@ const navigation: NavItem[] = [
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
   { name: 'Logistique', href: '/logistique', icon: Truck },
+  { name: 'Fournisseurs', href: '/fournisseurs', icon: Handshake },
   { name: 'Webhooks', href: '/webhooks', icon: Webhook },
 ]
 
