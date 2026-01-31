@@ -1,0 +1,1 @@
+"""Adapters du module Financier."""

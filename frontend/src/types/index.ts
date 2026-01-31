@@ -933,3 +933,230 @@ export type {
   FeedResponse,
   Author,
 } from './dashboard'
+
+// =====================================================
+// MODULE FINANCIER (Module 17)
+// =====================================================
+
+// Fournisseurs (FIN-14)
+export type TypeFournisseur = 'negoce_materiaux' | 'loueur' | 'sous_traitant' | 'service'
+export type TypeAchat = 'materiau' | 'materiel' | 'sous_traitance' | 'service'
+export type StatutAchat = 'demande' | 'valide' | 'refuse' | 'commande' | 'livre' | 'facture'
+export type UniteMesureFinancier = 'm2' | 'm3' | 'forfait' | 'kg' | 'heure' | 'ml' | 'u'
+
+export interface Fournisseur {
+  id: number
+  raison_sociale: string
+  type: TypeFournisseur
+  siret: string | null
+  adresse: string | null
+  contact_principal: string | null
+  telephone: string | null
+  email: string | null
+  conditions_paiement: string | null
+  notes: string | null
+  actif: boolean
+  created_at: string
+}
+
+export interface FournisseurCreate {
+  raison_sociale: string
+  type: TypeFournisseur
+  siret?: string
+  adresse?: string
+  contact_principal?: string
+  telephone?: string
+  email?: string
+  conditions_paiement?: string
+  notes?: string
+}
+
+export interface FournisseurUpdate extends Partial<FournisseurCreate> {
+  actif?: boolean
+}
+
+// Budgets (FIN-01)
+export interface Budget {
+  id: number
+  chantier_id: number
+  montant_initial_ht: number
+  montant_avenants_ht: number
+  montant_revise_ht: number
+  retenue_garantie_pct: number
+  seuil_alerte_pct: number
+  seuil_validation_achat: number
+  notes: string | null
+  created_at: string
+}
+
+export interface BudgetCreate {
+  chantier_id: number
+  montant_initial_ht: number
+  retenue_garantie_pct?: number
+  seuil_alerte_pct?: number
+  seuil_validation_achat?: number
+  notes?: string
+}
+
+export interface BudgetUpdate {
+  montant_initial_ht?: number
+  retenue_garantie_pct?: number
+  seuil_alerte_pct?: number
+  seuil_validation_achat?: number
+  notes?: string
+}
+
+// Lots budgetaires (FIN-02)
+export interface LotBudgetaire {
+  id: number
+  budget_id: number
+  code_lot: string
+  libelle: string
+  unite: UniteMesureFinancier
+  quantite_prevue: number
+  prix_unitaire_ht: number
+  total_prevu_ht: number
+  engage: number
+  realise: number
+  ecart: number
+  parent_lot_id: number | null
+  ordre: number
+}
+
+export interface LotBudgetaireCreate {
+  budget_id: number
+  code_lot: string
+  libelle: string
+  unite: UniteMesureFinancier
+  quantite_prevue: number
+  prix_unitaire_ht: number
+  parent_lot_id?: number
+  ordre?: number
+}
+
+export interface LotBudgetaireUpdate extends Partial<Omit<LotBudgetaireCreate, 'budget_id'>> {}
+
+// Achats (FIN-05, FIN-06)
+export interface Achat {
+  id: number
+  chantier_id: number
+  fournisseur_id: number
+  lot_budgetaire_id: number | null
+  type_achat: TypeAchat
+  libelle: string
+  quantite: number
+  unite: UniteMesureFinancier
+  prix_unitaire_ht: number
+  taux_tva: number
+  total_ht: number
+  montant_tva: number
+  total_ttc: number
+  date_commande: string
+  date_livraison_prevue: string | null
+  statut: StatutAchat
+  numero_facture: string | null
+  motif_refus: string | null
+  commentaire: string | null
+  demandeur_id: number
+  valideur_id: number | null
+  fournisseur_nom?: string
+  chantier_nom?: string
+  lot_code?: string
+  demandeur_nom?: string
+  valideur_nom?: string
+  statut_label?: string
+  statut_couleur?: string
+  created_at: string
+}
+
+export interface AchatCreate {
+  chantier_id: number
+  fournisseur_id: number
+  lot_budgetaire_id?: number
+  type_achat: TypeAchat
+  libelle: string
+  quantite: number
+  unite: UniteMesureFinancier
+  prix_unitaire_ht: number
+  taux_tva: number
+  date_commande: string
+  date_livraison_prevue?: string
+  commentaire?: string
+}
+
+export interface AchatUpdate extends Partial<Omit<AchatCreate, 'chantier_id'>> {}
+
+// Dashboard financier (FIN-11)
+export interface KPIFinancier {
+  montant_revise_ht: number
+  total_engage: number
+  total_realise: number
+  marge_estimee: number
+  pct_engage: number
+  pct_realise: number
+}
+
+export interface RepartitionLot {
+  lot_id: number
+  code_lot: string
+  libelle: string
+  total_prevu_ht: number
+  engage: number
+  realise: number
+}
+
+export interface DashboardFinancier {
+  kpi: KPIFinancier
+  derniers_achats: Achat[]
+  repartition_par_lot: RepartitionLot[]
+}
+
+// Journal financier (FIN-15)
+export interface JournalFinancierEntry {
+  id: number
+  entite_type: string
+  entite_id: number
+  action: string
+  champ_modifie: string | null
+  ancienne_valeur: string | null
+  nouvelle_valeur: string | null
+  motif: string | null
+  auteur_id: number
+  auteur_nom?: string
+  created_at: string
+}
+
+// Constantes financieres
+export const TYPE_FOURNISSEUR_LABELS: Record<TypeFournisseur, string> = {
+  negoce_materiaux: 'Negoce materiaux',
+  loueur: 'Loueur',
+  sous_traitant: 'Sous-traitant',
+  service: 'Service',
+}
+
+export const TYPE_ACHAT_LABELS: Record<TypeAchat, string> = {
+  materiau: 'Materiau',
+  materiel: 'Materiel',
+  sous_traitance: 'Sous-traitance',
+  service: 'Service',
+}
+
+export const STATUT_ACHAT_CONFIG: Record<StatutAchat, { label: string; couleur: string }> = {
+  demande: { label: 'Demande', couleur: '#F59E0B' },
+  valide: { label: 'Valide', couleur: '#10B981' },
+  refuse: { label: 'Refuse', couleur: '#EF4444' },
+  commande: { label: 'Commande', couleur: '#3B82F6' },
+  livre: { label: 'Livre', couleur: '#8B5CF6' },
+  facture: { label: 'Facture', couleur: '#6B7280' },
+}
+
+export const UNITE_MESURE_FINANCIER_LABELS: Record<UniteMesureFinancier, string> = {
+  m2: 'm2', m3: 'm3', forfait: 'Forfait', kg: 'kg', heure: 'h', ml: 'ml', u: 'u',
+}
+
+export const TAUX_TVA_OPTIONS = [
+  { value: 20, label: '20% (Normal)' },
+  { value: 10, label: '10% (Intermediaire)' },
+  { value: 5.5, label: '5,5% (Reduit)' },
+  { value: 0, label: '0% (Exonere)' },
+]

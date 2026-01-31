@@ -3,6 +3,82 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-31 PM #4 (Module Financier - Phase 1)
+
+**Durée**: ~6h
+**Modules**: Financier (nouveau), Auth (modification), Logistique (modification)
+**Objectif**: Implémenter le Module 17 - Gestion Financière et Budgétaire (Phase 1 : 7 features)
+
+### Features implémentées (Phase 1)
+
+| Feature | Description | Statut |
+|---------|-------------|--------|
+| FIN-14 | Référentiel fournisseurs | ✅ |
+| FIN-01 | Onglet Budget par chantier | ✅ |
+| FIN-02 | Budget prévisionnel par lots | ✅ |
+| FIN-05 | Saisie achats / bons de commande | ✅ |
+| FIN-06 | Validation hiérarchique achats | ✅ |
+| FIN-11 | Tableau de bord financier | ✅ |
+| FIN-15 | Historique et traçabilité | ✅ |
+
+### Travail effectué
+
+#### 1. Agent sql-pro : Schéma DB ✅
+- 5 nouvelles tables : fournisseurs, budgets, lots_budgetaires, achats, journal_financier
+- 2 colonnes ajoutées : users.taux_horaire (FIN-09), ressources.tarif_journalier (FIN-10)
+- Index composites, CHECK constraints, soft delete (H10)
+
+#### 2. Agent python-pro : Backend complet ✅
+- **Domain** : 5 entities, 6 value objects, 5 repository interfaces, 16 domain events
+- **Application** : 24 use cases, 5 groupes de DTOs, dashboard KPIs
+- **Infrastructure** : 5 SQLAlchemy repositories, 26 routes FastAPI, DI complète
+- State machine StatutAchat avec transitions explicites
+- Journal financier append-only pour audit trail
+
+#### 3. Agent typescript-pro : Frontend complet ✅
+- Service API (26 endpoints)
+- 10 composants : BudgetTab, BudgetDashboard, LotsBudgetairesTable, LotBudgetaireModal, AchatsList, AchatModal, AchatWorkflowActions, FournisseursList, FournisseurModal, JournalFinancier
+- 1 page : FournisseursPage
+- Intégration dans ChantierDetailPage (onglet Budget), App.tsx, Layout.tsx
+
+#### 4. Validation par 4 agents ✅
+
+- **architect-reviewer** : PASS 9/10
+- **test-automator** : 206 tests créés, tous PASS
+- **code-reviewer** : 3 HIGH + 9 MEDIUM + 8 LOW → tous corrigés
+- **security-auditor** : 6 MEDIUM + 5 LOW → tous corrigés
+
+#### 5. Corrections appliquées ✅
+
+**Code-reviewer** :
+- DRY : constantes STATUTS_ENGAGES/REALISES centralisées dans `domain/value_objects/statuts_financiers.py`
+- Type hints ajoutés sur tous les from_entity() des DTOs
+- Frontend : data shape mismatch fixé (listLots, listAchatsEnAttente)
+
+**Security-auditor** :
+- IDOR : `_check_chantier_access()` ajouté sur toutes les routes chantier
+- RBAC : routes compagnon changées en require_chef_or_above
+- Seuil validation achat : restriction admin-only
+- SIRET : regex Pydantic `^\d{14}$`
+- TVA : revalidation dans UpdateAchatUseCase
+- entite_type : validation whitelist sur journal route
+
+### Résultats finaux
+
+- **206 tests financier** : tous PASS
+- **3432 tests total** : tous PASS (0 régression)
+- **0 erreurs TypeScript** dans les fichiers financier
+- **SPECIFICATIONS.md** : 8 features marquées ✅
+
+### Fichiers créés/modifiés
+
+- **~50 fichiers créés** dans `backend/modules/financier/` et `frontend/src/components/financier/`
+- **4 fichiers existants modifiés** : user_model.py, logistique/models.py, database.py, main.py
+- **4 fichiers frontend modifiés** : types/index.ts, ChantierDetailPage.tsx, App.tsx, Layout.tsx
+- **7 fichiers de tests** dans `backend/tests/unit/financier/`
+
+---
+
 ## Session 2026-01-31 PM #3 (Corrections critiques heures_prevues - FDH-10)
 
 **Durée**: ~4h

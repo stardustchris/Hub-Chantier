@@ -100,6 +100,10 @@ def init_db() -> None:
         InterventionModel, AffectationInterventionModel,
         InterventionMessageModel, SignatureInterventionModel
     )
+    from modules.financier.infrastructure.persistence import (  # noqa: F401
+        FournisseurModel, BudgetModel, LotBudgetaireModel,
+        AchatModel, JournalFinancierModel
+    )
 
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
