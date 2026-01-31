@@ -3,7 +3,7 @@
 // ===== UTILISATEURS =====
 export type UserRole = 'admin' | 'conducteur' | 'chef_chantier' | 'compagnon'
 export type UserType = 'employe' | 'interimaire' | 'sous_traitant'
-export type Metier = 'macon' | 'coffreur' | 'ferrailleur' | 'grutier' | 'charpentier' | 'couvreur' | 'electricien' | 'plombier' | 'autre'
+export type Metier = 'macon' | 'coffreur' | 'ferrailleur' | 'grutier' | 'charpentier' | 'couvreur' | 'terrassier' | 'administratif' | 'autre'
 
 export interface User {
   id: string
@@ -78,9 +78,9 @@ export const METIERS: Record<Metier, { label: string; color: string }> = {
   grutier: { label: 'Grutier', color: '#1ABC9C' },
   charpentier: { label: 'Charpentier', color: '#2ECC71' },
   couvreur: { label: 'Couvreur', color: '#E67E22' },
-  electricien: { label: 'Electricien', color: '#EC407A' },
-  plombier: { label: 'Plombier', color: '#3498DB' },
-  autre: { label: 'Autre', color: '#607D8B' },
+  terrassier: { label: 'Terrassier', color: '#FF9800' },
+  administratif: { label: 'Administratif', color: '#9C27B0' },
+  autre: { label: 'Autre', color: '#95A5A6' },
 }
 
 // Roles avec labels et couleurs
