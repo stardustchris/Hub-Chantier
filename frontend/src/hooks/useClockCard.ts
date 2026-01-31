@@ -11,6 +11,7 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import { pointagesService } from '../services/pointages'
 import { logger } from '../services/logger'
+import type { Pointage } from '../types'
 
 // Clé sessionStorage pour le pointage du jour (évite manipulation localStorage)
 const CLOCK_STORAGE_KEY = 'hub_chantier_clock_today'
@@ -67,19 +68,70 @@ export function useClockCard(): UseClockCardReturn {
   const [editTimeType, setEditTimeType] = useState<'arrival' | 'departure'>('arrival')
   const [editTimeValue, setEditTimeValue] = useState('')
 
-  // Charger l'état du pointage depuis sessionStorage au montage
+  // Charger l'état du pointage depuis le backend au montage
   useEffect(() => {
-    loadClockState()
-  }, [])
+    loadClockStateFromBackend()
+  }, [user?.id])
 
   /**
-   * Charge l'état du pointage depuis sessionStorage avec validation
+   * Charge l'état du pointage depuis le backend (source de vérité)
+   * Fallback sur sessionStorage si le backend échoue
    */
-  const loadClockState = () => {
-    try {
-      const today = new Date().toISOString().split('T')[0]
-      const stored = sessionStorage.getItem(CLOCK_STORAGE_KEY)
+  const loadClockStateFromBackend = async () => {
+    if (!user?.id) return
 
+    const userId = Number(user.id)
+    if (isNaN(userId)) return
+
+    const today = new Date().toISOString().split('T')[0]
+
+    try {
+      // 1. Essayer de charger depuis le backend
+      const response = await pointagesService.list({
+        utilisateur_id: userId,
+        date_debut: today,
+        date_fin: today,
+        page: 1,
+        page_size: 10,
+      })
+
+      // Chercher un pointage pour aujourd'hui
+      const todayPointage = response.items.find(p => p.date_pointage === today)
+
+      if (todayPointage) {
+        // Reconstituer l'état depuis le pointage backend
+        const state: ClockState = {
+          date: today,
+          pointageId: todayPointage.id,
+          chantierId: String(todayPointage.chantier_id),
+          // Extraire clockInTime et clockOutTime depuis heures_normales si disponible
+          // Format attendu : "08:00" pour 8h
+          clockInTime: extractClockInTime(todayPointage),
+          // clockOutTime est undefined si le pointage est en brouillon (clock-in uniquement)
+          clockOutTime: extractClockOutTime(todayPointage),
+        }
+
+        setClockState(state)
+        saveClockState(state)
+        logger.info('Pointage chargé depuis le backend', { pointageId: todayPointage.id })
+        return
+      }
+
+      // 2. Si pas de pointage backend, essayer sessionStorage
+      loadClockStateFromSession(today)
+    } catch (err) {
+      logger.warn('Impossible de charger le pointage depuis le backend, fallback sessionStorage', err)
+      // 3. Fallback sur sessionStorage en cas d'erreur réseau
+      loadClockStateFromSession(today)
+    }
+  }
+
+  /**
+   * Charge l'état du pointage depuis sessionStorage (fallback)
+   */
+  const loadClockStateFromSession = (today: string) => {
+    try {
+      const stored = sessionStorage.getItem(CLOCK_STORAGE_KEY)
       if (!stored) return
 
       const state = JSON.parse(stored) as ClockState
@@ -93,6 +145,7 @@ export function useClockCard(): UseClockCardReturn {
       // Réinitialiser si c'est un nouveau jour
       if (state.date === today) {
         setClockState(state)
+        logger.info('Pointage chargé depuis sessionStorage (cache local)')
       } else {
         sessionStorage.removeItem(CLOCK_STORAGE_KEY)
       }
@@ -100,6 +153,53 @@ export function useClockCard(): UseClockCardReturn {
       // En cas d'erreur de parsing, supprimer les données corrompues
       sessionStorage.removeItem(CLOCK_STORAGE_KEY)
     }
+  }
+
+  /**
+   * Extrait l'heure d'arrivée depuis un pointage backend
+   *
+   * Stratégie:
+   * - Le backend ne stocke pas explicitement clockInTime
+   * - On utilise created_at comme heure d'arrivée (moment où le pointage a été créé)
+   * - C'est une approximation raisonnable pour la carte de pointage dashboard
+   */
+  const extractClockInTime = (pointage: Pointage): string | undefined => {
+    if (pointage.created_at) {
+      const date = new Date(pointage.created_at)
+      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    }
+    return undefined
+  }
+
+  /**
+   * Extrait l'heure de départ depuis un pointage backend
+   *
+   * Stratégie:
+   * - Si le pointage a des heures_normales ET est validé/soumis, on calcule clockOutTime
+   * - clockOutTime = clockInTime + heures_normales
+   * - Si le pointage est en brouillon, pas de clockOutTime (en cours de pointage)
+   */
+  const extractClockOutTime = (pointage: Pointage): string | undefined => {
+    // Si brouillon, pas de clockOutTime (l'utilisateur n'a pointé que l'arrivée)
+    if (pointage.statut === 'brouillon') {
+      return undefined
+    }
+
+    // Si validé/soumis et a des heures_normales, calculer clockOutTime
+    if (pointage.heures_normales && pointage.heures_normales !== '00:00') {
+      const clockInTime = extractClockInTime(pointage)
+      if (!clockInTime) return undefined
+
+      const [inH, inM] = clockInTime.split(':').map(Number)
+      const [durationH, durationM] = pointage.heures_normales.split(':').map(Number)
+
+      const totalMinutes = (inH * 60 + inM) + (durationH * 60 + durationM)
+      const outH = Math.floor(totalMinutes / 60) % 24 // Mod 24 pour gérer les débordements
+      const outM = totalMinutes % 60
+
+      return `${String(outH).padStart(2, '0')}:${String(outM).padStart(2, '0')}`
+    }
+    return undefined
   }
 
   /**
@@ -128,23 +228,62 @@ export function useClockCard(): UseClockCardReturn {
 
   /**
    * Enregistre l'heure d'arrivée
+   * NOUVEAU : Crée immédiatement un pointage "brouillon" sur le backend
    */
-  const handleClockIn = useCallback(() => {
+  const handleClockIn = useCallback(async () => {
     const now = new Date()
     const today = now.toISOString().split('T')[0]
     const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
-    const newState: ClockState = {
+    // 1. Créer l'état local immédiatement (UX réactive)
+    const tempState: ClockState = {
       date: today,
       clockInTime: timeStr,
     }
-    setClockState(newState)
-    saveClockState(newState)
+
     addToast({
       message: `Arrivee pointee a ${timeStr}. Bonne journee de travail !`,
       type: 'success',
     })
-  }, [addToast])
+
+    // 2. Créer un pointage "brouillon" sur le backend (async)
+    // On utilise setClockState avec callback pour accéder à l'état actuel (chantierId)
+    setClockState(prevState => {
+      const chantierId = prevState?.chantierId
+      const finalState = { ...tempState, chantierId }
+
+      // Sauvegarder immédiatement
+      saveClockState(finalState)
+
+      // Créer le pointage backend en arrière-plan
+      if (user?.id && chantierId) {
+        const userId = Number(user.id)
+        const chantierIdNum = Number(chantierId)
+
+        if (!isNaN(userId) && !isNaN(chantierIdNum)) {
+          pointagesService.create({
+            utilisateur_id: userId,
+            chantier_id: chantierIdNum,
+            date_pointage: today,
+            heures_normales: '00:00', // Brouillon : pas encore d'heures
+          }, userId)
+            .then(pointage => {
+              // Mettre à jour l'état avec l'ID du pointage backend
+              const updatedState = { ...finalState, pointageId: pointage.id }
+              setClockState(updatedState)
+              saveClockState(updatedState)
+              logger.info('Pointage brouillon créé', { pointageId: pointage.id })
+            })
+            .catch(err => {
+              logger.error('Erreur création pointage brouillon', err)
+              // L'état local est déjà sauvegardé, on peut continuer
+            })
+        }
+      }
+
+      return finalState
+    })
+  }, [addToast, user?.id])
 
   /**
    * Synchonise le pointage avec le backend
