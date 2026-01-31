@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { usersService } from '../services/users'
 import { authService } from '../services/auth'
 import { useAuth } from '../contexts/AuthContext'
@@ -30,6 +30,7 @@ export default function UsersListPage() {
     page,
     setPage,
     totalPages,
+    totalItems,
     search,
     setSearch,
     filters,
@@ -49,6 +50,12 @@ export default function UsersListPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [roleStats, setRoleStats] = useState<Record<UserRole, number>>({
+    admin: 0,
+    conducteur: 0,
+    chef_chantier: 0,
+    compagnon: 0,
+  })
 
   const roleFilter = (filters.role as UserRole | undefined) || ''
   const activeFilter = filters.is_active as boolean | null ?? null
@@ -59,11 +66,12 @@ export default function UsersListPage() {
       setShowCreateModal(false)
       showToast('Utilisateur créé avec succès', 'success')
       reload()
+      loadRoleStats()
     } catch (error) {
       logger.error('Error creating user', error, { context: 'UsersListPage' })
       throw error
     }
-  }, [reload, showToast])
+  }, [reload, showToast, loadRoleStats])
 
   const handleInviteUser = useCallback(async (data: { email: string; nom: string; prenom: string; role: string }) => {
     try {
@@ -71,11 +79,12 @@ export default function UsersListPage() {
       setShowInviteModal(false)
       showToast(`Invitation envoyée à ${data.email}`, 'success')
       reload()
+      loadRoleStats()
     } catch (error) {
       logger.error('Error inviting user', error, { context: 'UsersListPage', showToast: true })
       throw error
     }
-  }, [reload, showToast])
+  }, [reload, showToast, loadRoleStats])
 
   const handleToggleActive = useCallback(async (user: User) => {
     try {
@@ -85,10 +94,11 @@ export default function UsersListPage() {
         await usersService.activate(user.id)
       }
       reload()
+      loadRoleStats()
     } catch (error) {
       logger.error('Erreur lors du changement de statut', error, { context: 'UsersListPage', showToast: true })
     }
-  }, [reload])
+  }, [reload, loadRoleStats])
 
   const handleSetRoleFilter = useCallback((role: UserRole | '') => {
     setFilter('role', role || undefined)
@@ -102,9 +112,36 @@ export default function UsersListPage() {
     clearFilters()
   }, [clearFilters])
 
+  // Charger les statistiques par rôle (totaux réels, pas juste la page actuelle)
+  const loadRoleStats = useCallback(async () => {
+    try {
+      // Charger tous les utilisateurs pour calculer les vrais totaux par rôle
+      const allUsers = await usersService.list({ size: 1000 })
+      const stats: Record<UserRole, number> = {
+        admin: 0,
+        conducteur: 0,
+        chef_chantier: 0,
+        compagnon: 0,
+      }
+      allUsers.items.forEach(u => {
+        if (u.role in stats) {
+          stats[u.role]++
+        }
+      })
+      setRoleStats(stats)
+    } catch (error) {
+      logger.error('Error loading role stats', error, { context: 'UsersListPage' })
+    }
+  }, [])
+
+  // Charger les stats au montage et après chaque reload
+  useEffect(() => {
+    loadRoleStats()
+  }, [loadRoleStats])
+
   const getRoleCount = useCallback((role: UserRole) => {
-    return users.filter((u) => u.role === role).length
-  }, [users])
+    return roleStats[role]
+  }, [roleStats])
 
   return (
     <Layout>
@@ -147,7 +184,7 @@ export default function UsersListPage() {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-gray-400" />
               <div>
-                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
                 <p className="text-xs text-gray-500">Tous</p>
               </div>
             </div>
