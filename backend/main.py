@@ -140,6 +140,11 @@ async def startup_event():
     setup_planning_integration(SessionLocal)
     logger.info("Intégration Planning → Pointages câblée")
 
+    # Enregistrer handlers Planning → Chantiers (GAP-CHT-002)
+    from modules.planning.infrastructure.event_handlers import register_planning_event_handlers
+    register_planning_event_handlers()
+    logger.info("Planning integration configured")
+
     # Enregistrer le webhook event handler sur tous les événements
     # Cela permet aux webhooks de se déclencher automatiquement à chaque événement
     event_bus.subscribe_all(webhook_event_handler)

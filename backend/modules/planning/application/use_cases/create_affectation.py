@@ -78,11 +78,16 @@ class CreateAffectationUseCase:
             >>> affectations = use_case.execute(dto, created_by=1)
             >>> print(f"Cree {len(affectations)} affectation(s)")
         """
-        # RG-PLN-004: Valider que le chantier est actif
+        # RG-PLN-008: Valider que le chantier est actif (Gap GAP-CHT-003)
         if self.chantier_repo:
             chantier = self.chantier_repo.find_by_id(dto.chantier_id)
-            if chantier and not chantier.is_actif:
-                raise ChantierInactifError(dto.chantier_id)
+            if chantier:
+                # Utiliser la méthode is_active() du statut chantier
+                if not chantier.statut.is_active():
+                    raise ChantierInactifError(
+                        chantier_id=dto.chantier_id,
+                        statut=str(chantier.statut)
+                    )
 
         # RG-PLN-005: Valider que l'utilisateur est actif
         if self.user_repo:

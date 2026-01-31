@@ -105,22 +105,29 @@ class NoAffectationsToDuplicateError(Exception):
 
 
 class ChantierInactifError(Exception):
-    """Exception levee quand on tente d'affecter sur un chantier inactif (RG-PLN-004).
+    """Exception levee quand on tente d'affecter sur un chantier inactif (RG-PLN-004, RG-PLN-008).
 
     Attributes:
         chantier_id: ID du chantier inactif.
+        statut: Statut actuel du chantier.
         message: Message d'erreur descriptif.
     """
 
-    def __init__(self, chantier_id: int):
+    def __init__(self, chantier_id: int, statut: str = "inconnu"):
         """
         Initialise l'exception.
 
         Args:
             chantier_id: ID du chantier inactif.
+            statut: Statut actuel du chantier.
         """
         self.chantier_id = chantier_id
-        self.message = f"Le chantier {chantier_id} est inactif et ne peut pas recevoir d'affectations"
+        self.statut = statut
+        self.message = (
+            f"Impossible d'affecter sur le chantier #{chantier_id}. "
+            f"Le chantier est en statut '{statut}' (inactif). "
+            f"Seuls les chantiers OUVERT, EN_COURS ou RECEPTIONNE acceptent des affectations."
+        )
         super().__init__(self.message)
 
 
