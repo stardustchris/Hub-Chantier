@@ -62,11 +62,16 @@ class SQLAlchemyEntityInfoService(EntityInfoService):
 
             if user:
                 nom = f"{user.prenom or ''} {user.nom or ''}".strip()
+                # Récupérer le premier métier si la liste existe et n'est pas vide
+                metier = None
+                if user.metiers and len(user.metiers) > 0:
+                    metier = user.metiers[0]
+
                 return UserBasicInfo(
                     id=user.id,
                     nom=nom or f"User {user.id}",
                     couleur=user.couleur,
-                    metier=user.metier,
+                    metier=metier,
                     role=user.role,
                     type_utilisateur=user.type_utilisateur,
                 )

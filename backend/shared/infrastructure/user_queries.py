@@ -25,13 +25,25 @@ def get_user_basic_info(db: Session, user_id: int) -> Optional[dict]:
     """Get basic user info without importing UserModel."""
     result = db.execute(
         text(
-            "SELECT id, prenom, nom, email, role, couleur, metier, photo_profil, "
+            "SELECT id, prenom, nom, email, role, couleur, metiers, photo_profil, "
             "type_utilisateur, is_active "
             "FROM users WHERE id = :id AND deleted_at IS NULL"
         ),
         {"id": user_id},
     ).fetchone()
     if result:
+        # metiers is now a JSON array, extract first element if exists
+        metiers = result[6]
+        metier = None
+        if metiers:
+            import json
+            try:
+                metiers_list = json.loads(metiers) if isinstance(metiers, str) else metiers
+                if metiers_list and len(metiers_list) > 0:
+                    metier = metiers_list[0]
+            except (json.JSONDecodeError, TypeError):
+                pass
+
         return {
             "id": result[0],
             "prenom": result[1],
@@ -39,7 +51,7 @@ def get_user_basic_info(db: Session, user_id: int) -> Optional[dict]:
             "email": result[3],
             "role": result[4],
             "couleur": result[5],
-            "metier": result[6],
+            "metier": metier,
             "photo_profil": result[7],
             "type_utilisateur": result[8],
             "is_active": bool(result[9]),
@@ -62,15 +74,27 @@ def get_users_basic_info_by_ids(db: Session, user_ids: list[int]) -> dict[int, d
 
     rows = db.execute(
         text(
-            f"SELECT id, prenom, nom, email, role, couleur, metier, photo_profil, "
+            f"SELECT id, prenom, nom, email, role, couleur, metiers, photo_profil, "
             f"type_utilisateur, is_active "
             f"FROM users WHERE id IN ({placeholders})"
         ),
         params,
     ).fetchall()
 
+    import json
     result: dict[int, dict] = {}
     for row in rows:
+        # metiers is now a JSON array, extract first element if exists
+        metiers = row[6]
+        metier = None
+        if metiers:
+            try:
+                metiers_list = json.loads(metiers) if isinstance(metiers, str) else metiers
+                if metiers_list and len(metiers_list) > 0:
+                    metier = metiers_list[0]
+            except (json.JSONDecodeError, TypeError):
+                pass
+
         result[row[0]] = {
             "id": row[0],
             "prenom": row[1],
@@ -78,7 +102,7 @@ def get_users_basic_info_by_ids(db: Session, user_ids: list[int]) -> dict[int, d
             "email": row[3],
             "role": row[4],
             "couleur": row[5],
-            "metier": row[6],
+            "metier": metier,
             "photo_profil": row[7],
             "type_utilisateur": row[8],
             "is_active": bool(row[9]),
@@ -97,12 +121,16 @@ def count_active_users(db: Session) -> int:
 def count_active_users_by_metier(db: Session) -> dict[str, int]:
     """Count active users grouped by metier without importing UserModel.
 
+    Note: Now returns counts by first metier in the metiers array.
+
     Returns:
         Dict mapping metier -> count (metier can be None).
     """
+    # Since metiers is now a JSON array, we need to extract the first element
+    # This query uses SQLite json_extract to get the first element
     rows = db.execute(
         text(
-            "SELECT metier, COUNT(id) FROM users "
+            "SELECT json_extract(metiers, '$[0]') as metier, COUNT(id) FROM users "
             "WHERE is_active = true GROUP BY metier"
         ),
     ).fetchall()
@@ -140,6 +168,8 @@ def count_active_users_not_in_ids(db: Session, exclude_user_ids: list[int]) -> i
 def get_metier_for_user_ids(db: Session, user_ids: list[int]) -> dict[int, Optional[str]]:
     """Get metier for a list of user IDs.
 
+    Note: Returns the first metier from the metiers array.
+
     Returns:
         Dict mapping user_id -> metier (or None).
     """
@@ -150,7 +180,7 @@ def get_metier_for_user_ids(db: Session, user_ids: list[int]) -> dict[int, Optio
     placeholders = ", ".join(f":{k}" for k in params)
 
     rows = db.execute(
-        text(f"SELECT id, metier FROM users WHERE id IN ({placeholders})"),
+        text(f"SELECT id, json_extract(metiers, '$[0]') FROM users WHERE id IN ({placeholders})"),
         params,
     ).fetchall()
     return {row[0]: row[1] for row in rows}
