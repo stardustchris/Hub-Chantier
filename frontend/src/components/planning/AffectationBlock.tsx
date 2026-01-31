@@ -53,7 +53,7 @@ const AffectationBlock = memo(function AffectationBlock({
   proportionalHeight = false,
   cellHeight = 60,
 }: AffectationBlockProps) {
-  const backgroundColor = affectation.chantier_couleur || '#3498DB'
+  const backgroundColor = affectation.utilisateur_couleur || '#3498DB'
   const hasNote = !!affectation.note
 
   // Calculer la hauteur proportionnelle si les horaires sont definis
