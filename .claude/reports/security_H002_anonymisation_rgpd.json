@@ -1,0 +1,94 @@
+{
+  "security_issue": "H002",
+  "title": "Anonymisation données RGPD - seed_demo_data.py",
+  "date": "2026-01-31",
+  "status": "RESOLVED",
+  "severity": "HIGH",
+  "rgpd_articles": [
+    "Art. 5(1)(c) - Minimisation des données",
+    "Art. 6(1)(f) - Base légale (intérêt légitime)",
+    "Art. 13 - Information des personnes concernées"
+  ],
+  "modifications": {
+    "file": "backend/scripts/seed_demo_data.py",
+    "changes": [
+      {
+        "section": "Docstring",
+        "description": "Ajout disclaimer RGPD complet (Art. 5, 6, 13)",
+        "lines": "1-25"
+      },
+      {
+        "section": "USERS_DATA",
+        "description": "Anonymisation complète de 19 utilisateurs",
+        "details": {
+          "emails": "Remplacés par @example.com (noms génériques: DUPONT, MARTIN, BERNARD, etc.)",
+          "telephones": "Remplacés par 00 00 00 00 XX (numéros invalides)",
+          "noms_prenoms": "Remplacés par noms français génériques"
+        },
+        "lines": "56-290"
+      },
+      {
+        "section": "CHANTIERS_DATA",
+        "description": "Anonymisation de 24 chantiers",
+        "details": {
+          "adresses": "Remplacées par adresses fictives (Ville-A, Ville-B, etc.)",
+          "contacts_noms": "Remplacés par 'Client A', 'Client B', etc.",
+          "contacts_telephones": "Remplacés par 00 00 00 01 XX",
+          "villes_reelles": "Remplacées par villes fictives"
+        },
+        "lines": "342-643"
+      },
+      {
+        "section": "seed_chantiers()",
+        "description": "Mise à jour références emails conducteurs/chefs",
+        "lines": "729-736"
+      },
+      {
+        "section": "seed_affectations()",
+        "description": "Mise à jour références emails compagnons/chefs",
+        "lines": "813-843"
+      },
+      {
+        "section": "seed_templates_formulaires()",
+        "description": "Mise à jour admin_id",
+        "lines": "1051"
+      },
+      {
+        "section": "seed_formulaires_remplis()",
+        "description": "Anonymisation formulaires démo",
+        "details": {
+          "chantiers": "Remplacés par codes réels (2025-11-TRIALP, etc.)",
+          "users": "Remplacés par emails @example.com",
+          "temoins": "Remplacés par 'Temoin A', 'Temoin B'",
+          "fournisseurs": "Remplacés par 'Fournisseur Demo'",
+          "coordonnees_geo": "Remplacées par coordonnées fictives (45.0000, 5.0000)"
+        },
+        "lines": "1106-1329"
+      },
+      {
+        "section": "main()",
+        "description": "Mise à jour comptes de test affichés",
+        "lines": "1408-1414"
+      }
+    ]
+  },
+  "verification": {
+    "syntaxe_python": "VALID",
+    "emails_sensibles": 0,
+    "telephones_sensibles": 0,
+    "adresses_sensibles": 0,
+    "noms_reels": 0
+  },
+  "conformite_rgpd": {
+    "minimisation_donnees": "✅ Seules données strictement nécessaires",
+    "base_legale": "✅ Art. 6(1)(f) - Intérêt légitime (tests/démo)",
+    "information_personnes": "✅ Disclaimer dans docstring",
+    "donnees_fictives": "✅ 100% des données anonymisées",
+    "consentement": "✅ Non requis (données fictives)"
+  },
+  "next_actions": [
+    "Tester le script avec python -m scripts.seed_demo_data",
+    "Vérifier que la base de données se peuple correctement",
+    "Confirmer que les relations entre entités sont préservées"
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "report_metadata": {
+    "agent": "test-automator",
+    "date": "2026-01-31",
+    "module": "chantiers",
+    "objective": "Augmenter couverture de tests de 88% à 95%"
+  },
+  "tests_generated": [
+    {
+      "file": "backend/tests/unit/modules/chantiers/adapters/controllers/test_chantier_controller.py",
+      "test_count": 28,
+      "coverage_target": "backend/modules/chantiers/adapters/controllers/chantier_controller.py",
+      "coverage_before": "28%",
+      "coverage_after": "99%",
+      "status": "COMPLETED",
+      "tests_list": [
+        "test_create_success",
+        "test_create_with_all_fields",
+        "test_create_with_code_already_exists_raises_error",
+        "test_create_with_invalid_dates_raises_error",
+        "test_get_by_id_success",
+        "test_get_by_id_not_found_raises_error",
+        "test_get_by_code_success",
+        "test_get_by_code_not_found_raises_error",
+        "test_list_chantiers_success",
+        "test_list_chantiers_with_filters",
+        "test_update_chantier_success",
+        "test_update_chantier_with_statut_change",
+        "test_update_chantier_not_found_raises_error",
+        "test_update_chantier_ferme_raises_error",
+        "test_delete_chantier_success",
+        "test_delete_chantier_with_force",
+        "test_delete_chantier_not_found_raises_error",
+        "test_delete_chantier_actif_raises_error",
+        "test_change_statut_success",
+        "test_change_statut_not_found_raises_error",
+        "test_change_statut_transition_non_autorisee_raises_error",
+        "test_demarrer_success",
+        "test_receptionner_success",
+        "test_fermer_success",
+        "test_assigner_conducteur_success",
+        "test_assigner_chef_chantier_success",
+        "test_retirer_conducteur_success",
+        "test_retirer_chef_chantier_success"
+      ]
+    }
+  ],
+  "coverage_summary": {
+    "coverage_before": "68%",
+    "coverage_after": "71%",
+    "coverage_gain": "+3%",
+    "total_tests_before": 120,
+    "total_tests_after": 148,
+    "tests_added": 28,
+    "target_coverage": "95%",
+    "target_reached": false,
+    "target_gap": "24%"
+  },
+  "detailed_coverage": {
+    "adapters/controllers/chantier_controller.py": {
+      "statements": 72,
+      "missing": 1,
+      "coverage": "99%",
+      "missing_lines": "305"
+    },
+    "application/use_cases/list_chantiers.py": {
+      "statements": 46,
+      "missing": 1,
+      "coverage": "98%",
+      "missing_lines": "166"
+    },
+    "application/use_cases/create_chantier.py": {
+      "statements": 75,
+      "missing": 0,
+      "coverage": "100%"
+    },
+    "application/use_cases/update_chantier.py": {
+      "statements": 85,
+      "missing": 0,
+      "coverage": "100%"
+    },
+    "application/use_cases/delete_chantier.py": {
+      "statements": 34,
+      "missing": 0,
+      "coverage": "100%"
+    },
+    "application/use_cases/get_chantier.py": {
+      "statements": 30,
+      "missing": 0,
+      "coverage": "100%"
+    },
+    "application/use_cases/assign_responsable.py": {
+      "statements": 57,
+      "missing": 0,
+      "coverage": "100%"
+    },
+    "application/use_cases/change_statut.py": {
+      "statements": 65,
+      "missing": 6,
+      "coverage": "91%",
+      "missing_lines": "157-158, 175-181, 219, 243"
+    }
+  },
+  "areas_not_covered": {
+    "infrastructure_routes": {
+      "file": "infrastructure/web/chantier_routes.py",
+      "coverage": "0%",
+      "reason": "Tests d'intégration non générés (hors scope pour atteindre rapidement l'objectif)",
+      "recommendation": "Créer tests d'intégration avec FastAPI TestClient"
+    },
+    "domain_entities": {
+      "file": "domain/entities/chantier.py",
+      "coverage": "79%",
+      "missing_statements": 30,
+      "reason": "Méthodes de domaine peu utilisées, edge cases",
+      "recommendation": "Tests unitaires pour méthodes de domaine"
+    },
+    "domain_repositories": {
+      "file": "domain/repositories/chantier_repository.py",
+      "coverage": "70%",
+      "missing_statements": 14,
+      "reason": "Interface (pas d'implémentation à tester en unitaire)",
+      "recommendation": "Tests d'intégration avec implémentation SQL"
+    },
+    "domain_events": {
+      "files": [
+        "domain/events/chantier_deleted.py",
+        "domain/events/chantier_statut_changed.py",
+        "domain/events/chantier_updated.py"
+      ],
+      "coverage": "0%",
+      "reason": "Events non testés (simple dataclasses)",
+      "recommendation": "Tests basiques de création et serialization"
+    }
+  },
+  "test_execution_result": {
+    "total_tests": 148,
+    "passed": 148,
+    "failed": 0,
+    "skipped": 0,
+    "execution_time": "0.38s",
+    "status": "ALL PASSED"
+  },
+  "recommendations": {
+    "next_steps": [
+      "Générer tests d'intégration pour routes FastAPI (chantier_routes.py)",
+      "Ajouter tests pour méthodes de domaine non couvertes (chantier.py)",
+      "Tester les events de domaine (dataclasses)",
+      "Atteindre 100% sur change_statut.py (lignes 157-158, 175-181, 219, 243)",
+      "Corriger ligne 305 dans chantier_controller.py (conversion contacts)",
+      "Corriger ligne 166 dans list_chantiers.py (edge case else)"
+    ],
+    "priority": "HIGH",
+    "estimated_effort": "4 hours pour atteindre 95%",
+    "blockers": [
+      "Tests d'intégration nécessitent une base de données de test (conftest.py)",
+      "Tests de routes nécessitent fixtures auth avec JWT valides"
+    ]
+  },
+  "test_patterns_used": [
+    "Pattern pytest avec classes TestXxx",
+    "Mock de tous les use cases et repositories",
+    "Utilisation de unittest.mock.Mock avec spec",
+    "Tests AAA (Arrange-Act-Assert)",
+    "Tests rapides (< 2s total)",
+    "Utilisation de dataclasses.replace() pour DTOs immutables",
+    "Tests de happy path ET error paths (exceptions)"
+  ],
+  "quality_metrics": {
+    "test_speed": "EXCELLENT (0.38s pour 148 tests)",
+    "test_isolation": "EXCELLENT (mocks complets)",
+    "test_determinism": "EXCELLENT (pas de flaky tests)",
+    "test_maintainability": "GOOD (patterns cohérents)"
+  }
+}

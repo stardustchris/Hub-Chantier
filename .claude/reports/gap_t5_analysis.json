@@ -1,0 +1,167 @@
+{
+  "report_id": "gap-t5-analysis",
+  "title": "GAP-T5 : Vérification création automatique pointages (FDH-10)",
+  "date": "2026-01-31",
+  "status": "PARTIALLY_WORKING",
+  "severity": "MEDIUM",
+  "components_validated": {
+    "wiring_configuration": {
+      "status": "OK",
+      "files": [
+        "backend/scripts/seed_demo_data.py:1365-1367",
+        "backend/main.py:139-141",
+        "backend/modules/pointages/infrastructure/event_handlers.py:163-187"
+      ],
+      "details": "setup_planning_integration() est correctement câblé dans seed et main.py. L'événement 'affectation.created' est bien écouté."
+    },
+    "event_handler": {
+      "status": "OK",
+      "file": "backend/modules/pointages/infrastructure/event_handlers.py:28-101",
+      "function": "handle_affectation_created",
+      "details": "Le handler extrait correctement les champs de l'événement, injecte le chantier_repo, et appelle le use case. Fallback à '08:00' pour heures_prevues si manquant (ligne 77)."
+    },
+    "use_case_execution": {
+      "status": "OK",
+      "file": "backend/modules/pointages/application/use_cases/bulk_create_from_planning.py:122-191",
+      "function": "BulkCreateFromPlanningUseCase.execute_from_event",
+      "validations": [
+        "Filtrage des chantiers système (CONGES, MALADIE, RTT, FORMATION) - lignes 147-152",
+        "Vérification de doublons par affectation_id - lignes 154-157",
+        "Vérification de doublons par triplet utilisateur/chantier/date - lignes 159-165",
+        "Création du pointage avec heures_normales = heures_prevues - lignes 168-178",
+        "Création automatique de la feuille d'heures - lignes 184-189"
+      ],
+      "details": "Le use case fonctionne correctement et crée bien les pointages avec les heures prévues reçues."
+    },
+    "unit_tests": {
+      "status": "OK",
+      "test_files": [
+        "backend/tests/unit/pointages/test_event_handlers.py",
+        "backend/tests/unit/planning/test_create_affectation_use_case.py"
+      ],
+      "results": {
+        "test_event_handlers": "11/11 passed",
+        "test_create_affectation_use_case": "4/4 event tests passed"
+      }
+    }
+  },
+  "issues_found": [
+    {
+      "id": "ISSUE-001",
+      "severity": "CRITICAL",
+      "component": "AffectationCreatedEvent",
+      "file": "backend/modules/planning/domain/events/affectation_created.py:48-61",
+      "description": "L'événement AffectationCreatedEvent ne transmet PAS le champ 'heures_prevues' dans son data. Il transmet seulement heure_debut et heure_fin.",
+      "impact": "Tous les pointages créés automatiquement ont toujours 08:00 (fallback), même si l'affectation prévoyait une durée différente (4h, 6h, etc.).",
+      "recommendation": "Ajouter 'heures_prevues' dans le data de l'événement et dans la signature __init__"
+    },
+    {
+      "id": "ISSUE-002",
+      "severity": "CRITICAL",
+      "component": "CreateAffectationUseCase",
+      "file": "backend/modules/planning/application/use_cases/create_affectation.py:203-209",
+      "description": "Le use case CreateAffectationUseCase ne passe PAS heures_prevues lors de la création de l'événement AffectationCreatedEvent, alors que l'entité Affectation possède ce champ (valeur par défaut: 8.0).",
+      "impact": "Même si l'affectation a des heures_prevues != 8.0, cette information n'est jamais transmise au module pointages.",
+      "recommendation": "Passer affectations[0].heures_prevues lors de la création de l'événement"
+    },
+    {
+      "id": "ISSUE-003",
+      "severity": "MEDIUM",
+      "component": "handle_affectation_created",
+      "file": "backend/modules/pointages/infrastructure/event_handlers.py:77",
+      "description": "Le handler utilise un fallback à '08:00' si heures_prevues n'est pas trouvé dans l'événement. Ce comportement masque le problème mais ne le résout pas.",
+      "impact": "Les affectations avec durées non-standard (demi-journées, heures variables) seront toujours créées avec 8h.",
+      "recommendation": "Après correction des ISSUE-001 et ISSUE-002, ce fallback restera comme sécurité pour les anciens événements."
+    }
+  ],
+  "workflow_validation": {
+    "step_1_wiring": "✅ OK - setup_planning_integration() câblé",
+    "step_2_event_subscription": "✅ OK - event_bus.subscribe('affectation.created', handler)",
+    "step_3_event_publishing": "⚠️ INCOMPLETE - Événement publié SANS heures_prevues",
+    "step_4_handler_execution": "✅ OK - Handler reçoit l'événement et extrait les champs",
+    "step_5_use_case_execution": "✅ OK - Use case crée le pointage",
+    "step_6_chantiers_systeme_filter": "✅ OK - Chantiers CONGES/MALADIE/RTT/FORMATION exclus",
+    "step_7_feuille_heures_creation": "✅ OK - Feuille créée automatiquement"
+  },
+  "test_scenario_results": [
+    {
+      "scenario": "Création affectation standard 8h",
+      "expected": "Pointage créé avec 08:00",
+      "actual": "✅ Pointage créé avec 08:00 (par fallback)",
+      "status": "PASS_BUT_WRONG_REASON"
+    },
+    {
+      "scenario": "Création affectation 4h (demi-journée)",
+      "expected": "Pointage créé avec 04:00",
+      "actual": "❌ Pointage créé avec 08:00 (fallback car heures_prevues manquant)",
+      "status": "FAIL"
+    },
+    {
+      "scenario": "Création affectation chantier CONGES",
+      "expected": "Aucun pointage créé",
+      "actual": "✅ Aucun pointage créé (filtré)",
+      "status": "PASS"
+    },
+    {
+      "scenario": "Création affectation doublon (même affectation_id)",
+      "expected": "Aucun pointage créé",
+      "actual": "✅ Aucun pointage créé (détecté)",
+      "status": "PASS"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "P0",
+      "action": "Modifier AffectationCreatedEvent pour inclure heures_prevues",
+      "files_to_modify": [
+        "backend/modules/planning/domain/events/affectation_created.py"
+      ],
+      "changes": "Ajouter parameter heures_prevues: Optional[float] = None et l'inclure dans data"
+    },
+    {
+      "priority": "P0",
+      "action": "Modifier CreateAffectationUseCase pour passer heures_prevues à l'événement",
+      "files_to_modify": [
+        "backend/modules/planning/application/use_cases/create_affectation.py"
+      ],
+      "changes": "Ajouter heures_prevues=affectations[0].heures_prevues lors de la création de l'événement"
+    },
+    {
+      "priority": "P1",
+      "action": "Mettre à jour les tests unitaires",
+      "files_to_modify": [
+        "backend/tests/unit/planning/test_affectation_events.py",
+        "backend/tests/unit/pointages/test_event_handlers.py"
+      ],
+      "changes": "Ajouter tests vérifiant que heures_prevues est bien transmis et extrait"
+    },
+    {
+      "priority": "P2",
+      "action": "Tester en environnement seed",
+      "files_to_modify": [],
+      "changes": "Créer des affectations avec heures_prevues variées et vérifier les pointages créés"
+    }
+  ],
+  "conclusion": {
+    "status": "PARTIALLY_WORKING",
+    "summary": "Le mécanisme FDH-10 de création automatique de pointages fonctionne, mais les heures prévues sont toujours 08:00 au lieu de la valeur réelle de l'affectation.",
+    "impact": "Faible si toutes les affectations font 8h (cas standard). Élevé si l'entreprise utilise des demi-journées ou heures variables.",
+    "blocking": false,
+    "requires_fix": true,
+    "estimated_fix_time": "30 minutes",
+    "risk_level": "MEDIUM"
+  },
+  "files_analyzed": [
+    "backend/scripts/seed_demo_data.py",
+    "backend/main.py",
+    "backend/modules/pointages/infrastructure/event_handlers.py",
+    "backend/modules/pointages/application/use_cases/bulk_create_from_planning.py",
+    "backend/modules/planning/domain/events/affectation_created.py",
+    "backend/modules/planning/application/use_cases/create_affectation.py",
+    "backend/modules/planning/domain/entities/affectation.py",
+    "backend/tests/unit/pointages/test_event_handlers.py",
+    "backend/tests/unit/planning/test_affectation_events.py",
+    "backend/tests/unit/planning/test_create_affectation_use_case.py"
+  ],
+  "generated_at": "2026-01-31T10:50:00Z"
+}

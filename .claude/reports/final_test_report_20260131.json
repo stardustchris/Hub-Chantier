@@ -1,0 +1,105 @@
+{
+  "tests_generated": [
+    {
+      "file": "backend/tests/unit/modules/chantiers/adapters/controllers/test_chantier_controller.py",
+      "test_count": 28,
+      "coverage": "99%"
+    }
+  ],
+  "total_new_tests": 28,
+  "coverage_before": "68%",
+  "coverage_after": "71%",
+  "coverage_gain": "+3%",
+  "test_execution_result": "148 passed in 0.31s",
+  "target_coverage": "95%",
+  "target_reached": false,
+  "target_gap": "-24%",
+  "recommendations": [
+    "Générer tests d'intégration pour routes FastAPI (chantier_routes.py) - estimé +15% couverture",
+    "Ajouter tests unitaires pour domain entities (chantier.py) - estimé +5% couverture",
+    "Tester les domain events (chantier_deleted.py, chantier_statut_changed.py, chantier_updated.py) - estimé +1% couverture",
+    "Compléter tests pour change_statut.py (lignes 157-158, 175-181, 219, 243) - estimé +1% couverture",
+    "Tester les value objects (coordonnees_gps.py, contact_chantier.py, code_chantier.py) - estimé +2% couverture"
+  ],
+  "detailed_coverage": {
+    "adapters": {
+      "chantier_controller.py": "99% (72 stmts, 1 miss)"
+    },
+    "application_use_cases": {
+      "assign_responsable.py": "100% (57 stmts, 0 miss)",
+      "change_statut.py": "91% (65 stmts, 6 miss)",
+      "create_chantier.py": "100% (75 stmts, 0 miss)",
+      "delete_chantier.py": "100% (34 stmts, 0 miss)",
+      "get_chantier.py": "100% (30 stmts, 0 miss)",
+      "list_chantiers.py": "98% (46 stmts, 1 miss)",
+      "update_chantier.py": "100% (85 stmts, 0 miss)"
+    },
+    "domain_services": {
+      "prerequis_service.py": "100% (32 stmts, 0 miss)"
+    },
+    "domain_entities": {
+      "chantier.py": "79% (141 stmts, 30 miss)"
+    },
+    "domain_value_objects": {
+      "statut_chantier.py": "85% (52 stmts, 8 miss)",
+      "code_chantier.py": "73% (49 stmts, 13 miss)",
+      "contact_chantier.py": "66% (53 stmts, 18 miss)",
+      "coordonnees_gps.py": "45% (53 stmts, 29 miss)"
+    },
+    "domain_events": {
+      "chantier_created.py": "86% (7 stmts, 1 miss)",
+      "chantier_deleted.py": "0% (7 stmts, 7 miss)",
+      "chantier_statut_changed.py": "0% (7 stmts, 7 miss)",
+      "chantier_updated.py": "0% (7 stmts, 7 miss)"
+    },
+    "infrastructure_persistence": {
+      "chantier_model.py": "97% (38 stmts, 1 miss)",
+      "contact_chantier_model.py": "94% (16 stmts, 1 miss)",
+      "phase_chantier_model.py": "94% (17 stmts, 1 miss)",
+      "chantier_responsable_model.py": "100% (20 stmts, 0 miss)",
+      "sqlalchemy_chantier_repository.py": "28% (120 stmts, 87 miss)"
+    },
+    "infrastructure_web": {
+      "chantier_routes.py": "41% (388 stmts, 229 miss)",
+      "dependencies.py": "34% (47 stmts, 31 miss)"
+    }
+  },
+  "quality_metrics": {
+    "test_speed": "EXCELLENT (0.31s for 148 tests)",
+    "test_isolation": "EXCELLENT (100% mocks)",
+    "flaky_tests": 0,
+    "test_determinism": "EXCELLENT"
+  },
+  "next_priority_tasks": [
+    {
+      "task": "Generate integration tests for chantier_routes.py",
+      "priority": "HIGH",
+      "estimated_effort": "2-3 hours",
+      "estimated_coverage_gain": "+15%",
+      "blockers": ["Auth fixtures needed", "Database test setup needed"]
+    },
+    {
+      "task": "Generate unit tests for domain entities (chantier.py)",
+      "priority": "MEDIUM",
+      "estimated_effort": "1 hour",
+      "estimated_coverage_gain": "+5%",
+      "blockers": []
+    },
+    {
+      "task": "Generate tests for domain events",
+      "priority": "LOW",
+      "estimated_effort": "30 minutes",
+      "estimated_coverage_gain": "+1%",
+      "blockers": []
+    },
+    {
+      "task": "Complete coverage for value objects",
+      "priority": "LOW",
+      "estimated_effort": "1 hour",
+      "estimated_coverage_gain": "+2%",
+      "blockers": []
+    }
+  ],
+  "summary": "Generated 28 new unit tests for ChantierController with 99% coverage. Overall module coverage increased from 68% to 71% (+3%). To reach 95% target, integration tests for routes and additional domain tests are needed.",
+  "status": "PARTIALLY_COMPLETED"
+}

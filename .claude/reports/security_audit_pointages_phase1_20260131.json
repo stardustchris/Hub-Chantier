@@ -1,0 +1,254 @@
+{
+  "audit_metadata": {
+    "audit_scope": "Module pointages - Corrections Phase 1",
+    "audit_date": "2026-01-31",
+    "auditor": "security-auditor",
+    "version": "1.0",
+    "files_audited": [
+      "backend/modules/pointages/domain/value_objects/periode_paie.py",
+      "backend/modules/pointages/domain/services/permission_service.py",
+      "backend/modules/pointages/application/use_cases/correct_pointage.py",
+      "backend/modules/pointages/domain/entities/pointage.py",
+      "backend/modules/pointages/application/use_cases/update_pointage.py",
+      "backend/modules/pointages/application/use_cases/sign_pointage.py",
+      "backend/modules/pointages/application/use_cases/submit_pointage.py",
+      "backend/modules/pointages/application/use_cases/validate_pointage.py",
+      "backend/modules/pointages/application/use_cases/reject_pointage.py",
+      "backend/modules/pointages/infrastructure/web/routes.py",
+      "backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py",
+      "backend/modules/pointages/adapters/controllers/pointage_controller.py"
+    ]
+  },
+  "executive_summary": {
+    "status": "PASS",
+    "critical_findings": 0,
+    "high_findings": 0,
+    "medium_findings": 2,
+    "low_findings": 4,
+    "overall_assessment": "Le module pointages présente une architecture sécurisée avec une bonne séparation des couches et des contrôles appropriés. Aucune vulnérabilité critique ou haute n'a été identifiée. Les findings MEDIUM concernent principalement des améliorations de traçabilité et de validation d'entrées. Le verrouillage de période paie (GAP-FDH-002) est correctement implémenté."
+  },
+  "findings": [
+    {
+      "id": "SEC-PTG-001",
+      "severity": "MEDIUM",
+      "type": "Input Validation",
+      "category": "OWASP A03:2021 - Injection",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py:37-38, 46-47",
+      "description": "Les patterns regex pour la validation des heures (HH:MM) acceptent des formats invalides comme '99:99'. Le pattern `^\\d{1,2}:\\d{2}$` ne valide pas que les heures sont < 24 et les minutes < 60.",
+      "impact": "Un utilisateur pourrait soumettre des heures invalides (ex: 99:99) qui passeraient la validation Pydantic mais pourraient échouer lors de la conversion en Duree, générant une erreur 500 au lieu d'une erreur de validation claire.",
+      "remediation": "Utiliser un pattern regex strict : `^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$` pour valider HH:MM avec HH entre 00-23 et MM entre 00-59. Ou mieux, utiliser un validateur Pydantic custom qui vérifie la validité du format.",
+      "evidence": "pattern=r'^\\d{1,2}:\\d{2}$' permet 99:99 au lieu de limiter à 23:59",
+      "effort": "2h",
+      "priority": "P2"
+    },
+    {
+      "id": "SEC-PTG-002",
+      "severity": "MEDIUM",
+      "type": "Authorization & Access Control",
+      "category": "OWASP A01:2021 - Broken Access Control",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py:116-144, 384-415",
+      "description": "Les routes de création et modification de pointages ne vérifient pas les permissions via PointagePermissionService. Bien que l'utilisateur soit authentifié (Depends(get_current_user_id)), il n'y a pas de vérification que current_user a le droit de créer/modifier un pointage pour utilisateur_id (compagnon ne peut agir que pour lui-même).",
+      "impact": "Un compagnon pourrait potentiellement créer ou modifier des pointages pour d'autres utilisateurs en manipulant le champ utilisateur_id dans la requête, contournant les règles métier de permission.",
+      "remediation": "1. Dans les routes POST /pointages et PUT /{pointage_id}, appeler PointagePermissionService.can_create_for_user() et can_modify() AVANT de déléguer au controller. 2. Récupérer le rôle de current_user depuis la session/token. 3. Rejeter avec HTTPException(403) si non autorisé. 4. Alternativement, intégrer cette vérification dans les use cases CreatePointage et UpdatePointage.",
+      "evidence": "create_pointage() accepte utilisateur_id sans vérifier si current_user_id peut créer pour cet utilisateur. update_pointage() ne vérifie pas le propriétaire du pointage.",
+      "effort": "4h",
+      "priority": "P2"
+    },
+    {
+      "id": "SEC-PTG-003",
+      "severity": "LOW",
+      "type": "Audit Trail",
+      "category": "Logging & Monitoring",
+      "location": "backend/modules/pointages/application/use_cases/correct_pointage.py:72",
+      "description": "Le use case CorrectPointageUseCase ne publie aucun événement (commentaire ligne 72: 'Pas d'événement publié pour la correction'). Cela réduit la traçabilité des actions de correction dans les logs d'audit.",
+      "impact": "Perte de traçabilité : impossible de savoir qui a corrigé un pointage rejeté et quand, ce qui peut poser problème pour les audits RGPD et les enquêtes sur modifications de données paie.",
+      "remediation": "Créer un événement PointageCorrectedEvent(pointage_id, utilisateur_id, corrected_by, corrected_at) et le publier via event_bus après la correction. Cet événement devrait être logué pour traçabilité.",
+      "evidence": "Ligne 71-72: # Pas d'événement publié pour la correction",
+      "effort": "2h",
+      "priority": "P3"
+    },
+    {
+      "id": "SEC-PTG-004",
+      "severity": "LOW",
+      "type": "SQL Injection",
+      "category": "OWASP A03:2021 - Injection",
+      "location": "backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py",
+      "description": "VALIDATION POSITIVE : Aucune construction de requête SQL manuelle détectée. Toutes les requêtes utilisent l'ORM SQLAlchemy avec des paramètres liés (query.filter(...)) ce qui protège contre les injections SQL.",
+      "impact": "Aucun - Bonne pratique respectée",
+      "remediation": "N/A - Continuer à utiliser exclusivement l'ORM SQLAlchemy pour toutes les requêtes.",
+      "evidence": "Exemples lignes 28-30, 66-69, 110-114 : Utilisation de PointageModel.id == pointage_id (paramètres liés)",
+      "effort": "0h",
+      "priority": "P4"
+    },
+    {
+      "id": "SEC-PTG-005",
+      "severity": "LOW",
+      "type": "Data Protection - RGPD",
+      "category": "Privacy",
+      "location": "backend/modules/pointages/domain/entities/pointage.py:64-66",
+      "description": "Les champs created_by et updated_at sont présents pour la traçabilité RGPD, ce qui est conforme. Cependant, il manque un champ 'updated_by' pour tracer QUI a effectué la dernière modification (important pour audit).",
+      "impact": "Traçabilité partielle : on sait QUAND une modification a eu lieu (updated_at) mais pas toujours QUI l'a faite. En cas d'audit RGPD ou d'enquête sur modification de données paie, cette information manquante peut poser problème.",
+      "remediation": "1. Ajouter un champ 'updated_by: Optional[int]' à l'entité Pointage. 2. Mettre à jour ce champ dans toutes les méthodes de modification (set_heures, signer, soumettre, valider, rejeter, corriger). 3. Passer updated_by dans les DTOs et use cases.",
+      "evidence": "Ligne 64-66: created_by présent, mais pas d'updated_by. Ligne 173: self.updated_at = datetime.now() sans mise à jour de updated_by",
+      "effort": "6h (entité + migrations + use cases + tests)",
+      "priority": "P3"
+    },
+    {
+      "id": "SEC-PTG-006",
+      "severity": "LOW",
+      "type": "Rate Limiting",
+      "category": "DoS Prevention",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py",
+      "description": "Aucun rate limiting détecté sur les routes sensibles (création, validation, rejet). Un utilisateur malveillant pourrait spammer la création de pointages ou les validations.",
+      "impact": "Risque de Denial of Service (DoS) par création massive de pointages ou spam de requêtes de validation. Pollution de la base de données et ralentissement du système.",
+      "remediation": "Implémenter un rate limiting via middleware FastAPI (slowapi ou fastapi-limiter) : - POST /pointages : max 60 requêtes/minute/user - POST /{pointage_id}/validate : max 120 requêtes/minute/user - POST /{pointage_id}/sign : max 60 requêtes/minute/user",
+      "evidence": "Aucun décorateur @limiter ou middleware de rate limiting sur les routes",
+      "effort": "4h (installation library + configuration + tests)",
+      "priority": "P3"
+    },
+    {
+      "id": "SEC-PTG-007",
+      "severity": "INFO",
+      "type": "Business Logic Validation",
+      "category": "GAP-FDH-002 Compliance",
+      "location": "backend/modules/pointages/domain/value_objects/periode_paie.py",
+      "description": "VALIDATION POSITIVE : Le verrouillage de période paie (GAP-FDH-002) est correctement implémenté via PeriodePaie.is_locked(). Cette vérification est présente dans TOUS les use cases de modification (correct, update, sign, submit, validate, reject).",
+      "impact": "Aucun - Règle métier critique correctement implémentée",
+      "remediation": "N/A - Continuer à vérifier is_locked() dans tout nouveau use case de modification.",
+      "evidence": "Vérification présente dans : - correct_pointage.py:58 - update_pointage.py:55 - sign_pointage.py:54 - submit_pointage.py:54 - validate_pointage.py:54 - reject_pointage.py:54",
+      "effort": "0h",
+      "priority": "INFO"
+    },
+    {
+      "id": "SEC-PTG-008",
+      "severity": "INFO",
+      "type": "Authentication & Session Management",
+      "category": "OWASP A07:2021 - Identification and Authentication Failures",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py",
+      "description": "VALIDATION POSITIVE : Toutes les routes sont protégées par Depends(get_current_user_id), garantissant l'authentification. Aucune route publique non intentionnelle détectée.",
+      "impact": "Aucun - Bonne pratique respectée",
+      "remediation": "N/A - Maintenir Depends(get_current_user_id) sur toutes les routes sensibles.",
+      "evidence": "Toutes les routes ont current_user_id: int = Depends(get_current_user_id)",
+      "effort": "0h",
+      "priority": "INFO"
+    }
+  ],
+  "compliance_status": {
+    "RGPD": {
+      "status": "PARTIAL",
+      "compliant_items": [
+        "Traçabilité created_by présente (Article 5.1.a - Licéité, loyauté, transparence)",
+        "Traçabilité created_at/updated_at présente (Article 30 - Registre des traitements)",
+        "Données sensibles (heures de travail) identifiées comme telles",
+        "Durée de retention implicite via verrouillage mensuel (Article 5.1.e - Limitation de la conservation)"
+      ],
+      "non_compliant_items": [
+        "Traçabilité updated_by manquante (Finding SEC-PTG-005) - Impact sur Article 5.1.a",
+        "Pas d'événement de correction logué (Finding SEC-PTG-003) - Impact sur Article 30"
+      ],
+      "recommendations": [
+        "Ajouter champ updated_by pour traçabilité complète",
+        "Implémenter PointageCorrectedEvent pour audit trail",
+        "Documenter la durée de retention explicite (actuellement implicite via verrouillage)",
+        "Vérifier que le consentement utilisateur pour collecte heures est documenté"
+      ]
+    },
+    "OWASP_Top_10_2021": {
+      "status": "PASS",
+      "A01_Broken_Access_Control": "PARTIAL - Finding SEC-PTG-002 (permissions non vérifiées dans routes)",
+      "A02_Cryptographic_Failures": "PASS - Pas de données chiffrées en base (signature_utilisateur stockée en clair OK pour ce use case)",
+      "A03_Injection": "PASS - SQL injection protégé par ORM (Finding SEC-PTG-004 POSITIVE), validation inputs à améliorer (Finding SEC-PTG-001)",
+      "A04_Insecure_Design": "PASS - Clean Architecture respectée, séparation domain/application/infrastructure",
+      "A05_Security_Misconfiguration": "PASS - Pas de config sensible exposée",
+      "A06_Vulnerable_Components": "N/A - Hors scope (nécessite scan dépendances)",
+      "A07_Authentication_Failures": "PASS - Toutes routes authentifiées (Finding SEC-PTG-008 POSITIVE)",
+      "A08_Data_Integrity_Failures": "PASS - Validation statut via State Machine (StatutPointage.can_transition_to)",
+      "A09_Logging_Failures": "PARTIAL - Audit trail incomplet (Finding SEC-PTG-003)",
+      "A10_SSRF": "N/A - Pas d'appels HTTP externes"
+    },
+    "ISO_27001": {
+      "status": "PASS",
+      "A.9_Access_Control": "PARTIAL - Permissions métier à renforcer (SEC-PTG-002)",
+      "A.12_Operations_Security": "PASS - Rate limiting recommandé (SEC-PTG-006)",
+      "A.18_Compliance": "PARTIAL - RGPD compliance partielle (updated_by manquant)"
+    }
+  },
+  "security_best_practices": {
+    "passed": [
+      "✅ Utilisation exclusive de l'ORM SQLAlchemy (pas de SQL brut)",
+      "✅ Authentification obligatoire sur toutes les routes (Depends(get_current_user_id))",
+      "✅ Validation des transitions de statut via State Machine (StatutPointage)",
+      "✅ Séparation des couches (Clean Architecture respectée)",
+      "✅ Verrouillage de période paie implémenté (GAP-FDH-002) dans tous les use cases",
+      "✅ EventBus utilisé pour traçabilité (création, update, sign, submit, validate, reject)",
+      "✅ Validation métier dans l'entité (set_heures vérifie <= 24h par jour - GAP-FDH-005)",
+      "✅ DTOs utilisés pour validation d'entrées (Pydantic)",
+      "✅ Aucun secret en dur dans le code (pas de credentials hardcodés)"
+    ],
+    "to_improve": [
+      "⚠️ Renforcer validation regex heures (HH:MM) pour rejeter 99:99 (SEC-PTG-001)",
+      "⚠️ Vérifier permissions métier (PointagePermissionService) dans les routes (SEC-PTG-002)",
+      "⚠️ Ajouter PointageCorrectedEvent pour audit trail complet (SEC-PTG-003)",
+      "⚠️ Ajouter champ updated_by pour traçabilité RGPD (SEC-PTG-005)",
+      "⚠️ Implémenter rate limiting sur routes sensibles (SEC-PTG-006)"
+    ]
+  },
+  "risk_assessment": {
+    "overall_risk_level": "LOW",
+    "business_impact": {
+      "confidentiality": "MEDIUM - Données paie sensibles (heures travaillées) mais protégées par auth",
+      "integrity": "HIGH - Modification heures impacte paie, mais verrouillage mensuel protège",
+      "availability": "MEDIUM - Pas de rate limiting, risque DoS théorique"
+    },
+    "threat_model": {
+      "insider_threat": "MEDIUM - Compagnon pourrait tenter de modifier heures autres utilisateurs (SEC-PTG-002)",
+      "external_attacker": "LOW - Authentification obligatoire, pas d'endpoints publics",
+      "privilege_escalation": "MEDIUM - Permissions métier non vérifiées (SEC-PTG-002)",
+      "data_exfiltration": "LOW - Pas de bulk export sans auth, données loguées via EventBus"
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "P1 - URGENT",
+      "items": []
+    },
+    {
+      "priority": "P2 - HIGH (dans 1 semaine)",
+      "items": [
+        "Corriger validation regex heures (SEC-PTG-001) - 2h",
+        "Implémenter vérifications PointagePermissionService dans routes (SEC-PTG-002) - 4h"
+      ]
+    },
+    {
+      "priority": "P3 - MEDIUM (dans 1 mois)",
+      "items": [
+        "Ajouter PointageCorrectedEvent pour audit trail (SEC-PTG-003) - 2h",
+        "Ajouter champ updated_by pour traçabilité complète (SEC-PTG-005) - 6h",
+        "Implémenter rate limiting (SEC-PTG-006) - 4h"
+      ]
+    },
+    {
+      "priority": "P4 - LOW (backlog)",
+      "items": [
+        "Documenter durée de retention RGPD explicitement",
+        "Scan dépendances avec safety/bandit pour vulnérabilités",
+        "Ajouter tests de sécurité (injection SQL, auth bypass, etc.)"
+      ]
+    }
+  ],
+  "test_coverage_security": {
+    "sql_injection_tests": "MISSING - Recommandé d'ajouter tests avec inputs SQL malicieux",
+    "auth_bypass_tests": "MISSING - Recommandé de tester routes sans token",
+    "permission_tests": "MISSING - Recommandé de tester création/modification cross-user",
+    "lockdown_tests": "EXPECTED - Tests verrouillage période paie doivent exister",
+    "input_validation_tests": "PARTIAL - Tests Duree.from_string existent, mais pas tests regex invalides"
+  },
+  "next_steps": [
+    "1. Corriger SEC-PTG-001 et SEC-PTG-002 (findings MEDIUM) avant mise en production",
+    "2. Créer tests de sécurité pour permissions (compagnon ne peut pas modifier pointage d'autrui)",
+    "3. Implémenter PointageCorrectedEvent pour audit trail (SEC-PTG-003)",
+    "4. Planifier ajout updated_by dans sprint suivant (SEC-PTG-005)",
+    "5. Évaluer besoin rate limiting selon volumétrie attendue (SEC-PTG-006)"
+  ],
+  "conclusion": "Le module pointages Phase 1 présente une architecture sécurisée avec 0 vulnérabilité CRITICAL/HIGH. Les 2 findings MEDIUM (validation regex et permissions) doivent être corrigés avant production. Les 4 findings LOW sont des améliorations recommandées pour renforcer la traçabilité et la robustesse. Le verrouillage de période paie (GAP-FDH-002), critique pour conformité légale, est correctement implémenté. Conformité RGPD partielle (updated_by manquant). Recommandation : APPROVED pour merge après correction SEC-PTG-001 et SEC-PTG-002."
+}

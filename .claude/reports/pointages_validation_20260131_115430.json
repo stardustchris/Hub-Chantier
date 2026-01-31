@@ -1,0 +1,553 @@
+{
+  "module": "pointages",
+  "global_status": "WARN",
+  "timestamp": "2026-01-31T11:54:30.851540",
+  "duration_seconds": 0.095214,
+  "agents_executed": 3,
+  "total_findings": {
+    "CRITICAL": 0,
+    "HIGH": 6,
+    "MEDIUM": 18,
+    "LOW": 47
+  },
+  "reports": [
+    {
+      "agent": "architectreviewer",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 3 violation(s) haute(s) architecture",
+      "score": {
+        "clean_architecture": "7/10",
+        "modularity": "9/10",
+        "files_analyzed": 64
+      },
+      "findings_count": 3,
+      "findings": [
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'chantiers' (violation isolation des modules)",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'planning' (violation isolation des modules)",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'planning' (violation isolation des modules)",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        }
+      ]
+    },
+    {
+      "agent": "codereviewer",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 3 problème(s) haute(s) priorité, 17 moyen(s)",
+      "score": {
+        "quality": "7/10",
+        "maintainability": "0/10",
+        "files_reviewed": 64,
+        "issues_found": 67
+      },
+      "findings_count": 67,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/pointages/domain/events/heures_created.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/pointages/domain/events/heures_validated.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/pointages/domain/events/heures_rejected.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/pointages/domain/events/heures_updated.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'register_event_handlers' sans type hints sur les paramètres",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'setup_planning_integration' sans type hints sur les paramètres",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'wrapped_handler' sans type hints sur les paramètres",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction 'wrapped_handler' sans annotation de retour",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter -> ReturnType ou -> None",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'is' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+          "suggestion": "Renommer en Is",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/events/heures_created.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/events/heures_validated.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/events/heures_rejected.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/events/heures_updated.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/entities/variable_paie.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/entities/feuille_heures.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/domain/entities/pointage.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/feuille_heures_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/pointage_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/pointages/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (11)",
+          "file": "backend/modules/pointages/infrastructure/persistence/sqlalchemy_variable_paie_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (21)",
+          "file": "backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (19)",
+          "file": "backend/modules/pointages/infrastructure/persistence/sqlalchemy_feuille_heures_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/pointages/application/use_cases/compare_equipes.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (31)",
+          "file": "backend/modules/pointages/application/use_cases/export_feuille_heures.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (15)",
+          "file": "backend/modules/pointages/application/use_cases/list_pointages.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (17)",
+          "file": "backend/modules/pointages/application/use_cases/bulk_create_from_planning.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (28)",
+          "file": "backend/modules/pointages/application/use_cases/get_feuille_heures.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (51)",
+          "file": "backend/modules/pointages/application/use_cases/get_vue_semaine.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '_fetch_pointages_chantiers' a une complexité cyclomatique élevée (50)",
+          "file": "backend/modules/pointages/application/use_cases/get_vue_semaine.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '_fetch_pointages_semaine' a une complexité cyclomatique élevée (33)",
+          "file": "backend/modules/pointages/application/use_cases/get_vue_semaine.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (24)",
+          "file": "backend/modules/pointages/adapters/controllers/pointage_controller.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        }
+      ]
+    },
+    {
+      "agent": "securityauditor",
+      "status": "PASS",
+      "summary": "✅ Aucune vulnérabilité critique détectée",
+      "score": {
+        "security": "10/10",
+        "critical_issues": 0,
+        "high_issues": 0,
+        "total_findings": 1
+      },
+      "findings_count": 1,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit à l'oubli non implémenté",
+          "file": "backend/modules/pointages",
+          "suggestion": "Implémenter la suppression complète des données",
+          "category": "security"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "gap_id": "GAP-T3",
+  "titre": "Vérification JOINs avec table users pour FeuilleHeuresRepository",
+  "date_verification": "2026-01-31",
+  "status": "CONFORME",
+  "severite": "INFO",
+  "
+": "Le système effectue correctement l'enrichissement des noms d'utilisateurs via EntityInfoService. L'architecture respecte le découplage entre modules.",
+
+  "contexte": {
+    "description": "Suite à la correction du seed (GAP-T2), vérifier que le repository backend effectue bien la récupération des noms des compagnons pour l'endpoint /api/pointages/vues/compagnons",
+    "fichiers_seed_corriges": [
+      "backend/scripts/seed_pointages_semaine.py"
+    ],
+    "endpoint_teste": "GET /api/pointages/vues/compagnons"
+  },
+
+  "architecture_solution": {
+    "approche": "Enrichissement via EntityInfoService (pas de JOIN direct)",
+    "raison": "Clean Architecture - découplage entre modules pointages et auth",
+    "flux": [
+      "1. SQLAlchemyPointageRepository.search() récupère les pointages (IDs uniquement)",
+      "2. GetVueSemaineUseCase._enrich_pointages() enrichit via EntityInfoService",
+      "3. SQLAlchemyEntityInfoService.get_user_info() fait SELECT sur users",
+      "4. Pointage.utilisateur_nom est enrichi in-memory"
+    ]
+  },
+
+  "composants_analyses": {
+    "repository": {
+      "fichier": "backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py",
+      "constat": "Pas de JOIN avec users - découplage voulu",
+      "requete_sql": "SELECT pointages.* FROM pointages WHERE date_pointage >= ? AND date_pointage <= ?",
+      "lignes_cles": "28-29, 150-165"
+    },
+
+    "entity_info_service": {
+      "fichier": "backend/shared/infrastructure/entity_info_impl.py",
+      "role": "Centralise les imports inter-modules et effectue les JOINs logiques",
+      "methode_cle": "get_user_info(user_id: int) -> Optional[UserBasicInfo]",
+      "requete_sql": "SELECT users.* FROM users WHERE users.id = ?",
+      "lignes_cles": "46-76"
+    },
+
+    "use_case": {
+      "fichier": "backend/modules/pointages/application/use_cases/get_vue_semaine.py",
+      "methode": "_enrich_pointages(pointages: List) -> None",
+      "optimisation": "Cache local pour minimiser les requêtes SQL (1 requête par user_id unique)",
+      "lignes_cles": "316-352"
+    },
+
+    "entite_domain": {
+      "fichier": "backend/modules/pointages/domain/entities/pointage.py",
+      "proprietes_enrichies": [
+        "utilisateur_nom (property, lignes 106-113)",
+        "chantier_nom (property, lignes 116-123)",
+        "chantier_couleur (property, lignes 126-133)"
+      ],
+      "stockage": "Attributs privés _utilisateur_nom, _chantier_nom, _chantier_couleur"
+    },
+
+    "controller": {
+      "fichier": "backend/modules/pointages/adapters/controllers/pointage_controller.py",
+      "initialisation": "EntityInfoService injecté dans __init__ (ligne 77)",
+      "transmission": "Passé à GetVueSemaineUseCase (ligne 92)",
+      "lignes_cles": "322-365"
+    },
+
+    "routes_api": {
+      "fichier": "backend/modules/pointages/infrastructure/web/routes.py",
+      "endpoint": "/vues/compagnons",
+      "methode": "GET",
+      "dependency_injection": "get_controller() instancie SQLAlchemyEntityInfoService (ligne 102)",
+      "lignes_cles": "96-110, 227-238"
+    }
+  },
+
+  "test_reel": {
+    "commande": "python3 -c 'from modules.pointages.application.use_cases import GetVueSemaineUseCase; ...'",
+    "semaine_testee": "2026-01-26 à 2026-02-01",
+    "resultats": {
+      "nombre_compagnons": 12,
+      "exemples": [
+        {
+          "utilisateur_id": 12,
+          "nom": "Babaker HAROUN MOUSSA",
+          "total_heures": "40:00",
+          "chantiers": [
+            {
+              "chantier_id": 24,
+              "nom": "Chantier 24",
+              "total_heures": "40:00"
+            }
+          ]
+        },
+        {
+          "utilisateur_id": 11,
+          "nom": "Manuel FIGUEIREDO DE ALMEIDA",
+          "total_heures": "40:00",
+          "chantiers": [
+            {
+              "chantier_id": 28,
+              "nom": "Chantier 28",
+              "total_heures": "40:00"
+            }
+          ]
+        }
+      ]
+    },
+
+    "requetes_sql_generees": {
+      "etape_1_pointages": {
+        "requete": "SELECT pointages.* FROM pointages WHERE pointages.date_pointage >= '2026-01-26' AND pointages.date_pointage <= '2026-02-01'",
+        "nombre_resultats": "~84 pointages (12 compagnons × 7 jours)"
+      },
+      "etape_2_enrichissement_users": {
+        "requete": "SELECT users.* FROM users WHERE users.id = ?",
+        "nombre_appels": 12,
+        "user_ids": [7, 8, 9, 10, 11, 12, 24, 25, 26, 27, 28, 29],
+        "optimisation": "Cache local évite les requêtes dupliquées"
+      },
+      "etape_3_enrichissement_chantiers": {
+        "requete": "SELECT chantiers.* FROM chantiers WHERE chantiers.id = ?",
+        "nombre_appels": "~8 (nombre de chantiers uniques)",
+        "statut": "ERREUR - DossierModel non trouvé (hors scope GAP-T3)"
+      }
+    }
+  },
+
+  "conformite_specifications": {
+    "FDH-01_vue_compagnons": {
+      "specification": "Afficher la liste des compagnons avec leurs noms et heures travaillées par chantier",
+      "status": "CONFORME",
+      "details": [
+        "✅ Noms des compagnons affichés correctement",
+        "✅ Heures par chantier calculées",
+        "✅ Structure de données conforme aux DTOs"
+      ]
+    },
+
+    "clean_architecture": {
+      "specification": "Découplage entre modules - pas de FK directes",
+      "status": "CONFORME",
+      "details": [
+        "✅ PointageModel ne contient que utilisateur_id/chantier_id (pas de FK)",
+        "✅ EntityInfoService centralise les imports inter-modules",
+        "✅ Aucune dépendance directe entre modules pointages et auth"
+      ]
+    }
+  },
+
+  "performance": {
+    "nombre_requetes_sql": {
+      "pointages": 1,
+      "users": 12,
+      "chantiers": 8,
+      "total": 21
+    },
+    "optimisations": [
+      "Cache local dans _enrich_pointages() évite les requêtes dupliquées",
+      "1 requête par utilisateur unique (pas 1 par pointage)",
+      "1 requête par chantier unique (pas 1 par pointage)"
+    ],
+    "scalabilite": {
+      "actuel": "21 requêtes pour 12 compagnons × 8 chantiers",
+      "limite_acceptable": "~100 utilisateurs + 50 chantiers = ~150 requêtes",
+      "recommandation": "Monitorer si >100 compagnons, envisager cache Redis si nécessaire"
+    }
+  },
+
+  "problemes_detectes": {
+    "chantier_model_dossier_error": {
+      "severite": "MEDIUM",
+      "message": "When initializing mapper Mapper[ChantierModel(chantiers)], expression 'DossierModel' failed to locate a name",
+      "impact": "Les noms de chantiers ne sont pas récupérés (fallback sur 'Chantier {id}')",
+      "fichier_concerne": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+      "status": "HORS_SCOPE_GAP-T3",
+      "action_recommandee": "Corriger la référence à DossierModel dans ChantierModel"
+    }
+  },
+
+  "recommandations": {
+    "court_terme": [
+      {
+        "priorite": "HIGH",
+        "action": "Corriger l'erreur DossierModel dans ChantierModel",
+        "raison": "Permettre l'affichage des noms de chantiers",
+        "fichier": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py"
+      },
+      {
+        "priorite": "MEDIUM",
+        "action": "Ajouter un test d'intégration pour /api/pointages/vues/compagnons",
+        "raison": "Valider l'enrichissement end-to-end",
+        "fichier": "backend/tests/integration/pointages/test_vues_api.py"
+      }
+    ],
+
+    "moyen_terme": [
+      {
+        "priorite": "LOW",
+        "action": "Monitorer les performances avec >100 compagnons",
+        "raison": "Anticiper les problèmes de scalabilité",
+        "outil": "Logging SQL + métriques APM"
+      },
+      {
+        "priorite": "LOW",
+        "action": "Envisager un cache Redis pour UserBasicInfo/ChantierBasicInfo",
+        "raison": "Réduire le nombre de requêtes SQL si nécessaire",
+        "condition": "Si performances dégradées avec forte charge"
+      }
+    ]
+  },
+
+  "conclusion": {
+    "gap_resolu": true,
+    "resume": "Le système effectue correctement la récupération des noms d'utilisateurs via EntityInfoService. La méthode utilisée (requêtes séparées + cache) est conforme à l'architecture Clean Architecture et au découplage entre modules.",
+    "prochaine_etape": "Corriger l'erreur DossierModel dans le module chantiers (hors scope GAP-T3)",
+    "validateur": "Claude (Sonnet 4.5)",
+    "date_validation": "2026-01-31"
+  },
+
+  "fichiers_analyses": [
+    "/Users/aptsdae/Hub-Chantier/backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py",
+    "/Users/aptsdae/Hub-Chantier/backend/modules/pointages/application/use_cases/get_vue_semaine.py",
+    "/Users/aptsdae/Hub-Chantier/backend/shared/infrastructure/entity_info_impl.py",
+    "/Users/aptsdae/Hub-Chantier/backend/modules/pointages/infrastructure/web/routes.py",
+    "/Users/aptsdae/Hub-Chantier/backend/modules/pointages/adapters/controllers/pointage_controller.py",
+    "/Users/aptsdae/Hub-Chantier/backend/modules/pointages/domain/entities/pointage.py",
+    "/Users/aptsdae/Hub-Chantier/backend/modules/pointages/infrastructure/persistence/models.py"
+  ]
+}
