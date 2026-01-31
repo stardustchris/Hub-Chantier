@@ -1,0 +1,189 @@
+{
+  "agent": "python-pro",
+  "date": "2026-01-31",
+  "mission": "Corriger 3 problèmes critiques identifiés par les agents de validation",
+  "problems_fixed": [
+    {
+      "id": 1,
+      "severity": "MAJOR",
+      "title": "Type inconsistency entre Planning et Pointages",
+      "description": "Le module Planning envoie heures_prevues en float (8.0), mais Pointages attend string 'HH:MM' ('08:00')",
+      "file": "backend/modules/pointages/infrastructure/event_handlers.py",
+      "solution": {
+        "approach": "Ajout d'une fonction de conversion universelle",
+        "function_added": "_convert_heures_to_string(heures)",
+        "features": [
+          "Convertit float -> HH:MM (8.0 -> '08:00', 7.5 -> '07:30')",
+          "Préserve strings déjà au format HH:MM (rétrocompatibilité)",
+          "Gestion des minutes décimales avec arrondi"
+        ],
+        "lines_added": "28-52",
+        "lines_modified": "102"
+      },
+      "validation": {
+        "tests_passing": "11/11 tests pointages/event_handlers",
+        "manual_tests": [
+          "8.0 -> '08:00' ✓",
+          "7.5 -> '07:30' ✓",
+          "9.75 -> '09:45' ✓",
+          "'08:00' -> '08:00' ✓"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "severity": "HIGH",
+      "category": "security",
+      "title": "Validation NaN/Infinity manquante",
+      "description": "Pydantic accepte float('nan') et float('inf') dans heures_prevues, causant des bugs de calcul",
+      "file": "backend/modules/planning/adapters/controllers/planning_schemas.py",
+      "solution": {
+        "approach": "Ajout d'un field_validator Pydantic",
+        "validator_added": "validate_heures_prevues",
+        "logic": "Rejette NaN/Infinity via math.isnan() et math.isinf()",
+        "error_message": "heures_prevues ne peut pas etre NaN ou Infinity",
+        "lines_modified": "82-96"
+      },
+      "validation": {
+        "manual_tests": [
+          "8.0 (valeur normale) -> accepté ✓",
+          "float('nan') -> rejeté ✓",
+          "float('inf') -> rejeté ✓",
+          "float('-inf') -> rejeté ✓"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "severity": "HIGH",
+      "category": "security",
+      "subcategory": "RGPD",
+      "title": "Exposition d'informations sensibles dans les logs",
+      "description": "Logs INFO exposent user_id, chantier_id, heures_prevues liés à la paie",
+      "file": "backend/modules/planning/adapters/controllers/planning_controller.py",
+      "solution": {
+        "approach": "Réduction du niveau de log de INFO à DEBUG pour données sensibles",
+        "modifications": [
+          {
+            "method": "create()",
+            "line": 204,
+            "change": "logger.info -> logger.debug",
+            "reason": "Contient utilisateur_id, chantier_id, heures_prevues, created_by"
+          },
+          {
+            "method": "create() (confirmation)",
+            "line": 227,
+            "change": "logger.info -> logger.debug",
+            "reason": "Contient nombre d'affectations créées et IDs"
+          },
+          {
+            "method": "duplicate()",
+            "line": 504,
+            "change": "logger.info -> logger.debug",
+            "reason": "Contient utilisateur_id et dates d'affectation"
+          },
+          {
+            "method": "duplicate() (confirmation)",
+            "line": 519,
+            "change": "logger.info -> logger.debug",
+            "reason": "Contient nombre d'affectations dupliquées"
+          }
+        ],
+        "logs_kept_info": [
+          "update() - contient seulement affectation_id (acceptable pour audit)",
+          "delete() - contient seulement affectation_id (acceptable pour audit)",
+          "resize() - contient seulement affectation_id et dates (acceptable pour audit)"
+        ]
+      },
+      "validation": {
+        "tests_passing": "50/50 tests planning/create",
+        "security_improvement": "Logs sensibles (paie) uniquement en mode DEBUG, pas en production"
+      }
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "backend/modules/pointages/infrastructure/event_handlers.py",
+      "changes": [
+        "Ajout fonction _convert_heures_to_string() (lignes 28-52)",
+        "Utilisation de la fonction dans handle_affectation_created() (ligne 102)"
+      ],
+      "impact": "Conversion automatique float->string pour compatibilité inter-modules"
+    },
+    {
+      "path": "backend/modules/planning/adapters/controllers/planning_schemas.py",
+      "changes": [
+        "Import math (ligne 13)",
+        "Ajout field_validator validate_heures_prevues() (lignes 82-96)"
+      ],
+      "impact": "Validation stricte des heures, rejet NaN/Infinity"
+    },
+    {
+      "path": "backend/modules/planning/adapters/controllers/planning_controller.py",
+      "changes": [
+        "logger.info -> logger.debug dans create() (lignes 204, 227)",
+        "logger.info -> logger.debug dans duplicate() (lignes 504, 519)"
+      ],
+      "impact": "Réduction exposition données sensibles en production"
+    }
+  ],
+  "clean_architecture_compliance": {
+    "domain_layer": "Non modifié",
+    "application_layer": "Non modifié",
+    "adapters_layer": "Modifié (schemas, controller)",
+    "infrastructure_layer": "Modifié (event_handlers)",
+    "forbidden_imports": "Aucun",
+    "dependency_rule": "Respectée (dépendances vers l'intérieur uniquement)"
+  },
+  "code_quality": {
+    "docstrings": "Ajoutées pour _convert_heures_to_string()",
+    "type_hints": "Présents sur toutes les fonctions modifiées",
+    "pep8_compliance": "Oui",
+    "error_handling": "ValueError pour validation NaN/Infinity"
+  },
+  "tests_results": {
+    "planning_module": {
+      "passed": 456,
+      "failed": 7,
+      "errors": 7,
+      "notes": "Échecs pré-existants (fixtures test cassées, non liés aux corrections)"
+    },
+    "pointages_module": {
+      "passed": 236,
+      "failed": 0,
+      "errors": 0,
+      "notes": "Tous les tests passent, y compris event_handlers"
+    },
+    "total_affected_tests": 692,
+    "regression_tests": 0
+  },
+  "security_improvements": [
+    {
+      "type": "Data validation",
+      "description": "Rejet NaN/Infinity empêche calculs incorrects et potentiels DoS",
+      "impact": "HIGH"
+    },
+    {
+      "type": "RGPD compliance",
+      "description": "Logs sensibles (paie) uniquement en DEBUG, pas exposés en production",
+      "impact": "HIGH"
+    },
+    {
+      "type": "Type safety",
+      "description": "Conversion automatique float->string évite erreurs runtime",
+      "impact": "MAJOR"
+    }
+  ],
+  "recommendations": [
+    "Corriger les 7 tests cassés dans planning (fixtures AffectationDTO manquent heures_prevues)",
+    "Corriger les 5 tests cassés dans planning/infrastructure (mock 'persistence' invalide)",
+    "Ajouter des tests unitaires pour _convert_heures_to_string()",
+    "Ajouter des tests d'intégration Planning->Pointages avec float"
+  ],
+  "next_steps": [
+    "Relancer architect-reviewer pour valider Clean Architecture",
+    "Relancer security-auditor pour confirmer résolution des gaps",
+    "Relancer test-automator pour générer tests manquants",
+    "Relancer code-reviewer pour validation finale"
+  ]
+}

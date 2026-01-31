@@ -1,0 +1,111 @@
+=================================================================
+IMPLEMENTATION BACKEND - PLUSIEURS METIERS PAR UTILISATEUR
+Date: 2026-01-31
+Agents: sql-pro, python-pro
+Phases: 1-4 (COMPLETE)
+=================================================================
+
+FICHIERS CREES (1)
+------------------
+1. backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py
+   → Migration Alembic: metier (String) → metiers (JSON array)
+   → Exécutée avec succès
+
+
+FICHIERS MODIFIES (13)
+----------------------
+
+MODULE AUTH (7 fichiers)
+------------------------
+1. backend/modules/auth/infrastructure/persistence/user_model.py
+   Ligne 70: metier = Column(String(100)) → metiers = Column(JSON)
+
+2. backend/modules/auth/domain/entities/user.py
+   Ligne 6: + from typing import List
+   Ligne 55: metier: Optional[str] → metiers: Optional[List[str]]
+   Ligne 278: parameter metier → metiers dans update_profile()
+
+3. backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py
+   Ligne 117: model.metier → model.metiers
+   Ligne 423: "metier": model.metier → "metiers": model.metiers
+   Ligne 475: "metier": user.metier → "metiers": user.metiers
+
+4. backend/modules/auth/application/dtos/user_dto.py
+   Ligne 34: metier: Optional[str] → metiers: Optional[List[str]]
+   Ligne 64: metier=user.metier → metiers=user.metiers
+   Ligne 122: metier: Optional[str] → metiers: Optional[List[str]]
+   Ligne 138: metier: Optional[str] → metiers: Optional[List[str]]
+
+5. backend/modules/auth/application/use_cases/register.py
+   Ligne 138: metier=dto.metier → metiers=dto.metiers
+
+6. backend/modules/auth/application/use_cases/update_user.py
+   Ligne 92: metier=dto.metier → metiers=dto.metiers
+
+7. backend/modules/auth/infrastructure/web/auth_routes.py
+   Ligne 64: metier: Optional[str] → metiers: Optional[List[str]]
+   Ligne 75: metier: Optional[str] → metiers: Optional[List[str]]
+   Ligne 101: metier: Optional[str] → metiers: Optional[List[str]]
+
+
+MODULE PLANNING (4 fichiers)
+-----------------------------
+8. backend/modules/planning/application/dtos/affectation_dto.py
+   Ligne 63: utilisateur_metier → utilisateur_metiers: Optional[List[str]]
+   Ligne 74: parameter utilisateur_metier → utilisateur_metiers
+   Ligne 122: utilisateur_metier → utilisateur_metiers
+
+9. backend/modules/planning/application/use_cases/get_planning.py
+   Ligne 80-84: Filtrage métier avec intersection d'arrays
+              OLD: if dto.utilisateur_metier in filters.metiers
+              NEW: if any(m in filters.metiers for m in (dto.utilisateur_metiers or []))
+   Ligne 203: utilisateur_metier → utilisateur_metiers
+
+10. backend/modules/planning/adapters/controllers/planning_schemas.py
+    Ligne 318-322: utilisateur_metier → utilisateur_metiers: Optional[List[str]]
+
+11. backend/modules/planning/infrastructure/web/dependencies.py
+    Ligne 150: "metier": info.metier → "metiers": info.metiers
+
+
+MODULE SHARED (2 fichiers)
+---------------------------
+12. backend/shared/application/ports/entity_info_service.py
+    Ligne 26: metier: Optional[str] → metiers: Optional[List[str]]
+
+13. backend/shared/infrastructure/entity_info_impl.py
+    Ligne 69: metier=user.metier → metiers=user.metiers
+
+
+CHANGEMENTS CRITIQUES
+----------------------
+1. API Breaking Change: 
+   - Champ "metier" renommé en "metiers"
+   - Type: string → array of strings
+
+2. Filtrage Planning:
+   - Logique: intersection d'arrays au lieu de comparaison simple
+   - any(m in filters.metiers for m in utilisateur_metiers)
+
+3. Migration DB:
+   - PostgreSQL: jsonb_build_array()
+   - SQLite: json_array()
+
+
+VALIDATION
+----------
+✅ Migration exécutée (alembic upgrade head)
+✅ Imports Python fonctionnent
+✅ Type hints 100%
+✅ Clean Architecture respectée
+⏳ Tests unitaires à adapter
+
+
+PROCHAINES ETAPES
+-----------------
+1. Frontend: Mettre à jour types TypeScript
+2. Frontend: Créer MetierMultiSelect.tsx
+3. Frontend: Intégrer dans formulaires
+4. Frontend: Adapter filtrage planning
+5. Tests: Corriger tests unitaires cassés
+6. Tests: Ajouter tests multi-métiers

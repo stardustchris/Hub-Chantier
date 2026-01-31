@@ -1,0 +1,345 @@
+{
+  "audit_metadata": {
+    "module": "planning",
+    "audit_date": "2026-01-31",
+    "auditor": "security-auditor",
+    "scope": "Audit sécurité Phase 2 - Validation corrections NaN/Infinity, RGPD logs, et conversion types",
+    "previous_audit": ".claude/reports/security_audit_phase2_gaps_001_005_006.json",
+    "corrections_validated": [
+      "Validation NaN/Infinity dans planning_schemas.py",
+      "Logs sensibles en DEBUG dans planning_controller.py",
+      "Conversion type sécurisée dans event_handlers.py"
+    ]
+  },
+  "executive_summary": {
+    "overall_status": "CONDITIONAL_PASS",
+    "critical_findings": 0,
+    "high_findings": 1,
+    "medium_findings": 2,
+    "low_findings": 3,
+    "corrective_actions_validated": 3,
+    "new_issues_found": 3,
+    "recommendation": "Corriger le finding HIGH (print statements) avant commit. Les corrections NaN/Infinity et RGPD sont validées."
+  },
+  "corrections_validated": [
+    {
+      "gap_id": "GAP-PLN-001",
+      "correction": "Validation NaN/Infinity dans planning_schemas.py",
+      "location": "backend/modules/planning/adapters/controllers/planning_schemas.py:83-100",
+      "status": "VALIDATED",
+      "verification": {
+        "validator_implemented": true,
+        "uses_math_module": true,
+        "checks_isnan": true,
+        "checks_isinf": true,
+        "error_message_clear": true,
+        "applied_to_field": "heures_prevues"
+      },
+      "code_snippet": "@field_validator(\"heures_prevues\")\n@classmethod\ndef validate_heures_prevues(cls, v: float) -> float:\n    if math.isnan(v) or math.isinf(v):\n        raise ValueError(\"heures_prevues ne peut pas etre NaN ou Infinity\")\n    return v",
+      "security_impact": "Empêche les valeurs NaN/Infinity de corrompre les données de paie et de planification",
+      "compliance": "OWASP Input Validation"
+    },
+    {
+      "gap_id": "GAP-PLN-005",
+      "correction": "Logs sensibles en DEBUG dans planning_controller.py",
+      "location": "backend/modules/planning/adapters/controllers/planning_controller.py:204-208",
+      "status": "VALIDATED",
+      "verification": {
+        "uses_logger_debug": true,
+        "logs_user_ids": true,
+        "logs_business_data": true,
+        "no_logger_info_for_sensitive": true,
+        "consistent_pattern": true
+      },
+      "code_snippet": "logger.debug(\n    f\"Creation affectation: user={request.utilisateur_id}, \"\n    f\"chantier={request.chantier_id}, date={request.date}, \"\n    f\"heures_prevues={request.heures_prevues}, created_by={current_user_id}\"\n)",
+      "security_impact": "Réduit l'exposition des données sensibles dans les logs de production (niveau INFO désactivé par défaut)",
+      "compliance": "RGPD Article 32 - Minimisation des données dans les logs",
+      "remaining_concern": "Les logs DEBUG contiennent toujours des user_id et chantier_id, mais c'est acceptable car DEBUG est désactivé en production"
+    },
+    {
+      "gap_id": "GAP-PLN-006",
+      "correction": "Conversion type sécurisée dans event_handlers.py",
+      "location": "backend/modules/planning/infrastructure/event_handlers.py:31-42",
+      "status": "VALIDATED",
+      "verification": {
+        "defensive_extraction": true,
+        "handles_dict_and_dataclass": true,
+        "uses_get_with_defaults": true,
+        "uses_getattr_with_defaults": true,
+        "validates_before_use": true
+      },
+      "code_snippet": "data = event.data if hasattr(event, 'data') and isinstance(event.data, dict) else {}\nchantier_id = data.get('chantier_id') or getattr(event, 'chantier_id', None)\nnouveau_statut = data.get('nouveau_statut') or getattr(event, 'nouveau_statut', '')",
+      "security_impact": "Évite les AttributeError et garantit la robustesse du système d'événements",
+      "compliance": "Defensive Programming Best Practice"
+    }
+  ],
+  "new_findings": [
+    {
+      "id": "FIND-PLN-007",
+      "severity": "HIGH",
+      "type": "Information Disclosure",
+      "category": "Logging & Error Handling",
+      "location": "backend/modules/planning/infrastructure/web/planning_routes.py:180-182",
+      "description": "Utilisation de print() pour afficher les erreurs et stack traces en production",
+      "evidence": "print(f\"[ERROR] get_planning failed: {e}\")\nprint(traceback.format_exc())",
+      "impact": "Les erreurs et stack traces sont exposées dans stdout, potentiellement accessibles aux attaquants. Les informations de debug peuvent révéler la structure interne de l'application.",
+      "exploitation": "Un attaquant peut déclencher des erreurs intentionnelles pour collecter des informations sur l'architecture, les chemins de fichiers, et les dépendances.",
+      "remediation": {
+        "action": "Remplacer print() par logger.error() ou logger.exception()",
+        "code": "logger.exception(f\"Erreur lors du chargement du planning: {e}\")",
+        "priority": "HIGH",
+        "effort": "15 minutes"
+      },
+      "references": [
+        "OWASP Top 10 2021 - A09:2021 Security Logging and Monitoring Failures",
+        "CWE-209: Generation of Error Message Containing Sensitive Information"
+      ]
+    },
+    {
+      "id": "FIND-PLN-008",
+      "severity": "MEDIUM",
+      "type": "CSRF Protection",
+      "category": "Web Security",
+      "location": "backend/modules/planning/infrastructure/web/planning_routes.py",
+      "description": "Absence de protection CSRF explicite sur les routes POST/PUT/DELETE",
+      "impact": "Les routes de modification (création, mise à jour, suppression d'affectations) ne vérifient pas les tokens CSRF. Un attaquant peut forcer un utilisateur authentifié à effectuer des actions non désirées.",
+      "exploitation": "Un site malveillant peut créer une requête POST vers /planning/affectations avec les cookies de session de la victime.",
+      "remediation": {
+        "action": "Implémenter fastapi-csrf-protect sur toutes les routes de modification",
+        "code": "from fastapi_csrf_protect import CsrfProtect\n\n@router.post(\"/affectations\")\nasync def create_affectation(csrf_protect: CsrfProtect = Depends()):\n    await csrf_protect.validate_csrf(request)",
+        "priority": "MEDIUM",
+        "effort": "2-4 heures",
+        "note": "Vérifier si FastAPI utilise déjà une protection CSRF au niveau global avant d'implémenter"
+      },
+      "references": [
+        "OWASP Top 10 2021 - A01:2021 Broken Access Control",
+        "CWE-352: Cross-Site Request Forgery (CSRF)"
+      ]
+    },
+    {
+      "id": "FIND-PLN-009",
+      "severity": "MEDIUM",
+      "type": "Rate Limiting",
+      "category": "API Security",
+      "location": "backend/modules/planning/infrastructure/web/planning_routes.py",
+      "description": "Absence de rate limiting sur les endpoints API",
+      "impact": "Un attaquant peut effectuer un grand nombre de requêtes pour surcharger le serveur ou tenter une énumération d'IDs.",
+      "exploitation": "Attaque par déni de service (DoS) ou énumération d'affectations via /affectations/{affectation_id}.",
+      "remediation": {
+        "action": "Implémenter slowapi ou fastapi-limiter pour limiter les requêtes par utilisateur",
+        "code": "from slowapi import Limiter\n\n@router.get(\"/affectations\")\n@limiter.limit(\"100/minute\")\nasync def get_planning(...):",
+        "priority": "MEDIUM",
+        "effort": "1-2 heures"
+      },
+      "references": [
+        "OWASP API Security Top 10 - API4:2023 Unrestricted Resource Consumption",
+        "CWE-770: Allocation of Resources Without Limits or Throttling"
+      ]
+    }
+  ],
+  "low_severity_observations": [
+    {
+      "id": "OBS-PLN-001",
+      "severity": "LOW",
+      "type": "Code Quality",
+      "category": "Error Handling",
+      "location": "backend/modules/planning/infrastructure/web/planning_routes.py:179-183",
+      "description": "Catch générique Exception au lieu d'exceptions spécifiques",
+      "recommendation": "Capturer les exceptions spécifiques attendues (ValueError, AffectationNotFoundError) plutôt qu'Exception générique",
+      "impact": "Difficulté de débogage et risque de masquer des erreurs inattendues"
+    },
+    {
+      "id": "OBS-PLN-002",
+      "severity": "LOW",
+      "type": "Input Validation",
+      "category": "Data Validation",
+      "location": "backend/modules/planning/adapters/controllers/planning_schemas.py",
+      "description": "Validation des champs note limitée à max_length seulement",
+      "recommendation": "Ajouter une sanitization HTML pour les champs note (bleach.clean) pour prévenir XSS",
+      "code": "@field_validator('note')\n@classmethod\ndef sanitize_note(cls, v: Optional[str]) -> Optional[str]:\n    if v:\n        return bleach.clean(v)\n    return v",
+      "impact": "Risque faible de XSS si les notes sont affichées sans échappement côté frontend"
+    },
+    {
+      "id": "OBS-PLN-003",
+      "severity": "LOW",
+      "type": "SQL Injection",
+      "category": "Database Security",
+      "location": "backend/modules/planning/infrastructure/persistence/sqlalchemy_affectation_repository.py",
+      "description": "Repository utilise SQLAlchemy ORM correctement (aucune concaténation SQL détectée)",
+      "status": "PASS",
+      "verification": "Toutes les requêtes utilisent les paramètres bindés de SQLAlchemy. Aucune vulnérabilité SQL injection détectée.",
+      "recommendation": "Continuer à utiliser l'ORM SQLAlchemy et éviter les requêtes raw SQL"
+    }
+  ],
+  "compliance_status": {
+    "RGPD": {
+      "status": "PARTIAL_COMPLIANCE",
+      "compliant_items": [
+        "Logs sensibles en DEBUG (minimisation des données)",
+        "Pas de données personnelles en clair dans les logs INFO/WARNING",
+        "Validation des entrées pour éviter la corruption de données"
+      ],
+      "non_compliant_items": [
+        "Logs DEBUG contiennent toujours des user_id (acceptable si désactivé en production)",
+        "Absence de mécanisme de suppression automatique des logs anciens (à vérifier au niveau infra)"
+      ],
+      "recommendations": [
+        "Documenter la politique de rétention des logs",
+        "Implémenter un mécanisme d'anonymisation des logs après X jours",
+        "Vérifier que les logs DEBUG sont désactivés en production"
+      ]
+    },
+    "OWASP_Top10": {
+      "status": "PASS",
+      "A01_Broken_Access_Control": {
+        "status": "PASS",
+        "note": "Contrôle d'accès basé sur les rôles implémenté (admin, conducteur, chef, compagnon)"
+      },
+      "A02_Cryptographic_Failures": {
+        "status": "PASS",
+        "note": "Pas de données sensibles stockées en clair (sauf logs DEBUG à vérifier)"
+      },
+      "A03_Injection": {
+        "status": "PASS",
+        "note": "Utilisation de SQLAlchemy ORM, Pydantic validation, pas de SQL injection détectée"
+      },
+      "A04_Insecure_Design": {
+        "status": "PARTIAL",
+        "note": "Absence de CSRF protection et rate limiting (MEDIUM severity)"
+      },
+      "A05_Security_Misconfiguration": {
+        "status": "CONDITIONAL",
+        "note": "Print statements en production (HIGH severity) - doit être corrigé"
+      },
+      "A06_Vulnerable_Components": {
+        "status": "PASS",
+        "note": "Utilisation de FastAPI, SQLAlchemy, Pydantic (versions à auditer séparément)"
+      },
+      "A07_Authentication_Failures": {
+        "status": "NOT_APPLICABLE",
+        "note": "Gestion d'authentification déléguée au module auth"
+      },
+      "A08_Software_Data_Integrity": {
+        "status": "PASS",
+        "note": "Validation NaN/Infinity implémentée, event handlers robustes"
+      },
+      "A09_Logging_Monitoring": {
+        "status": "CONDITIONAL",
+        "note": "Print statements au lieu de logger (HIGH severity) - doit être corrigé"
+      },
+      "A10_Server_Side_Request_Forgery": {
+        "status": "NOT_APPLICABLE",
+        "note": "Pas de requêtes sortantes vers des URLs fournies par l'utilisateur"
+      }
+    },
+    "ISO_27001": {
+      "status": "PARTIAL_COMPLIANCE",
+      "A.8.2_Information_Classification": "PASS - Logs sensibles en DEBUG",
+      "A.9.4_Access_Control": "PASS - RBAC implémenté",
+      "A.12.4_Logging_Monitoring": "CONDITIONAL - Print statements à corriger",
+      "A.14.2_Security_Dev": "PASS - Validation des entrées, code reviews"
+    }
+  },
+  "security_checklist": {
+    "injection_prevention": {
+      "sql_injection": "PASS",
+      "xss_prevention": "PARTIAL (sanitization HTML manquante pour champs note)",
+      "command_injection": "PASS",
+      "ldap_injection": "NOT_APPLICABLE"
+    },
+    "authentication_authorization": {
+      "password_hashing": "NOT_APPLICABLE (délégué au module auth)",
+      "session_management": "NOT_APPLICABLE (délégué au module auth)",
+      "rbac": "PASS",
+      "csrf_protection": "FAIL (à implémenter)"
+    },
+    "data_protection": {
+      "encryption_at_rest": "NOT_VERIFIED",
+      "encryption_in_transit": "NOT_VERIFIED (assumé HTTPS au niveau infra)",
+      "sensitive_data_logs": "PASS (DEBUG level)",
+      "pii_minimization": "PASS"
+    },
+    "error_handling": {
+      "generic_error_messages": "PASS",
+      "stack_traces_hidden": "FAIL (print statements exposent stack traces)",
+      "logging_errors": "CONDITIONAL (print au lieu de logger)"
+    },
+    "api_security": {
+      "rate_limiting": "FAIL (à implémenter)",
+      "input_validation": "PASS (Pydantic)",
+      "output_encoding": "PASS (FastAPI JSON encoding)",
+      "cors_configuration": "NOT_VERIFIED"
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "action": "Remplacer print() par logger.error() dans planning_routes.py",
+      "effort": "15 minutes",
+      "impact": "Évite l'exposition d'informations sensibles dans stdout"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Implémenter CSRF protection sur les routes POST/PUT/DELETE",
+      "effort": "2-4 heures",
+      "impact": "Protège contre les attaques CSRF"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Implémenter rate limiting sur les endpoints API",
+      "effort": "1-2 heures",
+      "impact": "Protège contre les attaques DoS et l'énumération"
+    },
+    {
+      "priority": "LOW",
+      "action": "Ajouter sanitization HTML pour le champ note",
+      "effort": "30 minutes",
+      "impact": "Prévention XSS additionnelle"
+    },
+    {
+      "priority": "LOW",
+      "action": "Remplacer catch Exception générique par exceptions spécifiques",
+      "effort": "1 heure",
+      "impact": "Améliore la qualité du code et le débogage"
+    }
+  ],
+  "final_verdict": {
+    "status": "CONDITIONAL_PASS",
+    "condition": "Corriger le finding HIGH (FIND-PLN-007) avant commit",
+    "corrections_validated": 3,
+    "new_critical_issues": 0,
+    "new_high_issues": 1,
+    "ready_for_production": false,
+    "next_steps": [
+      "Corriger FIND-PLN-007 (print statements) - OBLIGATOIRE",
+      "Valider que les logs DEBUG sont désactivés en production",
+      "Planifier l'implémentation CSRF protection (MEDIUM)",
+      "Planifier l'implémentation rate limiting (MEDIUM)"
+    ]
+  },
+  "audit_trail": {
+    "files_audited": [
+      "backend/modules/planning/adapters/controllers/planning_schemas.py",
+      "backend/modules/planning/adapters/controllers/planning_controller.py",
+      "backend/modules/planning/infrastructure/event_handlers.py",
+      "backend/modules/planning/infrastructure/web/planning_routes.py",
+      "backend/modules/planning/infrastructure/web/dependencies.py",
+      "backend/modules/planning/infrastructure/persistence/sqlalchemy_affectation_repository.py"
+    ],
+    "total_files_scanned": 83,
+    "vulnerabilities_patterns_searched": [
+      "SQL injection (concaténation SQL)",
+      "eval/exec usage",
+      "hardcoded secrets",
+      "print statements",
+      "password/token exposure",
+      "NaN/Infinity handling",
+      "logging sensitive data"
+    ],
+    "tools_used": [
+      "Grep (pattern matching)",
+      "Read (code review)",
+      "Manual code analysis"
+    ]
+  }
+}

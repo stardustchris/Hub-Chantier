@@ -9,6 +9,10 @@ from shared.infrastructure.database import SessionLocal
 from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from modules.dashboard.domain.events import CommentAddedEvent, LikeAddedEvent
 from modules.pointages.domain.events.heures_validated import HeuresValidatedEvent
+from modules.pointages.domain.events import (
+    PointageSubmittedEvent,
+    PointageRejectedEvent,
+)
 from ..domain.entities import Notification
 from ..domain.value_objects import NotificationType
 from .persistence import SQLAlchemyNotificationRepository
@@ -318,6 +322,92 @@ def handle_chantier_statut_changed(event) -> None:
         db.close()
 
 
+@event_handler(PointageSubmittedEvent)
+def handle_pointage_submitted(event: PointageSubmittedEvent) -> None:
+    """
+    Gere l'evenement PointageSubmittedEvent (GAP-FDH-007).
+
+    Notifie le chef de chantier ou conducteur de travaux qu'un compagnon
+    a soumis ses heures pour validation.
+    """
+    logger.info(
+        f"Handling PointageSubmittedEvent: pointage_id={event.pointage_id}, "
+        f"utilisateur_id={event.utilisateur_id}, chantier_id={event.chantier_id}"
+    )
+
+    db = SessionLocal()
+    try:
+        repo = SQLAlchemyNotificationRepository(db)
+        compagnon_name = get_user_name(db, event.utilisateur_id)
+
+        # Recupere les chefs et conducteurs du chantier
+        destinataires = _get_chantier_users(db, event.chantier_id)
+
+        # Ne pas notifier le compagnon lui-meme si jamais il est aussi chef
+        destinataires = [uid for uid in destinataires if uid != event.utilisateur_id]
+
+        date_str = event.date_pointage.strftime("%d/%m/%Y")
+
+        for user_id in destinataires:
+            notification = Notification(
+                user_id=user_id,
+                type=NotificationType.SYSTEM,
+                title="Heures soumises pour validation",
+                message=f"{compagnon_name} a soumis ses heures du {date_str}",
+                related_chantier_id=event.chantier_id,
+                triggered_by_user_id=event.utilisateur_id,
+            )
+            repo.save(notification)
+            logger.info(f"Created pointage submitted notification for user {user_id}")
+
+    except Exception as e:
+        logger.error(f"Error handling PointageSubmittedEvent: {e}")
+    finally:
+        db.close()
+
+
+@event_handler(PointageRejectedEvent)
+def handle_pointage_rejected(event: PointageRejectedEvent) -> None:
+    """
+    Gere l'evenement PointageRejectedEvent (GAP-FDH-007).
+
+    Notifie le compagnon que ses heures ont ete rejetees avec le motif.
+    """
+    logger.info(
+        f"Handling PointageRejectedEvent: pointage_id={event.pointage_id}, "
+        f"utilisateur_id={event.utilisateur_id}, validateur_id={event.validateur_id}"
+    )
+
+    # Ne pas notifier si le compagnon rejette ses propres heures
+    if event.utilisateur_id == event.validateur_id:
+        logger.info(f"Auto-rejet heures user_id={event.utilisateur_id}, pas de notification")
+        return
+
+    db = SessionLocal()
+    try:
+        repo = SQLAlchemyNotificationRepository(db)
+        validator_name = get_user_name(db, event.validateur_id)
+        date_str = event.date_pointage.strftime("%d/%m/%Y")
+
+        message = f"{validator_name} a rejete vos heures du {date_str}. Motif: {event.motif}"
+
+        notification = Notification(
+            user_id=event.utilisateur_id,
+            type=NotificationType.SYSTEM,
+            title="Heures rejetees",
+            message=message,
+            related_chantier_id=event.chantier_id,
+            triggered_by_user_id=event.validateur_id,
+        )
+        repo.save(notification)
+        logger.info(f"Created pointage rejected notification for user {event.utilisateur_id}")
+
+    except Exception as e:
+        logger.error(f"Error handling PointageRejectedEvent: {e}")
+    finally:
+        db.close()
+
+
 def register_notification_handlers() -> None:
     """
     Enregistre tous les handlers de notifications.
@@ -328,5 +418,6 @@ def register_notification_handlers() -> None:
     """
     logger.info(
         "Notification event handlers registered "
-        "(comment, like, heures.validated, chantier.created, chantier.statut_changed)"
+        "(comment, like, heures.validated, pointage.submitted, pointage.rejected, "
+        "chantier.created, chantier.statut_changed)"
     )

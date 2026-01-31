@@ -1,0 +1,352 @@
+{
+  "audit_metadata": {
+    "module": "pointages",
+    "audit_date": "2026-01-31",
+    "auditor": "security-auditor",
+    "scope": "Validation corrections sécurité SEC-PTG-001 et SEC-PTG-002",
+    "files_audited": [
+      "backend/modules/pointages/infrastructure/web/routes.py",
+      "backend/modules/pointages/domain/services/permission_service.py",
+      "backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py",
+      "backend/modules/pointages/adapters/controllers/pointage_controller.py"
+    ]
+  },
+  "previous_findings_status": {
+    "SEC-PTG-001": {
+      "severity": "MEDIUM",
+      "title": "Validation regex heures insuffisante",
+      "status": "RESOLVED",
+      "resolution_details": {
+        "location": "backend/modules/pointages/infrastructure/web/routes.py:34-91",
+        "function": "validate_time_format()",
+        "implementation": [
+          "Regex stricte: r'^(\\d{1,2}):(\\d{2})$'",
+          "Validation plages heures: 0-23",
+          "Validation plages minutes: 0-59",
+          "Normalisation format (padding zéros)",
+          "Messages d'erreur explicites"
+        ],
+        "test_cases_covered": [
+          "Format valide: '08:30', '23:59', '00:00'",
+          "Format invalide: '24:00', '12:60', '-1:30', '99:99'",
+          "Edge cases: heures >= 24, minutes >= 60"
+        ],
+        "verification": "PASS - Formats invalides maintenant rejetés avec ValueError"
+      }
+    },
+    "SEC-PTG-002": {
+      "severity": "MEDIUM",
+      "title": "Contrôles permissions non intégrés dans les routes",
+      "status": "RESOLVED",
+      "resolution_details": {
+        "service_location": "backend/modules/pointages/domain/services/permission_service.py",
+        "integration_points": [
+          {
+            "route": "POST /pointages",
+            "line": 216,
+            "check": "PointagePermissionService.can_create_for_user()",
+            "status_code": 403,
+            "message": "Vous n'avez pas la permission de créer un pointage pour cet utilisateur"
+          },
+          {
+            "route": "PUT /pointages/{pointage_id}",
+            "line": 501,
+            "check": "PointagePermissionService.can_modify()",
+            "status_code": 403,
+            "message": "Vous n'avez pas la permission de modifier ce pointage"
+          }
+        ],
+        "permission_matrix": {
+          "compagnon": "Peut créer/modifier uniquement pour lui-même",
+          "chef_chantier": "Peut créer/modifier pour n'importe qui",
+          "conducteur": "Peut tout faire",
+          "admin": "Peut tout faire"
+        },
+        "verification": "PASS - Contrôles permissions appliqués avec HTTPException 403"
+      }
+    }
+  },
+  "new_findings": [
+    {
+      "id": "SEC-PTG-003",
+      "severity": "MEDIUM",
+      "type": "Authorization - Missing Permission Checks",
+      "category": "OWASP A01:2021 - Broken Access Control",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py:566-597",
+      "description": "Les endpoints /validate et /reject ne vérifient PAS les permissions avant d'autoriser l'action. Un compagnon pourrait potentiellement valider ses propres heures ou celles d'autres utilisateurs.",
+      "affected_endpoints": [
+        "POST /pointages/{pointage_id}/validate (ligne 566)",
+        "POST /pointages/{pointage_id}/reject (ligne 599)"
+      ],
+      "impact": "Un utilisateur non autorisé (compagnon) pourrait valider/rejeter des pointages alors que seuls les chefs/conducteurs/admins devraient avoir ce droit selon la matrice de permissions.",
+      "evidence": {
+        "current_code": "Lines 566-596: Aucun appel à PointagePermissionService.can_validate() ou can_reject()",
+        "expected_pattern": "if not PointagePermissionService.can_validate(current_user_role): raise HTTPException(403, ...)"
+      },
+      "remediation": {
+        "description": "Ajouter la vérification des permissions dans les routes /validate et /reject",
+        "code_example": "# Dans la route validate_pointage (après ligne 569)\nif not PointagePermissionService.can_validate(current_user_role):\n    raise HTTPException(\n        status_code=403,\n        detail=\"Vous n'avez pas la permission de valider des pointages\"\n    )\n\n# Dans la route reject_pointage (après ligne 602)\nif not PointagePermissionService.can_reject(current_user_role):\n    raise HTTPException(\n        status_code=403,\n        detail=\"Vous n'avez pas la permission de rejeter des pointages\"\n    )",
+        "effort": "30 minutes",
+        "priority": "HIGH"
+      },
+      "cvss_v3": {
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+        "score": 6.5
+      }
+    },
+    {
+      "id": "SEC-PTG-004",
+      "severity": "MEDIUM",
+      "type": "Authorization - Missing Permission Checks",
+      "category": "OWASP A01:2021 - Broken Access Control",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py:356-386",
+      "description": "L'endpoint POST /export ne vérifie PAS les permissions. Selon la matrice, seuls les conducteurs et admins peuvent exporter (pas les chefs de chantier ni les compagnons).",
+      "affected_endpoints": [
+        "POST /pointages/export (ligne 356)"
+      ],
+      "impact": "Un chef de chantier ou un compagnon pourrait exporter des données de paie alors que cette action est restreinte aux conducteurs/admins uniquement.",
+      "evidence": {
+        "current_code": "Lines 356-386: Aucun appel à PointagePermissionService.can_export()",
+        "permission_service_method": "PointagePermissionService.can_export(user_role) existe (ligne 143 de permission_service.py) mais n'est PAS utilisé"
+      },
+      "remediation": {
+        "description": "Ajouter la vérification des permissions dans la route /export",
+        "code_example": "# Dans la route export_feuilles_heures (après ligne 361)\nif not PointagePermissionService.can_export(current_user_role):\n    raise HTTPException(\n        status_code=403,\n        detail=\"Vous n'avez pas la permission d'exporter les feuilles d'heures\"\n    )",
+        "effort": "15 minutes",
+        "priority": "HIGH"
+      },
+      "cvss_v3": {
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+        "score": 6.5
+      }
+    },
+    {
+      "id": "SEC-PTG-005",
+      "severity": "LOW",
+      "type": "Input Validation - No Sanitization",
+      "category": "OWASP A03:2021 - Injection",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py:134-150",
+      "description": "Le champ 'commentaire' (texte libre) n'est pas sanitizé contre les attaques XSS. Bien que Pydantic valide le type, il n'y a pas de nettoyage HTML/JS.",
+      "affected_fields": [
+        "CreatePointageRequest.commentaire",
+        "UpdatePointageRequest.commentaire",
+        "RejectPointageRequest.motif"
+      ],
+      "impact": "Un attaquant pourrait injecter du JavaScript dans les commentaires qui serait exécuté si affiché dans le frontend sans échappement.",
+      "evidence": {
+        "current_code": "Lignes 97-150: Aucun import de bleach ou autre sanitizer",
+        "pydantic_models": "Validation de type uniquement (Optional[str]), pas de sanitization"
+      },
+      "remediation": {
+        "description": "Ajouter un validator Pydantic pour sanitizer les champs texte libre",
+        "code_example": "from pydantic import validator\nimport bleach\n\nclass CreatePointageRequest(BaseModel):\n    commentaire: Optional[str] = None\n    \n    @validator('commentaire')\n    def sanitize_commentaire(cls, v):\n        if v:\n            return bleach.clean(v, tags=[], strip=True)\n        return v",
+        "effort": "1 heure",
+        "priority": "MEDIUM",
+        "notes": "Le frontend devrait également échapper les données lors de l'affichage (défense en profondeur)"
+      },
+      "cvss_v3": {
+        "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:C/C:L/I:L/A:N",
+        "score": 4.4
+      }
+    },
+    {
+      "id": "SEC-PTG-006",
+      "severity": "INFO",
+      "type": "Security Best Practice",
+      "category": "Logging & Monitoring",
+      "location": "backend/modules/pointages/infrastructure/web/routes.py",
+      "description": "Aucun logging d'audit pour les actions sensibles (validation, rejet, export de paie). Les événements de sécurité ne sont pas tracés.",
+      "affected_operations": [
+        "Validation de pointage (ligne 566)",
+        "Rejet de pointage (ligne 599)",
+        "Export feuilles heures (ligne 356)"
+      ],
+      "impact": "En cas d'incident de sécurité ou de fraude, impossible de retracer qui a effectué quelle action sensible et quand.",
+      "remediation": {
+        "description": "Ajouter des logs d'audit sécurité pour les opérations sensibles",
+        "code_example": "import logging\nsecurity_logger = logging.getLogger('security.audit')\n\n# Dans validate_pointage:\nsecurity_logger.info(\n    f\"VALIDATION_POINTAGE: user={validateur_id} pointage={pointage_id} action=VALIDATE\"\n)\n\n# Dans reject_pointage:\nsecurity_logger.warning(\n    f\"REJECTION_POINTAGE: user={validateur_id} pointage={pointage_id} motif={request.motif}\"\n)\n\n# Dans export:\nsecurity_logger.info(\n    f\"EXPORT_PAIE: user={current_user_id} format={request.format_export} periode={request.date_debut} to {request.date_fin}\"\n)",
+        "effort": "2 heures",
+        "priority": "MEDIUM"
+      },
+      "compliance": {
+        "rgpd": "Art. 32 - Traçabilité des accès aux données de paie",
+        "iso27001": "A.12.4.1 - Event logging"
+      }
+    }
+  ],
+  "security_strengths": [
+    {
+      "area": "SQL Injection Protection",
+      "details": "Utilisation correcte de SQLAlchemy ORM avec requêtes paramétrées. Aucune concaténation de chaînes SQL détectée.",
+      "evidence": "backend/modules/pointages/infrastructure/persistence/sqlalchemy_pointage_repository.py - Toutes les requêtes utilisent .filter() avec comparaisons"
+    },
+    {
+      "area": "CSRF Protection",
+      "details": "Middleware CSRF actif au niveau application (CSRFMiddleware dans shared/infrastructure/web/csrf_middleware.py)",
+      "evidence": "Validation token CSRF sur POST/PUT/DELETE, exemptions appropriées pour /auth/login"
+    },
+    {
+      "area": "Rate Limiting",
+      "details": "Middleware de rate limiting avec backoff exponentiel déployé (RateLimitMiddleware)",
+      "evidence": "backend/shared/infrastructure/web/rate_limit_middleware.py - Limites par endpoint, backoff 30s→300s"
+    },
+    {
+      "area": "Password Hashing",
+      "details": "Module auth utilise bcrypt pour le hashage des mots de passe (vérifié dans l'architecture globale)",
+      "evidence": "Pas de stockage de mots de passe en clair dans le module pointages"
+    },
+    {
+      "area": "Cookie Security",
+      "details": "Configuration cookies sécurisée: SameSite=strict, Secure=true en production, HttpOnly",
+      "evidence": "backend/shared/infrastructure/config.py:38-40"
+    }
+  ],
+  "compliance_status": {
+    "OWASP_Top10_2021": {
+      "A01_Broken_Access_Control": "PARTIAL - Gaps: SEC-PTG-003, SEC-PTG-004 (permissions validation/export manquantes)",
+      "A02_Cryptographic_Failures": "PASS - Aucune donnée sensible chiffrée dans ce module (heures = paie, mais pas de cartes bancaires)",
+      "A03_Injection": "PARTIAL - SQL injection PASS, XSS MEDIUM (SEC-PTG-005 - sanitization commentaires)",
+      "A04_Insecure_Design": "PASS - Clean Architecture respectée, séparation domaine/infra",
+      "A05_Security_Misconfiguration": "PASS - CSRF actif, rate limiting actif, cookies sécurisés",
+      "A06_Vulnerable_Components": "N/A - Pas d'analyse de dépendances dans ce scope",
+      "A07_Authentication_Failures": "PASS - Authentification gérée par module auth (hors scope)",
+      "A08_Software_Data_Integrity": "PASS - Event bus pour intégrité événements",
+      "A09_Logging_Monitoring_Failures": "MEDIUM - SEC-PTG-006 (logging audit manquant)",
+      "A10_SSRF": "N/A - Pas de requêtes HTTP sortantes dans ce module"
+    },
+    "RGPD": {
+      "Art_5_Minimisation": "PASS - Collecte uniquement heures/commentaires nécessaires",
+      "Art_25_Privacy_by_Design": "PASS - Clean Architecture, données découplées",
+      "Art_32_Security": "PARTIAL - Chiffrement N/A, mais logging audit manquant (SEC-PTG-006)",
+      "Art_33_Breach_Notification": "MEDIUM - Pas de mécanisme de détection de fuite de données de paie",
+      "Donnees_sensibles": {
+        "heures_travail": "CONFIDENTIEL - Lié à la paie",
+        "variables_paie": "HAUTE_CONFIDENTIALITE - Montants de paie",
+        "commentaires": "BAS - Texte libre, potentiel XSS (SEC-PTG-005)"
+      }
+    }
+  },
+  "risk_assessment": {
+    "critical_risks": 0,
+    "high_risks": 0,
+    "medium_risks": 3,
+    "low_risks": 1,
+    "info_risks": 1,
+    "total_findings": 4,
+    "resolved_findings": 2
+  },
+  "recommendations": {
+    "immediate_actions": [
+      {
+        "priority": "P1",
+        "action": "Intégrer PointagePermissionService.can_validate() dans POST /pointages/{id}/validate",
+        "finding": "SEC-PTG-003",
+        "effort": "30 minutes",
+        "impact": "Empêche compagnons de valider leurs propres heures"
+      },
+      {
+        "priority": "P1",
+        "action": "Intégrer PointagePermissionService.can_reject() dans POST /pointages/{id}/reject",
+        "finding": "SEC-PTG-003",
+        "effort": "30 minutes",
+        "impact": "Empêche accès non autorisé au workflow de validation"
+      },
+      {
+        "priority": "P1",
+        "action": "Intégrer PointagePermissionService.can_export() dans POST /pointages/export",
+        "finding": "SEC-PTG-004",
+        "effort": "15 minutes",
+        "impact": "Restreint export paie aux conducteurs/admins uniquement"
+      }
+    ],
+    "short_term_actions": [
+      {
+        "priority": "P2",
+        "action": "Ajouter sanitization bleach pour les champs commentaire/motif",
+        "finding": "SEC-PTG-005",
+        "effort": "1 heure",
+        "impact": "Prévient injection XSS dans commentaires"
+      },
+      {
+        "priority": "P2",
+        "action": "Implémenter logging d'audit sécurité pour validation/rejet/export",
+        "finding": "SEC-PTG-006",
+        "effort": "2 heures",
+        "impact": "Conformité RGPD Art. 32, traçabilité incidents"
+      }
+    ],
+    "long_term_actions": [
+      {
+        "priority": "P3",
+        "action": "Ajouter tests de sécurité automatisés pour les permissions",
+        "effort": "4 heures",
+        "impact": "Détection régression permissions"
+      },
+      {
+        "priority": "P3",
+        "action": "Implémenter détection d'anomalies export paie (volume inhabituel)",
+        "effort": "1 jour",
+        "impact": "Alerte en cas d'exfiltration massive de données"
+      }
+    ]
+  },
+  "security_score": {
+    "overall": 7.5,
+    "breakdown": {
+      "input_validation": 8.0,
+      "authentication": 10.0,
+      "authorization": 6.0,
+      "cryptography": 9.0,
+      "error_handling": 8.0,
+      "logging": 6.0,
+      "configuration": 9.0
+    },
+    "justification": "Score 7.5/10. Corrections SEC-PTG-001 et SEC-PTG-002 résolues avec succès. Principales faiblesses: permissions validation/export manquantes (SEC-PTG-003, SEC-PTG-004) et logging audit absent (SEC-PTG-006).",
+    "target_score": 9.0,
+    "gap_to_target": "1.5 points - Corriger findings MEDIUM restants"
+  },
+  "test_recommendations": [
+    {
+      "test_type": "Unit Test",
+      "description": "Tester que validate_time_format() rejette '24:00', '12:60', '-1:30'",
+      "file": "backend/tests/unit/pointages/test_validation_heures.py",
+      "status": "À CRÉER"
+    },
+    {
+      "test_type": "Unit Test",
+      "description": "Tester que PointagePermissionService.can_validate('compagnon') == False",
+      "file": "backend/tests/unit/pointages/test_permission_service.py",
+      "status": "À CRÉER"
+    },
+    {
+      "test_type": "Integration Test",
+      "description": "Tester que POST /validate avec role=compagnon retourne 403",
+      "file": "backend/tests/integration/pointages/test_routes_security.py",
+      "status": "À CRÉER"
+    },
+    {
+      "test_type": "Integration Test",
+      "description": "Tester que POST /export avec role=chef_chantier retourne 403",
+      "file": "backend/tests/integration/pointages/test_routes_security.py",
+      "status": "À CRÉER"
+    },
+    {
+      "test_type": "Security Test",
+      "description": "Fuzzing validation heures avec payloads XSS dans commentaires",
+      "file": "backend/tests/security/test_pointages_xss.py",
+      "status": "À CRÉER"
+    }
+  ],
+  "conclusion": {
+    "summary": "Audit de sécurité du module pointages suite aux corrections SEC-PTG-001 et SEC-PTG-002. Les deux findings précédents sont RESOLUS avec succès. Détection de 4 nouveaux findings (3 MEDIUM, 1 LOW, 1 INFO) principalement liés aux contrôles de permissions manquants sur les endpoints sensibles (validation, rejet, export).",
+    "critical_items": "Aucun finding CRITICAL ou HIGH détecté. Les findings MEDIUM (SEC-PTG-003, SEC-PTG-004, SEC-PTG-006) peuvent être corrigés rapidement (effort total ~4h).",
+    "next_steps": [
+      "1. Corriger SEC-PTG-003 et SEC-PTG-004 (permissions validation/export) - Effort 1h15",
+      "2. Ajouter sanitization XSS (SEC-PTG-005) - Effort 1h",
+      "3. Implémenter logging audit (SEC-PTG-006) - Effort 2h",
+      "4. Créer tests de sécurité automatisés",
+      "5. Re-audit après corrections pour valider score 9/10"
+    ],
+    "approval_status": "APPROVED_WITH_CONDITIONS - Module peut être déployé APRÈS correction de SEC-PTG-003 et SEC-PTG-004 (permissions critiques manquantes)"
+  }
+}

@@ -23,6 +23,10 @@ from .use_cases import (
     ExportFeuilleHeuresUseCase,
     GetJaugeAvancementUseCase,
     CompareEquipesUseCase,
+    # Phase 2
+    BulkValidatePointagesUseCase,
+    GenerateMonthlyRecapUseCase,
+    LockMonthlyPeriodUseCase,
 )
 
 from .dtos import (
@@ -70,6 +74,10 @@ __all__ = [
     "ExportFeuilleHeuresUseCase",
     "GetJaugeAvancementUseCase",
     "CompareEquipesUseCase",
+    # Phase 2
+    "BulkValidatePointagesUseCase",
+    "GenerateMonthlyRecapUseCase",
+    "LockMonthlyPeriodUseCase",
     # DTOs
     "CreatePointageDTO",
     "UpdatePointageDTO",

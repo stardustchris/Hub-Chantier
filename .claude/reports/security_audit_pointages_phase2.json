@@ -1,0 +1,341 @@
+{
+  "audit_scope": "Module pointages - Phase 2 (4 nouvelles fonctionnalités)",
+  "audit_date": "2026-01-31",
+  "auditor": "Security Auditor Agent",
+  "module": "pointages",
+  "phase": "Phase 2 - GAP-FDH-004, GAP-FDH-008, GAP-FDH-009",
+
+  "features_audited": [
+    {
+      "gap_id": "GAP-FDH-004",
+      "name": "Validation par lot de pointages",
+      "use_case": "BulkValidatePointagesUseCase",
+      "routes": ["/pointages/bulk-validate"]
+    },
+    {
+      "gap_id": "GAP-FDH-008",
+      "name": "Récapitulatif mensuel",
+      "use_case": "GenerateMonthlyRecapUseCase",
+      "routes": ["/pointages/recap/{utilisateur_id}/{year}/{month}"]
+    },
+    {
+      "gap_id": "GAP-FDH-009",
+      "name": "Verrouillage période de paie",
+      "use_case": "LockMonthlyPeriodUseCase",
+      "routes": ["/pointages/lock-period"]
+    },
+    {
+      "gap_id": "GAP-FDH-009-SCHEDULER",
+      "name": "Scheduler automatique de clôture",
+      "component": "PaieLockdownScheduler",
+      "routes": []
+    }
+  ],
+
+  "findings": [
+    {
+      "id": "SEC-PTG-P2-001",
+      "severity": "HIGH",
+      "type": "Authorization Bypass",
+      "category": "Access Control",
+      "location": "modules/pointages/infrastructure/web/routes.py:640-658",
+      "description": "Route /bulk-validate manquante de vérification de permissions. Aucun contrôle PointagePermissionService.can_validate() avant la validation par lot. Un compagnon pourrait théoriquement valider ses propres pointages ou ceux d'autres utilisateurs si l'endpoint est exposé.",
+      "impact": "Un utilisateur non autorisé (compagnon) pourrait valider des pointages en masse, contournant le workflow de validation hiérarchique et compromettant l'intégrité des données de paie.",
+      "owasp": "A01:2021 - Broken Access Control",
+      "evidence": "Ligne 640-658: Pas de décorateur @require_role ni de vérification PointagePermissionService.can_validate(current_user_role) contrairement aux autres endpoints de validation (ligne 566-596).",
+      "remediation": "Ajouter une vérification de permissions avant l'appel au use case:\n\nif not PointagePermissionService.can_validate(current_user_role):\n    raise HTTPException(\n        status_code=403,\n        detail=\"Seuls les chefs de chantier, conducteurs et admins peuvent valider des pointages\"\n    )\n\nOu créer un décorateur @require_manager_role pour réutiliser cette logique.",
+      "effort": "1h",
+      "compliance": {
+        "RGPD": "VIOLATION - Article 32 (intégrité des données)",
+        "OWASP_Top10": "FAIL - A01 Broken Access Control"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-002",
+      "severity": "HIGH",
+      "type": "Information Disclosure",
+      "category": "Data Privacy",
+      "location": "modules/pointages/infrastructure/web/routes.py:660-685",
+      "description": "Route /recap/{utilisateur_id}/{year}/{month} ne vérifie pas si current_user_id a le droit de consulter les données de paie d'un autre utilisateur. Un compagnon peut accéder aux récapitulatifs mensuels (heures, variables de paie, absences) de n'importe quel autre compagnon.",
+      "impact": "Fuite de données sensibles de paie (heures supplémentaires, primes, paniers, absences). Violation RGPD Article 5 (limitation de la finalité) et Article 32 (confidentialité). Les données de paie sont classifiées 'HAUTE CONFIDENTIALITÉ' selon security-auditor.md ligne 88.",
+      "owasp": "A01:2021 - Broken Access Control",
+      "evidence": "Ligne 660-685: Aucun contrôle d'accès. Un compagnon (user_id=7) peut requêter GET /recap/8/2026/1 et obtenir toutes les données de paie du compagnon 8.",
+      "remediation": "Ajouter une règle de permission:\n\n# Un compagnon ne peut consulter que son propre récapitulatif\nif current_user_role == 'compagnon' and current_user_id != utilisateur_id:\n    raise HTTPException(\n        status_code=403,\n        detail=\"Vous ne pouvez consulter que votre propre récapitulatif\"\n    )\n\n# Les managers peuvent consulter tous les récapitulatifs\nif current_user_role not in PointagePermissionService.ROLES_MANAGERS:\n    if current_user_id != utilisateur_id:\n        raise HTTPException(status_code=403, detail=\"Accès interdit\")",
+      "effort": "30min",
+      "compliance": {
+        "RGPD": "VIOLATION - Article 5.1.b (limitation de la finalité), Article 32 (confidentialité)",
+        "OWASP_Top10": "FAIL - A01 Broken Access Control"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-003",
+      "severity": "MEDIUM",
+      "type": "Race Condition",
+      "category": "Concurrency",
+      "location": "modules/pointages/application/use_cases/bulk_validate_pointages.py:74-138",
+      "description": "La validation par lot itère sur les pointages sans transaction atomique. Si deux validateurs exécutent bulk_validate sur les mêmes pointages simultanément, des race conditions peuvent survenir (double validation, états incohérents).",
+      "impact": "Corruption potentielle de l'état des pointages. Événements dupliqués publiés vers le système de paie. Non-respect du principe d'atomicité pour les opérations de lot.",
+      "owasp": "A04:2021 - Insecure Design",
+      "evidence": "Ligne 74-138: Boucle for sans verrouillage pessimiste. Chaque pointage est récupéré (ligne 80), validé (ligne 103) et sauvegardé (ligne 106) individuellement. Deux threads peuvent lire le même pointage au statut SOUMIS et le valider simultanément.",
+      "remediation": "Option 1 (Recommandée): Ajouter un verrouillage optimiste avec version:\n\nfor pointage_id in dto.pointage_ids:\n    pointage = self.pointage_repo.find_by_id_for_update(pointage_id)  # SELECT FOR UPDATE\n    # ...\n\nOption 2: Utiliser un verrou distribué (Redis) pour la période de l'opération:\n\nwith distributed_lock(f'bulk_validate:{hash(pointage_ids)}'):\n    # traitement...\n\nOption 3: Ajouter une vérification de version à l'entité Pointage.",
+      "effort": "4h",
+      "compliance": {
+        "RGPD": "PARTIAL - Article 32 (intégrité)",
+        "OWASP_Top10": "PASS with caveat"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-004",
+      "severity": "MEDIUM",
+      "type": "Business Logic Bypass",
+      "category": "Data Integrity",
+      "location": "modules/pointages/application/use_cases/bulk_validate_pointages.py:92-100",
+      "description": "Le verrouillage de période (PeriodePaie.is_locked) est vérifié mais un test unitaire échoue (test_bulk_validate_periode_locked). Le pointage est validé malgré une période verrouillée, indiquant une implémentation incomplète de la règle métier.",
+      "impact": "Modifications rétroactives possibles après la clôture paie. Violation des règles comptables (immutabilité des données paie après clôture). Non-conformité aux audits financiers.",
+      "owasp": "A04:2021 - Insecure Design",
+      "evidence": "Test tests/unit/modules/pointages/application/use_cases/test_bulk_validate_pointages.py::test_bulk_validate_periode_locked FAILED:\nassert result.success_count == 0 (attendu)\nassert result.success_count == 1 (réel)\n\nLe pointage est validé malgré PeriodePaie.is_locked() == True.",
+      "remediation": "Corriger le test ou la logique:\n\n1. Vérifier que PeriodePaie.is_locked() utilise bien la date actuelle (pas de mock incorrect)\n2. S'assurer que la vérification ligne 92-100 est exécutée AVANT la validation\n3. Ajouter un test d'intégration pour valider le verrouillage en conditions réelles\n4. Potentiellement ajouter une contrainte DB CHECK pour empêcher les modifications sur périodes verrouillées",
+      "effort": "2h",
+      "compliance": {
+        "RGPD": "PARTIAL - Article 32 (intégrité)",
+        "OWASP_Top10": "PASS with fix needed"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-005",
+      "severity": "MEDIUM",
+      "type": "Information Disclosure",
+      "category": "Data Privacy",
+      "location": "modules/pointages/application/use_cases/generate_monthly_recap.py:99-106",
+      "description": "Le récapitulatif mensuel récupère jusqu'à 10000 pointages sans limite (ligne 105). Pour un utilisateur avec beaucoup de données, cela pourrait causer un déni de service ou exposer des volumes de données excessifs. Pas de pagination ni de limite raisonnable.",
+      "impact": "Risque de déni de service (DoS) si un utilisateur a des milliers de pointages. Exposition massive de données sensibles en une seule réponse API. Violation du principe de minimisation des données (RGPD).",
+      "owasp": "A04:2021 - Insecure Design",
+      "evidence": "Ligne 105: limit=10000 est une limite arbitraire très élevée. Un mois ne devrait jamais dépasser ~30 pointages par utilisateur, mais le code permet 10k.",
+      "remediation": "Remplacer par une limite métier raisonnable:\n\npointages, _ = self.pointage_repo.search(\n    utilisateur_id=dto.utilisateur_id,\n    date_debut=date_debut,\n    date_fin=date_fin,\n    skip=0,\n    limit=50,  # Max 50 pointages par mois (largement suffisant)\n)\n\nAjouter une validation:\n\nif len(pointages) >= 50:\n    logger.warning(f\"Utilisateur {dto.utilisateur_id} a {len(pointages)} pointages en {dto.month}/{dto.year}\")",
+      "effort": "30min",
+      "compliance": {
+        "RGPD": "PARTIAL - Article 5.1.c (minimisation des données)",
+        "OWASP_Top10": "PASS with improvement"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-006",
+      "severity": "CRITICAL",
+      "type": "Authorization Bypass",
+      "category": "Access Control",
+      "location": "modules/pointages/infrastructure/web/routes.py:694-723",
+      "description": "Route /lock-period vérifie uniquement le rôle (admin ou conducteur) mais n'empêche pas le verrouillage de périodes arbitraires (ex: verrouiller 2020, 2025, 2030). Un admin malveillant pourrait verrouiller toutes les périodes passées et futures, rendant le système inutilisable.",
+      "impact": "Déni de service total du module pointages. Un admin malveillant peut verrouiller toutes les périodes, empêchant toute modification de pointage (passée, présente, future). Perte de contrôle total du système.",
+      "owasp": "A04:2021 - Insecure Design",
+      "evidence": "Ligne 710-722: Seul le rôle est vérifié. Pas de validation que:\n- La période n'est pas déjà verrouillée\n- La période n'est pas dans le futur (ex: verrouiller 2030)\n- La période n'est pas trop ancienne (ex: verrouiller 2020)\n- Le verrouillage manuel ne peut pas override le verrouillage automatique",
+      "remediation": "Ajouter des validations métier:\n\n# 1. Interdire le verrouillage de périodes futures\ntoday = date.today()\nif year > today.year or (year == today.year and month > today.month):\n    raise HTTPException(\n        status_code=400,\n        detail=\"Impossible de verrouiller une période future\"\n    )\n\n# 2. Interdire le verrouillage de périodes trop anciennes (> 12 mois)\nperiod_date = date(year, month, 1)\nif (today - period_date).days > 365:\n    raise HTTPException(\n        status_code=400,\n        detail=\"Impossible de verrouiller une période de plus de 12 mois\"\n    )\n\n# 3. Vérifier que la période n'est pas déjà verrouillée\nif PeriodePaie.is_locked(date(year, month, 15)):\n    raise HTTPException(\n        status_code=409,\n        detail=\"Cette période est déjà verrouillée\"\n    )",
+      "effort": "2h",
+      "compliance": {
+        "RGPD": "VIOLATION - Article 32 (disponibilité)",
+        "OWASP_Top10": "FAIL - A04 Insecure Design"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-007",
+      "severity": "MEDIUM",
+      "type": "Insecure Scheduler Configuration",
+      "category": "Infrastructure Security",
+      "location": "modules/pointages/infrastructure/scheduler/paie_lockdown_scheduler.py:35-48",
+      "description": "Le scheduler utilise un use_case injecté ou créé par défaut (ligne 43), mais la méthode _create_use_case() utilise get_event_bus() sans validation. Si l'EventBus n'est pas correctement initialisé au démarrage, le scheduler échouera silencieusement ou publiera des événements vers un bus null.",
+      "impact": "Le verrouillage automatique peut échouer silencieusement. Les notifications de verrouillage peuvent ne pas être envoyées. Pas de traçabilité en cas d'échec (logs insuffisants).",
+      "owasp": "A05:2021 - Security Misconfiguration",
+      "evidence": "Ligne 43-48: Pas de validation que get_event_bus() retourne un bus fonctionnel. Ligne 138: Exception catchée mais pas de retry ni d'alerte.",
+      "remediation": "1. Valider l'EventBus au démarrage:\n\ndef _create_use_case(self) -> LockMonthlyPeriodUseCase:\n    event_bus = get_event_bus()\n    if event_bus is None or isinstance(event_bus, NullEventBus):\n        logger.error(\"EventBus non initialisé - scheduler ne peut pas démarrer\")\n        raise RuntimeError(\"EventBus requis pour le scheduler\")\n    return LockMonthlyPeriodUseCase(event_bus=event_bus)\n\n2. Ajouter un healthcheck:\n\ndef healthcheck(self) -> bool:\n    return self.scheduler.running and self.use_case.event_bus is not None\n\n3. Améliorer la gestion d'erreur ligne 138:\n\nexcept Exception as e:\n    logger.error(f\"CRITICAL: Verrouillage automatique échoué {month:02d}/{year}: {e}\", exc_info=True)\n    # Envoyer une alerte (email, Slack, etc.)\n    send_alert_to_admins(f\"Échec verrouillage paie {month}/{year}\")",
+      "effort": "3h",
+      "compliance": {
+        "RGPD": "PARTIAL - Article 32 (disponibilité)",
+        "OWASP_Top10": "PASS with improvement"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-008",
+      "severity": "LOW",
+      "type": "Missing Audit Trail",
+      "category": "Logging & Monitoring",
+      "location": "modules/pointages/application/use_cases/bulk_validate_pointages.py:108-116",
+      "description": "La validation par lot publie des événements individuels (PointageValidatedEvent) mais ne log pas les détails de l'opération de lot (qui a validé, combien de pointages, à quelle heure). En cas d'incident, il sera difficile de tracer qui a validé quel lot.",
+      "impact": "Traçabilité insuffisante pour les audits. Difficulté à identifier les validations abusives ou erronées. Non-conformité partielle à l'Article 30 RGPD (registre des traitements).",
+      "owasp": "A09:2021 - Security Logging and Monitoring Failures",
+      "evidence": "Ligne 108-116: Événements publiés mais pas de logger.info avec les détails complets. Ligne 140-147: Événement bulk publié mais sans métadonnées enrichies (ex: IP, user-agent).",
+      "remediation": "Ajouter des logs structurés:\n\nlogger.info(\n    f\"Validation par lot démarrée: validateur={dto.validateur_id}, \"\n    f\"nb_pointages={len(dto.pointage_ids)}, pointages={dto.pointage_ids}\",\n    extra={\n        \"event\": \"bulk_validate_start\",\n        \"validateur_id\": dto.validateur_id,\n        \"pointage_ids\": dto.pointage_ids,\n        \"timestamp\": datetime.now().isoformat(),\n    }\n)\n\n# À la fin:\nlogger.info(\n    f\"Validation par lot terminée: succès={len(validated_ids)}, \"\n    f\"échecs={len(failed_results)}\",\n    extra={\n        \"event\": \"bulk_validate_complete\",\n        \"success_count\": len(validated_ids),\n        \"failure_count\": len(failed_results),\n    }\n)",
+      "effort": "1h",
+      "compliance": {
+        "RGPD": "PARTIAL - Article 30 (registre des traitements)",
+        "OWASP_Top10": "PASS with improvement"
+      }
+    },
+    {
+      "id": "SEC-PTG-P2-009",
+      "severity": "LOW",
+      "type": "Missing Input Validation",
+      "category": "Input Validation",
+      "location": "modules/pointages/infrastructure/web/routes.py:634-638",
+      "description": "La route /bulk-validate accepte une liste de pointage_ids mais ne vérifie pas la taille maximale de la liste. Un attaquant pourrait envoyer des milliers d'IDs pour causer un DoS.",
+      "impact": "Déni de service potentiel. Surcharge du serveur et de la base de données si un utilisateur malveillant envoie 10000+ IDs.",
+      "owasp": "A04:2021 - Insecure Design",
+      "evidence": "Ligne 637: Field(..., min_items=1) vérifie le minimum mais pas le maximum. Un payload avec 100000 IDs serait accepté.",
+      "remediation": "Ajouter une limite maximale:\n\nclass BulkValidateRequest(BaseModel):\n    pointage_ids: List[int] = Field(\n        ...,\n        min_items=1,\n        max_items=100,  # Limite raisonnable pour une validation par lot\n        description=\"IDs des pointages à valider (max 100)\"\n    )\n\nOu ajouter une validation dans le use case:\n\nif len(dto.pointage_ids) > 100:\n    raise BulkValidatePointagesError(\n        \"Maximum 100 pointages par lot. Divisez votre requête.\"\n    )",
+      "effort": "15min",
+      "compliance": {
+        "RGPD": "PASS",
+        "OWASP_Top10": "PASS with improvement"
+      }
+    }
+  ],
+
+  "summary": {
+    "total_findings": 9,
+    "by_severity": {
+      "CRITICAL": 1,
+      "HIGH": 2,
+      "MEDIUM": 4,
+      "LOW": 2
+    },
+    "by_category": {
+      "Access Control": 3,
+      "Data Privacy": 2,
+      "Concurrency": 1,
+      "Data Integrity": 1,
+      "Infrastructure Security": 1,
+      "Logging & Monitoring": 1,
+      "Input Validation": 1
+    },
+    "critical_issues": [
+      "SEC-PTG-P2-006: Route /lock-period permet le verrouillage de périodes arbitraires (DoS total possible)"
+    ],
+    "high_issues": [
+      "SEC-PTG-P2-001: Route /bulk-validate manquante de contrôle d'accès (authorization bypass)",
+      "SEC-PTG-P2-002: Route /recap expose les données de paie sans vérification (information disclosure)"
+    ]
+  },
+
+  "compliance_status": {
+    "RGPD": {
+      "status": "FAIL",
+      "violations": [
+        "Article 5.1.b - Limitation de la finalité (SEC-PTG-P2-002)",
+        "Article 5.1.c - Minimisation des données (SEC-PTG-P2-005)",
+        "Article 32 - Intégrité des données (SEC-PTG-P2-001, SEC-PTG-P2-004)",
+        "Article 32 - Confidentialité (SEC-PTG-P2-002)",
+        "Article 32 - Disponibilité (SEC-PTG-P2-006)"
+      ],
+      "partial_compliance": [
+        "Article 30 - Registre des traitements (logs insuffisants)"
+      ]
+    },
+    "OWASP_Top10": {
+      "status": "FAIL",
+      "failures": [
+        "A01:2021 - Broken Access Control (SEC-PTG-P2-001, SEC-PTG-P2-002)",
+        "A04:2021 - Insecure Design (SEC-PTG-P2-006)"
+      ],
+      "warnings": [
+        "A04:2021 - Insecure Design (SEC-PTG-P2-003, SEC-PTG-P2-004, SEC-PTG-P2-005, SEC-PTG-P2-009)",
+        "A05:2021 - Security Misconfiguration (SEC-PTG-P2-007)",
+        "A09:2021 - Security Logging and Monitoring Failures (SEC-PTG-P2-008)"
+      ]
+    }
+  },
+
+  "recommendations": [
+    {
+      "priority": "IMMEDIATE",
+      "items": [
+        "SEC-PTG-P2-006: Ajouter validations métier pour /lock-period (interdire futur, passé > 12 mois, déjà verrouillé)",
+        "SEC-PTG-P2-001: Ajouter contrôle PointagePermissionService.can_validate() sur /bulk-validate",
+        "SEC-PTG-P2-002: Ajouter règle 'compagnon ne peut consulter que son propre récapitulatif' sur /recap"
+      ],
+      "deadline": "48h"
+    },
+    {
+      "priority": "HIGH",
+      "items": [
+        "SEC-PTG-P2-003: Implémenter verrouillage optimiste (SELECT FOR UPDATE) pour bulk_validate",
+        "SEC-PTG-P2-004: Corriger le test test_bulk_validate_periode_locked et vérifier la logique de verrouillage",
+        "SEC-PTG-P2-007: Ajouter validation EventBus et healthcheck pour le scheduler"
+      ],
+      "deadline": "1 semaine"
+    },
+    {
+      "priority": "MEDIUM",
+      "items": [
+        "SEC-PTG-P2-005: Réduire la limite de pointages à 50 dans generate_monthly_recap",
+        "SEC-PTG-P2-008: Ajouter logs structurés pour la validation par lot",
+        "SEC-PTG-P2-009: Limiter bulk_validate à max 100 pointages"
+      ],
+      "deadline": "1 mois"
+    },
+    {
+      "priority": "ARCHITECTURAL",
+      "items": [
+        "Créer un décorateur @require_manager_role pour éviter la duplication de code de contrôle d'accès",
+        "Implémenter un système de rate limiting sur /bulk-validate (max 10 requêtes/minute par utilisateur)",
+        "Ajouter un audit trail dédié pour toutes les opérations sensibles (validation, verrouillage)",
+        "Créer une contrainte DB CHECK pour empêcher les modifications sur périodes verrouillées",
+        "Implémenter un système d'alertes pour les échecs du scheduler (email/Slack vers admins)"
+      ],
+      "deadline": "3 mois"
+    }
+  ],
+
+  "security_score": {
+    "score": 5.5,
+    "scale": 10,
+    "rationale": "Score réduit en raison de 3 findings HIGH/CRITICAL (SEC-PTG-P2-001, SEC-PTG-P2-002, SEC-PTG-P2-006) qui représentent des risques sérieux pour la sécurité et la conformité RGPD. Les contrôles d'accès manquants sur des endpoints exposant des données de paie sensibles sont inacceptables pour un système de production.",
+    "blockers": [
+      "SEC-PTG-P2-006 (CRITICAL) doit être corrigé avant mise en production",
+      "SEC-PTG-P2-001 et SEC-PTG-P2-002 (HIGH) doivent être corrigés avant mise en production"
+    ],
+    "target_score": 9.0,
+    "pass_threshold": 9.0,
+    "status": "FAIL"
+  },
+
+  "testing_coverage": {
+    "unit_tests_reviewed": [
+      "tests/unit/modules/pointages/application/use_cases/test_bulk_validate_pointages.py"
+    ],
+    "test_failures": [
+      {
+        "test": "test_bulk_validate_periode_locked",
+        "status": "FAILED",
+        "issue": "Pointage validé malgré période verrouillée (SEC-PTG-P2-004)"
+      }
+    ],
+    "missing_security_tests": [
+      "Test d'authorization pour /bulk-validate (compagnon ne peut pas valider)",
+      "Test d'authorization pour /recap (compagnon ne peut consulter que son récapitulatif)",
+      "Test de limite maximale pour bulk_validate (>100 IDs)",
+      "Test de verrouillage de période future/passée",
+      "Test de race condition pour bulk_validate (2 validateurs simultanés)",
+      "Test de scheduler avec EventBus null/non-initialisé"
+    ],
+    "recommendation": "Créer tests/unit/pointages/test_security_fixes_phase2.py avec couverture >= 90% des findings identifiés"
+  },
+
+  "positive_observations": [
+    "La validation de période verrouillée est présente dans bulk_validate (ligne 92-100), même si le test échoue",
+    "Le scheduler utilise APScheduler correctement avec CronTrigger (bonne pratique)",
+    "Les événements sont correctement publiés pour la traçabilité (PointageValidatedEvent, PointagesBulkValidatedEvent, PeriodePaieLockedEvent)",
+    "Les DTOs utilisent des dataclasses avec typage fort (bonne pratique)",
+    "La séparation des responsabilités entre Use Case, Controller et Routes est respectée",
+    "Le scheduler vérifie deux mois (courant et précédent) pour gérer les cas limites (ligne 93-116)",
+    "Les erreurs sont catchées et loggées dans le scheduler (ligne 127-138)"
+  ],
+
+  "next_steps": [
+    "1. Corriger les 3 findings CRITICAL/HIGH (SEC-PTG-P2-001, SEC-PTG-P2-002, SEC-PTG-P2-006) AVANT tout commit",
+    "2. Créer une PR dédiée pour les corrections de sécurité",
+    "3. Écrire tests de sécurité pour couvrir les 9 findings",
+    "4. Faire re-auditer par security-auditor après corrections",
+    "5. Mettre à jour SPECIFICATIONS.md avec les nouvelles règles de sécurité",
+    "6. Documenter les contrôles d'accès dans .claude/security-guidelines.md"
+  ],
+
+  "audit_conclusion": "Le module pointages Phase 2 présente des vulnérabilités CRITIQUES et HAUTES qui BLOQUENT la mise en production. Les contrôles d'accès manquants sur /bulk-validate et /recap exposent des risques sérieux de bypass d'autorisation et de fuite de données de paie sensibles. La route /lock-period permet un déni de service total. TOUTES les corrections IMMEDIATE doivent être appliquées avant commit. Score actuel 5.5/10 (FAIL). Score cible 9.0/10 requis pour PASS."
+}

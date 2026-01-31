@@ -1,0 +1,1296 @@
+{
+  "module": "chantiers",
+  "global_status": "WARN",
+  "timestamp": "2026-01-31T12:02:39.914851",
+  "duration_seconds": 0.145875,
+  "agents_executed": 7,
+  "total_findings": {
+    "CRITICAL": 0,
+    "HIGH": 66,
+    "MEDIUM": 36,
+    "LOW": 68
+  },
+  "reports": [
+    {
+      "agent": "sqlpro",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 7 problème(s) haute(s) priorité DB",
+      "score": {
+        "db_quality": "0/10",
+        "total_findings": 42
+      },
+      "findings_count": 42,
+      "findings": [
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0001_initial_chantiers.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260125_0001_add_chantier_ouvriers.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260128_0001_add_rgpd_consent_fields.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0002_security_and_performance.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260124_0002_security_and_performance.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260129_0001_add_webhooks_and_event_logs.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260130_2114_45fbfeb64662_add_heures_prevues_to_affectations.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0002_create_besoins_charge.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260130_0001_add_maitre_ouvrage_to_chantiers.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260128_0002_add_api_keys_table.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "DROP COLUMN sans batch_op (problème SQLite)",
+          "file": "backend/migrations/versions/20260130_1630_670f48881d6d_add_password_reset_invitation_and_email_.py",
+          "suggestion": "Utiliser with batch_alter_table(...)",
+          "category": "database"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Migration contient DROP TABLE",
+          "file": "backend/migrations/versions/20260124_0003_logistique_schema.py",
+          "suggestion": "Vérifier que cette suppression est intentionnelle",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Relation sans stratégie lazy définie",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter lazy='select' ou lazy='joined' explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/phase_chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/phase_chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/contact_chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/contact_chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/contact_chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/contact_chantier_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne sans nullable défini",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter nullable=False ou nullable=True explicitement",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Modèle sans colonne created_at",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter created_at = Column(DateTime(timezone=True), server_default=func.now())",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Modèle sans colonne updated_at",
+          "file": "backend/modules/chantiers/infrastructure/persistence/chantier_responsable_model.py",
+          "suggestion": "Ajouter updated_at = Column(DateTime(timezone=True), onupdate=func.now())",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'code' utilisée dans filter sans index apparent",
+          "file": "backend/modules/chantiers/infrastructure/persistence/sqlalchemy_chantier_repository.py",
+          "suggestion": "Vérifier si index existe sur 'code' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'statut' utilisée dans filter sans index apparent",
+          "file": "backend/modules/chantiers/infrastructure/persistence/sqlalchemy_chantier_repository.py",
+          "suggestion": "Vérifier si index existe sur 'statut' pour optimiser les recherches",
+          "category": "database"
+        },
+        {
+          "severity": "LOW",
+          "message": "Colonne 'user_id' utilisée dans filter sans index apparent",
+          "file": "backend/modules/chantiers/infrastructure/persistence/sqlalchemy_chantier_repository.py",
+          "suggestion": "Vérifier si index existe sur 'user_id' pour optimiser les recherches",
+          "category": "database"
+        }
+      ]
+    },
+    {
+      "agent": "pythonpro",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 1 problème(s) haute(s) priorité Python",
+      "score": {
+        "python_quality": "8/10",
+        "total_findings": 7
+      },
+      "findings_count": 7,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/chantiers/application/use_cases/create_chantier.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/chantiers/application/use_cases/delete_chantier.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/chantiers/application/use_cases/update_chantier.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/chantiers/application/use_cases/assign_responsable.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/chantiers/application/use_cases/change_statut.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Use case sans méthode execute()",
+          "file": "backend/modules/chantiers/application/use_cases/get_chantier.py",
+          "suggestion": "Ajouter def execute(self, dto: InputDTO) -> OutputDTO:",
+          "category": "python"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Use case sans injection de repository",
+          "file": "backend/modules/chantiers/application/use_cases/get_chantier.py",
+          "suggestion": "Injecter le repository via __init__(self, repo: RepoInterface)",
+          "category": "python"
+        }
+      ]
+    },
+    {
+      "agent": "typescriptpro",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 26 problème(s) haute(s) priorité TypeScript",
+      "score": {
+        "typescript_quality": "0/10",
+        "total_findings": 36
+      },
+      "findings_count": 36,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'ToastProvider' sans interface Props",
+          "file": "frontend/src/contexts/ToastContext.tsx",
+          "suggestion": "Créer interface ToastProviderProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'AuthProvider' sans interface Props",
+          "file": "frontend/src/contexts/AuthContext.tsx",
+          "suggestion": "Créer interface AuthProviderProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'MiniMapStatic' sans interface Props",
+          "file": "frontend/src/components/MiniMap.tsx",
+          "suggestion": "Créer interface MiniMapStaticProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Composant 'MapPlaceholder' sans interface Props",
+          "file": "frontend/src/components/MiniMap.tsx",
+          "suggestion": "Créer interface MapPlaceholderProps { ... }",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/LoggerToastBridge.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/ChantiersListPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/UsersListPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/WebhooksPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/APIKeysPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/DashboardPage.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/pages/DashboardPage.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/taches/TaskModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/taches/TemplateImportModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/planning/PlanningToolbar.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/planning/AffectationBlock.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/chantiers/EditChantierModal.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/chantiers/ChantierLogistiqueSection.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/pointages/SignatureSection.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/pointages/PointageFormFields.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/dashboard/WeatherBulletinPost.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/dashboard/PostComposer.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/FormulaireList.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/NewFormulaireModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/TemplateList.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/formulaires/TemplateModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/ReservationActions.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/RessourceModal.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/ReservationFormFields.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/logistique/RessourceModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Utilisation de 'any' explicite",
+          "file": "frontend/src/components/documents/DocumentPreviewModal.test.tsx",
+          "suggestion": "Remplacer 'any' par un type spécifique ou 'unknown'",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useDocuments' sans type de retour explicite",
+          "file": "frontend/src/hooks/useDocuments.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useAPIKeys' sans type de retour explicite",
+          "file": "frontend/src/hooks/useAPIKeys.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useWebhooks' sans type de retour explicite",
+          "file": "frontend/src/hooks/useWebhooks.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useFeuillesHeures' sans type de retour explicite",
+          "file": "frontend/src/hooks/useFeuillesHeures.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'useOfflineStorage' sans type de retour explicite",
+          "file": "frontend/src/hooks/useOfflineStorage.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Hook 'usePlanning' sans type de retour explicite",
+          "file": "frontend/src/hooks/usePlanning.ts",
+          "suggestion": "Ajouter : ReturnType après les paramètres",
+          "category": "typescript"
+        }
+      ]
+    },
+    {
+      "agent": "architectreviewer",
+      "status": "PASS",
+      "summary": "✅ Architecture Clean respectée",
+      "score": {
+        "clean_architecture": "10/10",
+        "modularity": "10/10",
+        "files_analyzed": 46
+      },
+      "findings_count": 0,
+      "findings": []
+    },
+    {
+      "agent": "testautomator",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 15 tests, couverture à améliorer (100%)",
+      "score": {
+        "coverage_estimate": "100%",
+        "tests_count": 15,
+        "use_cases_count": 7,
+        "test_quality": "0/10",
+        "target_coverage": "85%"
+      },
+      "findings_count": 62,
+      "findings": [
+        {
+          "severity": "LOW",
+          "message": "Test 'test_empty_nom_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_empty_nom_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_whitespace_nom_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_whitespace_nom_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_frozen_immutability' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_frozen_immutability' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_from_dict_missing_nom_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_from_dict_missing_nom_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_contact_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_empty_nom_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_empty_nom_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_empty_adresse_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_empty_adresse_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_invalid_dates_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_invalid_dates_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_rouvrir_from_ouvert_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_rouvrir_from_ouvert_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_change_statut_invalid_transition_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_change_statut_invalid_transition_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_update_dates_invalid_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_update_dates_invalid_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_update_heures_estimees_negative_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_update_heures_estimees_negative_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_update_infos_empty_nom_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_update_infos_empty_nom_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_update_infos_empty_adresse_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_update_infos_empty_adresse_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_chantier_entity.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_create_invalid_dates_order' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_create_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_create_invalid_code_format' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_create_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_delete_chantier_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_delete_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_delete_chantier_not_found' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_delete_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_empty_code_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_empty_code_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_invalid_format_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_invalid_format_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_invalid_format_short_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_invalid_format_short_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_invalid_format_only_numbers_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_invalid_format_only_numbers_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_frozen_immutability' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_frozen_immutability' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_generate_next_z999_raises' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_generate_next_z999_raises' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_comparison_with_non_code' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_comparison_with_non_code' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_assign_chantier_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_assign_responsable.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_assign_chantier_not_found' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_assign_responsable.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_retirer_conducteur_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_assign_responsable.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_retirer_conducteur_not_found' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_assign_responsable.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_retirer_chef_chantier_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_assign_responsable.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_retirer_chef_chantier_not_found' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_assign_responsable.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_update_chantier_not_found' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/test_update_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_update_chantier_not_found' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_update_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_chantier_not_found' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_change_statut.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_invalid_statut_value' sans assertion",
+          "file": "backend/tests/unit/chantiers/test_change_statut.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_immutability' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/value_objects/test_code_chantier.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_immutability' sans assertion",
+          "file": "backend/tests/unit/chantiers/value_objects/test_code_chantier.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_from_string_invalid_format_raises_error' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/value_objects/test_coordonnees_gps.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_from_string_invalid_format_raises_error' sans assertion",
+          "file": "backend/tests/unit/chantiers/value_objects/test_coordonnees_gps.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Test 'test_immutability' sans pattern AAA clair",
+          "file": "backend/tests/unit/chantiers/value_objects/test_coordonnees_gps.py",
+          "suggestion": "Structurer avec # Arrange, # Act, # Assert",
+          "category": "testing"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test 'test_immutability' sans assertion",
+          "file": "backend/tests/unit/chantiers/value_objects/test_coordonnees_gps.py",
+          "suggestion": "Ajouter au moins une assertion (assert ...)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Fixture 'db_session' manquante",
+          "file": "backend/tests/unit/conftest.py",
+          "suggestion": "Ajouter fixture db_session (Session DB en mémoire)",
+          "category": "testing"
+        },
+        {
+          "severity": "LOW",
+          "message": "Fixture 'client' manquante",
+          "file": "backend/tests/unit/conftest.py",
+          "suggestion": "Ajouter fixture client (TestClient FastAPI)",
+          "category": "testing"
+        }
+      ]
+    },
+    {
+      "agent": "codereviewer",
+      "status": "PASS",
+      "summary": "✅ Code de qualité acceptable",
+      "score": {
+        "quality": "10/10",
+        "maintainability": "0/10",
+        "files_reviewed": 46,
+        "issues_found": 21
+      },
+      "findings_count": 21,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/domain/events/chantier_created.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/domain/events/chantier_statut_changed.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/domain/events/chantier_updated.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/domain/events/chantier_deleted.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/application/use_cases/delete_chantier.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/application/use_cases/update_chantier.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/application/use_cases/assign_responsable.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/application/use_cases/change_statut.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/chantiers/application/use_cases/change_statut.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/value_objects/code_chantier.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/value_objects/statut_chantier.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/value_objects/contact_chantier.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/events/chantier_created.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/events/chantier_statut_changed.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/events/chantier_updated.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/events/chantier_deleted.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/services/prerequis_service.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/services/prerequis_service.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/domain/entities/chantier.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/application/dtos/chantier_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/chantiers/application/dtos/chantier_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        }
+      ]
+    },
+    {
+      "agent": "securityauditor",
+      "status": "PASS",
+      "summary": "✅ Aucune vulnérabilité critique détectée",
+      "score": {
+        "security": "10/10",
+        "critical_issues": 0,
+        "high_issues": 0,
+        "total_findings": 2
+      },
+      "findings_count": 2,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit d'accès aux données non implémenté",
+          "file": "backend/modules/chantiers",
+          "suggestion": "Implémenter l'export des données utilisateur",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit à l'oubli non implémenté",
+          "file": "backend/modules/chantiers",
+          "suggestion": "Implémenter la suppression complète des données",
+          "category": "security"
+        }
+      ]
+    }
+  ]
+}

@@ -18,6 +18,9 @@ from .create_variable_paie import CreateVariablePaieUseCase
 from .export_feuille_heures import ExportFeuilleHeuresUseCase
 from .get_jauge_avancement import GetJaugeAvancementUseCase
 from .compare_equipes import CompareEquipesUseCase
+from .bulk_validate_pointages import BulkValidatePointagesUseCase
+from .generate_monthly_recap import GenerateMonthlyRecapUseCase
+from .lock_monthly_period import LockMonthlyPeriodUseCase
 
 __all__ = [
     # Pointage CRUD
@@ -44,4 +47,8 @@ __all__ = [
     "ExportFeuilleHeuresUseCase",
     "GetJaugeAvancementUseCase",
     "CompareEquipesUseCase",
+    # Phase 2 GAPs
+    "BulkValidatePointagesUseCase",  # GAP-FDH-004
+    "GenerateMonthlyRecapUseCase",   # GAP-FDH-008
+    "LockMonthlyPeriodUseCase",      # GAP-FDH-009
 ]

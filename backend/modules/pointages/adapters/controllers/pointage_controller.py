@@ -22,6 +22,9 @@ from ...application import (
     ExportFeuilleHeuresUseCase,
     GetJaugeAvancementUseCase,
     CompareEquipesUseCase,
+    BulkValidatePointagesUseCase,
+    GenerateMonthlyRecapUseCase,
+    LockMonthlyPeriodUseCase,
 )
 from ...application.dtos import (
     CreatePointageDTO,
@@ -36,6 +39,9 @@ from ...application.dtos import (
     CreateVariablePaieDTO,
     ExportFeuilleHeuresDTO,
     FormatExport,
+    BulkValidatePointagesDTO,
+    GenerateMonthlyRecapDTO,
+    LockMonthlyPeriodDTO,
 )
 from ...domain.repositories import (
     PointageRepository,
@@ -98,6 +104,9 @@ class PointageController:
         )
         self._export_uc = ExportFeuilleHeuresUseCase(feuille_repo, pointage_repo, event_bus)
         self._jauge_uc = GetJaugeAvancementUseCase(pointage_repo)
+        self._bulk_validate_uc = BulkValidatePointagesUseCase(pointage_repo, event_bus)
+        self._monthly_recap_uc = GenerateMonthlyRecapUseCase(pointage_repo, variable_repo)
+        self._lock_period_uc = LockMonthlyPeriodUseCase(event_bus)
         self._compare_uc = CompareEquipesUseCase(pointage_repo)
 
     # ===== Pointage CRUD =====
@@ -613,4 +622,135 @@ class PointageController:
             "totaux_par_chantier": {
                 str(k): v for k, v in dto.totaux_par_chantier.items()
             },
+        }
+
+    # === Phase 2 GAPs ===
+
+    def bulk_validate_pointages(
+        self, pointage_ids: List[int], validateur_id: int
+    ) -> Dict[str, Any]:
+        """
+        Valide plusieurs pointages en une seule opération (GAP-FDH-004).
+
+        Args:
+            pointage_ids: Liste des IDs de pointages à valider.
+            validateur_id: ID du validateur.
+
+        Returns:
+            Dictionnaire avec les résultats détaillés.
+        """
+        dto = BulkValidatePointagesDTO(
+            pointage_ids=pointage_ids, validateur_id=validateur_id
+        )
+        result = self._bulk_validate_uc.execute(dto)
+
+        return {
+            "validated": result.validated,
+            "failed": [
+                {"pointage_id": f.pointage_id, "error": f.error} for f in result.failed
+            ],
+            "total_count": result.total_count,
+            "success_count": result.success_count,
+            "failure_count": result.failure_count,
+        }
+
+    def generate_monthly_recap(
+        self, utilisateur_id: int, year: int, month: int, export_pdf: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Génère un récapitulatif mensuel (GAP-FDH-008).
+
+        Args:
+            utilisateur_id: ID de l'utilisateur.
+            year: Année.
+            month: Mois.
+            export_pdf: True pour générer un PDF.
+
+        Returns:
+            Dictionnaire avec le récapitulatif complet.
+        """
+        dto = GenerateMonthlyRecapDTO(
+            utilisateur_id=utilisateur_id, year=year, month=month, export_pdf=export_pdf
+        )
+        result = self._monthly_recap_uc.execute(dto)
+
+        return {
+            "utilisateur_id": result.utilisateur_id,
+            "utilisateur_nom": result.utilisateur_nom,
+            "year": result.year,
+            "month": result.month,
+            "month_label": result.month_label,
+            "weekly_summaries": [
+                {
+                    "semaine_debut": ws.semaine_debut.isoformat(),
+                    "numero_semaine": ws.numero_semaine,
+                    "heures_normales": ws.heures_normales,
+                    "heures_supplementaires": ws.heures_supplementaires,
+                    "total_heures": ws.total_heures,
+                    "heures_normales_decimal": ws.heures_normales_decimal,
+                    "heures_supplementaires_decimal": ws.heures_supplementaires_decimal,
+                    "total_heures_decimal": ws.total_heures_decimal,
+                    "statut": ws.statut,
+                }
+                for ws in result.weekly_summaries
+            ],
+            "heures_normales_total": result.heures_normales_total,
+            "heures_supplementaires_total": result.heures_supplementaires_total,
+            "total_heures_month": result.total_heures_month,
+            "heures_normales_total_decimal": result.heures_normales_total_decimal,
+            "heures_supplementaires_total_decimal": result.heures_supplementaires_total_decimal,
+            "total_heures_month_decimal": result.total_heures_month_decimal,
+            "variables_paie": [
+                {
+                    "type_variable": vp.type_variable,
+                    "type_variable_libelle": vp.type_variable_libelle,
+                    "nombre_occurrences": vp.nombre_occurrences,
+                    "valeur_unitaire": str(vp.valeur_unitaire)
+                    if vp.valeur_unitaire
+                    else None,
+                    "montant_total": str(vp.montant_total),
+                }
+                for vp in result.variables_paie
+            ],
+            "variables_paie_total": str(result.variables_paie_total),
+            "absences": [
+                {
+                    "type_absence": a.type_absence,
+                    "type_absence_libelle": a.type_absence_libelle,
+                    "nombre_jours": a.nombre_jours,
+                    "total_heures": a.total_heures,
+                    "total_heures_decimal": a.total_heures_decimal,
+                }
+                for a in result.absences
+            ],
+            "all_validated": result.all_validated,
+            "pdf_path": result.pdf_path,
+        }
+
+    def lock_monthly_period(
+        self, year: int, month: int, locked_by: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Verrouille une période de paie (GAP-FDH-009).
+
+        Args:
+            year: Année.
+            month: Mois.
+            locked_by: ID de l'utilisateur (None si auto).
+
+        Returns:
+            Dictionnaire avec le résultat du verrouillage.
+        """
+        dto = LockMonthlyPeriodDTO(year=year, month=month)
+        result = self._lock_period_uc.execute(
+            dto, auto_locked=(locked_by is None), locked_by=locked_by
+        )
+
+        return {
+            "year": result.year,
+            "month": result.month,
+            "lockdown_date": result.lockdown_date.isoformat(),
+            "success": result.success,
+            "message": result.message,
+            "notified_users": result.notified_users,
         }

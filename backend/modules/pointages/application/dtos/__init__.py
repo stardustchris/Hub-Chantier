@@ -48,6 +48,25 @@ from .export_dtos import (
     ResultatMacroPaieDTO,
 )
 
+from .bulk_validate_dtos import (
+    BulkValidatePointagesDTO,
+    BulkValidatePointagesResultDTO,
+    PointageValidationResult,
+)
+
+from .monthly_recap_dtos import (
+    GenerateMonthlyRecapDTO,
+    MonthlyRecapDTO,
+    WeeklySummary,
+    VariablePaieSummary,
+    AbsenceSummary,
+)
+
+from .lock_period_dtos import (
+    LockMonthlyPeriodDTO,
+    LockMonthlyPeriodResultDTO,
+)
+
 __all__ = [
     # Pointage DTOs
     "CreatePointageDTO",
@@ -91,4 +110,17 @@ __all__ = [
     "MacroPaieDTO",
     "CalculMacroPaieDTO",
     "ResultatMacroPaieDTO",
+    # Bulk validation DTOs (GAP-FDH-004)
+    "BulkValidatePointagesDTO",
+    "BulkValidatePointagesResultDTO",
+    "PointageValidationResult",
+    # Monthly recap DTOs (GAP-FDH-008)
+    "GenerateMonthlyRecapDTO",
+    "MonthlyRecapDTO",
+    "WeeklySummary",
+    "VariablePaieSummary",
+    "AbsenceSummary",
+    # Lock period DTOs (GAP-FDH-009)
+    "LockMonthlyPeriodDTO",
+    "LockMonthlyPeriodResultDTO",
 ]

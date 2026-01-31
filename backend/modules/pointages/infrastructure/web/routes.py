@@ -4,6 +4,7 @@ from datetime import date
 from typing import Optional, List
 import re
 
+from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
@@ -23,6 +24,7 @@ from ..event_bus_impl import get_event_bus
 from ...adapters.controllers import PointageController
 from ...domain.events.heures_validated import HeuresValidatedEvent
 from ...domain.services.permission_service import PointagePermissionService
+from ...domain.value_objects.periode_paie import PeriodePaie
 
 
 router = APIRouter(prefix="/pointages", tags=["Feuilles d'heures"])
@@ -357,9 +359,17 @@ def create_variable_paie(
 def export_feuilles_heures(
     request: ExportRequest,
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
 ):
     """Exporte les feuilles d'heures (FDH-03, FDH-17)."""
+    # Vérification des permissions (SEC-PTG-004)
+    if not PointagePermissionService.can_export(current_user_role):
+        raise HTTPException(
+            status_code=403,
+            detail="Vous n'avez pas la permission d'exporter les feuilles d'heures"
+        )
+
     result = controller.export_feuilles_heures(
         format_export=request.format_export,
         date_debut=request.date_debut,
@@ -567,10 +577,18 @@ def submit_pointage(
 async def validate_pointage(
     pointage_id: int,
     validateur_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
     event_bus = Depends(get_event_bus),
     controller: PointageController = Depends(get_controller),
 ):
     """Valide un pointage soumis. ⚡ CRITIQUE: Déclenche la synchronisation avec la paie."""
+    # Vérification des permissions (SEC-PTG-003)
+    if not PointagePermissionService.can_validate(current_user_role):
+        raise HTTPException(
+            status_code=403,
+            detail="Vous n'avez pas la permission de valider des pointages"
+        )
+
     try:
         result = controller.validate_pointage(pointage_id, validateur_id)
 
@@ -601,9 +619,17 @@ def reject_pointage(
     pointage_id: int,
     request: RejectPointageRequest,
     validateur_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
 ):
     """Rejette un pointage soumis."""
+    # Vérification des permissions (SEC-PTG-003)
+    if not PointagePermissionService.can_reject(current_user_role):
+        raise HTTPException(
+            status_code=403,
+            detail="Vous n'avez pas la permission de rejeter des pointages"
+        )
+
     try:
         return controller.reject_pointage(pointage_id, validateur_id, request.motif)
     except ValueError as e:
@@ -624,5 +650,145 @@ def correct_pointage(
     """
     try:
         return controller.correct_pointage(pointage_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ===== Phase 2 GAPs =====
+
+
+class BulkValidateRequest(BaseModel):
+    """Requête de validation par lot (GAP-FDH-004)."""
+
+    pointage_ids: List[int] = Field(..., min_items=1, description="IDs des pointages à valider")
+
+
+@router.post("/bulk-validate")
+def bulk_validate_pointages(
+    request: BulkValidateRequest,
+    validateur_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    controller: PointageController = Depends(get_controller),
+):
+    """
+    Valide plusieurs pointages en une seule opération (GAP-FDH-004).
+
+    Permet au chef de chantier ou conducteur de valider tous les pointages
+    d'une feuille d'heures en un seul clic.
+
+    Retourne un résultat détaillé avec les succès et les échecs.
+    """
+    # SEC-PTG-P2-001: Vérification des permissions avant validation en masse
+    if not PointagePermissionService.can_validate(current_user_role):
+        raise HTTPException(
+            status_code=403,
+            detail="Seuls les chefs de chantier, conducteurs et admins peuvent valider des pointages"
+        )
+
+    try:
+        return controller.bulk_validate_pointages(request.pointage_ids, validateur_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/recap/{utilisateur_id}/{year}/{month}")
+def get_monthly_recap(
+    utilisateur_id: int,
+    year: int,
+    month: int,
+    export_pdf: bool = Query(False, description="Générer un export PDF"),
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    controller: PointageController = Depends(get_controller),
+):
+    """
+    Récapitulatif mensuel des heures (GAP-FDH-008).
+
+    Retourne un récapitulatif complet pour un compagnon sur un mois donné:
+    - Totaux hebdomadaires (heures normales, heures sup)
+    - Totaux mensuels
+    - Variables de paie (paniers, indemnités, primes)
+    - Absences
+    - Statut de validation
+
+    Optionnel: Génération d'un export PDF.
+    """
+    # SEC-PTG-P2-002: Un compagnon ne peut consulter que son propre récapitulatif
+    if current_user_role == "compagnon" and current_user_id != utilisateur_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Vous ne pouvez consulter que votre propre récapitulatif mensuel"
+        )
+
+    try:
+        return controller.generate_monthly_recap(utilisateur_id, year, month, export_pdf)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+class LockPeriodRequest(BaseModel):
+    """Requête de verrouillage de période (GAP-FDH-009)."""
+
+    year: int = Field(..., ge=2000, le=2100, description="Année")
+    month: int = Field(..., ge=1, le=12, description="Mois (1-12)")
+
+
+@router.post("/lock-period")
+def lock_monthly_period(
+    request: LockPeriodRequest,
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    controller: PointageController = Depends(get_controller),
+):
+    """
+    Verrouille manuellement une période de paie (GAP-FDH-009).
+
+    Réservé aux administrateurs et conducteurs de travaux.
+    Après le verrouillage, aucun pointage du mois ne peut plus être modifié.
+
+    Note: Le verrouillage automatique est déclenché par le scheduler
+    le dernier vendredi avant la dernière semaine du mois à 23:59.
+    """
+    # Vérification des permissions (admin ou conducteur uniquement)
+    if current_user_role not in ["admin", "conducteur"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Seuls les administrateurs et conducteurs peuvent verrouiller une période",
+        )
+
+    # SEC-PTG-P2-006: Validations de sécurité sur la période de verrouillage
+    today = date.today()
+    period_date = date(request.year, request.month, 1)
+
+    # 1. Interdire le verrouillage de périodes futures
+    if request.year > today.year or (request.year == today.year and request.month > today.month):
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de verrouiller une période future"
+        )
+
+    # 2. Interdire le verrouillage de périodes trop anciennes (> 12 mois)
+    # Calculer la date limite = 12 mois en arrière (1er du mois)
+    twelve_months_ago = today - relativedelta(months=12)
+    twelve_months_ago_first = date(twelve_months_ago.year, twelve_months_ago.month, 1)
+
+    if period_date < twelve_months_ago_first:
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de verrouiller une période de plus de 12 mois"
+        )
+
+    # 3. Vérifier que la période n'est pas déjà verrouillée
+    # Utiliser le 15 du mois comme date de référence pour vérifier le statut de verrouillage
+    if PeriodePaie.is_locked(date(request.year, request.month, 15), today=today):
+        raise HTTPException(
+            status_code=409,
+            detail="Cette période est déjà verrouillée"
+        )
+
+    try:
+        return controller.lock_monthly_period(
+            request.year, request.month, locked_by=current_user_id
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
