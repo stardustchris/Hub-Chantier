@@ -11,6 +11,7 @@ from ...application import (
     SubmitPointageUseCase,
     ValidatePointageUseCase,
     RejectPointageUseCase,
+    CorrectPointageUseCase,
     GetPointageUseCase,
     ListPointagesUseCase,
     GetFeuilleHeuresUseCase,
@@ -83,6 +84,7 @@ class PointageController:
         self._submit_uc = SubmitPointageUseCase(pointage_repo, event_bus)
         self._validate_uc = ValidatePointageUseCase(pointage_repo, event_bus)
         self._reject_uc = RejectPointageUseCase(pointage_repo, event_bus)
+        self._correct_uc = CorrectPointageUseCase(pointage_repo, event_bus)
         self._get_uc = GetPointageUseCase(pointage_repo)
         self._list_uc = ListPointagesUseCase(pointage_repo, entity_info_service)
         self._get_feuille_uc = GetFeuilleHeuresUseCase(feuille_repo, pointage_repo, entity_info_service)
@@ -207,6 +209,19 @@ class PointageController:
             pointage_id=pointage_id, validateur_id=validateur_id, motif=motif
         )
         result = self._reject_uc.execute(dto)
+        return self._pointage_to_dict(result)
+
+    def correct_pointage(self, pointage_id: int) -> Dict[str, Any]:
+        """
+        Repasse un pointage rejeté en brouillon pour correction.
+
+        Args:
+            pointage_id: ID du pointage à corriger.
+
+        Returns:
+            Le pointage remis en brouillon.
+        """
+        result = self._correct_uc.execute(pointage_id)
         return self._pointage_to_dict(result)
 
     # ===== Feuilles d'heures =====

@@ -157,6 +157,27 @@ class TestUpdatePointageUseCase:
         with pytest.raises(ValueError, match="ne peut pas être modifié"):
             self.use_case.execute(dto, updated_by=1)
 
+    def test_update_periode_verrouillee(self):
+        """Test: ValueError si période de paie verrouillée (GAP-FDH-002).
+
+        Impossible de modifier un pointage après la clôture mensuelle.
+        """
+        # Arrange: Pointage de décembre 2025, on est en 2026
+        existing = Pointage(
+            id=1,
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date(2025, 12, 15),  # Mois ancien verrouillé
+            heures_normales=Duree(8, 0),
+        )
+        self.pointage_repo.find_by_id.return_value = existing
+
+        dto = UpdatePointageDTO(pointage_id=1, heures_normales="07:00")
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="période de paie est verrouillée"):
+            self.use_case.execute(dto, updated_by=1)
+
 
 class TestSignPointageUseCase:
     """Tests pour SignPointageUseCase (FDH-12)."""
@@ -198,6 +219,26 @@ class TestSignPointageUseCase:
         dto = SignPointageDTO(pointage_id=1, signature="   ")
 
         with pytest.raises(ValueError, match="ne peut pas être vide"):
+            self.use_case.execute(dto)
+
+    def test_sign_periode_verrouillee(self):
+        """Test: ValueError si période de paie verrouillée (GAP-FDH-002).
+
+        Impossible de signer un pointage après la clôture mensuelle.
+        """
+        # Arrange: Pointage de décembre 2025
+        existing = Pointage(
+            id=1,
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date(2025, 12, 15),  # Ancien mois verrouillé
+        )
+        self.pointage_repo.find_by_id.return_value = existing
+
+        dto = SignPointageDTO(pointage_id=1, signature="signature_hash")
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="période de paie est verrouillée"):
             self.use_case.execute(dto)
 
 
@@ -245,6 +286,27 @@ class TestValidatePointageUseCase:
         with pytest.raises(ValueError, match="Impossible de valider"):
             self.use_case.execute(dto)
 
+    def test_validate_periode_verrouillee(self):
+        """Test: ValueError si période de paie verrouillée (GAP-FDH-002).
+
+        Impossible de valider un pointage après la clôture mensuelle.
+        """
+        # Arrange: Pointage de décembre 2025
+        existing = Pointage(
+            id=1,
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date(2025, 12, 15),  # Ancien mois verrouillé
+            statut=StatutPointage.SOUMIS,
+        )
+        self.pointage_repo.find_by_id.return_value = existing
+
+        dto = ValidatePointageDTO(pointage_id=1, validateur_id=5)
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="période de paie est verrouillée"):
+            self.use_case.execute(dto)
+
 
 class TestRejectPointageUseCase:
     """Tests pour RejectPointageUseCase."""
@@ -275,6 +337,29 @@ class TestRejectPointageUseCase:
 
         assert result.statut == "rejete"
         assert result.motif_rejet == "Heures incorrectes"
+
+    def test_reject_periode_verrouillee(self):
+        """Test: ValueError si période de paie verrouillée (GAP-FDH-002).
+
+        Impossible de rejeter un pointage après la clôture mensuelle.
+        """
+        # Arrange: Pointage de décembre 2025
+        existing = Pointage(
+            id=1,
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date(2025, 12, 15),  # Ancien mois verrouillé
+            statut=StatutPointage.SOUMIS,
+        )
+        self.pointage_repo.find_by_id.return_value = existing
+
+        dto = RejectPointageDTO(
+            pointage_id=1, validateur_id=5, motif="Heures incorrectes"
+        )
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="période de paie est verrouillée"):
+            self.use_case.execute(dto)
 
 
 class TestGetFeuilleHeuresUseCase:

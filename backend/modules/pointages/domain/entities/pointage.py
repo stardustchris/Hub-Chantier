@@ -145,11 +145,24 @@ class Pointage:
             heures_supplementaires: Nouvelles heures sup.
 
         Raises:
-            ValueError: Si le pointage n'est pas modifiable.
+            ValueError: Si le pointage n'est pas modifiable ou si le total
+                       dépasse 24h par jour (GAP-FDH-005).
         """
         if not self.is_editable:
             raise ValueError(
                 f"Le pointage ne peut pas être modifié (statut: {self.statut.value})"
+            )
+
+        # Calcule le total après modification
+        nouvelles_norm = heures_normales if heures_normales is not None else self.heures_normales
+        nouvelles_sup = heures_supplementaires if heures_supplementaires is not None else self.heures_supplementaires
+        total = nouvelles_norm + nouvelles_sup
+
+        # Validation GAP-FDH-005 : total <= 24h par jour
+        if total.heures > 24 or (total.heures == 24 and total.minutes > 0):
+            raise ValueError(
+                f"Le total des heures ({total}) dépasse 24h par jour. "
+                f"Heures normales: {nouvelles_norm}, Heures sup: {nouvelles_sup}."
             )
 
         if heures_normales is not None:

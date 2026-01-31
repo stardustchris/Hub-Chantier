@@ -4,6 +4,7 @@ from typing import Optional
 
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository
+from ...domain.value_objects import PeriodePaie
 from ...domain.events import PointageRejectedEvent
 from ..dtos import RejectPointageDTO, PointageDTO
 from ..ports import EventBus, NullEventBus
@@ -48,6 +49,13 @@ class RejectPointageUseCase:
         pointage = self.pointage_repo.find_by_id(dto.pointage_id)
         if not pointage:
             raise ValueError(f"Pointage {dto.pointage_id} non trouvé")
+
+        # Vérifie le verrouillage mensuel (GAP-FDH-002)
+        if PeriodePaie.is_locked(pointage.date_pointage):
+            raise ValueError(
+                "La période de paie est verrouillée. "
+                "Impossible de rejeter un pointage après la clôture mensuelle."
+            )
 
         # Rejette le pointage
         pointage.rejeter(dto.validateur_id, dto.motif)

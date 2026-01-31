@@ -489,3 +489,21 @@ def reject_pointage(
         return controller.reject_pointage(pointage_id, validateur_id, request.motif)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{pointage_id}/correct")
+def correct_pointage(
+    pointage_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    controller: PointageController = Depends(get_controller),
+):
+    """
+    Repasse un pointage rejeté en brouillon pour correction.
+
+    Le compagnon peut ensuite modifier les heures et re-soumettre.
+    Workflow § 5.5 (Rejet et correction).
+    """
+    try:
+        return controller.correct_pointage(pointage_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

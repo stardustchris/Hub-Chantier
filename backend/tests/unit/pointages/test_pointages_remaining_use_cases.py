@@ -378,6 +378,25 @@ class TestSubmitPointageUseCase:
         with pytest.raises(ValueError):
             self.use_case.execute(1)
 
+    def test_submit_periode_verrouillee(self):
+        """Test: ValueError si période de paie verrouillée (GAP-FDH-002).
+
+        Impossible de soumettre un pointage après la clôture mensuelle.
+        """
+        # Arrange: Pointage de décembre 2025
+        pointage = Pointage(
+            id=1,
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date(2025, 12, 15),  # Ancien mois verrouillé
+            statut=StatutPointage.BROUILLON,
+        )
+        self.pointage_repo.find_by_id.return_value = pointage
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="période de paie est verrouillée"):
+            self.use_case.execute(1)
+
     def test_submit_publishes_event(self):
         """Test publication event après soumission."""
         mock_event_bus = Mock()

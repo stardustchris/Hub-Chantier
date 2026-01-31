@@ -184,6 +184,161 @@ class TestPointage:
         assert p.signature_utilisateur is None  # Reset signature
         assert p.is_editable
 
+    def test_set_heures_total_depasse_24h(self):
+        """Test: ValueError si le total dépasse 24h par jour (GAP-FDH-005).
+
+        Selon la règle métier GAP-FDH-005, un pointage ne peut pas
+        dépasser 24h par jour (heures normales + heures sup).
+        """
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act & Assert: 20h normales + 5h sup = 25h > 24h
+        with pytest.raises(ValueError, match="dépasse 24h par jour"):
+            p.set_heures(
+                heures_normales=Duree(20, 0),
+                heures_supplementaires=Duree(5, 0)
+            )
+
+    def test_set_heures_exactement_24h(self):
+        """Test: Accepté si le total = 24h pile (limite exacte).
+
+        24h00 est la limite exacte, donc doit être accepté.
+        """
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act: 16h normales + 8h sup = 24h00
+        p.set_heures(
+            heures_normales=Duree(16, 0),
+            heures_supplementaires=Duree(8, 0)
+        )
+
+        # Assert
+        assert p.heures_normales == Duree(16, 0)
+        assert p.heures_supplementaires == Duree(8, 0)
+        assert p.total_heures == Duree(24, 0)
+
+    def test_set_heures_24h_1_minute(self):
+        """Test: ValueError si 24h01 (même 1 minute au-dessus).
+
+        La validation doit être stricte: 24h00 OK, 24h01 KO.
+        """
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act & Assert: 20h normales + 4h01 sup = 24h01 > 24h
+        with pytest.raises(ValueError, match="dépasse 24h par jour"):
+            p.set_heures(
+                heures_normales=Duree(20, 0),
+                heures_supplementaires=Duree(4, 1)
+            )
+
+    def test_set_heures_uniquement_normales_depasse_24h(self):
+        """Test: Validation fonctionne même si seulement heures normales.
+
+        Si on met 25h normales (sans heures sup), ça doit aussi être rejeté.
+        """
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act & Assert: 25h normales seules
+        with pytest.raises(ValueError, match="dépasse 24h par jour"):
+            p.set_heures(heures_normales=Duree(25, 0))
+
+    def test_set_heures_uniquement_supplementaires_depasse_24h(self):
+        """Test: Validation fonctionne même si seulement heures sup."""
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act & Assert: 30h sup seules
+        with pytest.raises(ValueError, match="dépasse 24h par jour"):
+            p.set_heures(heures_supplementaires=Duree(30, 0))
+
+    def test_set_heures_23h59_accepte(self):
+        """Test: 23h59 est accepté (juste en dessous de la limite)."""
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act: 16h normales + 7h59 sup = 23h59
+        p.set_heures(
+            heures_normales=Duree(16, 0),
+            heures_supplementaires=Duree(7, 59)
+        )
+
+        # Assert
+        assert p.total_heures == Duree(23, 59)
+
+    def test_set_heures_modification_partielle_avec_validation(self):
+        """Test: Validation 24h appliquée même en modification partielle.
+
+        Si on modifie seulement les heures normales, la validation
+        doit prendre en compte les heures sup existantes.
+        """
+        # Arrange: Pointage avec 10h sup déjà présentes
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+            heures_normales=Duree(8, 0),
+            heures_supplementaires=Duree(10, 0),
+        )
+
+        # Act & Assert: Modifier normales à 15h → total 25h
+        with pytest.raises(ValueError, match="dépasse 24h par jour"):
+            p.set_heures(heures_normales=Duree(15, 0))
+
+    def test_set_heures_message_erreur_detaille(self):
+        """Test: Le message d'erreur contient les détails des heures.
+
+        Le message doit indiquer le total et la répartition pour aider
+        l'utilisateur à comprendre l'erreur.
+        """
+        # Arrange
+        p = Pointage(
+            utilisateur_id=1,
+            chantier_id=10,
+            date_pointage=date.today(),
+        )
+
+        # Act & Assert: Vérifier le contenu du message
+        try:
+            p.set_heures(
+                heures_normales=Duree(20, 30),
+                heures_supplementaires=Duree(4, 0)
+            )
+            pytest.fail("Devrait lever ValueError")
+        except ValueError as e:
+            error_msg = str(e)
+            # Vérifie que le message contient les informations utiles
+            assert "24h30" in error_msg or "24.5" in error_msg or "24:30" in error_msg
+            assert "Heures normales" in error_msg
+            assert "Heures sup" in error_msg
+
 
 class TestVariablePaie:
     """Tests pour l'entité VariablePaie."""

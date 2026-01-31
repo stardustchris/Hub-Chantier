@@ -7,6 +7,7 @@ from .sign_pointage import SignPointageUseCase
 from .submit_pointage import SubmitPointageUseCase
 from .validate_pointage import ValidatePointageUseCase
 from .reject_pointage import RejectPointageUseCase
+from .correct_pointage import CorrectPointageUseCase
 from .get_pointage import GetPointageUseCase
 from .list_pointages import ListPointagesUseCase
 from .get_feuille_heures import GetFeuilleHeuresUseCase
@@ -30,6 +31,7 @@ __all__ = [
     "SubmitPointageUseCase",
     "ValidatePointageUseCase",
     "RejectPointageUseCase",
+    "CorrectPointageUseCase",
     # Feuilles d'heures
     "GetFeuilleHeuresUseCase",
     "ListFeuillesHeuresUseCase",

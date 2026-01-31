@@ -4,7 +4,7 @@ from typing import Optional
 
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository
-from ...domain.value_objects import Duree
+from ...domain.value_objects import Duree, PeriodePaie
 from ...domain.events import PointageUpdatedEvent
 from ..dtos import UpdatePointageDTO, PointageDTO
 from ..ports import EventBus, NullEventBus
@@ -50,6 +50,13 @@ class UpdatePointageUseCase:
         pointage = self.pointage_repo.find_by_id(dto.pointage_id)
         if not pointage:
             raise ValueError(f"Pointage {dto.pointage_id} non trouvé")
+
+        # Vérifie le verrouillage mensuel (GAP-FDH-002)
+        if PeriodePaie.is_locked(pointage.date_pointage):
+            raise ValueError(
+                "La période de paie est verrouillée. "
+                "Impossible de modifier un pointage après la clôture mensuelle."
+            )
 
         # Vérifie qu'il est modifiable
         if not pointage.is_editable:

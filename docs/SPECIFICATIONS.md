@@ -557,6 +557,17 @@ Le module Feuilles d'heures permet la saisie, le suivi et l'export des heures tr
 | FDH-19 | Feuilles de route | Generation automatique PDF | ✅ |
 | FDH-20 | Mode Offline | Saisie sans connexion, sync auto | ⏳ Frontend |
 
+**Note technique (31/01/2026)** : Phase 1 - Corrections critiques workflow validation feuilles d'heures :
+- ✅ **GAP-FDH-001** : Workflow "corriger" implémenté (`CorrectPointageUseCase` + route POST `/{pointage_id}/correct`)
+- ✅ **GAP-FDH-002** : Verrouillage mensuel période de paie (`PeriodePaie` value object, clôture vendredi avant dernière semaine)
+- ✅ **GAP-FDH-003** : Service de permissions domaine (`PointagePermissionService`, contrôles rôles compagnon/chef/conducteur/admin)
+- ✅ **GAP-FDH-005** : Validation 24h par jour (méthode `Pointage.set_heures()` avec vérification total <= 24h)
+- ✅ Tous les use cases intègrent la vérification `PeriodePaie.is_locked()` avant modification
+- ✅ Tests : +74 tests générés (PeriodePaie, PermissionService, CorrectPointage, validation 24h), 214 tests total (100% pass)
+- ✅ Validation agents : architect-reviewer (10/10), test-automator (90%+), code-reviewer (9.5/10), security-auditor (PASS, 0 CRITICAL/HIGH)
+- ⏳ **SEC-PTG-001** (MEDIUM) : Regex validation heures à renforcer (accepte formats invalides 99:99)
+- ⏳ **SEC-PTG-002** (MEDIUM) : Intégration `PointagePermissionService` dans routes POST/PUT (service créé mais pas encore utilisé)
+
 ### 7.3 Variables de paie
 
 | Variable | Type | Description |

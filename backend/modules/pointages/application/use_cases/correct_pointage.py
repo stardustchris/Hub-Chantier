@@ -1,20 +1,23 @@
-"""Use Case: Soumettre un pointage pour validation."""
+"""Use Case: Corriger un pointage rejeté."""
 
 from typing import Optional
 
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository
 from ...domain.value_objects import PeriodePaie
-from ...domain.events import PointageSubmittedEvent
 from ..dtos import PointageDTO
 from ..ports import EventBus, NullEventBus
 
 
-class SubmitPointageUseCase:
+class CorrectPointageUseCase:
     """
-    Soumet un pointage pour validation.
+    Repasse un pointage REJETÉ en BROUILLON pour correction.
 
-    Le pointage passe du statut BROUILLON à SOUMIS.
+    Selon le workflow § 5.5 (Rejet et correction), après un rejet,
+    le compagnon peut reprendre son pointage pour le corriger.
+
+    Le pointage passe de REJETÉ → BROUILLON et peut être modifié,
+    re-signé et re-soumis.
     """
 
     def __init__(
@@ -34,48 +37,52 @@ class SubmitPointageUseCase:
 
     def execute(self, pointage_id: int) -> PointageDTO:
         """
-        Exécute la soumission d'un pointage.
+        Exécute la correction d'un pointage rejeté.
 
         Args:
-            pointage_id: ID du pointage à soumettre.
+            pointage_id: ID du pointage à corriger.
 
         Returns:
-            Le DTO du pointage soumis.
+            Le DTO du pointage remis en brouillon.
 
         Raises:
-            ValueError: Si le pointage n'existe pas ou ne peut pas être soumis.
+            ValueError: Si le pointage n'existe pas, n'est pas REJETÉ,
+                       ou si la période de paie est verrouillée.
         """
         # Récupère le pointage
         pointage = self.pointage_repo.find_by_id(pointage_id)
         if not pointage:
             raise ValueError(f"Pointage {pointage_id} non trouvé")
 
-        # Vérifie le verrouillage mensuel (GAP-FDH-002)
+        # Vérifie le verrouillage mensuel (CRITIQUE GAP-FDH-002)
         if PeriodePaie.is_locked(pointage.date_pointage):
             raise ValueError(
                 "La période de paie est verrouillée. "
-                "Impossible de soumettre un pointage après la clôture mensuelle."
+                "Impossible de corriger un pointage après la clôture mensuelle."
             )
 
-        # Soumet le pointage
-        pointage.soumettre()
+        # Corrige le pointage (REJETE → BROUILLON)
+        # La méthode corriger() de l'entité vérifie que le statut est REJETÉ
+        pointage.corriger()
 
         # Persiste
         pointage = self.pointage_repo.save(pointage)
 
-        # Publie l'événement
-        event = PointageSubmittedEvent(
-            pointage_id=pointage.id,
-            utilisateur_id=pointage.utilisateur_id,
-            chantier_id=pointage.chantier_id,
-            date_pointage=pointage.date_pointage,
-        )
-        self.event_bus.publish(event)
+        # Pas d'événement publié pour la correction
+        # (action interne au workflow, pas d'impact sur d'autres modules)
 
         return self._to_dto(pointage)
 
     def _to_dto(self, pointage: Pointage) -> PointageDTO:
-        """Convertit l'entité en DTO."""
+        """
+        Convertit l'entité Pointage en DTO.
+
+        Args:
+            pointage: L'entité Pointage.
+
+        Returns:
+            Le DTO correspondant.
+        """
         return PointageDTO(
             id=pointage.id,
             utilisateur_id=pointage.utilisateur_id,
