@@ -17,6 +17,7 @@ Cree:
 import os
 import sys
 from datetime import date, datetime, timedelta
+import asyncio
 
 # Ajouter le chemin du backend pour les imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,9 +26,11 @@ import bcrypt
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import SessionLocal, init_db
+from shared.infrastructure.event_bus import event_bus
 from modules.auth.infrastructure.persistence.user_model import UserModel
 from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
 from modules.planning.infrastructure.persistence.affectation_model import AffectationModel
+from modules.planning.domain.events import AffectationCreatedEvent
 from modules.pointages.infrastructure.persistence.models import PointageModel
 from modules.taches.infrastructure.persistence import TacheModel
 from modules.formulaires.infrastructure.persistence import (
@@ -831,6 +834,8 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
     admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     created_count = 0
+    events_to_publish = []
+
     for email, chantier_code in affectations_data:
         user_id = user_ids.get(email)
         chantier_id = chantier_ids.get(chantier_code)
@@ -861,10 +866,32 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
                 created_by=admin_id,
             )
             db.add(affectation)
+            db.flush()  # Pour obtenir l'ID de l'affectation
+
+            # Créer l'événement pour déclencher FDH-10
+            event = AffectationCreatedEvent(
+                affectation_id=affectation.id,
+                user_id=user_id,
+                chantier_id=chantier_id,
+                date_affectation=affectation_date,
+                metadata={'created_by': admin_id},
+            )
+            events_to_publish.append(event)
             created_count += 1
 
     db.commit()
-    print(f"  [CREE] {created_count} affectations pour la semaine du {monday}")
+
+    # Publier les événements après le commit pour déclencher FDH-10
+    async def publish_events():
+        for event in events_to_publish:
+            await event_bus.publish(event)
+
+    if events_to_publish:
+        asyncio.run(publish_events())
+        print(f"  [CREE] {created_count} affectations pour la semaine du {monday}")
+        print(f"  [PUBLIE] {len(events_to_publish)} événements AffectationCreatedEvent (FDH-10 déclenché)")
+    else:
+        print(f"  [CREE] {created_count} affectations pour la semaine du {monday}")
 
 
 def seed_taches(db: Session, chantier_ids: dict):
@@ -904,73 +931,9 @@ def seed_taches(db: Session, chantier_ids: dict):
     print(f"  [CREE] {created_count} taches")
 
 
-def seed_pointages(db: Session, user_ids: dict, chantier_ids: dict):
-    """Cree des pointages pour la semaine courante et la semaine derniere."""
-    print("\n=== Creation des pointages ===")
-
-    # Semaine courante et semaine derniere
-    today = date.today()
-    current_monday = today - timedelta(days=today.weekday())
-    last_monday = current_monday - timedelta(days=7)
-
-    # Compagnons avec leurs chantiers (VRAIS compagnons du seed)
-    compagnons = [
-        ("sebastien.achkar@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),
-        ("carlos.de-oliveira-covas@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),
-        ("abou.drame@greg-construction.fr", "2025-04-CHIGNIN-AGRICOLE"),
-        ("loic.duinat@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
-        ("manuel.figueiredo-de-almeida@greg-construction.fr", "2025-11-TRIALP"),
-        ("babaker.haroun-moussa@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),
-    ]
-
-    created_count = 0
-
-    # Créer des pointages pour les deux semaines (courante et derniere)
-    for week_monday in [current_monday, last_monday]:
-        for email, chantier_code in compagnons:
-            user_id = user_ids.get(email)
-            chantier_id = chantier_ids.get(chantier_code)
-
-            if not user_id or not chantier_id:
-                continue
-
-            # Créer des pointages du lundi au vendredi (ou jusqu'à aujourd'hui pour la semaine courante)
-            for day_offset in range(5):
-                pointage_date = week_monday + timedelta(days=day_offset)
-
-                # Ne pas créer de pointages dans le futur
-                if pointage_date > today:
-                    continue
-
-                # Verifier si existe deja
-                existing = db.query(PointageModel).filter(
-                    PointageModel.utilisateur_id == user_id,
-                    PointageModel.date_pointage == pointage_date
-                ).first()
-
-                if existing:
-                    continue
-
-                # Heures variables selon le jour (en minutes)
-                heures_normales_min = 480 if day_offset < 4 else 420  # 8h ou 7h
-                heures_sup_min = 60 if day_offset == 3 else 0  # 1h sup le jeudi
-
-                # Pour la semaine courante, statut "soumis" (en attente de validation)
-                statut = "valide" if week_monday == last_monday else "soumis"
-
-                pointage = PointageModel(
-                    utilisateur_id=user_id,
-                    chantier_id=chantier_id,
-                    date_pointage=pointage_date,
-                    heures_normales_minutes=heures_normales_min,
-                    heures_supplementaires_minutes=heures_sup_min,
-                    statut=statut,
-                )
-                db.add(pointage)
-                created_count += 1
-
-    db.commit()
-    print(f"  [CREE] {created_count} pointages pour les semaines du {last_monday} et {current_monday}")
+# SUPPRIMÉ : seed_pointages() n'est plus nécessaire.
+# Les pointages sont désormais créés automatiquement par FDH-10
+# lorsqu'un événement AffectationCreatedEvent est publié.
 
 
 TEMPLATES_FORMULAIRES_DATA = [
@@ -1398,6 +1361,11 @@ def main():
     # Initialiser la base de donnees
     init_db()
 
+    # Câbler l'intégration Planning → Pointages (FDH-10)
+    from modules.pointages.infrastructure.event_handlers import setup_planning_integration
+    setup_planning_integration(SessionLocal)
+    print("Intégration Planning → Pointages câblée (FDH-10)")
+
     # Creer une session
     db = SessionLocal()
 
@@ -1409,18 +1377,16 @@ def main():
         chantier_ids = seed_chantiers(db, user_ids)
 
         # 3. Creer les affectations (planning)
+        # Note: Les pointages seront créés automatiquement via FDH-10
         seed_affectations(db, user_ids, chantier_ids)
 
         # 4. Creer les taches
         seed_taches(db, chantier_ids)
 
-        # 5. Creer les pointages
-        seed_pointages(db, user_ids, chantier_ids)
-
-        # 6. Creer les templates de formulaire
+        # 5. Creer les templates de formulaire
         template_ids = seed_templates_formulaires(db, user_ids)
 
-        # 7. Creer les formulaires remplis
+        # 6. Creer les formulaires remplis
         seed_formulaires_remplis(db, user_ids, chantier_ids, template_ids)
 
         print("\n" + "=" * 60)
