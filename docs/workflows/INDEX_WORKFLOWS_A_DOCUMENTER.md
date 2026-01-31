@@ -31,6 +31,7 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | **Gestion des Tâches** | `WORKFLOW_GESTION_TACHES.md` | ✅ Complet | 100% - Hiérarchie, templates, feuilles tâches, validation, progression |
 | **Dashboard & Feed** | `WORKFLOW_DASHBOARD_FEED.md` | ✅ Complet | 100% - Posts, ciblage, likes, commentaires, @mentions, archivage |
 | **Notifications** | `WORKFLOW_NOTIFICATIONS.md` | ✅ Complet | 100% - EventBus, handlers, Firebase FCM, polling 30s |
+| **Gestion Financière** | `WORKFLOW_GESTION_FINANCIERE.md` | ✅ Complet | 100% - Budget lots, achats workflow, situations travaux, KPI dashboard, fournisseurs, export comptable |
 
 ---
 
@@ -253,6 +254,7 @@ Liste exhaustive des workflows métier de Hub Chantier nécessitant une document
 | 10 | **Tâches** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 0.5j | ✅ Complet (WORKFLOW_GESTION_TACHES.md) |
 | 11 | **Dashboard/Feed** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 1j | ✅ Complet (WORKFLOW_DASHBOARD_FEED.md) |
 | 12 | **Notifications** | ✅ FAIT | ⭐⭐⭐ | ℹ️ UTILE | 1j | ✅ Complet (WORKFLOW_NOTIFICATIONS.md) |
+| 13 | **Gestion Financière** | ✅ FAIT | ⭐⭐⭐⭐⭐ | 🔥 CRITIQUE | 3j | ✅ Complet (WORKFLOW_GESTION_FINANCIERE.md) |
 | | **Authentification** | ✅ FAIT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 2j | ✅ Complet |
 | | **Feuilles Heures (saisie)** | ✅ FAIT | ⭐⭐⭐⭐ | 🔥 CRITIQUE | 1j | ✅ Complet |
 
@@ -379,7 +381,7 @@ Description concise du workflow
 
 ## 📞 CONCLUSION
 
-**Statut actuel** : 16 workflows documentés sur 16 (100%) ✅
+**Statut actuel** : 17 workflows documentés sur 17 (100%) ✅
 
 **Fait** :
 1. ✅ **3 workflows critiques** documentés (Planning, Cycle Vie Chantier, Validation FdH)
