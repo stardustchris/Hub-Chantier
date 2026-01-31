@@ -60,6 +60,35 @@ export default function UsersListPage() {
   const roleFilter = (filters.role as UserRole | undefined) || ''
   const activeFilter = filters.is_active as boolean | null ?? null
 
+  // Charger les statistiques par rôle (totaux réels, pas juste la page actuelle)
+  const loadRoleStats = useCallback(async () => {
+    try {
+      // Charger tous les utilisateurs pour calculer les vrais totaux par rôle
+      // On ne passe PAS is_active pour récupérir tous les utilisateurs (actifs et inactifs)
+      const allUsers = await usersService.list({ size: 100 })
+      const stats: Record<UserRole, number> = {
+        admin: 0,
+        conducteur: 0,
+        chef_chantier: 0,
+        compagnon: 0,
+      }
+      allUsers.items.forEach(u => {
+        if (u.role in stats) {
+          stats[u.role]++
+        }
+      })
+      setRoleStats(stats)
+    } catch (error) {
+      logger.error('Error loading role stats', error, { context: 'UsersListPage' })
+    }
+  }, [])
+
+  // Charger les stats au montage
+  useEffect(() => {
+    loadRoleStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleCreateUser = useCallback(async (data: UserCreate) => {
     try {
       await usersService.create(data)
@@ -111,33 +140,6 @@ export default function UsersListPage() {
   const handleClearFilters = useCallback(() => {
     clearFilters()
   }, [clearFilters])
-
-  // Charger les statistiques par rôle (totaux réels, pas juste la page actuelle)
-  const loadRoleStats = useCallback(async () => {
-    try {
-      // Charger tous les utilisateurs pour calculer les vrais totaux par rôle
-      const allUsers = await usersService.list({ size: 1000 })
-      const stats: Record<UserRole, number> = {
-        admin: 0,
-        conducteur: 0,
-        chef_chantier: 0,
-        compagnon: 0,
-      }
-      allUsers.items.forEach(u => {
-        if (u.role in stats) {
-          stats[u.role]++
-        }
-      })
-      setRoleStats(stats)
-    } catch (error) {
-      logger.error('Error loading role stats', error, { context: 'UsersListPage' })
-    }
-  }, [])
-
-  // Charger les stats au montage et après chaque reload
-  useEffect(() => {
-    loadRoleStats()
-  }, [loadRoleStats])
 
   const getRoleCount = useCallback((role: UserRole) => {
     return roleStats[role]
