@@ -10,7 +10,67 @@ from modules.pointages.infrastructure.event_handlers import (
     handle_affectation_bulk_created,
     register_event_handlers,
     setup_planning_integration,
+    _convert_heures_to_string,
 )
+
+
+class TestConvertHeuresToString:
+    """Tests de la fonction _convert_heures_to_string."""
+
+    def test_convert_float_8_hours(self):
+        """Test: conversion de 8.0 heures en '08:00'."""
+        result = _convert_heures_to_string(8.0)
+        assert result == "08:00"
+
+    def test_convert_float_7_5_hours(self):
+        """Test: conversion de 7.5 heures en '07:30'."""
+        result = _convert_heures_to_string(7.5)
+        assert result == "07:30"
+
+    def test_convert_float_with_15_minutes(self):
+        """Test: conversion de 8.25 heures en '08:15'."""
+        result = _convert_heures_to_string(8.25)
+        assert result == "08:15"
+
+    def test_convert_float_with_45_minutes(self):
+        """Test: conversion de 8.75 heures en '08:45'."""
+        result = _convert_heures_to_string(8.75)
+        assert result == "08:45"
+
+    def test_convert_float_10_hours(self):
+        """Test: conversion de 10.0 heures en '10:00'."""
+        result = _convert_heures_to_string(10.0)
+        assert result == "10:00"
+
+    def test_convert_float_zero_hours(self):
+        """Test: conversion de 0.0 heures en '00:00'."""
+        result = _convert_heures_to_string(0.0)
+        assert result == "00:00"
+
+    def test_convert_string_already_formatted(self):
+        """Test: retourne la string telle quelle si deja au format HH:MM."""
+        result = _convert_heures_to_string("08:00")
+        assert result == "08:00"
+
+    def test_convert_string_with_different_time(self):
+        """Test: retourne la string telle quelle pour '09:30'."""
+        result = _convert_heures_to_string("09:30")
+        assert result == "09:30"
+
+    def test_convert_string_with_leading_zero(self):
+        """Test: retourne la string telle quelle pour '07:15'."""
+        result = _convert_heures_to_string("07:15")
+        assert result == "07:15"
+
+    def test_convert_rounding_minutes(self):
+        """Test: arrondit correctement les minutes (ex: 7.33 -> '07:20')."""
+        result = _convert_heures_to_string(7.33)
+        assert result == "07:20"
+
+    def test_convert_handles_edge_case_23_hours(self):
+        """Test: conversion de 23.5 heures en '23:30'."""
+        result = _convert_heures_to_string(23.5)
+        assert result == "23:30"
 
 
 class TestHandleAffectationCreated:

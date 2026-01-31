@@ -4,10 +4,13 @@ Ce module definit les endpoints API pour le Planning Operationnel
 selon CDC Section 5 (PLN-01 a PLN-28).
 """
 
+import logging
 from datetime import date
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+logger = logging.getLogger(__name__)
 
 from ...adapters.controllers import PlanningController
 from ...adapters.controllers.planning_schemas import (
@@ -100,6 +103,7 @@ async def create_affectation(
             user_id=result["utilisateur_id"],
             chantier_id=result["chantier_id"],
             date_affectation=datetime.fromisoformat(result["date"]).date() if isinstance(result["date"], str) else result["date"],
+            heures_prevues=result.get("heures_prevues"),
             metadata={"created_by": current_user_id}
         ))
 
@@ -176,10 +180,11 @@ def get_planning(
         )
         return controller.get_planning(filters, current_user_id, current_user_role)
     except Exception as e:
-        import traceback
-        print(f"[ERROR] get_planning failed: {e}")
-        print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Erreur lors du chargement du planning: {str(e)}")
+        logger.exception(f"Erreur lors du chargement du planning: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors du chargement du planning"
+        )
 
 
 @router.get(

@@ -206,6 +206,7 @@ class CreateAffectationUseCase:
                     chantier_id=affectations[0].chantier_id,
                     date=affectations[0].date,
                     created_by=created_by,
+                    heures_prevues=affectations[0].heures_prevues,
                 )
                 self.event_bus.publish(event)
             else:

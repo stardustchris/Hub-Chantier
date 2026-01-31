@@ -25,9 +25,43 @@ def _extract_event_field(event, field: str, default=None):
     return getattr(event, field, default)
 
 
+def _convert_heures_to_string(heures) -> str:
+    """
+    Convertit un nombre d'heures (float ou string) en format "HH:MM".
+
+    Gère deux cas:
+    - float: convertit en "HH:MM" (ex: 8.0 -> "08:00", 7.5 -> "07:30")
+    - str: retourne tel quel si déjà au format "HH:MM"
+
+    Args:
+        heures: Nombre d'heures (float) ou string au format "HH:MM".
+
+    Returns:
+        Chaine au format "HH:MM" (ex: "08:00", "07:30").
+
+    Example:
+        >>> _convert_heures_to_string(8.0)
+        '08:00'
+        >>> _convert_heures_to_string(7.5)
+        '07:30'
+        >>> _convert_heures_to_string("08:00")
+        '08:00'
+    """
+    # Si c'est déjà une string, retourner tel quel
+    if isinstance(heures, str):
+        return heures
+
+    # Sinon, convertir float -> "HH:MM"
+    heures_int = int(heures)
+    minutes_decimal = (heures - heures_int) * 60
+    minutes_int = int(round(minutes_decimal))
+    return f"{heures_int:02d}:{minutes_int:02d}"
+
+
 def handle_affectation_created(
     event,
     session: Session,
+    chantier_repo=None,
 ) -> None:
     """
     Handler pour l'événement AffectationCreatedEvent du module Planning.
@@ -38,6 +72,7 @@ def handle_affectation_created(
     Args:
         event: L'événement AffectationCreatedEvent (DomainEvent ou dataclass).
         session: Session SQLAlchemy.
+        chantier_repo: Repository chantier injecté (optionnel, pour filtrage système).
     """
     from datetime import date as date_type
 
@@ -60,21 +95,14 @@ def handle_affectation_created(
         feuille_repo = SQLAlchemyFeuilleHeuresRepository(session)
         event_bus = get_event_bus()
 
-        # Injecte le repository chantier pour filtrage des chantiers système (Gap 2)
-        chantier_repo = None
-        try:
-            from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
-            chantier_repo = SQLAlchemyChantierRepository(session)
-        except ImportError:
-            logger.warning("ChantierRepository not available, système chantiers filtering disabled")
-
         # Initialise le use case
         use_case = BulkCreateFromPlanningUseCase(
             pointage_repo, feuille_repo, event_bus, chantier_repo
         )
 
         # Détermine les heures prévues (depuis l'événement ou par défaut)
-        heures_prevues = _extract_event_field(event, 'heures_prevues') or "08:00"
+        heures_prevues_raw = _extract_event_field(event, 'heures_prevues')
+        heures_prevues = _convert_heures_to_string(heures_prevues_raw) if heures_prevues_raw else "08:00"
 
         # Convertir la date si c'est une string ISO
         if isinstance(date_val, str):
@@ -160,22 +188,28 @@ def register_event_handlers(event_bus_class=None) -> None:
         logger.debug("Planning module events not available")
 
 
-def setup_planning_integration(session_factory) -> None:
+def setup_planning_integration(session_factory, chantier_repo_factory=None) -> None:
     """
     Configure l'intégration avec le module Planning.
 
     Args:
         session_factory: Factory pour créer des sessions SQLAlchemy.
+        chantier_repo_factory: Factory pour créer ChantierRepository (optionnel).
     """
     try:
         from shared.infrastructure.event_bus import event_bus
         from modules.planning.domain.events import AffectationCreatedEvent
 
         def wrapped_handler(event):
-            """Handler avec session automatique."""
+            """Handler avec session automatique et injection de dépendances."""
             session = session_factory()
             try:
-                handle_affectation_created(event, session)
+                # Injection du repository chantier si disponible
+                chantier_repo = None
+                if chantier_repo_factory:
+                    chantier_repo = chantier_repo_factory(session)
+
+                handle_affectation_created(event, session, chantier_repo)
             finally:
                 session.close()
 

@@ -615,6 +615,16 @@ Le module Feuilles d'heures permet la saisie, le suivi et l'export des heures tr
 - ⏳ **SEC-PTG-001** (MEDIUM) : Regex validation heures à renforcer (accepte formats invalides 99:99)
 - ⏳ **SEC-PTG-002** (MEDIUM) : Intégration `PointagePermissionService` dans routes POST/PUT (service créé mais pas encore utilisé)
 
+**Note technique (31/01/2026)** : Phase 2 - Corrections critiques transmission heures_prevues (FDH-10) :
+- ✅ **GAP-T5** : Transmission heures_prevues dans événements Planning → Pointages (ajout paramètre `heures_prevues: Optional[float]` dans `AffectationCreatedEvent`)
+- ✅ **Type conversion** : Ajout `_convert_heures_to_string()` dans `event_handlers.py` pour convertir float (8.0) → string ("08:00")
+- ✅ **Validation NaN/Infinity** : Ajout `field_validator` dans `planning_schemas.py` pour rejeter valeurs invalides (sécurité HIGH)
+- ✅ **RGPD logs** : Passage logs sensibles (user_id, chantier_id, heures) de INFO → DEBUG dans `planning_controller.py`
+- ✅ **Clean Architecture** : Correction ligne 99 `event_handlers.py` - injection dépendance `chantier_repo` au lieu import direct inter-modules
+- ✅ **Security** : Remplacement `print()` par `logger.exception()` dans `planning_routes.py` (finding HIGH résolu)
+- ✅ Tests : +43 tests générés (conversion heures, validators Pydantic), 92% couverture (objectif 90% dépassé)
+- ✅ Validation agents finale : architect-reviewer (WARN, 0 CRITICAL), test-automator (92%), code-reviewer (APPROVED), security-auditor (PASS, 0 HIGH/CRITICAL)
+
 ### 7.3 Variables de paie
 
 | Variable | Type | Description |

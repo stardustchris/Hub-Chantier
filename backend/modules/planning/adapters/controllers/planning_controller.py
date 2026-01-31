@@ -201,10 +201,10 @@ class PlanningController:
         Example:
             >>> result = controller.create(request, current_user_id=1)
         """
-        logger.info(
+        logger.debug(
             f"Creation affectation: user={request.utilisateur_id}, "
             f"chantier={request.chantier_id}, date={request.date}, "
-            f"created_by={current_user_id}"
+            f"heures_prevues={request.heures_prevues}, created_by={current_user_id}"
         )
 
         # Convertir la requete en DTO
@@ -224,7 +224,7 @@ class PlanningController:
         # Executer le use case
         affectations = self.create_affectation_uc.execute(dto, current_user_id)
 
-        logger.info(
+        logger.debug(
             f"Affectation(s) creee(s): {len(affectations)} affectation(s), "
             f"premiere_id={affectations[0].id}"
         )
@@ -501,7 +501,7 @@ class PlanningController:
         Example:
             >>> results = controller.duplicate(request, current_user_id=1)
         """
-        logger.info(
+        logger.debug(
             f"Duplication affectations: user={request.utilisateur_id}, "
             f"source={request.source_date_debut} -> {request.source_date_fin}, "
             f"target={request.target_date_debut}, created_by={current_user_id}"
@@ -516,7 +516,7 @@ class PlanningController:
 
         affectations = self.duplicate_affectations_uc.execute(dto, current_user_id)
 
-        logger.info(
+        logger.debug(
             f"Affectations dupliquees: {len(affectations)} affectation(s) creee(s)"
         )
 

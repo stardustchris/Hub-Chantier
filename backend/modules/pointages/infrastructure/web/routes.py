@@ -2,14 +2,16 @@
 
 from datetime import date
 from typing import Optional, List
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
 from shared.infrastructure.web.dependencies import (
     get_current_user_id,
+    get_current_user_role,
 )
 from shared.infrastructure.entity_info_impl import SQLAlchemyEntityInfoService
 from ..persistence import (
@@ -20,9 +22,73 @@ from ..persistence import (
 from ..event_bus_impl import get_event_bus
 from ...adapters.controllers import PointageController
 from ...domain.events.heures_validated import HeuresValidatedEvent
+from ...domain.services.permission_service import PointagePermissionService
 
 
 router = APIRouter(prefix="/pointages", tags=["Feuilles d'heures"])
+
+
+# ===== Validation Helpers =====
+
+
+def validate_time_format(time_str: str) -> str:
+    """
+    Valide le format HH:MM strictement.
+
+    Args:
+        time_str: Chaîne au format HH:MM.
+
+    Returns:
+        La chaîne validée.
+
+    Raises:
+        ValueError: Si le format est invalide.
+
+    Examples:
+        >>> validate_time_format("08:30")
+        '08:30'
+        >>> validate_time_format("23:59")
+        '23:59'
+        >>> validate_time_format("00:00")
+        '00:00'
+        >>> validate_time_format("24:00")
+        ValueError: Heures invalides (doit être entre 00 et 23)
+        >>> validate_time_format("12:60")
+        ValueError: Minutes invalides (doit être entre 00 et 59)
+        >>> validate_time_format("-1:30")
+        ValueError: Format d'heure invalide. Format attendu: HH:MM
+        >>> validate_time_format("99:99")
+        ValueError: Heures invalides (doit être entre 00 et 23)
+    """
+    # Vérification du format de base
+    if not time_str or not isinstance(time_str, str):
+        raise ValueError("Format d'heure invalide. Format attendu: HH:MM")
+
+    # Regex stricte: exactement 2 chiffres pour les heures, 2 pour les minutes
+    pattern = r"^(\d{1,2}):(\d{2})$"
+    match = re.match(pattern, time_str)
+
+    if not match:
+        raise ValueError("Format d'heure invalide. Format attendu: HH:MM")
+
+    hours_str, minutes_str = match.groups()
+
+    # Convertir en entiers
+    try:
+        hours = int(hours_str)
+        minutes = int(minutes_str)
+    except ValueError:
+        raise ValueError("Format d'heure invalide. Format attendu: HH:MM")
+
+    # Validation des plages
+    if hours < 0 or hours > 23:
+        raise ValueError("Heures invalides (doit être entre 00 et 23)")
+
+    if minutes < 0 or minutes > 59:
+        raise ValueError("Minutes invalides (doit être entre 00 et 59)")
+
+    # Normaliser le format (pad avec des zéros si nécessaire)
+    return f"{hours:02d}:{minutes:02d}"
 
 
 # ===== Pydantic Schemas =====
@@ -34,18 +100,32 @@ class CreatePointageRequest(BaseModel):
     utilisateur_id: int
     chantier_id: int
     date_pointage: date
-    heures_normales: str = Field(..., pattern=r"^\d{1,2}:\d{2}$")
-    heures_supplementaires: str = Field(default="00:00", pattern=r"^\d{1,2}:\d{2}$")
+    heures_normales: str
+    heures_supplementaires: str = "00:00"
     commentaire: Optional[str] = None
     affectation_id: Optional[int] = None
+
+    @validator("heures_normales", "heures_supplementaires")
+    def validate_time(cls, v):
+        """Valide le format HH:MM strictement."""
+        if v:
+            return validate_time_format(v)
+        return v
 
 
 class UpdatePointageRequest(BaseModel):
     """Requête de mise à jour de pointage."""
 
-    heures_normales: Optional[str] = Field(None, pattern=r"^\d{1,2}:\d{2}$")
-    heures_supplementaires: Optional[str] = Field(None, pattern=r"^\d{1,2}:\d{2}$")
+    heures_normales: Optional[str] = None
+    heures_supplementaires: Optional[str] = None
     commentaire: Optional[str] = None
+
+    @validator("heures_normales", "heures_supplementaires")
+    def validate_time(cls, v):
+        """Valide le format HH:MM strictement."""
+        if v:
+            return validate_time_format(v)
+        return v
 
 
 class SignPointageRequest(BaseModel):
@@ -117,6 +197,7 @@ def get_controller(db: Session = Depends(get_db)) -> PointageController:
 def create_pointage(
     request: CreatePointageRequest,
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
 ):
     """
@@ -127,7 +208,22 @@ def create_pointage(
     - **date_pointage**: Date du pointage
     - **heures_normales**: Heures normales (format HH:MM)
     - **heures_supplementaires**: Heures sup (format HH:MM, défaut 00:00)
+
+    Permissions:
+    - Compagnon: Peut créer uniquement pour lui-même
+    - Chef/Conducteur/Admin: Peut créer pour n'importe qui
     """
+    # Vérification des permissions (SEC-PTG-002)
+    if not PointagePermissionService.can_create_for_user(
+        current_user_id=current_user_id,
+        target_user_id=request.utilisateur_id,
+        user_role=current_user_role,
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Vous n'avez pas la permission de créer un pointage pour cet utilisateur",
+        )
+
     try:
         return controller.create_pointage(
             utilisateur_id=request.utilisateur_id,
@@ -386,9 +482,32 @@ def update_pointage(
     pointage_id: int,
     request: UpdatePointageRequest,
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
 ):
-    """Met à jour un pointage (si en brouillon ou rejeté)."""
+    """
+    Met à jour un pointage (si en brouillon ou rejeté).
+
+    Permissions:
+    - Compagnon: Peut modifier uniquement ses propres pointages
+    - Chef/Conducteur/Admin: Peut modifier n'importe quel pointage
+    """
+    # Récupérer le pointage pour vérifier le propriétaire (SEC-PTG-002)
+    pointage = controller.get_pointage(pointage_id)
+    if not pointage:
+        raise HTTPException(status_code=404, detail="Pointage non trouvé")
+
+    # Vérification des permissions
+    if not PointagePermissionService.can_modify(
+        current_user_id=current_user_id,
+        pointage_owner_id=pointage.get("utilisateur_id"),
+        user_role=current_user_role,
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Vous n'avez pas la permission de modifier ce pointage",
+        )
+
     try:
         return controller.update_pointage(
             pointage_id=pointage_id,

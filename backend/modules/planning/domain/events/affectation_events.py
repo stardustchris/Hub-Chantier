@@ -20,6 +20,7 @@ class AffectationCreatedEvent:
         chantier_id: ID du chantier concerne.
         date: Date de l'affectation.
         created_by: ID de l'utilisateur qui a cree l'affectation.
+        heures_prevues: Nombre d'heures prevues pour l'affectation (optionnel).
         timestamp: Moment de l'evenement.
 
     Example:
@@ -28,7 +29,8 @@ class AffectationCreatedEvent:
         ...     utilisateur_id=5,
         ...     chantier_id=10,
         ...     date=date(2026, 1, 22),
-        ...     created_by=3
+        ...     created_by=3,
+        ...     heures_prevues=8.0
         ... )
     """
 
@@ -37,6 +39,7 @@ class AffectationCreatedEvent:
     chantier_id: int
     date: date
     created_by: int
+    heures_prevues: Optional[float] = None
     timestamp: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -53,6 +56,7 @@ class AffectationCreatedEvent:
             "chantier_id": self.chantier_id,
             "date": self.date.isoformat(),
             "created_by": self.created_by,
+            "heures_prevues": self.heures_prevues,
             "timestamp": self.timestamp.isoformat(),
         }
 

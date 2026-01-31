@@ -23,6 +23,7 @@ class AffectationCreatedEvent(DomainEvent):
         heure_debut: Heure de début optionnelle.
         heure_fin: Heure de fin optionnelle.
         note: Notes optionnelles sur l'affectation.
+        heures_prevues: Nombre d'heures prévues pour l'affectation (optionnel).
         metadata: Métadonnées additionnelles (user_id, ip_address, etc).
 
     Example:
@@ -43,6 +44,7 @@ class AffectationCreatedEvent(DomainEvent):
         heure_debut: Optional[time] = None,
         heure_fin: Optional[time] = None,
         note: Optional[str] = None,
+        heures_prevues: Optional[float] = None,
         metadata: Optional[Dict[str, Any]] = None
     ):
         super().__init__(
@@ -55,7 +57,8 @@ class AffectationCreatedEvent(DomainEvent):
                 'date': date_affectation.isoformat(),
                 'heure_debut': heure_debut.isoformat() if heure_debut else None,
                 'heure_fin': heure_fin.isoformat() if heure_fin else None,
-                'note': note
+                'note': note,
+                'heures_prevues': heures_prevues
             },
             metadata=metadata or {}
         )

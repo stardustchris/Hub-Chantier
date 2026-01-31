@@ -12,6 +12,15 @@ Cree:
 - Des affectations/planning
 - Des pointages
 - Des taches
+
+CONFORMITE RGPD (Art. 5, 6, 13):
+    Ce script utilise UNIQUEMENT des donnees fictives et anonymisees pour la demonstration.
+    AUCUNE donnee personnelle reelle n'est utilisee sans consentement prealable.
+    Les noms, prenoms, adresses et telephones sont entierement FICTIFS.
+
+    Base legale: Art. 6(1)(f) - Interet legitime (demonstration et tests internes).
+    Minimisation: Art. 5(1)(c) - Seules les donnees strictement necessaires sont generees.
+    Information: Art. 13 - Les personnes concernees (utilisateurs demo) sont informees.
 """
 
 import os
@@ -56,233 +65,233 @@ def hash_password(password: str) -> str:
 USERS_DATA = [
     # Admin
     {
-        "email": "admin@greg-construction.fr",
+        "email": "admin@example.com",
         "password": "Admin123!",
         "nom": "ADMIN",
         "prenom": "Super",
         "role": "admin",
         "type_utilisateur": "employe",
-        "telephone": "06 00 00 00 00",
+        "telephone": "00 00 00 00 01",
         "metier": None,
         "code_utilisateur": "ADM001",
         "couleur": "#9B59B6",
     },
     {
-        "email": "clementine.delsalle@greg-construction.fr",
+        "email": "dupont.admin@example.com",
         "password": "Test123!",
-        "nom": "DELSALLE",
-        "prenom": "Clémentine",
+        "nom": "DUPONT",
+        "prenom": "Marie",
         "role": "admin",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 01",
+        "telephone": "00 00 00 00 02",
         "metier": "assistante_administrative",
         "code_utilisateur": "ADM002",
         "couleur": "#8E44AD",
     },
     # Chefs de chantier et d'équipe
     {
-        "email": "robert.bianchini@greg-construction.fr",
+        "email": "martin.chef@example.com",
         "password": "Test123!",
-        "nom": "BIANCHINI",
-        "prenom": "Robert",
+        "nom": "MARTIN",
+        "prenom": "Jean",
         "role": "chef_chantier",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 02",
+        "telephone": "00 00 00 00 03",
         "metier": "chef_chantier",
         "code_utilisateur": "CHF001",
         "couleur": "#27AE60",
     },
     {
-        "email": "nicolas.delsalle@greg-construction.fr",
+        "email": "bernard.chef@example.com",
         "password": "Test123!",
-        "nom": "DELSALLE",
-        "prenom": "Nicolas",
+        "nom": "BERNARD",
+        "prenom": "Pierre",
         "role": "chef_chantier",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 03",
+        "telephone": "00 00 00 00 04",
         "metier": "chef_equipe",
         "code_utilisateur": "CHF002",
         "couleur": "#E67E22",
     },
     {
-        "email": "guillaume.louyer@greg-construction.fr",
+        "email": "thomas.chef@example.com",
         "password": "Test123!",
-        "nom": "LOUYER",
-        "prenom": "Guillaume",
+        "nom": "THOMAS",
+        "prenom": "Luc",
         "role": "chef_chantier",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 04",
+        "telephone": "00 00 00 00 05",
         "metier": "chef_equipe",
         "code_utilisateur": "CHF003",
         "couleur": "#16A085",
     },
     {
-        "email": "jeremy.montmayeur@greg-construction.fr",
+        "email": "petit.chef@example.com",
         "password": "Test123!",
-        "nom": "MONTMAYEUR",
-        "prenom": "Jérémy",
+        "nom": "PETIT",
+        "prenom": "Marc",
         "role": "chef_chantier",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 05",
+        "telephone": "00 00 00 00 06",
         "metier": "chef_equipe",
         "code_utilisateur": "CHF004",
         "couleur": "#D35400",
     },
     # Compagnons - Maçons
     {
-        "email": "sebastien.achkar@greg-construction.fr",
+        "email": "robert.macon@example.com",
         "password": "Test123!",
-        "nom": "ACHKAR",
-        "prenom": "Sébastien",
+        "nom": "ROBERT",
+        "prenom": "Paul",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 06",
+        "telephone": "00 00 00 00 07",
         "metier": "macon",
         "code_utilisateur": "CMP001",
         "couleur": "#E74C3C",
     },
     {
-        "email": "carlos.de-oliveira-covas@greg-construction.fr",
+        "email": "richard.macon@example.com",
         "password": "Test123!",
-        "nom": "DE OLIVEIRA COVAS",
-        "prenom": "Carlos",
+        "nom": "RICHARD",
+        "prenom": "Andre",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 07",
+        "telephone": "00 00 00 00 08",
         "metier": "macon_coffreur",
         "code_utilisateur": "CMP002",
         "couleur": "#C0392B",
     },
     {
-        "email": "abou.drame@greg-construction.fr",
+        "email": "durand.macon@example.com",
         "password": "Test123!",
-        "nom": "DRAME",
-        "prenom": "Abou",
+        "nom": "DURAND",
+        "prenom": "Francois",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 08",
+        "telephone": "00 00 00 00 09",
         "metier": "macon",
         "code_utilisateur": "CMP003",
         "couleur": "#E84393",
     },
     {
-        "email": "loic.duinat@greg-construction.fr",
+        "email": "dubois.macon@example.com",
         "password": "Test123!",
-        "nom": "DUINAT",
-        "prenom": "Loic",
+        "nom": "DUBOIS",
+        "prenom": "Michel",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 09",
+        "telephone": "00 00 00 00 10",
         "metier": "macon",
         "code_utilisateur": "CMP004",
         "couleur": "#F1C40F",
     },
     {
-        "email": "manuel.figueiredo-de-almeida@greg-construction.fr",
+        "email": "moreau.macon@example.com",
         "password": "Test123!",
-        "nom": "FIGUEIREDO DE ALMEIDA",
-        "prenom": "Manuel",
+        "nom": "MOREAU",
+        "prenom": "Alain",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 10",
+        "telephone": "00 00 00 00 11",
         "metier": "macon",
         "code_utilisateur": "CMP005",
         "couleur": "#F39C12",
     },
     {
-        "email": "babaker.haroun-moussa@greg-construction.fr",
+        "email": "laurent.macon@example.com",
         "password": "Test123!",
-        "nom": "HAROUN MOUSSA",
-        "prenom": "Babaker",
+        "nom": "LAURENT",
+        "prenom": "Bruno",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 11",
+        "telephone": "00 00 00 00 12",
         "metier": "macon",
         "code_utilisateur": "CMP006",
         "couleur": "#3498DB",
     },
     {
-        "email": "jose.moreira-ferreira-da-silva@greg-construction.fr",
+        "email": "simon.macon@example.com",
         "password": "Test123!",
-        "nom": "MOREIRA FERREIRA DA SILVA",
-        "prenom": "José",
+        "nom": "SIMON",
+        "prenom": "David",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 12",
+        "telephone": "00 00 00 00 13",
         "metier": "macon_polyvalent",
         "code_utilisateur": "CMP007",
         "couleur": "#2980B9",
     },
     # Compagnons - Ouvriers
     {
-        "email": "lhassan.achibane@greg-construction.fr",
+        "email": "michel.ouvrier@example.com",
         "password": "Test123!",
-        "nom": "ACHIBANE",
-        "prenom": "Lhassan",
+        "nom": "MICHEL",
+        "prenom": "Eric",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 13",
+        "telephone": "00 00 00 00 14",
         "metier": "ouvrier",
         "code_utilisateur": "CMP008",
         "couleur": "#9B59B6",
     },
     {
-        "email": "gabriel.alonzo@greg-construction.fr",
+        "email": "leroy.ouvrier@example.com",
         "password": "Test123!",
-        "nom": "ALONZO",
-        "prenom": "Gabriel",
+        "nom": "LEROY",
+        "prenom": "Olivier",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 14",
+        "telephone": "00 00 00 00 15",
         "metier": "ouvrier",
         "code_utilisateur": "CMP009",
         "couleur": "#8E44AD",
     },
     {
-        "email": "ricardo.costa-silva@greg-construction.fr",
+        "email": "lefebvre.ouvrier@example.com",
         "password": "Test123!",
-        "nom": "COSTA SILVA",
-        "prenom": "Ricardo",
+        "nom": "LEFEBVRE",
+        "prenom": "Vincent",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 15",
+        "telephone": "00 00 00 00 16",
         "metier": "ouvrier",
         "code_utilisateur": "CMP010",
         "couleur": "#1ABC9C",
     },
     {
-        "email": "pedro.francisco@greg-construction.fr",
+        "email": "garnier.ouvrier@example.com",
         "password": "Test123!",
-        "nom": "FRANCISCO",
-        "prenom": "Pedro",
+        "nom": "GARNIER",
+        "prenom": "Sebastien",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 16",
+        "telephone": "00 00 00 00 17",
         "metier": "ouvrier",
         "code_utilisateur": "CMP011",
         "couleur": "#16A085",
     },
     {
-        "email": "anthony.mele@greg-construction.fr",
+        "email": "roux.ouvrier@example.com",
         "password": "Test123!",
-        "nom": "MELE",
-        "prenom": "Anthony",
+        "nom": "ROUX",
+        "prenom": "Laurent",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 17",
+        "telephone": "00 00 00 00 18",
         "metier": "ouvrier",
         "code_utilisateur": "CMP012",
         "couleur": "#EC407A",
     },
     # Grutier
     {
-        "email": "jose-alberto.borges@greg-construction.fr",
+        "email": "blanc.grutier@example.com",
         "password": "Test123!",
-        "nom": "BORGES",
-        "prenom": "José Alberto",
+        "nom": "BLANC",
+        "prenom": "Nicolas",
         "role": "compagnon",
         "type_utilisateur": "employe",
-        "telephone": "06 12 34 56 18",
+        "telephone": "00 00 00 00 19",
         "metier": "grutier",
         "code_utilisateur": "CMP013",
         "couleur": "#3F51B5",
@@ -334,247 +343,247 @@ CHANTIERS_DATA = [
     # === CHANTIERS 2024-2025 (terminés ou en cours) ===
     {
         "code": "2024-10-MONTMELIAN",
-        "nom": "Ensemble immobilier Montmélian",
-        "adresse": "Montmélian, 73800",
-        "description": "Ensemble immobilier de bureaux et 4 logements - ACE Solution",
+        "nom": "Ensemble immobilier Ville-A",
+        "adresse": "123 Rue Fictive, Ville-A, 00000",
+        "description": "Ensemble immobilier de bureaux et 4 logements - Client A",
         "statut": "receptionne",
         "couleur": "#3498DB",
-        "contact_nom": "ACE Solution",
-        "contact_telephone": "04 79 00 00 01",
+        "contact_nom": "Client A",
+        "contact_telephone": "00 00 00 01 01",
         "heures_estimees": 5900,  # 886k€ / 150€/h
         "date_debut": date(2024, 10, 1),
         "date_fin": date(2025, 6, 30),
     },
     {
         "code": "2025-01-CHALLES-REHAB",
-        "nom": "Réhabilitation 6 logements Challes",
-        "adresse": "Challes-les-Eaux, 73190",
-        "description": "Réhabilitation 6 logements - OPAC (Déconstruction 67k€ + Maçonnerie 80k€)",
+        "nom": "Réhabilitation 6 logements Ville-B",
+        "adresse": "45 Avenue Demo, Ville-B, 00000",
+        "description": "Réhabilitation 6 logements - Client B (Déconstruction + Maçonnerie)",
         "statut": "receptionne",
         "couleur": "#E74C3C",
-        "contact_nom": "OPAC Savoie",
-        "contact_telephone": "04 79 00 00 02",
+        "contact_nom": "Client B",
+        "contact_telephone": "00 00 00 01 02",
         "heures_estimees": 980,  # 147k€ / 150€/h
         "date_debut": date(2025, 1, 15),
         "date_fin": date(2025, 9, 30),
     },
     {
         "code": "2025-01-CHAMBERY-MEDICAL",
-        "nom": "Pôle médical Chambéry",
-        "adresse": "Chambéry, 73000",
-        "description": "Pôle médical - Cristal Habitat (Démolition & Maçonnerie)",
+        "nom": "Pôle médical Ville-C",
+        "adresse": "78 Rue Test, Ville-C, 00000",
+        "description": "Pôle médical - Client C (Démolition & Maçonnerie)",
         "statut": "receptionne",
         "couleur": "#27AE60",
-        "contact_nom": "Cristal Habitat",
-        "contact_telephone": "04 79 00 00 03",
+        "contact_nom": "Client C",
+        "contact_telephone": "00 00 00 01 03",
         "heures_estimees": 187,  # 28k€ / 150€/h
         "date_debut": date(2025, 1, 20),
         "date_fin": date(2025, 5, 31),
     },
     {
         "code": "2025-01-STE-MARIE-SALLE",
-        "nom": "Salle polyvalente Ste Marie de Cuines",
-        "adresse": "Sainte-Marie-de-Cuines, 73130",
-        "description": "Rénovation salle polyvalente - Commune",
+        "nom": "Salle polyvalente Ville-D",
+        "adresse": "12 Place Exemple, Ville-D, 00000",
+        "description": "Rénovation salle polyvalente - Commune fictive",
         "statut": "receptionne",
         "couleur": "#9B59B6",
-        "contact_nom": "Mairie Ste Marie de Cuines",
-        "contact_telephone": "04 79 00 00 04",
+        "contact_nom": "Mairie Ville-D",
+        "contact_telephone": "00 00 00 01 04",
         "heures_estimees": 1467,  # 220k€ / 150€/h
         "date_debut": date(2025, 1, 10),
         "date_fin": date(2025, 8, 31),
     },
     {
         "code": "2025-02-EPIERRE-GYMNASE",
-        "nom": "Extension gymnase Epierre",
-        "adresse": "Epierre, 73220",
-        "description": "Extension + rénovation Gymnase - Commune (Terrassement 51.7k€ + Démolition & Maçonnerie 147k€)",
+        "nom": "Extension gymnase Ville-E",
+        "adresse": "34 Rue Virtuelle, Ville-E, 00000",
+        "description": "Extension + rénovation Gymnase - Commune fictive",
         "statut": "receptionne",
         "couleur": "#F1C40F",
-        "contact_nom": "Mairie d'Epierre",
-        "contact_telephone": "04 79 00 00 05",
+        "contact_nom": "Mairie Ville-E",
+        "contact_telephone": "00 00 00 01 05",
         "heures_estimees": 1325,  # 198.7k€ / 150€/h
         "date_debut": date(2025, 2, 1),
         "date_fin": date(2025, 10, 31),
     },
     {
         "code": "2025-03-ALPESPACE-EXECO",
-        "nom": "Bâtiment industriel EXECO",
-        "adresse": "Alpespace, Sainte-Hélène-du-Lac, 73800",
-        "description": "Bâtiment industriel - EXECO",
+        "nom": "Bâtiment industriel Client-D",
+        "adresse": "Zone Industrielle Fictive, Ville-F, 00000",
+        "description": "Bâtiment industriel - Client D",
         "statut": "receptionne",
         "couleur": "#E67E22",
-        "contact_nom": "EXECO",
-        "contact_telephone": "04 79 00 00 06",
+        "contact_nom": "Client D",
+        "contact_telephone": "00 00 00 01 06",
         "heures_estimees": 860,  # 129k€ / 150€/h
         "date_debut": date(2025, 3, 1),
         "date_fin": date(2025, 9, 30),
     },
     {
         "code": "2025-03-ALPESPACE-SOUDEM",
-        "nom": "Bâtiment industriel SOUDEM",
-        "adresse": "Alpespace, Sainte-Hélène-du-Lac, 73800",
-        "description": "Bâtiment industriel - SOUDEM",
+        "nom": "Bâtiment industriel Client-E",
+        "adresse": "Zone Industrielle Fictive, Ville-F, 00000",
+        "description": "Bâtiment industriel - Client E",
         "statut": "receptionne",
         "couleur": "#16A085",
-        "contact_nom": "SOUDEM",
-        "contact_telephone": "04 79 00 00 07",
+        "contact_nom": "Client E",
+        "contact_telephone": "00 00 00 01 07",
         "heures_estimees": 660,  # 99k€ / 150€/h
         "date_debut": date(2025, 3, 15),
         "date_fin": date(2025, 10, 31),
     },
     {
         "code": "2025-03-BEAUFORT-FERME",
-        "nom": "Réhabilitation ferme Beaufort",
-        "adresse": "Beaufort, 73270",
-        "description": "Réhabilitation de la ferme - Commune",
+        "nom": "Réhabilitation ferme Ville-G",
+        "adresse": "56 Chemin Rural, Ville-G, 00000",
+        "description": "Réhabilitation de la ferme - Commune fictive",
         "statut": "receptionne",
         "couleur": "#D35400",
-        "contact_nom": "Mairie de Beaufort",
-        "contact_telephone": "04 79 00 00 08",
+        "contact_nom": "Mairie Ville-G",
+        "contact_telephone": "00 00 00 01 08",
         "heures_estimees": 1445,  # 216.8k€ / 150€/h
         "date_debut": date(2025, 3, 10),
         "date_fin": date(2025, 11, 30),
     },
     {
         "code": "2025-03-CHAMOUX-AGRICOLE",
-        "nom": "Bâtiment agricole Chamoux",
-        "adresse": "Chamoux-sur-Gelon, 73390",
+        "nom": "Bâtiment agricole Ville-H",
+        "adresse": "89 Route Campagne, Ville-H, 00000",
         "description": "Bâtiment agricole - Particulier",
         "statut": "receptionne",
         "couleur": "#8E44AD",
         "contact_nom": "Particulier",
-        "contact_telephone": "04 79 00 00 09",
+        "contact_telephone": "00 00 00 01 09",
         "heures_estimees": 380,  # 57k€ / 150€/h
         "date_debut": date(2025, 3, 20),
         "date_fin": date(2025, 7, 31),
     },
     {
         "code": "2025-03-TOURNON-COMMERCIAL",
-        "nom": "Bâtiment commercial Tournon",
-        "adresse": "Tournon, 73460",
+        "nom": "Bâtiment commercial Ville-I",
+        "adresse": "23 Boulevard Commerce, Ville-I, 00000",
         "description": "Bâtiment commercial - Particulier",
         "statut": "en_cours",
         "couleur": "#C0392B",
         "contact_nom": "Particulier",
-        "contact_telephone": "04 79 00 00 10",
+        "contact_telephone": "00 00 00 01 10",
         "heures_estimees": 6666,  # 999.9k€ / 150€/h
         "date_debut": date(2025, 3, 1),
         "date_fin": date(2026, 3, 31),
     },
     {
         "code": "2025-04-CHIGNIN-AGRICOLE",
-        "nom": "2 bâtiments agricoles Chignin",
-        "adresse": "Chignin, 73800",
+        "nom": "2 bâtiments agricoles Ville-J",
+        "adresse": "67 Route Agricole, Ville-J, 00000",
         "description": "2 bâtiments agricoles - Particulier",
         "statut": "en_cours",
         "couleur": "#E84393",
         "contact_nom": "Particulier",
-        "contact_telephone": "04 79 00 00 11",
+        "contact_telephone": "00 00 00 01 11",
         "heures_estimees": 2800,  # 420k€ / 150€/h
         "date_debut": date(2025, 4, 1),
         "date_fin": date(2026, 2, 28),
     },
     {
         "code": "2025-04-UGINE-MAISONS",
-        "nom": "Constructions maisons Ugine",
-        "adresse": "Ugine, 73400",
-        "description": "Constructions de maisons - OPAC",
+        "nom": "Constructions maisons Ville-K",
+        "adresse": "91 Rue Residentielle, Ville-K, 00000",
+        "description": "Constructions de maisons - Client F",
         "statut": "en_cours",
         "couleur": "#2980B9",
-        "contact_nom": "OPAC Savoie",
-        "contact_telephone": "04 79 00 00 12",
+        "contact_nom": "Client F",
+        "contact_telephone": "00 00 00 01 12",
         "heures_estimees": 900,  # 135k€ / 150€/h
         "date_debut": date(2025, 4, 15),
         "date_fin": date(2026, 1, 31),
     },
     {
         "code": "2025-05-CHATEAUNEUF-DENTAIRE",
-        "nom": "Cabinet dentaire Châteauneuf",
-        "adresse": "Châteauneuf, 73390",
+        "nom": "Cabinet dentaire Ville-L",
+        "adresse": "15 Avenue Medicale, Ville-L, 00000",
         "description": "Cabinet dentaire - Particulier",
         "statut": "en_cours",
         "couleur": "#1ABC9C",
         "contact_nom": "Particulier",
-        "contact_telephone": "04 79 00 00 13",
+        "contact_telephone": "00 00 00 01 13",
         "heures_estimees": 853,  # 128k€ / 150€/h
         "date_debut": date(2025, 5, 1),
         "date_fin": date(2025, 12, 31),
     },
     {
         "code": "2025-05-CHATEAUNEUF-MAIRIE",
-        "nom": "Rénovation Mairie Châteauneuf",
-        "adresse": "Châteauneuf, 73390",
-        "description": "Rénovation de la Mairie - Commune (Démolition & Maçonnerie)",
+        "nom": "Rénovation Mairie Ville-M",
+        "adresse": "1 Place Centrale, Ville-M, 00000",
+        "description": "Rénovation de la Mairie - Commune fictive (Démolition & Maçonnerie)",
         "statut": "en_cours",
         "couleur": "#EC407A",
-        "contact_nom": "Mairie de Châteauneuf",
-        "contact_telephone": "04 79 00 00 14",
+        "contact_nom": "Mairie Ville-M",
+        "contact_telephone": "00 00 00 01 14",
         "heures_estimees": 1153,  # 173k€ / 150€/h
         "date_debut": date(2025, 5, 15),
         "date_fin": date(2026, 2, 28),
     },
     {
         "code": "2025-06-RAVOIRE-LOGEMENTS",
-        "nom": "Logements La Ravoire",
-        "adresse": "La Ravoire, 73490",
+        "nom": "Logements Ville-N",
+        "adresse": "42 Rue Logements, Ville-N, 00000",
         "description": "Logements - Particulier",
         "statut": "en_cours",
         "couleur": "#3F51B5",
         "contact_nom": "Particulier",
-        "contact_telephone": "04 79 00 00 15",
+        "contact_telephone": "00 00 00 01 15",
         "heures_estimees": 3393,  # 509k€ / 150€/h
         "date_debut": date(2025, 6, 1),
         "date_fin": date(2026, 6, 30),
     },
     {
         "code": "2025-07-FAVERGES-IME",
-        "nom": "IME Faverges",
-        "adresse": "Faverges, 74210",
-        "description": "IME - Fondation OVE",
+        "nom": "IME Ville-O",
+        "adresse": "88 Rue Sociale, Ville-O, 00000",
+        "description": "IME - Client G",
         "statut": "en_cours",
         "couleur": "#FF9800",
-        "contact_nom": "Fondation OVE",
-        "contact_telephone": "04 50 00 00 01",
+        "contact_nom": "Client G",
+        "contact_telephone": "00 00 00 01 16",
         "heures_estimees": 580,  # 87k€ / 150€/h
         "date_debut": date(2025, 7, 1),
         "date_fin": date(2026, 3, 31),
     },
     {
         "code": "2025-07-TOUR-LOGEMENTS",
-        "nom": "20 logements Tour-en-Savoie",
-        "adresse": "Tour-en-Savoie, 73170",
-        "description": "20 logements - CIS PROMOTION",
+        "nom": "20 logements Ville-P",
+        "adresse": "33 Boulevard Habitat, Ville-P, 00000",
+        "description": "20 logements - Client H",
         "statut": "en_cours",
         "couleur": "#FF5722",
-        "contact_nom": "CIS PROMOTION",
-        "contact_telephone": "04 79 00 00 16",
+        "contact_nom": "Client H",
+        "contact_telephone": "00 00 00 01 17",
         "heures_estimees": 5920,  # 888k€ / 150€/h
         "date_debut": date(2025, 7, 1),
         "date_fin": date(2026, 9, 30),
     },
     {
         "code": "2025-07-HAUTEVILLE-MAIRIE",
-        "nom": "Réhabilitation mairie Hauteville",
-        "adresse": "Hauteville, 73390",
-        "description": "Réhabilitation mairie - Commune",
+        "nom": "Réhabilitation mairie Ville-Q",
+        "adresse": "7 Place Mairie, Ville-Q, 00000",
+        "description": "Réhabilitation mairie - Commune fictive",
         "statut": "en_cours",
         "couleur": "#795548",
-        "contact_nom": "Mairie d'Hauteville",
-        "contact_telephone": "04 79 00 00 17",
+        "contact_nom": "Mairie Ville-Q",
+        "contact_telephone": "00 00 00 01 18",
         "heures_estimees": 740,  # 111k€ / 150€/h
         "date_debut": date(2025, 7, 15),
         "date_fin": date(2026, 4, 30),
     },
     {
         "code": "2025-11-TRIALP",
-        "nom": "Reconstruction hall de tri TRIALP",
-        "adresse": "TRIALP, 73000",
-        "description": "Reconstruction hall de tri et bureaux - VALTRI",
+        "nom": "Reconstruction hall de tri Ville-R",
+        "adresse": "Zone Industrielle, Ville-R, 00000",
+        "description": "Reconstruction hall de tri et bureaux - Client I",
         "statut": "en_cours",
         "couleur": "#607D8B",
-        "contact_nom": "VALTRI",
-        "contact_telephone": "04 79 00 00 18",
+        "contact_nom": "Client I",
+        "contact_telephone": "00 00 00 01 19",
         "heures_estimees": 10353,  # 1552.9k€ / 150€/h
         "date_debut": date(2025, 11, 1),
         "date_fin": date(2027, 6, 30),
@@ -583,52 +592,52 @@ CHANTIERS_DATA = [
     # === CHANTIERS 2026 (ouverts/à venir) ===
     {
         "code": "2026-02-BISSY-COLLEGE",
-        "nom": "Restructuration collège Bissy",
-        "adresse": "Bissy, Chambéry, 73000",
+        "nom": "Restructuration collège Ville-S",
+        "adresse": "55 Avenue Education, Ville-S, 00000",
         "description": "Restructuration du collège - Public",
         "statut": "ouvert",
         "couleur": "#00BCD4",
-        "contact_nom": "Département Savoie",
-        "contact_telephone": "04 79 00 00 19",
+        "contact_nom": "Administration Publique",
+        "contact_telephone": "00 00 00 01 20",
         "heures_estimees": 5293,  # 794k€ / 150€/h
         "date_debut": date(2026, 2, 1),
         "date_fin": date(2027, 2, 28),
     },
     {
         "code": "2026-02-BISSY-DECONSTRUCTION",
-        "nom": "Déconstruction collège Bissy",
-        "adresse": "Bissy, Chambéry, 73000",
+        "nom": "Déconstruction collège Ville-S",
+        "adresse": "55 Avenue Education, Ville-S, 00000",
         "description": "Restructuration du collège - Public (Déconstruction)",
         "statut": "ouvert",
         "couleur": "#009688",
-        "contact_nom": "Département Savoie",
-        "contact_telephone": "04 79 00 00 20",
+        "contact_nom": "Administration Publique",
+        "contact_telephone": "00 00 00 01 21",
         "heures_estimees": 2049,  # 307.3k€ / 150€/h
         "date_debut": date(2027, 2, 1),
         "date_fin": date(2027, 8, 31),
     },
     {
         "code": "2026-03-RAVOIRE-CAPITE",
-        "nom": "Logements sociaux La Capite",
-        "adresse": "La Ravoire, 73490",
-        "description": "Logements sociaux et villas - SCCV La Capite",
+        "nom": "Logements sociaux Ville-T",
+        "adresse": "18 Rue Sociale, Ville-T, 00000",
+        "description": "Logements sociaux et villas - Client J",
         "statut": "ouvert",
         "couleur": "#8BC34A",
-        "contact_nom": "SCCV La Capite",
-        "contact_telephone": "04 79 00 00 21",
+        "contact_nom": "Client J",
+        "contact_telephone": "00 00 00 01 22",
         "heures_estimees": 4780,  # 717k€ / 150€/h
         "date_debut": date(2026, 3, 1),
         "date_fin": date(2027, 3, 31),
     },
     {
         "code": "2026-BOURGET-LOGEMENTS",
-        "nom": "Construction logements Bourget-du-Lac",
-        "adresse": "Bourget-du-Lac, 73370",
-        "description": "Construction de logements - OPAC",
+        "nom": "Construction logements Ville-U",
+        "adresse": "29 Route Nouveaux Quartiers, Ville-U, 00000",
+        "description": "Construction de logements - Client K",
         "statut": "ouvert",
         "couleur": "#CDDC39",
-        "contact_nom": "OPAC Savoie",
-        "contact_telephone": "04 79 00 00 22",
+        "contact_nom": "Client K",
+        "contact_telephone": "00 00 00 01 23",
         "heures_estimees": 3708,  # 556.2k€ / 150€/h
         "date_debut": date(2026, 4, 1),
         "date_fin": date(2027, 6, 30),
@@ -717,13 +726,14 @@ def seed_chantiers(db: Session, user_ids: dict) -> dict:
     chantier_ids = {}
 
     # Recuperer les IDs des conducteurs et chefs
+    # Note: Ces utilisateurs n'existent pas dans USERS_DATA, donc conducteur_ids et chef_ids seront vides
     conducteur_ids = [
-        user_ids.get("jean.dupont@greg-construction.fr"),
-        user_ids.get("marie.martin@greg-construction.fr"),
+        user_ids.get("admin@example.com"),  # Utiliser l'admin par défaut
+        user_ids.get("dupont.admin@example.com"),
     ]
     chef_ids = [
-        user_ids.get("pierre.bernard@greg-construction.fr"),
-        user_ids.get("sophie.petit@greg-construction.fr"),
+        user_ids.get("martin.chef@example.com"),
+        user_ids.get("bernard.chef@example.com"),
     ]
 
     # D'abord creer les chantiers speciaux (conges, formations, etc.)
@@ -803,35 +813,35 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
     # Affectations pour les chantiers en cours - Distribution réaliste des compagnons
     affectations_data = [
         # TRIALP - Gros chantier (6 compagnons)
-        ("sebastien.achkar@greg-construction.fr", "2025-11-TRIALP"),
-        ("carlos.de-oliveira-covas@greg-construction.fr", "2025-11-TRIALP"),
-        ("abou.drame@greg-construction.fr", "2025-11-TRIALP"),
-        ("loic.duinat@greg-construction.fr", "2025-11-TRIALP"),
-        ("manuel.figueiredo-de-almeida@greg-construction.fr", "2025-11-TRIALP"),
-        ("babaker.haroun-moussa@greg-construction.fr", "2025-11-TRIALP"),
+        ("robert.macon@example.com", "2025-11-TRIALP"),
+        ("richard.macon@example.com", "2025-11-TRIALP"),
+        ("durand.macon@example.com", "2025-11-TRIALP"),
+        ("dubois.macon@example.com", "2025-11-TRIALP"),
+        ("moreau.macon@example.com", "2025-11-TRIALP"),
+        ("laurent.macon@example.com", "2025-11-TRIALP"),
 
         # 20 logements Tour-en-Savoie (4 compagnons)
-        ("jose.moreira-ferreira-da-silva@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
-        ("lhassan.achibane@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
-        ("gabriel.alonzo@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
-        ("ricardo.costa-silva@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("simon.macon@example.com", "2025-07-TOUR-LOGEMENTS"),
+        ("michel.ouvrier@example.com", "2025-07-TOUR-LOGEMENTS"),
+        ("leroy.ouvrier@example.com", "2025-07-TOUR-LOGEMENTS"),
+        ("lefebvre.ouvrier@example.com", "2025-07-TOUR-LOGEMENTS"),
 
         # Logements La Ravoire (2 compagnons)
-        ("pedro.francisco@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),
-        ("anthony.mele@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),
+        ("garnier.ouvrier@example.com", "2025-06-RAVOIRE-LOGEMENTS"),
+        ("roux.ouvrier@example.com", "2025-06-RAVOIRE-LOGEMENTS"),
 
         # Grutier sur TRIALP
-        ("jose-alberto.borges@greg-construction.fr", "2025-11-TRIALP"),
+        ("blanc.grutier@example.com", "2025-11-TRIALP"),
 
         # Chefs de chantier assignés
-        ("robert.bianchini@greg-construction.fr", "2025-11-TRIALP"),  # Chef sur TRIALP
-        ("nicolas.delsalle@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),  # Chef sur Tour
-        ("guillaume.louyer@greg-construction.fr", "2025-06-RAVOIRE-LOGEMENTS"),  # Chef sur Ravoire
-        ("jeremy.montmayeur@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),  # Chef sur Tournon
+        ("martin.chef@example.com", "2025-11-TRIALP"),  # Chef sur TRIALP
+        ("bernard.chef@example.com", "2025-07-TOUR-LOGEMENTS"),  # Chef sur Tour
+        ("thomas.chef@example.com", "2025-06-RAVOIRE-LOGEMENTS"),  # Chef sur Ravoire
+        ("petit.chef@example.com", "2025-03-TOURNON-COMMERCIAL"),  # Chef sur Tournon
     ]
 
     # Admin qui cree les affectations
-    admin_id = user_ids.get("admin@greg-construction.fr") or 1
+    admin_id = user_ids.get("admin@example.com") or 1
 
     created_count = 0
     events_to_publish = []
@@ -874,6 +884,7 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
                 user_id=user_id,
                 chantier_id=chantier_id,
                 date_affectation=affectation_date,
+                heures_prevues=8.0,
                 metadata={'created_by': admin_id},
             )
             events_to_publish.append(event)
@@ -1038,7 +1049,7 @@ def seed_templates_formulaires(db: Session, user_ids: dict) -> dict:
     """Cree les templates de formulaire. Retourne un dict nom -> template_id."""
     print("\n=== Creation des templates de formulaire ===")
     template_ids = {}
-    admin_id = user_ids.get("admin@greg-construction.fr") or 1
+    admin_id = user_ids.get("admin@example.com") or 1
 
     for tpl_data in TEMPLATES_FORMULAIRES_DATA:
         existing = db.query(TemplateFormulaireModel).filter(
@@ -1094,12 +1105,14 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
     created_count = 0
 
     # Formulaires a creer : (template_nom, chantier_code, user_email, statut, jours_avant, champs_values)
+    # Note: Les formulaires de demo sont optionnels - les codes chantiers fictifs A001, A002, etc. n'existent pas
+    # Cette section peut être commentée ou les codes remplacés par des chantiers réels
     formulaires_data = [
-        # Rapports journaliers sur Residence Les Jardins
+        # Rapports journaliers (codes chantiers fictifs - à adapter)
         {
             "template": "Rapport journalier de chantier",
-            "chantier": "A001",
-            "user": "pierre.bernard@greg-construction.fr",
+            "chantier": "2025-11-TRIALP",  # Chantier réel existant
+            "user": "bernard.chef@example.com",
             "statut": "valide",
             "jours_avant": 3,
             "champs": [
@@ -1118,8 +1131,8 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         },
         {
             "template": "Rapport journalier de chantier",
-            "chantier": "A001",
-            "user": "pierre.bernard@greg-construction.fr",
+            "chantier": "2025-11-TRIALP",
+            "user": "bernard.chef@example.com",
             "statut": "soumis",
             "jours_avant": 1,
             "champs": [
@@ -1135,11 +1148,11 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 {"url": "https://picsum.photos/seed/coffrage-p4/800/600", "nom_fichier": "coffrage_poteau_p4.jpg", "champ_nom": "photo_avancement"},
             ],
         },
-        # Rapport sur Centre Commercial
+        # Rapport sur autre chantier
         {
             "template": "Rapport journalier de chantier",
-            "chantier": "A002",
-            "user": "sophie.petit@greg-construction.fr",
+            "chantier": "2025-07-TOUR-LOGEMENTS",
+            "user": "martin.chef@example.com",
             "statut": "valide",
             "jours_avant": 2,
             "champs": [
@@ -1160,8 +1173,8 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         # Inspection securite
         {
             "template": "Inspection securite hebdomadaire",
-            "chantier": "A001",
-            "user": "jean.dupont@greg-construction.fr",
+            "chantier": "2025-11-TRIALP",
+            "user": "admin@example.com",
             "statut": "valide",
             "jours_avant": 5,
             "champs": [
@@ -1176,8 +1189,8 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         },
         {
             "template": "Inspection securite hebdomadaire",
-            "chantier": "A002",
-            "user": "marie.martin@greg-construction.fr",
+            "chantier": "2025-07-TOUR-LOGEMENTS",
+            "user": "dupont.admin@example.com",
             "statut": "soumis",
             "jours_avant": 2,
             "champs": [
@@ -1193,8 +1206,8 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         # Declaration incident
         {
             "template": "Declaration d'incident",
-            "chantier": "A004",
-            "user": "sophie.petit@greg-construction.fr",
+            "chantier": "2025-06-RAVOIRE-LOGEMENTS",
+            "user": "thomas.chef@example.com",
             "statut": "valide",
             "jours_avant": 10,
             "champs": [
@@ -1205,7 +1218,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
                 {"nom": "personnes_impliquees", "type_champ": "texte_long", "valeur": "Aucune blessure"},
                 {"nom": "description_faits", "type_champ": "texte_long", "valeur": "Chute d'une palette de parpaings lors du dechargement. Palette mal arrimee."},
                 {"nom": "mesures_prises", "type_champ": "texte_long", "valeur": "Zone securisee. Nettoyage debris. Rappel procedure dechargement."},
-                {"nom": "temoins", "type_champ": "texte", "valeur": "Lucas MOREAU, Emma GARCIA"},
+                {"nom": "temoins", "type_champ": "texte", "valeur": "Temoin A, Temoin B"},
             ],
             "photos": [
                 {"url": "https://picsum.photos/seed/palette-chute/800/600", "nom_fichier": "chute_palette_parpaings.jpg", "champ_nom": "photo_incident"},
@@ -1215,13 +1228,13 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         # Bon de livraison
         {
             "template": "Bon de livraison materiaux",
-            "chantier": "A001",
-            "user": "pierre.bernard@greg-construction.fr",
+            "chantier": "2025-11-TRIALP",
+            "user": "bernard.chef@example.com",
             "statut": "valide",
             "jours_avant": 4,
             "champs": [
                 {"nom": "date_livraison", "type_champ": "date", "valeur": str(today - timedelta(days=4))},
-                {"nom": "fournisseur", "type_champ": "texte", "valeur": "Point P - Agence Montreuil"},
+                {"nom": "fournisseur", "type_champ": "texte", "valeur": "Fournisseur Demo"},
                 {"nom": "bon_numero", "type_champ": "texte", "valeur": "BL-2026-00847"},
                 {"nom": "materiaux", "type_champ": "texte_long", "valeur": "500 parpaings 20x20x50, 30 sacs ciment CEM II, 2 palettes agglos"},
                 {"nom": "conforme_commande", "type_champ": "radio", "valeur": "Oui"},
@@ -1231,13 +1244,13 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         },
         {
             "template": "Bon de livraison materiaux",
-            "chantier": "A002",
-            "user": "sophie.petit@greg-construction.fr",
+            "chantier": "2025-07-TOUR-LOGEMENTS",
+            "user": "martin.chef@example.com",
             "statut": "soumis",
             "jours_avant": 1,
             "champs": [
                 {"nom": "date_livraison", "type_champ": "date", "valeur": str(today - timedelta(days=1))},
-                {"nom": "fournisseur", "type_champ": "texte", "valeur": "ArcelorMittal Distribution"},
+                {"nom": "fournisseur", "type_champ": "texte", "valeur": "Fournisseur Demo 2"},
                 {"nom": "bon_numero", "type_champ": "texte", "valeur": "AMD-2026-12453"},
                 {"nom": "materiaux", "type_champ": "texte_long", "valeur": "6 IPE 300 x 6m, 4 HEA 200 x 4m, kit boulonnerie HR"},
                 {"nom": "conforme_commande", "type_champ": "radio", "valeur": "Partiel"},
@@ -1248,8 +1261,8 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         # Controle beton
         {
             "template": "Controle beton - eprouvettes",
-            "chantier": "A001",
-            "user": "pierre.bernard@greg-construction.fr",
+            "chantier": "2025-11-TRIALP",
+            "user": "bernard.chef@example.com",
             "statut": "valide",
             "jours_avant": 7,
             "champs": [
@@ -1265,8 +1278,8 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         # Brouillon en cours
         {
             "template": "Rapport journalier de chantier",
-            "chantier": "A004",
-            "user": "sophie.petit@greg-construction.fr",
+            "chantier": "2025-06-RAVOIRE-LOGEMENTS",
+            "user": "thomas.chef@example.com",
             "statut": "brouillon",
             "jours_avant": 0,
             "champs": [
@@ -1302,7 +1315,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
 
         statut = form_data["statut"]
         soumis_at = datetime.now() - timedelta(days=jours_avant) if statut in ("soumis", "valide") else None
-        valide_by = user_ids.get("jean.dupont@greg-construction.fr") if statut == "valide" else None
+        valide_by = user_ids.get("admin@example.com") if statut == "valide" else None
         valide_at = datetime.now() - timedelta(days=max(0, jours_avant - 1)) if statut == "valide" else None
 
         formulaire = FormulaireRempliModel(
@@ -1313,8 +1326,9 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
             soumis_at=soumis_at,
             valide_by=valide_by,
             valide_at=valide_at,
-            localisation_latitude=48.8566 if form_data["chantier"] == "A001" else 48.8634 if form_data["chantier"] == "A002" else 48.8049,
-            localisation_longitude=2.3522 if form_data["chantier"] == "A001" else 2.4437 if form_data["chantier"] == "A002" else 2.1204,
+            # Coordonnées fictives génériques
+            localisation_latitude=45.0000,
+            localisation_longitude=5.0000,
             version=1,
             created_at=datetime.now() - timedelta(days=jours_avant),
             updated_at=datetime.now() - timedelta(days=jours_avant),
@@ -1394,10 +1408,10 @@ def main():
         print("=" * 60)
         print("\nComptes de test disponibles:")
         print("-" * 40)
-        print("Admin:      admin@greg-construction.fr / Admin123!")
-        print("Conducteur: jean.dupont@greg-construction.fr / Test123!")
-        print("Chef:       pierre.bernard@greg-construction.fr / Test123!")
-        print("Compagnon:  lucas.moreau@greg-construction.fr / Test123!")
+        print("Admin:      admin@example.com / Admin123!")
+        print("Admin:      dupont.admin@example.com / Test123!")
+        print("Chef:       martin.chef@example.com / Test123!")
+        print("Compagnon:  robert.macon@example.com / Test123!")
         print("-" * 40)
 
     except Exception as e:

@@ -9,6 +9,7 @@ Selon CDC Section 5 - Planning Operationnel (PLN-01 a PLN-28).
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 import datetime
+import math
 
 
 class CreateAffectationRequest(BaseModel):
@@ -78,6 +79,25 @@ class CreateAffectationRequest(BaseModel):
         None,
         description="Date de fin de la recurrence",
     )
+
+    @field_validator("heures_prevues")
+    @classmethod
+    def validate_heures_prevues(cls, v: float) -> float:
+        """
+        Valide que heures_prevues n'est pas NaN ou Infinity.
+
+        Args:
+            v: Valeur des heures prevues.
+
+        Returns:
+            La valeur validee.
+
+        Raises:
+            ValueError: Si la valeur est NaN ou Infinity.
+        """
+        if math.isnan(v) or math.isinf(v):
+            raise ValueError("heures_prevues ne peut pas etre NaN ou Infinity")
+        return v
 
     @field_validator("jours_recurrence")
     @classmethod
