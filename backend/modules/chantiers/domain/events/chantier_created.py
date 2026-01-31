@@ -36,7 +36,7 @@ class ChantierCreatedEvent(DomainEvent):
         adresse: str,
         statut: str,
         metadata: Optional[Dict[str, Any]] = None
-    ):
+    ) -> None:
         super().__init__(
             event_type='chantier.created',
             aggregate_id=str(chantier_id),

@@ -5,6 +5,7 @@ from typing import Optional, List
 
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_
+from sqlalchemy.sql.elements import ColumnElement
 
 from shared.domain.value_objects import Couleur
 
@@ -32,7 +33,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         session: Session SQLAlchemy pour les opérations DB.
     """
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session) -> None:
         """
         Initialise le repository.
 
@@ -42,7 +43,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         self.session = session
 
     @property
-    def _eager_options(self):
+    def _eager_options(self) -> tuple:
         """Options de chargement eager pour éviter N+1 queries.
 
         Note: Utilise joinedload au lieu de selectinload car les relations
@@ -56,7 +57,7 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         # L'optimisation viendra de la réduction des requêtes dans _to_entity()
         return ()
 
-    def _not_deleted(self):
+    def _not_deleted(self) -> ColumnElement[bool]:
         """Filtre pour exclure les enregistrements supprimés (soft delete)."""
         return ChantierModel.deleted_at.is_(None)
 

@@ -23,7 +23,7 @@ from ..dtos import CreateChantierDTO, ChantierDTO
 class CodeChantierAlreadyExistsError(Exception):
     """Exception levée quand le code chantier est déjà utilisé."""
 
-    def __init__(self, code: str):
+    def __init__(self, code: str) -> None:
         self.code = code
         self.message = f"Le code chantier {code} est déjà utilisé"
         super().__init__(self.message)
@@ -32,7 +32,7 @@ class CodeChantierAlreadyExistsError(Exception):
 class InvalidDatesError(Exception):
     """Exception levée quand les dates sont invalides."""
 
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
         self.message = message
         super().__init__(self.message)
 

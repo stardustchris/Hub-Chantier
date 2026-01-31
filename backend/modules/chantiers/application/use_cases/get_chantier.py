@@ -12,7 +12,7 @@ from ..dtos import ChantierDTO
 class ChantierNotFoundError(Exception):
     """Exception levée quand le chantier n'est pas trouvé."""
 
-    def __init__(self, identifier: str):
+    def __init__(self, identifier: str) -> None:
         self.identifier = identifier
         self.message = f"Chantier non trouvé: {identifier}"
         super().__init__(self.message)

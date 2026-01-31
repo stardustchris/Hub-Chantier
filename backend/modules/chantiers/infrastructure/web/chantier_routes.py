@@ -376,7 +376,7 @@ async def create_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC: conducteur ou admin requis
-):
+) -> ChantierResponse:
     """
     Crée un nouveau chantier.
 
@@ -465,7 +465,7 @@ def list_chantiers(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> ChantierListResponse:
     """
     Liste les chantiers avec pagination et filtres.
 
@@ -512,7 +512,7 @@ def get_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> ChantierResponse:
     """
     Récupère un chantier par son ID.
 
@@ -545,7 +545,7 @@ def get_chantier_by_code(
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> ChantierResponse:
     """
     Récupère un chantier par son code (CHT-19).
 
@@ -579,7 +579,7 @@ def update_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC: conducteur ou admin requis
-):
+) -> ChantierResponse:
     """
     Met à jour un chantier.
 
@@ -660,7 +660,7 @@ def delete_chantier(
     controller: ChantierController = Depends(get_chantier_controller),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_admin),  # RBAC: admin uniquement pour suppression
-):
+) -> DeleteResponse:
     """
     Supprime un chantier (soft delete).
 
@@ -708,7 +708,7 @@ def change_statut(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC: conducteur ou admin requis
-):
+) -> ChantierResponse:
     """
     Change le statut d'un chantier (CHT-03).
 
@@ -772,7 +772,7 @@ def demarrer_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """Passe le chantier en statut 'En cours'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.demarrer(chantier_id)
@@ -796,7 +796,7 @@ def receptionner_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """Passe le chantier en statut 'Réceptionné'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.receptionner(chantier_id)
@@ -820,7 +820,7 @@ def fermer_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """Passe le chantier en statut 'Fermé'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.fermer(chantier_id)
@@ -850,7 +850,7 @@ def assigner_conducteur(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """
     Assigne un conducteur au chantier (CHT-05: Multi-conducteurs).
 
@@ -884,7 +884,7 @@ def retirer_conducteur(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """Retire un conducteur du chantier. RBAC: conducteur ou admin requis."""
     try:
         result = controller.retirer_conducteur(chantier_id, user_id)
@@ -904,7 +904,7 @@ def assigner_chef_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """
     Assigne un chef de chantier (CHT-06: Multi-chefs de chantier).
 
@@ -938,7 +938,7 @@ def retirer_chef_chantier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """Retire un chef de chantier. RBAC: conducteur ou admin requis."""
     try:
         result = controller.retirer_chef_chantier(chantier_id, user_id)
@@ -964,7 +964,7 @@ def assigner_ouvrier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """
     Assigne un ouvrier/intérimaire/sous-traitant au chantier.
 
@@ -1018,7 +1018,7 @@ def retirer_ouvrier(
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
-):
+) -> ChantierResponse:
     """Retire un ouvrier du chantier. RBAC: conducteur ou admin requis."""
     from ..persistence import ChantierOuvrierModel
 
@@ -1050,7 +1050,7 @@ def list_contacts(
     chantier_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> List[ContactChantierResponse]:
     """
     Liste tous les contacts d'un chantier.
 
@@ -1083,7 +1083,7 @@ def create_contact(
     request: ContactChantierCreate,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> ContactChantierResponse:
     """
     Crée un nouveau contact pour un chantier.
 
@@ -1121,7 +1121,7 @@ def update_contact(
     request: ContactChantierUpdate,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> ContactChantierResponse:
     """
     Met à jour un contact.
 
@@ -1170,7 +1170,7 @@ def delete_contact(
     contact_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> dict:
     """
     Supprime un contact.
 
@@ -1210,7 +1210,7 @@ def list_phases(
     chantier_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> List[PhaseChantierResponse]:
     """
     Liste toutes les phases d'un chantier.
 
@@ -1245,7 +1245,7 @@ def create_phase(
     request: PhaseChantierCreate,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> PhaseChantierResponse:
     """
     Crée une nouvelle phase pour un chantier.
 
@@ -1306,7 +1306,7 @@ def update_phase(
     request: PhaseChantierUpdate,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> PhaseChantierResponse:
     """
     Met à jour une phase.
 
@@ -1363,7 +1363,7 @@ def delete_phase(
     phase_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
-):
+) -> dict:
     """
     Supprime une phase.
 

@@ -39,7 +39,7 @@ class ChantierUpdatedEvent(DomainEvent):
         statut: str,
         changes: Dict[str, Any],
         metadata: Optional[Dict[str, Any]] = None
-    ):
+    ) -> None:
         super().__init__(
             event_type='chantier.updated',
             aggregate_id=str(chantier_id),

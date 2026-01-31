@@ -13,7 +13,7 @@ from .get_chantier import ChantierNotFoundError
 class ChantierActifError(Exception):
     """Exception levée quand on essaie de supprimer un chantier actif."""
 
-    def __init__(self, chantier_id: int):
+    def __init__(self, chantier_id: int) -> None:
         self.chantier_id = chantier_id
         self.message = (
             f"Impossible de supprimer le chantier {chantier_id}: "

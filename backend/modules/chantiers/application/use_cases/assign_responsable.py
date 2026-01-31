@@ -14,7 +14,7 @@ from .get_chantier import ChantierNotFoundError
 class InvalidRoleTypeError(Exception):
     """Exception levée quand le type de rôle est invalide."""
 
-    def __init__(self, role_type: str):
+    def __init__(self, role_type: str) -> None:
         self.role_type = role_type
         self.message = (
             f"Type de rôle invalide: {role_type}. "

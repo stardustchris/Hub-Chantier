@@ -33,7 +33,7 @@ class ChantierDeletedEvent(DomainEvent):
         nom: str,
         adresse: str,
         metadata: Optional[Dict[str, Any]] = None
-    ):
+    ) -> None:
         super().__init__(
             event_type='chantier.deleted',
             aggregate_id=str(chantier_id),

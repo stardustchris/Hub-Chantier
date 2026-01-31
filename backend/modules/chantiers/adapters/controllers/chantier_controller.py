@@ -15,6 +15,7 @@ from ...application.dtos import (
     CreateChantierDTO,
     UpdateChantierDTO,
     ChangeStatutDTO,
+    ChantierDTO,
 )
 
 
@@ -36,7 +37,7 @@ class ChantierController:
         delete_use_case: DeleteChantierUseCase,
         change_statut_use_case: ChangeStatutUseCase,
         assign_responsable_use_case: AssignResponsableUseCase,
-    ):
+    ) -> None:
         """
         Initialise le controller.
 
@@ -57,7 +58,7 @@ class ChantierController:
         self.change_statut_use_case = change_statut_use_case
         self.assign_responsable_use_case = assign_responsable_use_case
 
-    def _chantier_dto_to_dict(self, dto) -> Dict[str, Any]:
+    def _chantier_dto_to_dict(self, dto: ChantierDTO) -> Dict[str, Any]:
         """Convertit un ChantierDTO en dictionnaire."""
         # Convertir les contacts en liste de dicts
         contacts = []

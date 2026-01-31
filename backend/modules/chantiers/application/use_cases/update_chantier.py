@@ -18,7 +18,7 @@ from .get_chantier import ChantierNotFoundError
 class ChantierFermeError(Exception):
     """Exception levée quand on essaie de modifier un chantier fermé."""
 
-    def __init__(self, chantier_id: int):
+    def __init__(self, chantier_id: int) -> None:
         self.chantier_id = chantier_id
         self.message = f"Impossible de modifier le chantier {chantier_id}: il est fermé"
         super().__init__(self.message)

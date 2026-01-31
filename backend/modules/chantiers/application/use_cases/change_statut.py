@@ -15,7 +15,7 @@ from .get_chantier import ChantierNotFoundError
 class TransitionNonAutoriseeError(Exception):
     """Exception levée quand la transition de statut n'est pas autorisée."""
 
-    def __init__(self, ancien_statut: str, nouveau_statut: str):
+    def __init__(self, ancien_statut: str, nouveau_statut: str) -> None:
         self.ancien_statut = ancien_statut
         self.nouveau_statut = nouveau_statut
         self.message = (
@@ -35,7 +35,7 @@ class PrerequisReceptionNonRemplisError(Exception):
         chantier_id: int,
         prerequis_manquants: List[str],
         details: Dict[str, Any]
-    ):
+    ) -> None:
         self.chantier_id = chantier_id
         self.prerequis_manquants = prerequis_manquants
         self.details = details
