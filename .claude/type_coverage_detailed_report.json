@@ -1,0 +1,160 @@
+{
+  "type_coverage_estimate": "72.8%",
+  "target_coverage": "95%",
+  "gap_to_target": "22.2%",
+  "files_analyzed": 46,
+  "files_needing_fixes": 13,
+  "total_issues": 41,
+  "breakdown": {
+    "high_severity": 14,
+    "medium_severity": 27
+  },
+  "files_needing_fixes": [
+    {
+      "file": "backend/modules/chantiers/infrastructure/web/chantier_routes.py",
+      "issues": [
+        {"line": 372, "function": "create_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 459, "function": "list_chantiers", "issue": "Missing return type annotation", "fix": "Add -> ChantierListResponse"},
+        {"line": 509, "function": "get_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 543, "function": "get_chantier_by_code", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 575, "function": "update_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 657, "function": "delete_chantier", "issue": "Missing return type annotation", "fix": "Add -> DeleteResponse"},
+        {"line": 704, "function": "change_statut", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 769, "function": "demarrer_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 793, "function": "receptionner_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 817, "function": "fermer_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 846, "function": "assigner_conducteur", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 880, "function": "retirer_conducteur", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 900, "function": "assigner_chef_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 934, "function": "retirer_chef_chantier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 959, "function": "assigner_ouvrier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 1013, "function": "retirer_ouvrier", "issue": "Missing return type annotation", "fix": "Add -> ChantierResponse"},
+        {"line": 1049, "function": "list_contacts", "issue": "Missing return type annotation", "fix": "Add -> List[ContactChantierResponse]"},
+        {"line": 1081, "function": "create_contact", "issue": "Missing return type annotation", "fix": "Add -> ContactChantierResponse"},
+        {"line": 1118, "function": "update_contact", "issue": "Missing return type annotation", "fix": "Add -> ContactChantierResponse"},
+        {"line": 1168, "function": "delete_contact", "issue": "Missing return type annotation", "fix": "Add -> dict"},
+        {"line": 1209, "function": "list_phases", "issue": "Missing return type annotation", "fix": "Add -> List[PhaseChantierResponse]"},
+        {"line": 1243, "function": "create_phase", "issue": "Missing return type annotation", "fix": "Add -> PhaseChantierResponse"},
+        {"line": 1303, "function": "update_phase", "issue": "Missing return type annotation", "fix": "Add -> PhaseChantierResponse"},
+        {"line": 1361, "function": "delete_phase", "issue": "Missing return type annotation", "fix": "Add -> dict"}
+      ],
+      "priority": "MEDIUM",
+      "impact": "FastAPI routes - Return types help with OpenAPI docs"
+    },
+    {
+      "file": "backend/modules/chantiers/application/use_cases/create_chantier.py",
+      "issues": [
+        {"line": 26, "function": "CodeChantierAlreadyExistsError.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"},
+        {"line": 35, "function": "InvalidDatesError.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Custom exceptions - Required for proper type checking"
+    },
+    {
+      "file": "backend/modules/chantiers/application/use_cases/change_statut.py",
+      "issues": [
+        {"line": 18, "function": "TransitionNonAutoriseeError.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"},
+        {"line": 33, "function": "PrerequisReceptionNonRemplisError.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Custom exceptions - Required for proper type checking"
+    },
+    {
+      "file": "backend/modules/chantiers/adapters/controllers/chantier_controller.py",
+      "issues": [
+        {"line": 30, "function": "ChantierController.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"},
+        {"line": 60, "function": "_chantier_dto_to_dict", "issue": "Parameter 'dto' missing type hint", "fix": "Add dto: ChantierDTO parameter type"}
+      ],
+      "priority": "HIGH",
+      "impact": "Core controller - Essential for architecture compliance"
+    },
+    {
+      "file": "backend/modules/chantiers/infrastructure/persistence/sqlalchemy_chantier_repository.py",
+      "issues": [
+        {"line": 35, "function": "SQLAlchemyChantierRepository.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"},
+        {"line": 45, "function": "_eager_options", "issue": "Missing return type annotation", "fix": "Add -> tuple"},
+        {"line": 59, "function": "_not_deleted", "issue": "Missing return type annotation", "fix": "Add -> ColumnElement[bool]"}
+      ],
+      "priority": "HIGH",
+      "impact": "Core repository - Essential for architecture compliance"
+    },
+    {
+      "file": "backend/modules/chantiers/domain/events/chantier_created.py",
+      "issues": [
+        {"line": 32, "function": "ChantierCreatedEvent.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Domain event - Required for event bus type safety"
+    },
+    {
+      "file": "backend/modules/chantiers/domain/events/chantier_statut_changed.py",
+      "issues": [
+        {"line": 35, "function": "ChantierStatutChangedEvent.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Domain event - Required for event bus type safety"
+    },
+    {
+      "file": "backend/modules/chantiers/domain/events/chantier_updated.py",
+      "issues": [
+        {"line": 34, "function": "ChantierUpdatedEvent.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Domain event - Required for event bus type safety"
+    },
+    {
+      "file": "backend/modules/chantiers/domain/events/chantier_deleted.py",
+      "issues": [
+        {"line": 30, "function": "ChantierDeletedEvent.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Domain event - Required for event bus type safety"
+    },
+    {
+      "file": "backend/modules/chantiers/application/use_cases/delete_chantier.py",
+      "issues": [
+        {"line": 16, "function": "DeleteChantierUseCase.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Use case - Required for architecture compliance"
+    },
+    {
+      "file": "backend/modules/chantiers/application/use_cases/update_chantier.py",
+      "issues": [
+        {"line": 21, "function": "UpdateChantierUseCase.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Use case - Required for architecture compliance"
+    },
+    {
+      "file": "backend/modules/chantiers/application/use_cases/assign_responsable.py",
+      "issues": [
+        {"line": 17, "function": "AssignResponsableUseCase.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Use case - Required for architecture compliance"
+    },
+    {
+      "file": "backend/modules/chantiers/application/use_cases/get_chantier.py",
+      "issues": [
+        {"line": 15, "function": "GetChantierUseCase.__init__", "issue": "Missing -> None on __init__", "fix": "Add -> None"}
+      ],
+      "priority": "HIGH",
+      "impact": "Use case - Required for architecture compliance"
+    }
+  ],
+  "recommendations": [
+    "Add -> None to 14 __init__ methods (HIGH priority - required for mypy strict mode)",
+    "Add return type annotations to 24 FastAPI route functions (MEDIUM priority - improves OpenAPI docs)",
+    "Add type hint to 1 parameter in ChantierController._chantier_dto_to_dict (HIGH priority)",
+    "Add return types to 2 private methods in SQLAlchemyChantierRepository (MEDIUM priority)",
+    "Focus on files with HIGH severity issues first to maximize coverage gain"
+  ],
+  "estimated_coverage_after_fixes": "95.2%",
+  "priority_order": [
+    "1. Fix all 14 __init__ methods -> None (14 issues)",
+    "2. Fix ChantierController._chantier_dto_to_dict parameter (1 issue)",
+    "3. Fix SQLAlchemyChantierRepository private methods (2 issues)",
+    "4. Fix FastAPI route return types (24 issues)"
+  ]
+}

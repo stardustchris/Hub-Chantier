@@ -1,0 +1,391 @@
+{
+  "module": "planning",
+  "global_status": "WARN",
+  "timestamp": "2026-01-31T08:00:24.709511",
+  "duration_seconds": 0.117161,
+  "agents_executed": 3,
+  "total_findings": {
+    "CRITICAL": 0,
+    "HIGH": 1,
+    "MEDIUM": 22,
+    "LOW": 25
+  },
+  "reports": [
+    {
+      "agent": "architectreviewer",
+      "status": "PASS",
+      "summary": "✅ Architecture Clean respectée",
+      "score": {
+        "clean_architecture": "10/10",
+        "modularity": "10/10",
+        "files_analyzed": 83
+      },
+      "findings_count": 0,
+      "findings": []
+    },
+    {
+      "agent": "codereviewer",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 1 problème(s) haute(s) priorité, 18 moyen(s)",
+      "score": {
+        "quality": "9/10",
+        "maintainability": "0/10",
+        "files_reviewed": 83,
+        "issues_found": 44
+      },
+      "findings_count": 44,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/planning/domain/events/affectation_cancelled.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/planning/domain/events/affectation_updated.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/planning/domain/events/affectation_created.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/planning/domain/events/affectation_deleted.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction 'get_user_info' sans docstring Google style",
+          "file": "backend/modules/planning/infrastructure/web/dependencies.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction 'get_chantier_info' sans docstring Google style",
+          "file": "backend/modules/planning/infrastructure/web/dependencies.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/planning/application/use_cases/charge/exceptions.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/planning/application/use_cases/charge/exceptions.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'handle_chantier_statut_changed_for_planning' sans type hints sur les paramètres",
+          "file": "backend/modules/planning/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/events/affectation_cancelled.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/events/affectation_updated.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/events/affectation_created.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/events/affectation_deleted.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/entities/affectation.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/entities/besoin_charge.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/value_objects/charge/taux_occupation.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/domain/value_objects/charge/semaine.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/affectation_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/duplicate_affectations_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/create_affectation_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/planning_filters_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/update_affectation_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/planning_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/planning_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/planning_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/planning_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/planning_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/planning_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/occupation_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/occupation_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/besoin_charge_dto.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/besoin_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/besoin_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/planning/application/dtos/charge/besoin_charge_dto.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/planning/infrastructure/providers/affectation_provider.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (26)",
+          "file": "backend/modules/planning/infrastructure/persistence/sqlalchemy_affectation_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (20)",
+          "file": "backend/modules/planning/infrastructure/persistence/sqlalchemy_besoin_charge_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (43)",
+          "file": "backend/modules/planning/application/use_cases/create_affectation.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (28)",
+          "file": "backend/modules/planning/application/use_cases/get_planning.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/planning/application/use_cases/resize_affectation.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (21)",
+          "file": "backend/modules/planning/application/use_cases/update_affectation.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (16)",
+          "file": "backend/modules/planning/application/use_cases/charge/get_planning_charge.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (12)",
+          "file": "backend/modules/planning/adapters/presenters/affectation_presenter.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (15)",
+          "file": "backend/modules/planning/adapters/controllers/planning_controller.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        }
+      ]
+    },
+    {
+      "agent": "securityauditor",
+      "status": "PASS",
+      "summary": "✅ Aucune vulnérabilité critique détectée",
+      "score": {
+        "security": "10/10",
+        "critical_issues": 0,
+        "high_issues": 0,
+        "total_findings": 4
+      },
+      "findings_count": 4,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Endpoint sans validation Pydantic stricte",
+          "file": "backend/modules/planning/infrastructure/web/charge_routes.py",
+          "suggestion": "Utiliser des modèles Pydantic avec validators",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Endpoint sans validation Pydantic stricte",
+          "file": "backend/modules/planning/infrastructure/web/planning_routes.py",
+          "suggestion": "Utiliser des modèles Pydantic avec validators",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit d'accès aux données non implémenté",
+          "file": "backend/modules/planning",
+          "suggestion": "Implémenter l'export des données utilisateur",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit à l'oubli non implémenté",
+          "file": "backend/modules/planning",
+          "suggestion": "Implémenter la suppression complète des données",
+          "category": "security"
+        }
+      ]
+    }
+  ]
+}

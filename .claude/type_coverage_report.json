@@ -1,0 +1,425 @@
+{
+  "module": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers",
+  "files_analyzed": 46,
+  "files_needing_fixes": 13,
+  "total_issues": 41,
+  "statistics": {
+    "total_functions": 206,
+    "typed_functions": 151,
+    "function_coverage": 73.3,
+    "total_parameters": 566,
+    "typed_parameters": 409,
+    "parameter_coverage": 72.3,
+    "overall_coverage": 72.8
+  },
+  "files_with_issues": [
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/application/use_cases/create_chantier.py",
+      "total_functions": 11,
+      "typed_functions": 9,
+      "function_coverage": 81.8,
+      "total_params": 29,
+      "typed_params": 18,
+      "param_coverage": 62.1,
+      "issues": [
+        {
+          "line": 26,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        },
+        {
+          "line": 35,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/application/use_cases/change_statut.py",
+      "total_functions": 7,
+      "typed_functions": 5,
+      "function_coverage": 71.4,
+      "total_params": 23,
+      "typed_params": 16,
+      "param_coverage": 69.6,
+      "issues": [
+        {
+          "line": 18,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        },
+        {
+          "line": 33,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/adapters/controllers/chantier_controller.py",
+      "total_functions": 16,
+      "typed_functions": 15,
+      "function_coverage": 93.8,
+      "total_params": 81,
+      "typed_params": 64,
+      "param_coverage": 79.0,
+      "issues": [
+        {
+          "line": 30,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        },
+        {
+          "line": 60,
+          "function": "_chantier_dto_to_dict",
+          "issue": "Parameter 'dto' missing type hint",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/infrastructure/persistence/sqlalchemy_chantier_repository.py",
+      "total_functions": 20,
+      "typed_functions": 17,
+      "function_coverage": 85.0,
+      "total_params": 51,
+      "typed_params": 31,
+      "param_coverage": 60.8,
+      "issues": [
+        {
+          "line": 35,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        },
+        {
+          "line": 45,
+          "function": "_eager_options",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 59,
+          "function": "_not_deleted",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/domain/events/chantier_created.py",
+      "total_functions": 1,
+      "typed_functions": 0,
+      "function_coverage": 0.0,
+      "total_params": 6,
+      "typed_params": 5,
+      "param_coverage": 83.3,
+      "issues": [
+        {
+          "line": 32,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/domain/events/chantier_statut_changed.py",
+      "total_functions": 1,
+      "typed_functions": 0,
+      "function_coverage": 0.0,
+      "total_params": 7,
+      "typed_params": 6,
+      "param_coverage": 85.7,
+      "issues": [
+        {
+          "line": 35,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/domain/events/chantier_updated.py",
+      "total_functions": 1,
+      "typed_functions": 0,
+      "function_coverage": 0.0,
+      "total_params": 7,
+      "typed_params": 6,
+      "param_coverage": 85.7,
+      "issues": [
+        {
+          "line": 34,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/domain/events/chantier_deleted.py",
+      "total_functions": 1,
+      "typed_functions": 0,
+      "function_coverage": 0.0,
+      "total_params": 5,
+      "typed_params": 4,
+      "param_coverage": 80.0,
+      "issues": [
+        {
+          "line": 30,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/application/use_cases/delete_chantier.py",
+      "total_functions": 3,
+      "typed_functions": 2,
+      "function_coverage": 66.7,
+      "total_params": 8,
+      "typed_params": 5,
+      "param_coverage": 62.5,
+      "issues": [
+        {
+          "line": 16,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/application/use_cases/update_chantier.py",
+      "total_functions": 9,
+      "typed_functions": 8,
+      "function_coverage": 88.9,
+      "total_params": 29,
+      "typed_params": 20,
+      "param_coverage": 69.0,
+      "issues": [
+        {
+          "line": 21,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/application/use_cases/assign_responsable.py",
+      "total_functions": 7,
+      "typed_functions": 6,
+      "function_coverage": 85.7,
+      "total_params": 20,
+      "typed_params": 13,
+      "param_coverage": 65.0,
+      "issues": [
+        {
+          "line": 17,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/application/use_cases/get_chantier.py",
+      "total_functions": 4,
+      "typed_functions": 3,
+      "function_coverage": 75.0,
+      "total_params": 8,
+      "typed_params": 4,
+      "param_coverage": 50.0,
+      "issues": [
+        {
+          "line": 15,
+          "function": "__init__",
+          "issue": "Missing -> None on __init__",
+          "severity": "HIGH"
+        }
+      ],
+      "needs_fixes": true
+    },
+    {
+      "file": "/Users/aptsdae/Hub-Chantier/backend/modules/chantiers/infrastructure/web/chantier_routes.py",
+      "total_functions": 26,
+      "typed_functions": 2,
+      "function_coverage": 7.7,
+      "total_params": 132,
+      "typed_params": 132,
+      "param_coverage": 100.0,
+      "issues": [
+        {
+          "line": 372,
+          "function": "create_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 459,
+          "function": "list_chantiers",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 509,
+          "function": "get_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 543,
+          "function": "get_chantier_by_code",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 575,
+          "function": "update_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 657,
+          "function": "delete_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 704,
+          "function": "change_statut",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 769,
+          "function": "demarrer_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 793,
+          "function": "receptionner_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 817,
+          "function": "fermer_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 846,
+          "function": "assigner_conducteur",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 880,
+          "function": "retirer_conducteur",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 900,
+          "function": "assigner_chef_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 934,
+          "function": "retirer_chef_chantier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 959,
+          "function": "assigner_ouvrier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1013,
+          "function": "retirer_ouvrier",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1049,
+          "function": "list_contacts",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1081,
+          "function": "create_contact",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1118,
+          "function": "update_contact",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1168,
+          "function": "delete_contact",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1209,
+          "function": "list_phases",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1243,
+          "function": "create_phase",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1303,
+          "function": "update_phase",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        },
+        {
+          "line": 1361,
+          "function": "delete_phase",
+          "issue": "Missing return type annotation",
+          "severity": "MEDIUM"
+        }
+      ],
+      "needs_fixes": true
+    }
+  ],
+  "recommendations": [
+    "Add -> None to 14 __init__ methods",
+    "Add return type annotations to 26 functions/methods",
+    "Add type hints to 1 parameters",
+    "Focus on 12 files with HIGH severity issues first"
+  ]
+}
