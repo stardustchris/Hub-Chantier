@@ -55,13 +55,16 @@ Le systeme repose sur un **EventBus** partage :
 3. Les handlers creent des notifications ciblees
 4. Le frontend recupere les notifications par polling ou push FCM
 
-### Etat actuel : handlers partiels
+### Etat actuel : 5 handlers cables
 
-Sur les 10 types de notifications definis, seuls **2 handlers** sont actuellement cables :
+Sur les 10 types de notifications definis, **5 handlers** sont actuellement cables :
 - `CommentAddedEvent` → COMMENT_ADDED + MENTION
 - `LikeAddedEvent` → LIKE_ADDED
+- `heures.validated` → SYSTEM (notification au compagnon quand ses heures sont validees)
+- `chantier.created` → CHANTIER_ASSIGNMENT (notification aux conducteurs/chefs assignes)
+- `chantier.statut_changed` → SYSTEM (notification a l'equipe lors d'un changement de statut)
 
-Les 7 autres types (DOCUMENT_ADDED, CHANTIER_ASSIGNMENT, SIGNALEMENT_CREATED, SIGNALEMENT_RESOLVED, TACHE_ASSIGNED, TACHE_DUE, SYSTEM) existent dans l'enum mais **n'ont pas de handler implemente**.
+Les 4 autres types (DOCUMENT_ADDED, SIGNALEMENT_CREATED, SIGNALEMENT_RESOLVED, TACHE_ASSIGNED, TACHE_DUE) existent dans l'enum mais **n'ont pas de handler implemente**.
 
 ---
 
@@ -109,12 +112,12 @@ Les 7 autres types (DOCUMENT_ADDED, CHANTIER_ASSIGNMENT, SIGNALEMENT_CREATED, SI
 | MENTION | "Quelqu'un vous a mentionne avec @" | Dashboard | ✅ Cable | AtSign |
 | LIKE_ADDED | "Quelqu'un a aime votre post" | Dashboard | ✅ Cable | Heart |
 | DOCUMENT_ADDED | "Nouveau document sur un chantier" | GED | ❌ Non cable | FileText |
-| CHANTIER_ASSIGNMENT | "Affecte a un chantier" | Planning | ❌ Non cable | Building2 |
+| CHANTIER_ASSIGNMENT | "Affecte a un chantier" | Chantiers | ✅ Cable (`chantier.created`) | Building2 |
 | SIGNALEMENT_CREATED | "Nouveau signalement" | Signalements | ❌ Non cable | AlertTriangle |
 | SIGNALEMENT_RESOLVED | "Signalement resolu" | Signalements | ❌ Non cable | AlertTriangle |
 | TACHE_ASSIGNED | "Tache assignee" | Taches | ❌ Non cable | CheckSquare |
 | TACHE_DUE | "Tache bientot due" | Taches | ❌ Non cable | CheckSquare |
-| SYSTEM | "Notification systeme" | Systeme | ❌ Non cable | Bell |
+| SYSTEM | "Notification systeme" | Systeme | ✅ Cable (`heures.validated`, `chantier.statut_changed`) | Bell |
 
 ---
 
@@ -394,7 +397,7 @@ notifications/
 │   └── use_cases/
 │       └── mark_as_read.py             # Lecture unitaire/batch
 └── infrastructure/
-    ├── event_handlers.py                # 2 handlers cables
+    ├── event_handlers.py                # 5 handlers cables (comment, like, heures, chantier.created, chantier.statut_changed)
     ├── persistence/
     │   ├── models.py                    # Modele SQLAlchemy
     │   └── sqlalchemy_notification_repository.py
@@ -504,19 +507,27 @@ Fonction `formatRelativeTime(dateString)` :
 
 ---
 
-## 13. HANDLERS A IMPLEMENTER
+## 13. HANDLERS IMPLEMENTES ET A IMPLEMENTER
 
-Les types suivants sont definis dans l'enum `NotificationType` mais n'ont **pas de handler actuellement cable**. Voici les evenements source a ecouter :
+### Handlers cables (audit 30 janvier 2026)
+
+| Type notification | Evenement ecoute | Module source | Handler |
+|------------------|-----------------|--------------|---------|
+| CHANTIER_ASSIGNMENT | `chantier.created` | Chantiers | `handle_chantier_created` — Notifie les conducteurs et chefs assignes |
+| SYSTEM | `heures.validated` | Pointages | `handle_heures_validated` — Notifie le compagnon que ses heures sont validees |
+| SYSTEM | `chantier.statut_changed` | Chantiers | `handle_chantier_statut_changed` — Notifie l'equipe (conducteurs + chefs) du changement de statut |
+
+> Tous ces handlers sont dans `backend/modules/notifications/infrastructure/event_handlers.py` (Clean Architecture : le module notifications ecoute passivement).
+
+### Handlers restant a implementer
 
 | Type notification | Evenement a ecouter | Module source | Notes |
 |------------------|---------------------|--------------|-------|
 | DOCUMENT_ADDED | DocumentUploadedEvent | GED | Notifier les utilisateurs du chantier |
-| CHANTIER_ASSIGNMENT | AffectationCreatedEvent | Planning | Notifier le compagnon affecte |
 | SIGNALEMENT_CREATED | SignalementCreeEvent | Signalements | Notifier le chef de chantier |
 | SIGNALEMENT_RESOLVED | SignalementTraiteEvent | Signalements | Notifier le createur |
 | TACHE_ASSIGNED | TacheCreatedEvent | Taches | Notifier le compagnon (quand affectation existera) |
 | TACHE_DUE | (cron/scheduler) | Taches | Alert J-1 avant echeance |
-| SYSTEM | (manuel/admin) | Systeme | Messages systeme generaux |
 
 ### Patron d'implementation
 
@@ -538,7 +549,7 @@ def handle_nouvel_evenement(event):
 
 | Evolution | Description | Priorite |
 |-----------|-------------|----------|
-| Handlers manquants (7 types) | Implementer les event handlers pour tous les types | Haute |
+| Handlers manquants (5 types) | Implementer les event handlers restants (DOCUMENT, SIGNALEMENT x2, TACHE x2) | Haute |
 | WebSocket / SSE | Remplacer le polling 30s par des connexions temps reel | Moyenne |
 | Preferences notifications | Permettre a l'utilisateur de choisir ses notifications | Moyenne |
 | Notifications email | Digest quotidien par email | Basse |
@@ -555,6 +566,7 @@ def handle_nouvel_evenement(event):
 | Push FCM | Service Firebase + Service Worker | Configure, operationnel |
 | CommentAddedEvent handler | COMMENT_ADDED + MENTION | Cable et actif |
 | LikeAddedEvent handler | LIKE_ADDED | Cable et actif |
-| Autres handlers (7 types) | DOCUMENT, CHANTIER, SIGNALEMENT, TACHE, SYSTEM | Types definis, handlers a implementer |
+| Handlers chantier + heures | CHANTIER_ASSIGNMENT, SYSTEM (heures.validated, chantier.statut_changed) | ✅ Cable et actif (audit 30 jan) |
+| Handlers restants (5 types) | DOCUMENT, SIGNALEMENT x2, TACHE x2 | Types definis, handlers a implementer |
 | Polling 30s | Hook useNotifications | Frontend OK |
 | Lecture batch | Mark as read unitaire et global | Backend + Frontend OK |

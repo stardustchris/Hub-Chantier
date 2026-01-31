@@ -171,7 +171,7 @@ def can_transition_to(self, nouveau_statut: "StatutChantier") -> bool:
 | Propriété | Description | Valeurs |
 |-----------|-------------|---------|
 | `is_active()` | Chantier actif (pointages autorisés) | OUVERT, EN_COURS, RECEPTIONNE |
-| `allows_modifications()` | Modifications autorisées | OUVERT, EN_COURS, RECEPTIONNE |
+| `allows_modifications()` | Modifications autorisées | OUVERT, EN_COURS |
 | `is_closed()` | Chantier fermé | FERME |
 
 **Utilisation** :
@@ -1572,16 +1572,17 @@ def list_all(self, statut=None, conducteur_id=None):
 | **Chantier → Pointages** | Pointages sur chantier fermé | Écouter event, bloquer pointages |
 | **Chantier → Documents** | Documents orphelins | Cascade delete OU archivage |
 
-**Event Handler Planning** :
+**Event Handler Notifications** :
 
 ```python
-# backend/modules/planning/infrastructure/event_handlers.py
+# backend/modules/notifications/infrastructure/event_handlers.py
 
-def handle_chantier_statut_changed(event: ChantierStatutChangedEvent):
-    """Réagit au changement de statut chantier."""
-    if event.nouveau_statut == "ferme":
-        # Bloquer futures affectations
-        affectation_repo.block_future_affectations(event.chantier_id)
+@event_handler('chantier.statut_changed')
+def handle_chantier_statut_changed(event):
+    """Notifie l'equipe du chantier lors d'un changement de statut."""
+    # Recupere les conducteurs et chefs du chantier
+    # Utilise StatutChantier.from_string(nouveau_statut).display_name pour le label
+    # Cree une notification SYSTEM pour chaque destinataire (sauf l'auteur du changement)
 ```
 
 ### 9.5 RGPD et archivage
@@ -1692,7 +1693,7 @@ Le **Cycle de Vie d'un Chantier** est le workflow central de Hub Chantier. Il g�
 | Validation automatique prérequis réception (formulaires, docs) | Haute | 3j |
 | Workflow approbation pour transition FERME | Moyenne | 2j |
 | Export données chantier (RGPD) | Haute | 2j |
-| Notification emails sur changements statut | Moyenne | 1j |
+| ~~Notification sur changements statut~~ | ~~Moyenne~~ | ✅ Implémenté (handler `chantier.statut_changed`) |
 | Dashboard KPI par statut | Basse | 3j |
 
 ### 10.4 Prochaines étapes
@@ -1705,6 +1706,6 @@ Le **Cycle de Vie d'un Chantier** est le workflow central de Hub Chantier. Il g�
 ---
 
 **Auteur** : Claude Sonnet 4.5
-**Date dernière mise à jour** : 30 janvier 2026
-**Version** : 1.0
-**Statut** : ✅ Complet
+**Date dernière mise à jour** : 31 janvier 2026
+**Version** : 1.1 (audit executabilite : allows_modifications corrige, handlers chantier deplaces dans notifications)
+**Statut** : ✅ Complet + Audite

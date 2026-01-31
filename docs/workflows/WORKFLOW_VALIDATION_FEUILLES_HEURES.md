@@ -1152,7 +1152,7 @@ Authorization: Bearer <token_conducteur>
 | Event | Déclencheur | Contenu | Consommateurs |
 |-------|-------------|---------|--------------|
 | `PointageSubmittedEvent` | Compagnon soumet | pointage_id, utilisateur_id, chantier_id, date, heures | Notifications (alerte chef) |
-| `PointageValidatedEvent` | Chef/Conducteur/Admin valide | pointage_id, validateur_id, date_validation | Dashboard, Export paie |
+| `PointageValidatedEvent` | Chef/Conducteur/Admin valide | pointage_id, validateur_id, date_validation | Dashboard, Export paie, **Notifications** (`heures.validated` → notifie le compagnon) |
 | `PointageRejectedEvent` | Chef/Conducteur/Admin rejette | pointage_id, validateur_id, motif_rejet | Notifications (alerte compagnon) |
 
 ---
@@ -1674,12 +1674,12 @@ pytest tests/unit/modules/pointages -v --cov=modules/pointages --cov-report=html
 1. ✅ **Documentation complète** (ce fichier)
 2. Implémenter la vérification de verrouillage mensuel dans les use cases
 3. Ajouter la validation par lot (tous les pointages d'une feuille)
-4. Implémenter les notifications push lors des soumissions/validations
+4. ~~Implémenter les notifications lors des validations~~ ✅ Done (`heures.validated` handler dans notifications)
 5. Tests d'intégration du cycle complet (>= 85% couverture)
 
 ---
 
 **Auteur** : Claude Opus 4.5
-**Date dernière mise à jour** : 30 janvier 2026
-**Version** : 1.0
-**Statut** : ✅ Complet
+**Date dernière mise à jour** : 31 janvier 2026
+**Version** : 1.1 (audit executabilite : handler heures.validated cable dans notifications)
+**Statut** : ✅ Complet + Audite
