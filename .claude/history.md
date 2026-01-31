@@ -3,6 +3,62 @@
 > Ce fichier contient l'historique detaille des sessions de travail.
 > Il est separe de CLAUDE.md pour garder ce dernier leger.
 
+## Session 2026-01-31 AM (Correction Documentation Workflow Agents)
+
+**Duree**: 15 min
+**Modules**: Documentation
+**Commits**: e23d556
+
+### Objectif
+
+Corriger l'incohérence dans CLAUDE.md qui ne mentionnait que 4 agents au lieu de 7.
+
+### Problème identifié
+
+**CLAUDE.md** section 3 listait seulement **4 agents de validation** :
+- architect-reviewer, test-automator, code-reviewer, security-auditor
+
+Mais **omettait les 3 agents d'implémentation** :
+- sql-pro, python-pro, typescript-pro
+
+Cette incohérence causait confusion : le workflow complet nécessite **7 agents** (3 implémentation + 4 validation), comme documenté dans `.claude/agents.md`.
+
+### Corrections apportées
+
+**Fichier modifié** : `CLAUDE.md`
+
+**Section 2 - Workflow fonctionnalité** :
+- Distinction claire entre **IMPLEMENTATION** (3 agents) et **VALIDATION** (4 agents)
+- Précision du contexte d'utilisation de chaque agent (si code *.py, *.ts, *.tsx, *.sql)
+
+**Section 3 - Validation AVANT commit** :
+- Checklist restructurée en 3 sections : Phase IMPLEMENTATION, Phase VALIDATION, Documentation
+- 7 agents explicitement listés avec critères de succès
+- Ajout de ❌ "Sauter sql-pro, python-pro ou typescript-pro selon le contexte"
+- Ajout de ✅ exemples `Task(subagent_type="...")` pour TOUS les 7 agents
+- Section Documentation séparée (SPECIFICATIONS.md + history.md)
+
+### Résultat
+
+- ✅ CLAUDE.md aligné avec .claude/agents.md
+- ✅ Workflow complet documenté (7 agents)
+- ✅ Clarté sur quand lancer chaque agent
+- ✅ Pas de régression : workflow existant préservé
+
+### Fichiers modifiés
+
+```
+CLAUDE.md | 28 insertions(+), 9 deletions(-)
+```
+
+### Validation
+
+- ✅ Documentation cohérente entre CLAUDE.md et .claude/agents.md
+- ✅ Workflow 7 agents explicite
+- ✅ Checklist complète pour les développeurs
+
+---
+
 ## Session 2026-01-30 PM (Routes API Authentification - Finalisation Phase 1)
 
 **Duree**: ~1h30
