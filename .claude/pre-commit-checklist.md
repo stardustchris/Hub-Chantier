@@ -30,7 +30,7 @@ Si cette commande retourne des resultats → **LANCER LES AGENTS**
 3. **test-automator** - Verification couverture tests
    - Identifier les gaps de couverture
    - Proposer les tests manquants
-   - Objectif: >= 85% couverture
+   - Objectif: >= 90% couverture
 
 4. **code-reviewer** - Qualite du code
    - Type hints complets
