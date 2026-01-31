@@ -64,9 +64,50 @@ def get_delete_chantier_use_case(
 
 def get_change_statut_use_case(
     chantier_repo: SQLAlchemyChantierRepository = Depends(get_chantier_repository),
+    db: Session = Depends(get_db),
 ) -> ChangeStatutUseCase:
-    """Retourne le use case de changement de statut."""
-    return ChangeStatutUseCase(chantier_repo=chantier_repo)
+    """Retourne le use case de changement de statut avec dépendances cross-module.
+
+    Gap: GAP-CHT-001 - Injection repositories pour validation prérequis
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # Injection cross-module (optionnelle, graceful degradation)
+    formulaire_repo = None
+    signalement_repo = None
+    pointage_repo = None
+
+    try:
+        from modules.formulaires.infrastructure.persistence import (
+            SQLAlchemyFormulaireRempliRepository
+        )
+        formulaire_repo = SQLAlchemyFormulaireRempliRepository(db)
+    except ImportError:
+        logger.warning("FormulaireRempliRepository not available")
+
+    try:
+        from modules.signalements.infrastructure.persistence import (
+            SQLAlchemySignalementRepository
+        )
+        signalement_repo = SQLAlchemySignalementRepository(db)
+    except ImportError:
+        logger.warning("SignalementRepository not available")
+
+    try:
+        from modules.pointages.infrastructure.persistence import (
+            SQLAlchemyPointageRepository
+        )
+        pointage_repo = SQLAlchemyPointageRepository(db)
+    except ImportError:
+        logger.warning("PointageRepository not available")
+
+    return ChangeStatutUseCase(
+        chantier_repo,
+        formulaire_repo,
+        signalement_repo,
+        pointage_repo
+    )
 
 
 def get_assign_responsable_use_case(

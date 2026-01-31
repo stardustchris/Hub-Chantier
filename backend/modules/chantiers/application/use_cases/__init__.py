@@ -9,7 +9,11 @@ from .get_chantier import GetChantierUseCase, ChantierNotFoundError
 from .list_chantiers import ListChantiersUseCase
 from .update_chantier import UpdateChantierUseCase, ChantierFermeError
 from .delete_chantier import DeleteChantierUseCase, ChantierActifError
-from .change_statut import ChangeStatutUseCase, TransitionNonAutoriseeError
+from .change_statut import (
+    ChangeStatutUseCase,
+    TransitionNonAutoriseeError,
+    PrerequisReceptionNonRemplisError,  # GAP-CHT-001
+)
 from .assign_responsable import AssignResponsableUseCase, InvalidRoleTypeError
 
 __all__ = [
@@ -28,5 +32,6 @@ __all__ = [
     "ChantierFermeError",
     "ChantierActifError",
     "TransitionNonAutoriseeError",
+    "PrerequisReceptionNonRemplisError",  # GAP-CHT-001
     "InvalidRoleTypeError",
 ]

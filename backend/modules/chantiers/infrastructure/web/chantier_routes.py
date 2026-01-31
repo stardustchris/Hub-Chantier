@@ -15,6 +15,7 @@ from ...application.use_cases import (
     ChantierFermeError,
     ChantierActifError,
     TransitionNonAutoriseeError,
+    PrerequisReceptionNonRemplisError,  # GAP-CHT-001
 )
 from ...domain.events.chantier_created import ChantierCreatedEvent
 from .dependencies import get_chantier_controller, get_user_repository
@@ -743,6 +744,16 @@ def change_statut(
     try:
         result = controller.change_statut(chantier_id, request.statut)
         return _transform_chantier_response(result, controller, user_repo)
+    except PrerequisReceptionNonRemplisError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "prerequis_non_remplis",
+                "message": str(e),
+                "prerequis_manquants": e.prerequis_manquants,
+                "details": e.details
+            }
+        )
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

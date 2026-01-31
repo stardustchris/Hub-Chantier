@@ -1,6 +1,6 @@
 """Use Case ChangeStatut - Changement de statut d'un chantier."""
 
-from typing import Optional, Callable
+from typing import Optional, Callable, List, Dict, Any
 
 from ...domain.repositories import ChantierRepository
 from ...domain.value_objects import StatutChantier
@@ -17,6 +17,30 @@ class TransitionNonAutoriseeError(Exception):
         self.nouveau_statut = nouveau_statut
         self.message = (
             f"Transition non autorisée: {ancien_statut} → {nouveau_statut}"
+        )
+        super().__init__(self.message)
+
+
+class PrerequisReceptionNonRemplisError(Exception):
+    """Levée quand les prérequis de réception ne sont pas remplis.
+
+    Gap: GAP-CHT-001
+    """
+
+    def __init__(
+        self,
+        chantier_id: int,
+        prerequis_manquants: List[str],
+        details: Dict[str, Any]
+    ):
+        self.chantier_id = chantier_id
+        self.prerequis_manquants = prerequis_manquants
+        self.details = details
+
+        manquants_str = "\n  - ".join(prerequis_manquants)
+        self.message = (
+            f"Impossible de réceptionner le chantier #{chantier_id}.\n"
+            f"Prérequis manquants :\n  - {manquants_str}"
         )
         super().__init__(self.message)
 
@@ -39,6 +63,9 @@ class ChangeStatutUseCase:
     def __init__(
         self,
         chantier_repo: ChantierRepository,
+        formulaire_repo=None,      # NOUVEAU (GAP-CHT-001)
+        signalement_repo=None,     # NOUVEAU (GAP-CHT-001)
+        pointage_repo=None,        # NOUVEAU (GAP-CHT-001)
         event_publisher: Optional[Callable] = None,
     ):
         """
@@ -46,9 +73,15 @@ class ChangeStatutUseCase:
 
         Args:
             chantier_repo: Repository chantiers (interface).
+            formulaire_repo: Repository formulaires (optionnel, GAP-CHT-001).
+            signalement_repo: Repository signalements (optionnel, GAP-CHT-001).
+            pointage_repo: Repository pointages (optionnel, GAP-CHT-001).
             event_publisher: Fonction pour publier les domain events.
         """
         self.chantier_repo = chantier_repo
+        self.formulaire_repo = formulaire_repo
+        self.signalement_repo = signalement_repo
+        self.pointage_repo = pointage_repo
         self.event_publisher = event_publisher
 
     def execute(self, chantier_id: int, dto: ChangeStatutDTO) -> ChantierDTO:
@@ -74,6 +107,27 @@ class ChangeStatutUseCase:
 
         # Parser le nouveau statut
         nouveau_statut = StatutChantier.from_string(dto.nouveau_statut)
+
+        # 2.5. Validation prérequis si transition vers RECEPTIONNE (GAP-CHT-001)
+        if nouveau_statut == StatutChantier.receptionne():
+            from ...domain.services.prerequis_service import (
+                PrerequisReceptionService
+            )
+
+            service = PrerequisReceptionService()
+            result = service.verifier_prerequis(
+                chantier_id=chantier_id,
+                formulaire_repo=self.formulaire_repo,
+                signalement_repo=self.signalement_repo,
+                pointage_repo=self.pointage_repo,
+            )
+
+            if not result.est_valide:
+                raise PrerequisReceptionNonRemplisError(
+                    chantier_id,
+                    result.prerequis_manquants,
+                    result.details
+                )
 
         # Sauvegarder l'ancien statut pour l'event
         ancien_statut = str(chantier.statut)
