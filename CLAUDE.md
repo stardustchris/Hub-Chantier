@@ -24,70 +24,88 @@ cd ../frontend && npm install && npm run build
 
 **NE PAS commencer si ces commandes echouent.**
 
-### 2. Workflow fonctionnalite (7 agents)
+---
 
-Voir `.claude/agents.md` pour le workflow detaille complet.
+### 2. Workflow SYSTEMATIQUE avec agents
 
-**Resume** :
-1. Lire SPECIFICATIONS.md (specs feature)
-2. **IMPLEMENTATION** (3 agents selon contexte) :
-   - sql-pro : schema DB et migrations (si nouvelles tables/colonnes)
-   - python-pro : implementation backend (si code *.py)
-   - typescript-pro : implementation frontend (si code *.ts, *.tsx)
-3. **VALIDATION** (4 agents obligatoires) :
-   - architect-reviewer : conformite Clean Architecture
-   - test-automator : tests >= 90% couverture
-   - code-reviewer : qualite et conventions code
-   - security-auditor : securite + RGPD (0 CRITICAL/HIGH)
-4. Mettre a jour SPECIFICATIONS.md + .claude/history.md
+⚠️ **REGLE ABSOLUE** : Je (Claude) ne code JAMAIS seul. Les agents m'assistent SYSTEMATIQUEMENT.
 
-### 3. Validation AVANT commit (code *.py, *.ts, *.tsx, *.sql)
+Voir `.claude/agents.md` pour le workflow detaille complet (301 lignes).
 
-**CRITIQUE : Utiliser `Task(subagent_type="general-purpose")` pour TOUS les agents**
+#### 📖 Étape 0 : Lecture specs
+- Lire `docs/SPECIFICATIONS.md` pour comprendre la fonctionnalité
 
-> **Note technique** : Les agents personnalisés (sql-pro, python-pro, etc.) ne sont PAS des `subagent_type` natifs de Claude Code.
-> Utiliser `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/NOM_AGENT.md et execute son role...")` pour chaque agent.
+#### 🔨 Étape 1 : IMPLEMENTATION (agents selon contexte)
 
-**Checklist obligatoire (7 agents)** :
+Je lance les agents d'implémentation **SELON LE CONTEXTE** :
 
-**Phase IMPLEMENTATION** :
-- [ ] sql-pro : migrations OK (si modifs DB — nouvelles tables/colonnes)
-- [ ] python-pro : implementation backend (si code *.py)
-- [ ] typescript-pro : implementation frontend (si code *.ts, *.tsx)
+| Si modification de... | Agent à lancer | Commande |
+|----------------------|----------------|----------|
+| Base de données (nouvelles tables/colonnes) | **sql-pro** | `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/sql-pro.md...")` |
+| Code backend (`*.py`) | **python-pro** | `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/python-pro.md...")` |
+| Code frontend (`*.ts`, `*.tsx`) | **typescript-pro** | `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/typescript-pro.md...")` |
 
-**Phase VALIDATION** :
-- [ ] architect-reviewer : PASS (0 violation Clean Architecture)
-- [ ] test-automator : tests generes (>= 90% couverture)
-- [ ] code-reviewer : APPROVED (qualite + conventions)
-- [ ] security-auditor : PASS (0 finding CRITICAL/HIGH)
+#### ✅ Étape 2 : VALIDATION (4 agents OBLIGATOIRES avant commit)
 
-**Documentation** :
-- [ ] SPECIFICATIONS.md mis a jour
-- [ ] .claude/history.md mis a jour
+Je lance **TOUJOURS** ces 4 agents, dans l'ordre :
 
-**NE JAMAIS** :
-- ❌ Analyser le code soi-meme sans les agents
-- ❌ Dire "je vais verifier la qualite"
-- ❌ Committer sans validation agents
-- ❌ Sauter sql-pro, python-pro ou typescript-pro selon le contexte
+1. **architect-reviewer** → Objectif : PASS (0 violation Clean Architecture)
+2. **test-automator** → Objectif : >= 90% couverture
+3. **code-reviewer** → Objectif : APPROVED (qualité + conventions)
+4. **security-auditor** → Objectif : PASS (0 finding CRITICAL/HIGH)
 
-**TOUJOURS** :
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/sql-pro.md...")` (si modifs DB)
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/python-pro.md...")` (si code *.py)
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/typescript-pro.md...")` (si *.ts, *.tsx)
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/architect-reviewer.md...")`
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/test-automator.md...")`
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/code-reviewer.md...")`
-- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/security-auditor.md...")`
-- ✅ Attendre le retour agent
-- ✅ Afficher le rapport complet
+**Commande pour chaque agent** :
+```python
+Task(subagent_type="general-purpose",
+     description="Courte description (3-5 mots)",
+     prompt="Lis .claude/agents/NOM_AGENT.md et execute son role. [Détails tâche]")
+```
 
-**Exceptions** (validation optionnelle) :
-- Documentation seule (*.md)
-- Configuration (*.json, *.yaml, *.toml)
+#### 📝 Étape 3 : Documentation
+- Mettre à jour `SPECIFICATIONS.md` (statut ✅)
+- Mettre à jour `.claude/history.md` (résumé session)
+
+---
+
+### 3. Ce que je fais / ne fais pas
+
+#### ❌ INTERDIT
+- Analyser le code moi-même sans lancer les agents
+- Dire "je vais vérifier la qualité/sécurité/architecture"
+- Committer sans validation des 4 agents
+- Sauter un agent d'implémentation si le contexte l'exige
+
+#### ✅ OBLIGATOIRE
+- Lancer les agents via `Task(subagent_type="general-purpose")`
+- Attendre le retour de chaque agent
+- Afficher le rapport complet à l'utilisateur
+- Corriger les problèmes trouvés avant de continuer
+
+#### 💡 EXCEPTIONS (validation optionnelle)
+- Documentation seule (`*.md`)
+- Configuration (`*.json`, `*.yaml`, `*.toml`)
 - Scripts utilitaires simples
 
-### 4. Apres validation
+---
+
+### 4. Note technique : Agents personnalisés
+
+⚠️ **IMPORTANT** : Les agents `sql-pro`, `python-pro`, etc. ne sont PAS des `subagent_type` natifs de Claude Code.
+
+**Syntaxe correcte** :
+```python
+# ✅ BON
+Task(subagent_type="general-purpose",
+     description="Validation architecture",
+     prompt="Lis .claude/agents/architect-reviewer.md et execute son role. Valide le module auth.")
+
+# ❌ MAUVAIS (n'existe pas dans Claude Code)
+Task(subagent_type="architect-reviewer", prompt="...")
+```
+
+---
+
+### 5. Apres validation
 
 Committer, pousser, puis **proposer automatiquement** merge/PR vers main.
 
@@ -104,8 +122,6 @@ Committer, pousser, puis **proposer automatiquement** merge/PR vers main.
 | **test-automator** | Generation tests pytest/vitest | AVANT commit code |
 | **code-reviewer** | Qualite + conventions code | AVANT commit code |
 | **security-auditor** | Audit securite + RGPD | AVANT commit code |
-
-**Workflow complet** : Voir `.claude/agents.md` (301 lignes)
 
 ---
 
