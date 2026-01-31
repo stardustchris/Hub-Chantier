@@ -1,7 +1,10 @@
 """Use Case GetChantier - Récupération d'un chantier."""
 
+import logging
 
 from ...domain.repositories import ChantierRepository
+
+logger = logging.getLogger(__name__)
 from ...domain.value_objects import CodeChantier
 from ..dtos import ChantierDTO
 
@@ -45,10 +48,45 @@ class GetChantierUseCase:
         Raises:
             ChantierNotFoundError: Si le chantier n'existe pas.
         """
-        chantier = self.chantier_repo.find_by_id(chantier_id)
-        if not chantier:
-            raise ChantierNotFoundError(str(chantier_id))
-        return ChantierDTO.from_entity(chantier)
+        # Logging structured (GAP-CHT-006)
+        logger.info(
+            "Use case execution started",
+            extra={
+                "event": "chantier.use_case.started",
+                "use_case": "GetChantierUseCase",
+                "chantier_id": chantier_id,
+                "operation": "get_by_id",
+            }
+        )
+
+        try:
+            chantier = self.chantier_repo.find_by_id(chantier_id)
+            if not chantier:
+                raise ChantierNotFoundError(str(chantier_id))
+
+            logger.info(
+                "Use case execution succeeded",
+                extra={
+                    "event": "chantier.use_case.succeeded",
+                    "use_case": "GetChantierUseCase",
+                    "chantier_id": chantier.id,
+                }
+            )
+
+            return ChantierDTO.from_entity(chantier)
+
+        except Exception as e:
+            logger.error(
+                "Use case execution failed",
+                extra={
+                    "event": "chantier.use_case.failed",
+                    "use_case": "GetChantierUseCase",
+                    "chantier_id": chantier_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
+            raise
 
     def execute_by_code(self, code: str) -> ChantierDTO:
         """

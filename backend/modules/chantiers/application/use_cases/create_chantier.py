@@ -1,9 +1,12 @@
 """Use Case CreateChantier - Création d'un nouveau chantier."""
 
+import logging
 from datetime import date
 from typing import Optional, Callable
 
 from shared.domain.value_objects import Couleur
+
+logger = logging.getLogger(__name__)
 
 from ...domain.entities import Chantier
 from ...domain.repositories import ChantierRepository
@@ -75,20 +78,57 @@ class CreateChantierUseCase:
             InvalidDatesError: Si les dates sont invalides.
             ValueError: Si les données sont invalides.
         """
-        code = self._generate_or_validate_code(dto)
-        coordonnees_gps = self._parse_coordonnees_gps(dto)
-        contact = self._parse_contact(dto)
-        date_debut, date_fin = self._parse_and_validate_dates(dto)
-        couleur = self._parse_couleur(dto)
-
-        chantier = self._create_chantier_entity(
-            code, dto, couleur, coordonnees_gps, contact, date_debut, date_fin
+        # Logging structured (GAP-CHT-006)
+        logger.info(
+            "Use case execution started",
+            extra={
+                "event": "chantier.use_case.started",
+                "use_case": "CreateChantierUseCase",
+                "operation": "create",
+                "chantier_nom": dto.nom,
+                "chantier_code": dto.code,
+            }
         )
 
-        chantier = self.chantier_repo.save(chantier)
-        self._publish_created_event(chantier)
+        try:
+            code = self._generate_or_validate_code(dto)
+            coordonnees_gps = self._parse_coordonnees_gps(dto)
+            contact = self._parse_contact(dto)
+            date_debut, date_fin = self._parse_and_validate_dates(dto)
+            couleur = self._parse_couleur(dto)
 
-        return ChantierDTO.from_entity(chantier)
+            chantier = self._create_chantier_entity(
+                code, dto, couleur, coordonnees_gps, contact, date_debut, date_fin
+            )
+
+            chantier = self.chantier_repo.save(chantier)
+            self._publish_created_event(chantier)
+
+            logger.info(
+                "Use case execution succeeded",
+                extra={
+                    "event": "chantier.use_case.succeeded",
+                    "use_case": "CreateChantierUseCase",
+                    "chantier_id": chantier.id,
+                    "chantier_code": str(chantier.code),
+                    "chantier_nom": chantier.nom,
+                }
+            )
+
+            return ChantierDTO.from_entity(chantier)
+
+        except Exception as e:
+            logger.error(
+                "Use case execution failed",
+                extra={
+                    "event": "chantier.use_case.failed",
+                    "use_case": "CreateChantierUseCase",
+                    "operation": "create",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
+            raise
 
     def _generate_or_validate_code(self, dto: CreateChantierDTO) -> CodeChantier:
         """Génère ou valide le code chantier (CHT-19)."""

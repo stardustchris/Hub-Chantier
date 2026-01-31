@@ -600,8 +600,6 @@ def update_chantier(
         HTTPException 400: Chantier fermé ou données invalides.
         HTTPException 403: Accès non autorisé.
     """
-    print(f"[DEBUG] update_chantier called with request: {request}")
-    print(f"[DEBUG] request dict: {request.dict()}")
     try:
         # Convertir les contacts en liste de dicts
         contacts_data = None
@@ -611,7 +609,6 @@ def update_chantier(
                 for c in request.contacts
             ]
 
-        print(f"[DEBUG] Calling controller.update with chantier_id={chantier_id}")
         result = controller.update(
             chantier_id=chantier_id,
             nom=request.nom,
@@ -630,10 +627,7 @@ def update_chantier(
             description=request.description,
             maitre_ouvrage=request.maitre_ouvrage,
         )
-        print(f"[DEBUG] controller.update returned: {result}")
-        print(f"[DEBUG] Calling _transform_chantier_response")
         response = _transform_chantier_response(result, controller, user_repo)
-        print(f"[DEBUG] _transform_chantier_response returned successfully")
         return response
     except ChantierNotFoundError as e:
         raise HTTPException(

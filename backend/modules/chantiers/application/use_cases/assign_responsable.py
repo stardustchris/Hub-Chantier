@@ -1,8 +1,11 @@
 """Use Case AssignResponsable - Assignation d'un responsable à un chantier."""
 
+import logging
 from typing import Optional, Callable
 
 from ...domain.repositories import ChantierRepository
+
+logger = logging.getLogger(__name__)
 from ...domain.events import ConducteurAssigneEvent, ChefChantierAssigneEvent
 from ..dtos import AssignResponsableDTO, ChantierDTO
 from .get_chantier import ChantierNotFoundError
@@ -61,41 +64,79 @@ class AssignResponsableUseCase:
             ChantierNotFoundError: Si le chantier n'existe pas.
             InvalidRoleTypeError: Si le type de rôle est invalide.
         """
-        # Récupérer le chantier
-        chantier = self.chantier_repo.find_by_id(chantier_id)
-        if not chantier:
-            raise ChantierNotFoundError(chantier_id)
+        # Logging structured (GAP-CHT-006)
+        logger.info(
+            "Use case execution started",
+            extra={
+                "event": "chantier.use_case.started",
+                "use_case": "AssignResponsableUseCase",
+                "chantier_id": chantier_id,
+                "operation": "assign_responsable",
+                "user_id": dto.user_id,
+                "role_type": dto.role_type,
+            }
+        )
 
-        # Valider et appliquer selon le type de rôle
-        role_type = dto.role_type.lower().strip()
+        try:
+            # Récupérer le chantier
+            chantier = self.chantier_repo.find_by_id(chantier_id)
+            if not chantier:
+                raise ChantierNotFoundError(chantier_id)
 
-        if role_type == "conducteur":
-            chantier.assigner_conducteur(dto.user_id)
-        elif role_type in ("chef_chantier", "chef"):
-            chantier.assigner_chef_chantier(dto.user_id)
-        else:
-            raise InvalidRoleTypeError(dto.role_type)
+            # Valider et appliquer selon le type de rôle
+            role_type = dto.role_type.lower().strip()
 
-        # Sauvegarder
-        chantier = self.chantier_repo.save(chantier)
-
-        # Publier l'event
-        if self.event_publisher:
             if role_type == "conducteur":
-                event = ConducteurAssigneEvent(
-                    chantier_id=chantier.id,
-                    code=str(chantier.code),
-                    conducteur_id=dto.user_id,
-                )
+                chantier.assigner_conducteur(dto.user_id)
+            elif role_type in ("chef_chantier", "chef"):
+                chantier.assigner_chef_chantier(dto.user_id)
             else:
-                event = ChefChantierAssigneEvent(
-                    chantier_id=chantier.id,
-                    code=str(chantier.code),
-                    chef_id=dto.user_id,
-                )
-            self.event_publisher(event)
+                raise InvalidRoleTypeError(dto.role_type)
 
-        return ChantierDTO.from_entity(chantier)
+            # Sauvegarder
+            chantier = self.chantier_repo.save(chantier)
+
+            # Publier l'event
+            if self.event_publisher:
+                if role_type == "conducteur":
+                    event = ConducteurAssigneEvent(
+                        chantier_id=chantier.id,
+                        code=str(chantier.code),
+                        conducteur_id=dto.user_id,
+                    )
+                else:
+                    event = ChefChantierAssigneEvent(
+                        chantier_id=chantier.id,
+                        code=str(chantier.code),
+                        chef_id=dto.user_id,
+                    )
+                self.event_publisher(event)
+
+            logger.info(
+                "Use case execution succeeded",
+                extra={
+                    "event": "chantier.use_case.succeeded",
+                    "use_case": "AssignResponsableUseCase",
+                    "chantier_id": chantier.id,
+                    "user_id": dto.user_id,
+                    "role_type": role_type,
+                }
+            )
+
+            return ChantierDTO.from_entity(chantier)
+
+        except Exception as e:
+            logger.error(
+                "Use case execution failed",
+                extra={
+                    "event": "chantier.use_case.failed",
+                    "use_case": "AssignResponsableUseCase",
+                    "chantier_id": chantier_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
+            raise
 
     def assigner_conducteur(self, chantier_id: int, user_id: int) -> ChantierDTO:
         """

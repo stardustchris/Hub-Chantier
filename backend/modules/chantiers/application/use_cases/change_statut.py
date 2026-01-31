@@ -1,8 +1,11 @@
 """Use Case ChangeStatut - Changement de statut d'un chantier."""
 
+import logging
 from typing import Optional, Callable, List, Dict, Any
 
 from ...domain.repositories import ChantierRepository
+
+logger = logging.getLogger(__name__)
 from ...domain.value_objects import StatutChantier
 from ...domain.events import ChantierStatutChangedEvent
 from ..dtos import ChangeStatutDTO, ChantierDTO
@@ -66,6 +69,7 @@ class ChangeStatutUseCase:
         formulaire_repo=None,      # NOUVEAU (GAP-CHT-001)
         signalement_repo=None,     # NOUVEAU (GAP-CHT-001)
         pointage_repo=None,        # NOUVEAU (GAP-CHT-001)
+        audit_service=None,        # NOUVEAU (GAP-CHT-005)
         event_publisher: Optional[Callable] = None,
     ):
         """
@@ -76,12 +80,14 @@ class ChangeStatutUseCase:
             formulaire_repo: Repository formulaires (optionnel, GAP-CHT-001).
             signalement_repo: Repository signalements (optionnel, GAP-CHT-001).
             pointage_repo: Repository pointages (optionnel, GAP-CHT-001).
+            audit_service: Service d'audit pour traçabilité (optionnel, GAP-CHT-005).
             event_publisher: Fonction pour publier les domain events.
         """
         self.chantier_repo = chantier_repo
         self.formulaire_repo = formulaire_repo
         self.signalement_repo = signalement_repo
         self.pointage_repo = pointage_repo
+        self.audit_service = audit_service
         self.event_publisher = event_publisher
 
     def execute(self, chantier_id: int, dto: ChangeStatutDTO) -> ChantierDTO:
@@ -100,58 +106,105 @@ class ChangeStatutUseCase:
             TransitionNonAutoriseeError: Si la transition n'est pas permise.
             ValueError: Si le statut est invalide.
         """
-        # Récupérer le chantier
-        chantier = self.chantier_repo.find_by_id(chantier_id)
-        if not chantier:
-            raise ChantierNotFoundError(chantier_id)
+        # Logging structured (GAP-CHT-006)
+        logger.info(
+            "Use case execution started",
+            extra={
+                "event": "chantier.use_case.started",
+                "use_case": "ChangeStatutUseCase",
+                "chantier_id": chantier_id,
+                "operation": "change_statut",
+                "nouveau_statut": dto.nouveau_statut,
+            }
+        )
 
-        # Parser le nouveau statut
-        nouveau_statut = StatutChantier.from_string(dto.nouveau_statut)
+        try:
+            # Récupérer le chantier
+            chantier = self.chantier_repo.find_by_id(chantier_id)
+            if not chantier:
+                raise ChantierNotFoundError(chantier_id)
 
-        # 2.5. Validation prérequis si transition vers RECEPTIONNE (GAP-CHT-001)
-        if nouveau_statut == StatutChantier.receptionne():
-            from ...domain.services.prerequis_service import (
-                PrerequisReceptionService
-            )
+            # Parser le nouveau statut
+            nouveau_statut = StatutChantier.from_string(dto.nouveau_statut)
 
-            service = PrerequisReceptionService()
-            result = service.verifier_prerequis(
-                chantier_id=chantier_id,
-                formulaire_repo=self.formulaire_repo,
-                signalement_repo=self.signalement_repo,
-                pointage_repo=self.pointage_repo,
-            )
-
-            if not result.est_valide:
-                raise PrerequisReceptionNonRemplisError(
-                    chantier_id,
-                    result.prerequis_manquants,
-                    result.details
+            # 2.5. Validation prérequis si transition vers RECEPTIONNE (GAP-CHT-001)
+            if nouveau_statut == StatutChantier.receptionne():
+                from ...domain.services.prerequis_service import (
+                    PrerequisReceptionService
                 )
 
-        # Sauvegarder l'ancien statut pour l'event
-        ancien_statut = str(chantier.statut)
+                service = PrerequisReceptionService()
+                result = service.verifier_prerequis(
+                    chantier_id=chantier_id,
+                    formulaire_repo=self.formulaire_repo,
+                    signalement_repo=self.signalement_repo,
+                    pointage_repo=self.pointage_repo,
+                )
 
-        # Tenter la transition (lève ValueError si non autorisée)
-        try:
-            chantier.change_statut(nouveau_statut)
-        except ValueError as e:
-            raise TransitionNonAutoriseeError(ancien_statut, dto.nouveau_statut) from e
+                if not result.est_valide:
+                    raise PrerequisReceptionNonRemplisError(
+                        chantier_id,
+                        result.prerequis_manquants,
+                        result.details
+                    )
 
-        # Sauvegarder
-        chantier = self.chantier_repo.save(chantier)
+            # Sauvegarder l'ancien statut pour l'event
+            ancien_statut = str(chantier.statut)
 
-        # Publier l'event
-        if self.event_publisher:
-            event = ChantierStatutChangedEvent(
-                chantier_id=chantier.id,
-                code=str(chantier.code),
-                ancien_statut=ancien_statut,
-                nouveau_statut=str(chantier.statut),
+            # Tenter la transition (lève ValueError si non autorisée)
+            try:
+                chantier.change_statut(nouveau_statut)
+            except ValueError as e:
+                raise TransitionNonAutoriseeError(ancien_statut, dto.nouveau_statut) from e
+
+            # Sauvegarder
+            chantier = self.chantier_repo.save(chantier)
+
+            # Logger dans audit_logs (GAP-CHT-005)
+            if self.audit_service:
+                self.audit_service.log_chantier_status_changed(
+                    chantier_id=chantier.id,
+                    user_id=None,  # TODO: Injecter depuis context utilisateur
+                    old_status=ancien_statut,
+                    new_status=str(chantier.statut),
+                    ip_address=None,  # TODO: Injecter depuis request
+                )
+
+            # Publier l'event
+            if self.event_publisher:
+                event = ChantierStatutChangedEvent(
+                    chantier_id=chantier.id,
+                    code=str(chantier.code),
+                    ancien_statut=ancien_statut,
+                    nouveau_statut=str(chantier.statut),
+                )
+                self.event_publisher(event)
+
+            logger.info(
+                "Use case execution succeeded",
+                extra={
+                    "event": "chantier.use_case.succeeded",
+                    "use_case": "ChangeStatutUseCase",
+                    "chantier_id": chantier.id,
+                    "ancien_statut": ancien_statut,
+                    "nouveau_statut": str(chantier.statut),
+                }
             )
-            self.event_publisher(event)
 
-        return ChantierDTO.from_entity(chantier)
+            return ChantierDTO.from_entity(chantier)
+
+        except Exception as e:
+            logger.error(
+                "Use case execution failed",
+                extra={
+                    "event": "chantier.use_case.failed",
+                    "use_case": "ChangeStatutUseCase",
+                    "chantier_id": chantier_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
+            raise
 
     def demarrer(self, chantier_id: int) -> ChantierDTO:
         """

@@ -1,9 +1,12 @@
 """Use Case UpdateChantier - Mise à jour d'un chantier."""
 
+import logging
 from datetime import date
 from typing import Optional, Callable
 
 from shared.domain.value_objects import Couleur
+
+logger = logging.getLogger(__name__)
 
 from ...domain.repositories import ChantierRepository
 from ...domain.value_objects import CoordonneesGPS, ContactChantier
@@ -63,41 +66,57 @@ class UpdateChantierUseCase:
             ChantierFermeError: Si le chantier est fermé.
             ValueError: Si les données sont invalides.
         """
-        print(f"[DEBUG UseCase] execute() called with chantier_id={chantier_id}")
-        print(f"[DEBUG UseCase] dto values: nom={dto.nom}, couleur={dto.couleur}, maitre_ouvrage={dto.maitre_ouvrage}")
+        # Logging structured (GAP-CHT-006)
+        logger.info(
+            "Use case execution started",
+            extra={
+                "event": "chantier.use_case.started",
+                "use_case": "UpdateChantierUseCase",
+                "chantier_id": chantier_id,
+                "operation": "update",
+            }
+        )
 
-        # Récupérer et valider le chantier
-        print(f"[DEBUG UseCase] Calling _get_and_validate_chantier")
-        chantier = self._get_and_validate_chantier(chantier_id)
-        print(f"[DEBUG UseCase] Chantier loaded: id={chantier.id}, allows_modifications={chantier.allows_modifications}")
+        try:
+            # Récupérer et valider le chantier
+            chantier = self._get_and_validate_chantier(chantier_id)
 
-        # Collecter les changements
-        changes = []
-        print(f"[DEBUG UseCase] Calling _update_infos_generales")
-        self._update_infos_generales(chantier, dto, changes)
-        print(f"[DEBUG UseCase] After _update_infos_generales, changes={changes}")
+            # Collecter les changements
+            changes = []
+            self._update_infos_generales(chantier, dto, changes)
+            self._update_coordonnees_et_contact(chantier, dto, changes)
+            self._update_dates_et_heures(chantier, dto, changes)
+            self._update_photo_couverture(chantier, dto, changes)
 
-        print(f"[DEBUG UseCase] Calling _update_coordonnees_et_contact")
-        self._update_coordonnees_et_contact(chantier, dto, changes)
-        print(f"[DEBUG UseCase] After _update_coordonnees_et_contact")
+            # Sauvegarder et publier l'event
+            chantier = self.chantier_repo.save(chantier)
+            self._publish_update_event(chantier, changes)
 
-        print(f"[DEBUG UseCase] Calling _update_dates_et_heures")
-        self._update_dates_et_heures(chantier, dto, changes)
-        print(f"[DEBUG UseCase] After _update_dates_et_heures")
+            logger.info(
+                "Use case execution succeeded",
+                extra={
+                    "event": "chantier.use_case.succeeded",
+                    "use_case": "UpdateChantierUseCase",
+                    "chantier_id": chantier.id,
+                    "changes_count": len(changes),
+                    "changes": changes,
+                }
+            )
 
-        print(f"[DEBUG UseCase] Calling _update_photo_couverture")
-        self._update_photo_couverture(chantier, dto, changes)
-        print(f"[DEBUG UseCase] After _update_photo_couverture")
+            return ChantierDTO.from_entity(chantier)
 
-        # Sauvegarder et publier l'event
-        print(f"[DEBUG UseCase] Calling repo.save")
-        chantier = self.chantier_repo.save(chantier)
-        print(f"[DEBUG UseCase] After repo.save")
-
-        self._publish_update_event(chantier, changes)
-        print(f"[DEBUG UseCase] Returning ChantierDTO")
-
-        return ChantierDTO.from_entity(chantier)
+        except Exception as e:
+            logger.error(
+                "Use case execution failed",
+                extra={
+                    "event": "chantier.use_case.failed",
+                    "use_case": "UpdateChantierUseCase",
+                    "chantier_id": chantier_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
+            raise
 
     def _get_and_validate_chantier(self, chantier_id: int):
         """Récupère le chantier et vérifie qu'il peut être modifié."""
@@ -110,29 +129,16 @@ class UpdateChantierUseCase:
 
     def _update_infos_generales(self, chantier, dto: UpdateChantierDTO, changes: list):
         """Met à jour les informations générales (nom, adresse, description, couleur, maitre_ouvrage)."""
-        print(f"[DEBUG UseCase] _update_infos_generales: dto.nom={dto.nom}, dto.couleur={dto.couleur}, dto.maitre_ouvrage={dto.maitre_ouvrage}")
         if dto.nom is not None or dto.adresse is not None or dto.description is not None or dto.maitre_ouvrage is not None:
-            print(f"[DEBUG UseCase] Creating Couleur from: {dto.couleur}")
-            try:
-                couleur = Couleur(dto.couleur) if dto.couleur else None
-                print(f"[DEBUG UseCase] Couleur created successfully: {couleur}")
-            except Exception as e:
-                print(f"[DEBUG UseCase] ERROR creating Couleur: {type(e).__name__}: {str(e)}")
-                raise
+            couleur = Couleur(dto.couleur) if dto.couleur else None
 
-            print(f"[DEBUG UseCase] Calling chantier.update_infos")
-            try:
-                chantier.update_infos(
-                    nom=dto.nom,
-                    adresse=dto.adresse,
-                    description=dto.description,
-                    couleur=couleur,
-                    maitre_ouvrage=dto.maitre_ouvrage,
-                )
-                print(f"[DEBUG UseCase] chantier.update_infos completed successfully")
-            except Exception as e:
-                print(f"[DEBUG UseCase] ERROR in chantier.update_infos: {type(e).__name__}: {str(e)}")
-                raise
+            chantier.update_infos(
+                nom=dto.nom,
+                adresse=dto.adresse,
+                description=dto.description,
+                couleur=couleur,
+                maitre_ouvrage=dto.maitre_ouvrage,
+            )
 
             if dto.nom:
                 changes.append(("nom", dto.nom))

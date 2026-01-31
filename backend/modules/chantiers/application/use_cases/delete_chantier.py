@@ -1,8 +1,11 @@
 """Use Case DeleteChantier - Suppression d'un chantier."""
 
+import logging
 from typing import Optional, Callable
 
 from ...domain.repositories import ChantierRepository
+
+logger = logging.getLogger(__name__)
 from ...domain.events import ChantierDeletedEvent
 from .get_chantier import ChantierNotFoundError
 
@@ -61,29 +64,65 @@ class DeleteChantierUseCase:
             ChantierNotFoundError: Si le chantier n'existe pas.
             ChantierActifError: Si le chantier est actif et force=False.
         """
-        # Récupérer le chantier
-        chantier = self.chantier_repo.find_by_id(chantier_id)
-        if not chantier:
-            raise ChantierNotFoundError(chantier_id)
+        # Logging structured (GAP-CHT-006)
+        logger.info(
+            "Use case execution started",
+            extra={
+                "event": "chantier.use_case.started",
+                "use_case": "DeleteChantierUseCase",
+                "chantier_id": chantier_id,
+                "operation": "delete",
+                "force": force,
+            }
+        )
 
-        # Vérifier que le chantier est fermé (sauf si force)
-        if chantier.is_active and not force:
-            raise ChantierActifError(chantier_id)
+        try:
+            # Récupérer le chantier
+            chantier = self.chantier_repo.find_by_id(chantier_id)
+            if not chantier:
+                raise ChantierNotFoundError(chantier_id)
 
-        # Sauvegarder les infos pour l'event
-        code = str(chantier.code)
-        nom = chantier.nom
+            # Vérifier que le chantier est fermé (sauf si force)
+            if chantier.is_active and not force:
+                raise ChantierActifError(chantier_id)
 
-        # Supprimer
-        result = self.chantier_repo.delete(chantier_id)
+            # Sauvegarder les infos pour l'event
+            code = str(chantier.code)
+            nom = chantier.nom
 
-        # Publier l'event
-        if result and self.event_publisher:
-            event = ChantierDeletedEvent(
-                chantier_id=chantier_id,
-                code=code,
-                nom=nom,
+            # Supprimer
+            result = self.chantier_repo.delete(chantier_id)
+
+            # Publier l'event
+            if result and self.event_publisher:
+                event = ChantierDeletedEvent(
+                    chantier_id=chantier_id,
+                    code=code,
+                    nom=nom,
+                )
+                self.event_publisher(event)
+
+            logger.info(
+                "Use case execution succeeded",
+                extra={
+                    "event": "chantier.use_case.succeeded",
+                    "use_case": "DeleteChantierUseCase",
+                    "chantier_id": chantier_id,
+                    "chantier_code": code,
+                }
             )
-            self.event_publisher(event)
 
-        return result
+            return result
+
+        except Exception as e:
+            logger.error(
+                "Use case execution failed",
+                extra={
+                    "event": "chantier.use_case.failed",
+                    "use_case": "DeleteChantierUseCase",
+                    "chantier_id": chantier_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
+            raise

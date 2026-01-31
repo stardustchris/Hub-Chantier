@@ -69,6 +69,7 @@ def get_change_statut_use_case(
     """Retourne le use case de changement de statut avec dépendances cross-module.
 
     Gap: GAP-CHT-001 - Injection repositories pour validation prérequis
+    Gap: GAP-CHT-005 - Injection AuditService pour traçabilité
     """
     import logging
     logger = logging.getLogger(__name__)
@@ -102,11 +103,16 @@ def get_change_statut_use_case(
     except ImportError:
         logger.warning("PointageRepository not available")
 
+    # Injection AuditService (GAP-CHT-005)
+    from shared.infrastructure.audit import AuditService
+    audit_service = AuditService(db)
+
     return ChangeStatutUseCase(
         chantier_repo,
         formulaire_repo,
         signalement_repo,
-        pointage_repo
+        pointage_repo,
+        audit_service
     )
 
 
