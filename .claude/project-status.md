@@ -19,12 +19,15 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
+| financier | 17 | FIN-01 a FIN-15 | 0/15 | 0 | **SPECS READY** |
 
 ## Statistiques globales
 
-- **Modules complets** : 12/12 (dashboard cards + planning unifié)
-- **Fonctionnalites totales** : 252 (+1 AUTH-11 RGPD)
-- **Fonctionnalites done** : 234 (93%)
+- **Modules complets** : 12/13 (dashboard cards + planning unifié)
+- **Module en specs** : 1 (financier — 15 features, specs ready, dev a venir)
+- **Fonctionnalites totales** : 267 (+15 FIN)
+- **Fonctionnalites done** : 234 (88%)
+- **Fonctionnalites specs ready** : 15 (module financier)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 2 (prevues pour versions futures)
 
@@ -83,6 +86,26 @@
 | Auto-geocoding | Geocodage automatique a la modification d'adresse | 26 jan |
 
 ## Prochaines taches prioritaires
+
+### Module Financier (15 features — specs ready)
+
+| ID | Description | Priorite |
+|----|-------------|----------|
+| FIN-01 | Onglet Budget par chantier | P1 |
+| FIN-02 | Budget previsionnel par lots | P1 |
+| FIN-05 | Saisie achats / bons de commande | P1 |
+| FIN-14 | Referentiel fournisseurs | P1 |
+| FIN-06 | Validation hierarchique achats | P1 |
+| FIN-11 | Tableau de bord financier (KPI) | P1 |
+| FIN-07 | Situations de travaux | P2 |
+| FIN-08 | Facturation client | P2 |
+| FIN-04 | Avenants budgetaires | P2 |
+| FIN-09 | Suivi couts main-d'oeuvre | P2 |
+| FIN-10 | Suivi couts materiel | P2 |
+| FIN-12 | Alertes depassements | P2 |
+| FIN-03 | Affectation budgets aux taches | P3 |
+| FIN-13 | Export comptable | P3 |
+| FIN-15 | Historique et tracabilite | P3 |
 
 ### Infrastructure (16 features)
 
