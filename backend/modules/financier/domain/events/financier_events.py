@@ -206,6 +206,156 @@ class AchatFactureEvent:
     occurred_at: datetime = field(default_factory=datetime.utcnow)
 
 
+# --- Avenant Events ---
+
+
+@dataclass(frozen=True)
+class AvenantCreatedEvent:
+    """Event émis lors de la création d'un avenant budgétaire.
+
+    FIN-04: Avenants budgétaires.
+    """
+
+    avenant_id: int
+    budget_id: int
+    montant_ht: Decimal
+    motif: str
+    created_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class AvenantValideEvent:
+    """Event émis lors de la validation d'un avenant budgétaire.
+
+    FIN-04: Avenants budgétaires - validation et impact sur le budget.
+    """
+
+    avenant_id: int
+    budget_id: int
+    montant_ht: Decimal
+    validated_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+# --- Situation de Travaux Events ---
+
+
+@dataclass(frozen=True)
+class SituationCreatedEvent:
+    """Event emis lors de la creation d'une situation de travaux.
+
+    FIN-07: Situations de travaux.
+    """
+
+    situation_id: int
+    chantier_id: int
+    budget_id: int
+    numero: str
+    montant_cumule_ht: Decimal
+    created_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class SituationEmiseEvent:
+    """Event emis lors de l'emission d'une situation de travaux.
+
+    FIN-07: Situations de travaux - validation interne.
+    """
+
+    situation_id: int
+    chantier_id: int
+    numero: str
+    montant_cumule_ht: Decimal
+    validated_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class SituationValideeEvent:
+    """Event emis lors de la validation client d'une situation de travaux.
+
+    FIN-07: Situations de travaux - validation client.
+    """
+
+    situation_id: int
+    chantier_id: int
+    numero: str
+    montant_cumule_ht: Decimal
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class SituationFactureeEvent:
+    """Event emis lors de la facturation d'une situation de travaux.
+
+    FIN-07: Situations de travaux - facturation.
+    """
+
+    situation_id: int
+    chantier_id: int
+    numero: str
+    montant_cumule_ht: Decimal
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+# --- Facture Client Events ---
+
+
+@dataclass(frozen=True)
+class FactureCreatedEvent:
+    """Event emis lors de la creation d'une facture client.
+
+    FIN-08: Facturation client.
+    """
+
+    facture_id: int
+    chantier_id: int
+    numero_facture: str
+    type_facture: str
+    montant_ttc: Decimal
+    created_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class FactureEmiseEvent:
+    """Event emis lors de l'emission d'une facture client.
+
+    FIN-08: Facturation client - emission.
+    """
+
+    facture_id: int
+    chantier_id: int
+    numero_facture: str
+    montant_ttc: Decimal
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class FacturePayeeEvent:
+    """Event emis lors du paiement d'une facture client.
+
+    FIN-08: Facturation client - paiement.
+    """
+
+    facture_id: int
+    chantier_id: int
+    numero_facture: str
+    montant_ttc: Decimal
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
 # --- Alertes Budget ---
 
 

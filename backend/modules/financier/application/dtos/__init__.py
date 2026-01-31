@@ -26,6 +26,33 @@ from .achat_dtos import (
     AchatValidationDTO,
     AchatRefusDTO,
 )
+from .avenant_dtos import (
+    AvenantCreateDTO,
+    AvenantUpdateDTO,
+    AvenantDTO,
+)
+from .situation_dtos import (
+    SituationCreateDTO,
+    SituationUpdateDTO,
+    SituationDTO,
+    LigneSituationCreateDTO,
+    LigneSituationDTO,
+)
+from .facture_dtos import (
+    FactureCreateDTO,
+    FactureUpdateDTO,
+    FactureDTO,
+)
+from .cout_dtos import (
+    CoutEmployeDTO,
+    CoutMaterielDTO,
+    CoutMainOeuvreSummaryDTO,
+    CoutMaterielSummaryDTO,
+)
+from .alerte_dtos import (
+    AlerteCreateDTO,
+    AlerteDTO,
+)
 from .dashboard_dtos import (
     KPIFinancierDTO,
     DerniersAchatsDTO,
@@ -51,6 +78,23 @@ __all__ = [
     "AchatListDTO",
     "AchatValidationDTO",
     "AchatRefusDTO",
+    "AvenantCreateDTO",
+    "AvenantUpdateDTO",
+    "AvenantDTO",
+    "SituationCreateDTO",
+    "SituationUpdateDTO",
+    "SituationDTO",
+    "LigneSituationCreateDTO",
+    "LigneSituationDTO",
+    "FactureCreateDTO",
+    "FactureUpdateDTO",
+    "FactureDTO",
+    "CoutEmployeDTO",
+    "CoutMaterielDTO",
+    "CoutMainOeuvreSummaryDTO",
+    "CoutMaterielSummaryDTO",
+    "AlerteCreateDTO",
+    "AlerteDTO",
     "KPIFinancierDTO",
     "DerniersAchatsDTO",
     "DashboardFinancierDTO",

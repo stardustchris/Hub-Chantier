@@ -14,6 +14,13 @@ from ...domain.repositories import (
     LotBudgetaireRepository,
     AchatRepository,
     JournalFinancierRepository,
+    AvenantRepository,
+    SituationRepository,
+    LigneSituationRepository,
+    FactureRepository,
+    CoutMainOeuvreRepository,
+    CoutMaterielRepository,
+    AlerteRepository,
 )
 from ...application.use_cases import (
     # Fournisseur
@@ -44,6 +51,39 @@ from ...application.use_cases import (
     GetAchatUseCase,
     ListAchatsUseCase,
     ListAchatsEnAttenteUseCase,
+    # Avenant (FIN-04)
+    CreateAvenantUseCase,
+    UpdateAvenantUseCase,
+    ValiderAvenantUseCase,
+    GetAvenantUseCase,
+    ListAvenantsUseCase,
+    DeleteAvenantUseCase,
+    # Situation (FIN-07)
+    CreateSituationUseCase,
+    UpdateSituationUseCase,
+    SoumettreSituationUseCase,
+    ValiderSituationUseCase,
+    MarquerValideeClientUseCase,
+    MarquerFactureeSituationUseCase,
+    GetSituationUseCase,
+    ListSituationsUseCase,
+    DeleteSituationUseCase,
+    # Facture (FIN-08)
+    CreateFactureFromSituationUseCase,
+    CreateFactureAcompteUseCase,
+    EmettreFactureUseCase,
+    EnvoyerFactureUseCase,
+    MarquerPayeeFactureUseCase,
+    AnnulerFactureUseCase,
+    GetFactureUseCase,
+    ListFacturesUseCase,
+    # Couts (FIN-09, FIN-10)
+    GetCoutMainOeuvreUseCase,
+    GetCoutMaterielUseCase,
+    # Alertes (FIN-12)
+    VerifierDepassementUseCase,
+    AcquitterAlerteUseCase,
+    ListAlertesUseCase,
     # Dashboard
     GetDashboardFinancierUseCase,
 )
@@ -53,6 +93,13 @@ from ..persistence import (
     SQLAlchemyLotBudgetaireRepository,
     SQLAlchemyAchatRepository,
     SQLAlchemyJournalFinancierRepository,
+    SQLAlchemyAvenantRepository,
+    SQLAlchemySituationRepository,
+    SQLAlchemyLigneSituationRepository,
+    SQLAlchemyFactureRepository,
+    SQLAlchemyCoutMainOeuvreRepository,
+    SQLAlchemyCoutMaterielRepository,
+    SQLAlchemyAlerteRepository,
 )
 
 
@@ -347,3 +394,395 @@ def get_dashboard_financier_use_case(
     return GetDashboardFinancierUseCase(
         budget_repository, lot_repository, achat_repository
     )
+
+
+# =============================================================================
+# Repositories - Avenant (FIN-04)
+# =============================================================================
+
+
+def get_avenant_repository(
+    db: Session = Depends(get_db),
+) -> AvenantRepository:
+    """Retourne le repository Avenant."""
+    return SQLAlchemyAvenantRepository(db)
+
+
+# =============================================================================
+# Use Cases - Avenant (FIN-04)
+# =============================================================================
+
+
+def get_create_avenant_use_case(
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> CreateAvenantUseCase:
+    """Retourne le use case CreateAvenant."""
+    return CreateAvenantUseCase(
+        avenant_repository, budget_repository, journal_repository, event_bus
+    )
+
+
+def get_update_avenant_use_case(
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> UpdateAvenantUseCase:
+    """Retourne le use case UpdateAvenant."""
+    return UpdateAvenantUseCase(
+        avenant_repository, budget_repository, journal_repository
+    )
+
+
+def get_valider_avenant_use_case(
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> ValiderAvenantUseCase:
+    """Retourne le use case ValiderAvenant."""
+    return ValiderAvenantUseCase(
+        avenant_repository, budget_repository, journal_repository, event_bus
+    )
+
+
+def get_get_avenant_use_case(
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+) -> GetAvenantUseCase:
+    """Retourne le use case GetAvenant."""
+    return GetAvenantUseCase(avenant_repository)
+
+
+def get_list_avenants_use_case(
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+) -> ListAvenantsUseCase:
+    """Retourne le use case ListAvenants."""
+    return ListAvenantsUseCase(avenant_repository)
+
+
+def get_delete_avenant_use_case(
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> DeleteAvenantUseCase:
+    """Retourne le use case DeleteAvenant."""
+    return DeleteAvenantUseCase(
+        avenant_repository, budget_repository, journal_repository
+    )
+
+
+# =============================================================================
+# Repositories - Situation (FIN-07)
+# =============================================================================
+
+
+def get_situation_repository(
+    db: Session = Depends(get_db),
+) -> SituationRepository:
+    """Retourne le repository Situation."""
+    return SQLAlchemySituationRepository(db)
+
+
+def get_ligne_situation_repository(
+    db: Session = Depends(get_db),
+) -> LigneSituationRepository:
+    """Retourne le repository LigneSituation."""
+    return SQLAlchemyLigneSituationRepository(db)
+
+
+# =============================================================================
+# Use Cases - Situation (FIN-07)
+# =============================================================================
+
+
+def get_create_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> CreateSituationUseCase:
+    """Retourne le use case CreateSituation."""
+    return CreateSituationUseCase(
+        situation_repository, ligne_repository, budget_repository,
+        lot_repository, journal_repository, event_bus,
+    )
+
+
+def get_update_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> UpdateSituationUseCase:
+    """Retourne le use case UpdateSituation."""
+    return UpdateSituationUseCase(
+        situation_repository, ligne_repository, lot_repository, journal_repository
+    )
+
+
+def get_soumettre_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> SoumettreSituationUseCase:
+    """Retourne le use case SoumettreSituation."""
+    return SoumettreSituationUseCase(
+        situation_repository, ligne_repository, journal_repository
+    )
+
+
+def get_valider_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> ValiderSituationUseCase:
+    """Retourne le use case ValiderSituation."""
+    return ValiderSituationUseCase(
+        situation_repository, ligne_repository, journal_repository, event_bus
+    )
+
+
+def get_marquer_validee_client_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> MarquerValideeClientUseCase:
+    """Retourne le use case MarquerValideeClient."""
+    return MarquerValideeClientUseCase(
+        situation_repository, ligne_repository, journal_repository, event_bus
+    )
+
+
+def get_marquer_facturee_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> MarquerFactureeSituationUseCase:
+    """Retourne le use case MarquerFactureeSituation."""
+    return MarquerFactureeSituationUseCase(
+        situation_repository, ligne_repository, journal_repository, event_bus
+    )
+
+
+def get_get_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+) -> GetSituationUseCase:
+    """Retourne le use case GetSituation."""
+    return GetSituationUseCase(situation_repository, ligne_repository)
+
+
+def get_list_situations_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+) -> ListSituationsUseCase:
+    """Retourne le use case ListSituations."""
+    return ListSituationsUseCase(situation_repository, ligne_repository)
+
+
+def get_delete_situation_use_case(
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    ligne_repository: LigneSituationRepository = Depends(get_ligne_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> DeleteSituationUseCase:
+    """Retourne le use case DeleteSituation."""
+    return DeleteSituationUseCase(
+        situation_repository, ligne_repository, journal_repository
+    )
+
+
+# =============================================================================
+# Repositories - Facture (FIN-08)
+# =============================================================================
+
+
+def get_facture_repository(
+    db: Session = Depends(get_db),
+) -> FactureRepository:
+    """Retourne le repository Facture."""
+    return SQLAlchemyFactureRepository(db)
+
+
+# =============================================================================
+# Use Cases - Facture (FIN-08)
+# =============================================================================
+
+
+def get_create_facture_from_situation_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> CreateFactureFromSituationUseCase:
+    """Retourne le use case CreateFactureFromSituation."""
+    return CreateFactureFromSituationUseCase(
+        facture_repository, situation_repository, journal_repository, event_bus
+    )
+
+
+def get_create_facture_acompte_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> CreateFactureAcompteUseCase:
+    """Retourne le use case CreateFactureAcompte."""
+    return CreateFactureAcompteUseCase(
+        facture_repository, journal_repository, event_bus
+    )
+
+
+def get_emettre_facture_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> EmettreFactureUseCase:
+    """Retourne le use case EmettreFacture."""
+    return EmettreFactureUseCase(
+        facture_repository, journal_repository, event_bus
+    )
+
+
+def get_envoyer_facture_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> EnvoyerFactureUseCase:
+    """Retourne le use case EnvoyerFacture."""
+    return EnvoyerFactureUseCase(facture_repository, journal_repository)
+
+
+def get_marquer_payee_facture_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> MarquerPayeeFactureUseCase:
+    """Retourne le use case MarquerPayeeFacture."""
+    return MarquerPayeeFactureUseCase(
+        facture_repository, situation_repository, journal_repository, event_bus
+    )
+
+
+def get_annuler_facture_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> AnnulerFactureUseCase:
+    """Retourne le use case AnnulerFacture."""
+    return AnnulerFactureUseCase(facture_repository, journal_repository)
+
+
+def get_get_facture_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+) -> GetFactureUseCase:
+    """Retourne le use case GetFacture."""
+    return GetFactureUseCase(facture_repository)
+
+
+def get_list_factures_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+) -> ListFacturesUseCase:
+    """Retourne le use case ListFactures."""
+    return ListFacturesUseCase(facture_repository)
+
+
+# =============================================================================
+# Repositories - Couts Main-d'Oeuvre (FIN-09)
+# =============================================================================
+
+
+def get_cout_main_oeuvre_repository(
+    db: Session = Depends(get_db),
+) -> CoutMainOeuvreRepository:
+    """Retourne le repository CoutMainOeuvre."""
+    return SQLAlchemyCoutMainOeuvreRepository(db)
+
+
+# =============================================================================
+# Use Cases - Couts Main-d'Oeuvre (FIN-09)
+# =============================================================================
+
+
+def get_cout_main_oeuvre_use_case(
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+) -> GetCoutMainOeuvreUseCase:
+    """Retourne le use case GetCoutMainOeuvre."""
+    return GetCoutMainOeuvreUseCase(cout_mo_repository)
+
+
+# =============================================================================
+# Repositories - Couts Materiel (FIN-10)
+# =============================================================================
+
+
+def get_cout_materiel_repository(
+    db: Session = Depends(get_db),
+) -> CoutMaterielRepository:
+    """Retourne le repository CoutMateriel."""
+    return SQLAlchemyCoutMaterielRepository(db)
+
+
+# =============================================================================
+# Use Cases - Couts Materiel (FIN-10)
+# =============================================================================
+
+
+def get_cout_materiel_use_case(
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
+) -> GetCoutMaterielUseCase:
+    """Retourne le use case GetCoutMateriel."""
+    return GetCoutMaterielUseCase(cout_materiel_repository)
+
+
+# =============================================================================
+# Repositories - Alertes (FIN-12)
+# =============================================================================
+
+
+def get_alerte_repository(
+    db: Session = Depends(get_db),
+) -> AlerteRepository:
+    """Retourne le repository Alerte."""
+    return SQLAlchemyAlerteRepository(db)
+
+
+# =============================================================================
+# Use Cases - Alertes (FIN-12)
+# =============================================================================
+
+
+def get_verifier_depassement_use_case(
+    alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> VerifierDepassementUseCase:
+    """Retourne le use case VerifierDepassement."""
+    return VerifierDepassementUseCase(
+        alerte_repository, budget_repository, achat_repository,
+        cout_mo_repository, cout_materiel_repository,
+        journal_repository, event_bus,
+    )
+
+
+def get_acquitter_alerte_use_case(
+    alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+) -> AcquitterAlerteUseCase:
+    """Retourne le use case AcquitterAlerte."""
+    return AcquitterAlerteUseCase(alerte_repository, journal_repository)
+
+
+def get_list_alertes_use_case(
+    alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+) -> ListAlertesUseCase:
+    """Retourne le use case ListAlertes."""
+    return ListAlertesUseCase(alerte_repository)
