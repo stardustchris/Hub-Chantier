@@ -1,0 +1,94 @@
+{
+  "violations_fixed": 4,
+  "files_modified": 3,
+  "files_created": 1,
+  "architecture_score": "10/10",
+  "tests_status": "148 passed",
+  "architect_review_status": "PASS",
+  "pattern_used": "Service Locator (Service Registry)",
+  "timestamp": "2026-01-31T12:02:30.305114",
+  "details": {
+    "violations_corrected": [
+      {
+        "file": "backend/modules/chantiers/infrastructure/web/chantier_routes.py",
+        "severity": "HIGH",
+        "violation": "Import direct du module auth",
+        "solution": "Utilisation de string annotations pour UserRepository"
+      },
+      {
+        "file": "backend/modules/chantiers/infrastructure/web/dependencies.py",
+        "severity": "HIGH",
+        "violation": "Import direct du module formulaires",
+        "solution": "Utilisation du Service Registry"
+      },
+      {
+        "file": "backend/modules/chantiers/infrastructure/web/dependencies.py",
+        "severity": "HIGH",
+        "violation": "Import direct du module signalements",
+        "solution": "Utilisation du Service Registry"
+      },
+      {
+        "file": "backend/modules/chantiers/infrastructure/web/dependencies.py",
+        "severity": "HIGH",
+        "violation": "Import direct du module pointages",
+        "solution": "Utilisation du Service Registry"
+      }
+    ],
+    "files_changed": [
+      {
+        "path": "backend/shared/infrastructure/service_registry.py",
+        "status": "created",
+        "lines_added": 114,
+        "purpose": "Service Registry pour communication cross-module"
+      },
+      {
+        "path": "backend/modules/chantiers/infrastructure/web/dependencies.py",
+        "status": "refactored",
+        "lines_removed": 23,
+        "lines_added": 7,
+        "purpose": "Utilisation du Service Registry au lieu d'imports directs"
+      },
+      {
+        "path": "backend/modules/chantiers/infrastructure/web/chantier_routes.py",
+        "status": "refactored",
+        "lines_removed": 4,
+        "lines_added": 0,
+        "purpose": "Suppression de l'import TYPE_CHECKING, utilisation de string annotations"
+      }
+    ],
+    "validation_results": {
+      "architect_reviewer": {
+        "status": "PASS",
+        "score": {
+          "clean_architecture": "10/10",
+          "modularity": "10/10"
+        },
+        "findings": 0,
+        "files_analyzed": 46
+      },
+      "tests": {
+        "total": 148,
+        "passed": 148,
+        "failed": 0,
+        "duration": "0.16s"
+      },
+      "code_reviewer": {
+        "status": "PASS",
+        "score": "10/10",
+        "quality_issues": 21,
+        "severity_distribution": {
+          "CRITICAL": 0,
+          "HIGH": 0,
+          "MEDIUM": 9,
+          "LOW": 12
+        }
+      },
+      "security_auditor": {
+        "status": "PASS",
+        "critical_issues": 0,
+        "high_issues": 0,
+        "findings": 2
+      }
+    }
+  }
+}

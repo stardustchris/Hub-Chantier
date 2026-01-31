@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from ...adapters.controllers import ChantierController
@@ -26,9 +26,6 @@ from shared.infrastructure.web import (
 )
 from shared.infrastructure.event_bus.dependencies import get_event_bus
 from shared.infrastructure.event_bus import EventBus
-
-# Import UserRepository pour les dépendances FastAPI
-from modules.auth.domain.repositories import UserRepository
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 

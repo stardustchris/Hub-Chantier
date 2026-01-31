@@ -70,38 +70,16 @@ def get_change_statut_use_case(
 
     Gap: GAP-CHT-001 - Injection repositories pour validation prérequis
     Gap: GAP-CHT-005 - Injection AuditService pour traçabilité
+
+    Note: Utilise le Service Registry pour éviter les imports directs cross-module
+    et respecter le principe d'isolation des modules selon Clean Architecture.
     """
-    import logging
-    logger = logging.getLogger(__name__)
+    # Injection cross-module via Service Registry (graceful degradation)
+    from shared.infrastructure.service_registry import get_service
 
-    # Injection cross-module (optionnelle, graceful degradation)
-    formulaire_repo = None
-    signalement_repo = None
-    pointage_repo = None
-
-    try:
-        from modules.formulaires.infrastructure.persistence import (
-            SQLAlchemyFormulaireRempliRepository
-        )
-        formulaire_repo = SQLAlchemyFormulaireRempliRepository(db)
-    except ImportError:
-        logger.warning("FormulaireRempliRepository not available")
-
-    try:
-        from modules.signalements.infrastructure.persistence import (
-            SQLAlchemySignalementRepository
-        )
-        signalement_repo = SQLAlchemySignalementRepository(db)
-    except ImportError:
-        logger.warning("SignalementRepository not available")
-
-    try:
-        from modules.pointages.infrastructure.persistence import (
-            SQLAlchemyPointageRepository
-        )
-        pointage_repo = SQLAlchemyPointageRepository(db)
-    except ImportError:
-        logger.warning("PointageRepository not available")
+    formulaire_repo = get_service("formulaire_repository", db)
+    signalement_repo = get_service("signalement_repository", db)
+    pointage_repo = get_service("pointage_repository", db)
 
     # Injection AuditService (GAP-CHT-005)
     from shared.infrastructure.audit import AuditService
