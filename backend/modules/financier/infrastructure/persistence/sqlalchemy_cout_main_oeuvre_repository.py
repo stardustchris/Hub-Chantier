@@ -1,0 +1,138 @@
+"""Implementation SQLAlchemy du repository CoutMainOeuvre.
+
+FIN-09: Suivi couts main-d'oeuvre - requetes sur les pointages valides.
+Utilise text() pour les requetes SQL brutes afin d'eviter les imports
+cross-module (Clean Architecture).
+"""
+
+from datetime import date
+from decimal import Decimal
+from typing import List, Optional
+
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from ...domain.repositories.cout_main_oeuvre_repository import (
+    CoutMainOeuvreRepository,
+)
+from ...domain.value_objects.cout_employe import CoutEmploye
+
+
+class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
+    """Implementation SQLAlchemy du repository CoutMainOeuvre.
+
+    Utilise des requetes SQL brutes (text()) pour interroger les tables
+    pointages et users sans importer les modeles d'autres modules.
+    """
+
+    def __init__(self, session: Session):
+        """Initialise le repository avec une session SQLAlchemy.
+
+        Args:
+            session: La session SQLAlchemy.
+        """
+        self._session = session
+
+    def calculer_cout_chantier(
+        self,
+        chantier_id: int,
+        date_debut: Optional[date] = None,
+        date_fin: Optional[date] = None,
+    ) -> Decimal:
+        """Calcule le cout total main-d'oeuvre d'un chantier.
+
+        Args:
+            chantier_id: L'ID du chantier.
+            date_debut: Date de debut de la periode (optionnel).
+            date_fin: Date de fin de la periode (optionnel).
+
+        Returns:
+            Le cout total en Decimal.
+        """
+        query = text("""
+            SELECT COALESCE(
+                SUM(
+                    (p.heures_normales_minutes + p.heures_supplementaires_minutes)
+                    / 60.0 * COALESCE(u.taux_horaire, 0)
+                ), 0
+            ) as cout_total
+            FROM pointages p
+            JOIN users u ON p.utilisateur_id = u.id
+            WHERE p.chantier_id = :chantier_id
+              AND p.statut = 'valide'
+              AND (p.date_pointage >= :date_debut OR :date_debut IS NULL)
+              AND (p.date_pointage <= :date_fin OR :date_fin IS NULL)
+        """)
+
+        result = self._session.execute(
+            query,
+            {
+                "chantier_id": chantier_id,
+                "date_debut": date_debut,
+                "date_fin": date_fin,
+            },
+        ).scalar()
+
+        return Decimal(str(result)) if result else Decimal("0")
+
+    def calculer_cout_par_employe(
+        self,
+        chantier_id: int,
+        date_debut: Optional[date] = None,
+        date_fin: Optional[date] = None,
+    ) -> List[CoutEmploye]:
+        """Calcule le cout main-d'oeuvre par employe.
+
+        Args:
+            chantier_id: L'ID du chantier.
+            date_debut: Date de debut de la periode (optionnel).
+            date_fin: Date de fin de la periode (optionnel).
+
+        Returns:
+            Liste des couts par employe.
+        """
+        query = text("""
+            SELECT p.utilisateur_id,
+                   u.nom,
+                   u.prenom,
+                   SUM(p.heures_normales_minutes + p.heures_supplementaires_minutes)
+                       as total_minutes,
+                   COALESCE(u.taux_horaire, 0) as taux_horaire
+            FROM pointages p
+            JOIN users u ON p.utilisateur_id = u.id
+            WHERE p.chantier_id = :chantier_id
+              AND p.statut = 'valide'
+              AND (p.date_pointage >= :date_debut OR :date_debut IS NULL)
+              AND (p.date_pointage <= :date_fin OR :date_fin IS NULL)
+            GROUP BY p.utilisateur_id, u.nom, u.prenom, u.taux_horaire
+            ORDER BY u.nom, u.prenom
+        """)
+
+        rows = self._session.execute(
+            query,
+            {
+                "chantier_id": chantier_id,
+                "date_debut": date_debut,
+                "date_fin": date_fin,
+            },
+        ).fetchall()
+
+        result = []
+        for row in rows:
+            total_minutes = Decimal(str(row.total_minutes or 0))
+            heures = total_minutes / Decimal("60")
+            taux = Decimal(str(row.taux_horaire or 0))
+            cout = heures * taux
+
+            result.append(
+                CoutEmploye(
+                    user_id=row.utilisateur_id,
+                    nom=row.nom or "",
+                    prenom=row.prenom or "",
+                    heures_validees=heures.quantize(Decimal("0.01")),
+                    taux_horaire=taux,
+                    cout_total=cout.quantize(Decimal("0.01")),
+                )
+            )
+
+        return result

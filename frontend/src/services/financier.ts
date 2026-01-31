@@ -14,6 +14,18 @@ import type {
   AchatUpdate,
   DashboardFinancier,
   JournalFinancierEntry,
+  AvenantBudgetaire,
+  AvenantCreate,
+  AvenantUpdate,
+  SituationTravaux,
+  SituationCreate,
+  SituationUpdate,
+  FactureClient,
+  FactureFromSituationCreate,
+  FactureAcompteCreate,
+  CoutMainOeuvreSummary,
+  CoutMaterielSummary,
+  AlerteDepassement,
 } from '../types'
 
 const BASE = '/api/financier'
@@ -174,6 +186,163 @@ export const financierService = {
       `${BASE}/journal-financier`,
       { params }
     )
+    return response.data
+  },
+
+  // ===== Avenants (FIN-04) =====
+  async listAvenants(budgetId: number): Promise<AvenantBudgetaire[]> {
+    const response = await api.get<{ items: AvenantBudgetaire[]; total: number }>(
+      `${BASE}/budgets/${budgetId}/avenants`
+    )
+    return response.data.items
+  },
+
+  async createAvenant(data: AvenantCreate): Promise<AvenantBudgetaire> {
+    const response = await api.post<AvenantBudgetaire>(`${BASE}/avenants`, data)
+    return response.data
+  },
+
+  async updateAvenant(id: number, data: AvenantUpdate): Promise<AvenantBudgetaire> {
+    const response = await api.put<AvenantBudgetaire>(`${BASE}/avenants/${id}`, data)
+    return response.data
+  },
+
+  async validerAvenant(id: number): Promise<AvenantBudgetaire> {
+    const response = await api.post<AvenantBudgetaire>(`${BASE}/avenants/${id}/valider`)
+    return response.data
+  },
+
+  async deleteAvenant(id: number): Promise<void> {
+    await api.delete(`${BASE}/avenants/${id}`)
+  },
+
+  // ===== Situations (FIN-07) =====
+  async listSituations(chantierId: number): Promise<SituationTravaux[]> {
+    const response = await api.get<{ items: SituationTravaux[]; total: number }>(
+      `${BASE}/chantiers/${chantierId}/situations`
+    )
+    return response.data.items
+  },
+
+  async getSituation(id: number): Promise<SituationTravaux> {
+    const response = await api.get<SituationTravaux>(`${BASE}/situations/${id}`)
+    return response.data
+  },
+
+  async createSituation(data: SituationCreate): Promise<SituationTravaux> {
+    const response = await api.post<SituationTravaux>(`${BASE}/situations`, data)
+    return response.data
+  },
+
+  async updateSituation(id: number, data: SituationUpdate): Promise<SituationTravaux> {
+    const response = await api.put<SituationTravaux>(`${BASE}/situations/${id}`, data)
+    return response.data
+  },
+
+  async soumettreSituation(id: number): Promise<SituationTravaux> {
+    const response = await api.post<SituationTravaux>(`${BASE}/situations/${id}/soumettre`)
+    return response.data
+  },
+
+  async validerSituation(id: number): Promise<SituationTravaux> {
+    const response = await api.post<SituationTravaux>(`${BASE}/situations/${id}/valider`)
+    return response.data
+  },
+
+  async validerClientSituation(id: number): Promise<SituationTravaux> {
+    const response = await api.post<SituationTravaux>(`${BASE}/situations/${id}/valider-client`)
+    return response.data
+  },
+
+  async deleteSituation(id: number): Promise<void> {
+    await api.delete(`${BASE}/situations/${id}`)
+  },
+
+  // ===== Factures (FIN-08) =====
+  async listFactures(chantierId: number): Promise<FactureClient[]> {
+    const response = await api.get<{ items: FactureClient[]; total: number }>(
+      `${BASE}/chantiers/${chantierId}/factures`
+    )
+    return response.data.items
+  },
+
+  async getFacture(id: number): Promise<FactureClient> {
+    const response = await api.get<FactureClient>(`${BASE}/factures/${id}`)
+    return response.data
+  },
+
+  async createFactureFromSituation(data: FactureFromSituationCreate): Promise<FactureClient> {
+    const response = await api.post<FactureClient>(`${BASE}/factures/from-situation`, data)
+    return response.data
+  },
+
+  async createFactureAcompte(data: FactureAcompteCreate): Promise<FactureClient> {
+    const response = await api.post<FactureClient>(`${BASE}/factures/acompte`, data)
+    return response.data
+  },
+
+  async emettreFacture(id: number): Promise<FactureClient> {
+    const response = await api.post<FactureClient>(`${BASE}/factures/${id}/emettre`)
+    return response.data
+  },
+
+  async envoyerFacture(id: number): Promise<FactureClient> {
+    const response = await api.post<FactureClient>(`${BASE}/factures/${id}/envoyer`)
+    return response.data
+  },
+
+  async payerFacture(id: number): Promise<FactureClient> {
+    const response = await api.post<FactureClient>(`${BASE}/factures/${id}/payer`)
+    return response.data
+  },
+
+  async annulerFacture(id: number): Promise<FactureClient> {
+    const response = await api.post<FactureClient>(`${BASE}/factures/${id}/annuler`)
+    return response.data
+  },
+
+  // ===== Couts main-d'oeuvre (FIN-09) =====
+  async getCoutsMainOeuvre(chantierId: number, params?: { date_debut?: string; date_fin?: string }): Promise<CoutMainOeuvreSummary> {
+    const response = await api.get<CoutMainOeuvreSummary>(
+      `${BASE}/chantiers/${chantierId}/couts-main-oeuvre`,
+      { params }
+    )
+    return response.data
+  },
+
+  // ===== Couts materiel (FIN-10) =====
+  async getCoutsMateriel(chantierId: number, params?: { date_debut?: string; date_fin?: string }): Promise<CoutMaterielSummary> {
+    const response = await api.get<CoutMaterielSummary>(
+      `${BASE}/chantiers/${chantierId}/couts-materiel`,
+      { params }
+    )
+    return response.data
+  },
+
+  // ===== Alertes (FIN-12) =====
+  async listAlertes(chantierId: number, nonAcquitteesSeulement?: boolean): Promise<AlerteDepassement[]> {
+    const response = await api.get<{ items: AlerteDepassement[]; total: number }>(
+      `${BASE}/chantiers/${chantierId}/alertes`,
+      { params: { non_acquittees_seulement: nonAcquitteesSeulement } }
+    )
+    return response.data.items
+  },
+
+  async verifierDepassement(chantierId: number): Promise<AlerteDepassement | null> {
+    try {
+      const response = await api.post<AlerteDepassement>(
+        `${BASE}/chantiers/${chantierId}/alertes/verifier`
+      )
+      return response.data
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } }
+      if (err.response?.status === 200) return null
+      throw error
+    }
+  },
+
+  async acquitterAlerte(id: number): Promise<AlerteDepassement> {
+    const response = await api.post<AlerteDepassement>(`${BASE}/alertes/${id}/acquitter`)
     return response.data
   },
 }

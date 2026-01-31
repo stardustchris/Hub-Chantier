@@ -40,6 +40,20 @@ from ...application.use_cases.achat_use_cases import (
     AchatNotFoundError,
     FournisseurInactifError,
 )
+from ...application.use_cases.avenant_use_cases import (
+    AvenantNotFoundError,
+    AvenantAlreadyValideError,
+)
+from ...application.use_cases.situation_use_cases import (
+    SituationNotFoundError,
+    SituationWorkflowError,
+)
+from ...application.use_cases.facture_use_cases import (
+    FactureNotFoundError,
+    FactureWorkflowError,
+    SituationNonValideeError,
+)
+from ...application.use_cases.alerte_use_cases import AlerteNotFoundError
 from ...application.dtos import (
     FournisseurCreateDTO,
     FournisseurUpdateDTO,
@@ -49,6 +63,12 @@ from ...application.dtos import (
     LotBudgetaireUpdateDTO,
     AchatCreateDTO,
     AchatUpdateDTO,
+    AvenantCreateDTO,
+    AvenantUpdateDTO,
+    SituationCreateDTO,
+    SituationUpdateDTO,
+    LigneSituationCreateDTO,
+    FactureCreateDTO,
 )
 from .dependencies import (
     # Fournisseur
@@ -79,6 +99,39 @@ from .dependencies import (
     get_get_achat_use_case,
     get_list_achats_use_case,
     get_list_achats_en_attente_use_case,
+    # Avenant (FIN-04)
+    get_create_avenant_use_case,
+    get_update_avenant_use_case,
+    get_valider_avenant_use_case,
+    get_get_avenant_use_case,
+    get_list_avenants_use_case,
+    get_delete_avenant_use_case,
+    # Situation (FIN-07)
+    get_create_situation_use_case,
+    get_update_situation_use_case,
+    get_soumettre_situation_use_case,
+    get_valider_situation_use_case,
+    get_marquer_validee_client_use_case,
+    get_marquer_facturee_situation_use_case,
+    get_get_situation_use_case,
+    get_list_situations_use_case,
+    get_delete_situation_use_case,
+    # Facture (FIN-08)
+    get_create_facture_from_situation_use_case,
+    get_create_facture_acompte_use_case,
+    get_emettre_facture_use_case,
+    get_envoyer_facture_use_case,
+    get_marquer_payee_facture_use_case,
+    get_annuler_facture_use_case,
+    get_get_facture_use_case,
+    get_list_factures_use_case,
+    # Couts (FIN-09, FIN-10)
+    get_cout_main_oeuvre_use_case,
+    get_cout_materiel_use_case,
+    # Alertes (FIN-12)
+    get_verifier_depassement_use_case,
+    get_acquitter_alerte_use_case,
+    get_list_alertes_use_case,
     # Dashboard
     get_dashboard_financier_use_case,
     # Journal
@@ -108,7 +161,10 @@ def _check_chantier_access(chantier_id: int, user_role: str, user_chantier_ids: 
 
 
 # Valeurs autorisees pour entite_type dans le journal financier
-ENTITE_TYPES_AUTORISES = {"budget", "lot_budgetaire", "achat", "fournisseur"}
+ENTITE_TYPES_AUTORISES = {
+    "budget", "lot_budgetaire", "achat", "fournisseur",
+    "avenant", "situation", "facture", "alerte",
+}
 
 
 # =============================================================================
@@ -970,3 +1026,722 @@ async def list_journal_financier(
         "limit": limit,
         "offset": offset,
     }
+
+
+# =============================================================================
+# Schemas Pydantic - Avenants (FIN-04)
+# =============================================================================
+
+
+class AvenantCreateRequest(BaseModel):
+    """Requete de creation d'avenant budgetaire."""
+
+    budget_id: int = Field(..., gt=0)
+    motif: str = Field(..., min_length=1, max_length=500)
+    montant_ht: Decimal = Field(default=Decimal("0"))
+    impact_description: Optional[str] = Field(None, max_length=2000)
+
+
+class AvenantUpdateRequest(BaseModel):
+    """Requete de mise a jour d'avenant budgetaire."""
+
+    motif: Optional[str] = Field(None, min_length=1, max_length=500)
+    montant_ht: Optional[Decimal] = None
+    impact_description: Optional[str] = Field(None, max_length=2000)
+
+
+# =============================================================================
+# Routes Avenants (FIN-04)
+# =============================================================================
+
+
+@router.get("/budgets/{budget_id}/avenants")
+async def list_avenants(
+    budget_id: int,
+    _role: str = Depends(require_chef_or_above),
+    current_user_id: int = Depends(get_current_user_id),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_avenants_use_case),
+    budget_use_case=Depends(get_get_budget_use_case),
+):
+    """Liste les avenants d'un budget.
+
+    FIN-04: Accessible aux chefs de chantier et superieurs.
+    """
+    # IDOR: verifier acces au chantier via le budget
+    try:
+        budget_dto = budget_use_case.execute(budget_id)
+        _check_chantier_access(budget_dto.chantier_id, _role, user_chantier_ids)
+    except BudgetNotFoundError:
+        raise HTTPException(status_code=404, detail="Budget non trouve")
+    result = use_case.execute(budget_id)
+    return {
+        "items": [a.to_dict() for a in result],
+        "total": len(result),
+    }
+
+
+@router.post("/avenants", status_code=status.HTTP_201_CREATED)
+async def create_avenant(
+    request: AvenantCreateRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_create_avenant_use_case),
+):
+    """Cree un nouvel avenant budgetaire.
+
+    FIN-04: Conducteurs et admins.
+    """
+    try:
+        dto = AvenantCreateDTO(
+            budget_id=request.budget_id,
+            motif=request.motif,
+            montant_ht=request.montant_ht,
+            impact_description=request.impact_description,
+        )
+        result = use_case.execute(dto, current_user_id)
+        return result.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/avenants/{avenant_id}")
+async def update_avenant(
+    avenant_id: int,
+    request: AvenantUpdateRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_update_avenant_use_case),
+):
+    """Met a jour un avenant budgetaire (brouillon uniquement).
+
+    FIN-04: Conducteurs et admins.
+    """
+    try:
+        dto = AvenantUpdateDTO(
+            motif=request.motif,
+            montant_ht=request.montant_ht,
+            impact_description=request.impact_description,
+        )
+        result = use_case.execute(avenant_id, dto, current_user_id)
+        return result.to_dict()
+    except AvenantNotFoundError:
+        raise HTTPException(status_code=404, detail="Avenant non trouve")
+    except AvenantAlreadyValideError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/avenants/{avenant_id}/valider")
+async def valider_avenant(
+    avenant_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_valider_avenant_use_case),
+):
+    """Valide un avenant budgetaire et met a jour le budget.
+
+    FIN-04: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(avenant_id, current_user_id)
+        return result.to_dict()
+    except AvenantNotFoundError:
+        raise HTTPException(status_code=404, detail="Avenant non trouve")
+    except AvenantAlreadyValideError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete(
+    "/avenants/{avenant_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_avenant(
+    avenant_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_delete_avenant_use_case),
+):
+    """Supprime un avenant budgetaire (soft delete, brouillon uniquement).
+
+    FIN-04: Conducteurs et admins.
+    """
+    try:
+        use_case.execute(avenant_id, current_user_id)
+    except AvenantNotFoundError:
+        raise HTTPException(status_code=404, detail="Avenant non trouve")
+    except AvenantAlreadyValideError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# =============================================================================
+# Schemas Pydantic - Situations (FIN-07)
+# =============================================================================
+
+
+class LigneSituationCreateRequest(BaseModel):
+    """Requete pour une ligne de situation (avancement par lot)."""
+
+    lot_budgetaire_id: int = Field(..., gt=0)
+    pourcentage_avancement: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+
+
+class SituationCreateRequest(BaseModel):
+    """Requete de creation de situation de travaux."""
+
+    chantier_id: int = Field(..., gt=0)
+    budget_id: int = Field(..., gt=0)
+    periode_debut: date
+    periode_fin: date
+    retenue_garantie_pct: Decimal = Field(default=Decimal("5.00"), ge=0, le=100)
+    taux_tva: Decimal = Field(default=Decimal("20.00"), ge=0)
+    notes: Optional[str] = Field(None, max_length=2000)
+    lignes: list[LigneSituationCreateRequest] = Field(default_factory=list)
+
+
+class SituationUpdateRequest(BaseModel):
+    """Requete de mise a jour de situation de travaux."""
+
+    periode_debut: Optional[date] = None
+    periode_fin: Optional[date] = None
+    retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=100)
+    taux_tva: Optional[Decimal] = Field(None, ge=0)
+    notes: Optional[str] = Field(None, max_length=2000)
+    lignes: Optional[list[LigneSituationCreateRequest]] = None
+
+
+# =============================================================================
+# Routes Situations (FIN-07)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/situations")
+async def list_situations(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_situations_use_case),
+):
+    """Liste les situations de travaux d'un chantier.
+
+    FIN-07: Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id)
+    return {
+        "items": [s.to_dict() for s in result],
+        "total": len(result),
+    }
+
+
+@router.post("/situations", status_code=status.HTTP_201_CREATED)
+async def create_situation(
+    request: SituationCreateRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_create_situation_use_case),
+):
+    """Cree une situation de travaux (auto-creation des lignes depuis les lots).
+
+    FIN-07: Conducteurs et admins.
+    """
+    _check_chantier_access(request.chantier_id, _role, user_chantier_ids)
+    try:
+        lignes_dto = [
+            LigneSituationCreateDTO(
+                lot_budgetaire_id=l.lot_budgetaire_id,
+                pourcentage_avancement=l.pourcentage_avancement,
+            )
+            for l in request.lignes
+        ]
+        dto = SituationCreateDTO(
+            chantier_id=request.chantier_id,
+            budget_id=request.budget_id,
+            periode_debut=request.periode_debut,
+            periode_fin=request.periode_fin,
+            retenue_garantie_pct=request.retenue_garantie_pct,
+            taux_tva=request.taux_tva,
+            notes=request.notes,
+            lignes=lignes_dto,
+        )
+        result = use_case.execute(dto, current_user_id)
+        return result.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/situations/{situation_id}")
+async def update_situation(
+    situation_id: int,
+    request: SituationUpdateRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_update_situation_use_case),
+):
+    """Met a jour une situation de travaux (brouillon uniquement).
+
+    FIN-07: Conducteurs et admins.
+    """
+    try:
+        lignes_dto = None
+        if request.lignes is not None:
+            lignes_dto = [
+                LigneSituationCreateDTO(
+                    lot_budgetaire_id=l.lot_budgetaire_id,
+                    pourcentage_avancement=l.pourcentage_avancement,
+                )
+                for l in request.lignes
+            ]
+        dto = SituationUpdateDTO(
+            periode_debut=request.periode_debut,
+            periode_fin=request.periode_fin,
+            retenue_garantie_pct=request.retenue_garantie_pct,
+            taux_tva=request.taux_tva,
+            notes=request.notes,
+            lignes=lignes_dto,
+        )
+        result = use_case.execute(situation_id, dto, current_user_id)
+        return result.to_dict()
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+    except SituationWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/situations/{situation_id}/soumettre")
+async def soumettre_situation(
+    situation_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_soumettre_situation_use_case),
+):
+    """Soumet une situation pour validation (brouillon -> en_validation).
+
+    FIN-07: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(situation_id, current_user_id)
+        return result.to_dict()
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+    except SituationWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/situations/{situation_id}/valider")
+async def valider_situation(
+    situation_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_valider_situation_use_case),
+):
+    """Valide et emet une situation (en_validation -> emise).
+
+    FIN-07: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(situation_id, current_user_id)
+        return result.to_dict()
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+    except SituationWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/situations/{situation_id}/valider-client")
+async def valider_client_situation(
+    situation_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_marquer_validee_client_use_case),
+):
+    """Marque une situation comme validee par le client (emise -> validee).
+
+    FIN-07: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(situation_id, current_user_id)
+        return result.to_dict()
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+    except SituationWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete(
+    "/situations/{situation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_situation(
+    situation_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_delete_situation_use_case),
+):
+    """Supprime une situation de travaux (soft delete, brouillon uniquement).
+
+    FIN-07: Conducteurs et admins.
+    """
+    try:
+        use_case.execute(situation_id, current_user_id)
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+    except SituationWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/situations/{situation_id}")
+async def get_situation(
+    situation_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_get_situation_use_case),
+):
+    """Recupere une situation de travaux avec ses lignes.
+
+    FIN-07: Accessible aux chefs de chantier et superieurs.
+    """
+    try:
+        result = use_case.execute(situation_id)
+        _check_chantier_access(result.chantier_id, _role, user_chantier_ids)
+        return result.to_dict()
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+
+
+# =============================================================================
+# Schemas Pydantic - Factures (FIN-08)
+# =============================================================================
+
+
+class FactureFromSituationRequest(BaseModel):
+    """Requete de creation de facture depuis une situation."""
+
+    situation_id: int = Field(..., gt=0)
+
+
+class FactureAcompteCreateRequest(BaseModel):
+    """Requete de creation de facture d'acompte."""
+
+    chantier_id: int = Field(..., gt=0)
+    montant_ht: Decimal = Field(..., ge=0)
+    taux_tva: Decimal = Field(default=Decimal("20.00"), ge=0)
+    retenue_garantie_pct: Decimal = Field(default=Decimal("5.00"), ge=0, le=100)
+    notes: Optional[str] = Field(None, max_length=2000)
+
+
+# =============================================================================
+# Routes Factures (FIN-08)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/factures")
+async def list_factures(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_factures_use_case),
+):
+    """Liste les factures d'un chantier.
+
+    FIN-08: Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id)
+    return {
+        "items": [f.to_dict() for f in result],
+        "total": len(result),
+    }
+
+
+@router.post("/factures/from-situation", status_code=status.HTTP_201_CREATED)
+async def create_facture_from_situation(
+    request: FactureFromSituationRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_create_facture_from_situation_use_case),
+):
+    """Cree une facture a partir d'une situation validee.
+
+    FIN-08: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(request.situation_id, current_user_id)
+        return result.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except SituationNonValideeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/factures/acompte", status_code=status.HTTP_201_CREATED)
+async def create_facture_acompte(
+    request: FactureAcompteCreateRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_create_facture_acompte_use_case),
+):
+    """Cree une facture d'acompte (sans situation).
+
+    FIN-08: Conducteurs et admins.
+    """
+    _check_chantier_access(request.chantier_id, _role, user_chantier_ids)
+    try:
+        dto = FactureCreateDTO(
+            chantier_id=request.chantier_id,
+            type_facture="acompte",
+            montant_ht=request.montant_ht,
+            taux_tva=request.taux_tva,
+            retenue_garantie_pct=request.retenue_garantie_pct,
+            notes=request.notes,
+        )
+        result = use_case.execute(dto, current_user_id)
+        return result.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/factures/{facture_id}/emettre")
+async def emettre_facture(
+    facture_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_emettre_facture_use_case),
+):
+    """Emet une facture (brouillon -> emise).
+
+    FIN-08: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(facture_id, current_user_id)
+        return result.to_dict()
+    except FactureNotFoundError:
+        raise HTTPException(status_code=404, detail="Facture non trouvee")
+    except FactureWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/factures/{facture_id}/envoyer")
+async def envoyer_facture(
+    facture_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_envoyer_facture_use_case),
+):
+    """Envoie une facture au client (emise -> envoyee).
+
+    FIN-08: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(facture_id, current_user_id)
+        return result.to_dict()
+    except FactureNotFoundError:
+        raise HTTPException(status_code=404, detail="Facture non trouvee")
+    except FactureWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/factures/{facture_id}/payer")
+async def marquer_payee_facture(
+    facture_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_marquer_payee_facture_use_case),
+):
+    """Marque une facture comme payee (envoyee -> payee).
+
+    FIN-08: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(facture_id, current_user_id)
+        return result.to_dict()
+    except FactureNotFoundError:
+        raise HTTPException(status_code=404, detail="Facture non trouvee")
+    except FactureWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/factures/{facture_id}/annuler")
+async def annuler_facture(
+    facture_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_annuler_facture_use_case),
+):
+    """Annule une facture (brouillon/emise -> annulee).
+
+    FIN-08: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(facture_id, current_user_id)
+        return result.to_dict()
+    except FactureNotFoundError:
+        raise HTTPException(status_code=404, detail="Facture non trouvee")
+    except FactureWorkflowError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/factures/{facture_id}")
+async def get_facture(
+    facture_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_get_facture_use_case),
+):
+    """Recupere une facture par son ID.
+
+    FIN-08: Accessible aux chefs de chantier et superieurs.
+    """
+    try:
+        result = use_case.execute(facture_id)
+        _check_chantier_access(result.chantier_id, _role, user_chantier_ids)
+        return result.to_dict()
+    except FactureNotFoundError:
+        raise HTTPException(status_code=404, detail="Facture non trouvee")
+
+
+# =============================================================================
+# Routes Couts Main-d'Oeuvre (FIN-09)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/couts-main-oeuvre")
+async def get_couts_main_oeuvre(
+    chantier_id: int,
+    date_debut: Optional[date] = Query(None),
+    date_fin: Optional[date] = Query(None),
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_cout_main_oeuvre_use_case),
+):
+    """Recupere les couts main-d'oeuvre d'un chantier.
+
+    FIN-09: Accessible aux chefs de chantier et superieurs.
+    Filtres optionnels par periode (date_debut, date_fin).
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id, date_debut, date_fin)
+    return {
+        "chantier_id": result.chantier_id,
+        "total_heures": result.total_heures,
+        "cout_total": result.cout_total,
+        "details": [
+            {
+                "user_id": d.user_id,
+                "nom": d.nom,
+                "prenom": d.prenom,
+                "heures_validees": d.heures_validees,
+                "taux_horaire": d.taux_horaire,
+                "cout_total": d.cout_total,
+            }
+            for d in result.details
+        ],
+    }
+
+
+# =============================================================================
+# Routes Couts Materiel (FIN-10)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/couts-materiel")
+async def get_couts_materiel(
+    chantier_id: int,
+    date_debut: Optional[date] = Query(None),
+    date_fin: Optional[date] = Query(None),
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_cout_materiel_use_case),
+):
+    """Recupere les couts materiel d'un chantier.
+
+    FIN-10: Accessible aux chefs de chantier et superieurs.
+    Filtres optionnels par periode (date_debut, date_fin).
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id, date_debut, date_fin)
+    return {
+        "chantier_id": result.chantier_id,
+        "cout_total": result.cout_total,
+        "details": [
+            {
+                "ressource_id": d.ressource_id,
+                "nom": d.nom,
+                "code": d.code,
+                "jours_reservation": d.jours_reservation,
+                "tarif_journalier": d.tarif_journalier,
+                "cout_total": d.cout_total,
+            }
+            for d in result.details
+        ],
+    }
+
+
+# =============================================================================
+# Routes Alertes (FIN-12)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/alertes")
+async def list_alertes(
+    chantier_id: int,
+    non_acquittees_seulement: bool = Query(default=False),
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_alertes_use_case),
+):
+    """Liste les alertes de depassement d'un chantier.
+
+    FIN-12: Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id, non_acquittees_seulement)
+    return {
+        "items": [a.to_dict() for a in result],
+        "total": len(result),
+    }
+
+
+@router.post("/chantiers/{chantier_id}/alertes/verifier")
+async def verifier_depassement(
+    chantier_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_verifier_depassement_use_case),
+):
+    """Declenche une verification des depassements budgetaires.
+
+    FIN-12: Conducteurs et admins.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    try:
+        result = use_case.execute(chantier_id)
+        return {
+            "alertes_creees": [a.to_dict() for a in result],
+            "total": len(result),
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/alertes/{alerte_id}/acquitter")
+async def acquitter_alerte(
+    alerte_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_acquitter_alerte_use_case),
+):
+    """Acquitte une alerte de depassement.
+
+    FIN-12: Conducteurs et admins.
+    """
+    try:
+        result = use_case.execute(alerte_id, current_user_id)
+        return result.to_dict()
+    except AlerteNotFoundError:
+        raise HTTPException(status_code=404, detail="Alerte non trouvee")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

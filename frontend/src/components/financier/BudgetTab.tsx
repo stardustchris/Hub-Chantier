@@ -3,9 +3,8 @@
  *
  * Orchestrateur qui affiche :
  * 1. BudgetDashboard (KPI)
- * 2. LotsBudgetairesTable (lots)
- * 3. AchatsList (achats du chantier)
- * 4. JournalFinancier (toggle)
+ * 2. Sub-tabs: Lots, Achats, Avenants, Situations, Factures, Couts MO, Couts Materiel, Alertes
+ * 3. JournalFinancier (toggle)
  *
  * Si pas de budget, affiche un bouton "Creer le budget" (conducteur/admin).
  */
@@ -20,11 +19,30 @@ import BudgetDashboard from './BudgetDashboard'
 import LotsBudgetairesTable from './LotsBudgetairesTable'
 import AchatsList from './AchatsList'
 import JournalFinancier from './JournalFinancier'
+import AvenantsList from './AvenantsList'
+import SituationsList from './SituationsList'
+import FacturesList from './FacturesList'
+import CoutsMainOeuvrePanel from './CoutsMainOeuvrePanel'
+import CoutsMaterielPanel from './CoutsMaterielPanel'
+import AlertesPanel from './AlertesPanel'
 import type { Budget, BudgetCreate } from '../../types'
 
 interface BudgetTabProps {
   chantierId: number
 }
+
+type SubTab = 'lots' | 'achats' | 'avenants' | 'situations' | 'factures' | 'couts_mo' | 'couts_materiel' | 'alertes'
+
+const SUB_TABS: { key: SubTab; label: string }[] = [
+  { key: 'lots', label: 'Lots' },
+  { key: 'achats', label: 'Achats' },
+  { key: 'avenants', label: 'Avenants' },
+  { key: 'situations', label: 'Situations' },
+  { key: 'factures', label: 'Factures' },
+  { key: 'couts_mo', label: 'Couts MO' },
+  { key: 'couts_materiel', label: 'Couts Materiel' },
+  { key: 'alertes', label: 'Alertes' },
+]
 
 export default function BudgetTab({ chantierId }: BudgetTabProps) {
   const { user } = useAuth()
@@ -36,6 +54,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
   const [montantInitial, setMontantInitial] = useState('')
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>('lots')
 
   const canEdit = user?.role === 'admin' || user?.role === 'conducteur'
 
@@ -82,6 +101,31 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
       logger.error('Erreur creation budget', err, { context: 'BudgetTab' })
     } finally {
       setCreateLoading(false)
+    }
+  }
+
+  const renderSubTabContent = () => {
+    if (!budget) return null
+
+    switch (activeSubTab) {
+      case 'lots':
+        return <LotsBudgetairesTable budgetId={budget.id} onRefresh={loadBudget} />
+      case 'achats':
+        return <AchatsList chantierId={chantierId} budgetId={budget.id} />
+      case 'avenants':
+        return <AvenantsList budgetId={budget.id} />
+      case 'situations':
+        return <SituationsList chantierId={chantierId} budgetId={budget.id} />
+      case 'factures':
+        return <FacturesList chantierId={chantierId} />
+      case 'couts_mo':
+        return <CoutsMainOeuvrePanel chantierId={chantierId} />
+      case 'couts_materiel':
+        return <CoutsMaterielPanel chantierId={chantierId} />
+      case 'alertes':
+        return <AlertesPanel chantierId={chantierId} />
+      default:
+        return null
     }
   }
 
@@ -180,11 +224,27 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
       {/* Dashboard KPI */}
       <BudgetDashboard chantierId={chantierId} budget={budget} />
 
-      {/* Lots budgetaires */}
-      <LotsBudgetairesTable budgetId={budget.id} onRefresh={loadBudget} />
+      {/* Sub-tabs navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="flex gap-0 overflow-x-auto" aria-label="Sous-onglets financier">
+          {SUB_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveSubTab(tab.key)}
+              className={`whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                activeSubTab === tab.key
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-      {/* Achats */}
-      <AchatsList chantierId={chantierId} budgetId={budget.id} />
+      {/* Sub-tab content */}
+      {renderSubTabContent()}
 
       {/* Toggle Journal */}
       <div>

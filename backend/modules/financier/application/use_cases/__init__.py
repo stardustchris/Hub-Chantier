@@ -40,6 +40,50 @@ from .achat_use_cases import (
     AchatNotFoundError,
     FournisseurInactifError,
 )
+from .avenant_use_cases import (
+    CreateAvenantUseCase,
+    UpdateAvenantUseCase,
+    ValiderAvenantUseCase,
+    GetAvenantUseCase,
+    ListAvenantsUseCase,
+    DeleteAvenantUseCase,
+    AvenantNotFoundError,
+    AvenantAlreadyValideError,
+)
+from .situation_use_cases import (
+    CreateSituationUseCase,
+    UpdateSituationUseCase,
+    SoumettreSituationUseCase,
+    ValiderSituationUseCase,
+    MarquerValideeClientUseCase,
+    MarquerFactureeSituationUseCase,
+    GetSituationUseCase,
+    ListSituationsUseCase,
+    DeleteSituationUseCase,
+    SituationNotFoundError,
+    SituationWorkflowError,
+)
+from .facture_use_cases import (
+    CreateFactureFromSituationUseCase,
+    CreateFactureAcompteUseCase,
+    EmettreFactureUseCase,
+    EnvoyerFactureUseCase,
+    MarquerPayeeFactureUseCase,
+    AnnulerFactureUseCase,
+    GetFactureUseCase,
+    ListFacturesUseCase,
+    FactureNotFoundError,
+    FactureWorkflowError,
+    SituationNonValideeError,
+)
+from .cout_main_oeuvre_use_cases import GetCoutMainOeuvreUseCase
+from .cout_materiel_use_cases import GetCoutMaterielUseCase
+from .alerte_use_cases import (
+    VerifierDepassementUseCase,
+    AcquitterAlerteUseCase,
+    ListAlertesUseCase,
+    AlerteNotFoundError,
+)
 from .dashboard_use_cases import GetDashboardFinancierUseCase
 
 __all__ = [
@@ -79,6 +123,47 @@ __all__ = [
     "ListAchatsEnAttenteUseCase",
     "AchatNotFoundError",
     "FournisseurInactifError",
+    # Avenant
+    "CreateAvenantUseCase",
+    "UpdateAvenantUseCase",
+    "ValiderAvenantUseCase",
+    "GetAvenantUseCase",
+    "ListAvenantsUseCase",
+    "DeleteAvenantUseCase",
+    "AvenantNotFoundError",
+    "AvenantAlreadyValideError",
+    # Situation de Travaux
+    "CreateSituationUseCase",
+    "UpdateSituationUseCase",
+    "SoumettreSituationUseCase",
+    "ValiderSituationUseCase",
+    "MarquerValideeClientUseCase",
+    "MarquerFactureeSituationUseCase",
+    "GetSituationUseCase",
+    "ListSituationsUseCase",
+    "DeleteSituationUseCase",
+    "SituationNotFoundError",
+    "SituationWorkflowError",
+    # Facture Client
+    "CreateFactureFromSituationUseCase",
+    "CreateFactureAcompteUseCase",
+    "EmettreFactureUseCase",
+    "EnvoyerFactureUseCase",
+    "MarquerPayeeFactureUseCase",
+    "AnnulerFactureUseCase",
+    "GetFactureUseCase",
+    "ListFacturesUseCase",
+    "FactureNotFoundError",
+    "FactureWorkflowError",
+    "SituationNonValideeError",
+    # Couts
+    "GetCoutMainOeuvreUseCase",
+    "GetCoutMaterielUseCase",
+    # Alertes
+    "VerifierDepassementUseCase",
+    "AcquitterAlerteUseCase",
+    "ListAlertesUseCase",
+    "AlerteNotFoundError",
     # Dashboard
     "GetDashboardFinancierUseCase",
 ]

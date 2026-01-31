@@ -19,15 +19,15 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
-| financier | 17 | FIN-01 a FIN-15 | 0/15 | 0 | **SPECS READY** |
+| financier | 17 | FIN-01 a FIN-15 | 12/15 | 0 | **PHASE 2 COMPLET** |
 
 ## Statistiques globales
 
-- **Modules complets** : 12/13 (dashboard cards + planning unifié)
-- **Module en specs** : 1 (financier — 15 features, specs ready, dev a venir)
+- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2)
+- **Module financier** : 12/15 features done (Phase 1: 6, Phase 2: 6), 3 remaining (Phase 3)
 - **Fonctionnalites totales** : 267 (+15 FIN)
-- **Fonctionnalites done** : 234 (88%)
-- **Fonctionnalites specs ready** : 15 (module financier)
+- **Fonctionnalites done** : 246 (92%)
+- **Fonctionnalites specs ready** : 3 (FIN-03, FIN-13, FIN-15 — Phase 3)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 2 (prevues pour versions futures)
 
@@ -87,25 +87,25 @@
 
 ## Prochaines taches prioritaires
 
-### Module Financier (15 features — specs ready)
+### Module Financier (12/15 features done — Phase 3 remaining)
 
-| ID | Description | Priorite |
-|----|-------------|----------|
-| FIN-01 | Onglet Budget par chantier | P1 |
-| FIN-02 | Budget previsionnel par lots | P1 |
-| FIN-05 | Saisie achats / bons de commande | P1 |
-| FIN-14 | Referentiel fournisseurs | P1 |
-| FIN-06 | Validation hierarchique achats | P1 |
-| FIN-11 | Tableau de bord financier (KPI) | P1 |
-| FIN-07 | Situations de travaux | P2 |
-| FIN-08 | Facturation client | P2 |
-| FIN-04 | Avenants budgetaires | P2 |
-| FIN-09 | Suivi couts main-d'oeuvre | P2 |
-| FIN-10 | Suivi couts materiel | P2 |
-| FIN-12 | Alertes depassements | P2 |
-| FIN-03 | Affectation budgets aux taches | P3 |
-| FIN-13 | Export comptable | P3 |
-| FIN-15 | Historique et tracabilite | P3 |
+| ID | Description | Statut |
+|----|-------------|--------|
+| FIN-01 | Onglet Budget par chantier | ✅ Done (Phase 1) |
+| FIN-02 | Budget previsionnel par lots | ✅ Done (Phase 1) |
+| FIN-05 | Saisie achats / bons de commande | ✅ Done (Phase 1) |
+| FIN-14 | Referentiel fournisseurs | ✅ Done (Phase 1) |
+| FIN-06 | Validation hierarchique achats | ✅ Done (Phase 1) |
+| FIN-11 | Tableau de bord financier (KPI) | ✅ Done (Phase 1) |
+| FIN-04 | Avenants budgetaires | ✅ Done (Phase 2) |
+| FIN-07 | Situations de travaux | ✅ Done (Phase 2) |
+| FIN-08 | Facturation client | ✅ Done (Phase 2) |
+| FIN-09 | Suivi couts main-d'oeuvre | ✅ Done (Phase 2) |
+| FIN-10 | Suivi couts materiel | ✅ Done (Phase 2) |
+| FIN-12 | Alertes depassements | ✅ Done (Phase 2) |
+| FIN-03 | Affectation budgets aux taches | 🔮 Phase 3 |
+| FIN-13 | Export comptable | 🔮 Phase 3 |
+| FIN-15 | Historique et tracabilite | 🔮 Phase 3 |
 
 ### Infrastructure (16 features)
 
@@ -182,6 +182,21 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-01-31 - Module Financier Phase 2 (6 features)
+- **Objectif**: Implementer les 6 features Phase 2 du module financier
+- **FIN-04**: Avenants budgetaires (entity, workflow brouillon->valide, impact budget revise)
+- **FIN-07**: Situations de travaux (5-step workflow, lignes par lot, calculs avancement)
+- **FIN-08**: Facturation client (factures/acomptes, workflow 5 etapes, retenue garantie)
+- **FIN-09**: Suivi couts main-d'oeuvre (cross-module pointages x taux_horaire via raw SQL)
+- **FIN-10**: Suivi couts materiel (cross-module logistique x tarif_journalier via raw SQL)
+- **FIN-12**: Alertes depassements (verification seuils, acquittement, listing)
+- **Architecture**: 5 nouvelles tables SQL, 6 entites, 7 value objects, 30+ use cases, 7 repositories, 23+ routes API, 7 composants React
+- **Fix architecture**: Domain VOs (CoutEmploye, CoutMaterielItem) pour respecter dependency rule
+- **Fix SEC-02**: ENTITE_TYPES_AUTORISES etendu avec types Phase 2
+- **Validation agents**: architect 9/10 PASS, code-reviewer APPROVED, security CONDITIONAL PASS (0 CRITICAL), test-automator 197 nouveaux tests
+- **Tests**: 403 pass (206 Phase 1 + 197 Phase 2), 0 fail, 1.14s
+- Verdict : ✅ **MODULE FINANCIER PHASE 2 COMPLET**
 
 Session 2026-01-30 - Audit executabilite workflows + refactoring Clean Architecture
 - **Objectif**: Verifier executabilite des 3 workflows critiques, corriger les gaps, valider avec 7 agents

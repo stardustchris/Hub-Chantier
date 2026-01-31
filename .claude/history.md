@@ -12,6 +12,7 @@
 **Modules implémentés**: Auth, Dashboard, Chantiers, Planning, **Pointages Phase 1+2**, Formulaires, GED, Signalements, Logistique, Interventions, Tâches
 
 **Highlights**:
+- ✅ **31 jan**: Module Financier Phase 2 (FIN-04, 07, 08, 09, 10, 12) — 6 features, 403 tests, 23+ API routes
 - ✅ **31 jan**: Module Pointages Phase 2 (GAP-FDH-004, 007, 008, 009) + corrections sécurité (6.0→9.5/10)
 - ✅ **31 jan**: Module Pointages Phase 1 (GAP-FDH-001, 002, 003, 005)
 - ✅ **31 jan**: Corrections critiques workflow FDH-10 (heures_prevues)

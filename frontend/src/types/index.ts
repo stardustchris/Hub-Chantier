@@ -1126,6 +1126,221 @@ export interface JournalFinancierEntry {
   created_at: string
 }
 
+// ===== Phase 2 Types =====
+
+// Avenants (FIN-04)
+export type StatutAvenant = 'brouillon' | 'valide'
+
+export interface AvenantBudgetaire {
+  id: number
+  budget_id: number
+  numero: string
+  motif: string
+  montant_ht: number
+  impact_description: string | null
+  statut: StatutAvenant
+  created_by: number | null
+  validated_by: number | null
+  validated_at: string | null
+  created_at: string
+}
+
+export interface AvenantCreate {
+  budget_id: number
+  motif: string
+  montant_ht: number
+  impact_description?: string
+}
+
+export interface AvenantUpdate {
+  motif?: string
+  montant_ht?: number
+  impact_description?: string
+}
+
+// Situations de travaux (FIN-07)
+export type StatutSituation = 'brouillon' | 'en_validation' | 'emise' | 'validee' | 'facturee'
+
+export interface LigneSituation {
+  id: number
+  situation_id: number
+  lot_budgetaire_id: number
+  pourcentage_avancement: number
+  montant_marche_ht: number
+  montant_cumule_precedent_ht: number
+  montant_periode_ht: number
+  montant_cumule_ht: number
+  code_lot?: string
+  libelle_lot?: string
+}
+
+export interface LigneSituationCreate {
+  lot_budgetaire_id: number
+  pourcentage_avancement: number
+}
+
+export interface SituationTravaux {
+  id: number
+  chantier_id: number
+  budget_id: number
+  numero: string
+  periode_debut: string
+  periode_fin: string
+  montant_cumule_precedent_ht: number
+  montant_periode_ht: number
+  montant_cumule_ht: number
+  retenue_garantie_pct: number
+  taux_tva: number
+  statut: StatutSituation
+  notes: string | null
+  montant_retenue_garantie: number
+  montant_tva: number
+  montant_ttc: number
+  montant_net: number
+  lignes: LigneSituation[]
+  created_at: string
+}
+
+export interface SituationCreate {
+  chantier_id: number
+  budget_id: number
+  periode_debut: string
+  periode_fin: string
+  lignes: LigneSituationCreate[]
+  retenue_garantie_pct?: number
+  taux_tva?: number
+  notes?: string
+}
+
+export interface SituationUpdate {
+  lignes: LigneSituationCreate[]
+  notes?: string
+}
+
+// Factures client (FIN-08)
+export type TypeFacture = 'acompte' | 'situation' | 'solde'
+export type StatutFacture = 'brouillon' | 'emise' | 'envoyee' | 'payee' | 'annulee'
+
+export interface FactureClient {
+  id: number
+  chantier_id: number
+  situation_id: number | null
+  numero_facture: string
+  type_facture: TypeFacture
+  montant_ht: number
+  taux_tva: number
+  montant_tva: number
+  montant_ttc: number
+  retenue_garantie_montant: number
+  montant_net: number
+  date_emission: string | null
+  date_echeance: string | null
+  statut: StatutFacture
+  notes: string | null
+  created_at: string
+}
+
+export interface FactureFromSituationCreate {
+  situation_id: number
+  date_echeance?: string
+  notes?: string
+}
+
+export interface FactureAcompteCreate {
+  chantier_id: number
+  montant_ht: number
+  taux_tva?: number
+  retenue_garantie_pct?: number
+  date_echeance?: string
+  notes?: string
+}
+
+// Couts main-d'oeuvre (FIN-09)
+export interface CoutEmploye {
+  user_id: number
+  nom: string
+  prenom: string
+  heures_validees: number
+  taux_horaire: number
+  cout_total: number
+}
+
+export interface CoutMainOeuvreSummary {
+  chantier_id: number
+  total_heures: number
+  cout_total: number
+  details: CoutEmploye[]
+}
+
+// Couts materiel (FIN-10)
+export interface CoutMateriel {
+  ressource_id: number
+  nom: string
+  code: string
+  jours_reservation: number
+  tarif_journalier: number
+  cout_total: number
+}
+
+export interface CoutMaterielSummary {
+  chantier_id: number
+  cout_total: number
+  details: CoutMateriel[]
+}
+
+// Alertes depassement (FIN-12)
+export type TypeAlerte = 'seuil_engage' | 'seuil_realise' | 'depassement_lot'
+
+export interface AlerteDepassement {
+  id: number
+  chantier_id: number
+  budget_id: number
+  type_alerte: TypeAlerte
+  message: string
+  pourcentage_atteint: number
+  seuil_configure: number
+  montant_budget_ht: number
+  montant_atteint_ht: number
+  est_acquittee: boolean
+  acquittee_par: number | null
+  acquittee_at: string | null
+  created_at: string
+}
+
+// Phase 2 constants
+export const STATUT_AVENANT_CONFIG: Record<StatutAvenant, { label: string; couleur: string }> = {
+  brouillon: { label: 'Brouillon', couleur: '#F59E0B' },
+  valide: { label: 'Valide', couleur: '#10B981' },
+}
+
+export const STATUT_SITUATION_CONFIG: Record<StatutSituation, { label: string; couleur: string }> = {
+  brouillon: { label: 'Brouillon', couleur: '#F59E0B' },
+  en_validation: { label: 'En validation', couleur: '#3B82F6' },
+  emise: { label: 'Emise', couleur: '#8B5CF6' },
+  validee: { label: 'Validee', couleur: '#10B981' },
+  facturee: { label: 'Facturee', couleur: '#6B7280' },
+}
+
+export const STATUT_FACTURE_CONFIG: Record<StatutFacture, { label: string; couleur: string }> = {
+  brouillon: { label: 'Brouillon', couleur: '#F59E0B' },
+  emise: { label: 'Emise', couleur: '#3B82F6' },
+  envoyee: { label: 'Envoyee', couleur: '#8B5CF6' },
+  payee: { label: 'Payee', couleur: '#10B981' },
+  annulee: { label: 'Annulee', couleur: '#EF4444' },
+}
+
+export const TYPE_FACTURE_LABELS: Record<TypeFacture, string> = {
+  acompte: 'Acompte',
+  situation: 'Situation',
+  solde: 'Solde',
+}
+
+export const TYPE_ALERTE_LABELS: Record<TypeAlerte, string> = {
+  seuil_engage: 'Seuil engage',
+  seuil_realise: 'Seuil realise',
+  depassement_lot: 'Depassement lot',
+}
+
 // Constantes financieres
 export const TYPE_FOURNISSEUR_LABELS: Record<TypeFournisseur, string> = {
   negoce_materiaux: 'Negoce materiaux',
