@@ -36,14 +36,17 @@ Voir `.claude/agents.md` pour le workflow detaille complet.
    - typescript-pro : implementation frontend (si code *.ts, *.tsx)
 3. **VALIDATION** (4 agents obligatoires) :
    - architect-reviewer : conformite Clean Architecture
-   - test-automator : tests >= 85% couverture
+   - test-automator : tests >= 90% couverture
    - code-reviewer : qualite et conventions code
    - security-auditor : securite + RGPD (0 CRITICAL/HIGH)
 4. Mettre a jour SPECIFICATIONS.md + .claude/history.md
 
 ### 3. Validation AVANT commit (code *.py, *.ts, *.tsx, *.sql)
 
-**CRITIQUE : Utiliser `Task(subagent_type="...")` pour TOUS les agents**
+**CRITIQUE : Utiliser `Task(subagent_type="general-purpose")` pour TOUS les agents**
+
+> **Note technique** : Les agents personnalisés (sql-pro, python-pro, etc.) ne sont PAS des `subagent_type` natifs de Claude Code.
+> Utiliser `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/NOM_AGENT.md et execute son role...")` pour chaque agent.
 
 **Checklist obligatoire (7 agents)** :
 
@@ -54,7 +57,7 @@ Voir `.claude/agents.md` pour le workflow detaille complet.
 
 **Phase VALIDATION** :
 - [ ] architect-reviewer : PASS (0 violation Clean Architecture)
-- [ ] test-automator : tests generes (>= 85% couverture)
+- [ ] test-automator : tests generes (>= 90% couverture)
 - [ ] code-reviewer : APPROVED (qualite + conventions)
 - [ ] security-auditor : PASS (0 finding CRITICAL/HIGH)
 
@@ -69,15 +72,15 @@ Voir `.claude/agents.md` pour le workflow detaille complet.
 - ❌ Sauter sql-pro, python-pro ou typescript-pro selon le contexte
 
 **TOUJOURS** :
-- ✅ `Task(subagent_type="sql-pro", prompt="...")` (si modifs DB)
-- ✅ `Task(subagent_type="python-pro", prompt="...")` (si code *.py)
-- ✅ `Task(subagent_type="typescript-pro", prompt="...")` (si code *.ts, *.tsx)
-- ✅ `Task(subagent_type="architect-reviewer", prompt="...")`
-- ✅ `Task(subagent_type="test-automator", prompt="...")`
-- ✅ `Task(subagent_type="code-reviewer", prompt="...")`
-- ✅ `Task(subagent_type="security-auditor", prompt="...")`
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/sql-pro.md...")` (si modifs DB)
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/python-pro.md...")` (si code *.py)
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/typescript-pro.md...")` (si *.ts, *.tsx)
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/architect-reviewer.md...")`
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/test-automator.md...")`
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/code-reviewer.md...")`
+- ✅ `Task(subagent_type="general-purpose", prompt="Lis .claude/agents/security-auditor.md...")`
 - ✅ Attendre le retour agent
-- ✅ Afficher le rapport
+- ✅ Afficher le rapport complet
 
 **Exceptions** (validation optionnelle) :
 - Documentation seule (*.md)
