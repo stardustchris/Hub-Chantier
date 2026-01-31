@@ -26,7 +26,7 @@ class GetChantierUseCase:
         chantier_repo: Repository pour accéder aux chantiers.
     """
 
-    def __init__(self, chantier_repo: ChantierRepository):
+    def __init__(self, chantier_repo: ChantierRepository) -> None:
         """
         Initialise le use case.
 

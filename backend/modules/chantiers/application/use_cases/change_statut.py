@@ -66,12 +66,12 @@ class ChangeStatutUseCase:
     def __init__(
         self,
         chantier_repo: ChantierRepository,
-        formulaire_repo=None,      # NOUVEAU (GAP-CHT-001)
-        signalement_repo=None,     # NOUVEAU (GAP-CHT-001)
-        pointage_repo=None,        # NOUVEAU (GAP-CHT-001)
-        audit_service=None,        # NOUVEAU (GAP-CHT-005)
+        formulaire_repo: Optional[Any] = None,      # NOUVEAU (GAP-CHT-001)
+        signalement_repo: Optional[Any] = None,     # NOUVEAU (GAP-CHT-001)
+        pointage_repo: Optional[Any] = None,        # NOUVEAU (GAP-CHT-001)
+        audit_service: Optional[Any] = None,        # NOUVEAU (GAP-CHT-005)
         event_publisher: Optional[Callable] = None,
-    ):
+    ) -> None:
         """
         Initialise le use case.
 

@@ -2,7 +2,7 @@
 
 import logging
 from datetime import date
-from typing import Optional, Callable
+from typing import Optional, Callable, List, Tuple, Any
 
 from shared.domain.value_objects import Couleur
 
@@ -39,7 +39,7 @@ class UpdateChantierUseCase:
         self,
         chantier_repo: ChantierRepository,
         event_publisher: Optional[Callable] = None,
-    ):
+    ) -> None:
         """
         Initialise le use case.
 
@@ -118,7 +118,7 @@ class UpdateChantierUseCase:
             )
             raise
 
-    def _get_and_validate_chantier(self, chantier_id: int):
+    def _get_and_validate_chantier(self, chantier_id: int) -> Any:
         """Récupère le chantier et vérifie qu'il peut être modifié."""
         chantier = self.chantier_repo.find_by_id(chantier_id)
         if not chantier:
@@ -127,7 +127,7 @@ class UpdateChantierUseCase:
             raise ChantierFermeError(chantier_id)
         return chantier
 
-    def _update_infos_generales(self, chantier, dto: UpdateChantierDTO, changes: list):
+    def _update_infos_generales(self, chantier: Any, dto: UpdateChantierDTO, changes: List[Tuple[str, str]]) -> None:
         """Met à jour les informations générales (nom, adresse, description, couleur, maitre_ouvrage)."""
         if dto.nom is not None or dto.adresse is not None or dto.description is not None or dto.maitre_ouvrage is not None:
             couleur = Couleur(dto.couleur) if dto.couleur else None
@@ -151,7 +151,7 @@ class UpdateChantierUseCase:
             if dto.maitre_ouvrage:
                 changes.append(("maitre_ouvrage", dto.maitre_ouvrage))
 
-    def _update_coordonnees_et_contact(self, chantier, dto: UpdateChantierDTO, changes: list):
+    def _update_coordonnees_et_contact(self, chantier: Any, dto: UpdateChantierDTO, changes: List[Tuple[str, str]]) -> None:
         """Met à jour les coordonnées GPS et le contact."""
         # Coordonnées GPS
         if dto.latitude is not None and dto.longitude is not None:
@@ -171,7 +171,7 @@ class UpdateChantierUseCase:
             chantier.update_contact(contact)
             changes.append(("contact", str(contact)))
 
-    def _update_dates_et_heures(self, chantier, dto: UpdateChantierDTO, changes: list):
+    def _update_dates_et_heures(self, chantier: Any, dto: UpdateChantierDTO, changes: List[Tuple[str, str]]) -> None:
         """Met à jour les dates et heures estimées."""
         # Dates
         date_debut = date.fromisoformat(dto.date_debut) if dto.date_debut else None
@@ -188,13 +188,13 @@ class UpdateChantierUseCase:
             chantier.update_heures_estimees(dto.heures_estimees)
             changes.append(("heures_estimees", str(dto.heures_estimees)))
 
-    def _update_photo_couverture(self, chantier, dto: UpdateChantierDTO, changes: list):
+    def _update_photo_couverture(self, chantier: Any, dto: UpdateChantierDTO, changes: List[Tuple[str, str]]) -> None:
         """Met à jour la photo de couverture."""
         if dto.photo_couverture is not None:
             chantier.update_photo_couverture(dto.photo_couverture)
             changes.append(("photo_couverture", dto.photo_couverture))
 
-    def _publish_update_event(self, chantier, changes: list):
+    def _publish_update_event(self, chantier: Any, changes: List[Tuple[str, str]]) -> None:
         """Publie l'événement de mise à jour si des changements ont été effectués."""
         if self.event_publisher and changes:
             event = ChantierUpdatedEvent(

@@ -2,7 +2,7 @@
 
 import logging
 from datetime import date
-from typing import Optional, Callable
+from typing import Optional, Callable, List, Tuple
 
 from shared.domain.value_objects import Couleur
 
@@ -52,7 +52,7 @@ class CreateChantierUseCase:
         self,
         chantier_repo: ChantierRepository,
         event_publisher: Optional[Callable] = None,
-    ):
+    ) -> None:
         """
         Initialise le use case.
 

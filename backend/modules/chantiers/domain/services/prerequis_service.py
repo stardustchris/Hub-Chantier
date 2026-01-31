@@ -30,9 +30,9 @@ class PrerequisReceptionService:
     def verifier_prerequis(
         self,
         chantier_id: int,
-        formulaire_repo=None,
-        signalement_repo=None,
-        pointage_repo=None,
+        formulaire_repo: Optional[Any] = None,
+        signalement_repo: Optional[Any] = None,
+        pointage_repo: Optional[Any] = None,
     ) -> PrerequisResult:
         """
         Vérifie tous les prérequis de réception.

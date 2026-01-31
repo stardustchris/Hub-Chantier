@@ -38,7 +38,7 @@ class DeleteChantierUseCase:
         self,
         chantier_repo: ChantierRepository,
         event_publisher: Optional[Callable] = None,
-    ):
+    ) -> None:
         """
         Initialise le use case.
 
