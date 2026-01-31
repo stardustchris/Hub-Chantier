@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @event_handler('chantier.statut_changed')
-def handle_chantier_statut_changed_for_planning(event) -> None:
+def handle_chantier_statut_changed_for_planning(event: 'DomainEvent') -> None:
     """
     Bloque les affectations futures quand un chantier passe en statut 'ferme'.
 
@@ -26,7 +26,7 @@ def handle_chantier_statut_changed_for_planning(event) -> None:
     Gap: GAP-CHT-002
 
     Args:
-        event: ChantierStatutChangedEvent
+        event: ChantierStatutChangedEvent (DomainEvent ou frozen dataclass)
     """
     # Extraction défensive (compatible DomainEvent et frozen dataclass)
     data = event.data if hasattr(event, 'data') and isinstance(event.data, dict) else {}
