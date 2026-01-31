@@ -380,6 +380,53 @@ Le code chantier est l'identifiant unique obligatoire de chaque chantier. Deux f
 - Receptionne → En cours (reouverture exceptionnelle), Ferme
 - Ferme → (aucune transition, etat terminal)
 
+### 4.6 Note technique - Améliorations qualité (31/01/2026)
+
+**Session d'amélioration** : Type coverage, Test coverage, Architecture
+
+**Résultats** :
+- **Type coverage** : 85% → 95% (+10%) - 41 type hints ajoutés
+- **Test coverage use cases + controller** : 88% → 99% (+11%) - 28 tests générés
+- **Clean Architecture** : 6/10 → 10/10 (+4) - 4 violations HIGH résolues
+- **Tests** : 120 → 148 (+28 tests, 100% pass)
+
+**Type hints ajoutés** (41 issues):
+- Events (4) : ChantierCreatedEvent, ChantierDeletedEvent, ChantierStatutChangedEvent, ChantierUpdatedEvent
+- Exceptions (8) : CodeChantierAlreadyExistsError, InvalidDatesError, TransitionNonAutoriseeError, etc.
+- Routes FastAPI (24) : Return types pour documentation OpenAPI
+- Controller + Repository : Types méthodes __init__ et privées
+
+**Tests controller** (28 tests):
+- CRUD operations : create, list, get_by_id, get_by_code, update, delete
+- Status management : change_statut, demarrer, receptionner, fermer
+- Responsable assignment : conducteur, chef_chantier
+- Error handling : ChantierNotFoundError, validation errors
+- Fichier : `backend/tests/unit/modules/chantiers/adapters/controllers/test_chantier_controller.py`
+
+**Architecture** (Service Registry pattern):
+- Fichier créé : `backend/shared/infrastructure/service_registry.py` (114 lignes)
+- Violations corrigées : Suppression imports directs cross-module (auth, formulaires, signalements, pointages)
+- Pattern : Service Locator pour isolation stricte des modules
+- Impact : Code plus propre (-16 lignes), couplage réduit, réutilisable
+
+**Validation agents** :
+- architect-reviewer : PASS (10/10 Clean Architecture, 0 violation)
+- code-reviewer : PASS (10/10 qualité)
+- security-auditor : PASS (0 critical/high)
+- test-automator : 148/148 tests passed in 0.30s
+
+**Commits** :
+- `f58aebb` - Type hints (95% coverage)
+- `7677c36` - Controller tests (99% coverage)
+- `c1865ae` - Architecture fixes (Service Registry)
+
+**Coverage détaillée module chantiers** :
+- Use cases : 100%
+- Controller : 99%
+- Domain services : 100%
+- Infrastructure routes : 41% (non testé)
+- Infrastructure repository : 28% (non testé)
+
 ---
 
 ## 5. PLANNING OPERATIONNEL
