@@ -88,6 +88,19 @@ from .dashboard_use_cases import GetDashboardFinancierUseCase
 from .evolution_use_cases import GetEvolutionFinanciereUseCase
 from .consolidation_use_cases import GetVueConsolideeFinancesUseCase
 from .suggestions_use_cases import GetSuggestionsFinancieresUseCase
+from .affectation_use_cases import (
+    CreateAffectationBudgetTacheUseCase,
+    DeleteAffectationBudgetTacheUseCase,
+    ListAffectationsByChantierUseCase,
+    GetAffectationsByTacheUseCase,
+    AffectationNotFoundError,
+    AllocationDepasseError,
+    LotBudgetaireIntrouvableError,
+)
+from .export_comptable_use_cases import (
+    ExportComptableUseCase,
+    ExportComptableError,
+)
 
 __all__ = [
     # Fournisseur
@@ -175,4 +188,15 @@ __all__ = [
     "GetVueConsolideeFinancesUseCase",
     # Suggestions (FIN-21/22)
     "GetSuggestionsFinancieresUseCase",
+    # Affectation (FIN-03)
+    "CreateAffectationBudgetTacheUseCase",
+    "DeleteAffectationBudgetTacheUseCase",
+    "ListAffectationsByChantierUseCase",
+    "GetAffectationsByTacheUseCase",
+    "AffectationNotFoundError",
+    "AllocationDepasseError",
+    "LotBudgetaireIntrouvableError",
+    # Export comptable (FIN-13)
+    "ExportComptableUseCase",
+    "ExportComptableError",
 ]

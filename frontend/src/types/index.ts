@@ -1452,4 +1452,23 @@ export interface SuggestionsFinancieres {
   chantier_id: number
   suggestions: Suggestion[]
   indicateurs: IndicateursPredictif
+  ai_available: boolean
+  source: 'gemini' | 'algorithmic'
+}
+
+// Affectations budget-tache (FIN-03)
+export interface AffectationBudgetTache {
+  id: number
+  lot_budgetaire_id: number
+  tache_id: number
+  pourcentage_allocation: number
+  code_lot?: string
+  libelle_lot?: string
+  total_prevu_ht?: string
+  created_at: string
+}
+
+export interface AffectationBudgetTacheCreate {
+  tache_id: number
+  pourcentage_allocation: number
 }

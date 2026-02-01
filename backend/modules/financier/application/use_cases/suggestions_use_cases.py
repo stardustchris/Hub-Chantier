@@ -1,12 +1,13 @@
 """Use Cases pour les suggestions financieres et indicateurs predictifs.
 
-FIN-21/22 Phase 3: Suggestions algorithmiques deterministes (pas d'IA)
+FIN-21/22 Phase 3: Suggestions algorithmiques deterministes + IA (Gemini)
 et indicateurs predictifs pour un chantier.
 """
 
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 from ...domain.repositories import (
     BudgetRepository,
@@ -20,7 +21,10 @@ from ..dtos.suggestions_dtos import (
     IndicateursPredictifDTO,
     SuggestionsFinancieresDTO,
 )
+from ..ports.ai_suggestion_port import AISuggestionPort
 from .budget_use_cases import BudgetNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 MAX_SUGGESTIONS = 5
@@ -28,19 +32,19 @@ MAX_SUGGESTIONS = 5
 
 
 class GetSuggestionsFinancieresUseCase:
-    """Use case pour generer des suggestions financieres deterministes.
+    """Use case pour generer des suggestions financieres.
 
     FIN-21/22: Analyse les donnees financieres d'un chantier et genere
-    des suggestions basees sur des regles algorithmiques. Calcule
-    egalement les indicateurs predictifs (burn rate, date epuisement).
-
-    Pas d'IA - regles deterministes uniquement.
+    des suggestions basees sur des regles algorithmiques. Si un provider IA
+    est disponible (Gemini), les suggestions IA sont fusionnees en priorite.
+    Calcule egalement les indicateurs predictifs (burn rate, date epuisement).
 
     Attributes:
         _budget_repository: Repository pour acceder aux budgets.
         _achat_repository: Repository pour acceder aux achats.
         _lot_repository: Repository pour acceder aux lots budgetaires.
         _alerte_repository: Repository pour acceder aux alertes.
+        _ai_provider: Provider IA optionnel (Gemini) pour les suggestions.
     """
 
     def __init__(
@@ -49,6 +53,7 @@ class GetSuggestionsFinancieresUseCase:
         achat_repository: AchatRepository,
         lot_repository: LotBudgetaireRepository,
         alerte_repository: AlerteRepository,
+        ai_provider: Optional[AISuggestionPort] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -57,11 +62,14 @@ class GetSuggestionsFinancieresUseCase:
             achat_repository: Repository Achat (interface).
             lot_repository: Repository LotBudgetaire (interface).
             alerte_repository: Repository Alerte (interface).
+            ai_provider: Provider IA optionnel (AISuggestionPort).
+                Si None, seules les regles algorithmiques sont utilisees.
         """
         self._budget_repository = budget_repository
         self._achat_repository = achat_repository
         self._lot_repository = lot_repository
         self._alerte_repository = alerte_repository
+        self._ai_provider = ai_provider
 
     def execute(self, chantier_id: int) -> SuggestionsFinancieresDTO:
         """Genere les suggestions financieres et indicateurs predictifs.
@@ -104,8 +112,15 @@ class GetSuggestionsFinancieresUseCase:
             pct_realise = Decimal("0")
             marge_pct = Decimal("0")
 
-        # 3. Generer les suggestions (max 5)
-        suggestions = self._generer_suggestions(
+        # Calcul du burn rate pour les KPI
+        burn_rate, _budget_moyen = self._calculer_burn_rate(
+            total_realise=total_realise,
+            montant_revise=montant_revise,
+            budget_created_at=budget.created_at,
+        )
+
+        # 3. Generer les suggestions algorithmiques (max 5)
+        suggestions_algo = self._generer_suggestions(
             chantier_id=chantier_id,
             montant_revise=montant_revise,
             total_engage=total_engage,
@@ -116,6 +131,54 @@ class GetSuggestionsFinancieresUseCase:
             marge_pct=marge_pct,
             budget=budget,
         )
+
+        # 3bis. Si provider IA disponible, generer et fusionner les suggestions IA
+        ai_available = False
+        source = "algorithmic"
+        suggestions = suggestions_algo
+
+        if self._ai_provider is not None:
+            try:
+                kpi_data = {
+                    "montant_revise": str(montant_revise.quantize(Decimal("0.01"))),
+                    "total_engage": str(total_engage.quantize(Decimal("0.01"))),
+                    "total_realise": str(total_realise.quantize(Decimal("0.01"))),
+                    "pct_engage": str(pct_engage.quantize(Decimal("0.01"))),
+                    "pct_realise": str(pct_realise.quantize(Decimal("0.01"))),
+                    "marge_pct": str(marge_pct.quantize(Decimal("0.01"))),
+                    "reste_a_depenser": str(reste_a_depenser.quantize(Decimal("0.01"))),
+                    "burn_rate": str(burn_rate.quantize(Decimal("0.01"))),
+                }
+                suggestions_ia = self._ai_provider.generate_suggestions(kpi_data)
+
+                if suggestions_ia:
+                    # Fusionner : IA en priorite, deduplication par type
+                    suggestions = self._fusionner_suggestions(
+                        suggestions_ia, suggestions_algo
+                    )
+                    ai_available = True
+                    source = "gemini"
+                    logger.info(
+                        "Suggestions IA fusionnees pour chantier %d: "
+                        "%d IA + %d algo -> %d total",
+                        chantier_id,
+                        len(suggestions_ia),
+                        len(suggestions_algo),
+                        len(suggestions),
+                    )
+                else:
+                    logger.info(
+                        "Provider IA n'a retourne aucune suggestion pour chantier %d, "
+                        "fallback algorithmique",
+                        chantier_id,
+                    )
+            except Exception as e:
+                logger.warning(
+                    "Erreur provider IA pour chantier %d (fallback algo): %s",
+                    chantier_id,
+                    str(e),
+                )
+                # Fallback silencieux aux regles algo
 
         # 4. Calculer les indicateurs predictifs
         indicateurs = self._calculer_indicateurs_predictifs(
@@ -129,6 +192,8 @@ class GetSuggestionsFinancieresUseCase:
             chantier_id=chantier_id,
             suggestions=suggestions[:5],
             indicateurs=indicateurs,
+            ai_available=ai_available,
+            source=source,
         )
 
     def _generer_suggestions(
@@ -274,6 +339,38 @@ class GetSuggestionsFinancieresUseCase:
         suggestions.sort(key=lambda s: severity_order.get(s.severity, 3))
 
         return suggestions
+
+    def _fusionner_suggestions(
+        self,
+        suggestions_ia: List[SuggestionDTO],
+        suggestions_algo: List[SuggestionDTO],
+    ) -> List[SuggestionDTO]:
+        """Fusionne les suggestions IA et algorithmiques.
+
+        Les suggestions IA ont la priorite. En cas de doublon (meme type),
+        la suggestion IA est conservee et l'algorithmique est ignoree.
+
+        Args:
+            suggestions_ia: Suggestions generees par l'IA.
+            suggestions_algo: Suggestions generees par les regles algo.
+
+        Returns:
+            Liste fusionnee, triee par severite (CRITICAL > WARNING > INFO).
+        """
+        # Collecter les types deja couverts par l'IA
+        types_ia = {s.type for s in suggestions_ia}
+
+        # Ajouter les suggestions algo dont le type n'est pas deja couvert
+        merged: List[SuggestionDTO] = list(suggestions_ia)
+        for s_algo in suggestions_algo:
+            if s_algo.type not in types_ia:
+                merged.append(s_algo)
+
+        # Trier par severite
+        severity_order = {"CRITICAL": 0, "WARNING": 1, "INFO": 2}
+        merged.sort(key=lambda s: severity_order.get(s.severity, 3))
+
+        return merged
 
     def _calculer_burn_rate(
         self,

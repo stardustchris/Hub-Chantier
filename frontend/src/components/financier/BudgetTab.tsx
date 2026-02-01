@@ -26,6 +26,7 @@ import {
   Receipt,
   Wrench,
   Bell,
+  Link2,
 } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { useAuth } from '../../contexts/AuthContext'
@@ -42,6 +43,8 @@ import FacturesList from './FacturesList'
 import CoutsMainOeuvrePanel from './CoutsMainOeuvrePanel'
 import CoutsMaterielPanel from './CoutsMaterielPanel'
 import AlertesPanel from './AlertesPanel'
+import AffectationsBudgetPanel from './AffectationsBudgetPanel'
+import ExportComptableButton from './ExportComptableButton'
 import { formatEUR } from './ChartTooltip'
 import type { Budget, BudgetCreate, DashboardFinancier, SituationTravaux } from '../../types'
 import { STATUT_SITUATION_CONFIG, STATUT_ACHAT_CONFIG } from '../../types'
@@ -58,6 +61,7 @@ interface SectionConfig {
 
 const SECTIONS: SectionConfig[] = [
   { key: 'lots', label: 'Lots Budgetaires', icon: Package },
+  { key: 'affectations', label: 'Affectations Budget-Taches', icon: Link2 },
   { key: 'achats', label: 'Achats', icon: ShoppingCart },
   { key: 'avenants', label: 'Avenants', icon: FileText },
   { key: 'situations', label: 'Situations de Travaux', icon: ClipboardList },
@@ -158,6 +162,8 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
     switch (key) {
       case 'lots':
         return <LotsBudgetairesTable budgetId={budget.id} onRefresh={loadBudget} />
+      case 'affectations':
+        return <AffectationsBudgetPanel chantierId={chantierId} budgetId={budget.id} />
       case 'achats':
         return <AchatsList chantierId={chantierId} budgetId={budget.id} />
       case 'avenants':
@@ -414,7 +420,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
       {canEdit && (
         <div className="bg-white border border-gray-200 rounded-xl p-4" aria-label="Actions rapides">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Actions rapides</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <button
               onClick={() => expandSection('lots')}
               className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
@@ -447,6 +453,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
               <Plus size={16} />
               Nouvelle Situation
             </button>
+            <ExportComptableButton chantierId={chantierId} />
           </div>
         </div>
       )}

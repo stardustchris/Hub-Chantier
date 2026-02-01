@@ -29,6 +29,8 @@ import type {
   AlerteDepassement,
   VueConsolidee,
   SuggestionsFinancieres,
+  AffectationBudgetTache,
+  AffectationBudgetTacheCreate,
 } from '../types'
 
 const BASE = '/api/financier'
@@ -373,5 +375,44 @@ export const financierService = {
       `${BASE}/chantiers/${chantierId}/suggestions`
     )
     return response.data
+  },
+
+  // ===== Affectations budget-tache (FIN-03) =====
+  async getAffectationsByChantier(chantierId: number): Promise<AffectationBudgetTache[]> {
+    const response = await api.get<{ items: AffectationBudgetTache[]; total: number }>(
+      `${BASE}/chantiers/${chantierId}/affectations`
+    )
+    return response.data.items
+  },
+
+  async getAffectationsByTache(tacheId: number): Promise<AffectationBudgetTache[]> {
+    const response = await api.get<{ items: AffectationBudgetTache[]; total: number }>(
+      `${BASE}/taches/${tacheId}/affectations`
+    )
+    return response.data.items
+  },
+
+  async createAffectation(lotId: number, data: AffectationBudgetTacheCreate): Promise<AffectationBudgetTache> {
+    const response = await api.post<AffectationBudgetTache>(
+      `${BASE}/lots-budgetaires/${lotId}/affectations`,
+      data
+    )
+    return response.data
+  },
+
+  async deleteAffectation(affectationId: number): Promise<void> {
+    await api.delete(`${BASE}/affectations/${affectationId}`)
+  },
+
+  // ===== Export comptable (FIN-13) =====
+  async exportComptable(chantierId: number, format: 'csv' | 'xlsx'): Promise<Blob> {
+    const response = await api.get(
+      `${BASE}/chantiers/${chantierId}/export-comptable`,
+      {
+        params: { format },
+        responseType: 'blob',
+      }
+    )
+    return response.data as Blob
   },
 }

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { AlertTriangle, AlertCircle, Info, Loader2, TrendingDown, Clock, Flame } from 'lucide-react'
+import { AlertTriangle, AlertCircle, Info, Loader2, TrendingDown, Clock, Flame, Sparkles } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
 import { formatEUR } from './ChartTooltip'
@@ -81,10 +81,28 @@ export default function SuggestionsPanel({ chantierId }: SuggestionsPanelProps) 
     return null
   }
 
-  const { indicateurs, suggestions } = data
+  const { indicateurs, suggestions, ai_available, source } = data
 
   return (
     <div role="region" aria-label="Suggestions et indicateurs predictifs">
+      {/* Badge source IA */}
+      <div className="mb-3 flex items-center gap-2">
+        {ai_available ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+            <Sparkles size={14} />
+            IA Gemini
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+            <Sparkles size={14} />
+            Regles algorithmiques
+          </span>
+        )}
+        {source === 'gemini' && (
+          <span className="text-xs text-gray-400">Analyse enrichie par intelligence artificielle</span>
+        )}
+      </div>
+
       {/* Indicateurs predictifs */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
         <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">

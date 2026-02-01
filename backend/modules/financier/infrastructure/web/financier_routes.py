@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from shared.infrastructure.web import (
@@ -54,6 +55,12 @@ from ...application.use_cases.facture_use_cases import (
     SituationNonValideeError,
 )
 from ...application.use_cases.alerte_use_cases import AlerteNotFoundError
+from ...application.use_cases.affectation_use_cases import (
+    AffectationNotFoundError,
+    AllocationDepasseError,
+    LotBudgetaireIntrouvableError,
+)
+from ...application.use_cases.export_comptable_use_cases import ExportComptableError
 from ...application.dtos import (
     FournisseurCreateDTO,
     FournisseurUpdateDTO,
@@ -69,6 +76,7 @@ from ...application.dtos import (
     SituationUpdateDTO,
     LigneSituationCreateDTO,
     FactureCreateDTO,
+    CreateAffectationDTO,
 )
 from .dependencies import (
     # Fournisseur
@@ -140,6 +148,13 @@ from .dependencies import (
     get_vue_consolidee_use_case,
     # Suggestions (FIN-21/22)
     get_suggestions_financieres_use_case,
+    # Affectation (FIN-03)
+    get_create_affectation_use_case,
+    get_delete_affectation_use_case,
+    get_list_affectations_by_chantier_use_case,
+    get_affectations_by_tache_use_case,
+    # Export comptable (FIN-13)
+    get_export_comptable_use_case,
     # Journal
     get_journal_financier_repository,
 )
@@ -1852,3 +1867,161 @@ async def acquitter_alerte(
         raise HTTPException(status_code=404, detail="Alerte non trouvee")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# =============================================================================
+# Schemas Pydantic - Affectations Budget-Tache (FIN-03)
+# =============================================================================
+
+
+class AffectationCreateRequest(BaseModel):
+    """Requete de creation d'affectation budget-tache."""
+
+    tache_id: int = Field(..., gt=0)
+    pourcentage_allocation: Decimal = Field(..., ge=0, le=100)
+
+
+# =============================================================================
+# Routes Affectations Budget-Tache (FIN-03)
+# =============================================================================
+
+
+@router.post(
+    "/lots/{lot_id}/affectations",
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_affectation(
+    lot_id: int,
+    request: AffectationCreateRequest,
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case=Depends(get_create_affectation_use_case),
+):
+    """Cree une affectation entre un lot budgetaire et une tache.
+
+    FIN-03: Affectation budgets aux taches - Conducteurs et admins.
+    """
+    try:
+        dto = CreateAffectationDTO(
+            lot_budgetaire_id=lot_id,
+            tache_id=request.tache_id,
+            pourcentage_allocation=request.pourcentage_allocation,
+        )
+        result = use_case.execute(dto)
+        return result.to_dict()
+    except LotBudgetaireIntrouvableError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except AllocationDepasseError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete(
+    "/affectations/{affectation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_affectation(
+    affectation_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case=Depends(get_delete_affectation_use_case),
+):
+    """Supprime une affectation budget-tache.
+
+    FIN-03: Conducteurs et admins.
+    """
+    try:
+        use_case.execute(affectation_id)
+    except AffectationNotFoundError:
+        raise HTTPException(status_code=404, detail="Affectation non trouvee")
+
+
+@router.get("/chantiers/{chantier_id}/affectations")
+async def list_affectations_by_chantier(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_affectations_by_chantier_use_case),
+):
+    """Liste les affectations budget-tache d'un chantier avec details lots.
+
+    FIN-03: Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id)
+    return {
+        "items": [a.to_dict() for a in result],
+        "total": len(result),
+    }
+
+
+@router.get("/taches/{tache_id}/affectations")
+async def get_affectations_by_tache(
+    tache_id: int,
+    _role: str = Depends(require_chef_or_above),
+    use_case=Depends(get_affectations_by_tache_use_case),
+):
+    """Liste les lots budgetaires affectes a une tache.
+
+    FIN-03: Accessible aux chefs de chantier et superieurs.
+    """
+    result = use_case.execute(tache_id)
+    return {
+        "items": [a.to_dict() for a in result],
+        "total": len(result),
+    }
+
+
+# =============================================================================
+# Routes Export Comptable (FIN-13)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/export")
+async def export_comptable(
+    chantier_id: int,
+    format: str = Query(default="csv", pattern="^(csv|xlsx)$"),
+    _role: str = Depends(require_conducteur_or_admin),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_export_comptable_use_case),
+):
+    """Exporte les donnees comptables d'un chantier en CSV ou Excel.
+
+    FIN-13: Export comptable - Conducteurs et admins.
+
+    Args:
+        chantier_id: ID du chantier.
+        format: Format d'export (csv ou xlsx).
+
+    Returns:
+        StreamingResponse avec le fichier CSV ou Excel.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    try:
+        dto = use_case.execute(chantier_id)
+
+        if format == "xlsx":
+            content = use_case.to_xlsx(dto)
+            return StreamingResponse(
+                iter([content]),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={
+                    "Content-Disposition": (
+                        f'attachment; filename="export_comptable_chantier_{chantier_id}.xlsx"'
+                    ),
+                },
+            )
+        else:
+            content = use_case.to_csv(dto)
+            return StreamingResponse(
+                iter([content]),
+                media_type="text/csv; charset=utf-8",
+                headers={
+                    "Content-Disposition": (
+                        f'attachment; filename="export_comptable_chantier_{chantier_id}.csv"'
+                    ),
+                },
+            )
+    except ExportComptableError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur export: {str(e)}")
