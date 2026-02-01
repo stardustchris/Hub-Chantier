@@ -30,14 +30,14 @@ Cette double approche permet aux conducteurs de piloter chaque chantier finement
 | FIN-12 | Alertes depassements | Banniere visible + notifications push si (Engage + Reste a faire) > Budget x seuil (110%) | ✅ Backend + Frontend |
 | FIN-14 | Referentiel fournisseurs | Gestion fournisseurs (raison sociale, type, SIRET, contact, conditions paiement) | ✅ Backend + Frontend |
 | FIN-15 | Historique et tracabilite | Journal complet des modifications budgetaires avec auteur, date et motif | ✅ Backend + Frontend |
-| **Phase 3 - UX Moderne & Intelligence (EN COURS)** ||||
-| FIN-16 | Indicateur "Reste a depenser" | Carte KPI Budget - Engage - Realise avec jauge visuelle et alerte si negatif | 🚧 Specs ready |
-| FIN-17 | Graphique evolution temporelle | Courbe comparative Budget/Engage/Realise sur timeline du chantier (mensuel) | 🚧 Specs ready |
-| FIN-18 | Graphique repartition lots | Camembert interactif montrant % budget par lot avec drill-down details | 🚧 Specs ready |
-| FIN-19 | Graphique barres comparatives | Barres empilees Prevu/Engage/Realise par lot avec code couleur depassements | 🚧 Specs ready |
-| FIN-20 | Vue consolidee multi-chantiers | Page Finances avec tableau comparatif tous chantiers + KPI globaux entreprise | 🚧 Specs ready |
-| FIN-21 | Suggestions intelligentes | Algorithme detectant anomalies et proposant actions (avenant, optimisation, alerte) | 🚧 Specs ready |
-| FIN-22 | Indicateurs predictifs | Burn rate, projection fin chantier, avancement physique vs financier | 🚧 Specs ready |
+| **Phase 3 - UX Moderne & Intelligence (COMPLET)** ||||
+| FIN-16 | Indicateur "Reste a depenser" | Carte KPI Budget - Engage - Realise avec jauge visuelle et alerte si negatif | ✅ Backend + Frontend |
+| FIN-17 | Graphique evolution temporelle | Courbe comparative Budget/Engage/Realise sur timeline du chantier (mensuel) | ✅ Backend + Frontend |
+| FIN-18 | Graphique repartition lots | Camembert interactif montrant % budget par lot avec drill-down details | ✅ Backend + Frontend |
+| FIN-19 | Graphique barres comparatives | Barres empilees Prevu/Engage/Realise par lot avec code couleur depassements | ✅ Backend + Frontend |
+| FIN-20 | Vue consolidee multi-chantiers | Page Finances avec tableau comparatif tous chantiers + KPI globaux entreprise | ✅ Backend + Frontend |
+| FIN-21 | Suggestions intelligentes | Algorithme detectant anomalies et proposant actions (avenant, optimisation, alerte) | ✅ Backend + Frontend |
+| FIN-22 | Indicateurs predictifs | Burn rate, projection fin chantier, avancement physique vs financier | ✅ Backend + Frontend |
 | **Phase 4 - Integration & Exports (FUTUR)** ||||
 | FIN-03 | Affectation budgets aux taches | Liaison optionnelle taches <-> lignes budgetaires pour suivi avancement financier | 🔮 Phase 4 |
 | FIN-13 | Export comptable | Generation CSV/Excel avec codes analytiques chantier, compatible logiciels comptables | 🔮 Phase 4 |
