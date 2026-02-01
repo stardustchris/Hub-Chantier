@@ -247,6 +247,39 @@ class SQLAlchemyLotBudgetaireRepository(LotBudgetaireRepository):
             .count()
         )
 
+    def find_by_devis_id(self, devis_id: UUID) -> List[LotBudgetaire]:
+        """Liste tous les lots d'un devis (exclut les supprimes).
+
+        Args:
+            devis_id: L'UUID du devis.
+
+        Returns:
+            Liste des lots du devis, tries par ordre et code.
+        """
+        query = (
+            self._session.query(LotBudgetaireModel)
+            .filter(LotBudgetaireModel.devis_id == str(devis_id))
+            .filter(LotBudgetaireModel.deleted_at.is_(None))
+            .order_by(LotBudgetaireModel.ordre, LotBudgetaireModel.code_lot)
+        )
+        return [self._to_entity(model) for model in query.all()]
+
+    def count_by_devis_id(self, devis_id: UUID) -> int:
+        """Compte le nombre de lots d'un devis (exclut les supprimes).
+
+        Args:
+            devis_id: L'UUID du devis.
+
+        Returns:
+            Le nombre de lots.
+        """
+        return (
+            self._session.query(LotBudgetaireModel)
+            .filter(LotBudgetaireModel.devis_id == str(devis_id))
+            .filter(LotBudgetaireModel.deleted_at.is_(None))
+            .count()
+        )
+
     def delete(self, lot_id: int, deleted_by: Optional[int] = None) -> bool:
         """Supprime un lot (soft delete - H10).
 

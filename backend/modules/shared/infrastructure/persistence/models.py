@@ -115,37 +115,37 @@ class AuditLogModel(Base):
         comment="Raison de la modification (optionnel)",
     )
 
-    metadata = Column(
+    audit_metadata = Column(
+        "metadata",
         JSONB,
         nullable=True,
         comment="Métadonnées additionnelles au format JSON",
     )
 
     __table_args__ = (
-        # Index composite pour optimisation des requêtes fréquentes
+        # Index composite pour récupération historique entité
         Index(
             "ix_audit_log_entity_type_entity_id",
             "entity_type",
             "entity_id",
-            comment="Index pour récupération historique entité",
         ),
+        # Index pour feed d'activité par type
         Index(
             "ix_audit_log_entity_type_timestamp",
             "entity_type",
             "timestamp",
-            comment="Index pour feed d'activité par type",
         ),
+        # Index pour actions utilisateur triées
         Index(
             "ix_audit_log_author_id_timestamp",
             "author_id",
             "timestamp",
-            comment="Index pour actions utilisateur triées",
         ),
+        # Index pour recherche par type d'action
         Index(
             "ix_audit_log_action_timestamp",
             "action",
             "timestamp",
-            comment="Index pour recherche par type d'action",
         ),
         {
             "comment": "Table d'audit trail générique pour tous les modules (append-only)",

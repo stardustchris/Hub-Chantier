@@ -5,6 +5,7 @@ FIN-02: Décomposition en lots - CRUD des lots budgétaires.
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
+from uuid import UUID
 
 from ..entities import LotBudgetaire
 
@@ -86,6 +87,30 @@ class LotBudgetaireRepository(ABC):
 
         Args:
             budget_id: L'ID du budget.
+
+        Returns:
+            Le nombre de lots.
+        """
+        pass
+
+    @abstractmethod
+    def find_by_devis_id(self, devis_id: UUID) -> List[LotBudgetaire]:
+        """Liste tous les lots d'un devis.
+
+        Args:
+            devis_id: L'UUID du devis.
+
+        Returns:
+            Liste des lots du devis, triés par ordre et code.
+        """
+        pass
+
+    @abstractmethod
+    def count_by_devis_id(self, devis_id: UUID) -> int:
+        """Compte le nombre de lots d'un devis.
+
+        Args:
+            devis_id: L'UUID du devis.
 
         Returns:
             Le nombre de lots.

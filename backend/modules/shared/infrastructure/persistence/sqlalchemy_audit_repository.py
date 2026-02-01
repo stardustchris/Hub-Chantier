@@ -54,7 +54,7 @@ class SQLAlchemyAuditRepository(AuditRepository):
             author_name=model.author_name,
             timestamp=model.timestamp,
             motif=model.motif,
-            metadata=model.metadata,
+            metadata=model.audit_metadata,
         )
 
     def _to_model(self, entry: AuditEntry) -> AuditLogModel:
@@ -79,7 +79,7 @@ class SQLAlchemyAuditRepository(AuditRepository):
             author_name=entry.author_name,
             timestamp=entry.timestamp,
             motif=entry.motif,
-            metadata=entry.metadata,
+            audit_metadata=entry.metadata,
         )
 
     def save(self, entry: AuditEntry) -> AuditEntry:
