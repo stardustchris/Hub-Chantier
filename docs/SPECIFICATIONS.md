@@ -1809,9 +1809,145 @@ if ecart_burn_rate_pct > 30:
 
 ---
 
-#### 17.12.3 Backend - Algorithme de suggestions
+#### 17.12.3 Implementation technique - IA Gemini Flash
 
-**Use Case** : `GetSuggestionsFinancieresUseCase`
+**Choix technologique** : **Google Gemini 1.5 Flash**
+
+**Justification** :
+- ✅ **Gratuit** : 1500 requetes/jour (tier gratuit largement suffisant pour Hub-Chantier)
+- ✅ **Excellente qualite** : Niveau GPT-4o-mini, superieur aux modeles locaux legers
+- ✅ **Rapide** : Latence 400ms (meilleure que modeles locaux)
+- ✅ **Simple** : Integration via google-generativeai (1 pip install)
+- ✅ **Fiable** : API stable Google, SLA 99.9%
+- ✅ **Evolutif** : Passage au tier payant transparent si croissance (0.35 USD/1M tokens input)
+
+**Alternatives evaluees** :
+- Ollama + Qwen 2.5 7B (100% local, mais latence 500ms et RAM 8GB requise)
+- Groq + Llama 3.1 (ultra-rapide 100ms, mais rate limit strict 30 req/min)
+- Mistral Large (EU RGPD, mais 3 EUR/mois vs gratuit Gemini)
+
+**Confidentialite** :
+- Donnees anonymisees avant envoi (noms chantiers/clients remplaces par codes)
+- Transmission KPI uniquement (pas de donnees brutes sensibles)
+- Option desactivable par parametre utilisateur (opt-in)
+
+**Cout estime** :
+- 20 chantiers x 2 consultations/jour = 40 req/jour
+- **0 EUR/mois** (tier gratuit 1500 req/jour)
+- Meme en depassant (100 req/jour) : ~0.80 EUR/mois
+
+---
+
+#### 17.12.4 Backend - Architecture d'implementation
+
+**Stack technique** :
+
+```python
+# requirements.txt
+google-generativeai>=0.4.0
+
+# .env
+GEMINI_API_KEY=your_key_here  # Cle gratuite : https://ai.google.dev/
+GEMINI_ENABLED=true            # Activation globale
+```
+
+**Structure fichiers** :
+
+```
+backend/modules/financier/application/intelligence/
+├── __init__.py
+├── ai_suggestion_engine.py           # Moteur principal IA
+├── suggestion_service.py             # Service orchestrateur
+├── providers/
+│   ├── __init__.py
+│   ├── gemini_provider.py            # Provider Gemini Flash
+│   └── fallback_provider.py          # Fallback regles algorithmiques
+├── prompts/
+│   ├── system_prompt.txt             # Prompt systeme (role expert BTP)
+│   └── user_prompt_template.txt     # Template prompt utilisateur
+└── models/
+    └── suggestion.py                 # Entities/DTOs suggestions
+```
+
+**Provider Gemini** :
+
+```python
+# backend/modules/financier/application/intelligence/providers/gemini_provider.py
+import google.generativeai as genai
+from typing import Dict
+import json
+
+class GeminiProvider:
+    """Provider Gemini Flash pour suggestions intelligentes"""
+
+    def __init__(self, api_key: str):
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            generation_config={
+                "temperature": 0.3,  # Peu de creativite (fiabilite)
+                "max_output_tokens": 800,
+                "response_mime_type": "application/json"
+            }
+        )
+
+    async def generate_suggestions(
+        self,
+        system_prompt: str,
+        user_prompt: str
+    ) -> Dict:
+        """
+        Genere suggestions via Gemini Flash
+
+        Args:
+            system_prompt: Role du modele (expert BTP)
+            user_prompt: Donnees financieres + contexte chantier
+
+        Returns:
+            JSON structure avec suggestions + metadata
+        """
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+
+        response = await self.model.generate_content_async(full_prompt)
+
+        return json.loads(response.text)
+```
+
+**Prompt Systeme** :
+
+```
+Tu es un expert en gestion financiere de chantiers BTP.
+Ton role est d'analyser les donnees budgetaires d'un chantier et de proposer
+des actions concretes et actionnables pour optimiser la rentabilite.
+
+Regles :
+- Sois concis (2-3 phrases max par suggestion)
+- Propose uniquement des actions realisables
+- Quantifie l'impact financier quand possible
+- Priorise par urgence (CRITICAL > WARNING > INFO)
+- Utilise un ton professionnel mais accessible
+- Reponds UNIQUEMENT en JSON (pas de texte avant/apres)
+
+Format JSON attendu :
+{
+  "suggestions": [
+    {
+      "type": "CREATE_AVENANT|IMPUTE_ACHATS|OPTIMIZE_COSTS|CREATE_SITUATION|REDUCE_BURN_RATE",
+      "severity": "CRITICAL|WARNING|INFO",
+      "titre": "Titre court (5-8 mots)",
+      "description": "Description actionable (2-3 phrases)",
+      "impact_estime_eur": 12345.67,
+      "actions": [
+        {"label": "Action principale", "primary": true}
+      ]
+    }
+  ]
+}
+```
+
+---
+
+#### 17.12.5 Backend - Use Case GetSuggestionsFinancieresUseCase
 
 **Input** : `chantier_id`
 
@@ -1847,10 +1983,113 @@ if ecart_burn_rate_pct > 30:
 }
 ```
 
+**Workflow** :
+
+1. Recuperer donnees financieres (dashboard KPI, achats, situations)
+2. Calculer indicateurs predictifs (burn rate, projection, avancement)
+3. **Si GEMINI_ENABLED=true** :
+   - Anonymiser donnees (remplacer noms par codes)
+   - Construire prompt utilisateur avec KPI + contexte
+   - Appeler Gemini Flash via provider
+   - Parser reponse JSON
+4. **Fallback si erreur ou GEMINI_ENABLED=false** :
+   - Utiliser regles algorithmiques (detection basee sur seuils)
+   - Generer suggestions avec templates texte fixes
+5. Filtrer + trier suggestions (max 3, severity DESC)
+6. Retourner JSON avec suggestions + indicateurs
+
+**Resilience** :
+- Timeout Gemini : 10 secondes
+- Retry : 2 tentatives avec exponential backoff (1s, 2s)
+- Fallback systematique regles algorithmiques si echec IA
+- Logging erreurs pour monitoring
+
+**Route API** :
+
+```
+GET /api/financier/chantiers/{chantier_id}/suggestions
+
+Response 200 OK :
+{
+  "suggestions": [...],
+  "indicateurs_predictifs": {...}
+}
+
+Response 500 (fallback actif) :
+{
+  "suggestions": [...],  # Generes par regles algorithmiques
+  "ai_available": false,
+  "fallback_mode": "algorithmic"
+}
+```
+
+---
+
+#### 17.12.6 Frontend - Composant SuggestionsPanel
+
+**Emplacement** : `frontend/src/components/financier/SuggestionsPanel.tsx`
+
+**Integration** : Section 1 du BudgetDashboard (avant les KPI cards)
+
+**Affichage** :
+
+```tsx
+<div className="space-y-3">
+  {suggestions.map(suggestion => (
+    <div
+      key={suggestion.id}
+      className={`border-l-4 p-4 rounded-lg ${severityColors[suggestion.severity]}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0">
+          {severityIcons[suggestion.severity]}
+        </div>
+        <div className="flex-1">
+          <h4 className="font-semibold text-gray-900 mb-1">
+            {suggestion.titre}
+          </h4>
+          <p className="text-sm text-gray-700 mb-3">
+            {suggestion.description}
+          </p>
+          {suggestion.impact_estime_eur && (
+            <p className="text-xs text-gray-500 mb-2">
+              Impact estime : {formatEUR(suggestion.impact_estime_eur)}
+            </p>
+          )}
+          <div className="flex gap-2">
+            {suggestion.actions.map(action => (
+              <button
+                key={action.label}
+                onClick={() => handleAction(action)}
+                className={action.primary ? 'btn-primary' : 'btn-secondary'}
+              >
+                {action.label}
+              </button>
+            ))}
+            <button
+              onClick={() => dismissSuggestion(suggestion.id)}
+              className="btn-ghost"
+            >
+              Ignorer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+**Severite** :
+- CRITICAL : Bordure rouge, icone AlertTriangle
+- WARNING : Bordure orange, icone AlertCircle
+- INFO : Bordure bleue, icone Info
+
 **Regles d'affichage** :
 - Maximum 3 suggestions affichees simultanement (tri par severity DESC)
 - Les suggestions peuvent etre "acquittees" (dismissed) par l'utilisateur
-- Historique des suggestions dans journal d'audit
+- Suggestions dismissees stockees en localStorage (24h)
+- Historique des suggestions dans journal d'audit backend
 
 ---
 
