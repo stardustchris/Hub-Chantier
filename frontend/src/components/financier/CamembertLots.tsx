@@ -13,18 +13,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import type { PieLabelRenderProps } from 'recharts'
 import type { RepartitionLot } from '../../types'
+import ChartTooltip from './ChartTooltip'
 
 interface CamembertLotsProps {
   lots: RepartitionLot[]
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316']
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
-
-import type { PieLabelRenderProps } from 'recharts'
 
 const RADIAN = Math.PI / 180
 
@@ -54,29 +51,6 @@ function renderLabel(props: PieLabelRenderProps) {
     >
       {name} ({(percent * 100).toFixed(0)}%)
     </text>
-  )
-}
-
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: ReadonlyArray<{
-    name: string
-    value: number
-    payload: { fill: string }
-  }>
-}
-
-function ChartTooltip({ active, payload }: CustomTooltipProps) {
-  if (!active || !payload || payload.length === 0) return null
-
-  const entry = payload[0]
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-      <p className="text-sm font-medium text-gray-900">{entry.name}</p>
-      <p className="text-sm" style={{ color: entry.payload.fill }}>
-        {formatEUR(entry.value)}
-      </p>
-    </div>
   )
 }
 

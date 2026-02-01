@@ -94,7 +94,27 @@ class GetEvolutionFinanciereUseCase:
             else Decimal("0")
         )
 
-        # 5. Construire les points mensuels
+        # 5. Pre-grouper les achats par mois O(n) au lieu de O(n*m)
+        engage_par_mois: dict[tuple[int, int], Decimal] = {}
+        realise_par_mois: dict[tuple[int, int], Decimal] = {}
+
+        for achat in achats:
+            if achat.created_at is None:
+                continue
+
+            achat_date = (
+                achat.created_at.date()
+                if isinstance(achat.created_at, datetime)
+                else achat.created_at
+            )
+
+            cle_mois = (achat_date.year, achat_date.month)
+            if achat.statut in STATUTS_ENGAGES:
+                engage_par_mois[cle_mois] = engage_par_mois.get(cle_mois, Decimal("0")) + achat.total_ht
+            if achat.statut in STATUTS_REALISES:
+                realise_par_mois[cle_mois] = realise_par_mois.get(cle_mois, Decimal("0")) + achat.total_ht
+
+        # 6. Construire les points mensuels
         points: List[EvolutionMensuelleDTO] = []
         prevu_cumule = Decimal("0")
         engage_cumule = Decimal("0")
@@ -103,31 +123,9 @@ class GetEvolutionFinanciereUseCase:
         for annee, mois_num in mois_list:
             prevu_cumule += prevu_par_mois
 
-            # Fin du mois pour comparaison
-            fin_mois = self._fin_du_mois(annee, mois_num)
-
-            # Calculer engage et realise du mois
-            engage_mois = Decimal("0")
-            realise_mois = Decimal("0")
-
-            for achat in achats:
-                if achat.created_at is None:
-                    continue
-
-                achat_date = (
-                    achat.created_at.date()
-                    if isinstance(achat.created_at, datetime)
-                    else achat.created_at
-                )
-
-                if achat_date.year == annee and achat_date.month == mois_num:
-                    if achat.statut in STATUTS_ENGAGES:
-                        engage_mois += achat.total_ht
-                    if achat.statut in STATUTS_REALISES:
-                        realise_mois += achat.total_ht
-
-            engage_cumule += engage_mois
-            realise_cumule += realise_mois
+            cle = (annee, mois_num)
+            engage_cumule += engage_par_mois.get(cle, Decimal("0"))
+            realise_cumule += realise_par_mois.get(cle, Decimal("0"))
 
             mois_label = f"{mois_num:02d}/{annee}"
 
@@ -209,17 +207,3 @@ class GetEvolutionFinanciereUseCase:
 
         return mois_list
 
-    @staticmethod
-    def _fin_du_mois(annee: int, mois: int) -> date:
-        """Retourne le dernier jour du mois.
-
-        Args:
-            annee: L'annee.
-            mois: Le mois (1-12).
-
-        Returns:
-            La date du dernier jour du mois.
-        """
-        if mois == 12:
-            return date(annee + 1, 1, 1)
-        return date(annee, mois + 1, 1)

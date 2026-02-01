@@ -21,42 +21,15 @@ import {
 import { Loader2 } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
+import ChartTooltip from './ChartTooltip'
 import type { EvolutionMensuelle } from '../../types'
 
 interface EvolutionChartProps {
   chantierId: number
 }
 
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
-
 const formatYAxis = (value: number): string =>
   `${(value / 1000).toFixed(0)}k`
-
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: ReadonlyArray<{
-    name: string
-    value: number
-    color: string
-  }>
-  label?: string
-}
-
-function ChartTooltip({ active, payload, label }: CustomTooltipProps) {
-  if (!active || !payload || payload.length === 0) return null
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-      <p className="text-sm font-medium text-gray-900 mb-1">{label}</p>
-      {payload.map((entry) => (
-        <p key={entry.name} className="text-sm" style={{ color: entry.color }}>
-          {entry.name} : {formatEUR(entry.value)}
-        </p>
-      ))}
-    </div>
-  )
-}
 
 export default function EvolutionChart({ chantierId }: EvolutionChartProps) {
   const [data, setData] = useState<EvolutionMensuelle[]>([])
