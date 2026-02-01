@@ -3,11 +3,12 @@
 DEV-03: Creation devis structure.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
 
 from ...domain.entities.devis import Devis
 from ...domain.entities.journal_devis import JournalDevis
+from ...domain.value_objects import StatutDevis
 from ...domain.repositories.devis_repository import DevisRepository
 from ...domain.repositories.lot_devis_repository import LotDevisRepository
 from ...domain.repositories.ligne_devis_repository import LigneDevisRepository
@@ -33,14 +34,14 @@ class DevisNotFoundError(Exception):
         super().__init__(f"Devis {devis_id} non trouve")
 
 
-class DevisNotBrouillonError(Exception):
-    """Erreur levee quand on essaie de modifier un devis non brouillon."""
+class DevisNotModifiableError(Exception):
+    """Erreur levee quand on essaie de modifier un devis non modifiable."""
 
-    def __init__(self, devis_id: int, statut: str):
+    def __init__(self, devis_id: int, statut: StatutDevis):
         self.devis_id = devis_id
         self.statut = statut
         super().__init__(
-            f"Le devis {devis_id} est en statut '{statut}' et ne peut pas etre modifie"
+            f"Le devis {devis_id} est en statut '{statut.label}' et ne peut pas etre modifie"
         )
 
 
@@ -74,21 +75,25 @@ class CreateDevisUseCase:
             numero=numero,
             client_nom=dto.client_nom,
             objet=dto.objet,
-            statut="brouillon",
-            chantier_id=dto.chantier_id,
+            statut=StatutDevis.BROUILLON,
+            chantier_ref=dto.chantier_ref,
             client_adresse=dto.client_adresse,
             client_email=dto.client_email,
             client_telephone=dto.client_telephone,
+            date_creation=date.today(),
             date_validite=dto.date_validite,
             taux_tva_defaut=dto.taux_tva_defaut,
-            marge_globale_pct=dto.marge_globale_pct,
-            marge_moe_pct=dto.marge_moe_pct,
-            marge_materiaux_pct=dto.marge_materiaux_pct,
-            marge_sous_traitance_pct=dto.marge_sous_traitance_pct,
-            coeff_frais_generaux=dto.coeff_frais_generaux,
+            taux_marge_global=dto.taux_marge_global,
+            taux_marge_moe=dto.taux_marge_moe,
+            taux_marge_materiaux=dto.taux_marge_materiaux,
+            taux_marge_sous_traitance=dto.taux_marge_sous_traitance,
+            taux_marge_materiel=dto.taux_marge_materiel,
+            taux_marge_deplacement=dto.taux_marge_deplacement,
+            coefficient_frais_generaux=dto.coefficient_frais_generaux,
             retenue_garantie_pct=dto.retenue_garantie_pct,
             notes=dto.notes,
             commercial_id=dto.commercial_id,
+            conducteur_id=dto.conducteur_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
             created_by=created_by,
@@ -111,7 +116,7 @@ class CreateDevisUseCase:
 
 
 class UpdateDevisUseCase:
-    """Use case pour mettre a jour un devis (brouillon uniquement)."""
+    """Use case pour mettre a jour un devis (modifiable uniquement)."""
 
     def __init__(
         self,
@@ -136,14 +141,14 @@ class UpdateDevisUseCase:
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisNotBrouillonError: Si le devis n'est pas en brouillon.
+            DevisNotModifiableError: Si le devis n'est pas modifiable.
         """
         devis = self._devis_repository.find_by_id(devis_id)
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        if devis.statut != "brouillon":
-            raise DevisNotBrouillonError(devis_id, devis.statut)
+        if not devis.est_modifiable:
+            raise DevisNotModifiableError(devis_id, devis.statut)
 
         modifications = []
 
@@ -153,9 +158,9 @@ class UpdateDevisUseCase:
         if dto.objet is not None:
             devis.objet = dto.objet
             modifications.append("objet")
-        if dto.chantier_id is not None:
-            devis.chantier_id = dto.chantier_id
-            modifications.append("chantier_id")
+        if dto.chantier_ref is not None:
+            devis.chantier_ref = dto.chantier_ref
+            modifications.append("chantier_ref")
         if dto.client_adresse is not None:
             devis.client_adresse = dto.client_adresse
             modifications.append("client_adresse")
@@ -171,21 +176,27 @@ class UpdateDevisUseCase:
         if dto.taux_tva_defaut is not None:
             devis.taux_tva_defaut = dto.taux_tva_defaut
             modifications.append("taux_tva_defaut")
-        if dto.marge_globale_pct is not None:
-            devis.marge_globale_pct = dto.marge_globale_pct
-            modifications.append("marge_globale_pct")
-        if dto.marge_moe_pct is not None:
-            devis.marge_moe_pct = dto.marge_moe_pct
-            modifications.append("marge_moe_pct")
-        if dto.marge_materiaux_pct is not None:
-            devis.marge_materiaux_pct = dto.marge_materiaux_pct
-            modifications.append("marge_materiaux_pct")
-        if dto.marge_sous_traitance_pct is not None:
-            devis.marge_sous_traitance_pct = dto.marge_sous_traitance_pct
-            modifications.append("marge_sous_traitance_pct")
-        if dto.coeff_frais_generaux is not None:
-            devis.coeff_frais_generaux = dto.coeff_frais_generaux
-            modifications.append("coeff_frais_generaux")
+        if dto.taux_marge_global is not None:
+            devis.taux_marge_global = dto.taux_marge_global
+            modifications.append("taux_marge_global")
+        if dto.taux_marge_moe is not None:
+            devis.taux_marge_moe = dto.taux_marge_moe
+            modifications.append("taux_marge_moe")
+        if dto.taux_marge_materiaux is not None:
+            devis.taux_marge_materiaux = dto.taux_marge_materiaux
+            modifications.append("taux_marge_materiaux")
+        if dto.taux_marge_sous_traitance is not None:
+            devis.taux_marge_sous_traitance = dto.taux_marge_sous_traitance
+            modifications.append("taux_marge_sous_traitance")
+        if dto.taux_marge_materiel is not None:
+            devis.taux_marge_materiel = dto.taux_marge_materiel
+            modifications.append("taux_marge_materiel")
+        if dto.taux_marge_deplacement is not None:
+            devis.taux_marge_deplacement = dto.taux_marge_deplacement
+            modifications.append("taux_marge_deplacement")
+        if dto.coefficient_frais_generaux is not None:
+            devis.coefficient_frais_generaux = dto.coefficient_frais_generaux
+            modifications.append("coefficient_frais_generaux")
         if dto.retenue_garantie_pct is not None:
             devis.retenue_garantie_pct = dto.retenue_garantie_pct
             modifications.append("retenue_garantie_pct")
@@ -195,6 +206,9 @@ class UpdateDevisUseCase:
         if dto.commercial_id is not None:
             devis.commercial_id = dto.commercial_id
             modifications.append("commercial_id")
+        if dto.conducteur_id is not None:
+            devis.conducteur_id = dto.conducteur_id
+            modifications.append("conducteur_id")
 
         devis.updated_at = datetime.utcnow()
         devis = self._devis_repository.save(devis)
@@ -265,7 +279,7 @@ class ListDevisUseCase:
         offset: int = 0,
     ) -> DevisListDTO:
         """Liste les devis avec pagination."""
-        devis_list = self._devis_repository.find_all(skip=offset, limit=limit)
+        devis_list = self._devis_repository.find_all(limit=limit, offset=offset)
         total = self._devis_repository.count()
         return DevisListDTO(
             items=[DevisDTO.from_entity(d) for d in devis_list],
@@ -291,16 +305,16 @@ class DeleteDevisUseCase:
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisNotBrouillonError: Si le devis n'est pas en brouillon.
+            DevisNotModifiableError: Si le devis n'est pas en brouillon.
         """
         devis = self._devis_repository.find_by_id(devis_id)
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        if devis.statut != "brouillon":
-            raise DevisNotBrouillonError(devis_id, devis.statut)
+        if devis.statut != StatutDevis.BROUILLON:
+            raise DevisNotModifiableError(devis_id, devis.statut)
 
-        self._devis_repository.delete(devis_id)
+        self._devis_repository.delete(devis_id, deleted_by=deleted_by)
 
         self._journal_repository.save(
             JournalDevis(

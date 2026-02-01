@@ -23,20 +23,23 @@ class DevisCreateDTO:
 
     client_nom: str
     objet: str
-    chantier_id: Optional[int] = None
+    chantier_ref: Optional[str] = None
     client_adresse: Optional[str] = None
     client_email: Optional[str] = None
     client_telephone: Optional[str] = None
     date_validite: Optional[date] = None
     taux_tva_defaut: Decimal = Decimal("20")
-    marge_globale_pct: Decimal = Decimal("15")
-    marge_moe_pct: Optional[Decimal] = None
-    marge_materiaux_pct: Optional[Decimal] = None
-    marge_sous_traitance_pct: Optional[Decimal] = None
-    coeff_frais_generaux: Decimal = Decimal("0.12")
+    taux_marge_global: Decimal = Decimal("15")
+    taux_marge_moe: Optional[Decimal] = None
+    taux_marge_materiaux: Optional[Decimal] = None
+    taux_marge_sous_traitance: Optional[Decimal] = None
+    taux_marge_materiel: Optional[Decimal] = None
+    taux_marge_deplacement: Optional[Decimal] = None
+    coefficient_frais_generaux: Decimal = Decimal("12")
     retenue_garantie_pct: Decimal = Decimal("0")
     notes: Optional[str] = None
     commercial_id: Optional[int] = None
+    conducteur_id: Optional[int] = None
 
 
 @dataclass
@@ -45,20 +48,23 @@ class DevisUpdateDTO:
 
     client_nom: Optional[str] = None
     objet: Optional[str] = None
-    chantier_id: Optional[int] = None
+    chantier_ref: Optional[str] = None
     client_adresse: Optional[str] = None
     client_email: Optional[str] = None
     client_telephone: Optional[str] = None
     date_validite: Optional[date] = None
     taux_tva_defaut: Optional[Decimal] = None
-    marge_globale_pct: Optional[Decimal] = None
-    marge_moe_pct: Optional[Decimal] = None
-    marge_materiaux_pct: Optional[Decimal] = None
-    marge_sous_traitance_pct: Optional[Decimal] = None
-    coeff_frais_generaux: Optional[Decimal] = None
+    taux_marge_global: Optional[Decimal] = None
+    taux_marge_moe: Optional[Decimal] = None
+    taux_marge_materiaux: Optional[Decimal] = None
+    taux_marge_sous_traitance: Optional[Decimal] = None
+    taux_marge_materiel: Optional[Decimal] = None
+    taux_marge_deplacement: Optional[Decimal] = None
+    coefficient_frais_generaux: Optional[Decimal] = None
     retenue_garantie_pct: Optional[Decimal] = None
     notes: Optional[str] = None
     commercial_id: Optional[int] = None
+    conducteur_id: Optional[int] = None
 
 
 @dataclass
@@ -70,12 +76,12 @@ class DevisDTO:
     client_nom: str
     objet: str
     statut: str
-    total_ht: str
-    total_ttc: str
+    montant_total_ht: str
+    montant_total_ttc: str
     date_creation: Optional[str]
     date_validite: Optional[str]
     commercial_id: Optional[int]
-    chantier_id: Optional[int]
+    chantier_ref: Optional[str]
 
     @classmethod
     def from_entity(cls, devis: Devis) -> DevisDTO:
@@ -85,13 +91,13 @@ class DevisDTO:
             numero=devis.numero,
             client_nom=devis.client_nom,
             objet=devis.objet,
-            statut=devis.statut,
-            total_ht=str(devis.total_ht),
-            total_ttc=str(devis.total_ttc),
-            date_creation=devis.created_at.isoformat() if devis.created_at else None,
+            statut=devis.statut.value,
+            montant_total_ht=str(devis.montant_total_ht),
+            montant_total_ttc=str(devis.montant_total_ttc),
+            date_creation=devis.date_creation.isoformat() if devis.date_creation else None,
             date_validite=devis.date_validite.isoformat() if devis.date_validite else None,
             commercial_id=devis.commercial_id,
-            chantier_id=devis.chantier_id,
+            chantier_ref=devis.chantier_ref,
         )
 
     def to_dict(self) -> dict:
@@ -102,12 +108,12 @@ class DevisDTO:
             "client_nom": self.client_nom,
             "objet": self.objet,
             "statut": self.statut,
-            "total_ht": self.total_ht,
-            "total_ttc": self.total_ttc,
+            "montant_total_ht": self.montant_total_ht,
+            "montant_total_ttc": self.montant_total_ttc,
             "date_creation": self.date_creation,
             "date_validite": self.date_validite,
             "commercial_id": self.commercial_id,
-            "chantier_id": self.chantier_id,
+            "chantier_ref": self.chantier_ref,
         }
 
 
@@ -123,23 +129,26 @@ class DevisDetailDTO:
     client_telephone: Optional[str]
     objet: str
     statut: str
-    total_ht: str
-    total_ttc: str
-    debourse_sec_total: str
-    marge_globale_pct: str
-    marge_moe_pct: Optional[str]
-    marge_materiaux_pct: Optional[str]
-    marge_sous_traitance_pct: Optional[str]
-    coeff_frais_generaux: str
+    montant_total_ht: str
+    montant_total_ttc: str
+    taux_marge_global: str
+    taux_marge_moe: Optional[str]
+    taux_marge_materiaux: Optional[str]
+    taux_marge_sous_traitance: Optional[str]
+    taux_marge_materiel: Optional[str]
+    taux_marge_deplacement: Optional[str]
+    coefficient_frais_generaux: str
     retenue_garantie_pct: str
     taux_tva_defaut: str
     date_creation: Optional[str]
     date_validite: Optional[str]
     updated_at: Optional[str]
     commercial_id: Optional[int]
-    chantier_id: Optional[int]
+    conducteur_id: Optional[int]
+    chantier_ref: Optional[str]
     created_by: Optional[int]
     notes: Optional[str]
+    conditions_generales: Optional[str]
     lots: List[LotDevisDTO]
 
     @classmethod
@@ -157,24 +166,27 @@ class DevisDetailDTO:
             client_email=devis.client_email,
             client_telephone=devis.client_telephone,
             objet=devis.objet,
-            statut=devis.statut,
-            total_ht=str(devis.total_ht),
-            total_ttc=str(devis.total_ttc),
-            debourse_sec_total=str(devis.debourse_sec_total),
-            marge_globale_pct=str(devis.marge_globale_pct),
-            marge_moe_pct=str(devis.marge_moe_pct) if devis.marge_moe_pct is not None else None,
-            marge_materiaux_pct=str(devis.marge_materiaux_pct) if devis.marge_materiaux_pct is not None else None,
-            marge_sous_traitance_pct=str(devis.marge_sous_traitance_pct) if devis.marge_sous_traitance_pct is not None else None,
-            coeff_frais_generaux=str(devis.coeff_frais_generaux),
+            statut=devis.statut.value,
+            montant_total_ht=str(devis.montant_total_ht),
+            montant_total_ttc=str(devis.montant_total_ttc),
+            taux_marge_global=str(devis.taux_marge_global),
+            taux_marge_moe=str(devis.taux_marge_moe) if devis.taux_marge_moe is not None else None,
+            taux_marge_materiaux=str(devis.taux_marge_materiaux) if devis.taux_marge_materiaux is not None else None,
+            taux_marge_sous_traitance=str(devis.taux_marge_sous_traitance) if devis.taux_marge_sous_traitance is not None else None,
+            taux_marge_materiel=str(devis.taux_marge_materiel) if devis.taux_marge_materiel is not None else None,
+            taux_marge_deplacement=str(devis.taux_marge_deplacement) if devis.taux_marge_deplacement is not None else None,
+            coefficient_frais_generaux=str(devis.coefficient_frais_generaux),
             retenue_garantie_pct=str(devis.retenue_garantie_pct),
             taux_tva_defaut=str(devis.taux_tva_defaut),
-            date_creation=devis.created_at.isoformat() if devis.created_at else None,
+            date_creation=devis.date_creation.isoformat() if devis.date_creation else None,
             date_validite=devis.date_validite.isoformat() if devis.date_validite else None,
             updated_at=devis.updated_at.isoformat() if devis.updated_at else None,
             commercial_id=devis.commercial_id,
-            chantier_id=devis.chantier_id,
+            conducteur_id=devis.conducteur_id,
+            chantier_ref=devis.chantier_ref,
             created_by=devis.created_by,
             notes=devis.notes,
+            conditions_generales=devis.conditions_generales,
             lots=lots or [],
         )
 
@@ -189,23 +201,26 @@ class DevisDetailDTO:
             "client_telephone": self.client_telephone,
             "objet": self.objet,
             "statut": self.statut,
-            "total_ht": self.total_ht,
-            "total_ttc": self.total_ttc,
-            "debourse_sec_total": self.debourse_sec_total,
-            "marge_globale_pct": self.marge_globale_pct,
-            "marge_moe_pct": self.marge_moe_pct,
-            "marge_materiaux_pct": self.marge_materiaux_pct,
-            "marge_sous_traitance_pct": self.marge_sous_traitance_pct,
-            "coeff_frais_generaux": self.coeff_frais_generaux,
+            "montant_total_ht": self.montant_total_ht,
+            "montant_total_ttc": self.montant_total_ttc,
+            "taux_marge_global": self.taux_marge_global,
+            "taux_marge_moe": self.taux_marge_moe,
+            "taux_marge_materiaux": self.taux_marge_materiaux,
+            "taux_marge_sous_traitance": self.taux_marge_sous_traitance,
+            "taux_marge_materiel": self.taux_marge_materiel,
+            "taux_marge_deplacement": self.taux_marge_deplacement,
+            "coefficient_frais_generaux": self.coefficient_frais_generaux,
             "retenue_garantie_pct": self.retenue_garantie_pct,
             "taux_tva_defaut": self.taux_tva_defaut,
             "date_creation": self.date_creation,
             "date_validite": self.date_validite,
             "updated_at": self.updated_at,
             "commercial_id": self.commercial_id,
-            "chantier_id": self.chantier_id,
+            "conducteur_id": self.conducteur_id,
+            "chantier_ref": self.chantier_ref,
             "created_by": self.created_by,
             "notes": self.notes,
+            "conditions_generales": self.conditions_generales,
             "lots": [l.to_dict() for l in self.lots],
         }
 

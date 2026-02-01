@@ -22,9 +22,9 @@ class CalculerTotauxDevisUseCase:
     DEV-06: Application des marges multi-niveaux.
     Formules:
         Debourse sec = Somme(quantite composant * prix unitaire composant)
-        Prix de revient = Debourse sec * (1 + coeff frais generaux)
-        Prix de vente HT = Prix de revient * (1 + taux de marge)
-        Prix de vente TTC = Prix de vente HT * (1 + taux TVA)
+        Prix de revient = Debourse sec * (1 + coeff frais generaux / 100)
+        Prix de vente HT = Prix de revient * (1 + taux de marge / 100)
+        Prix de vente TTC = Prix de vente HT * (1 + taux TVA / 100)
 
     Priorite des marges: ligne > lot > type debours > global.
     """
@@ -65,7 +65,6 @@ class CalculerTotauxDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        total_debourse_sec = Decimal("0")
         total_ht = Decimal("0")
         total_ttc = Decimal("0")
 
@@ -88,9 +87,9 @@ class CalculerTotauxDevisUseCase:
 
                 ligne.debourse_sec = ligne_debourse_sec
 
-                # Prix de revient = Debourse sec * (1 + coeff frais generaux)
+                # Prix de revient = Debourse sec * (1 + coeff frais generaux / 100)
                 ligne.prix_revient = ligne_debourse_sec * (
-                    Decimal("1") + devis.coeff_frais_generaux
+                    Decimal("1") + devis.coefficient_frais_generaux / Decimal("100")
                 )
 
                 # Determiner la marge applicable (priorite)
@@ -127,14 +126,12 @@ class CalculerTotauxDevisUseCase:
             lot.total_ttc = lot_total_ttc
             self._lot_repository.save(lot)
 
-            total_debourse_sec += lot_debourse_sec
             total_ht += lot_total_ht
             total_ttc += lot_total_ttc
 
         # Mettre a jour les totaux du devis
-        devis.debourse_sec_total = total_debourse_sec
-        devis.total_ht = total_ht
-        devis.total_ttc = total_ttc
+        devis.montant_total_ht = total_ht
+        devis.montant_total_ttc = total_ttc
         devis.updated_at = datetime.utcnow()
         self._devis_repository.save(devis)
 
@@ -144,7 +141,7 @@ class CalculerTotauxDevisUseCase:
                 devis_id=devis_id,
                 action="recalcul_totaux",
                 details=(
-                    f"Recalcul des totaux - Debourse sec: {total_debourse_sec}, "
+                    f"Recalcul des totaux - "
                     f"Total HT: {total_ht}, Total TTC: {total_ttc}"
                 ),
                 auteur_id=updated_by,
@@ -153,9 +150,8 @@ class CalculerTotauxDevisUseCase:
         )
 
         return {
-            "debourse_sec_total": str(total_debourse_sec),
-            "total_ht": str(total_ht),
-            "total_ttc": str(total_ttc),
+            "montant_total_ht": str(total_ht),
+            "montant_total_ttc": str(total_ttc),
         }
 
     def _resolve_marge(
@@ -185,7 +181,7 @@ class CalculerTotauxDevisUseCase:
                 return marge_type
 
         # 4. Marge globale
-        return devis.marge_globale_pct
+        return devis.taux_marge_global
 
     def _get_type_principal(self, debourses: list) -> Optional[str]:
         """Determine le type de debourse principal (le plus cher)."""
@@ -204,8 +200,10 @@ class CalculerTotauxDevisUseCase:
         if type_debourse is None:
             return None
         mapping = {
-            "main_oeuvre": devis.marge_moe_pct,
-            "materiaux": devis.marge_materiaux_pct,
-            "sous_traitance": devis.marge_sous_traitance_pct,
+            "main_oeuvre": devis.taux_marge_moe,
+            "materiaux": devis.taux_marge_materiaux,
+            "sous_traitance": devis.taux_marge_sous_traitance,
+            "materiel": devis.taux_marge_materiel,
+            "deplacement": devis.taux_marge_deplacement,
         }
         return mapping.get(type_debourse)
