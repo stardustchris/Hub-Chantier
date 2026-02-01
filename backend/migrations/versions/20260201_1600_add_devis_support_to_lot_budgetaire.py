@@ -1,7 +1,7 @@
 """Add devis support to lot_budgetaire
 
 Revision ID: add_devis_support
-Revises: 20260131_0001_convert_metier_to_metiers_array
+Revises: 20260131_0001
 Create Date: 2026-02-01 16:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'add_devis_support'
-down_revision: Union[str, None] = '20260131_0001_convert_metier_to_metiers_array'
+down_revision: Union[str, None] = '20260131_0001'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
