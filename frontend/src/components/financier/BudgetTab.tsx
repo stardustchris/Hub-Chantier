@@ -42,7 +42,9 @@ import FacturesList from './FacturesList'
 import CoutsMainOeuvrePanel from './CoutsMainOeuvrePanel'
 import CoutsMaterielPanel from './CoutsMaterielPanel'
 import AlertesPanel from './AlertesPanel'
-import type { Budget, BudgetCreate } from '../../types'
+import { formatEUR } from './ChartTooltip'
+import type { Budget, BudgetCreate, DashboardFinancier, SituationTravaux } from '../../types'
+import { STATUT_SITUATION_CONFIG, STATUT_ACHAT_CONFIG } from '../../types'
 
 interface BudgetTabProps {
   chantierId: number
@@ -75,6 +77,8 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
   const [createLoading, setCreateLoading] = useState(false)
   const [montantInitial, setMontantInitial] = useState('')
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
+  const [dashboardData, setDashboardData] = useState<DashboardFinancier | null>(null)
+  const [recentSituations, setRecentSituations] = useState<SituationTravaux[]>([])
 
   const canEdit = user?.role === 'admin' || user?.role === 'conducteur'
 
@@ -82,6 +86,13 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
     setCollapsedSections((prev) => ({
       ...prev,
       [key]: !prev[key],
+    }))
+  }, [])
+
+  const expandSection = useCallback((key: string) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [key]: false,
     }))
   }, [])
 
@@ -99,9 +110,19 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
     }
   }, [chantierId])
 
+  const loadRecentSituations = useCallback(async () => {
+    try {
+      const data = await financierService.listSituations(chantierId)
+      setRecentSituations(data.slice(0, 3))
+    } catch {
+      // Silent - situations panel is non-critical
+    }
+  }, [chantierId])
+
   useEffect(() => {
     loadBudget()
-  }, [loadBudget])
+    loadRecentSituations()
+  }, [loadBudget, loadRecentSituations])
 
   const handleCreateBudget = useCallback(async () => {
     const montant = parseFloat(montantInitial)
@@ -253,10 +274,182 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
   return (
     <div className="space-y-6" role="region" aria-label="Budget du chantier">
       {/* Dashboard KPI */}
-      <BudgetDashboard chantierId={chantierId} budget={budget} />
+      <BudgetDashboard chantierId={chantierId} budget={budget} onDashboardLoaded={setDashboardData} />
 
       {/* Suggestions IA */}
       <SuggestionsPanel chantierId={chantierId} />
+
+      {/* Section A : Top 5 Lots les plus consommes */}
+      {dashboardData?.repartition_par_lot && dashboardData.repartition_par_lot.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4" aria-label="Top 5 lots les plus consommes">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Top 5 Lots les plus consommes</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" aria-label="Tableau des 5 lots les plus engages">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-xs text-gray-500 uppercase">
+                  <th className="pb-2 pr-4">Code</th>
+                  <th className="pb-2 pr-4">Libelle</th>
+                  <th className="pb-2 pr-4 text-right">Engage</th>
+                  <th className="pb-2 pr-4 min-w-[120px]">% Engage</th>
+                  <th className="pb-2 text-right">Ecart</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...dashboardData.repartition_par_lot]
+                  .sort((a, b) => Number(b.engage) - Number(a.engage))
+                  .slice(0, 5)
+                  .map((lot) => {
+                    const engage = Number(lot.engage)
+                    const prevu = Number(lot.total_prevu_ht)
+                    const ecart = prevu - engage
+                    const pctEngage = prevu > 0 ? (engage / prevu) * 100 : 0
+                    return (
+                      <tr key={lot.lot_id} className="border-b border-gray-100 last:border-0">
+                        <td className="py-2 pr-4">
+                          <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{lot.code_lot}</span>
+                        </td>
+                        <td className="py-2 pr-4 text-gray-700">{lot.libelle}</td>
+                        <td className="py-2 pr-4 text-right font-medium">{formatEUR(engage)}</td>
+                        <td className="py-2 pr-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${pctEngage > 100 ? 'bg-red-500' : pctEngage > 80 ? 'bg-orange-400' : 'bg-blue-500'}`}
+                                style={{ width: `${Math.min(pctEngage, 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500 w-10 text-right">{pctEngage.toFixed(0)}%</span>
+                          </div>
+                        </td>
+                        <td className={`py-2 text-right font-medium ${ecart < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {formatEUR(ecart)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Section B : Dernieres Operations */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" aria-label="Dernieres operations">
+        {/* 5 derniers achats */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Derniers achats</h3>
+          {dashboardData?.derniers_achats && dashboardData.derniers_achats.length > 0 ? (
+            <div className="space-y-2">
+              {dashboardData.derniers_achats.slice(0, 5).map((achat) => {
+                const statutConfig = achat.statut_label && achat.statut_couleur
+                  ? { label: achat.statut_label, couleur: achat.statut_couleur }
+                  : STATUT_ACHAT_CONFIG[achat.statut]
+                return (
+                  <div key={achat.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 truncate">{achat.libelle}</p>
+                      {achat.fournisseur_nom && (
+                        <p className="text-xs text-gray-400 truncate">{achat.fournisseur_nom}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <span className="text-sm font-medium text-gray-700">{formatEUR(Number(achat.total_ht))}</span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={{
+                          backgroundColor: `${statutConfig.couleur}20`,
+                          color: statutConfig.couleur,
+                        }}
+                      >
+                        {statutConfig.label}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Aucun achat pour le moment</p>
+          )}
+        </div>
+
+        {/* 3 dernieres situations */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Dernieres situations</h3>
+          {recentSituations.length > 0 ? (
+            <div className="space-y-2">
+              {recentSituations.map((situation) => {
+                const statutConfig = STATUT_SITUATION_CONFIG[situation.statut]
+                return (
+                  <div key={situation.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800">Situation n&deg;{situation.numero}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(situation.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <span className="text-sm font-medium text-gray-700">{formatEUR(Number(situation.montant_cumule_ht))}</span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={{
+                          backgroundColor: `${statutConfig.couleur}20`,
+                          color: statutConfig.couleur,
+                        }}
+                      >
+                        {statutConfig.label}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Aucune situation pour le moment</p>
+          )}
+        </div>
+      </div>
+
+      {/* Section C : Actions rapides */}
+      {canEdit && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4" aria-label="Actions rapides">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Actions rapides</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              onClick={() => expandSection('lots')}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+              aria-label="Ouvrir la section Lots Budgetaires"
+            >
+              <Plus size={16} />
+              Nouveau Lot
+            </button>
+            <button
+              onClick={() => expandSection('achats')}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+              aria-label="Ouvrir la section Achats"
+            >
+              <Plus size={16} />
+              Nouvel Achat
+            </button>
+            <button
+              onClick={() => expandSection('avenants')}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+              aria-label="Ouvrir la section Avenants"
+            >
+              <Plus size={16} />
+              Nouvel Avenant
+            </button>
+            <button
+              onClick={() => expandSection('situations')}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+              aria-label="Ouvrir la section Situations de Travaux"
+            >
+              <Plus size={16} />
+              Nouvelle Situation
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Sections collapsables */}
       {SECTIONS.map((section) => {

@@ -96,7 +96,7 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.montant_revise_ht == "550000"
         assert result.kpi.total_engage == "200000"
         assert result.kpi.total_realise == "100000"
-        assert result.kpi.marge_estimee == "350000"
+        assert result.kpi.marge_estimee == "63.64"
         assert result.kpi.reste_a_depenser == "350000"
         assert result.kpi.pct_reste == "63.64"  # (350000/550000)*100
         assert len(result.derniers_achats) == 1
@@ -244,7 +244,7 @@ class TestGetDashboardFinancierUseCase:
         # pct_reste = (-50000 / 100000) * 100 = -50.00
         assert result.kpi.pct_reste == "-50.00"
         # marge_estimee aussi negative
-        assert result.kpi.marge_estimee == "-50000"
+        assert result.kpi.marge_estimee == "-50.00"
 
     def test_dashboard_reste_a_depenser_exact_budget(self):
         """Test: reste_a_depenser = 0 quand engage == montant_revise."""
