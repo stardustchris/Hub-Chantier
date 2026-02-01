@@ -8,6 +8,29 @@ from shared.infrastructure.webhooks.models import WebhookModel, WebhookDeliveryM
 from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
 from modules.dashboard.infrastructure.persistence.models import PostModel, CommentModel, LikeModel
 from modules.documents.infrastructure.persistence.models import DossierModel, DocumentModel
+from modules.planning.infrastructure.persistence.affectation_model import AffectationModel
+from modules.planning.infrastructure.persistence.besoin_charge_model import BesoinChargeModel
+from modules.pointages.infrastructure.persistence.models import PointageModel, FeuilleHeuresModel, VariablePaieModel
+from modules.taches.infrastructure.persistence.tache_model import TacheModel
+from modules.taches.infrastructure.persistence.template_modele_model import TemplateModeleModel, SousTacheModeleModel
+from modules.taches.infrastructure.persistence.feuille_tache_model import FeuilleTacheModel
+from modules.formulaires.infrastructure.persistence import (
+    TemplateFormulaireModel,
+    ChampTemplateModel,
+    FormulaireRempliModel,
+    ChampRempliModel,
+    PhotoFormulaireModel,
+)
+from modules.financier.infrastructure.persistence.models import (
+    BudgetModel,
+    LotBudgetaireModel,
+    AchatModel,
+    FournisseurModel,
+    SituationTravauxModel,
+    FactureClientModel,
+)
+from modules.logistique.infrastructure.persistence.models import RessourceModel, ReservationModel
+# Event logs and audit logs will be created via migrations if needed
 
 engine = create_engine("sqlite:///hub_chantier.db", echo=False)
 Base.metadata.create_all(engine)
