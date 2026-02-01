@@ -1,0 +1,232 @@
+import { useState } from 'react'
+import { X, Loader2 } from 'lucide-react'
+import type { DevisCreate, DevisUpdate, Devis } from '../../types'
+import { TAUX_TVA_OPTIONS } from '../../types'
+
+interface DevisFormProps {
+  devis?: Devis | null
+  onSubmit: (data: DevisCreate | DevisUpdate) => Promise<void>
+  onCancel: () => void
+}
+
+export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps) {
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({
+    objet: devis?.objet || '',
+    client_nom: devis?.client_nom || '',
+    client_adresse: devis?.client_adresse || '',
+    client_email: devis?.client_email || '',
+    client_telephone: devis?.client_telephone || '',
+    date_validite: devis?.date_validite?.split('T')[0] || '',
+    taux_tva: devis?.taux_tva ?? 20,
+    coefficient_frais_generaux: devis?.coefficient_frais_generaux ?? 12,
+    taux_marge_globale: devis?.taux_marge_globale ?? 15,
+    notes: devis?.notes || '',
+    conditions_paiement: devis?.conditions_paiement || '',
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      setLoading(true)
+      const data: DevisCreate | DevisUpdate = {
+        objet: form.objet,
+        client_nom: form.client_nom,
+        client_adresse: form.client_adresse || undefined,
+        client_email: form.client_email || undefined,
+        client_telephone: form.client_telephone || undefined,
+        date_validite: form.date_validite || undefined,
+        taux_tva: form.taux_tva,
+        coefficient_frais_generaux: form.coefficient_frais_generaux,
+        taux_marge_globale: form.taux_marge_globale,
+        notes: form.notes || undefined,
+        conditions_paiement: form.conditions_paiement || undefined,
+      }
+      await onSubmit(data)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {devis ? 'Modifier le devis' : 'Nouveau devis'}
+          </h2>
+          <button onClick={onCancel} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Objet */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Objet du devis *
+            </label>
+            <input
+              type="text"
+              required
+              value={form.objet}
+              onChange={(e) => setForm({ ...form, objet: e.target.value })}
+              placeholder="Ex: Renovation maison individuelle"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Client */}
+          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700">Informations client</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom du client *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.client_nom}
+                  onChange={(e) => setForm({ ...form, client_nom: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={form.client_email}
+                  onChange={(e) => setForm({ ...form, client_email: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Telephone</label>
+                <input
+                  type="tel"
+                  value={form.client_telephone}
+                  onChange={(e) => setForm({ ...form, client_telephone: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                <input
+                  type="text"
+                  value={form.client_adresse}
+                  onChange={(e) => setForm({ ...form, client_adresse: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Parametres financiers */}
+          <div className="bg-blue-50 rounded-lg p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-blue-700">Parametres financiers</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Taux TVA</label>
+                <select
+                  value={form.taux_tva}
+                  onChange={(e) => setForm({ ...form, taux_tva: Number(e.target.value) })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {TAUX_TVA_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Frais generaux (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={form.coefficient_frais_generaux}
+                  onChange={(e) => setForm({ ...form, coefficient_frais_generaux: Number(e.target.value) })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Marge globale (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={form.taux_marge_globale}
+                  onChange={(e) => setForm({ ...form, taux_marge_globale: Number(e.target.value) })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Date validite */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date de validite
+            </label>
+            <input
+              type="date"
+              value={form.date_validite}
+              onChange={(e) => setForm({ ...form, date_validite: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes internes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Conditions paiement */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Conditions de paiement
+            </label>
+            <textarea
+              value={form.conditions_paiement}
+              onChange={(e) => setForm({ ...form, conditions_paiement: e.target.value })}
+              rows={2}
+              placeholder="Ex: 30% a la commande, solde a la livraison"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !form.objet || !form.client_nom}
+              className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {devis ? 'Enregistrer' : 'Creer le devis'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
