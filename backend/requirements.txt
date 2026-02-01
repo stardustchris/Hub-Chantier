@@ -16,6 +16,7 @@ passlib[bcrypt]>=1.7.4
 
 # Security / Rate Limiting
 slowapi>=0.1.9
+bleach>=6.1.0  # XSS protection for connectors
 
 # Validation
 pydantic>=2.5.0
