@@ -19,17 +19,17 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
-| financier | 17 | FIN-01 a FIN-15 | 12/15 | 0 | **PHASE 2 COMPLET** |
+| financier | 17 | FIN-01 a FIN-23 | 13/23 | 0 | **PHASE 1+2 COMPLET, Phase 3 UX specs ready** |
 
 ## Statistiques globales
 
 - **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2)
-- **Module financier** : 12/15 features done (Phase 1: 6, Phase 2: 6), 3 remaining (Phase 3)
-- **Fonctionnalites totales** : 267 (+15 FIN)
-- **Fonctionnalites done** : 246 (92%)
-- **Fonctionnalites specs ready** : 3 (FIN-03, FIN-13, FIN-15 — Phase 3)
+- **Module financier** : 13/23 features (Phase 1+2: 13/13 ✅, Phase 3 UX: 0/7 specs ready, Phase 4: 0/3 futur)
+- **Fonctionnalites totales** : 275 (+8 nouvelles features financier Phase 3)
+- **Fonctionnalites done** : 246 (89%)
+- **Fonctionnalites specs ready** : 10 (7 FIN Phase 3 + 3 FIN Phase 4)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
-- **Fonctionnalites future** : 2 (prevues pour versions futures)
+- **Fonctionnalites future** : 3 (FIN-03, FIN-13, FIN-23 — Phase 4)
 
 **Note**: Le module `planning_charge` a été fusionné dans `planning` (28 jan 2026) pour conformité Clean Architecture. Score architect review: 87/100, 186 tests unitaires passent.
 
@@ -87,25 +87,54 @@
 
 ## Prochaines taches prioritaires
 
-### Module Financier (12/15 features done — Phase 3 remaining)
+### Module Financier (13/23 features — Phase 3 UX en cours)
+
+**Statut global** : Backend solide (9/10), Frontend basique (5/10) → Refonte UX necessaire pour rivaliser avec Graneet/Kalitics
+
+#### Phase 1 & 2 - Fondations (13/13 ✅ COMPLET)
 
 | ID | Description | Statut |
 |----|-------------|--------|
 | FIN-01 | Onglet Budget par chantier | ✅ Done (Phase 1) |
 | FIN-02 | Budget previsionnel par lots | ✅ Done (Phase 1) |
-| FIN-05 | Saisie achats / bons de commande | ✅ Done (Phase 1) |
-| FIN-14 | Referentiel fournisseurs | ✅ Done (Phase 1) |
-| FIN-06 | Validation hierarchique achats | ✅ Done (Phase 1) |
-| FIN-11 | Tableau de bord financier (KPI) | ✅ Done (Phase 1) |
 | FIN-04 | Avenants budgetaires | ✅ Done (Phase 2) |
+| FIN-05 | Saisie achats / bons de commande | ✅ Done (Phase 1) |
+| FIN-06 | Validation hierarchique achats | ✅ Done (Phase 1) |
 | FIN-07 | Situations de travaux | ✅ Done (Phase 2) |
 | FIN-08 | Facturation client | ✅ Done (Phase 2) |
 | FIN-09 | Suivi couts main-d'oeuvre | ✅ Done (Phase 2) |
 | FIN-10 | Suivi couts materiel | ✅ Done (Phase 2) |
-| FIN-12 | Alertes depassements | ✅ Done (Phase 2) |
-| FIN-03 | Affectation budgets aux taches | 🔮 Phase 3 |
-| FIN-13 | Export comptable | 🔮 Phase 3 |
-| FIN-15 | Historique et tracabilite | 🔮 Phase 3 |
+| FIN-11 | Tableau de bord financier (basique) | ✅ Done (Phase 1) - Needs upgrade |
+| FIN-12 | Alertes depassements | ✅ Done (Phase 2) - Needs visibility |
+| FIN-14 | Referentiel fournisseurs | ✅ Done (Phase 1) |
+| FIN-15 | Historique et tracabilite | ✅ Done (Phase 2) |
+
+#### Phase 3 - UX Moderne & Intelligence (0/7 🚧 SPECS READY)
+
+**Objectif** : Passer de "fonctionnel" a "moderne et competitif" vs Graneet/Kalitics
+
+| ID | Description | Impact Business | Effort |
+|----|-------------|-----------------|--------|
+| FIN-16 | Indicateur "Reste a depenser" | ⭐⭐⭐⭐⭐ Metrique cle manquante | 1h |
+| FIN-17 | Graphique evolution temporelle | ⭐⭐⭐⭐⭐ Tendances visuelles | 1 jour |
+| FIN-18 | Graphique repartition lots (camembert) | ⭐⭐⭐⭐ Comprehension immediate | 4h |
+| FIN-19 | Graphique barres comparatives par lot | ⭐⭐⭐⭐ Comparaison facile | 4h |
+| FIN-20 | Vue consolidee multi-chantiers | ⭐⭐⭐⭐⭐ Vision strategique CEO | 2 jours |
+| FIN-21 | Suggestions intelligentes | ⭐⭐⭐⭐⭐ Valeur ajoutee enorme | 2 jours |
+| FIN-22 | Indicateurs predictifs (burn rate, projection) | ⭐⭐⭐⭐ Anticipation problemes | 1 jour |
+
+**Roadmap Phase 3** :
+- Semaine 1 : Quick Wins (FIN-16 + ameliorations alertes + jauges) → Gain percu 70%
+- Semaine 2 : Graphiques (FIN-17, FIN-18, FIN-19) → Gain percu 90%
+- Semaines 3-4 : Refonte complete (FIN-20, FIN-21, FIN-22) → Niveau Graneet
+
+#### Phase 4 - Integration & Exports (0/3 🔮 FUTUR)
+
+| ID | Description | Statut |
+|----|-------------|--------|
+| FIN-03 | Affectation budgets aux taches | 🔮 Phase 4 |
+| FIN-13 | Export comptable | 🔮 Phase 4 |
+| FIN-23 | Integration ERP (Sage, Cegid) | 🔮 Phase 4 |
 
 ### Infrastructure (16 features)
 
