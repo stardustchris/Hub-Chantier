@@ -31,6 +31,7 @@ class LotDevis:
     # Montants calcules (mis a jour par le service de calcul)
     montant_debourse_ht: Decimal = Decimal("0")
     montant_vente_ht: Decimal = Decimal("0")
+    montant_vente_ttc: Decimal = Decimal("0")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     created_by: Optional[int] = None
@@ -80,6 +81,7 @@ class LotDevis:
             "parent_id": self.parent_id,
             "montant_debourse_ht": str(self.montant_debourse_ht),
             "montant_vente_ht": str(self.montant_vente_ht),
+            "montant_vente_ttc": str(self.montant_vente_ttc),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "created_by": self.created_by,

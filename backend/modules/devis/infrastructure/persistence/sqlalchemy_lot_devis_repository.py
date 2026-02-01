@@ -45,9 +45,10 @@ class SQLAlchemyLotDevisRepository(LotDevisRepository):
                 if model.marge_lot_pct is not None
                 else None
             ),
-            parent_id=None,
+            parent_id=model.parent_id,
             montant_debourse_ht=Decimal(str(model.debourse_sec)),
             montant_vente_ht=Decimal(str(model.total_ht)),
+            montant_vente_ttc=Decimal(str(model.total_ttc)),
             created_at=model.created_at,
             updated_at=model.updated_at,
             created_by=model.created_by,
@@ -75,8 +76,10 @@ class SQLAlchemyLotDevisRepository(LotDevisRepository):
                 model.titre = lot.libelle
                 model.numero = lot.code_lot
                 model.ordre = lot.ordre
+                model.parent_id = lot.parent_id
                 model.marge_lot_pct = lot.taux_marge_lot
                 model.total_ht = lot.montant_vente_ht
+                model.total_ttc = lot.montant_vente_ttc
                 model.debourse_sec = lot.montant_debourse_ht
                 model.updated_at = datetime.utcnow()
         else:
@@ -85,9 +88,10 @@ class SQLAlchemyLotDevisRepository(LotDevisRepository):
                 titre=lot.libelle,
                 numero=lot.code_lot,
                 ordre=lot.ordre,
+                parent_id=lot.parent_id,
                 marge_lot_pct=lot.taux_marge_lot,
                 total_ht=lot.montant_vente_ht,
-                total_ttc=Decimal("0"),
+                total_ttc=lot.montant_vente_ttc,
                 debourse_sec=lot.montant_debourse_ht,
                 created_at=lot.created_at or datetime.utcnow(),
                 created_by=lot.created_by,
@@ -121,10 +125,6 @@ class SQLAlchemyLotDevisRepository(LotDevisRepository):
     ) -> List[LotDevis]:
         """Liste les lots d'un devis, optionnellement filtres par parent.
 
-        Le modele n'a pas de colonne parent_id. Le parametre parent_id
-        est accepte pour respecter l'interface mais seule la valeur None
-        (lots racine) retourne des resultats.
-
         Args:
             devis_id: L'ID du devis.
             parent_id: Filtrer par lot parent (None = lots racine).
@@ -138,10 +138,10 @@ class SQLAlchemyLotDevisRepository(LotDevisRepository):
             .filter(LotDevisModel.deleted_at.is_(None))
         )
 
-        # Le modele n'a pas de parent_id, donc si un parent_id est demande
-        # on retourne une liste vide (pas de sous-chapitres en base).
         if parent_id is not None:
-            return []
+            query = query.filter(LotDevisModel.parent_id == parent_id)
+        else:
+            query = query.filter(LotDevisModel.parent_id.is_(None))
 
         query = query.order_by(LotDevisModel.ordre)
         return [self._to_entity(model) for model in query.all()]
@@ -149,16 +149,19 @@ class SQLAlchemyLotDevisRepository(LotDevisRepository):
     def find_children(self, parent_id: int) -> List[LotDevis]:
         """Liste les sous-chapitres d'un lot.
 
-        Le modele n'a pas de colonne parent_id. Retourne toujours
-        une liste vide.
-
         Args:
             parent_id: L'ID du lot parent.
 
         Returns:
-            Liste vide (pas de sous-chapitres en base).
+            Liste des sous-chapitres ordonnee par le champ ordre.
         """
-        return []
+        query = (
+            self._session.query(LotDevisModel)
+            .filter(LotDevisModel.parent_id == parent_id)
+            .filter(LotDevisModel.deleted_at.is_(None))
+            .order_by(LotDevisModel.ordre)
+        )
+        return [self._to_entity(model) for model in query.all()]
 
     def count_by_devis(self, devis_id: int) -> int:
         """Compte le nombre de lots d'un devis (exclut les supprimes).

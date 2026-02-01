@@ -20,7 +20,7 @@ class JournalDevis:
     id: Optional[int] = None
     devis_id: int = 0
     action: str = ""
-    auteur_id: int = 0
+    auteur_id: Optional[int] = None
     details_json: Optional[Dict[str, Any]] = None
     created_at: Optional[datetime] = None
 
@@ -30,8 +30,8 @@ class JournalDevis:
             raise ValueError("L'ID du devis est obligatoire")
         if not self.action or not self.action.strip():
             raise ValueError("L'action est obligatoire")
-        if self.auteur_id <= 0:
-            raise ValueError("L'ID de l'auteur est obligatoire")
+        if self.auteur_id is not None and self.auteur_id <= 0:
+            raise ValueError("L'ID de l'auteur doit etre positif ou None pour les actions systeme")
 
     def to_dict(self) -> dict:
         """Convertit l'entite en dictionnaire."""

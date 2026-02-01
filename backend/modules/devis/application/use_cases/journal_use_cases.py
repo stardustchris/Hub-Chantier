@@ -41,7 +41,7 @@ class LogJournalDevisUseCase:
         entry = JournalDevis(
             devis_id=devis_id,
             action=action,
-            details=details,
+            details_json={"message": details},
             auteur_id=auteur_id,
             created_at=datetime.utcnow(),
         )
@@ -68,12 +68,12 @@ class GetJournalDevisUseCase:
         Returns:
             Dictionnaire avec items, total, limit et offset.
         """
-        entries = self._journal_repository.find_by_devis_id(
+        entries = self._journal_repository.find_by_devis(
             devis_id=devis_id,
             limit=limit,
             offset=offset,
         )
-        total = self._journal_repository.count_by_devis_id(devis_id)
+        total = self._journal_repository.count_by_devis(devis_id)
 
         return {
             "items": [JournalDevisDTO.from_entity(e) for e in entries],

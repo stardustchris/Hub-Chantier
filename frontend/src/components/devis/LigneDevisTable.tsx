@@ -32,14 +32,14 @@ export default function LigneDevisTable({
     unite: '',
     quantite: 0,
     prix_unitaire_ht: 0,
-    taux_marge: undefined as number | undefined,
+    marge_ligne_pct: undefined as number | undefined,
   })
   const [newForm, setNewForm] = useState({
     designation: '',
     unite: 'u',
     quantite: 1,
     prix_unitaire_ht: 0,
-    taux_marge: undefined as number | undefined,
+    marge_ligne_pct: undefined as number | undefined,
   })
 
   const startEdit = (ligne: LigneDevis) => {
@@ -47,9 +47,9 @@ export default function LigneDevisTable({
     setEditForm({
       designation: ligne.designation,
       unite: ligne.unite,
-      quantite: ligne.quantite,
-      prix_unitaire_ht: ligne.prix_unitaire_ht,
-      taux_marge: ligne.taux_marge,
+      quantite: Number(ligne.quantite),
+      prix_unitaire_ht: Number(ligne.prix_unitaire_ht),
+      marge_ligne_pct: ligne.marge_ligne_pct != null ? Number(ligne.marge_ligne_pct) : undefined,
     })
   }
 
@@ -69,14 +69,14 @@ export default function LigneDevisTable({
     try {
       setLoading(true)
       await onCreateLigne({
-        lot_id: lotId,
+        lot_devis_id: lotId,
         designation: newForm.designation,
         unite: newForm.unite,
         quantite: newForm.quantite,
         prix_unitaire_ht: newForm.prix_unitaire_ht,
-        taux_marge: newForm.taux_marge,
+        marge_ligne_pct: newForm.marge_ligne_pct,
       })
-      setNewForm({ designation: '', unite: 'u', quantite: 1, prix_unitaire_ht: 0, taux_marge: undefined })
+      setNewForm({ designation: '', unite: 'u', quantite: 1, prix_unitaire_ht: 0, marge_ligne_pct: undefined })
       setShowAdd(false)
     } finally {
       setLoading(false)
@@ -123,6 +123,7 @@ export default function LigneDevisTable({
                       type="text"
                       value={editForm.designation}
                       onChange={(e) => setEditForm({ ...editForm, designation: e.target.value })}
+                      maxLength={500}
                       className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                     />
                   </td>
@@ -177,11 +178,11 @@ export default function LigneDevisTable({
                 <>
                   <td className="px-3 py-2 text-gray-900">{ligne.designation}</td>
                   <td className="px-3 py-2 text-center text-gray-500">{ligne.unite}</td>
-                  <td className="px-3 py-2 text-right">{ligne.quantite}</td>
-                  <td className="px-3 py-2 text-right">{formatEUR(ligne.prix_unitaire_ht)}</td>
-                  <td className="px-3 py-2 text-right font-medium">{formatEUR(ligne.total_ht)}</td>
-                  <td className="px-3 py-2 text-right text-orange-600">{formatEUR(ligne.debourse_sec)}</td>
-                  <td className="px-3 py-2 text-right text-green-600 font-medium">{formatEUR(ligne.prix_vente_ht)}</td>
+                  <td className="px-3 py-2 text-right">{Number(ligne.quantite)}</td>
+                  <td className="px-3 py-2 text-right">{formatEUR(Number(ligne.prix_unitaire_ht))}</td>
+                  <td className="px-3 py-2 text-right font-medium">{formatEUR(Number(ligne.montant_ht))}</td>
+                  <td className="px-3 py-2 text-right text-orange-600">{formatEUR(Number(ligne.debourse_sec))}</td>
+                  <td className="px-3 py-2 text-right text-green-600 font-medium">{formatEUR(Number(ligne.prix_revient))}</td>
                   {editable && (
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-center gap-1">
@@ -214,6 +215,7 @@ export default function LigneDevisTable({
                   value={newForm.designation}
                   onChange={(e) => setNewForm({ ...newForm, designation: e.target.value })}
                   placeholder="Designation"
+                  maxLength={500}
                   className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                 />
               </td>
@@ -273,7 +275,7 @@ export default function LigneDevisTable({
         <div className="flex justify-end px-3 py-2 bg-gray-50 border-t text-sm">
           <span className="text-gray-600 mr-4">Total:</span>
           <span className="font-semibold">
-            {formatEUR(lignes.reduce((sum, l) => sum + l.total_ht, 0))}
+            {formatEUR(lignes.reduce((sum, l) => sum + Number(l.montant_ht), 0))}
           </span>
         </div>
       )}

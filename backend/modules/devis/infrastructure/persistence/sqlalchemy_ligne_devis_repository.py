@@ -49,9 +49,13 @@ class SQLAlchemyLigneDevisRepository(LigneDevisRepository):
                 if model.marge_ligne_pct is not None
                 else None
             ),
+            taux_tva=Decimal(str(model.taux_tva)),
             ordre=model.ordre,
-            verrouille=False,
+            verrouille=model.verrouille,
             total_ht=Decimal(str(model.montant_ht)),
+            montant_ttc=Decimal(str(model.montant_ttc)),
+            debourse_sec=Decimal(str(model.debourse_sec)),
+            prix_revient=Decimal(str(model.prix_revient)),
             created_at=model.created_at,
             updated_at=model.updated_at,
             created_by=model.created_by,
@@ -81,9 +85,14 @@ class SQLAlchemyLigneDevisRepository(LigneDevisRepository):
                 model.unite = ligne.unite.value
                 model.quantite = ligne.quantite
                 model.prix_unitaire_ht = ligne.prix_unitaire_ht
+                model.taux_tva = ligne.taux_tva
                 model.marge_ligne_pct = ligne.taux_marge_ligne
                 model.ordre = ligne.ordre
+                model.verrouille = ligne.verrouille
                 model.montant_ht = ligne.total_ht
+                model.montant_ttc = ligne.montant_ttc
+                model.debourse_sec = ligne.debourse_sec
+                model.prix_revient = ligne.prix_revient
                 model.updated_at = datetime.utcnow()
         else:
             model = LigneDevisModel(
@@ -93,13 +102,14 @@ class SQLAlchemyLigneDevisRepository(LigneDevisRepository):
                 unite=ligne.unite.value,
                 quantite=ligne.quantite,
                 prix_unitaire_ht=ligne.prix_unitaire_ht,
-                taux_tva=Decimal("20"),
+                taux_tva=ligne.taux_tva,
                 marge_ligne_pct=ligne.taux_marge_ligne,
                 ordre=ligne.ordre,
+                verrouille=ligne.verrouille,
                 montant_ht=ligne.total_ht,
-                montant_ttc=Decimal("0"),
-                debourse_sec=Decimal("0"),
-                prix_revient=Decimal("0"),
+                montant_ttc=ligne.montant_ttc,
+                debourse_sec=ligne.debourse_sec,
+                prix_revient=ligne.prix_revient,
                 created_at=ligne.created_at or datetime.utcnow(),
                 created_by=ligne.created_by,
             )

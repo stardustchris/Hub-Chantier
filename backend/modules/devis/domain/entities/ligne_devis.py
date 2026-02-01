@@ -33,10 +33,14 @@ class LigneDevis:
     quantite: Decimal = Decimal("0")
     prix_unitaire_ht: Decimal = Decimal("0")
     taux_marge_ligne: Optional[Decimal] = None
+    taux_tva: Decimal = Decimal("20")
     ordre: int = 0
     verrouille: bool = False
     # Montants calcules
     total_ht: Decimal = Decimal("0")
+    montant_ttc: Decimal = Decimal("0")
+    debourse_sec: Decimal = Decimal("0")
+    prix_revient: Decimal = Decimal("0")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     created_by: Optional[int] = None
@@ -116,7 +120,11 @@ class LigneDevis:
             "unite": self.unite.value,
             "quantite": str(self.quantite),
             "prix_unitaire_ht": str(self.prix_unitaire_ht),
+            "taux_tva": str(self.taux_tva),
             "total_ht": str(self.total_ht),
+            "montant_ttc": str(self.montant_ttc),
+            "debourse_sec": str(self.debourse_sec),
+            "prix_revient": str(self.prix_revient),
             "taux_marge_ligne": str(self.taux_marge_ligne) if self.taux_marge_ligne is not None else None,
             "ordre": self.ordre,
             "verrouille": self.verrouille,

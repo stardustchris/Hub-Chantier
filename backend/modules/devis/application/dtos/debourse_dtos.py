@@ -43,12 +43,12 @@ class DebourseDetailDTO:
         return cls(
             id=debourse.id,
             ligne_devis_id=debourse.ligne_devis_id,
-            type_debourse=debourse.type_debourse,
-            designation=debourse.designation,
+            type_debourse=debourse.type_debourse.value if hasattr(debourse.type_debourse, 'value') else str(debourse.type_debourse),
+            designation=debourse.libelle,
             quantite=str(debourse.quantite),
             prix_unitaire=str(debourse.prix_unitaire),
-            montant=str(debourse.montant),
-            unite=debourse.unite,
+            montant=str(debourse.montant_calcule),
+            unite="U",
         )
 
     def to_dict(self) -> dict:

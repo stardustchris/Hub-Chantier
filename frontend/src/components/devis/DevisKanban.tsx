@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { User, Calendar, Euro } from 'lucide-react'
-import type { Devis, StatutDevis } from '../../types'
+import { User, Euro } from 'lucide-react'
+import type { DevisRecent, StatutDevis } from '../../types'
 import { STATUT_DEVIS_CONFIG } from '../../types'
 
 const formatEUR = (value: number) =>
@@ -9,7 +9,6 @@ const formatEUR = (value: number) =>
 const KANBAN_COLUMNS: StatutDevis[] = [
   'brouillon',
   'en_validation',
-  'approuve',
   'envoye',
   'vu',
   'en_negociation',
@@ -18,14 +17,14 @@ const KANBAN_COLUMNS: StatutDevis[] = [
 ]
 
 interface DevisKanbanProps {
-  devis: Devis[]
-  devisParStatut: Record<StatutDevis, number>
+  devis: DevisRecent[]
+  devisParStatut: Record<string, number>
 }
 
 export default function DevisKanban({ devis, devisParStatut }: DevisKanbanProps) {
   const navigate = useNavigate()
 
-  const getDevisByStatut = (statut: StatutDevis): Devis[] => {
+  const getDevisByStatut = (statut: StatutDevis): DevisRecent[] => {
     return devis.filter((d) => d.statut === statut)
   }
 
@@ -82,21 +81,8 @@ export default function DevisKanban({ devis, devisParStatut }: DevisKanbanProps)
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Euro className="w-3.5 h-3.5" />
-                        <span className="font-medium text-gray-700">{formatEUR(d.montant_total_ht)}</span>
+                        <span className="font-medium text-gray-700">{formatEUR(Number(d.montant_total_ht))}</span>
                       </div>
-                      {d.date_validite && (
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>{new Date(d.date_validite).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Marge */}
-                    <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Marge</span>
-                      <span className={`font-medium ${d.marge_globale_pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {d.marge_globale_pct.toFixed(1)}%
-                      </span>
                     </div>
                   </div>
                 ))}

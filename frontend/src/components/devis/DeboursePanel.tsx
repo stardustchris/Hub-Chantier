@@ -16,7 +16,6 @@ const TYPE_DEBOURSE_COLORS: Record<TypeDebourse, string> = {
 
 interface DeboursePanelProps {
   debourses: DebourseDetail[]
-  ligneId: number
   editable?: boolean
   onCreate?: (data: DebourseDetailCreate) => Promise<void>
   onDelete?: (id: number) => Promise<void>
@@ -24,7 +23,6 @@ interface DeboursePanelProps {
 
 export default function DeboursePanel({
   debourses,
-  ligneId,
   editable = false,
   onCreate,
   onDelete,
@@ -45,9 +43,9 @@ export default function DeboursePanel({
     prix_unitaire: 0,
   })
 
-  const totalDebourse = debourses.reduce((sum, d) => sum + d.montant, 0)
+  const totalDebourse = debourses.reduce((sum, d) => sum + Number(d.montant), 0)
   const totalsByType = debourses.reduce((acc, d) => {
-    acc[d.type_debourse] = (acc[d.type_debourse] || 0) + d.montant
+    acc[d.type_debourse] = (acc[d.type_debourse] || 0) + Number(d.montant)
     return acc
   }, {} as Record<string, number>)
 
@@ -56,7 +54,6 @@ export default function DeboursePanel({
     try {
       setLoading(true)
       await onCreate({
-        ligne_id: ligneId,
         type_debourse: form.type_debourse,
         designation: form.designation,
         unite: form.unite,
@@ -138,9 +135,9 @@ export default function DeboursePanel({
                 </td>
                 <td className="px-3 py-2 text-gray-900">{d.designation}</td>
                 <td className="px-3 py-2 text-center text-gray-500">{d.unite}</td>
-                <td className="px-3 py-2 text-right">{d.quantite}</td>
-                <td className="px-3 py-2 text-right">{formatEUR(d.prix_unitaire)}</td>
-                <td className="px-3 py-2 text-right font-medium">{formatEUR(d.montant)}</td>
+                <td className="px-3 py-2 text-right">{Number(d.quantite)}</td>
+                <td className="px-3 py-2 text-right">{formatEUR(Number(d.prix_unitaire))}</td>
+                <td className="px-3 py-2 text-right font-medium">{formatEUR(Number(d.montant))}</td>
                 {editable && (
                   <td className="px-3 py-2">
                     <button
@@ -180,6 +177,7 @@ export default function DeboursePanel({
                 value={form.designation}
                 onChange={(e) => setForm({ ...form, designation: e.target.value })}
                 placeholder="Ex: Macon qualifie"
+                maxLength={300}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
               />
             </div>

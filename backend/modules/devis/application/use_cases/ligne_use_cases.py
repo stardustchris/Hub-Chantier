@@ -10,6 +10,7 @@ from typing import Optional, List
 from ...domain.entities.ligne_devis import LigneDevis
 from ...domain.entities.debourse_detail import DebourseDetail
 from ...domain.entities.journal_devis import JournalDevis
+from ...domain.value_objects import TypeDebourse, UniteArticle
 from ...domain.repositories.lot_devis_repository import LotDevisRepository
 from ...domain.repositories.ligne_devis_repository import LigneDevisRepository
 from ...domain.repositories.debourse_detail_repository import DebourseDetailRepository
@@ -62,30 +63,43 @@ class CreateLigneDevisUseCase:
         if not lot:
             raise LotDevisNotFoundError(dto.lot_devis_id)
 
+        # Convertir l'unite string en enum
+        try:
+            unite_enum = UniteArticle(dto.unite.lower()) if dto.unite else UniteArticle.U
+        except ValueError:
+            unite_enum = UniteArticle.U
+
         ligne = LigneDevis(
             lot_devis_id=dto.lot_devis_id,
-            designation=dto.designation,
-            unite=dto.unite,
+            libelle=dto.designation,
+            unite=unite_enum,
             quantite=dto.quantite,
             prix_unitaire_ht=dto.prix_unitaire_ht,
             taux_tva=dto.taux_tva,
             ordre=dto.ordre,
-            marge_ligne_pct=dto.marge_ligne_pct,
+            taux_marge_ligne=dto.marge_ligne_pct,
             article_id=dto.article_id,
+            created_by=created_by,
         )
 
         ligne = self._ligne_repository.save(ligne)
 
         # Creer les debourses associes
-        debourse_dtos = []
+        debourse_dtos: List[DebourseDetailDTO] = []
         for deb_dto in dto.debourses:
+            # Convertir le type_debourse string en enum
+            try:
+                type_enum = TypeDebourse(deb_dto.type_debourse)
+            except ValueError:
+                type_enum = TypeDebourse.MATERIAUX
+
             debourse = DebourseDetail(
                 ligne_devis_id=ligne.id,
-                type_debourse=deb_dto.type_debourse,
-                designation=deb_dto.designation,
+                type_debourse=type_enum,
+                libelle=deb_dto.designation,
                 quantite=deb_dto.quantite,
                 prix_unitaire=deb_dto.prix_unitaire,
-                unite=deb_dto.unite,
+                total=deb_dto.quantite * deb_dto.prix_unitaire,
             )
             debourse = self._debourse_repository.save(debourse)
             debourse_dtos.append(DebourseDetailDTO.from_entity(debourse))
@@ -95,7 +109,7 @@ class CreateLigneDevisUseCase:
             JournalDevis(
                 devis_id=lot.devis_id,
                 action="ajout_ligne",
-                details=f"Ajout de la ligne '{dto.designation}' dans le lot '{lot.titre}'",
+                details_json={"message": f"Ajout de la ligne '{dto.designation}' dans le lot '{lot.libelle}'"},
                 auteur_id=created_by,
                 created_at=datetime.utcnow(),
             )
@@ -132,9 +146,12 @@ class UpdateLigneDevisUseCase:
             raise LigneDevisNotFoundError(ligne_id)
 
         if dto.designation is not None:
-            ligne.designation = dto.designation
+            ligne.libelle = dto.designation
         if dto.unite is not None:
-            ligne.unite = dto.unite
+            try:
+                ligne.unite = UniteArticle(dto.unite.lower())
+            except ValueError:
+                ligne.unite = UniteArticle.U
         if dto.quantite is not None:
             ligne.quantite = dto.quantite
         if dto.prix_unitaire_ht is not None:
@@ -144,29 +161,34 @@ class UpdateLigneDevisUseCase:
         if dto.ordre is not None:
             ligne.ordre = dto.ordre
         if dto.marge_ligne_pct is not None:
-            ligne.marge_ligne_pct = dto.marge_ligne_pct
+            ligne.taux_marge_ligne = dto.marge_ligne_pct
         if dto.article_id is not None:
             ligne.article_id = dto.article_id
 
         ligne = self._ligne_repository.save(ligne)
 
         # Si debourses fournis, remplacer
-        debourse_dtos = []
+        debourse_dtos: List[DebourseDetailDTO] = []
         if dto.debourses is not None:
-            self._debourse_repository.delete_by_ligne_id(ligne_id)
+            self._debourse_repository.delete_by_ligne(ligne_id)
             for deb_dto in dto.debourses:
+                try:
+                    type_enum = TypeDebourse(deb_dto.type_debourse)
+                except ValueError:
+                    type_enum = TypeDebourse.MATERIAUX
+
                 debourse = DebourseDetail(
                     ligne_devis_id=ligne.id,
-                    type_debourse=deb_dto.type_debourse,
-                    designation=deb_dto.designation,
+                    type_debourse=type_enum,
+                    libelle=deb_dto.designation,
                     quantite=deb_dto.quantite,
                     prix_unitaire=deb_dto.prix_unitaire,
-                    unite=deb_dto.unite,
+                    total=deb_dto.quantite * deb_dto.prix_unitaire,
                 )
                 debourse = self._debourse_repository.save(debourse)
                 debourse_dtos.append(DebourseDetailDTO.from_entity(debourse))
         else:
-            debourses = self._debourse_repository.find_by_ligne_id(ligne_id)
+            debourses = self._debourse_repository.find_by_ligne(ligne_id)
             debourse_dtos = [DebourseDetailDTO.from_entity(d) for d in debourses]
 
         # Journal
@@ -176,7 +198,7 @@ class UpdateLigneDevisUseCase:
                 JournalDevis(
                     devis_id=lot.devis_id,
                     action="modification_ligne",
-                    details=f"Modification de la ligne '{ligne.designation}'",
+                    details_json={"message": f"Modification de la ligne '{ligne.libelle}'"},
                     auteur_id=updated_by,
                     created_at=datetime.utcnow(),
                 )
@@ -211,7 +233,7 @@ class DeleteLigneDevisUseCase:
             raise LigneDevisNotFoundError(ligne_id)
 
         # Supprimer les debourses d'abord
-        self._debourse_repository.delete_by_ligne_id(ligne_id)
+        self._debourse_repository.delete_by_ligne(ligne_id)
         self._ligne_repository.delete(ligne_id)
 
         # Journal
@@ -221,7 +243,7 @@ class DeleteLigneDevisUseCase:
                 JournalDevis(
                     devis_id=lot.devis_id,
                     action="suppression_ligne",
-                    details=f"Suppression de la ligne '{ligne.designation}'",
+                    details_json={"message": f"Suppression de la ligne '{ligne.libelle}'"},
                     auteur_id=deleted_by,
                     created_at=datetime.utcnow(),
                 )

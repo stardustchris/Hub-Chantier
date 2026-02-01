@@ -20,6 +20,7 @@ from sqlalchemy import (
     Date,
     Numeric,
     Text,
+    JSON,
     Index,
     Enum as SQLEnum,
     ForeignKey,
@@ -140,6 +141,7 @@ class ArticleDevisModel(DevisBase):
         index=True,
     )
     taux_tva = Column(Numeric(5, 2), nullable=False, default=20.0)
+    composants_json = Column(JSON, nullable=True)
     actif = Column(Boolean, nullable=False, default=True, index=True)
 
     # Timestamps
@@ -231,10 +233,24 @@ class DevisModel(DevisBase):
     # Retenue de garantie (DEV-22)
     retenue_garantie_pct = Column(Numeric(5, 2), nullable=False, default=0)
 
+    # Marges par type de debourse supplementaires (DEV-06)
+    marge_materiel_pct = Column(Numeric(5, 2), nullable=True)
+    marge_deplacement_pct = Column(Numeric(5, 2), nullable=True)
+
     notes = Column(Text, nullable=True)
+    conditions_generales = Column(Text, nullable=True)
+
+    # Date de creation metier (distincte de created_at technique)
+    date_creation = Column(Date, nullable=True)
 
     # References utilisateurs
     commercial_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    conducteur_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
@@ -262,6 +278,8 @@ class DevisModel(DevisBase):
         Index("ix_devis_statut_created", "statut", "created_at"),
         Index("ix_devis_client_nom_statut", "client_nom", "statut"),
         Index("ix_devis_commercial_statut", "commercial_id", "statut"),
+        Index("ix_devis_conducteur_statut", "conducteur_id", "statut"),
+        Index("ix_devis_date_validite", "date_validite"),
         CheckConstraint(
             "total_ht >= 0",
             name="check_devis_total_ht_positif",
@@ -318,6 +336,12 @@ class LotDevisModel(DevisBase):
     titre = Column(String(300), nullable=False)
     numero = Column(String(20), nullable=True)
     ordre = Column(Integer, nullable=False, default=0)
+    parent_id = Column(
+        Integer,
+        ForeignKey("lots_devis.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
     marge_lot_pct = Column(Numeric(5, 2), nullable=True)
 
     # Montants calcules
@@ -398,6 +422,7 @@ class LigneDevisModel(DevisBase):
     prix_unitaire_ht = Column(Numeric(12, 4), nullable=False, default=0)
     taux_tva = Column(Numeric(5, 2), nullable=False, default=20.0)
     ordre = Column(Integer, nullable=False, default=0)
+    verrouille = Column(Boolean, nullable=False, default=False)
     marge_ligne_pct = Column(Numeric(5, 2), nullable=True)
 
     # Montants calcules
@@ -482,6 +507,9 @@ class DebourseDetailModel(DevisBase):
         nullable=False,
         default="u",
     )
+    # Champs specifiques MOE (DEV-05)
+    metier = Column(String(100), nullable=True)
+    taux_horaire = Column(Numeric(10, 2), nullable=True)
     montant = Column(Numeric(14, 2), nullable=False, default=0)
 
     # Timestamps
@@ -530,8 +558,8 @@ class JournalDevisModel(DevisBase):
     details = Column(Text, nullable=True)
     auteur_id = Column(
         Integer,
-        ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
 

@@ -43,9 +43,9 @@ export default function LotDevisPanel({
 }: LotDevisPanelProps) {
   const [expandedLots, setExpandedLots] = useState<Set<number>>(new Set(lots.map(l => l.id)))
   const [showAddLot, setShowAddLot] = useState(false)
-  const [newLotLibelle, setNewLotLibelle] = useState('')
+  const [newLotTitre, setNewLotTitre] = useState('')
   const [editingLotId, setEditingLotId] = useState<number | null>(null)
-  const [editLotLibelle, setEditLotLibelle] = useState('')
+  const [editLotTitre, setEditLotTitre] = useState('')
   const [loading, setLoading] = useState(false)
 
   const toggleLot = (lotId: number) => {
@@ -58,11 +58,11 @@ export default function LotDevisPanel({
   }
 
   const handleCreateLot = async () => {
-    if (!onCreateLot || !newLotLibelle.trim()) return
+    if (!onCreateLot || !newLotTitre.trim()) return
     try {
       setLoading(true)
-      await onCreateLot({ devis_id: devisId, libelle: newLotLibelle.trim() })
-      setNewLotLibelle('')
+      await onCreateLot({ devis_id: devisId, titre: newLotTitre.trim() })
+      setNewLotTitre('')
       setShowAddLot(false)
     } finally {
       setLoading(false)
@@ -70,10 +70,10 @@ export default function LotDevisPanel({
   }
 
   const handleUpdateLot = async (id: number) => {
-    if (!onUpdateLot || !editLotLibelle.trim()) return
+    if (!onUpdateLot || !editLotTitre.trim()) return
     try {
       setLoading(true)
-      await onUpdateLot(id, { libelle: editLotLibelle.trim() })
+      await onUpdateLot(id, { titre: editLotTitre.trim() })
       setEditingLotId(null)
     } finally {
       setLoading(false)
@@ -119,9 +119,10 @@ export default function LotDevisPanel({
                 <div className="flex items-center gap-2 flex-1">
                   <input
                     type="text"
-                    value={editLotLibelle}
-                    onChange={(e) => setEditLotLibelle(e.target.value)}
+                    value={editLotTitre}
+                    onChange={(e) => setEditLotTitre(e.target.value)}
                     className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                    maxLength={300}
                     autoFocus
                   />
                   <button
@@ -142,27 +143,27 @@ export default function LotDevisPanel({
                 <>
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-mono text-gray-400 mr-2">{lot.numero}</span>
-                    <span className="font-medium text-gray-900">{lot.libelle}</span>
+                    <span className="font-medium text-gray-900">{lot.titre}</span>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="text-right">
                       <span className="text-gray-500 text-xs">Debourse</span>
-                      <p className="font-medium text-orange-600">{formatEUR(lot.total_debourse_ht)}</p>
+                      <p className="font-medium text-orange-600">{formatEUR(Number(lot.debourse_sec))}</p>
                     </div>
                     <div className="text-right">
                       <span className="text-gray-500 text-xs">Vente HT</span>
-                      <p className="font-medium text-green-600">{formatEUR(lot.total_vente_ht)}</p>
+                      <p className="font-medium text-green-600">{formatEUR(Number(lot.total_ht))}</p>
                     </div>
                     <div className="text-right">
                       <span className="text-gray-500 text-xs">Marge</span>
-                      <p className={`font-medium ${lot.marge_lot_pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {lot.marge_lot_pct.toFixed(1)}%
+                      <p className={`font-medium ${Number(lot.marge_lot_pct ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {Number(lot.marge_lot_pct ?? 0).toFixed(1)}%
                       </p>
                     </div>
                     {editable && (
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => { setEditingLotId(lot.id); setEditLotLibelle(lot.libelle) }}
+                          onClick={() => { setEditingLotId(lot.id); setEditLotTitre(lot.titre) }}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -205,23 +206,24 @@ export default function LotDevisPanel({
             <div className="flex items-center gap-2 p-3 border border-dashed border-blue-300 rounded-lg bg-blue-50">
               <input
                 type="text"
-                value={newLotLibelle}
-                onChange={(e) => setNewLotLibelle(e.target.value)}
-                placeholder="Libelle du nouveau lot"
+                value={newLotTitre}
+                onChange={(e) => setNewLotTitre(e.target.value)}
+                placeholder="Titre du nouveau lot"
+                maxLength={300}
                 className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handleCreateLot() }}
               />
               <button
                 onClick={handleCreateLot}
-                disabled={loading || !newLotLibelle.trim()}
+                disabled={loading || !newLotTitre.trim()}
                 className="px-3 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center gap-1"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 Ajouter
               </button>
               <button
-                onClick={() => { setShowAddLot(false); setNewLotLibelle('') }}
+                onClick={() => { setShowAddLot(false); setNewLotTitre('') }}
                 className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
               >
                 Annuler

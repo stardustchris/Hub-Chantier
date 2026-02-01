@@ -15,6 +15,7 @@ import DevisForm from '../components/devis/DevisForm'
 import { devisService } from '../services/devis'
 import type {
   DevisDetail,
+  DevisCreate,
   DevisUpdate,
   LotDevisCreate,
   LotDevisUpdate,
@@ -78,16 +79,8 @@ export default function DevisDetailPage() {
     await devisService.validerDevis(devisId)
     await loadDevis()
   }
-  const handleEnvoyer = async () => {
-    await devisService.envoyerDevis(devisId)
-    await loadDevis()
-  }
-  const handleMarquerVu = async () => {
-    await devisService.marquerVu(devisId)
-    await loadDevis()
-  }
-  const handleNegocier = async () => {
-    await devisService.negocierDevis(devisId)
+  const handleRetournerBrouillon = async () => {
+    await devisService.retournerBrouillon(devisId)
     await loadDevis()
   }
   const handleAccepter = async () => {
@@ -95,16 +88,20 @@ export default function DevisDetailPage() {
     await loadDevis()
   }
   const handleRefuser = async (motif?: string) => {
-    await devisService.refuserDevis(devisId, motif)
-    await loadDevis()
+    if (motif) {
+      await devisService.refuserDevis(devisId, motif)
+      await loadDevis()
+    }
   }
   const handlePerdu = async (motif?: string) => {
-    await devisService.marquerPerdu(devisId, motif)
-    await loadDevis()
+    if (motif) {
+      await devisService.marquerPerdu(devisId, motif)
+      await loadDevis()
+    }
   }
 
   // Edition devis
-  const handleUpdateDevis = async (data: DevisUpdate) => {
+  const handleUpdateDevis = async (data: DevisCreate | DevisUpdate) => {
     await devisService.updateDevis(devisId, data as DevisUpdate)
     setShowEditForm(false)
     await loadDevis()
@@ -181,15 +178,14 @@ export default function DevisDetailPage() {
                   </div>
                   <p className="text-gray-700 font-medium">{devis.objet}</p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Cree le {new Date(devis.date_creation).toLocaleDateString('fr-FR')}
-                    {devis.created_by_nom && ` par ${devis.created_by_nom}`}
+                    {devis.date_creation && `Cree le ${new Date(devis.date_creation).toLocaleDateString('fr-FR')}`}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-3">
                   <div className="text-right">
                     <p className="text-sm text-gray-500">Montant HT</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatEUR(devis.montant_total_ht)}</p>
-                    <p className="text-sm text-gray-500">TTC: {formatEUR(devis.montant_total_ttc)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatEUR(Number(devis.montant_total_ht))}</p>
+                    <p className="text-sm text-gray-500">TTC: {formatEUR(Number(devis.montant_total_ttc))}</p>
                   </div>
                   {isEditable && (
                     <button
@@ -209,9 +205,7 @@ export default function DevisDetailPage() {
                   statut={devis.statut}
                   onSoumettre={handleSoumettre}
                   onValider={handleValider}
-                  onEnvoyer={handleEnvoyer}
-                  onMarquerVu={handleMarquerVu}
-                  onNegocier={handleNegocier}
+                  onRetournerBrouillon={handleRetournerBrouillon}
                   onAccepter={handleAccepter}
                   onRefuser={handleRefuser}
                   onPerdu={handlePerdu}
@@ -268,12 +262,12 @@ export default function DevisDetailPage() {
                     </div>
                   </div>
                 )}
-                {devis.conditions_paiement && (
+                {devis.conditions_generales && (
                   <div className="flex items-start gap-3">
                     <FileText className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-500">Conditions de paiement</p>
-                      <p className="text-sm text-gray-900">{devis.conditions_paiement}</p>
+                      <p className="text-xs text-gray-500">Conditions generales</p>
+                      <p className="text-sm text-gray-900">{devis.conditions_generales}</p>
                     </div>
                   </div>
                 )}

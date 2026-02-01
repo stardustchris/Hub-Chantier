@@ -6,7 +6,6 @@ DEV-17: Dashboard devis - Agregations pour KPI.
 DEV-19: Recherche et filtres - Filtres avances.
 """
 
-import json
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
@@ -49,7 +48,7 @@ class SQLAlchemyDevisRepository(DevisRepository):
             client_email=model.client_email,
             chantier_ref=str(model.chantier_id) if model.chantier_id is not None else None,
             objet=model.objet,
-            date_creation=None,
+            date_creation=model.date_creation,
             date_validite=model.date_validite,
             statut=StatutDevis(model.statut),
             montant_total_ht=Decimal(str(model.total_ht)),
@@ -73,12 +72,20 @@ class SQLAlchemyDevisRepository(DevisRepository):
                 if model.marge_sous_traitance_pct is not None
                 else None
             ),
-            taux_marge_materiel=None,
-            taux_marge_deplacement=None,
+            taux_marge_materiel=(
+                Decimal(str(model.marge_materiel_pct))
+                if model.marge_materiel_pct is not None
+                else None
+            ),
+            taux_marge_deplacement=(
+                Decimal(str(model.marge_deplacement_pct))
+                if model.marge_deplacement_pct is not None
+                else None
+            ),
             notes=model.notes,
-            conditions_generales=None,
+            conditions_generales=model.conditions_generales,
             commercial_id=model.commercial_id,
-            conducteur_id=None,
+            conducteur_id=model.conducteur_id,
             created_by=model.created_by,
             created_at=model.created_at,
             updated_at=model.updated_at,
@@ -112,11 +119,16 @@ class SQLAlchemyDevisRepository(DevisRepository):
         model.marge_moe_pct = devis.taux_marge_moe
         model.marge_materiaux_pct = devis.taux_marge_materiaux
         model.marge_sous_traitance_pct = devis.taux_marge_sous_traitance
+        model.marge_materiel_pct = devis.taux_marge_materiel
+        model.marge_deplacement_pct = devis.taux_marge_deplacement
         model.coeff_frais_generaux = devis.coefficient_frais_generaux
         model.taux_tva_defaut = devis.taux_tva_defaut
         model.retenue_garantie_pct = devis.retenue_garantie_pct
         model.notes = devis.notes
+        model.conditions_generales = devis.conditions_generales
+        model.date_creation = devis.date_creation
         model.commercial_id = devis.commercial_id
+        model.conducteur_id = devis.conducteur_id
         model.updated_at = datetime.utcnow()
 
     def generate_numero(self) -> str:
@@ -175,11 +187,16 @@ class SQLAlchemyDevisRepository(DevisRepository):
                 marge_moe_pct=devis.taux_marge_moe,
                 marge_materiaux_pct=devis.taux_marge_materiaux,
                 marge_sous_traitance_pct=devis.taux_marge_sous_traitance,
+                marge_materiel_pct=devis.taux_marge_materiel,
+                marge_deplacement_pct=devis.taux_marge_deplacement,
                 coeff_frais_generaux=devis.coefficient_frais_generaux,
                 taux_tva_defaut=devis.taux_tva_defaut,
                 retenue_garantie_pct=devis.retenue_garantie_pct,
                 notes=devis.notes,
+                conditions_generales=devis.conditions_generales,
+                date_creation=devis.date_creation,
                 commercial_id=devis.commercial_id,
+                conducteur_id=devis.conducteur_id,
                 created_at=devis.created_at or datetime.utcnow(),
                 created_by=devis.created_by,
             )
@@ -270,7 +287,8 @@ class SQLAlchemyDevisRepository(DevisRepository):
         if commercial_id is not None:
             query = query.filter(DevisModel.commercial_id == commercial_id)
 
-        # conducteur_id is not in the model, so we skip filtering by it
+        if conducteur_id is not None:
+            query = query.filter(DevisModel.conducteur_id == conducteur_id)
 
         if client_nom is not None:
             query = query.filter(

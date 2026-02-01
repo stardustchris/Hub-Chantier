@@ -51,7 +51,7 @@ class SoumettreDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="soumission",
-                details="Devis soumis pour validation interne",
+                details_json={"message": "Devis soumis pour validation interne"},
                 auteur_id=submitted_by,
                 created_at=datetime.utcnow(),
             )
@@ -94,7 +94,7 @@ class ValiderDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="validation_envoi",
-                details="Devis valide et envoye au client",
+                details_json={"message": "Devis valide et envoye au client"},
                 auteur_id=validated_by,
                 created_at=datetime.utcnow(),
             )
@@ -141,7 +141,7 @@ class RetournerBrouillonUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="retour_brouillon",
-                details=details,
+                details_json={"message": details},
                 auteur_id=returned_by,
                 created_at=datetime.utcnow(),
             )
@@ -184,7 +184,7 @@ class MarquerVuUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="vu",
-                details="Devis consulte par le client",
+                details_json={"message": "Devis consulte par le client"},
                 auteur_id=None,
                 created_at=datetime.utcnow(),
             )
@@ -227,7 +227,7 @@ class PasserEnNegociationUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="negociation",
-                details="Devis passe en negociation",
+                details_json={"message": "Devis passe en negociation"},
                 auteur_id=initiated_by,
                 created_at=datetime.utcnow(),
             )
@@ -270,7 +270,7 @@ class AccepterDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="acceptation",
-                details="Devis accepte par le client",
+                details_json={"message": "Devis accepte par le client"},
                 auteur_id=accepted_by,
                 created_at=datetime.utcnow(),
             )
@@ -324,7 +324,7 @@ class RefuserDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="refus",
-                details=f"Devis refuse - Motif: {motif.strip()}",
+                details_json={"message": f"Devis refuse - Motif: {motif.strip()}"},
                 auteur_id=refused_by,
                 created_at=datetime.utcnow(),
             )
@@ -378,7 +378,7 @@ class PerduDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="perdu",
-                details=f"Devis marque comme perdu - Motif: {motif.strip()}",
+                details_json={"message": f"Devis marque comme perdu - Motif: {motif.strip()}"},
                 auteur_id=marked_by,
                 created_at=datetime.utcnow(),
             )
@@ -419,7 +419,7 @@ class MarquerExpireUseCase:
                     JournalDevis(
                         devis_id=devis.id,
                         action="expiration",
-                        details="Devis expire automatiquement (date de validite depassee)",
+                        details_json={"message": "Devis expire automatiquement (date de validite depassee)"},
                         auteur_id=None,
                         created_at=datetime.utcnow(),
                     )

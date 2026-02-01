@@ -16,9 +16,7 @@ import {
   FileText,
   Euro,
   TrendingUp,
-  BarChart3,
   User,
-  Calendar,
 } from 'lucide-react'
 
 const formatEUR = (value: number) =>
@@ -85,16 +83,16 @@ export default function DevisDashboardPage() {
         {!loading && !error && data && (
           <>
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="region" aria-label="Indicateurs cles">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="region" aria-label="Indicateurs cles">
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Devis en cours</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {data.kpi.total_en_cours}
+                      {data.kpi.nb_envoye + data.kpi.nb_vu + data.kpi.nb_en_negociation + data.kpi.nb_en_validation}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {data.kpi.total_devis} devis au total
+                      {data.kpi.nb_total} devis au total
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -108,10 +106,10 @@ export default function DevisDashboardPage() {
                   <div>
                     <p className="text-sm text-gray-600">Montant pipeline</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatEUR(data.kpi.montant_pipeline_ht)}
+                      {formatEUR(Number(data.kpi.total_pipeline_ht))}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Accepte: {formatEUR(data.kpi.montant_accepte_ht)}
+                      Accepte: {formatEUR(Number(data.kpi.total_accepte_ht))}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -125,33 +123,14 @@ export default function DevisDashboardPage() {
                   <div>
                     <p className="text-sm text-gray-600">Taux de conversion</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {data.kpi.taux_conversion.toFixed(1)}%
+                      {Number(data.kpi.taux_conversion).toFixed(1)}%
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {data.kpi.total_acceptes} accepte{data.kpi.total_acceptes > 1 ? 's' : ''} / {data.kpi.total_refuses} refuse{data.kpi.total_refuses > 1 ? 's' : ''}
+                      {data.kpi.nb_accepte} accepte{data.kpi.nb_accepte > 1 ? 's' : ''} / {data.kpi.nb_refuse} refuse{data.kpi.nb_refuse > 1 ? 's' : ''}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Marge moyenne</p>
-                    <p className={`text-2xl font-bold mt-1 ${
-                      data.kpi.marge_moyenne_pct >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {data.kpi.marge_moyenne_pct.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Sur {data.kpi.total_devis} devis
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-orange-600" />
                   </div>
                 </div>
               </div>
@@ -162,7 +141,17 @@ export default function DevisDashboardPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Pipeline par statut</h2>
               <DevisKanban
                 devis={data.derniers_devis}
-                devisParStatut={data.devis_par_statut}
+                devisParStatut={{
+                  brouillon: data.kpi.nb_brouillon,
+                  en_validation: data.kpi.nb_en_validation,
+                  envoye: data.kpi.nb_envoye,
+                  vu: data.kpi.nb_vu,
+                  en_negociation: data.kpi.nb_en_negociation,
+                  accepte: data.kpi.nb_accepte,
+                  refuse: data.kpi.nb_refuse,
+                  perdu: data.kpi.nb_perdu,
+                  expire: data.kpi.nb_expire,
+                }}
               />
             </div>
 
@@ -180,7 +169,6 @@ export default function DevisDashboardPage() {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Objet</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Montant HT</th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500">Statut</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Marge</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -198,14 +186,9 @@ export default function DevisDashboardPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{d.objet}</td>
-                        <td className="px-4 py-3 text-right font-medium">{formatEUR(d.montant_total_ht)}</td>
+                        <td className="px-4 py-3 text-right font-medium">{formatEUR(Number(d.montant_total_ht))}</td>
                         <td className="px-4 py-3 text-center">
                           <DevisStatusBadge statut={d.statut} />
-                        </td>
-                        <td className={`px-4 py-3 text-right font-medium ${
-                          d.marge_globale_pct >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {d.marge_globale_pct.toFixed(1)}%
                         </td>
                       </tr>
                     ))}
