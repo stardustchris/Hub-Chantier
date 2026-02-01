@@ -22,6 +22,8 @@ import {
   Euro,
   ShoppingCart,
   BarChart3,
+  Package,
+  PieChart,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -56,6 +58,16 @@ const navigation: NavItem[] = [
       { name: 'Fournisseurs', href: '/fournisseurs', icon: Handshake },
     ],
   },
+  {
+    name: 'Devis',
+    href: '/devis',
+    icon: FileText,
+    children: [
+      { name: 'Pipeline', href: '/devis/dashboard', icon: PieChart },
+      { name: 'Liste devis', href: '/devis', icon: FileText },
+      { name: 'Articles', href: '/devis/articles', icon: Package },
+    ],
+  },
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
   { name: 'Logistique', href: '/logistique', icon: Truck },
@@ -69,15 +81,40 @@ interface NavLinksProps {
 }
 
 function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
-  const financePaths = ['/finances', '/budgets', '/achats', '/fournisseurs']
-  const isFinanceActive = financePaths.some((p) => currentPath.startsWith(p))
-  const [financesOpen, setFinancesOpen] = useState(isFinanceActive)
+  // Determine which groups are active based on current path
+  const getGroupPaths = (item: NavItem): string[] => {
+    const paths = [item.href]
+    item.children?.forEach((child) => paths.push(child.href))
+    return paths
+  }
+
+  const isGroupActive = (item: NavItem): boolean => {
+    const paths = getGroupPaths(item)
+    return paths.some((p) => currentPath === p || currentPath.startsWith(p + '/'))
+  }
+
+  // Track open state per group, defaulting to open if any child is active
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    navigation.forEach((item) => {
+      if (item.children) {
+        initial[item.name] = isGroupActive(item)
+      }
+    })
+    return initial
+  })
+
+  const toggleGroup = (name: string) => {
+    setOpenGroups((prev) => ({ ...prev, [name]: !prev[name] }))
+  }
 
   return (
     <>
       {navigation.map((item) => {
         if (item.children) {
+          const groupActive = isGroupActive(item)
           const isParentActive = currentPath === item.href
+          const isOpen = openGroups[item.name] ?? false
           return (
             <div key={item.name}>
               <div className="flex items-center">
@@ -87,7 +124,7 @@ function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
                   className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isParentActive
                       ? 'bg-primary-50 text-primary-600'
-                      : isFinanceActive
+                      : groupActive
                       ? 'text-primary-600'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
@@ -96,21 +133,21 @@ function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
                   <span className="font-medium">{item.name}</span>
                 </Link>
                 <button
-                  onClick={() => setFinancesOpen(!financesOpen)}
+                  onClick={() => toggleGroup(item.name)}
                   className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
-                  aria-label={financesOpen ? 'Replier le sous-menu' : 'Déplier le sous-menu'}
+                  aria-label={isOpen ? 'Replier le sous-menu' : 'Déplier le sous-menu'}
                 >
-                  {financesOpen ? (
+                  {isOpen ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
                     <ChevronRight className="w-4 h-4" />
                   )}
                 </button>
               </div>
-              {financesOpen && (
+              {isOpen && (
                 <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
                   {item.children.map((child) => {
-                    const isChildActive = currentPath.startsWith(child.href)
+                    const isChildActive = currentPath === child.href || currentPath.startsWith(child.href + '/')
                     return (
                       <Link
                         key={child.name}
