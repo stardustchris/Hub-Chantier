@@ -6,6 +6,7 @@ FIN-02: Decomposition en lots - CRUD des lots budgetaires.
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -38,6 +39,7 @@ class SQLAlchemyLotBudgetaireRepository(LotBudgetaireRepository):
         return LotBudgetaire(
             id=model.id,
             budget_id=model.budget_id,
+            devis_id=UUID(model.devis_id) if model.devis_id else None,
             code_lot=model.code_lot,
             libelle=model.libelle,
             unite=UniteMesure(model.unite) if model.unite else UniteMesure.U,
@@ -45,6 +47,26 @@ class SQLAlchemyLotBudgetaireRepository(LotBudgetaireRepository):
             prix_unitaire_ht=Decimal(str(model.prix_unitaire_ht)),
             parent_lot_id=model.parent_lot_id,
             ordre=model.ordre,
+            # Champs déboursés (phase devis)
+            debourse_main_oeuvre=(
+                Decimal(str(model.debourse_main_oeuvre)) if model.debourse_main_oeuvre is not None else None
+            ),
+            debourse_materiaux=(
+                Decimal(str(model.debourse_materiaux)) if model.debourse_materiaux is not None else None
+            ),
+            debourse_sous_traitance=(
+                Decimal(str(model.debourse_sous_traitance)) if model.debourse_sous_traitance is not None else None
+            ),
+            debourse_materiel=(
+                Decimal(str(model.debourse_materiel)) if model.debourse_materiel is not None else None
+            ),
+            debourse_divers=(
+                Decimal(str(model.debourse_divers)) if model.debourse_divers is not None else None
+            ),
+            # Marge
+            marge_pct=Decimal(str(model.marge_pct)) if model.marge_pct is not None else None,
+            prix_vente_ht=Decimal(str(model.prix_vente_ht)) if model.prix_vente_ht is not None else None,
+            # Timestamps
             created_at=model.created_at,
             updated_at=model.updated_at,
             created_by=model.created_by,
@@ -64,6 +86,7 @@ class SQLAlchemyLotBudgetaireRepository(LotBudgetaireRepository):
         return LotBudgetaireModel(
             id=entity.id,
             budget_id=entity.budget_id,
+            devis_id=str(entity.devis_id) if entity.devis_id else None,
             code_lot=entity.code_lot,
             libelle=entity.libelle,
             unite=entity.unite.value,
@@ -71,6 +94,16 @@ class SQLAlchemyLotBudgetaireRepository(LotBudgetaireRepository):
             prix_unitaire_ht=entity.prix_unitaire_ht,
             parent_lot_id=entity.parent_lot_id,
             ordre=entity.ordre,
+            # Champs déboursés (phase devis)
+            debourse_main_oeuvre=entity.debourse_main_oeuvre,
+            debourse_materiaux=entity.debourse_materiaux,
+            debourse_sous_traitance=entity.debourse_sous_traitance,
+            debourse_materiel=entity.debourse_materiel,
+            debourse_divers=entity.debourse_divers,
+            # Marge
+            marge_pct=entity.marge_pct,
+            prix_vente_ht=entity.prix_vente_ht,
+            # Timestamps
             created_at=entity.created_at or datetime.utcnow(),
             updated_at=entity.updated_at,
             created_by=entity.created_by,
@@ -100,6 +133,16 @@ class SQLAlchemyLotBudgetaireRepository(LotBudgetaireRepository):
                 model.prix_unitaire_ht = lot.prix_unitaire_ht
                 model.parent_lot_id = lot.parent_lot_id
                 model.ordre = lot.ordre
+                # Champs déboursés (phase devis)
+                model.debourse_main_oeuvre = lot.debourse_main_oeuvre
+                model.debourse_materiaux = lot.debourse_materiaux
+                model.debourse_sous_traitance = lot.debourse_sous_traitance
+                model.debourse_materiel = lot.debourse_materiel
+                model.debourse_divers = lot.debourse_divers
+                # Marge
+                model.marge_pct = lot.marge_pct
+                model.prix_vente_ht = lot.prix_vente_ht
+                # Timestamp
                 model.updated_at = datetime.utcnow()
         else:
             # Creation
