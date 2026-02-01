@@ -1472,3 +1472,247 @@ export interface AffectationBudgetTacheCreate {
   tache_id: number
   pourcentage_allocation: number
 }
+
+// =====================================================
+// MODULE DEVIS (Module 20)
+// =====================================================
+
+// Enums et types de base
+export type StatutDevis = 'brouillon' | 'en_validation' | 'approuve' | 'envoye' | 'vu' | 'en_negociation' | 'accepte' | 'refuse' | 'perdu' | 'expire'
+export type TypeDebourse = 'moe' | 'materiaux' | 'materiel' | 'sous_traitance' | 'deplacement'
+
+// Configuration des statuts devis (label + couleur)
+export const STATUT_DEVIS_CONFIG: Record<StatutDevis, { label: string; couleur: string }> = {
+  brouillon: { label: 'Brouillon', couleur: '#6B7280' },
+  en_validation: { label: 'En validation', couleur: '#F59E0B' },
+  approuve: { label: 'Approuve', couleur: '#10B981' },
+  envoye: { label: 'Envoye', couleur: '#3B82F6' },
+  vu: { label: 'Vu', couleur: '#8B5CF6' },
+  en_negociation: { label: 'En negociation', couleur: '#F97316' },
+  accepte: { label: 'Accepte', couleur: '#059669' },
+  refuse: { label: 'Refuse', couleur: '#EF4444' },
+  perdu: { label: 'Perdu', couleur: '#991B1B' },
+  expire: { label: 'Expire', couleur: '#9CA3AF' },
+}
+
+export const TYPE_DEBOURSE_LABELS: Record<TypeDebourse, string> = {
+  moe: 'Main d\'oeuvre',
+  materiaux: 'Materiaux',
+  materiel: 'Materiel',
+  sous_traitance: 'Sous-traitance',
+  deplacement: 'Deplacement',
+}
+
+// Articles (bibliotheque de prix)
+export interface Article {
+  id: number
+  code: string
+  designation: string
+  unite: string
+  prix_unitaire_ht: number
+  type_debourse: TypeDebourse
+  categorie?: string
+  description?: string
+  actif: boolean
+  created_at: string
+  updated_at?: string
+}
+
+export interface ArticleCreate {
+  code: string
+  designation: string
+  unite: string
+  prix_unitaire_ht: number
+  type_debourse: TypeDebourse
+  categorie?: string
+  description?: string
+}
+
+export interface ArticleUpdate {
+  code?: string
+  designation?: string
+  unite?: string
+  prix_unitaire_ht?: number
+  type_debourse?: TypeDebourse
+  categorie?: string
+  description?: string
+  actif?: boolean
+}
+
+// Devis
+export interface Devis {
+  id: number
+  numero: string
+  objet: string
+  client_nom: string
+  client_adresse?: string
+  client_email?: string
+  client_telephone?: string
+  statut: StatutDevis
+  date_creation: string
+  date_validite?: string
+  taux_tva: number
+  coefficient_frais_generaux: number
+  taux_marge_globale: number
+  montant_total_ht: number
+  montant_tva: number
+  montant_total_ttc: number
+  total_debourse_sec: number
+  marge_globale_pct: number
+  notes?: string
+  conditions_paiement?: string
+  created_by: number
+  created_by_nom?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface DevisCreate {
+  objet: string
+  client_nom: string
+  client_adresse?: string
+  client_email?: string
+  client_telephone?: string
+  date_validite?: string
+  taux_tva?: number
+  coefficient_frais_generaux?: number
+  taux_marge_globale?: number
+  notes?: string
+  conditions_paiement?: string
+}
+
+export interface DevisUpdate {
+  objet?: string
+  client_nom?: string
+  client_adresse?: string
+  client_email?: string
+  client_telephone?: string
+  date_validite?: string
+  taux_tva?: number
+  coefficient_frais_generaux?: number
+  taux_marge_globale?: number
+  notes?: string
+  conditions_paiement?: string
+}
+
+export interface DevisDetail extends Devis {
+  lots: LotDevis[]
+}
+
+// Lots de devis
+export interface LotDevis {
+  id: number
+  devis_id: number
+  numero: string
+  libelle: string
+  ordre: number
+  taux_marge?: number
+  total_debourse_ht: number
+  total_vente_ht: number
+  marge_lot_pct: number
+  lignes: LigneDevis[]
+}
+
+export interface LotDevisCreate {
+  devis_id: number
+  libelle: string
+  ordre?: number
+  taux_marge?: number
+}
+
+export interface LotDevisUpdate {
+  libelle?: string
+  ordre?: number
+  taux_marge?: number
+}
+
+// Lignes de devis
+export interface LigneDevis {
+  id: number
+  lot_id: number
+  designation: string
+  unite: string
+  quantite: number
+  prix_unitaire_ht: number
+  total_ht: number
+  taux_marge?: number
+  debourse_sec: number
+  prix_vente_ht: number
+  ordre: number
+  article_id?: number
+  debourses: DebourseDetail[]
+}
+
+export interface LigneDevisCreate {
+  lot_id: number
+  designation: string
+  unite: string
+  quantite: number
+  prix_unitaire_ht: number
+  taux_marge?: number
+  ordre?: number
+  article_id?: number
+}
+
+export interface LigneDevisUpdate {
+  designation?: string
+  unite?: string
+  quantite?: number
+  prix_unitaire_ht?: number
+  taux_marge?: number
+  ordre?: number
+}
+
+// Debourses detail par ligne
+export interface DebourseDetail {
+  id: number
+  ligne_id: number
+  type_debourse: TypeDebourse
+  designation: string
+  unite: string
+  quantite: number
+  prix_unitaire: number
+  montant: number
+}
+
+export interface DebourseDetailCreate {
+  ligne_id: number
+  type_debourse: TypeDebourse
+  designation: string
+  unite: string
+  quantite: number
+  prix_unitaire: number
+}
+
+// Journal devis
+export interface JournalDevisEntry {
+  id: number
+  devis_id: number
+  action: string
+  champ_modifie?: string
+  ancienne_valeur?: string
+  nouvelle_valeur?: string
+  auteur_id: number
+  auteur_nom?: string
+  created_at: string
+}
+
+// Dashboard devis
+export interface KPIDevis {
+  total_devis: number
+  total_brouillons: number
+  total_en_cours: number
+  total_acceptes: number
+  total_refuses: number
+  montant_pipeline_ht: number
+  montant_accepte_ht: number
+  taux_conversion: number
+  marge_moyenne_pct: number
+}
+
+export interface DashboardDevis {
+  kpi: KPIDevis
+  devis_par_statut: Record<StatutDevis, number>
+  derniers_devis: Devis[]
+  montant_par_mois: { mois: string; montant: number }[]
+}
