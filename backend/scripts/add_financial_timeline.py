@@ -87,7 +87,7 @@ def create_monthly_timeline(db: Session):
             "achats": [
                 ("TERRASSEMENT", "Terrassement phase 2", 250, "m3", 280.00, "livre", -35),
                 ("FONDATIONS", "Béton C30/37 semelles", 180, "m3", 450.00, "livre", -32),
-                ("FONDATIONS", "Ferraillage fondations", 8, "T", 1200.00, "livre", -30),
+                ("FONDATIONS", "Ferraillage fondations", 8000, "kg", 1.20, "livre", -30),
             ],
             "situation": {
                 "numero": "SIT-2025-12",
@@ -103,7 +103,7 @@ def create_monthly_timeline(db: Session):
             "achats": [
                 ("FONDATIONS", "Béton fondations finale", 120, "m3", 450.00, "livre", -5),
                 ("DALLE-BA", "Béton C25/30 dalle RDC", 400, "m3", 180.00, "livre", -3),
-                ("DALLE-BA", "Ferraillage dalles", 12, "T", 1100.00, "commande", -1),
+                ("DALLE-BA", "Ferraillage dalles", 12000, "kg", 1.10, "commande", -1),
                 ("VOILES-BA", "Béton C30/37 voiles", 200, "m3", 320.00, "valide", 5),
             ],
             "situation": {
@@ -120,7 +120,7 @@ def create_monthly_timeline(db: Session):
             "achats": [
                 ("DALLE-BA", "Béton dalle étages", 450, "m3", 180.00, "livre", -18),
                 ("VOILES-BA", "Béton voiles étages", 280, "m3", 320.00, "commande", -10),
-                ("VOILES-BA", "Ferraillage voiles", 15, "T", 1150.00, "valide", -5),
+                ("VOILES-BA", "Ferraillage voiles", 15000, "kg", 1.15, "valide", -5),
                 ("POTEAUX-POUTRES", "Béton poteaux", 150, "m3", 520.00, "demande", 2),
             ],
             "situation": {
