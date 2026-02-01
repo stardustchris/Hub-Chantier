@@ -1341,6 +1341,31 @@ export const TYPE_ALERTE_LABELS: Record<TypeAlerte, string> = {
   depassement_lot: 'Depassement lot',
 }
 
+// Affectation taches <-> lots budgetaires (FIN-03)
+export interface AffectationTacheLot {
+  id: number
+  chantier_id: number
+  tache_id: number
+  lot_budgetaire_id: number
+  pourcentage_affectation: string
+  created_at: string
+  created_by: number | null
+}
+
+export interface SuiviAvancementItem {
+  affectation_id: number
+  tache_id: number
+  tache_titre: string
+  tache_statut: string
+  tache_progression_pct: string
+  lot_budgetaire_id: number
+  lot_code: string
+  lot_libelle: string
+  lot_montant_prevu_ht: string
+  pourcentage_affectation: string
+  montant_affecte_ht: string
+}
+
 // Constantes financieres
 export const TYPE_FOURNISSEUR_LABELS: Record<TypeFournisseur, string> = {
   negoce_materiaux: 'Negoce materiaux',

@@ -25,23 +25,27 @@ import FacturesList from './FacturesList'
 import CoutsMainOeuvrePanel from './CoutsMainOeuvrePanel'
 import CoutsMaterielPanel from './CoutsMaterielPanel'
 import AlertesPanel from './AlertesPanel'
+import AffectationsPanel from './AffectationsPanel'
+import ExportComptablePanel from './ExportComptablePanel'
 import type { Budget, BudgetCreate } from '../../types'
 
 interface BudgetTabProps {
   chantierId: number
 }
 
-type SubTab = 'lots' | 'achats' | 'avenants' | 'situations' | 'factures' | 'couts_mo' | 'couts_materiel' | 'alertes'
+type SubTab = 'lots' | 'achats' | 'avenants' | 'situations' | 'factures' | 'couts_mo' | 'couts_materiel' | 'alertes' | 'affectations' | 'export'
 
-const SUB_TABS: { key: SubTab; label: string }[] = [
+const SUB_TABS: { key: SubTab; label: string; adminOnly?: boolean }[] = [
   { key: 'lots', label: 'Lots' },
   { key: 'achats', label: 'Achats' },
   { key: 'avenants', label: 'Avenants' },
   { key: 'situations', label: 'Situations' },
   { key: 'factures', label: 'Factures' },
+  { key: 'affectations', label: 'Affectations' },
   { key: 'couts_mo', label: 'Couts MO' },
   { key: 'couts_materiel', label: 'Couts Materiel' },
   { key: 'alertes', label: 'Alertes' },
+  { key: 'export', label: 'Export', adminOnly: true },
 ]
 
 export default function BudgetTab({ chantierId }: BudgetTabProps) {
@@ -124,6 +128,10 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
         return <CoutsMaterielPanel chantierId={chantierId} />
       case 'alertes':
         return <AlertesPanel chantierId={chantierId} />
+      case 'affectations':
+        return <AffectationsPanel chantierId={chantierId} budgetId={budget.id} />
+      case 'export':
+        return <ExportComptablePanel />
       default:
         return null
     }
@@ -227,7 +235,9 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
       {/* Sub-tabs navigation */}
       <div className="border-b border-gray-200">
         <nav className="flex gap-0 overflow-x-auto" aria-label="Sous-onglets financier">
-          {SUB_TABS.map((tab) => (
+          {SUB_TABS
+            .filter((tab) => !tab.adminOnly || canEdit)
+            .map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveSubTab(tab.key)}

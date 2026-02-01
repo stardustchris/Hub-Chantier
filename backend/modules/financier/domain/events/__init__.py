@@ -26,6 +26,8 @@ from .financier_events import (
     FacturePayeeEvent,
     DepassementBudgetEvent,
     JournalEntryCreatedEvent,
+    AffectationCreatedEvent,
+    AffectationDeletedEvent,
 )
 
 __all__ = [
@@ -54,4 +56,6 @@ __all__ = [
     "FacturePayeeEvent",
     "DepassementBudgetEvent",
     "JournalEntryCreatedEvent",
+    "AffectationCreatedEvent",
+    "AffectationDeletedEvent",
 ]

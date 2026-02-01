@@ -26,6 +26,8 @@ import type {
   CoutMainOeuvreSummary,
   CoutMaterielSummary,
   AlerteDepassement,
+  AffectationTacheLot,
+  SuiviAvancementItem,
 } from '../types'
 
 const BASE = '/api/financier'
@@ -343,6 +345,56 @@ export const financierService = {
 
   async acquitterAlerte(id: number): Promise<AlerteDepassement> {
     const response = await api.post<AlerteDepassement>(`${BASE}/alertes/${id}/acquitter`)
+    return response.data
+  },
+
+  // ===== Affectations taches <-> lots (FIN-03) =====
+  async createAffectation(data: {
+    chantier_id: number
+    tache_id: number
+    lot_budgetaire_id: number
+    pourcentage_affectation?: number
+  }): Promise<AffectationTacheLot> {
+    const response = await api.post<AffectationTacheLot>(`${BASE}/affectations`, data)
+    return response.data
+  },
+
+  async getAffectationsByChantier(chantierId: number): Promise<AffectationTacheLot[]> {
+    const response = await api.get<{ items: AffectationTacheLot[]; total: number }>(
+      `${BASE}/chantiers/${chantierId}/affectations`
+    )
+    return response.data.items
+  },
+
+  async getAffectationsByTache(tacheId: number): Promise<AffectationTacheLot[]> {
+    const response = await api.get<{ items: AffectationTacheLot[]; total: number }>(
+      `${BASE}/taches/${tacheId}/affectations`
+    )
+    return response.data.items
+  },
+
+  async deleteAffectation(affectationId: number): Promise<void> {
+    await api.delete(`${BASE}/affectations/${affectationId}`)
+  },
+
+  async getSuiviAvancement(chantierId: number): Promise<SuiviAvancementItem[]> {
+    const response = await api.get<{ items: SuiviAvancementItem[]; total: number }>(
+      `${BASE}/chantiers/${chantierId}/suivi-avancement`
+    )
+    return response.data.items
+  },
+
+  // ===== Export comptable (FIN-13) =====
+  async exportComptable(params: {
+    date_debut: string
+    date_fin: string
+    format: 'csv' | 'excel'
+    chantier_id?: number
+  }): Promise<Blob> {
+    const response = await api.get(`${BASE}/export-comptable`, {
+      params,
+      responseType: 'blob',
+    })
     return response.data
   },
 }

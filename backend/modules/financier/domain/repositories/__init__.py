@@ -11,6 +11,9 @@ from .facture_repository import FactureRepository
 from .cout_main_oeuvre_repository import CoutMainOeuvreRepository
 from .cout_materiel_repository import CoutMaterielRepository
 from .alerte_repository import AlerteRepository
+from .affectation_repository import AffectationRepository
+from .avancement_tache_repository import AvancementTacheRepository
+from .export_comptable_repository import ExportComptableRepository
 
 __all__ = [
     "FournisseurRepository",
@@ -26,4 +29,7 @@ __all__ = [
     "CoutMainOeuvreRepository",
     "CoutMaterielRepository",
     "AlerteRepository",
+    "AffectationRepository",
+    "AvancementTacheRepository",
+    "ExportComptableRepository",
 ]

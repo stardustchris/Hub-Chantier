@@ -21,6 +21,9 @@ from ...domain.repositories import (
     CoutMainOeuvreRepository,
     CoutMaterielRepository,
     AlerteRepository,
+    AffectationRepository,
+    AvancementTacheRepository,
+    ExportComptableRepository,
 )
 from ...application.use_cases import (
     # Fournisseur
@@ -86,6 +89,16 @@ from ...application.use_cases import (
     ListAlertesUseCase,
     # Dashboard
     GetDashboardFinancierUseCase,
+    # Affectation (FIN-03)
+    CreateAffectationUseCase,
+    DeleteAffectationUseCase,
+    ListAffectationsByChantierUseCase,
+    ListAffectationsByTacheUseCase,
+    GetSuiviAvancementFinancierUseCase,
+    # Export Comptable (FIN-13)
+    GenerateExportComptableUseCase,
+    ExportCSVUseCase,
+    ExportExcelUseCase,
 )
 from ..persistence import (
     SQLAlchemyFournisseurRepository,
@@ -100,6 +113,9 @@ from ..persistence import (
     SQLAlchemyCoutMainOeuvreRepository,
     SQLAlchemyCoutMaterielRepository,
     SQLAlchemyAlerteRepository,
+    SQLAlchemyAffectationRepository,
+    SQLAlchemyAvancementTacheRepository,
+    SQLAlchemyExportComptableRepository,
 )
 
 
@@ -786,3 +802,109 @@ def get_list_alertes_use_case(
 ) -> ListAlertesUseCase:
     """Retourne le use case ListAlertes."""
     return ListAlertesUseCase(alerte_repository)
+
+
+# =============================================================================
+# Repositories - Affectation (FIN-03)
+# =============================================================================
+
+
+def get_affectation_repository(
+    db: Session = Depends(get_db),
+) -> AffectationRepository:
+    """Retourne le repository Affectation."""
+    return SQLAlchemyAffectationRepository(db)
+
+
+def get_avancement_tache_repository(
+    db: Session = Depends(get_db),
+) -> AvancementTacheRepository:
+    """Retourne le repository AvancementTache."""
+    return SQLAlchemyAvancementTacheRepository(db)
+
+
+# =============================================================================
+# Use Cases - Affectation (FIN-03)
+# =============================================================================
+
+
+def get_create_affectation_use_case(
+    affectation_repository: AffectationRepository = Depends(get_affectation_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> CreateAffectationUseCase:
+    """Retourne le use case CreateAffectation."""
+    return CreateAffectationUseCase(
+        affectation_repository, lot_repository, journal_repository, event_bus
+    )
+
+
+def get_delete_affectation_use_case(
+    affectation_repository: AffectationRepository = Depends(get_affectation_repository),
+    journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
+    event_bus: EventBus = Depends(get_event_bus),
+) -> DeleteAffectationUseCase:
+    """Retourne le use case DeleteAffectation."""
+    return DeleteAffectationUseCase(
+        affectation_repository, journal_repository, event_bus
+    )
+
+
+def get_list_affectations_by_chantier_use_case(
+    affectation_repository: AffectationRepository = Depends(get_affectation_repository),
+) -> ListAffectationsByChantierUseCase:
+    """Retourne le use case ListAffectationsByChantier."""
+    return ListAffectationsByChantierUseCase(affectation_repository)
+
+
+def get_list_affectations_by_tache_use_case(
+    affectation_repository: AffectationRepository = Depends(get_affectation_repository),
+) -> ListAffectationsByTacheUseCase:
+    """Retourne le use case ListAffectationsByTache."""
+    return ListAffectationsByTacheUseCase(affectation_repository)
+
+
+def get_suivi_avancement_financier_use_case(
+    affectation_repository: AffectationRepository = Depends(get_affectation_repository),
+    avancement_repository: AvancementTacheRepository = Depends(get_avancement_tache_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+) -> GetSuiviAvancementFinancierUseCase:
+    """Retourne le use case GetSuiviAvancementFinancier."""
+    return GetSuiviAvancementFinancierUseCase(
+        affectation_repository, avancement_repository, lot_repository
+    )
+
+
+# =============================================================================
+# Repositories - Export Comptable (FIN-13)
+# =============================================================================
+
+
+def get_export_comptable_repository(
+    db: Session = Depends(get_db),
+) -> ExportComptableRepository:
+    """Retourne le repository ExportComptable."""
+    return SQLAlchemyExportComptableRepository(db)
+
+
+# =============================================================================
+# Use Cases - Export Comptable (FIN-13)
+# =============================================================================
+
+
+def get_generate_export_comptable_use_case(
+    export_repository: ExportComptableRepository = Depends(get_export_comptable_repository),
+) -> GenerateExportComptableUseCase:
+    """Retourne le use case GenerateExportComptable."""
+    return GenerateExportComptableUseCase(export_repository)
+
+
+def get_export_csv_use_case() -> ExportCSVUseCase:
+    """Retourne le use case ExportCSV."""
+    return ExportCSVUseCase()
+
+
+def get_export_excel_use_case() -> ExportExcelUseCase:
+    """Retourne le use case ExportExcel."""
+    return ExportExcelUseCase()

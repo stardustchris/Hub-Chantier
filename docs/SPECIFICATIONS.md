@@ -1159,7 +1159,7 @@ Le module Financier centralise le suivi economique des chantiers : budgets previ
 |----|----------------|-------------|--------|
 | FIN-01 | Onglet Budget par chantier | Accessible depuis la fiche chantier, affiche budget + KPI + dernieres operations | ✅ Backend + Frontend |
 | FIN-02 | Budget previsionnel par lots | Decomposition arborescente par lots et postes (code lot, libelle, unite, quantite, PU HT) | ✅ Backend + Frontend |
-| FIN-03 | Affectation budgets aux taches | Liaison optionnelle taches <-> lignes budgetaires pour suivi avancement financier | 🔮 Phase 3 |
+| FIN-03 | Affectation budgets aux taches | Liaison optionnelle taches <-> lignes budgetaires pour suivi avancement financier | ✅ Backend + Frontend |
 | FIN-04 | Avenants budgetaires | Creation d'avenants avec motif, montant et impact automatique sur budget revise | ✅ Backend + Frontend |
 | FIN-05 | Saisie achats / bons de commande | Creation achats avec fournisseur, lot, montant HT, TVA, statut et workflow validation | ✅ Backend + Frontend |
 | FIN-06 | Validation hierarchique achats | Approbation requise par Conducteur/Admin si montant > seuil configurable (defaut 5 000 EUR HT) | ✅ Backend + Frontend |
@@ -1169,7 +1169,7 @@ Le module Financier centralise le suivi economique des chantiers : budgets previ
 | FIN-10 | Suivi couts materiel | Integration automatique reservations (module Logistique) x tarif journalier | ✅ Backend + Frontend |
 | FIN-11 | Tableau de bord financier | Cartes KPI + graphiques comparatifs Budget/Engage/Realise + dernieres operations | ✅ Backend + Frontend |
 | FIN-12 | Alertes depassements | Notifications push si (Engage + Reste a faire) > Budget x seuil (defaut 110%) | ✅ Backend + Frontend |
-| FIN-13 | Export comptable | Generation CSV/Excel avec codes analytiques chantier, compatible logiciels comptables | 🔮 Phase 3 |
+| FIN-13 | Export comptable | Generation CSV/Excel avec codes analytiques chantier, compatible logiciels comptables | ✅ Backend + Frontend |
 | FIN-14 | Referentiel fournisseurs | Gestion fournisseurs (raison sociale, type, SIRET, contact, conditions paiement) | ✅ Backend + Frontend |
 | FIN-15 | Historique et tracabilite | Journal complet des modifications budgetaires avec auteur, date et motif | ✅ Backend + Frontend |
 

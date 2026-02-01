@@ -13,6 +13,7 @@ from .type_alerte import TypeAlerte
 from .type_facture import TypeFacture
 from .cout_employe import CoutEmploye
 from .cout_materiel import CoutMaterielItem
+from .avancement_tache import AvancementTache
 
 __all__ = [
     "TypeFournisseur",
@@ -30,4 +31,5 @@ __all__ = [
     "TypeFacture",
     "CoutEmploye",
     "CoutMaterielItem",
+    "AvancementTache",
 ]

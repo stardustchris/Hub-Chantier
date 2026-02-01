@@ -58,6 +58,15 @@ from .dashboard_dtos import (
     DerniersAchatsDTO,
     DashboardFinancierDTO,
 )
+from .affectation_dtos import (
+    AffectationCreateDTO,
+    AffectationDTO,
+    SuiviAffectationDTO,
+)
+from .export_dtos import (
+    ExportLigneComptableDTO,
+    ExportComptableDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -98,4 +107,11 @@ __all__ = [
     "KPIFinancierDTO",
     "DerniersAchatsDTO",
     "DashboardFinancierDTO",
+    # Affectation
+    "AffectationCreateDTO",
+    "AffectationDTO",
+    "SuiviAffectationDTO",
+    # Export Comptable
+    "ExportLigneComptableDTO",
+    "ExportComptableDTO",
 ]

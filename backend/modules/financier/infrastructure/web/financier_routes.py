@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel, Field
 
 from shared.infrastructure.web import (
@@ -54,6 +55,11 @@ from ...application.use_cases.facture_use_cases import (
     SituationNonValideeError,
 )
 from ...application.use_cases.alerte_use_cases import AlerteNotFoundError
+from ...application.use_cases.affectation_use_cases import (
+    AffectationNotFoundError,
+    AffectationAlreadyExistsError,
+    LotBudgetaireNotFoundForAffectationError,
+)
 from ...application.dtos import (
     FournisseurCreateDTO,
     FournisseurUpdateDTO,
@@ -69,6 +75,7 @@ from ...application.dtos import (
     SituationUpdateDTO,
     LigneSituationCreateDTO,
     FactureCreateDTO,
+    AffectationCreateDTO,
 )
 from .dependencies import (
     # Fournisseur
@@ -136,6 +143,17 @@ from .dependencies import (
     get_dashboard_financier_use_case,
     # Journal
     get_journal_financier_repository,
+    # Affectation (FIN-03)
+    get_affectation_repository,
+    get_create_affectation_use_case,
+    get_delete_affectation_use_case,
+    get_list_affectations_by_chantier_use_case,
+    get_list_affectations_by_tache_use_case,
+    get_suivi_avancement_financier_use_case,
+    # Export Comptable (FIN-13)
+    get_generate_export_comptable_use_case,
+    get_export_csv_use_case,
+    get_export_excel_use_case,
 )
 
 
@@ -164,6 +182,7 @@ def _check_chantier_access(chantier_id: int, user_role: str, user_chantier_ids: 
 ENTITE_TYPES_AUTORISES = {
     "budget", "lot_budgetaire", "achat", "fournisseur",
     "avenant", "situation", "facture", "alerte",
+    "affectation",
 }
 
 
@@ -1745,3 +1764,191 @@ async def acquitter_alerte(
         raise HTTPException(status_code=404, detail="Alerte non trouvee")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# =============================================================================
+# Schemas Pydantic - Affectations (FIN-03)
+# =============================================================================
+
+
+class AffectationCreateRequest(BaseModel):
+    """Requete de creation d'affectation tache/lot."""
+
+    chantier_id: int = Field(..., gt=0)
+    tache_id: int = Field(..., gt=0)
+    lot_budgetaire_id: int = Field(..., gt=0)
+    pourcentage_affectation: Decimal = Field(default=Decimal("100"), ge=0, le=100)
+
+
+# =============================================================================
+# Routes Affectations (FIN-03)
+# =============================================================================
+
+
+@router.post("/affectations", status_code=status.HTTP_201_CREATED)
+async def create_affectation(
+    request: AffectationCreateRequest,
+    _role: str = Depends(require_chef_or_above),
+    current_user_id: int = Depends(get_current_user_id),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_create_affectation_use_case),
+):
+    """Cree une affectation tache <-> lot budgetaire.
+
+    FIN-03: Chef de chantier et superieur.
+    """
+    _check_chantier_access(request.chantier_id, _role, user_chantier_ids)
+    try:
+        dto = AffectationCreateDTO(
+            chantier_id=request.chantier_id,
+            tache_id=request.tache_id,
+            lot_budgetaire_id=request.lot_budgetaire_id,
+            pourcentage_affectation=request.pourcentage_affectation,
+        )
+        result = use_case.execute(dto, current_user_id)
+        return result.to_dict()
+    except LotBudgetaireNotFoundForAffectationError:
+        raise HTTPException(status_code=404, detail="Lot budgetaire non trouve")
+    except AffectationAlreadyExistsError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/chantiers/{chantier_id}/affectations")
+async def list_affectations_by_chantier(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_affectations_by_chantier_use_case),
+):
+    """Liste les affectations d'un chantier.
+
+    FIN-03: Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id)
+    return {
+        "items": [a.to_dict() for a in result],
+        "total": len(result),
+    }
+
+
+@router.get("/taches/{tache_id}/affectations")
+async def list_affectations_by_tache(
+    tache_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_list_affectations_by_tache_use_case),
+):
+    """Liste les affectations d'une tache.
+
+    FIN-03: Accessible aux chefs de chantier et superieurs.
+    Filtre IDOR: ne retourne que les affectations des chantiers accessibles.
+    """
+    result = use_case.execute(tache_id)
+    if user_chantier_ids is not None:
+        result = [a for a in result if a.chantier_id in user_chantier_ids]
+    return {
+        "items": [a.to_dict() for a in result],
+        "total": len(result),
+    }
+
+
+@router.delete(
+    "/affectations/{affectation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_affectation(
+    affectation_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    current_user_id: int = Depends(get_current_user_id),
+    affectation_repo=Depends(get_affectation_repository),
+    use_case=Depends(get_delete_affectation_use_case),
+):
+    """Supprime une affectation tache/lot.
+
+    FIN-03: Chef de chantier et superieur. Verifie IDOR via chantier_id.
+    """
+    # IDOR: verifier que l'affectation appartient a un chantier accessible
+    affectation = affectation_repo.find_by_id(affectation_id)
+    if not affectation:
+        raise HTTPException(status_code=404, detail="Affectation non trouvee")
+    _check_chantier_access(affectation.chantier_id, _role, user_chantier_ids)
+    try:
+        use_case.execute(affectation_id, current_user_id)
+    except AffectationNotFoundError:
+        raise HTTPException(status_code=404, detail="Affectation non trouvee")
+
+
+@router.get("/chantiers/{chantier_id}/suivi-avancement")
+async def get_suivi_avancement(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_suivi_avancement_financier_use_case),
+):
+    """Suivi croise avancement physique vs financier.
+
+    FIN-03: Accessible aux chefs de chantier et superieurs.
+    Retourne l'avancement des taches liees aux lots budgetaires.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    result = use_case.execute(chantier_id)
+    return {
+        "items": [s.to_dict() for s in result],
+        "total": len(result),
+    }
+
+
+# =============================================================================
+# Routes Export Comptable (FIN-13)
+# =============================================================================
+
+
+@router.get("/export-comptable")
+async def export_comptable(
+    date_debut: date = Query(...),
+    date_fin: date = Query(...),
+    chantier_id: Optional[int] = Query(None, gt=0),
+    format: str = Query(default="csv", pattern="^(csv|excel)$"),
+    _role: str = Depends(require_admin),
+    generate_use_case=Depends(get_generate_export_comptable_use_case),
+    csv_use_case=Depends(get_export_csv_use_case),
+    excel_use_case=Depends(get_export_excel_use_case),
+):
+    """Export comptable CSV ou Excel.
+
+    FIN-13: Admin uniquement.
+    Parametres: date_debut, date_fin, chantier_id (optionnel), format (csv/excel).
+    """
+    if date_fin < date_debut:
+        raise HTTPException(
+            status_code=400,
+            detail="La date de fin doit etre posterieure a la date de debut",
+        )
+
+    # Generer les lignes comptables
+    export_dto = generate_use_case.execute(date_debut, date_fin, chantier_id)
+
+    if format == "csv":
+        csv_content = csv_use_case.execute(export_dto)
+        filename = f"export_comptable_{date_debut}_{date_fin}.csv"
+        return StreamingResponse(
+            iter([csv_content]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+    else:
+        excel_content = excel_use_case.execute(export_dto)
+        filename = f"export_comptable_{date_debut}_{date_fin}.xlsx"
+        return Response(
+            content=excel_content,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )

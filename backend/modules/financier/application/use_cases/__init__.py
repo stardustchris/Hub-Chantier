@@ -85,6 +85,21 @@ from .alerte_use_cases import (
     AlerteNotFoundError,
 )
 from .dashboard_use_cases import GetDashboardFinancierUseCase
+from .affectation_use_cases import (
+    CreateAffectationUseCase,
+    DeleteAffectationUseCase,
+    ListAffectationsByChantierUseCase,
+    ListAffectationsByTacheUseCase,
+    GetSuiviAvancementFinancierUseCase,
+    AffectationNotFoundError,
+    AffectationAlreadyExistsError,
+    LotBudgetaireNotFoundForAffectationError,
+)
+from .export_comptable_use_cases import (
+    GenerateExportComptableUseCase,
+    ExportCSVUseCase,
+    ExportExcelUseCase,
+)
 
 __all__ = [
     # Fournisseur
@@ -166,4 +181,17 @@ __all__ = [
     "AlerteNotFoundError",
     # Dashboard
     "GetDashboardFinancierUseCase",
+    # Affectation
+    "CreateAffectationUseCase",
+    "DeleteAffectationUseCase",
+    "ListAffectationsByChantierUseCase",
+    "ListAffectationsByTacheUseCase",
+    "GetSuiviAvancementFinancierUseCase",
+    "AffectationNotFoundError",
+    "AffectationAlreadyExistsError",
+    "LotBudgetaireNotFoundForAffectationError",
+    # Export Comptable
+    "GenerateExportComptableUseCase",
+    "ExportCSVUseCase",
+    "ExportExcelUseCase",
 ]

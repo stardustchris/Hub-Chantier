@@ -376,6 +376,42 @@ class DepassementBudgetEvent:
     occurred_at: datetime = field(default_factory=datetime.utcnow)
 
 
+# --- Affectation Events ---
+
+
+@dataclass(frozen=True)
+class AffectationCreatedEvent:
+    """Event emis lors de la creation d'une affectation tache/lot.
+
+    FIN-03: Affectation budgets aux taches.
+    """
+
+    affectation_id: int
+    chantier_id: int
+    tache_id: int
+    lot_budgetaire_id: int
+    pourcentage_affectation: Decimal
+    created_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass(frozen=True)
+class AffectationDeletedEvent:
+    """Event emis lors de la suppression d'une affectation tache/lot.
+
+    FIN-03: Affectation budgets aux taches.
+    """
+
+    affectation_id: int
+    chantier_id: int
+    tache_id: int
+    lot_budgetaire_id: int
+    deleted_by: int
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    occurred_at: datetime = field(default_factory=datetime.utcnow)
+
+
 # --- Journal Events ---
 
 

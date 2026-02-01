@@ -2,6 +2,7 @@
 
 FIN-01: Budget chantier
 FIN-02: Lots budgetaires (decomposition)
+FIN-03: Affectation budgets aux taches
 FIN-04: Avenants budgetaires
 FIN-05: Achats et commandes
 FIN-06: Workflow validation achats
@@ -86,6 +87,7 @@ JOURNAL_ENTITE_TYPES = (
     "situation",
     "facture",
     "alerte",
+    "affectation",
 )
 
 # Phase 2 enums
@@ -944,4 +946,61 @@ class AlerteDepassementModel(FinancierBase):
             f"<AlerteDepassement(id={self.id}, type='{self.type_alerte}', "
             f"pourcentage={self.pourcentage_atteint}%, "
             f"acquittee={self.est_acquittee})>"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FIN-03: Affectation budgets aux taches
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AffectationTacheLotModel(FinancierBase):
+    """Modele SQLAlchemy pour les affectations taches <-> lots budgetaires.
+
+    FIN-03: Liaison optionnelle taches <-> lignes budgetaires pour suivi
+    avancement financier. Decouplage Clean Architecture: pas de FK vers
+    module taches (chantier_id et tache_id sans FK).
+    """
+
+    __tablename__ = "affectations_taches_lots"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chantier_id = Column(Integer, nullable=False, index=True)
+    tache_id = Column(Integer, nullable=False, index=True)
+    lot_budgetaire_id = Column(
+        Integer,
+        ForeignKey("lots_budgetaires.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    pourcentage_affectation = Column(
+        Numeric(5, 2), nullable=False, default=100
+    )
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "tache_id", "lot_budgetaire_id",
+            name="uq_affectations_taches_lots_tache_lot",
+        ),
+        Index("ix_affectations_taches_lots_chantier", "chantier_id"),
+        Index("ix_affectations_taches_lots_lot", "lot_budgetaire_id"),
+        Index("ix_affectations_taches_lots_tache", "tache_id"),
+        CheckConstraint(
+            "pourcentage_affectation >= 0 AND pourcentage_affectation <= 100",
+            name="check_affectations_taches_lots_pourcentage_range",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AffectationTacheLot(id={self.id}, tache_id={self.tache_id}, "
+            f"lot_budgetaire_id={self.lot_budgetaire_id}, "
+            f"pourcentage={self.pourcentage_affectation}%)>"
         )

@@ -19,15 +19,15 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
-| financier | 17 | FIN-01 a FIN-15 | 12/15 | 0 | **PHASE 2 COMPLET** |
+| financier | 17 | FIN-01 a FIN-15 | 14/15 | 0 | **PHASE 3 COMPLET** |
 
 ## Statistiques globales
 
-- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2)
-- **Module financier** : 12/15 features done (Phase 1: 6, Phase 2: 6), 3 remaining (Phase 3)
+- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2+3)
+- **Module financier** : 14/15 features done (Phase 1: 6, Phase 2: 6, Phase 3: 2), 1 remaining (FIN-15 already done)
 - **Fonctionnalites totales** : 267 (+15 FIN)
-- **Fonctionnalites done** : 246 (92%)
-- **Fonctionnalites specs ready** : 3 (FIN-03, FIN-13, FIN-15 — Phase 3)
+- **Fonctionnalites done** : 248 (93%)
+- **Fonctionnalites specs ready** : 0
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 2 (prevues pour versions futures)
 
@@ -87,7 +87,7 @@
 
 ## Prochaines taches prioritaires
 
-### Module Financier (12/15 features done — Phase 3 remaining)
+### Module Financier (14/15 features done — COMPLET)
 
 | ID | Description | Statut |
 |----|-------------|--------|
@@ -103,9 +103,9 @@
 | FIN-09 | Suivi couts main-d'oeuvre | ✅ Done (Phase 2) |
 | FIN-10 | Suivi couts materiel | ✅ Done (Phase 2) |
 | FIN-12 | Alertes depassements | ✅ Done (Phase 2) |
-| FIN-03 | Affectation budgets aux taches | 🔮 Phase 3 |
-| FIN-13 | Export comptable | 🔮 Phase 3 |
-| FIN-15 | Historique et tracabilite | 🔮 Phase 3 |
+| FIN-03 | Affectation budgets aux taches | ✅ Done (Phase 3) |
+| FIN-13 | Export comptable | ✅ Done (Phase 3) |
+| FIN-15 | Historique et tracabilite | ✅ Done (Phase 1 — journal_financier) |
 
 ### Infrastructure (16 features)
 
@@ -182,6 +182,19 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-02-01 - Module Financier Phase 3 (2 features) — MODULE COMPLET
+- **Objectif**: Implementer les 2 dernieres features Phase 3 (FIN-03, FIN-13)
+- **FIN-03**: Affectation budgets aux taches (table liaison, entity, use cases, suivi croise avancement/financier)
+- **FIN-13**: Export comptable CSV/Excel (codes analytiques, journaux HA/VE, comptes 601/604/615/706)
+- **FIN-15**: Deja implemente en Phase 1 (journal_financier table + API)
+- **Architecture**: 1 nouvelle table SQL, 1 entite, 1 VO, 5 use cases, 3 repositories, 6 routes API, 3 composants React
+- **Fix IDOR**: Ajoute _check_chantier_access sur DELETE /affectations et filtre IDOR sur GET /taches/{id}/affectations
+- **Fix types**: Aligne TypeScript SuiviAvancementItem sur backend DTO (field names)
+- **Fix service**: Corrige les methodes getAffectations/getSuiviAvancement pour extraire .items
+- **Validation agents**: architect 9.3/10 PASS, code-reviewer APPROVED (apres fix), security CONDITIONAL PASS (0 CRITICAL/HIGH), test-automator 93 nouveaux tests
+- **Tests**: 496 pass (403 Phase 1+2 + 93 Phase 3), 0 fail, 1.60s
+- Verdict : ✅ **MODULE FINANCIER COMPLET (14/15 features, FIN-15 already done)**
 
 Session 2026-01-31 - Module Financier Phase 2 (6 features)
 - **Objectif**: Implementer les 6 features Phase 2 du module financier
