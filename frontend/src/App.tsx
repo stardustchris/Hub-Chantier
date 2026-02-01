@@ -31,6 +31,10 @@ const FournisseursPage = lazy(() => import('./pages/FournisseursPage'))
 const BudgetsPage = lazy(() => import('./pages/BudgetsPage'))
 const AchatsPage = lazy(() => import('./pages/AchatsPage'))
 const DashboardFinancierPage = lazy(() => import('./pages/DashboardFinancierPage'))
+const DevisListPage = lazy(() => import('./pages/DevisListPage'))
+const DevisDetailPage = lazy(() => import('./pages/DevisDetailPage'))
+const DevisDashboardPage = lazy(() => import('./pages/DevisDashboardPage'))
+const ArticlesPage = lazy(() => import('./pages/ArticlesPage'))
 
 // CSS-only loading spinner (no lucide-react dependency)
 function PageLoader() {
@@ -189,6 +193,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <SecuritySettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/dashboard"
+            element={
+              <ProtectedRoute>
+                <DevisDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/articles"
+            element={
+              <ProtectedRoute>
+                <ArticlesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/:id"
+            element={
+              <ProtectedRoute>
+                <DevisDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis"
+            element={
+              <ProtectedRoute>
+                <DevisListPage />
               </ProtectedRoute>
             }
           />
