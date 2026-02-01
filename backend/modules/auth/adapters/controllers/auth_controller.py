@@ -1,6 +1,7 @@
 """AuthController - Gestion des requêtes d'authentification et utilisateurs."""
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from decimal import Decimal
 
 from ...application.use_cases import (
     LoginUseCase,
@@ -73,7 +74,8 @@ class AuthController:
             "photo_profil": user_dto.photo_profil,
             "code_utilisateur": user_dto.code_utilisateur,
             "telephone": user_dto.telephone,
-            "metier": user_dto.metier,
+            "metiers": user_dto.metiers,
+            "taux_horaire": user_dto.taux_horaire,
             "contact_urgence_nom": user_dto.contact_urgence_nom,
             "contact_urgence_telephone": user_dto.contact_urgence_tel,  # Renommé pour frontend
             "created_at": user_dto.created_at,
@@ -112,7 +114,8 @@ class AuthController:
         prenom: str,
         type_utilisateur: Optional[str] = None,
         telephone: Optional[str] = None,
-        metier: Optional[str] = None,
+        metiers: Optional[List[str]] = None,
+        taux_horaire: Optional[Decimal] = None,
         code_utilisateur: Optional[str] = None,
         couleur: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -128,7 +131,8 @@ class AuthController:
             prenom: Prénom.
             type_utilisateur: Type (optionnel, défaut: employe).
             telephone: Numéro de téléphone.
-            metier: Métier/spécialité.
+            metiers: Liste de métiers/spécialités.
+            taux_horaire: Taux horaire en EUR (optionnel, module financier).
             code_utilisateur: Matricule.
             couleur: Couleur d'identification.
 
@@ -147,7 +151,8 @@ class AuthController:
             prenom=prenom,
             type_utilisateur=type_utilisateur,
             telephone=telephone,
-            metier=metier,
+            metiers=metiers,
+            taux_horaire=taux_horaire,
             code_utilisateur=code_utilisateur,
             couleur=couleur,
         )
@@ -203,7 +208,8 @@ class AuthController:
         nom: Optional[str] = None,
         prenom: Optional[str] = None,
         telephone: Optional[str] = None,
-        metier: Optional[str] = None,
+        metiers: Optional[List[str]] = None,
+        taux_horaire: Optional[Decimal] = None,
         couleur: Optional[str] = None,
         photo_profil: Optional[str] = None,
         contact_urgence_nom: Optional[str] = None,
@@ -220,7 +226,8 @@ class AuthController:
             nom: Nouveau nom.
             prenom: Nouveau prénom.
             telephone: Nouveau téléphone.
-            metier: Nouveau métier.
+            metiers: Nouvelle liste de métiers.
+            taux_horaire: Nouveau taux horaire en EUR (module financier).
             couleur: Nouvelle couleur.
             photo_profil: Nouvelle URL photo.
             contact_urgence_nom: Nouveau contact urgence nom.
@@ -240,7 +247,8 @@ class AuthController:
             nom=nom,
             prenom=prenom,
             telephone=telephone,
-            metier=metier,
+            metiers=metiers,
+            taux_horaire=taux_horaire,
             couleur=couleur,
             photo_profil=photo_profil,
             contact_urgence_nom=contact_urgence_nom,

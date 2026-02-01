@@ -107,7 +107,7 @@ export default function UserDetailPage() {
   }
 
   const roleInfo = ROLES[user.role as UserRole]
-  const metierInfo = user.metier ? METIERS[user.metier as Metier] : null
+  const metierInfos = (user.metiers || []).map(m => METIERS[m as Metier]).filter(Boolean)
 
   return (
     <Layout>
@@ -182,14 +182,15 @@ export default function UserDetailPage() {
                         {roleInfo.label}
                       </span>
                     )}
-                    {metierInfo && (
+                    {metierInfos.map((metierInfo, idx) => (
                       <span
+                        key={idx}
                         className="text-sm px-3 py-1 rounded-full"
                         style={{ backgroundColor: metierInfo.color + '20', color: metierInfo.color }}
                       >
                         {metierInfo.label}
                       </span>
-                    )}
+                    ))}
                     <span
                       className={`text-sm px-3 py-1 rounded-full ${
                         user.is_active
@@ -200,7 +201,10 @@ export default function UserDetailPage() {
                       {user.is_active ? 'Actif' : 'Desactive'}
                     </span>
                     <span className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700">
-                      {user.type_utilisateur === 'employe' ? 'Employe' : 'Sous-traitant'}
+                      {user.type_utilisateur === 'employe' && 'Employe'}
+                      {user.type_utilisateur === 'cadre' && 'Cadre'}
+                      {user.type_utilisateur === 'interimaire' && 'Interimaire'}
+                      {user.type_utilisateur === 'sous_traitant' && 'Sous-traitant'}
                     </span>
                   </div>
                 </div>
@@ -284,7 +288,10 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-sm text-gray-500">Type</p>
                   <p className="font-medium">
-                    {user.type_utilisateur === 'employe' ? 'Employe' : 'Sous-traitant'}
+                    {user.type_utilisateur === 'employe' && 'Employe'}
+                    {user.type_utilisateur === 'cadre' && 'Cadre'}
+                    {user.type_utilisateur === 'interimaire' && 'Interimaire'}
+                    {user.type_utilisateur === 'sous_traitant' && 'Sous-traitant'}
                   </p>
                 </div>
               </div>

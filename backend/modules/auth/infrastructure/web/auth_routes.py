@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Any
 from datetime import datetime
+from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.rate_limiter import limiter
@@ -61,7 +62,8 @@ class RegisterRequest(BaseModel):
     prenom: str
     type_utilisateur: Optional[str] = "salarie"
     telephone: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
     code_utilisateur: Optional[str] = None
     couleur: Optional[str] = None
 
@@ -72,7 +74,8 @@ class UpdateUserRequest(BaseModel):
     nom: Optional[str] = None
     prenom: Optional[str] = None
     telephone: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
     couleur: Optional[str] = None
     photo_profil: Optional[str] = None
     contact_urgence_nom: Optional[str] = None
@@ -98,7 +101,8 @@ class UserResponse(BaseModel):
     photo_profil: Optional[str] = None
     code_utilisateur: Optional[str] = None
     telephone: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
     contact_urgence_nom: Optional[str] = None
     contact_urgence_telephone: Optional[str] = None  # Renommé pour frontend
     created_at: datetime
@@ -260,7 +264,8 @@ def register(
             prenom=data.prenom,
             type_utilisateur=data.type_utilisateur,
             telephone=data.telephone,
-            metier=data.metier,
+            metiers=data.metiers,
+            taux_horaire=data.taux_horaire,
             code_utilisateur=data.code_utilisateur,
             couleur=data.couleur,
         )
@@ -382,7 +387,8 @@ class InviteUserModel(BaseModel):
     role: str
     type_utilisateur: Optional[str] = "employe"
     code_utilisateur: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
 
 
 class AcceptInvitationModel(BaseModel):
@@ -585,7 +591,8 @@ def invite_user(
             role=role_enum,
             type_utilisateur=type_enum,
             code_utilisateur=request_body.code_utilisateur,
-            metier=request_body.metier,
+            metiers=request_body.metiers,
+            taux_horaire=request_body.taux_horaire,
             inviter_name=inviter_name,
         )
 
@@ -907,7 +914,8 @@ def update_user(
             "nom": old_user.get("nom"),
             "prenom": old_user.get("prenom"),
             "telephone": old_user.get("telephone"),
-            "metier": old_user.get("metier"),
+            "metiers": old_user.get("metiers"),
+            "taux_horaire": float(old_user.get("taux_horaire")) if old_user.get("taux_horaire") else None,
             "role": old_user.get("role"),
             "type_utilisateur": old_user.get("type_utilisateur"),
             "code_utilisateur": old_user.get("code_utilisateur"),
@@ -918,7 +926,8 @@ def update_user(
             nom=request.nom,
             prenom=request.prenom,
             telephone=request.telephone,
-            metier=request.metier,
+            metiers=request.metiers,
+            taux_horaire=request.taux_horaire,
             couleur=request.couleur,
             photo_profil=request.photo_profil,
             contact_urgence_nom=request.contact_urgence_nom,
@@ -933,7 +942,8 @@ def update_user(
             "nom": result.get("nom"),
             "prenom": result.get("prenom"),
             "telephone": result.get("telephone"),
-            "metier": result.get("metier"),
+            "metiers": result.get("metiers"),
+            "taux_horaire": float(result.get("taux_horaire")) if result.get("taux_horaire") else None,
             "role": result.get("role"),
             "type_utilisateur": result.get("type_utilisateur"),
             "code_utilisateur": result.get("code_utilisateur"),
@@ -1175,7 +1185,8 @@ def _transform_user_response(user_dict: dict) -> UserResponse:
         photo_profil=user_dict.get("photo_profil"),
         code_utilisateur=user_dict.get("code_utilisateur"),
         telephone=user_dict.get("telephone"),
-        metier=user_dict.get("metier"),
+        metiers=user_dict.get("metiers"),
+        taux_horaire=user_dict.get("taux_horaire"),
         contact_urgence_nom=user_dict.get("contact_urgence_nom"),
         contact_urgence_telephone=user_dict.get("contact_urgence_telephone"),
         created_at=user_dict.get("created_at"),

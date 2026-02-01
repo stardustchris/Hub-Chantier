@@ -188,16 +188,12 @@ export function useRecentDocuments(): UseRecentDocumentsReturn {
         }
       }
 
-      // Si aucun document trouvé via l'API, utiliser les documents de démo
-      if (recentDocs.length === 0) {
-        setAllDocuments(DEMO_DOCUMENTS)
-      } else {
-        setAllDocuments(recentDocs)
-      }
+      // Définir les documents (vide si aucun trouvé)
+      setAllDocuments(recentDocs)
     } catch (error) {
       logger.error('Error loading recent documents', error)
-      // En cas d'erreur, utiliser des documents de démonstration
-      setAllDocuments(DEMO_DOCUMENTS)
+      // En cas d'erreur, afficher liste vide
+      setAllDocuments([])
     } finally {
       setIsLoading(false)
     }

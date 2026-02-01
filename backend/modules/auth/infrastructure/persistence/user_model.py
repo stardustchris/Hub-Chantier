@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, JSON
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
@@ -67,7 +67,7 @@ class UserModel(Base):
 
     # Informations professionnelles
     code_utilisateur = Column(String(50), nullable=True, index=True)  # USR-07 (matricule)
-    metier = Column(String(100), nullable=True)  # USR-11
+    metiers = Column(JSON, nullable=True)  # USR-11 - Array de métiers (JSON)
     taux_horaire = Column(Numeric(8, 2), nullable=True)  # FIN-09: Taux horaire employe
 
     # Contact d'urgence (USR-13) - Donnees chiffrees RGPD Art. 32

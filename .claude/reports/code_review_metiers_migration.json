@@ -1,0 +1,416 @@
+{
+  "status": "changes_requested",
+  "summary": "Migration metier → metiers partiellement implémentée. 7 fichiers backend contiennent encore des références à 'metier' (singular) au lieu de 'metiers' (pluriel). Incohérence majeure dans auth_routes.py et auth_controller.py qui empêche le fonctionnement correct.",
+  "findings": [
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 64,
+      "category": "quality",
+      "severity": "critical",
+      "message": "RegisterRequest utilise 'metier' (singular) au lieu de 'metiers' (List[str]). Incohérent avec la migration et le frontend.",
+      "suggestion": "Remplacer:\n    metier: Optional[str] = None\nPar:\n    metiers: Optional[List[str]] = None"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 263,
+      "category": "quality",
+      "severity": "critical",
+      "message": "Route /register passe 'data.metier' au controller, mais RegisterRequest n'a plus ce champ après migration.",
+      "suggestion": "Remplacer:\n            metier=data.metier,\nPar:\n            metiers=data.metiers,"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 74,
+      "category": "quality",
+      "severity": "critical",
+      "message": "UpdateUserRequest utilise 'metier' (singular) au lieu de 'metiers' (List[str]). Incohérent avec UserDTO et la migration.",
+      "suggestion": "Remplacer:\n    # Ligne implicite - pas de champ metier/metiers visible\nPar:\n    metiers: Optional[List[str]] = None"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 102,
+      "category": "quality",
+      "severity": "critical",
+      "message": "UserResponse utilise 'metier' (singular). Incohérent avec User.metiers.",
+      "suggestion": "Remplacer:\n    # Ligne implicite - pas de champ metier visible\nPar:\n    metiers: Optional[List[str]] = None"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 385,
+      "category": "quality",
+      "severity": "critical",
+      "message": "InviteUserModel utilise 'metier: Optional[str]' au lieu de 'metiers: Optional[List[str]]'.",
+      "suggestion": "Remplacer:\n    metier: Optional[str] = None\nPar:\n    metiers: Optional[List[str]] = None"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 588,
+      "category": "quality",
+      "severity": "critical",
+      "message": "Route /invite passe 'metier=request_body.metier' au use case, incompatible avec la nouvelle structure.",
+      "suggestion": "Remplacer:\n            metier=request_body.metier,\nPar:\n            metiers=request_body.metiers,"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 910,
+      "category": "quality",
+      "severity": "major",
+      "message": "Audit trail capture 'metier' au lieu de 'metiers' dans old_values.",
+      "suggestion": "Remplacer:\n            \"metier\": old_user.get(\"metier\"),\nPar:\n            \"metiers\": old_user.get(\"metiers\"),"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 921,
+      "category": "quality",
+      "severity": "critical",
+      "message": "Route PUT /users/{id} passe 'metier=request.metier' au controller, mais request n'a plus ce champ.",
+      "suggestion": "Remplacer:\n            metier=request.metier,\nPar:\n            metiers=request.metiers,"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 936,
+      "category": "quality",
+      "severity": "major",
+      "message": "Audit trail capture 'metier' au lieu de 'metiers' dans new_values.",
+      "suggestion": "Remplacer:\n            \"metier\": result.get(\"metier\"),\nPar:\n            \"metiers\": result.get(\"metiers\"),"
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "line": 1178,
+      "category": "quality",
+      "severity": "critical",
+      "message": "_transform_user_response utilise 'metier' au lieu de 'metiers' lors du mapping dict → UserResponse.",
+      "suggestion": "Remplacer:\n        metier=user_dict.get(\"metier\"),\nPar:\n        metiers=user_dict.get(\"metiers\"),"
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 76,
+      "category": "quality",
+      "severity": "critical",
+      "message": "_user_dto_to_dict mappe 'user_dto.metier' (qui n'existe pas) au lieu de 'user_dto.metiers'.",
+      "suggestion": "Remplacer:\n            \"metier\": user_dto.metier,\nPar:\n            \"metiers\": user_dto.metiers,"
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 115,
+      "category": "quality",
+      "severity": "critical",
+      "message": "register() accepte 'metier: Optional[str]' au lieu de 'metiers: Optional[List[str]]'.",
+      "suggestion": "Remplacer:\n        metier: Optional[str] = None,\nPar:\n        metiers: Optional[List[str]] = None,"
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 131,
+      "category": "quality",
+      "severity": "major",
+      "message": "Docstring de register() mentionne 'metier' (singular) au lieu de 'metiers'.",
+      "suggestion": "Remplacer:\n            metier: Métier/spécialité.\nPar:\n            metiers: Liste des métiers/spécialités."
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 150,
+      "category": "quality",
+      "severity": "critical",
+      "message": "RegisterDTO construit avec 'metier=metier' au lieu de 'metiers=metiers'.",
+      "suggestion": "Remplacer:\n            metier=metier,\nPar:\n            metiers=metiers,"
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 206,
+      "category": "quality",
+      "severity": "critical",
+      "message": "update_user() accepte 'metier: Optional[str]' au lieu de 'metiers: Optional[List[str]]'.",
+      "suggestion": "Remplacer:\n        metier: Optional[str] = None,\nPar:\n        metiers: Optional[List[str]] = None,"
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 223,
+      "category": "quality",
+      "severity": "major",
+      "message": "Docstring de update_user() mentionne 'metier' (singular) au lieu de 'metiers'.",
+      "suggestion": "Remplacer:\n            metier: Nouveau métier.\nPar:\n            metiers: Nouvelle liste de métiers."
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "line": 243,
+      "category": "quality",
+      "severity": "critical",
+      "message": "UpdateUserDTO construit avec 'metier=metier' au lieu de 'metiers=metiers'.",
+      "suggestion": "Remplacer:\n            metier=metier,\nPar:\n            metiers=metiers,"
+    },
+    {
+      "file": "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py",
+      "line": 14,
+      "category": "quality",
+      "severity": "minor",
+      "message": "down_revision utilise l'ID court '45fbfeb64662' au lieu du nom complet '20260130_2114_45fbfeb64662'.",
+      "suggestion": "Pour cohérence avec le style du projet, utiliser:\ndown_revision = '20260130_2114_45fbfeb64662'"
+    },
+    {
+      "file": "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py",
+      "line": 29,
+      "category": "performance",
+      "severity": "minor",
+      "message": "Utilisation de batch_alter_table pour compatibilité SQLite. Bien documenté dans la docstring.",
+      "suggestion": "Aucune - c'est une bonne pratique pour la portabilité."
+    },
+    {
+      "file": "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py",
+      "line": 42,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "Gestion élégante des dialectes PostgreSQL vs SQLite avec jsonb_build_array vs json_array.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/domain/entities/user.py",
+      "line": 55,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "metiers: Optional[List[str]] correctement typé. Cohérent avec la migration.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/domain/entities/user.py",
+      "line": 278,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "update_profile() accepte correctement metiers: Optional[List[str]].",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/application/dtos/user_dto.py",
+      "line": 34,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UserDTO.metiers correctement typé comme Optional[List[str]]. frozen=True respecté (immutabilité).",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/application/dtos/user_dto.py",
+      "line": 64,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UserDTO.from_entity() mappe correctement user.metiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/application/dtos/user_dto.py",
+      "line": 122,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "RegisterDTO.metiers correctement typé. frozen=True respecté.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/application/dtos/user_dto.py",
+      "line": 138,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UpdateUserDTO.metiers correctement typé. frozen=True respecté.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/application/use_cases/register.py",
+      "line": 138,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "RegisterUseCase passe correctement metiers=dto.metiers à l'entité User.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/application/use_cases/update_user.py",
+      "line": 92,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UpdateUserUseCase passe correctement metiers=dto.metiers à update_profile().",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/persistence/user_model.py",
+      "line": 70,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UserModel.metiers correctement défini comme Column(JSON). Cohérent avec la migration.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+      "line": 117,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "SQLAlchemyUserRepository.save() mappe correctement model.metiers = user.metiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+      "line": 423,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "_to_entity() mappe correctement 'metiers': model.metiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py",
+      "line": 475,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "_to_model() mappe correctement 'metiers': user.metiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/types/index.ts",
+      "line": 6,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "Type Metier correctement défini avec 9 valeurs possibles.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/types/index.ts",
+      "line": 16,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "User.metiers correctement typé comme Optional<Metier[]>.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/types/index.ts",
+      "line": 35,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UserCreate.metiers correctement typé.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/types/index.ts",
+      "line": 46,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "UserUpdate.metiers correctement typé.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/types/index.ts",
+      "line": 74,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "METIERS const correctement défini avec labels et couleurs pour chaque métier.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/MetierMultiSelect.tsx",
+      "line": 11,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "Constante MAX_METIERS = 5 bien définie pour limiter le nombre de métiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/MetierMultiSelect.tsx",
+      "line": 13,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "MetierMultiSelectProps correctement typé avec value: Metier[] et onChange callback.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/MetierMultiSelect.tsx",
+      "line": 24,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "useEffect pour fermer le dropdown au clic extérieur - bonne pratique UX.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/MetierMultiSelect.tsx",
+      "line": 37,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "handleAdd() vérifie les doublons et la limite MAX_METIERS avant ajout.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/MetierMultiSelect.tsx",
+      "line": 68,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "Badges colorés pour chaque métier avec bouton de suppression - excellente UX.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/CreateUserModal.tsx",
+      "line": 181,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "CreateUserModal utilise correctement MetierMultiSelect avec formData.metiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    },
+    {
+      "file": "frontend/src/components/users/EditUserModal.tsx",
+      "line": 123,
+      "category": "quality",
+      "severity": "suggestion",
+      "message": "EditUserModal utilise correctement MetierMultiSelect avec formData.metiers.",
+      "suggestion": "Aucune - implémentation correcte."
+    }
+  ],
+  "metrics": {
+    "files_reviewed": 25,
+    "issues_found": 43,
+    "critical": 14,
+    "major": 4,
+    "minor": 2,
+    "suggestion": 23
+  },
+  "recommendations": [
+    {
+      "priority": "critical",
+      "description": "Corriger IMMÉDIATEMENT les 14 fichiers backend utilisant 'metier' (singular) au lieu de 'metiers' (pluriel)",
+      "files": [
+        "backend/modules/auth/infrastructure/web/auth_routes.py",
+        "backend/modules/auth/adapters/controllers/auth_controller.py"
+      ]
+    },
+    {
+      "priority": "high",
+      "description": "Mettre à jour les docstrings pour refléter le changement metier → metiers",
+      "files": [
+        "backend/modules/auth/adapters/controllers/auth_controller.py"
+      ]
+    },
+    {
+      "priority": "medium",
+      "description": "Corriger les audit trails pour capturer 'metiers' au lieu de 'metier'",
+      "files": [
+        "backend/modules/auth/infrastructure/web/auth_routes.py"
+      ]
+    },
+    {
+      "priority": "low",
+      "description": "Migration Alembic: utiliser le nom complet de down_revision pour cohérence",
+      "files": [
+        "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py"
+      ]
+    }
+  ],
+  "positive_points": [
+    "Migration Alembic réversible et safe avec gestion PostgreSQL/SQLite",
+    "DTOs immutables (frozen=True) correctement utilisés partout",
+    "Type hints complets et corrects dans Domain/Application layers",
+    "Nommage cohérent 'metiers' (pluriel) dans frontend TypeScript",
+    "Composant MetierMultiSelect réutilisable avec excellente UX",
+    "Limite MAX_METIERS=5 bien implémentée",
+    "Gestion correcte des erreurs frontend",
+    "Hooks React (useCallback, useMemo implicites, useEffect) bien utilisés",
+    "Clean Architecture respectée (dépendances vers l'intérieur)",
+    "Repository pattern correctement implémenté avec mapping entity↔model"
+  ],
+  "next_steps": [
+    "1. Corriger auth_routes.py: remplacer 'metier' par 'metiers' dans RegisterRequest, UpdateUserRequest, UserResponse, InviteUserModel",
+    "2. Corriger auth_controller.py: remplacer 'metier' par 'metiers' dans register(), update_user(), _user_dto_to_dict()",
+    "3. Lancer les tests unitaires pour valider les corrections",
+    "4. Tester manuellement le flux complet: inscription → mise à jour → lecture",
+    "5. Vérifier la cohérence des audit trails"
+  ]
+}

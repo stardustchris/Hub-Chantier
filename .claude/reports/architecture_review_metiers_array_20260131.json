@@ -1,0 +1,163 @@
+{
+  "status": "FAIL",
+  "review_date": "2026-01-31T14:30:00Z",
+  "feature": "Plusieurs métiers par utilisateur (metier → metiers array)",
+  "reviewer": "architect-reviewer",
+  "violations": [
+    {
+      "file": "backend/modules/auth/infrastructure/web/auth_routes.py",
+      "lines": [263, 385, 588, 910, 921, 1178],
+      "rule": "data-consistency",
+      "message": "Utilisation de 'metier' (singulier) au lieu de 'metiers' (pluriel) dans les routes et schémas Pydantic",
+      "severity": "critical",
+      "details": "Les schémas RegisterRequest, InviteUserModel, UpdateUserRequest et les fonctions de transformation utilisent encore 'metier' au lieu de 'metiers', créant une incohérence avec le modèle de données migré vers JSON array",
+      "locations": [
+        "RegisterRequest.metier (ligne 64)",
+        "UpdateUserRequest.metier (ligne 75)",
+        "InviteUserModel.metier (ligne 385)",
+        "controller.register(metier=data.metier) (ligne 263)",
+        "controller.update_user(metier=request.metier) (ligne 921)",
+        "_transform_user_response metier= (ligne 1178)"
+      ]
+    },
+    {
+      "file": "backend/modules/auth/adapters/controllers/auth_controller.py",
+      "lines": [150, 243],
+      "rule": "data-consistency",
+      "message": "Controller utilise 'metier' (singulier) dans les appels aux use cases",
+      "severity": "critical",
+      "details": "Les méthodes register() et update_user() du controller passent 'metier' au lieu de 'metiers' aux use cases, alors que les DTOs et use cases attendent 'metiers' (array)",
+      "locations": [
+        "RegisterDTO(metier=metier) - ligne 150",
+        "UpdateUserDTO(metier=metier) - ligne 243"
+      ]
+    },
+    {
+      "file": "backend/modules/auth/infrastructure/web/password_routes.py",
+      "line": 275,
+      "rule": "data-consistency",
+      "message": "Route password reset utilise 'metier' au lieu de 'metiers'",
+      "severity": "critical",
+      "details": "Lors de l'acceptation d'une invitation, le paramètre metier (singulier) est utilisé au lieu de metiers"
+    },
+    {
+      "file": "backend/modules/auth/application/use_cases/invite_user.py",
+      "line": 88,
+      "rule": "data-consistency",
+      "message": "Use case InviteUser accepte 'metier' (singulier) au lieu de 'metiers'",
+      "severity": "critical",
+      "details": "La signature du use case InviteUser.execute() accepte metier (str) au lieu de metiers (List[str])"
+    }
+  ],
+  "recommendations": [
+    "URGENT: Renommer tous les paramètres 'metier' en 'metiers' dans les couches Infrastructure (routes) et Adapters (controllers)",
+    "Modifier RegisterRequest.metier → RegisterRequest.metiers (Optional[List[str]])",
+    "Modifier UpdateUserRequest.metier → UpdateUserRequest.metiers (Optional[List[str]])",
+    "Modifier InviteUserModel.metier → InviteUserModel.metiers (Optional[List[str]])",
+    "Modifier auth_controller.register() pour passer metiers= au lieu de metier=",
+    "Modifier auth_controller.update_user() pour passer metiers= au lieu de metier=",
+    "Modifier InviteUserUseCase.execute() signature: metier: str → metiers: Optional[List[str]]",
+    "Ajouter des tests d'intégration pour vérifier la cohérence end-to-end (API → BDD → API)"
+  ],
+  "clean_architecture_validation": {
+    "domain_layer_purity": {
+      "status": "PASS",
+      "score": "10/10",
+      "details": "Aucun import framework (fastapi, sqlalchemy, pydantic) détecté dans auth/domain et planning/domain",
+      "verified_files": [
+        "backend/modules/auth/domain/entities/user.py",
+        "backend/modules/auth/domain/value_objects.py",
+        "backend/modules/planning/domain/entities/*"
+      ]
+    },
+    "application_layer_purity": {
+      "status": "PASS",
+      "score": "10/10",
+      "details": "Application layer ne dépend que de Domain (pas d'imports framework)",
+      "verified_files": [
+        "backend/modules/auth/application/dtos/user_dto.py",
+        "backend/modules/auth/application/use_cases/*",
+        "backend/modules/planning/application/*"
+      ]
+    },
+    "dependency_rule": {
+      "status": "PASS",
+      "score": "10/10",
+      "details": "Règle de dépendance respectée: Infrastructure → Adapters → Application → Domain",
+      "violations": 0
+    },
+    "inter_module_communication": {
+      "status": "PASS",
+      "score": "10/10",
+      "details": "Communication inter-modules via EventBus (shared.infrastructure.event_bus) - pas d'import direct",
+      "verified_files": [
+        "backend/modules/planning/infrastructure/event_handlers.py",
+        "backend/modules/pointages/infrastructure/event_handlers.py",
+        "backend/modules/notifications/infrastructure/event_handlers.py"
+      ]
+    },
+    "database_migration": {
+      "status": "PASS",
+      "score": "10/10",
+      "details": "Migration Alembic correctement structurée avec support PostgreSQL et SQLite",
+      "file": "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py",
+      "migration_strategy": "Ajout colonne metiers (JSON) → Migration données → Suppression colonne metier"
+    }
+  },
+  "data_flow_analysis": {
+    "frontend_to_backend": {
+      "status": "INCONSISTENT",
+      "details": "Frontend envoie metiers[] (array) mais backend attend encore metier (string) dans certains schémas Pydantic",
+      "impact": "Erreurs de validation Pydantic lors de la création/modification d'utilisateurs avec plusieurs métiers"
+    },
+    "backend_to_database": {
+      "status": "PASS",
+      "details": "Domain entity User.metiers (List[str]) → UserModel.metiers (JSON) correctement mappé",
+      "verified": "backend/modules/auth/infrastructure/persistence/sqlalchemy_user_repository.py ligne 117"
+    },
+    "database_to_backend": {
+      "status": "PASS",
+      "details": "UserModel.metiers (JSON) → User.metiers (List[str]) correctement mappé dans le repository"
+    },
+    "backend_to_frontend": {
+      "status": "INCONSISTENT",
+      "details": "UserDTO.metiers (List[str]) correctement exposé, mais _transform_user_response utilise 'metier' (ligne 1178)",
+      "impact": "Frontend reçoit 'metier' au lieu de 'metiers' dans certaines réponses API"
+    }
+  },
+  "frontend_validation": {
+    "status": "PASS",
+    "details": "Types TypeScript correctement définis avec metiers: Metier[] dans User, UserCreate, UserUpdate",
+    "verified_files": [
+      "frontend/src/types/index.ts (ligne 15)",
+      "frontend/src/components/users/MetierMultiSelect.tsx",
+      "frontend/src/components/users/CreateUserModal.tsx",
+      "frontend/src/components/users/EditUserModal.tsx"
+    ]
+  },
+  "score": {
+    "clean_architecture": "10/10",
+    "modularity": "10/10",
+    "maintainability": "5/10",
+    "data_consistency": "3/10",
+    "overall": "7/10"
+  },
+  "summary": {
+    "total_violations": 4,
+    "critical": 4,
+    "warnings": 0,
+    "info": 0,
+    "blocking_issues": true,
+    "reason": "Incohérence critique entre les schémas Pydantic (routes) et les DTOs/modèles de données. L'API ne peut pas accepter les requêtes du frontend avec metiers[] array."
+  },
+  "next_steps": [
+    "1. Corriger IMMÉDIATEMENT les schémas Pydantic dans auth_routes.py (metier → metiers)",
+    "2. Corriger auth_controller.py pour passer metiers= aux DTOs",
+    "3. Corriger InviteUserUseCase signature (metier: str → metiers: Optional[List[str]])",
+    "4. Exécuter les tests unitaires pour vérifier la cohérence",
+    "5. Tester manuellement la création/modification d'utilisateur avec plusieurs métiers",
+    "6. RE-VALIDER avec architect-reviewer après corrections"
+  ],
+  "validation_required": true,
+  "can_commit": false
+}

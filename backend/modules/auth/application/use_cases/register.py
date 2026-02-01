@@ -135,7 +135,8 @@ class RegisterUseCase:
             type_utilisateur=type_utilisateur,
             couleur=couleur,
             telephone=dto.telephone,
-            metier=dto.metier,
+            metiers=dto.metiers,
+            taux_horaire=dto.taux_horaire,
             code_utilisateur=dto.code_utilisateur,
         )
 

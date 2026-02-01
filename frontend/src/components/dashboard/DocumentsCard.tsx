@@ -53,12 +53,13 @@ export default function DocumentsCard() {
       {!isLoading && documents.length === 0 && (
         <div className="text-center py-8">
           <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Aucun document recent</p>
+          <p className="text-gray-500 text-sm">Aucun document récent</p>
+          <p className="text-gray-400 text-xs mt-1">Les documents de vos chantiers apparaîtront ici</p>
           <button
             onClick={handleViewAll}
             className="mt-3 text-sm text-purple-600 hover:text-purple-700 font-medium"
           >
-            Acceder a la GED
+            Accéder à la GED
           </button>
         </div>
       )}

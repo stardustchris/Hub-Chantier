@@ -2,7 +2,7 @@
 
 // ===== UTILISATEURS =====
 export type UserRole = 'admin' | 'conducteur' | 'chef_chantier' | 'compagnon'
-export type UserType = 'employe' | 'interimaire' | 'sous_traitant'
+export type UserType = 'employe' | 'cadre' | 'interimaire' | 'sous_traitant'
 export type Metier = 'macon' | 'coffreur' | 'ferrailleur' | 'grutier' | 'charpentier' | 'couvreur' | 'terrassier' | 'administratif' | 'autre'
 
 export interface User {
@@ -14,6 +14,7 @@ export interface User {
   type_utilisateur: UserType
   telephone?: string
   metier?: Metier
+  taux_horaire?: number
   code_utilisateur?: string
   couleur?: string
   photo_profil?: string
@@ -33,6 +34,7 @@ export interface UserCreate {
   type_utilisateur?: UserType
   telephone?: string
   metier?: Metier
+  taux_horaire?: number
   code_utilisateur?: string
   couleur?: string
 }
@@ -44,6 +46,7 @@ export interface UserUpdate {
   type_utilisateur?: UserType
   telephone?: string
   metier?: Metier
+  taux_horaire?: number
   code_utilisateur?: string
   couleur?: string
   contact_urgence_nom?: string

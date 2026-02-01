@@ -28,6 +28,9 @@ const AcceptInvitationPage = lazy(() => import('./pages/AcceptInvitationPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const FournisseursPage = lazy(() => import('./pages/FournisseursPage'))
+const BudgetsPage = lazy(() => import('./pages/BudgetsPage'))
+const AchatsPage = lazy(() => import('./pages/AchatsPage'))
+const DashboardFinancierPage = lazy(() => import('./pages/DashboardFinancierPage'))
 
 // CSS-only loading spinner (no lucide-react dependency)
 function PageLoader() {
@@ -154,6 +157,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <FournisseursPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/budgets"
+            element={
+              <ProtectedRoute>
+                <BudgetsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/achats"
+            element={
+              <ProtectedRoute>
+                <AchatsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finances"
+            element={
+              <ProtectedRoute>
+                <DashboardFinancierPage />
               </ProtectedRoute>
             }
           />

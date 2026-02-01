@@ -1,0 +1,355 @@
+{
+  "audit_metadata": {
+    "date": "2026-01-31",
+    "auditor": "security-auditor agent",
+    "scope": "Implementation 'plusieurs metiers par utilisateur'",
+    "context": "Migration metier (string) -> metiers (JSON array)",
+    "standards": ["OWASP Top 10", "RGPD", "Clean Architecture"]
+  },
+  "summary": {
+    "status": "FAIL",
+    "critical_findings": 1,
+    "high_findings": 2,
+    "medium_findings": 2,
+    "low_findings": 1,
+    "total_findings": 6,
+    "remediation_required": true
+  },
+  "findings": [
+    {
+      "id": "SEC-001",
+      "severity": "CRITICAL",
+      "category": "Data Integrity / API Inconsistency",
+      "title": "Incompatibilite complete backend/frontend sur champ 'metiers'",
+      "location": [
+        "backend/modules/auth/infrastructure/web/auth_routes.py:263",
+        "backend/modules/auth/infrastructure/web/auth_routes.py:385",
+        "backend/modules/auth/infrastructure/web/auth_routes.py:588",
+        "backend/modules/auth/adapters/controllers/auth_controller.py:76",
+        "backend/modules/auth/adapters/controllers/auth_controller.py:116"
+      ],
+      "description": "Le backend utilise TOUJOURS le champ singular 'metier' (string) dans les routes API alors que:\n- La migration BDD a converti 'metier' -> 'metiers' (array)\n- Le domaine User.metiers attend Optional[List[str]]\n- Le frontend envoie 'metiers' (array)\n- Les DTOs (RegisterDTO, UpdateUserDTO) definissent 'metiers' (array)\n\nLes routes /auth/register, /auth/invite et PUT /users/{id} utilisent data.metier (singulier) ce qui provoque:\n1. Perte de donnees: le tableau metiers[] du frontend est ignore\n2. AttributeError potentiel si 'metier' n'existe pas dans le payload\n3. Les utilisateurs crees auront metiers=None au lieu de la valeur souhaitee",
+      "impact": "CRITIQUE - Les metiers selectionnes par l'utilisateur ne sont JAMAIS sauvegardes. Perte de donnees totale sur ce champ.",
+      "owasp_reference": "A01:2021 - Broken Access Control (data integrity)",
+      "evidence": [
+        "auth_routes.py ligne 263: metier=data.metier (devrait etre metiers=data.metiers)",
+        "auth_routes.py ligne 385: InviteUserModel utilise metier: Optional[str] (devrait etre metiers: Optional[List[str]])",
+        "auth_routes.py ligne 588: metier=request_body.metier (devrait etre metiers=request_body.metiers)",
+        "auth_routes.py ligne 921: metier=request.metier (devrait etre metiers=request.metiers)",
+        "auth_controller.py ligne 76: 'metier': user_dto.metier (devrait etre 'metiers': user_dto.metiers)",
+        "auth_controller.py ligne 116: metier: Optional[str] (devrait etre metiers: Optional[List[str]])"
+      ],
+      "remediation": {
+        "action": "Corriger IMMEDIATEMENT toutes les references 'metier' -> 'metiers' dans:",
+        "files_to_fix": [
+          "backend/modules/auth/infrastructure/web/auth_routes.py (lignes 263, 385, 588, 910, 921, 936, 1178)",
+          "backend/modules/auth/adapters/controllers/auth_controller.py (lignes 76, 116, 150, 206, 224, 244)"
+        ],
+        "steps": [
+          "1. Modifier RegisterRequest: metier -> metiers (List[str])",
+          "2. Modifier InviteUserModel: metier -> metiers (List[str])",
+          "3. Modifier UpdateUserRequest: metier -> metiers (List[str])",
+          "4. Modifier AuthController._user_dto_to_dict: 'metier' -> 'metiers'",
+          "5. Modifier AuthController.register: metier -> metiers",
+          "6. Modifier AuthController.update_user: metier -> metiers",
+          "7. Tester avec Postman/curl que metiers[] est bien sauvegarde"
+        ],
+        "effort": "2h",
+        "priority": "IMMEDIATE (blocker)"
+      },
+      "test_required": true
+    },
+    {
+      "id": "SEC-002",
+      "severity": "HIGH",
+      "category": "Input Validation",
+      "title": "Aucune validation serveur sur le nombre de metiers",
+      "location": [
+        "backend/modules/auth/application/dtos/user_dto.py:34",
+        "backend/modules/auth/application/use_cases/register.py:138",
+        "backend/modules/auth/application/use_cases/update_user.py:92"
+      ],
+      "description": "Le frontend limite a 5 metiers (MAX_METIERS = 5) mais le backend n'applique AUCUNE validation:\n- RegisterDTO accepte metiers sans constraint\n- UpdateUserDTO accepte metiers sans constraint\n- User.update_profile() accepte n'importe quelle liste\n\nUn attaquant peut contourner la validation frontend (Burp Suite, curl) et envoyer:\n- 1000 metiers -> surcharge memoire JSON\n- Liste vide valide mais semantiquement incorrecte\n- Injection de valeurs invalides: metiers=['<script>', 'DROP TABLE']",
+      "impact": "HIGH - Contournement validation client, risque DoS (memoire), donnees corrompues",
+      "owasp_reference": "A03:2021 - Injection / A04:2021 - Insecure Design",
+      "evidence": [
+        "user_dto.py ligne 34: metiers: Optional[List[str]] - aucune contrainte Pydantic",
+        "register.py ligne 138: metiers=dto.metiers - accepte sans validation",
+        "update_user.py ligne 92: metiers=dto.metiers - accepte sans validation",
+        "MetierMultiSelect.tsx ligne 11: MAX_METIERS = 5 (cote client uniquement)"
+      ],
+      "remediation": {
+        "action": "Ajouter validation Pydantic stricte sur le champ metiers",
+        "implementation": [
+          "1. Dans RegisterDTO et UpdateUserDTO, utiliser:",
+          "   from pydantic import validator, Field",
+          "   metiers: Optional[List[constr(min_length=1, max_length=50)]] = Field(None, max_items=5)",
+          "2. Ajouter validator pour verifier que les valeurs sont dans l'enum autorise:",
+          "   METIERS_AUTORISES = ['macon', 'coffreur', 'ferrailleur', 'grutier', 'charpentier', 'couvreur', 'terrassier', 'administratif', 'autre']",
+          "   @validator('metiers')",
+          "   def validate_metiers(cls, v):",
+          "       if v:",
+          "           if len(v) > 5:",
+          "               raise ValueError('Maximum 5 metiers autorises')",
+          "           for metier in v:",
+          "               if metier not in METIERS_AUTORISES:",
+          "                   raise ValueError(f'Metier invalide: {metier}')",
+          "       return v",
+          "3. Tester avec payload malveillant: metiers=['x']*100"
+        ],
+        "effort": "1h",
+        "priority": "HIGH"
+      },
+      "test_required": true
+    },
+    {
+      "id": "SEC-003",
+      "severity": "HIGH",
+      "category": "SQL Injection (PostgreSQL JSON)",
+      "title": "Risque SQL injection via requetes JSON non parametrees",
+      "location": [
+        "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py:44-57"
+      ],
+      "description": "La migration utilise des requetes SQL brutes avec sa.text() pour manipuler les colonnes JSON:\n- jsonb_build_array(metier) - PostgreSQL\n- json_array(metier) - SQLite\n\nBien que la migration elle-meme soit securisee (pas d'input utilisateur), le pattern etablit un precedent dangereux. Si des requetes similaires sont ajoutees dans les repositories avec filtrage par metiers[], risque d'injection SQL.\n\nPotentiel futur:\n- Filtrer utilisateurs par metier: WHERE metiers @> '[\"coffreur\"]'::jsonb\n- Si la valeur n'est pas parametree -> injection possible",
+      "impact": "HIGH - Pas d'exploitation immediate mais pattern a risque pour evolutions futures",
+      "owasp_reference": "A03:2021 - Injection",
+      "evidence": [
+        "migration ligne 44-48: UPDATE users SET metiers = jsonb_build_array(metier)",
+        "migration ligne 51-56: UPDATE users SET metiers = json_array(metier)",
+        "Pas de requetes SQL filtrant par metiers[] trouve dans le repository actuel (BON)"
+      ],
+      "remediation": {
+        "action": "Documenter les bonnes pratiques pour requetes JSON + code review",
+        "implementation": [
+          "1. Ajouter commentaire dans la migration expliquant pourquoi sa.text() est OK ici",
+          "2. Creer guide securite dans docs/security/sql-json-queries.md:",
+          "   - Toujours utiliser bindparams() pour valeurs dynamiques",
+          "   - Exemple: WHERE metiers @> :metier_filter avec {'metier_filter': json.dumps([metier])}",
+          "3. Code review systematique sur toute requete contenant 'metiers', 'JSON', 'jsonb'",
+          "4. Ajouter test unitaire pour verifier qu'aucune injection n'est possible"
+        ],
+        "effort": "30min documentation + vigilance",
+        "priority": "MEDIUM (preventif)"
+      },
+      "test_required": false
+    },
+    {
+      "id": "SEC-004",
+      "severity": "MEDIUM",
+      "category": "XSS (Cross-Site Scripting)",
+      "title": "Risque XSS dans affichage badges metiers (frontend)",
+      "location": [
+        "frontend/src/components/users/MetierMultiSelect.tsx:62-86",
+        "frontend/src/components/users/UserCard.tsx (non lu mais probable)"
+      ],
+      "description": "Les badges de metiers sont affiches avec:\n- style={{ backgroundColor: metierInfo.color + '20' }} (ligne 69)\n- Texte: {metierInfo.label} (ligne 73)\n\nBien que les valeurs proviennent de METIERS (constante statique), si un attaquant reussit a modifier le backend pour accepter des metiers custom, risque XSS:\n- metier malveillant: \"<img src=x onerror=alert(1)>\"\n- Affichage sans sanitization -> execution XSS\n\nActuellement: MEDIUM car validation frontend empeche l'ajout de valeurs hors enum.\nApres correction SEC-002: MEDIUM car validation backend existera.",
+      "impact": "MEDIUM - Risque XSS si contournement validation (improbable actuellement)",
+      "owasp_reference": "A03:2021 - Injection (XSS)",
+      "evidence": [
+        "MetierMultiSelect.tsx ligne 73: {metierInfo.label} - pas de sanitization explicite",
+        "React echappe automatiquement les {expressions} mais pas les dangerouslySetInnerHTML",
+        "Aucune utilisation de dangerouslySetInnerHTML detectee (BON)"
+      ],
+      "remediation": {
+        "action": "Verifier que React echappe correctement + valider backend (deja couvert par SEC-002)",
+        "implementation": [
+          "1. Confirmer que tous les affichages utilisent {expression} et non innerHTML",
+          "2. Ajouter Content-Security-Policy header cote backend:",
+          "   CSP: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+          "3. La validation backend (SEC-002) bloquera les valeurs hors enum",
+          "4. Test: verifier qu'un payload XSS dans metiers[] est rejete par le backend"
+        ],
+        "effort": "30min verification + CSP header",
+        "priority": "MEDIUM"
+      },
+      "test_required": true
+    },
+    {
+      "id": "SEC-005",
+      "severity": "MEDIUM",
+      "category": "Data Loss (Migration)",
+      "title": "Perte de donnees lors du downgrade migration (metiers -> metier)",
+      "location": [
+        "backend/migrations/versions/20260131_0001_convert_metier_to_metiers_array.py:64-105"
+      ],
+      "description": "La fonction downgrade() convertit metiers[] -> metier (string) en prenant UNIQUEMENT le premier metier:\n- PostgreSQL: metier = metiers->>0\n- SQLite: metier = json_extract(metiers, '$[0]')\n\nSi un utilisateur a ['coffreur', 'ferrailleur', 'macon'], apres downgrade il ne garde que 'coffreur'.\n\nLa migration documente bien le risque (ligne 73: ATTENTION: Perte de donnees), mais aucun log/alerte n'est genere.",
+      "impact": "MEDIUM - Perte de donnees documentee mais non logguee. Acceptable si downgrade est exceptionnel.",
+      "owasp_reference": "N/A (business logic)",
+      "evidence": [
+        "migration ligne 73: Commentaire 'ATTENTION: Perte de donnees si un utilisateur a plusieurs metiers'",
+        "migration ligne 89: metier = metiers->>0 (prend premier element)",
+        "Aucun logging de la perte detecte"
+      ],
+      "remediation": {
+        "action": "Ajouter logging lors du downgrade pour tracabilite",
+        "implementation": [
+          "1. Ajouter avant le downgrade:",
+          "   affected_count = connection.execute(sa.text(\"SELECT COUNT(*) FROM users WHERE jsonb_array_length(metiers) > 1\")).scalar()",
+          "   if affected_count > 0:",
+          "       print(f'WARNING: {affected_count} utilisateurs perdront des metiers lors du downgrade')",
+          "2. Logger les IDs des utilisateurs affectes pour audit",
+          "3. Documenter dans CHANGELOG.md que le downgrade provoque perte de donnees"
+        ],
+        "effort": "30min",
+        "priority": "LOW (preventif)"
+      },
+      "test_required": false
+    },
+    {
+      "id": "SEC-006",
+      "severity": "LOW",
+      "category": "RGPD Compliance",
+      "title": "Metiers ne sont PAS des donnees sensibles RGPD",
+      "location": "N/A",
+      "description": "Les metiers (macon, coffreur, etc.) ne revelent PAS d'informations sensibles au sens du RGPD:\n- Article 9 RGPD: donnees sensibles = origine ethnique, sante, opinions politiques, etc.\n- Les metiers sont des informations professionnelles standard, NON protegees\n\nConclusion: Aucun traitement special requis.\n- PAS de chiffrement necessaire (contrairement telephone, contact_urgence)\n- PAS de consentement explicite requis\n- Inclusion dans export RGPD (droit portabilite) suffit",
+      "impact": "LOW - Conformite RGPD OK, pas d'action requise",
+      "rgpd_reference": "Article 9 - Donnees sensibles",
+      "evidence": [
+        "user_model.py ligne 70: metiers = Column(JSON, nullable=True) - pas de EncryptedString (correct)",
+        "user_model.py ligne 53: telephone = Column(EncryptedString(20)) - chiffre car donnee personnelle",
+        "Les metiers sont inclus dans UserDTO (export RGPD) - conforme"
+      ],
+      "remediation": {
+        "action": "Aucune action requise - conformite OK",
+        "implementation": [],
+        "effort": "0h",
+        "priority": "N/A"
+      },
+      "test_required": false
+    }
+  ],
+  "compliance_status": {
+    "OWASP_Top10": "FAIL",
+    "details": {
+      "A01_Broken_Access_Control": "PASS - Permissions OK",
+      "A03_Injection": "FAIL - SEC-002 (validation), SEC-003 (SQL preventif), SEC-004 (XSS)",
+      "A04_Insecure_Design": "FAIL - SEC-001 (incoherence API critique)",
+      "A05_Security_Misconfiguration": "PASS",
+      "A07_Identification_Authentication_Failures": "PASS"
+    },
+    "RGPD": "PASS",
+    "details_rgpd": {
+      "Article_6_Licite": "PASS - Metiers = donnee professionnelle legitime",
+      "Article_9_Sensible": "PASS - Metiers NON sensibles",
+      "Article_15_Acces": "PASS - Inclus dans UserDTO",
+      "Article_17_Oubli": "PASS - Suppression via delete cascade",
+      "Article_20_Portabilite": "PASS - Export JSON disponible",
+      "Article_32_Securite": "PASS - Validation a ajouter (SEC-002)"
+    },
+    "Clean_Architecture": "PASS",
+    "details_architecture": {
+      "Domain_Independence": "PASS - User.metiers bien defini",
+      "DTO_Validation": "FAIL - SEC-002 (validation manquante)",
+      "API_Consistency": "FAIL - SEC-001 (metier vs metiers)"
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "IMMEDIATE",
+      "action": "Corriger SEC-001 (metier -> metiers dans routes et controller)",
+      "rationale": "Perte de donnees totale actuellement - blocker pour production",
+      "effort": "2h"
+    },
+    {
+      "priority": "HIGH",
+      "action": "Implementer SEC-002 (validation Pydantic sur metiers[])",
+      "rationale": "Prevention injection + DoS memoire",
+      "effort": "1h"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Ajouter CSP header + verifier XSS (SEC-004)",
+      "rationale": "Defense en profondeur contre XSS",
+      "effort": "30min"
+    },
+    {
+      "priority": "LOW",
+      "action": "Documenter bonnes pratiques SQL+JSON (SEC-003)",
+      "rationale": "Prevention pour futures evolutions",
+      "effort": "30min"
+    },
+    {
+      "priority": "LOW",
+      "action": "Ajouter logging downgrade migration (SEC-005)",
+      "rationale": "Tracabilite perte de donnees",
+      "effort": "30min"
+    }
+  ],
+  "test_plan": [
+    {
+      "test_id": "SEC-001-T1",
+      "description": "Verifier sauvegarde metiers[] via API POST /auth/register",
+      "steps": [
+        "1. POST /auth/register avec metiers: ['macon', 'coffreur']",
+        "2. GET /users/{id} et verifier metiers = ['macon', 'coffreur']",
+        "3. Verifier en BDD: SELECT metiers FROM users WHERE id = ?"
+      ],
+      "expected": "metiers[] correctement sauvegarde en JSON",
+      "severity": "CRITICAL"
+    },
+    {
+      "test_id": "SEC-001-T2",
+      "description": "Verifier mise a jour metiers[] via API PUT /users/{id}",
+      "steps": [
+        "1. PUT /users/{id} avec metiers: ['ferrailleur', 'grutier', 'couvreur']",
+        "2. GET /users/{id} et verifier metiers = ['ferrailleur', 'grutier', 'couvreur']"
+      ],
+      "expected": "metiers[] correctement mis a jour",
+      "severity": "CRITICAL"
+    },
+    {
+      "test_id": "SEC-002-T1",
+      "description": "Tenter injection avec >5 metiers",
+      "steps": [
+        "1. POST /auth/register avec metiers: ['macon']*10",
+        "2. Verifier reponse HTTP 400 'Maximum 5 metiers autorises'"
+      ],
+      "expected": "Validation backend rejette la requete",
+      "severity": "HIGH"
+    },
+    {
+      "test_id": "SEC-002-T2",
+      "description": "Tenter injection avec metier invalide",
+      "steps": [
+        "1. POST /auth/register avec metiers: ['<script>alert(1)</script>']",
+        "2. Verifier reponse HTTP 400 'Metier invalide'"
+      ],
+      "expected": "Validation backend rejette la requete",
+      "severity": "HIGH"
+    },
+    {
+      "test_id": "SEC-004-T1",
+      "description": "Verifier pas de XSS dans affichage badges",
+      "steps": [
+        "1. Inspecter frontend MetierMultiSelect avec DevTools",
+        "2. Verifier que les labels utilisent textContent et non innerHTML",
+        "3. Tenter payload XSS (apres avoir contourne validation) et verifier echappement"
+      ],
+      "expected": "React echappe automatiquement les expressions {}",
+      "severity": "MEDIUM"
+    }
+  ],
+  "conclusion": {
+    "status": "FAIL - CRITICAL findings bloquent production",
+    "critical_blockers": [
+      "SEC-001: Incompatibilite backend/frontend provoque perte totale des metiers"
+    ],
+    "must_fix_before_production": [
+      "SEC-001: Corriger metier -> metiers dans routes/controller",
+      "SEC-002: Ajouter validation Pydantic stricte"
+    ],
+    "post_production_improvements": [
+      "SEC-003: Documentation SQL+JSON",
+      "SEC-004: CSP header",
+      "SEC-005: Logging downgrade"
+    ],
+    "estimated_total_effort": "4h (2h SEC-001 + 1h SEC-002 + 1h tests)",
+    "next_steps": [
+      "1. Corriger immediatement SEC-001 (blocker)",
+      "2. Implementer SEC-002 (high priority)",
+      "3. Executer test plan complet",
+      "4. Re-auditer apres corrections",
+      "5. Deployer en production uniquement apres PASS"
+    ]
+  }
+}

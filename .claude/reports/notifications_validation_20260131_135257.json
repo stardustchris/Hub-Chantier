@@ -1,0 +1,210 @@
+{
+  "module": "notifications",
+  "global_status": "WARN",
+  "timestamp": "2026-01-31T13:52:57.431529",
+  "duration_seconds": 0.027484,
+  "agents_executed": 3,
+  "total_findings": {
+    "CRITICAL": 0,
+    "HIGH": 9,
+    "MEDIUM": 4,
+    "LOW": 9
+  },
+  "reports": [
+    {
+      "agent": "architectreviewer",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 6 violation(s) haute(s) architecture",
+      "score": {
+        "clean_architecture": "4/10",
+        "modularity": "9/10",
+        "files_analyzed": 25
+      },
+      "findings_count": 6,
+      "findings": [
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'dashboard' (violation isolation des modules)",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'pointages' (violation isolation des modules)",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'pointages' (violation isolation des modules)",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'dashboard' (violation isolation des modules)",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'chantiers' (violation isolation des modules)",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Import direct du module 'chantiers' (violation isolation des modules)",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Utiliser EventBus pour la communication inter-modules",
+          "category": "architecture"
+        }
+      ]
+    },
+    {
+      "agent": "codereviewer",
+      "status": "WARN",
+      "summary": "⚠️  WARNING : 3 problème(s) haute(s) priorité, 1 moyen(s)",
+      "score": {
+        "quality": "7/10",
+        "maintainability": "3/10",
+        "files_reviewed": 25,
+        "issues_found": 13
+      },
+      "findings_count": 13,
+      "findings": [
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'handle_heures_validated' sans type hints sur les paramètres",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'handle_chantier_created' sans type hints sur les paramètres",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Fonction 'handle_chantier_statut_changed' sans type hints sur les paramètres",
+          "file": "backend/modules/notifications/infrastructure/event_handlers.py",
+          "suggestion": "Ajouter les type hints : def func(param: Type) -> ReturnType:",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/domain/entities/notification.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/get_notifications.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/get_notifications.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/mark_as_read.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/mark_as_read.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/create_notification.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/create_notification.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/delete_notification.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/notifications/application/use_cases/delete_notification.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (13)",
+          "file": "backend/modules/notifications/infrastructure/persistence/sqlalchemy_notification_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        }
+      ]
+    },
+    {
+      "agent": "securityauditor",
+      "status": "PASS",
+      "summary": "✅ Aucune vulnérabilité critique détectée",
+      "score": {
+        "security": "10/10",
+        "critical_issues": 0,
+        "high_issues": 0,
+        "total_findings": 3
+      },
+      "findings_count": 3,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Endpoint sans validation Pydantic stricte",
+          "file": "backend/modules/notifications/infrastructure/web/routes.py",
+          "suggestion": "Utiliser des modèles Pydantic avec validators",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit d'accès aux données non implémenté",
+          "file": "backend/modules/notifications",
+          "suggestion": "Implémenter l'export des données utilisateur",
+          "category": "security"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit à l'oubli non implémenté",
+          "file": "backend/modules/notifications",
+          "suggestion": "Implémenter la suppression complète des données",
+          "category": "security"
+        }
+      ]
+    }
+  ]
+}

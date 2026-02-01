@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
+from decimal import Decimal
 
 from ...domain.entities import User
 
@@ -31,7 +32,8 @@ class UserDTO:
     photo_profil: Optional[str]
     code_utilisateur: Optional[str]
     telephone: Optional[str]
-    metier: Optional[str]
+    metiers: Optional[List[str]]
+    taux_horaire: Optional[Decimal]
     contact_urgence_nom: Optional[str]
     contact_urgence_tel: Optional[str]
     created_at: datetime
@@ -61,7 +63,8 @@ class UserDTO:
             photo_profil=user.photo_profil,
             code_utilisateur=user.code_utilisateur,
             telephone=user.telephone,
-            metier=user.metier,
+            metiers=user.metiers,
+            taux_horaire=user.taux_horaire,
             contact_urgence_nom=user.contact_urgence_nom,
             contact_urgence_tel=user.contact_urgence_tel,
             created_at=user.created_at,
@@ -119,7 +122,8 @@ class RegisterDTO:
     prenom: str
     type_utilisateur: Optional[str] = None
     telephone: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
     code_utilisateur: Optional[str] = None
     couleur: Optional[str] = None
 
@@ -135,7 +139,8 @@ class UpdateUserDTO:
     nom: Optional[str] = None
     prenom: Optional[str] = None
     telephone: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
     couleur: Optional[str] = None
     photo_profil: Optional[str] = None
     contact_urgence_nom: Optional[str] = None

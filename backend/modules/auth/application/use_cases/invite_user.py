@@ -2,7 +2,8 @@
 
 import secrets
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
+from decimal import Decimal
 
 from ...domain.repositories.user_repository import UserRepository
 from ...domain.entities import User
@@ -35,7 +36,8 @@ class InviteUserUseCase:
         role: Role,
         type_utilisateur: TypeUtilisateur = TypeUtilisateur.EMPLOYE,
         code_utilisateur: Optional[str] = None,
-        metier: Optional[str] = None,
+        metiers: Optional[List[str]] = None,
+        taux_horaire: Optional[Decimal] = None,
         inviter_name: str = "L'équipe Hub Chantier",
     ) -> User:
         """
@@ -48,7 +50,8 @@ class InviteUserUseCase:
             role: Rôle assigné.
             type_utilisateur: Type (employé ou sous-traitant).
             code_utilisateur: Code/matricule optionnel.
-            metier: Métier/spécialité optionnel.
+            metiers: Liste de métiers/spécialités optionnel.
+            taux_horaire: Taux horaire en EUR (optionnel, module financier).
             inviter_name: Nom de la personne qui invite.
 
         Returns:
@@ -85,7 +88,8 @@ class InviteUserUseCase:
             role=role,
             type_utilisateur=type_utilisateur,
             code_utilisateur=code_utilisateur,
-            metier=metier,
+            metiers=metiers,
+            taux_horaire=taux_horaire,
             is_active=False,  # Inactif tant que l'invitation n'est pas acceptée
         )
 

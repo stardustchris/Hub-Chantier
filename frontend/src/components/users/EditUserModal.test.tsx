@@ -16,8 +16,33 @@ import userEvent from '@testing-library/user-event'
 import { EditUserModal } from './EditUserModal'
 import type { User } from '../../types'
 
+// Mock AuthContext
+const mockAdminUser = {
+  id: 999,
+  email: 'admin@example.com',
+  role: 'admin' as const,
+  nom: 'Admin',
+  prenom: 'Test',
+  type_utilisateur: 'employe' as const,
+}
+
+const mockCompagnonUser = {
+  id: 998,
+  email: 'compagnon@example.com',
+  role: 'compagnon' as const,
+  nom: 'Compagnon',
+  prenom: 'Test',
+  type_utilisateur: 'employe' as const,
+}
+
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
+}))
+
+import { useAuth } from '../../contexts/AuthContext'
+
 const createMockUser = (overrides: Partial<User> = {}): User => ({
-  id: '1',
+  id: 1 as any,  // Type workaround for tests
   email: 'jean.dupont@test.com',
   nom: 'Dupont',
   prenom: 'Jean',
@@ -46,6 +71,16 @@ describe('EditUserModal', () => {
   })
 
   describe('Affichage', () => {
+    beforeEach(() => {
+      // Default to compagnon user for non-taux_horaire tests
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockCompagnonUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+    })
+
     it('affiche le titre', () => {
       render(<EditUserModal {...defaultProps} />)
       expect(screen.getByText('Modifier l\'utilisateur')).toBeInTheDocument()
@@ -322,6 +357,13 @@ describe('EditUserModal', () => {
 
   describe('Valeurs optionnelles', () => {
     it('gère les valeurs undefined', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockCompagnonUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
       render(
         <EditUserModal
           {...defaultProps}
@@ -338,6 +380,202 @@ describe('EditUserModal', () => {
       // Should not crash, inputs should be empty
       const textInputs = screen.getAllByRole('textbox')
       expect(textInputs.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Taux Horaire - Admin Only', () => {
+    it('affiche le champ taux_horaire quand l\'utilisateur est admin', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      expect(screen.getByText(/Taux horaire \(EUR\/h\)/)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Ex: 25.50')).toBeInTheDocument()
+      expect(screen.getByText(/Utilisé pour le calcul des coûts/)).toBeInTheDocument()
+    })
+
+    it('ne affiche PAS le champ taux_horaire quand l\'utilisateur n\'est PAS admin', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockCompagnonUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      expect(screen.queryByLabelText(/Taux horaire/)).not.toBeInTheDocument()
+    })
+
+    it('affiche la valeur existante du taux_horaire pour admin', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      const tauxInput = screen.getByPlaceholderText('Ex: 25.50') as HTMLInputElement
+      expect(tauxInput.value).toBe('25.5')
+    })
+
+    it('permet à l\'admin de modifier le taux_horaire', async () => {
+      const user = userEvent.setup()
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      const tauxInput = screen.getByPlaceholderText('Ex: 25.50')
+      await user.clear(tauxInput)
+      await user.type(tauxInput, '35.75')
+      await user.click(screen.getByText('Enregistrer'))
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            taux_horaire: 35.75,
+          })
+        )
+      })
+    })
+
+    it('permet à l\'admin de vider le taux_horaire', async () => {
+      const user = userEvent.setup()
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      const tauxInput = screen.getByPlaceholderText('Ex: 25.50')
+      await user.clear(tauxInput)
+      await user.click(screen.getByText('Enregistrer'))
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            taux_horaire: undefined,
+          })
+        )
+      })
+    })
+
+    it('accepte des valeurs décimales pour le taux_horaire', async () => {
+      const user = userEvent.setup()
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser()} />)
+
+      const tauxInput = screen.getByPlaceholderText('Ex: 25.50')
+      await user.type(tauxInput, '28.756')
+      await user.click(screen.getByText('Enregistrer'))
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            taux_horaire: 28.756,
+          })
+        )
+      })
+    })
+
+    it('a les attributs HTML corrects pour le champ taux_horaire', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser()} />)
+
+      const tauxInput = screen.getByPlaceholderText('Ex: 25.50') as HTMLInputElement
+      expect(tauxInput).toHaveAttribute('type', 'number')
+      expect(tauxInput).toHaveAttribute('min', '0')
+      expect(tauxInput).toHaveAttribute('step', '0.01')
+      expect(tauxInput).toHaveAttribute('placeholder', 'Ex: 25.50')
+    })
+
+    it('gère un utilisateur sans taux_horaire défini', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: undefined })} />)
+
+      const tauxInput = screen.getByPlaceholderText('Ex: 25.50') as HTMLInputElement
+      expect(tauxInput.value).toBe('')
+    })
+
+    it('soumet le formulaire avec le taux_horaire quand admin', async () => {
+      const user = userEvent.setup()
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockAdminUser,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      await user.click(screen.getByText('Enregistrer'))
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            taux_horaire: 25.5,
+          })
+        )
+      })
+    })
+
+    it('chef_chantier ne peut PAS voir le champ taux_horaire', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { ...mockCompagnonUser, role: 'chef_chantier' as const },
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      expect(screen.queryByLabelText(/Taux horaire/)).not.toBeInTheDocument()
+    })
+
+    it('conducteur ne peut PAS voir le champ taux_horaire', () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { ...mockCompagnonUser, role: 'conducteur' as const },
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
+      })
+
+      render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
+
+      expect(screen.queryByLabelText(/Taux horaire/)).not.toBeInTheDocument()
     })
   })
 })

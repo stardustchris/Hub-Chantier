@@ -114,7 +114,8 @@ class SQLAlchemyUserRepository(UserRepository):
                 model.photo_profil = user.photo_profil
                 model.code_utilisateur = user.code_utilisateur
                 model.telephone = user.telephone
-                model.metier = user.metier
+                model.metiers = user.metiers
+                model.taux_horaire = user.taux_horaire
                 model.contact_urgence_nom = user.contact_urgence_nom
                 model.contact_urgence_tel = user.contact_urgence_tel
                 model.updated_at = user.updated_at
@@ -420,7 +421,8 @@ class SQLAlchemyUserRepository(UserRepository):
             "photo_profil": model.photo_profil,
             "code_utilisateur": model.code_utilisateur,
             "telephone": model.telephone,
-            "metier": model.metier,
+            "metiers": model.metiers,
+            "taux_horaire": model.taux_horaire,
             "contact_urgence_nom": model.contact_urgence_nom,
             "contact_urgence_tel": model.contact_urgence_tel,
             "created_at": model.created_at,
@@ -472,7 +474,8 @@ class SQLAlchemyUserRepository(UserRepository):
             "photo_profil": user.photo_profil,
             "code_utilisateur": user.code_utilisateur,
             "telephone": user.telephone,
-            "metier": user.metier,
+            "metiers": user.metiers,
+            "taux_horaire": user.taux_horaire,
             "contact_urgence_nom": user.contact_urgence_nom,
             "contact_urgence_tel": user.contact_urgence_tel,
             "created_at": user.created_at,

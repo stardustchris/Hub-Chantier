@@ -4,9 +4,11 @@
  */
 
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, Euro } from 'lucide-react'
 import type { User, UserUpdate, UserRole, Metier } from '../../types'
 import { ROLES, METIERS, USER_COLORS } from '../../types'
+import { useAuth } from '../../contexts/AuthContext'
+import { MetierMultiSelect } from './MetierMultiSelect'
 
 interface EditUserModalProps {
   user: User
@@ -15,13 +17,17 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
+  const { user: currentUser } = useAuth()
+  const isAdmin = currentUser?.role === 'admin'
+
   const [formData, setFormData] = useState<UserUpdate>({
     nom: user.nom,
     prenom: user.prenom,
     role: user.role,
     type_utilisateur: user.type_utilisateur,
     telephone: user.telephone,
-    metier: user.metier,
+    metiers: user.metiers || [],
+    taux_horaire: user.taux_horaire,
     code_utilisateur: user.code_utilisateur,
     couleur: user.couleur,
     contact_urgence_nom: user.contact_urgence_nom,
@@ -104,12 +110,14 @@ export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    type_utilisateur: e.target.value as 'employe' | 'sous_traitant',
+                    type_utilisateur: e.target.value as 'employe' | 'cadre' | 'interimaire' | 'sous_traitant',
                   })
                 }
                 className="input"
               >
                 <option value="employe">Employe</option>
+                <option value="cadre">Cadre</option>
+                <option value="interimaire">Interimaire</option>
                 <option value="sous_traitant">Sous-traitant</option>
               </select>
             </div>
@@ -117,24 +125,12 @@ export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Metier
+              Métiers (jusqu'à 5)
             </label>
-            <select
-              value={formData.metier || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, metier: (e.target.value as Metier) || undefined })
-              }
-              className="input"
-            >
-              <option value="">Non specifie</option>
-              {(Object.entries(METIERS) as [Metier, typeof METIERS[Metier]][]).map(
-                ([metier, info]) => (
-                  <option key={metier} value={metier}>
-                    {info.label}
-                  </option>
-                )
-              )}
-            </select>
+            <MetierMultiSelect
+              value={formData.metiers || []}
+              onChange={(metiers) => setFormData({ ...formData, metiers })}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -162,6 +158,34 @@ export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
               />
             </div>
           </div>
+
+          {/* Taux horaire - Visible uniquement pour les administrateurs */}
+          {isAdmin && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                <Euro className="w-4 h-4" />
+                Taux horaire (EUR/h)
+              </label>
+              <input
+                type="number"
+                min="11"
+                max="200"
+                step="0.01"
+                value={formData.taux_horaire || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    taux_horaire: e.target.value ? parseFloat(e.target.value) : undefined,
+                  })
+                }
+                className="input"
+                placeholder="Ex: 25.50"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Plage valide : 11€ (SMIC) à 200€ (cadre sup.) • Utilisé pour le calcul des coûts
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

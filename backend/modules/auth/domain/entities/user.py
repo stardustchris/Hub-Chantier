@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+from decimal import Decimal
 
 from ..value_objects import Email, PasswordHash, Role, TypeUtilisateur, Couleur
 
@@ -30,7 +31,8 @@ class User:
         photo_profil: URL de la photo de profil (USR-02).
         code_utilisateur: Matricule pour export paie (USR-07).
         telephone: Numéro mobile (USR-08).
-        metier: Métier/Spécialité (USR-11).
+        metiers: Liste de métiers/spécialités (USR-11).
+        taux_horaire: Taux horaire en EUR (FIN-09).
         contact_urgence_nom: Nom du contact d'urgence (USR-13).
         contact_urgence_tel: Téléphone du contact d'urgence (USR-13).
         created_at: Date de création.
@@ -52,7 +54,8 @@ class User:
     photo_profil: Optional[str] = None
     code_utilisateur: Optional[str] = None
     telephone: Optional[str] = None
-    metier: Optional[str] = None
+    metiers: Optional[List[str]] = None
+    taux_horaire: Optional[Decimal] = None
     contact_urgence_nom: Optional[str] = None
     contact_urgence_tel: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.now)
@@ -82,6 +85,10 @@ class User:
         if not self.prenom or not self.prenom.strip():
             raise ValueError("Le prénom ne peut pas être vide")
 
+        # Validation taux horaire (FIN-09)
+        if self.taux_horaire is not None:
+            self._validate_taux_horaire(self.taux_horaire)
+
         # Normalisation
         self.nom = self.nom.strip().upper()
         self.prenom = self.prenom.strip().title()
@@ -89,6 +96,42 @@ class User:
         # Couleur par défaut si non spécifiée
         if self.couleur is None:
             self.couleur = Couleur.default()
+
+    @staticmethod
+    def _validate_taux_horaire(taux: Decimal) -> None:
+        """
+        Valide le taux horaire selon les règles métier.
+
+        Règles (FIN-09) :
+        - Minimum : 11.00 EUR/h (SMIC 2026)
+        - Maximum : 200.00 EUR/h (cadre supérieur)
+        - Précision : 2 décimales maximum
+
+        Args:
+            taux: Taux horaire à valider.
+
+        Raises:
+            ValueError: Si le taux horaire est invalide.
+        """
+        # Constantes métier
+        SMIC_HORAIRE = Decimal("11.00")  # SMIC 2026 (ajuster annuellement)
+        TAUX_MAX_CADRE = Decimal("200.00")  # Cadre supérieur
+
+        if taux < SMIC_HORAIRE:
+            raise ValueError(
+                f"Le taux horaire ({taux} EUR/h) est inférieur au SMIC ({SMIC_HORAIRE} EUR/h)"
+            )
+
+        if taux > TAUX_MAX_CADRE:
+            raise ValueError(
+                f"Le taux horaire ({taux} EUR/h) dépasse le maximum autorisé ({TAUX_MAX_CADRE} EUR/h)"
+            )
+
+        # Vérifier précision (max 2 décimales)
+        if taux.as_tuple().exponent < -2:
+            raise ValueError(
+                "Le taux horaire ne peut avoir plus de 2 décimales"
+            )
 
     @property
     def nom_complet(self) -> str:
@@ -275,7 +318,8 @@ class User:
         nom: Optional[str] = None,
         prenom: Optional[str] = None,
         telephone: Optional[str] = None,
-        metier: Optional[str] = None,
+        metiers: Optional[List[str]] = None,
+        taux_horaire: Optional[Decimal] = None,
         couleur: Optional[Couleur] = None,
         photo_profil: Optional[str] = None,
         contact_urgence_nom: Optional[str] = None,
@@ -288,7 +332,8 @@ class User:
             nom: Nouveau nom (optionnel).
             prenom: Nouveau prénom (optionnel).
             telephone: Nouveau téléphone (optionnel).
-            metier: Nouveau métier (optionnel).
+            metiers: Nouvelle liste de métiers (optionnel).
+            taux_horaire: Nouveau taux horaire (optionnel, admin only).
             couleur: Nouvelle couleur (optionnel).
             photo_profil: Nouvelle URL photo (optionnel).
             contact_urgence_nom: Nouveau contact urgence nom (optionnel).
@@ -307,8 +352,12 @@ class User:
         if telephone is not None:
             self.telephone = telephone
 
-        if metier is not None:
-            self.metier = metier
+        if metiers is not None:
+            self.metiers = metiers
+
+        if taux_horaire is not None:
+            self._validate_taux_horaire(taux_horaire)
+            self.taux_horaire = taux_horaire
 
         if couleur is not None:
             self.couleur = couleur

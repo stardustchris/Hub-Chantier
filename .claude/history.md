@@ -8,11 +8,13 @@
 
 **Fichier**: [.claude/history/2026-01.md](./history/2026-01.md)
 
-**Sessions**: 15+ sessions
-**Modules implémentés**: Auth, Dashboard, Chantiers, Planning, **Pointages Phase 1+2**, Formulaires, GED, Signalements, Logistique, Interventions, Tâches
+**Sessions**: 16+ sessions
+**Modules implémentés**: Auth, Dashboard, Chantiers, Planning, **Pointages Phase 1+2**, **Financier Phase 1**, Formulaires, GED, Signalements, Logistique, Interventions, Tâches
 
 **Highlights**:
+- ✅ **01 fév**: Multi-métier selection (jusqu'à 5 métiers) + ajout type Cadre
 - ✅ **31 jan**: Module Financier Phase 2 (FIN-04, 07, 08, 09, 10, 12) — 6 features, 403 tests, 23+ API routes
+- ✅ **31 jan**: Module Financier Phase 1 (FIN-01, 02, 05, 06, 11, 14, 15) - Budget, Achats, Fournisseurs
 - ✅ **31 jan**: Module Pointages Phase 2 (GAP-FDH-004, 007, 008, 009) + corrections sécurité (6.0→9.5/10)
 - ✅ **31 jan**: Module Pointages Phase 1 (GAP-FDH-001, 002, 003, 005)
 - ✅ **31 jan**: Corrections critiques workflow FDH-10 (heures_prevues)
@@ -22,7 +24,7 @@
 - ✅ **21-27 jan**: Setup initial + Architecture + Auth + Planning
 
 **Statut final**:
-- 303 tests unitaires (100% pass)
+- 3638 tests unitaires (100% pass)
 - Couverture: 85%+
 - Score sécurité: 9.5/10
 - 0 vulnérabilités CRITICAL/HIGH
