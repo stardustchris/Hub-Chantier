@@ -19,7 +19,7 @@ from ...application.dtos.suggestions_dtos import SuggestionDTO
 logger = logging.getLogger(__name__)
 
 # Constantes de configuration
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-3-flash"  # Gemini 3 Flash - latest fast model
 GEMINI_TEMPERATURE = 0.3
 GEMINI_MAX_OUTPUT_TOKENS = 800
 GEMINI_TIMEOUT_SECONDS = 10

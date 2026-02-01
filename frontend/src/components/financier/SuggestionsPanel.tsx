@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { AlertTriangle, AlertCircle, Info, Loader2, TrendingDown, Clock, Flame, Sparkles } from 'lucide-react'
+import { AlertTriangle, AlertCircle, Info, Loader2, TrendingDown, Clock, Flame, Sparkles, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
 import { formatEUR } from './ChartTooltip'
@@ -46,6 +46,8 @@ export default function SuggestionsPanel({ chantierId }: SuggestionsPanelProps) 
   const [data, setData] = useState<SuggestionsFinancieres | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showRulesExplainer, setShowRulesExplainer] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(false)
 
   const loadSuggestions = useCallback(async () => {
     try {
@@ -85,21 +87,88 @@ export default function SuggestionsPanel({ chantierId }: SuggestionsPanelProps) 
 
   return (
     <div role="region" aria-label="Suggestions et indicateurs predictifs">
-      {/* Badge source IA */}
-      <div className="mb-3 flex items-center gap-2">
-        {ai_available ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-            <Sparkles size={14} />
-            IA Gemini
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-            <Sparkles size={14} />
-            Regles algorithmiques
-          </span>
-        )}
-        {source === 'gemini' && (
-          <span className="text-xs text-gray-400">Analyse enrichie par intelligence artificielle</span>
+      {/* Badge source IA avec tooltip et toggle */}
+      <div className="mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {ai_available ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+              <Sparkles size={14} />
+              IA Gemini
+            </span>
+          ) : (
+            <div className="inline-flex items-center gap-1.5">
+              <div className="relative">
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 cursor-help"
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                >
+                  <Sparkles size={14} />
+                  Regles algorithmiques
+                  <HelpCircle size={12} className="text-gray-400" />
+                </span>
+
+                {/* Tooltip */}
+                {showTooltip && (
+                  <div className="absolute z-10 bottom-full left-0 mb-2 w-72 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg">
+                    <p className="font-medium mb-1">Suggestions basées sur des règles métier prédéfinies :</p>
+                    <ul className="space-y-1 text-gray-300">
+                      <li>• Budget &gt; 100k€ → Créer situation</li>
+                      <li>• Dépassement &gt; 10% → Alerte burn rate</li>
+                      <li>• Marge &lt; 15% → Optimiser coûts</li>
+                    </ul>
+                    <p className="mt-2 text-gray-400 italic">
+                      ℹ️ L'IA Gemini peut être activée pour des suggestions plus contextuelles.
+                    </p>
+                    {/* Triangle pointer */}
+                    <div className="absolute top-full left-4 -mt-1">
+                      <div className="border-4 border-transparent border-t-gray-900"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setShowRulesExplainer(!showRulesExplainer)}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                aria-expanded={showRulesExplainer}
+              >
+                {showRulesExplainer ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                <span>Voir les règles</span>
+              </button>
+            </div>
+          )}
+          {source === 'gemini' && (
+            <span className="text-xs text-gray-400">Analyse enrichie par intelligence artificielle</span>
+          )}
+        </div>
+
+        {/* Section dépliable : Règles déclenchées */}
+        {!ai_available && showRulesExplainer && (
+          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+              📋 Règles déclenchées ({suggestions.length})
+            </h4>
+            <div className="space-y-2">
+              {suggestions.map((suggestion, index) => (
+                <div key={index} className="flex items-start gap-2 text-sm">
+                  <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                  <div className="flex-1">
+                    <p className="text-gray-700">
+                      <span className="font-medium">{suggestion.type.replace(/_/g, ' ')}</span>
+                      {' → '}
+                      {suggestion.titre}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 pt-3 border-t border-blue-200">
+              <p className="text-xs text-blue-700">
+                💡 <span className="font-medium">Astuce :</span> Activez Gemini pour des suggestions adaptées à votre contexte spécifique (type de chantier, avancement, historique).
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
