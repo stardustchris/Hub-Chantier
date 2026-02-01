@@ -12,6 +12,7 @@
 **Modules implémentés**: Auth, Dashboard, Chantiers, Planning, **Pointages Phase 1+2**, **Financier Phase 1**, Formulaires, GED, Signalements, Logistique, Interventions, Tâches
 
 **Highlights**:
+- ✅ **01 fév**: Résolution finding HIGH rate limiting (fausse alerte) — Score 9.5→10/10, 0 finding réel
 - ✅ **01 fév**: Connecteurs Webhooks Pennylane (compta) + Silae (paie) — 97 tests, 94% couverture, RGPD compliant
 - ✅ **01 fév**: Multi-métier selection (jusqu'à 5 métiers) + ajout type Cadre
 - ✅ **31 jan**: Module Financier Phase 2 (FIN-04, 07, 08, 09, 10, 12) — 6 features, 403 tests, 23+ API routes
@@ -27,8 +28,8 @@
 **Statut final**:
 - 3638 tests unitaires (100% pass)
 - Couverture: 85%+
-- Score sécurité: 9.5/10
-- 0 vulnérabilités CRITICAL/HIGH
+- Score sécurité: **10/10** ⬆️
+- 0 vulnérabilités CRITICAL/HIGH (finding H-001 résolu = fausse alerte)
 
 ---
 
@@ -43,5 +44,5 @@ Chaque fichier mensuel contient:
 
 ---
 
-**Dernière mise à jour**: 31 janvier 2026
+**Dernière mise à jour**: 1er février 2026
 **Archive courante**: 2026-01.md (4304 lignes, ~58k tokens)
