@@ -134,6 +134,8 @@ from .dependencies import (
     get_list_alertes_use_case,
     # Dashboard
     get_dashboard_financier_use_case,
+    # Evolution financiere (FIN-17)
+    get_evolution_financiere_use_case,
     # Journal
     get_journal_financier_repository,
 )
@@ -953,6 +955,33 @@ async def get_dashboard_financier(
     """Tableau de bord financier d'un chantier.
 
     FIN-11: KPI, derniers achats, repartition par lot.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    try:
+        result = use_case.execute(chantier_id)
+        return result.to_dict()
+    except BudgetNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucun budget pour ce chantier",
+        )
+
+
+# =============================================================================
+# Routes Evolution Financiere (FIN-17)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/evolution-financiere")
+async def get_evolution_financiere(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_evolution_financiere_use_case),
+):
+    """Evolution financiere mensuelle d'un chantier.
+
+    FIN-17: Courbes prevu/engage/realise cumules pour graphique Recharts.
     """
     _check_chantier_access(chantier_id, _role, user_chantier_ids)
     try:

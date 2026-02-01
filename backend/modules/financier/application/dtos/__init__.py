@@ -58,6 +58,10 @@ from .dashboard_dtos import (
     DerniersAchatsDTO,
     DashboardFinancierDTO,
 )
+from .evolution_dtos import (
+    EvolutionMensuelleDTO,
+    EvolutionFinanciereDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -98,4 +102,6 @@ __all__ = [
     "KPIFinancierDTO",
     "DerniersAchatsDTO",
     "DashboardFinancierDTO",
+    "EvolutionMensuelleDTO",
+    "EvolutionFinanciereDTO",
 ]

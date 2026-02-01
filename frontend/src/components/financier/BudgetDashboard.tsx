@@ -16,6 +16,9 @@ import { TrendingUp, TrendingDown, AlertTriangle, Loader2, Wallet } from 'lucide
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
 import CircularGauge from './CircularGauge'
+import EvolutionChart from './EvolutionChart'
+import CamembertLots from './CamembertLots'
+import BarresComparativesLots from './BarresComparativesLots'
 import type { Budget, DashboardFinancier, AlerteDepassement } from '../../types'
 
 interface BudgetDashboardProps {
@@ -192,6 +195,24 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
           </p>
         </div>
       </div>
+
+      {/* Graphiques Phase 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border rounded-xl p-4">
+          <h3 className="font-semibold text-gray-900 mb-4">Evolution financiere</h3>
+          <EvolutionChart chantierId={chantierId} />
+        </div>
+        <div className="bg-white border rounded-xl p-4">
+          <h3 className="font-semibold text-gray-900 mb-4">Repartition par lot</h3>
+          <CamembertLots lots={dashboard?.repartition_par_lot || []} />
+        </div>
+      </div>
+      {dashboard?.repartition_par_lot && dashboard.repartition_par_lot.length > 0 && (
+        <div className="bg-white border rounded-xl p-4">
+          <h3 className="font-semibold text-gray-900 mb-4">Comparaison par lot</h3>
+          <BarresComparativesLots lots={dashboard.repartition_par_lot} />
+        </div>
+      )}
 
       {/* Repartition par lot */}
       {dashboard?.repartition_par_lot && dashboard.repartition_par_lot.length > 0 && (
