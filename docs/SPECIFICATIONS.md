@@ -12,6 +12,8 @@ Application SaaS de Gestion de Chantiers
 
 ## TABLE DES MATIERES
 
+### Modules opérationnels (1-15)
+
 1. [INTRODUCTION](./specifications/01-introduction.md)
 2. [TABLEAU DE BORD & FEED D'ACTUALITES](./specifications/02-tableau-de-bord.md)
 3. [GESTION DES UTILISATEURS](./specifications/03-utilisateurs.md)
@@ -27,10 +29,13 @@ Application SaaS de Gestion de Chantiers
 13. [GESTION DES TACHES](./specifications/13-taches.md)
 14. [INTEGRATIONS](./specifications/14-integrations.md)
 15. [SECURITE ET CONFORMITE](./specifications/15-securite.md)
-17. [GESTION FINANCIERE ET BUDGETAIRE](./specifications/17-financier.md)
-18. [CONNECTEURS WEBHOOKS (PENNYLANE & SILAE)](./specifications/18-connecteurs-webhooks-pennylane-silae.md)
-20. [GESTION DES DEVIS](./specifications/20-devis.md)
-21. [GLOSSAIRE](./specifications/21-glossaire.md)
+
+### Modules spécialisés
+
+- **Module 17** : [GESTION FINANCIERE ET BUDGETAIRE](./specifications/17-financier.md)
+- **Module 18** : [CONNECTEURS WEBHOOKS (PENNYLANE & SILAE)](./specifications/18-connecteurs-webhooks-pennylane-silae.md)
+- **Module 20** : [GESTION DES DEVIS](./specifications/20-devis.md)
+- **Module 21** : [GLOSSAIRE](./specifications/21-glossaire.md)
 
 ---
 
