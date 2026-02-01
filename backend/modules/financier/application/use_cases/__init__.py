@@ -85,6 +85,7 @@ from .alerte_use_cases import (
     AlerteNotFoundError,
 )
 from .dashboard_use_cases import GetDashboardFinancierUseCase
+from .evolution_use_cases import GetEvolutionFinanciereUseCase
 
 __all__ = [
     # Fournisseur
@@ -166,4 +167,6 @@ __all__ = [
     "AlerteNotFoundError",
     # Dashboard
     "GetDashboardFinancierUseCase",
+    # Evolution financiere (FIN-17)
+    "GetEvolutionFinanciereUseCase",
 ]

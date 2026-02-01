@@ -13,6 +13,7 @@ import type {
   AchatCreate,
   AchatUpdate,
   DashboardFinancier,
+  EvolutionFinanciere,
   JournalFinancierEntry,
   AvenantBudgetaire,
   AvenantCreate,
@@ -171,6 +172,14 @@ export const financierService = {
   async getDashboardFinancier(chantierId: number): Promise<DashboardFinancier> {
     const response = await api.get<DashboardFinancier>(
       `${BASE}/chantiers/${chantierId}/dashboard-financier`
+    )
+    return response.data
+  },
+
+  // ===== Evolution financiere (FIN-17) =====
+  async getEvolutionFinanciere(chantierId: number): Promise<EvolutionFinanciere> {
+    const response = await api.get<EvolutionFinanciere>(
+      `${BASE}/chantiers/${chantierId}/evolution-financiere`
     )
     return response.data
   },

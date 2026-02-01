@@ -1116,6 +1116,19 @@ export interface DashboardFinancier {
   repartition_par_lot: RepartitionLot[]
 }
 
+// Evolution financiere (FIN-17)
+export interface EvolutionMensuelle {
+  mois: string
+  prevu_cumule: number
+  engage_cumule: number
+  realise_cumule: number
+}
+
+export interface EvolutionFinanciere {
+  chantier_id: number
+  points: EvolutionMensuelle[]
+}
+
 // Journal financier (FIN-15)
 export interface JournalFinancierEntry {
   id: number

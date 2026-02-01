@@ -86,6 +86,8 @@ from ...application.use_cases import (
     ListAlertesUseCase,
     # Dashboard
     GetDashboardFinancierUseCase,
+    # Evolution financiere (FIN-17)
+    GetEvolutionFinanciereUseCase,
 )
 from ..persistence import (
     SQLAlchemyFournisseurRepository,
@@ -393,6 +395,21 @@ def get_dashboard_financier_use_case(
     """Retourne le use case GetDashboardFinancier."""
     return GetDashboardFinancierUseCase(
         budget_repository, lot_repository, achat_repository
+    )
+
+
+# =============================================================================
+# Use Cases - Evolution Financiere (FIN-17)
+# =============================================================================
+
+
+def get_evolution_financiere_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+) -> GetEvolutionFinanciereUseCase:
+    """Retourne le use case GetEvolutionFinanciere."""
+    return GetEvolutionFinanciereUseCase(
+        budget_repository, achat_repository
     )
 
 
