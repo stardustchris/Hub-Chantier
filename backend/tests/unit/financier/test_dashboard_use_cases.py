@@ -97,6 +97,8 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.total_engage == "200000"
         assert result.kpi.total_realise == "100000"
         assert result.kpi.marge_estimee == "350000"
+        assert result.kpi.reste_a_depenser == "350000"
+        assert result.kpi.pct_reste == "63.64"  # (350000/550000)*100
         assert len(result.derniers_achats) == 1
         assert len(result.repartition_par_lot) == 1
 
@@ -129,6 +131,8 @@ class TestGetDashboardFinancierUseCase:
 
         assert result.kpi.pct_engage == "80.00"
         assert result.kpi.pct_realise == "50.00"
+        assert result.kpi.reste_a_depenser == "20000"  # 100000 - 80000
+        assert result.kpi.pct_reste == "20.00"  # (20000/100000)*100
 
     def test_dashboard_budget_zero_montant(self):
         """Test: pourcentages a 0 si budget revise a 0."""
@@ -152,6 +156,8 @@ class TestGetDashboardFinancierUseCase:
         # quantize(Decimal("0.01")) formate toujours avec 2 decimales
         assert result.kpi.pct_engage == "0.00"
         assert result.kpi.pct_realise == "0.00"
+        assert result.kpi.reste_a_depenser == "0"  # 0 - 0
+        assert result.kpi.pct_reste == "0.00"  # division par zero evitee
 
     def test_dashboard_repartition_par_lot(self):
         """Test: repartition correcte par lot budgetaire."""
@@ -213,6 +219,54 @@ class TestGetDashboardFinancierUseCase:
         assert sec.total_prevu_ht == "50000"
         assert sec.engage == "50000"
         assert sec.ecart == "0"  # 50000 - 50000
+
+    def test_dashboard_reste_a_depenser_negatif(self):
+        """Test: reste_a_depenser negatif quand total_engage > montant_revise."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("100000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("150000"),  # total_engage depasse le budget
+            Decimal("120000"),  # total_realise
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # reste_a_depenser = 100000 - 150000 = -50000
+        assert result.kpi.reste_a_depenser == "-50000"
+        # pct_reste = (-50000 / 100000) * 100 = -50.00
+        assert result.kpi.pct_reste == "-50.00"
+        # marge_estimee aussi negative
+        assert result.kpi.marge_estimee == "-50000"
+
+    def test_dashboard_reste_a_depenser_exact_budget(self):
+        """Test: reste_a_depenser = 0 quand engage == montant_revise."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("200000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("200000"),  # total_engage == budget
+            Decimal("100000"),
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        result = self.use_case.execute(chantier_id=100)
+
+        assert result.kpi.reste_a_depenser == "0"
+        assert result.kpi.pct_reste == "0.00"
 
     def test_dashboard_derniers_achats(self):
         """Test: les derniers achats sont retournes correctement."""
