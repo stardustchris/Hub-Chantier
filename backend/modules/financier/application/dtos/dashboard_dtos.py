@@ -18,6 +18,8 @@ class KPIFinancierDTO:
     marge_estimee: str
     pct_engage: str
     pct_realise: str
+    reste_a_depenser: str
+    pct_reste: str
 
     def to_dict(self) -> dict:
         """Convertit le DTO en dictionnaire."""
@@ -28,6 +30,8 @@ class KPIFinancierDTO:
             "marge_estimee": self.marge_estimee,
             "pct_engage": self.pct_engage,
             "pct_realise": self.pct_realise,
+            "reste_a_depenser": self.reste_a_depenser,
+            "pct_reste": self.pct_reste,
         }
 
 

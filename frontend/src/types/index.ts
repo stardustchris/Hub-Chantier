@@ -1094,9 +1094,11 @@ export interface KPIFinancier {
   montant_revise_ht: number
   total_engage: number
   total_realise: number
+  reste_a_depenser: number
   marge_estimee: number
   pct_engage: number
   pct_realise: number
+  pct_reste: number
 }
 
 export interface RepartitionLot {

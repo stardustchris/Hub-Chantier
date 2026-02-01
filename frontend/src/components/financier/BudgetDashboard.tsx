@@ -1,18 +1,22 @@
 /**
- * BudgetDashboard - KPI cards et repartition par lot (FIN-11)
+ * BudgetDashboard - KPI cards et repartition par lot (FIN-11 + FIN-16)
  *
  * Affiche les indicateurs financiers cles d'un chantier :
+ * - Banniere alertes actives (Phase 1)
  * - Budget revise HT
- * - Montant engage (avec alerte si > seuil)
- * - Montant realise
+ * - Montant engage (avec jauge circulaire)
+ * - Montant realise (avec jauge circulaire)
+ * - Reste a depenser (FIN-16)
  * - Marge estimee
+ * - Repartition par lot
  */
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, AlertTriangle, Loader2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, AlertTriangle, Loader2, Wallet } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
-import type { Budget, DashboardFinancier } from '../../types'
+import CircularGauge from './CircularGauge'
+import type { Budget, DashboardFinancier, AlerteDepassement } from '../../types'
 
 interface BudgetDashboardProps {
   chantierId: number
@@ -27,6 +31,7 @@ const formatPct = (value: number): string =>
 
 export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardProps) {
   const [dashboard, setDashboard] = useState<DashboardFinancier | null>(null)
+  const [alertes, setAlertes] = useState<AlerteDepassement[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,8 +43,12 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
     try {
       setLoading(true)
       setError(null)
-      const data = await financierService.getDashboardFinancier(chantierId)
+      const [data, alertesData] = await Promise.all([
+        financierService.getDashboardFinancier(chantierId),
+        financierService.listAlertes(chantierId, true).catch(() => [] as AlerteDepassement[]),
+      ])
       setDashboard(data)
+      setAlertes(alertesData)
     } catch (err) {
       setError('Erreur lors du chargement du dashboard financier')
       logger.error('Erreur chargement dashboard financier', err, { context: 'BudgetDashboard' })
@@ -70,11 +79,39 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
   const engageAlerte = Number(kpi.pct_engage) > Number(budget.seuil_alerte_pct)
   const realiseDepasse = Number(kpi.pct_realise) > 100
   const margeFaible = Number(kpi.marge_estimee) < 5
+  const resteNegatif = Number(kpi.reste_a_depenser) < 0
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Banniere alertes actives */}
+      {alertes.length > 0 && (
+        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium text-orange-900">
+                {alertes.length} alerte{alertes.length > 1 ? 's' : ''} budgetaire{alertes.length > 1 ? 's' : ''}
+              </p>
+              <ul className="text-sm text-orange-700 mt-1 space-y-0.5">
+                {alertes.slice(0, 3).map(a => (
+                  <li key={a.id}>- {a.message}</li>
+                ))}
+                {alertes.length > 3 && (
+                  <li className="text-orange-500 text-xs">
+                    + {alertes.length - 3} autre{alertes.length - 3 > 1 ? 's' : ''}
+                  </li>
+                )}
+              </ul>
+            </div>
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-200 text-orange-800 text-sm font-bold flex-shrink-0">
+              {alertes.length}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* KPI Cards - 5 colonnes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Budget revise */}
         <div className="bg-white border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-gray-500 mb-1">Budget revise HT</p>
@@ -98,17 +135,10 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
             {formatEUR(kpi.total_engage)}
           </p>
           <div className="mt-2">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-gray-500">{formatPct(kpi.pct_engage)} du budget</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all ${
-                  engageAlerte ? 'bg-orange-500' : 'bg-green-500'
-                }`}
-                style={{ width: `${Math.min(kpi.pct_engage, 100)}%` }}
-              />
-            </div>
+            <CircularGauge
+              value={Number(kpi.pct_engage)}
+              thresholds={{ warning: Number(budget.seuil_alerte_pct), danger: 100 }}
+            />
           </div>
         </div>
 
@@ -126,17 +156,25 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
             {formatEUR(kpi.total_realise)}
           </p>
           <div className="mt-2">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-gray-500">{formatPct(kpi.pct_realise)} du budget</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all ${
-                  realiseDepasse ? 'bg-red-500' : 'bg-green-500'
-                }`}
-                style={{ width: `${Math.min(kpi.pct_realise, 100)}%` }}
-              />
-            </div>
+            <CircularGauge value={Number(kpi.pct_realise)} />
+          </div>
+        </div>
+
+        {/* Reste a depenser (FIN-16) */}
+        <div className={`bg-white border rounded-xl p-4 ${resteNegatif ? 'border-red-300' : 'border-blue-200'}`}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500 mb-1">Reste a depenser</p>
+            <Wallet className={`w-4 h-4 ${resteNegatif ? 'text-red-500' : 'text-blue-500'}`} />
+          </div>
+          <p className={`text-2xl font-bold ${resteNegatif ? 'text-red-600' : 'text-blue-700'}`}>
+            {formatEUR(kpi.reste_a_depenser)}
+          </p>
+          <div className="mt-2">
+            <CircularGauge
+              value={Number(kpi.pct_reste)}
+              color={resteNegatif ? '#ef4444' : '#3b82f6'}
+              thresholds={{ warning: 80, danger: 100 }}
+            />
           </div>
         </div>
 
