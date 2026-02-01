@@ -72,6 +72,15 @@ from .suggestions_dtos import (
     IndicateursPredictifDTO,
     SuggestionsFinancieresDTO,
 )
+from .affectation_dtos import (
+    CreateAffectationDTO,
+    AffectationBudgetTacheDTO,
+    AffectationAvecDetailsDTO,
+)
+from .export_dtos import (
+    LigneExportComptableDTO,
+    ExportComptableDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -122,4 +131,11 @@ __all__ = [
     "SuggestionDTO",
     "IndicateursPredictifDTO",
     "SuggestionsFinancieresDTO",
+    # Affectation (FIN-03)
+    "CreateAffectationDTO",
+    "AffectationBudgetTacheDTO",
+    "AffectationAvecDetailsDTO",
+    # Export comptable (FIN-13)
+    "LigneExportComptableDTO",
+    "ExportComptableDTO",
 ]

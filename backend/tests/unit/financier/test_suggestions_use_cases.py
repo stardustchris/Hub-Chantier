@@ -467,3 +467,312 @@ class TestGetSuggestionsFinancieresUseCase:
         # Assert
         assert result.indicateurs.avancement_financier_pct == "0.00"
         assert result.indicateurs.ecart_burn_rate_pct == "0.00"
+
+
+class TestGetSuggestionsWithAIProvider:
+    """Tests pour le use case avec AI provider (FIN-21)."""
+
+    def setup_method(self):
+        """Configuration avant chaque test."""
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_lot_repo = Mock(spec=LotBudgetaireRepository)
+        self.mock_alerte_repo = Mock(spec=AlerteRepository)
+        self.mock_ai_provider = Mock()
+
+        self.use_case = GetSuggestionsFinancieresUseCase(
+            budget_repository=self.mock_budget_repo,
+            achat_repository=self.mock_achat_repo,
+            lot_repository=self.mock_lot_repo,
+            alerte_repository=self.mock_alerte_repo,
+            ai_provider=self.mock_ai_provider,
+        )
+
+    def _make_budget(
+        self,
+        chantier_id=1,
+        initial=Decimal("100000"),
+        avenants=Decimal("0"),
+        created_at=None,
+    ):
+        """Helper pour creer un budget."""
+        return Budget(
+            id=chantier_id * 10,
+            chantier_id=chantier_id,
+            montant_initial_ht=initial,
+            montant_avenants_ht=avenants,
+            created_at=created_at or datetime(2026, 1, 1),
+        )
+
+    def _setup_basic_mocks(self, budget=None, engage=Decimal("50000"), realise=Decimal("30000")):
+        """Setup commun pour les mocks de base."""
+        if budget is None:
+            budget = self._make_budget()
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        def somme_by_chantier(cid, statuts):
+            if statuts == STATUTS_ENGAGES:
+                return engage
+            return realise
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = somme_by_chantier
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+        self.mock_alerte_repo.find_by_chantier_id.return_value = []
+
+    def test_ai_provider_called_when_available(self):
+        """Test: le provider IA est appele quand il est disponible."""
+        # Arrange
+        self._setup_basic_mocks()
+        self.mock_ai_provider.generate_suggestions.return_value = []
+
+        # Act
+        self.use_case.execute(chantier_id=1)
+
+        # Assert
+        self.mock_ai_provider.generate_suggestions.assert_called_once()
+        call_args = self.mock_ai_provider.generate_suggestions.call_args[0][0]
+        assert "montant_revise" in call_args
+        assert "total_engage" in call_args
+        assert "pct_engage" in call_args
+        assert "burn_rate" in call_args
+
+    def test_ai_suggestions_merged_with_algo(self):
+        """Test: les suggestions IA sont fusionnees avec les algorithmiques."""
+        # Arrange
+        self._setup_basic_mocks(engage=Decimal("95000"))  # declenche CREATE_AVENANT
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+
+        ai_suggestion = SuggestionDTO(
+            type="RENEGOCIATE_SUPPLIERS",
+            severity="WARNING",
+            titre="Renegocier les fournisseurs",
+            description="Description IA renegociation",
+            impact_estime_eur="5000.00",
+        )
+        self.mock_ai_provider.generate_suggestions.return_value = [ai_suggestion]
+
+        # Act
+        result = self.use_case.execute(chantier_id=1)
+
+        # Assert
+        assert result.ai_available is True
+        assert result.source == "gemini"
+        types = [s.type for s in result.suggestions]
+        assert "RENEGOCIATE_SUPPLIERS" in types
+        # L'algo CREATE_AVENANT devrait aussi etre present (pas doublon)
+        assert "CREATE_AVENANT" in types
+
+    def test_ai_deduplication_by_type(self):
+        """Test: deduplication IA vs algo par type (IA prioritaire)."""
+        # Arrange
+        self._setup_basic_mocks(engage=Decimal("95000"))  # declenche CREATE_AVENANT algo
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+
+        # IA retourne aussi CREATE_AVENANT -> devrait remplacer l'algo
+        ai_suggestion = SuggestionDTO(
+            type="CREATE_AVENANT",
+            severity="CRITICAL",
+            titre="Avenant recommande par IA",
+            description="Description IA avenant plus detaillee",
+            impact_estime_eur="10000.00",
+        )
+        self.mock_ai_provider.generate_suggestions.return_value = [ai_suggestion]
+
+        # Act
+        result = self.use_case.execute(chantier_id=1)
+
+        # Assert
+        avenant_suggestions = [s for s in result.suggestions if s.type == "CREATE_AVENANT"]
+        assert len(avenant_suggestions) == 1
+        # La suggestion IA a la priorite
+        assert avenant_suggestions[0].titre == "Avenant recommande par IA"
+
+    def test_ai_provider_error_fallback_to_algo(self):
+        """Test: fallback silencieux aux regles algo si le provider IA echoue."""
+        # Arrange
+        self._setup_basic_mocks(engage=Decimal("95000"))  # declenche CREATE_AVENANT
+        self.mock_ai_provider.generate_suggestions.side_effect = Exception("API error")
+
+        # Act
+        result = self.use_case.execute(chantier_id=1)
+
+        # Assert
+        assert result.ai_available is False
+        assert result.source == "algorithmic"
+        assert len(result.suggestions) > 0
+        avenant_suggestions = [s for s in result.suggestions if s.type == "CREATE_AVENANT"]
+        assert len(avenant_suggestions) == 1
+
+    def test_ai_provider_returns_empty_list_fallback(self):
+        """Test: fallback quand l'IA retourne une liste vide."""
+        # Arrange
+        self._setup_basic_mocks(engage=Decimal("95000"))
+        self.mock_ai_provider.generate_suggestions.return_value = []
+
+        # Act
+        result = self.use_case.execute(chantier_id=1)
+
+        # Assert
+        assert result.ai_available is False
+        assert result.source == "algorithmic"
+
+    def test_ai_kpi_data_format(self):
+        """Test: les KPI sont correctement formates pour l'IA."""
+        # Arrange
+        self._setup_basic_mocks(
+            budget=self._make_budget(initial=Decimal("200000")),
+            engage=Decimal("100000"),
+            realise=Decimal("50000"),
+        )
+        self.mock_ai_provider.generate_suggestions.return_value = []
+
+        # Act
+        self.use_case.execute(chantier_id=1)
+
+        # Assert
+        call_args = self.mock_ai_provider.generate_suggestions.call_args[0][0]
+        assert call_args["montant_revise"] == "200000.00"
+        assert call_args["total_engage"] == "100000.00"
+        assert call_args["total_realise"] == "50000.00"
+        assert call_args["pct_engage"] == "50.00"
+        assert call_args["pct_realise"] == "25.00"
+        assert call_args["marge_pct"] == "50.00"
+        assert call_args["reste_a_depenser"] == "100000.00"
+
+    def test_no_ai_provider_uses_algo_only(self):
+        """Test: sans ai_provider, seul algorithmic est utilise."""
+        # Arrange
+        use_case_no_ai = GetSuggestionsFinancieresUseCase(
+            budget_repository=self.mock_budget_repo,
+            achat_repository=self.mock_achat_repo,
+            lot_repository=self.mock_lot_repo,
+            alerte_repository=self.mock_alerte_repo,
+            ai_provider=None,
+        )
+        budget = self._make_budget()
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+        self.mock_achat_repo.somme_by_chantier.return_value = Decimal("50000")
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+        self.mock_alerte_repo.find_by_chantier_id.return_value = []
+
+        # Act
+        result = use_case_no_ai.execute(chantier_id=1)
+
+        # Assert
+        assert result.ai_available is False
+        assert result.source == "algorithmic"
+
+    def test_fusion_preserves_severity_order(self):
+        """Test: la fusion IA+algo preserve l'ordre par severite."""
+        # Arrange
+        self._setup_basic_mocks(
+            budget=self._make_budget(initial=Decimal("200000")),
+            engage=Decimal("190000"),  # declenche CREATE_AVENANT CRITICAL
+        )
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+
+        ai_suggestions = [
+            SuggestionDTO(
+                type="REVIEW_PLANNING",
+                severity="INFO",
+                titre="Revoir le planning",
+                description="Description IA planning",
+                impact_estime_eur="0",
+            ),
+            SuggestionDTO(
+                type="RENEGOCIATE_SUPPLIERS",
+                severity="WARNING",
+                titre="Renegocier",
+                description="Description IA renegociation",
+                impact_estime_eur="3000.00",
+            ),
+        ]
+        self.mock_ai_provider.generate_suggestions.return_value = ai_suggestions
+
+        # Act
+        result = self.use_case.execute(chantier_id=1)
+
+        # Assert - CRITICAL avant WARNING avant INFO
+        severities = [s.severity for s in result.suggestions]
+        severity_order = {"CRITICAL": 0, "WARNING": 1, "INFO": 2}
+        for i in range(len(severities) - 1):
+            assert severity_order[severities[i]] <= severity_order[severities[i + 1]]
+
+
+class TestFusionnerSuggestions:
+    """Tests pour la methode _fusionner_suggestions."""
+
+    def setup_method(self):
+        """Configuration avant chaque test."""
+        self.use_case = GetSuggestionsFinancieresUseCase(
+            budget_repository=Mock(spec=BudgetRepository),
+            achat_repository=Mock(spec=AchatRepository),
+            lot_repository=Mock(spec=LotBudgetaireRepository),
+            alerte_repository=Mock(spec=AlerteRepository),
+        )
+
+    def test_fusion_empty_ia_returns_algo(self):
+        """Test: si IA vide, retourne les algo."""
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+        algo = [
+            SuggestionDTO(type="CREATE_AVENANT", severity="CRITICAL",
+                          titre="T", description="D", impact_estime_eur="0"),
+        ]
+        result = self.use_case._fusionner_suggestions([], algo)
+        assert len(result) == 1
+        assert result[0].type == "CREATE_AVENANT"
+
+    def test_fusion_empty_algo_returns_ia(self):
+        """Test: si algo vide, retourne les IA."""
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+        ia = [
+            SuggestionDTO(type="RENEGOCIATE_SUPPLIERS", severity="WARNING",
+                          titre="T", description="D", impact_estime_eur="0"),
+        ]
+        result = self.use_case._fusionner_suggestions(ia, [])
+        assert len(result) == 1
+        assert result[0].type == "RENEGOCIATE_SUPPLIERS"
+
+    def test_fusion_dedup_same_type_keeps_ia(self):
+        """Test: meme type -> garde IA, ignore algo."""
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+        ia = [
+            SuggestionDTO(type="CREATE_AVENANT", severity="CRITICAL",
+                          titre="IA Avenant", description="D IA", impact_estime_eur="100"),
+        ]
+        algo = [
+            SuggestionDTO(type="CREATE_AVENANT", severity="CRITICAL",
+                          titre="Algo Avenant", description="D Algo", impact_estime_eur="50"),
+        ]
+        result = self.use_case._fusionner_suggestions(ia, algo)
+        assert len(result) == 1
+        assert result[0].titre == "IA Avenant"
+
+    def test_fusion_different_types_merged(self):
+        """Test: types differents -> tous inclus."""
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+        ia = [
+            SuggestionDTO(type="RENEGOCIATE_SUPPLIERS", severity="WARNING",
+                          titre="IA", description="D", impact_estime_eur="0"),
+        ]
+        algo = [
+            SuggestionDTO(type="CREATE_AVENANT", severity="CRITICAL",
+                          titre="Algo", description="D", impact_estime_eur="0"),
+        ]
+        result = self.use_case._fusionner_suggestions(ia, algo)
+        assert len(result) == 2
+
+    def test_fusion_sorted_by_severity(self):
+        """Test: resultat trie par severite."""
+        from modules.financier.application.dtos.suggestions_dtos import SuggestionDTO
+        ia = [
+            SuggestionDTO(type="REVIEW_PLANNING", severity="INFO",
+                          titre="T", description="D", impact_estime_eur="0"),
+        ]
+        algo = [
+            SuggestionDTO(type="CREATE_AVENANT", severity="CRITICAL",
+                          titre="T", description="D", impact_estime_eur="0"),
+        ]
+        result = self.use_case._fusionner_suggestions(ia, algo)
+        assert result[0].severity == "CRITICAL"
+        assert result[1].severity == "INFO"

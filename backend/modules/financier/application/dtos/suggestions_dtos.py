@@ -75,17 +75,21 @@ class IndicateursPredictifDTO:
 class SuggestionsFinancieresDTO:
     """DTO principal des suggestions financieres d'un chantier.
 
-    FIN-21/22: Suggestions algorithmiques et indicateurs predictifs.
+    FIN-21/22: Suggestions algorithmiques et/ou IA + indicateurs predictifs.
 
     Attributes:
         chantier_id: Identifiant du chantier.
         suggestions: Liste des suggestions (max 5).
         indicateurs: Indicateurs predictifs calcules.
+        ai_available: True si le provider IA etait disponible et a repondu.
+        source: Source des suggestions ("gemini" si IA, "algorithmic" sinon).
     """
 
     chantier_id: int
     suggestions: List[SuggestionDTO]
     indicateurs: IndicateursPredictifDTO
+    ai_available: bool = False
+    source: str = "algorithmic"
 
     def to_dict(self) -> dict:
         """Convertit le DTO en dictionnaire."""
@@ -93,4 +97,6 @@ class SuggestionsFinancieresDTO:
             "chantier_id": self.chantier_id,
             "suggestions": [s.to_dict() for s in self.suggestions],
             "indicateurs": self.indicateurs.to_dict(),
+            "ai_available": self.ai_available,
+            "source": self.source,
         }

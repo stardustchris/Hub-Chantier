@@ -1,12 +1,19 @@
 """Injection de dependances pour le module Financier."""
 
+import logging
+import os
+from typing import Optional
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
 from shared.infrastructure.event_bus import EventBus as CoreEventBus
 from ...application.ports.event_bus import EventBus
+from ...application.ports.ai_suggestion_port import AISuggestionPort
 from ..event_bus_impl import FinancierEventBus
+
+logger = logging.getLogger(__name__)
 
 from ...domain.repositories import (
     FournisseurRepository,
@@ -21,6 +28,7 @@ from ...domain.repositories import (
     CoutMainOeuvreRepository,
     CoutMaterielRepository,
     AlerteRepository,
+    AffectationBudgetTacheRepository,
 )
 from ...application.use_cases import (
     # Fournisseur
@@ -92,6 +100,13 @@ from ...application.use_cases import (
     GetVueConsolideeFinancesUseCase,
     # Suggestions (FIN-21/22)
     GetSuggestionsFinancieresUseCase,
+    # Affectation (FIN-03)
+    CreateAffectationBudgetTacheUseCase,
+    DeleteAffectationBudgetTacheUseCase,
+    ListAffectationsByChantierUseCase,
+    GetAffectationsByTacheUseCase,
+    # Export comptable (FIN-13)
+    ExportComptableUseCase,
 )
 from ..persistence import (
     SQLAlchemyFournisseurRepository,
@@ -106,6 +121,7 @@ from ..persistence import (
     SQLAlchemyCoutMainOeuvreRepository,
     SQLAlchemyCoutMaterielRepository,
     SQLAlchemyAlerteRepository,
+    SQLAlchemyAffectationBudgetTacheRepository,
 )
 
 
@@ -827,6 +843,56 @@ def get_vue_consolidee_use_case(
 
 
 # =============================================================================
+# AI Provider - Suggestions IA (FIN-21)
+# =============================================================================
+
+
+# Singleton pour eviter de re-initialiser le provider a chaque requete
+_ai_provider_instance: Optional[AISuggestionPort] = None
+_ai_provider_initialized: bool = False
+
+
+def get_ai_suggestion_provider() -> Optional[AISuggestionPort]:
+    """Retourne le provider IA Gemini si GEMINI_API_KEY est configuree.
+
+    Utilise un singleton pour eviter de re-initialiser le client Gemini
+    a chaque requete. Si la cle n'est pas configuree ou si l'initialisation
+    echoue, retourne None (fallback aux regles algorithmiques).
+
+    Returns:
+        GeminiSuggestionProvider si configure, None sinon.
+    """
+    global _ai_provider_instance, _ai_provider_initialized
+
+    if _ai_provider_initialized:
+        return _ai_provider_instance
+
+    _ai_provider_initialized = True
+
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        logger.info(
+            "GEMINI_API_KEY non configuree. "
+            "Suggestions IA desactivees (mode algorithmique uniquement)."
+        )
+        return None
+
+    try:
+        from ..ai.gemini_provider import GeminiSuggestionProvider
+
+        _ai_provider_instance = GeminiSuggestionProvider()
+        logger.info("Provider IA Gemini initialise avec succes.")
+        return _ai_provider_instance
+    except Exception as e:
+        logger.warning(
+            "Impossible d'initialiser le provider Gemini: %s. "
+            "Fallback aux regles algorithmiques.",
+            str(e),
+        )
+        return None
+
+
+# =============================================================================
 # Use Cases - Suggestions (FIN-21/22)
 # =============================================================================
 
@@ -837,7 +903,77 @@ def get_suggestions_financieres_use_case(
     lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
     alerte_repository: AlerteRepository = Depends(get_alerte_repository),
 ) -> GetSuggestionsFinancieresUseCase:
-    """Retourne le use case GetSuggestionsFinancieres."""
+    """Retourne le use case GetSuggestionsFinancieres avec provider IA optionnel."""
+    ai_provider = get_ai_suggestion_provider()
     return GetSuggestionsFinancieresUseCase(
-        budget_repository, achat_repository, lot_repository, alerte_repository
+        budget_repository, achat_repository, lot_repository, alerte_repository,
+        ai_provider=ai_provider,
+    )
+
+
+# =============================================================================
+# Repositories - Affectation Budget-Tache (FIN-03)
+# =============================================================================
+
+
+def get_affectation_repository(
+    db: Session = Depends(get_db),
+) -> AffectationBudgetTacheRepository:
+    """Retourne le repository AffectationBudgetTache."""
+    return SQLAlchemyAffectationBudgetTacheRepository(db)
+
+
+# =============================================================================
+# Use Cases - Affectation Budget-Tache (FIN-03)
+# =============================================================================
+
+
+def get_create_affectation_use_case(
+    affectation_repository: AffectationBudgetTacheRepository = Depends(get_affectation_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+) -> CreateAffectationBudgetTacheUseCase:
+    """Retourne le use case CreateAffectationBudgetTache."""
+    return CreateAffectationBudgetTacheUseCase(affectation_repository, lot_repository)
+
+
+def get_delete_affectation_use_case(
+    affectation_repository: AffectationBudgetTacheRepository = Depends(get_affectation_repository),
+) -> DeleteAffectationBudgetTacheUseCase:
+    """Retourne le use case DeleteAffectationBudgetTache."""
+    return DeleteAffectationBudgetTacheUseCase(affectation_repository)
+
+
+def get_list_affectations_by_chantier_use_case(
+    affectation_repository: AffectationBudgetTacheRepository = Depends(get_affectation_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+) -> ListAffectationsByChantierUseCase:
+    """Retourne le use case ListAffectationsByChantier."""
+    return ListAffectationsByChantierUseCase(affectation_repository, lot_repository)
+
+
+def get_affectations_by_tache_use_case(
+    affectation_repository: AffectationBudgetTacheRepository = Depends(get_affectation_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+) -> GetAffectationsByTacheUseCase:
+    """Retourne le use case GetAffectationsByTache."""
+    return GetAffectationsByTacheUseCase(affectation_repository, lot_repository)
+
+
+# =============================================================================
+# Use Cases - Export Comptable (FIN-13)
+# =============================================================================
+
+
+def get_export_comptable_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    fournisseur_repository: FournisseurRepository = Depends(get_fournisseur_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+) -> ExportComptableUseCase:
+    """Retourne le use case ExportComptable."""
+    return ExportComptableUseCase(
+        budget_repository, achat_repository, situation_repository,
+        facture_repository, fournisseur_repository, lot_repository,
     )

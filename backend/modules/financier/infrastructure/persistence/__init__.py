@@ -11,6 +11,7 @@ from .models import (
     JournalFinancierModel,
     FactureClientModel,
     AlerteDepassementModel,
+    AffectationBudgetTacheModel,
     FinancierBase,
 )
 from .sqlalchemy_fournisseur_repository import SQLAlchemyFournisseurRepository
@@ -27,6 +28,7 @@ from .sqlalchemy_facture_repository import SQLAlchemyFactureRepository
 from .sqlalchemy_cout_main_oeuvre_repository import SQLAlchemyCoutMainOeuvreRepository
 from .sqlalchemy_cout_materiel_repository import SQLAlchemyCoutMaterielRepository
 from .sqlalchemy_alerte_repository import SQLAlchemyAlerteRepository
+from .sqlalchemy_affectation_repository import SQLAlchemyAffectationBudgetTacheRepository
 
 __all__ = [
     # Models
@@ -40,6 +42,7 @@ __all__ = [
     "JournalFinancierModel",
     "FactureClientModel",
     "AlerteDepassementModel",
+    "AffectationBudgetTacheModel",
     "FinancierBase",
     # Repositories
     "SQLAlchemyFournisseurRepository",
@@ -54,4 +57,5 @@ __all__ = [
     "SQLAlchemyCoutMainOeuvreRepository",
     "SQLAlchemyCoutMaterielRepository",
     "SQLAlchemyAlerteRepository",
+    "SQLAlchemyAffectationBudgetTacheRepository",
 ]

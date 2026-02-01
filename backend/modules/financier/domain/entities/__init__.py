@@ -9,6 +9,7 @@ from .situation_travaux import SituationTravaux
 from .ligne_situation import LigneSituation
 from .facture_client import FactureClient
 from .alerte_depassement import AlerteDepassement
+from .affectation_budget_tache import AffectationBudgetTache
 
 __all__ = [
     "Fournisseur",
@@ -22,4 +23,5 @@ __all__ = [
     "LigneSituation",
     "FactureClient",
     "AlerteDepassement",
+    "AffectationBudgetTache",
 ]

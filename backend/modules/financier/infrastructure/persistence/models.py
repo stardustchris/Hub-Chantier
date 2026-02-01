@@ -2,6 +2,7 @@
 
 FIN-01: Budget chantier
 FIN-02: Lots budgetaires (decomposition)
+FIN-03: Affectation budgets aux taches
 FIN-04: Avenants budgetaires
 FIN-05: Achats et commandes
 FIN-06: Workflow validation achats
@@ -944,4 +945,68 @@ class AlerteDepassementModel(FinancierBase):
             f"<AlerteDepassement(id={self.id}, type='{self.type_alerte}', "
             f"pourcentage={self.pourcentage_atteint}%, "
             f"acquittee={self.est_acquittee})>"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FIN-03: Affectation budgets aux taches
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AffectationBudgetTacheModel(FinancierBase):
+    """Modele SQLAlchemy pour les affectations budget-tache.
+
+    FIN-03: Affectation budgets aux taches - Lien entre un lot budgetaire
+    et une tache avec un pourcentage d'allocation.
+    tache_id est un Integer simple (pas de FK cross-module).
+    """
+
+    __tablename__ = "financier_affectations_budget_tache"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    lot_budgetaire_id = Column(
+        Integer,
+        ForeignKey("lots_budgetaires.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tache_id = Column(
+        Integer,
+        nullable=False,
+        index=True,
+    )
+    pourcentage_allocation = Column(
+        Numeric(5, 2),
+        nullable=False,
+        default=0,
+    )
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "lot_budgetaire_id", "tache_id",
+            name="uq_affectations_budget_tache_lot_tache",
+        ),
+        Index(
+            "ix_affectations_budget_tache_lot",
+            "lot_budgetaire_id",
+        ),
+        Index(
+            "ix_affectations_budget_tache_tache",
+            "tache_id",
+        ),
+        CheckConstraint(
+            "pourcentage_allocation >= 0 AND pourcentage_allocation <= 100",
+            name="check_affectations_budget_tache_pourcentage_range",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AffectationBudgetTache(id={self.id}, "
+            f"lot_budgetaire_id={self.lot_budgetaire_id}, "
+            f"tache_id={self.tache_id}, "
+            f"pourcentage={self.pourcentage_allocation}%)>"
         )
