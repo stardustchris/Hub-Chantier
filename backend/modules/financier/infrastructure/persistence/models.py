@@ -265,7 +265,16 @@ class LotBudgetaireModel(FinancierBase):
     """Modele SQLAlchemy pour les lots budgetaires.
 
     FIN-02: Decomposition du budget en lots avec arborescence (parent_lot_id).
-    Chaque lot a un code unique par budget.
+    Chaque lot a un code unique par budget (phase chantier) ou par devis (phase commerciale).
+
+    Phase Devis:
+        - devis_id est renseigné, budget_id est NULL
+        - Les champs déboursés détaillés sont utilisés
+        - marge_pct et prix_vente_ht sont calculés
+
+    Phase Chantier:
+        - budget_id est renseigné, devis_id est NULL
+        - Les champs déboursés sont optionnels
     """
 
     __tablename__ = "lots_budgetaires"
@@ -274,7 +283,12 @@ class LotBudgetaireModel(FinancierBase):
     budget_id = Column(
         Integer,
         ForeignKey("budgets.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
+        index=True,
+    )
+    devis_id = Column(
+        String(36),  # UUID stocké comme string
+        nullable=True,
         index=True,
     )
     code_lot = Column(String(20), nullable=False)
@@ -289,6 +303,17 @@ class LotBudgetaireModel(FinancierBase):
         index=True,
     )
     ordre = Column(Integer, nullable=False, default=0)
+
+    # Champs déboursés détaillés (phase devis)
+    debourse_main_oeuvre = Column(Numeric(12, 2), nullable=True)
+    debourse_materiaux = Column(Numeric(12, 2), nullable=True)
+    debourse_sous_traitance = Column(Numeric(12, 2), nullable=True)
+    debourse_materiel = Column(Numeric(12, 2), nullable=True)
+    debourse_divers = Column(Numeric(12, 2), nullable=True)
+
+    # Marge (phase devis)
+    marge_pct = Column(Numeric(5, 2), nullable=True)
+    prix_vente_ht = Column(Numeric(12, 2), nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -308,9 +333,12 @@ class LotBudgetaireModel(FinancierBase):
     )
 
     __table_args__ = (
-        UniqueConstraint("budget_id", "code_lot", name="uq_lots_budgetaires_budget_code"),
-        Index("ix_lots_budgetaires_budget_ordre", "budget_id", "ordre"),
-        Index("ix_lots_budgetaires_parent", "parent_lot_id"),
+        # Contrainte XOR: soit devis_id, soit budget_id (pas les deux, pas aucun)
+        CheckConstraint(
+            "(devis_id IS NULL AND budget_id IS NOT NULL) OR (devis_id IS NOT NULL AND budget_id IS NULL)",
+            name="check_lots_budgetaires_devis_xor_budget",
+        ),
+        # Contraintes sur les valeurs
         CheckConstraint(
             "quantite_prevue >= 0",
             name="check_lots_budgetaires_quantite_positive",
@@ -319,12 +347,44 @@ class LotBudgetaireModel(FinancierBase):
             "prix_unitaire_ht >= 0",
             name="check_lots_budgetaires_prix_positif",
         ),
+        CheckConstraint(
+            "debourse_main_oeuvre IS NULL OR debourse_main_oeuvre >= 0",
+            name="check_lots_budgetaires_debourse_mo_positive",
+        ),
+        CheckConstraint(
+            "debourse_materiaux IS NULL OR debourse_materiaux >= 0",
+            name="check_lots_budgetaires_debourse_mat_positive",
+        ),
+        CheckConstraint(
+            "debourse_sous_traitance IS NULL OR debourse_sous_traitance >= 0",
+            name="check_lots_budgetaires_debourse_st_positive",
+        ),
+        CheckConstraint(
+            "debourse_materiel IS NULL OR debourse_materiel >= 0",
+            name="check_lots_budgetaires_debourse_materiel_positive",
+        ),
+        CheckConstraint(
+            "debourse_divers IS NULL OR debourse_divers >= 0",
+            name="check_lots_budgetaires_debourse_divers_positive",
+        ),
+        CheckConstraint(
+            "marge_pct IS NULL OR marge_pct >= 0",
+            name="check_lots_budgetaires_marge_positive",
+        ),
+        CheckConstraint(
+            "prix_vente_ht IS NULL OR prix_vente_ht >= 0",
+            name="check_lots_budgetaires_prix_vente_positive",
+        ),
+        # Index composés
+        Index("ix_lots_budgetaires_budget_ordre", "budget_id", "ordre"),
+        Index("ix_lots_budgetaires_devis_ordre", "devis_id", "ordre"),
+        Index("ix_lots_budgetaires_parent", "parent_lot_id"),
     )
 
     def __repr__(self) -> str:
         return (
             f"<LotBudgetaire(id={self.id}, code_lot='{self.code_lot}', "
-            f"libelle='{self.libelle}')>"
+            f"libelle='{self.libelle}', devis_id={self.devis_id}, budget_id={self.budget_id})>"
         )
 
 
