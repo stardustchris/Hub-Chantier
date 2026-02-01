@@ -2,9 +2,13 @@
 
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from pydantic import BaseModel, Field
 
+from shared.infrastructure.web import (
+    get_current_user_id,
+    require_chef_or_above,
+)
 from ...application.services.audit_service import AuditService, AuditServiceError
 from ...application.dtos.audit_dtos import AuditEntryDTO, AuditHistoryResponseDTO
 from .dependencies import get_audit_service
@@ -66,14 +70,18 @@ class AuditHistoryResponse(BaseModel):
     **Exemples d'utilisation :**
     - `/audit/history/devis/123` - Historique du devis ID 123
     - `/audit/history/lot_budgetaire/456?limit=20` - 20 dernières entrées du lot 456
+
+    **Autorisation:** Réservé aux Admin, Conducteur et Chef de chantier.
     """,
 )
 def get_entity_history(
-    entity_type: str = Field(..., description="Type d'entité (ex: devis, lot_budgetaire)"),
-    entity_id: str = Field(..., description="ID de l'entité"),
+    entity_type: str = Path(..., description="Type d'entité (ex: devis, lot_budgetaire)"),
+    entity_id: str = Path(..., description="ID de l'entité"),
     limit: int = Query(50, ge=1, le=200, description="Nombre maximum d'entrées à retourner"),
     offset: int = Query(0, ge=0, description="Décalage pour pagination"),
     service: AuditService = Depends(get_audit_service),
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(require_chef_or_above),
 ):
     """
     Récupère l'historique d'une entité.
@@ -144,16 +152,20 @@ def get_entity_history(
 
     Permet de filtrer par période et/ou type d'entité.
     Utile pour l'audit des actions utilisateur et la conformité RGPD.
+
+    **Autorisation:** Réservé aux Admin, Conducteur et Chef de chantier.
     """,
 )
 def get_user_actions(
-    user_id: int = Field(..., description="ID de l'utilisateur"),
+    user_id: int = Path(..., description="ID de l'utilisateur"),
     start_date: Optional[datetime] = Query(None, description="Date de début (ISO 8601)"),
     end_date: Optional[datetime] = Query(None, description="Date de fin (ISO 8601)"),
     entity_type: Optional[str] = Query(None, description="Filtrer par type d'entité"),
     limit: int = Query(100, ge=1, le=500, description="Nombre maximum d'entrées"),
     offset: int = Query(0, ge=0, description="Décalage pour pagination"),
     service: AuditService = Depends(get_audit_service),
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(require_chef_or_above),
 ):
     """
     Récupère les actions d'un utilisateur.
@@ -222,6 +234,8 @@ def get_user_actions(
 
     Utile pour afficher un feed d'activité global dans le dashboard.
     Permet de filtrer par type d'entité et/ou type d'action.
+
+    **Autorisation:** Réservé aux Admin, Conducteur et Chef de chantier.
     """,
 )
 def get_recent_entries(
@@ -229,6 +243,8 @@ def get_recent_entries(
     action: Optional[str] = Query(None, description="Filtrer par type d'action"),
     limit: int = Query(50, ge=1, le=200, description="Nombre maximum d'entrées"),
     service: AuditService = Depends(get_audit_service),
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(require_chef_or_above),
 ):
     """
     Récupère les entrées d'audit récentes.
@@ -291,6 +307,8 @@ def get_recent_entries(
 
     Tous les paramètres sont optionnels et peuvent être combinés.
     Supporte la pagination.
+
+    **Autorisation:** Réservé aux Admin, Conducteur et Chef de chantier.
     """,
 )
 def search_audit(
@@ -303,6 +321,8 @@ def search_audit(
     limit: int = Query(100, ge=1, le=500, description="Nombre maximum d'entrées"),
     offset: int = Query(0, ge=0, description="Décalage pour pagination"),
     service: AuditService = Depends(get_audit_service),
+    current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(require_chef_or_above),
 ):
     """
     Recherche avancée dans les entrées d'audit.
