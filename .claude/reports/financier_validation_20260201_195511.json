@@ -1,0 +1,1294 @@
+{
+  "module": "financier",
+  "global_status": "PASS",
+  "timestamp": "2026-02-01T19:55:11.452715",
+  "duration_seconds": 0.15564,
+  "agents_executed": 3,
+  "total_findings": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 88,
+    "LOW": 89
+  },
+  "reports": [
+    {
+      "agent": "architectreviewer",
+      "status": "PASS",
+      "summary": "✅ Architecture Clean respectée",
+      "score": {
+        "clean_architecture": "10/10",
+        "modularity": "10/10",
+        "files_analyzed": 102
+      },
+      "findings_count": 0,
+      "findings": []
+    },
+    {
+      "agent": "codereviewer",
+      "status": "PASS",
+      "summary": "✅ Code de qualité acceptable",
+      "score": {
+        "quality": "10/10",
+        "maintainability": "0/10",
+        "files_reviewed": 102,
+        "issues_found": 176
+      },
+      "findings_count": 176,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/domain/entities/achat.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/cout_main_oeuvre_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/alerte_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/dashboard_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/cout_materiel_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' sans docstring Google style",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Ajouter une docstring avec Args, Returns, Raises",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/value_objects/taux_tva.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/value_objects/cout_materiel.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/value_objects/cout_employe.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/repositories/journal_financier_repository.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/repositories/journal_financier_repository.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/situation_travaux.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/situation_travaux.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/lot_budgetaire.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/lot_budgetaire.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/affectation_budget_tache.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/affectation_budget_tache.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/avenant_budgetaire.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/avenant_budgetaire.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/budget.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/budget.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/achat.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/achat.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/facture_client.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/facture_client.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/fournisseur.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/fournisseur.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/alerte_depassement.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/alerte_depassement.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/ligne_situation.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/domain/entities/ligne_situation.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/avenant_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/avenant_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/avenant_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/avenant_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/fournisseur_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/fournisseur_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/fournisseur_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/fournisseur_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/fournisseur_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/consolidation_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/consolidation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/consolidation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/consolidation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/alerte_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/alerte_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/alerte_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/lot_budgetaire_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/lot_budgetaire_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/lot_budgetaire_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/lot_budgetaire_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/lot_budgetaire_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/budget_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/budget_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/budget_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/budget_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/budget_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/evolution_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/evolution_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/evolution_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/facture_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/facture_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/facture_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/facture_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/suggestions_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/suggestions_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/suggestions_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/suggestions_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/export_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/dashboard_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/dashboard_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/dashboard_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/dashboard_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/dashboard_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/situation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/situation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/situation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/situation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/situation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/affectation_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/affectation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/affectation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/affectation_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'from' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en From",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/achat_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/cout_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/cout_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/cout_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "LOW",
+          "message": "Classe 'class' ne suit pas PascalCase",
+          "file": "backend/modules/financier/application/dtos/cout_dtos.py",
+          "suggestion": "Renommer en Class",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (36)",
+          "file": "backend/modules/financier/infrastructure/event_bus_impl.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (17)",
+          "file": "backend/modules/financier/domain/entities/achat.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '_check_chantier_access' a une complexité cyclomatique élevée (120)",
+          "file": "backend/modules/financier/infrastructure/web/financier_routes.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (12)",
+          "file": "backend/modules/financier/infrastructure/persistence/sqlalchemy_fournisseur_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (15)",
+          "file": "backend/modules/financier/infrastructure/persistence/sqlalchemy_journal_financier_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (20)",
+          "file": "backend/modules/financier/infrastructure/persistence/sqlalchemy_lot_budgetaire_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (22)",
+          "file": "backend/modules/financier/infrastructure/persistence/sqlalchemy_achat_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/infrastructure/persistence/sqlalchemy_situation_repository.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/affectation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/affectation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/affectation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/affectation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (11)",
+          "file": "backend/modules/financier/application/use_cases/affectation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (35)",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (30)",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (13)",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (12)",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (11)",
+          "file": "backend/modules/financier/application/use_cases/achat_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (17)",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (17)",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (17)",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (16)",
+          "file": "backend/modules/financier/application/use_cases/avenant_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (25)",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (25)",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (25)",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (22)",
+          "file": "backend/modules/financier/application/use_cases/fournisseur_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (33)",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (33)",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (33)",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (25)",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (13)",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (11)",
+          "file": "backend/modules/financier/application/use_cases/situation_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (16)",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (14)",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (12)",
+          "file": "backend/modules/financier/application/use_cases/facture_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (19)",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (17)",
+          "file": "backend/modules/financier/application/use_cases/lot_budgetaire_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (13)",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (12)",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (12)",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (11)",
+          "file": "backend/modules/financier/application/use_cases/budget_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (30)",
+          "file": "backend/modules/financier/application/use_cases/export_comptable_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Fonction '__init__' a une complexité cyclomatique élevée (30)",
+          "file": "backend/modules/financier/application/use_cases/export_comptable_use_cases.py",
+          "suggestion": "Refactorer en fonctions plus petites (complexité cible < 10)",
+          "category": "quality"
+        }
+      ]
+    },
+    {
+      "agent": "securityauditor",
+      "status": "PASS",
+      "summary": "✅ Aucune vulnérabilité critique détectée",
+      "score": {
+        "security": "10/10",
+        "critical_issues": 0,
+        "high_issues": 0,
+        "total_findings": 1
+      },
+      "findings_count": 1,
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "message": "RGPD : Droit à l'oubli non implémenté",
+          "file": "backend/modules/financier",
+          "suggestion": "Implémenter la suppression complète des données",
+          "category": "security"
+        }
+      ]
+    }
+  ]
+}
