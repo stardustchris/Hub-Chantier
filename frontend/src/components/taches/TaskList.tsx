@@ -66,9 +66,16 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
         include_sous_taches: true,
       })
       setTaches(response.items)
-    } catch (err) {
+    } catch (err: any) {
       logger.error('Erreur chargement taches', err, { context: 'TaskList' })
-      setError('Impossible de charger les taches. Verifiez votre connexion.')
+      // Ne pas afficher d'erreur si c'est juste une liste vide (404 ou pas de données)
+      // Seulement afficher l'erreur pour les vraies erreurs réseau/serveur
+      if (err?.response?.status && err.response.status !== 404) {
+        setError('Impossible de charger les taches. Verifiez votre connexion.')
+      } else {
+        // 404 ou pas de données : liste vide, pas d'erreur à afficher
+        setTaches([])
+      }
     } finally {
       setIsLoading(false)
     }

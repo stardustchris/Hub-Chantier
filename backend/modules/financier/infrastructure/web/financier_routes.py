@@ -969,6 +969,13 @@ async def get_dashboard_financier(
             status_code=404,
             detail="Aucun budget pour ce chantier",
         )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur serveur: {str(e)}",
+        )
 
 
 # =============================================================================
@@ -1767,24 +1774,32 @@ async def get_couts_materiel(
 
     FIN-10: Accessible aux chefs de chantier et superieurs.
     Filtres optionnels par periode (date_debut, date_fin).
+
+    TEMPORAIRE: Désactivé car table ressources non créée (module logistique).
     """
     _check_chantier_access(chantier_id, _role, user_chantier_ids)
-    result = use_case.execute(chantier_id, date_debut, date_fin)
+    # TEMPORAIRE: Retourner des données vides en attendant le module logistique
     return {
-        "chantier_id": result.chantier_id,
-        "cout_total": result.cout_total,
-        "details": [
-            {
-                "ressource_id": d.ressource_id,
-                "nom": d.nom,
-                "code": d.code,
-                "jours_reservation": d.jours_reservation,
-                "tarif_journalier": d.tarif_journalier,
-                "cout_total": d.cout_total,
-            }
-            for d in result.details
-        ],
+        "chantier_id": chantier_id,
+        "cout_total": "0",
+        "details": [],
     }
+    # result = use_case.execute(chantier_id, date_debut, date_fin)
+    # return {
+    #     "chantier_id": result.chantier_id,
+    #     "cout_total": result.cout_total,
+    #     "details": [
+    #         {
+    #             "ressource_id": d.ressource_id,
+    #             "nom": d.nom,
+    #             "code": d.code,
+    #             "jours_reservation": d.jours_reservation,
+    #             "tarif_journalier": d.tarif_journalier,
+    #             "cout_total": d.cout_total,
+    #         }
+    #         for d in result.details
+    #     ],
+    # }
 
 
 # =============================================================================

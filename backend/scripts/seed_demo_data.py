@@ -49,6 +49,14 @@ from modules.formulaires.infrastructure.persistence import (
     ChampRempliModel,
     PhotoFormulaireModel,
 )
+from modules.financier.infrastructure.persistence.models import (
+    BudgetModel,
+    LotBudgetaireModel,
+    AchatModel,
+    FournisseurModel,
+    SituationTravauxModel,
+    FactureClientModel,
+)
 
 
 def hash_password(password: str) -> str:
@@ -72,7 +80,7 @@ USERS_DATA = [
         "role": "admin",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 01",
-        "metier": None,
+        "metiers": None,
         "code_utilisateur": "ADM001",
         "couleur": "#9B59B6",
     },
@@ -84,7 +92,7 @@ USERS_DATA = [
         "role": "admin",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 02",
-        "metier": "assistante_administrative",
+        "metiers": ["assistante_administrative"],
         "code_utilisateur": "ADM002",
         "couleur": "#8E44AD",
     },
@@ -97,7 +105,7 @@ USERS_DATA = [
         "role": "chef_chantier",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 03",
-        "metier": "chef_chantier",
+        "metiers": ["chef_chantier"],
         "code_utilisateur": "CHF001",
         "couleur": "#27AE60",
     },
@@ -109,7 +117,7 @@ USERS_DATA = [
         "role": "chef_chantier",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 04",
-        "metier": "chef_equipe",
+        "metiers": ["chef_equipe"],
         "code_utilisateur": "CHF002",
         "couleur": "#E67E22",
     },
@@ -121,7 +129,7 @@ USERS_DATA = [
         "role": "chef_chantier",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 05",
-        "metier": "chef_equipe",
+        "metiers": ["chef_equipe"],
         "code_utilisateur": "CHF003",
         "couleur": "#16A085",
     },
@@ -133,7 +141,7 @@ USERS_DATA = [
         "role": "chef_chantier",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 06",
-        "metier": "chef_equipe",
+        "metiers": ["chef_equipe"],
         "code_utilisateur": "CHF004",
         "couleur": "#D35400",
     },
@@ -146,7 +154,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 07",
-        "metier": "macon",
+        "metiers": ["macon"],
         "code_utilisateur": "CMP001",
         "couleur": "#E74C3C",
     },
@@ -158,7 +166,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 08",
-        "metier": "macon_coffreur",
+        "metiers": ["macon_coffreur"],
         "code_utilisateur": "CMP002",
         "couleur": "#C0392B",
     },
@@ -170,7 +178,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 09",
-        "metier": "macon",
+        "metiers": ["macon"],
         "code_utilisateur": "CMP003",
         "couleur": "#E84393",
     },
@@ -182,7 +190,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 10",
-        "metier": "macon",
+        "metiers": ["macon"],
         "code_utilisateur": "CMP004",
         "couleur": "#F1C40F",
     },
@@ -194,7 +202,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 11",
-        "metier": "macon",
+        "metiers": ["macon"],
         "code_utilisateur": "CMP005",
         "couleur": "#F39C12",
     },
@@ -206,7 +214,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 12",
-        "metier": "macon",
+        "metiers": ["macon"],
         "code_utilisateur": "CMP006",
         "couleur": "#3498DB",
     },
@@ -218,7 +226,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 13",
-        "metier": "macon_polyvalent",
+        "metiers": ["macon_polyvalent"],
         "code_utilisateur": "CMP007",
         "couleur": "#2980B9",
     },
@@ -231,7 +239,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 14",
-        "metier": "ouvrier",
+        "metiers": ["ouvrier"],
         "code_utilisateur": "CMP008",
         "couleur": "#9B59B6",
     },
@@ -243,7 +251,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 15",
-        "metier": "ouvrier",
+        "metiers": ["ouvrier"],
         "code_utilisateur": "CMP009",
         "couleur": "#8E44AD",
     },
@@ -255,7 +263,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 16",
-        "metier": "ouvrier",
+        "metiers": ["ouvrier"],
         "code_utilisateur": "CMP010",
         "couleur": "#1ABC9C",
     },
@@ -267,7 +275,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 17",
-        "metier": "ouvrier",
+        "metiers": ["ouvrier"],
         "code_utilisateur": "CMP011",
         "couleur": "#16A085",
     },
@@ -279,7 +287,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 18",
-        "metier": "ouvrier",
+        "metiers": ["ouvrier"],
         "code_utilisateur": "CMP012",
         "couleur": "#EC407A",
     },
@@ -292,7 +300,7 @@ USERS_DATA = [
         "role": "compagnon",
         "type_utilisateur": "employe",
         "telephone": "00 00 00 00 19",
-        "metier": "grutier",
+        "metiers": ["grutier"],
         "code_utilisateur": "CMP013",
         "couleur": "#3F51B5",
     },
@@ -706,7 +714,7 @@ def seed_users(db: Session) -> dict:
             role=user_data["role"],
             type_utilisateur=user_data["type_utilisateur"],
             telephone=user_data.get("telephone"),
-            metier=user_data.get("metier"),
+            metiers=user_data.get("metiers"),
             code_utilisateur=user_data.get("code_utilisateur"),
             couleur=user_data.get("couleur", "#3498DB"),
             is_active=True,
@@ -844,7 +852,6 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
     admin_id = user_ids.get("admin@example.com") or 1
 
     created_count = 0
-    events_to_publish = []
 
     for email, chantier_code in affectations_data:
         user_id = user_ids.get(email)
@@ -876,33 +883,11 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
                 created_by=admin_id,
             )
             db.add(affectation)
-            db.flush()  # Pour obtenir l'ID de l'affectation
-
-            # Créer l'événement pour déclencher FDH-10
-            event = AffectationCreatedEvent(
-                affectation_id=affectation.id,
-                user_id=user_id,
-                chantier_id=chantier_id,
-                date_affectation=affectation_date,
-                heures_prevues=8.0,
-                metadata={'created_by': admin_id},
-            )
-            events_to_publish.append(event)
             created_count += 1
 
     db.commit()
-
-    # Publier les événements après le commit pour déclencher FDH-10
-    async def publish_events():
-        for event in events_to_publish:
-            await event_bus.publish(event)
-
-    if events_to_publish:
-        asyncio.run(publish_events())
-        print(f"  [CREE] {created_count} affectations pour la semaine du {monday}")
-        print(f"  [PUBLIE] {len(events_to_publish)} événements AffectationCreatedEvent (FDH-10 déclenché)")
-    else:
-        print(f"  [CREE] {created_count} affectations pour la semaine du {monday}")
+    print(f"  [CREE] {created_count} affectations pour la semaine du {monday}")
+    print(f"  [INFO] Les pointages seront créés automatiquement par FDH-10 lors de la première utilisation")
 
 
 def seed_taches(db: Session, chantier_ids: dict):
@@ -1366,6 +1351,534 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
     print(f"  [CREE] {created_count} formulaires remplis")
 
 
+# =============================================================================
+# DONNEES FINANCIERES
+# =============================================================================
+
+FOURNISSEURS_DATA = [
+    {
+        "raison_sociale": "Négoce Matériaux Pro",
+        "type": "negoce_materiaux",
+        "siret": "12345678901234",
+        "contact_principal": "Jean Dupont",
+        "telephone": "04 00 00 00 01",
+        "email": "contact@negoce-pro.fr",
+        "conditions_paiement": "30 jours fin de mois",
+    },
+    {
+        "raison_sociale": "Location Matériel BTP",
+        "type": "loueur",
+        "siret": "23456789012345",
+        "contact_principal": "Marie Martin",
+        "telephone": "04 00 00 00 02",
+        "email": "contact@location-btp.fr",
+        "conditions_paiement": "Comptant",
+    },
+    {
+        "raison_sociale": "Sous-Traitance Élec Plus",
+        "type": "sous_traitant",
+        "siret": "34567890123456",
+        "contact_principal": "Pierre Bernard",
+        "telephone": "04 00 00 00 03",
+        "email": "contact@elec-plus.fr",
+        "conditions_paiement": "45 jours fin de mois",
+    },
+    {
+        "raison_sociale": "Plomberie Services",
+        "type": "sous_traitant",
+        "siret": "45678901234567",
+        "contact_principal": "Luc Dubois",
+        "telephone": "04 00 00 00 04",
+        "email": "contact@plomberie-services.fr",
+        "conditions_paiement": "30 jours",
+    },
+    {
+        "raison_sociale": "Services Généraux BTP",
+        "type": "service",
+        "siret": "56789012345678",
+        "contact_principal": "Sophie Roux",
+        "telephone": "04 00 00 00 05",
+        "email": "contact@services-btp.fr",
+        "conditions_paiement": "Comptant",
+    },
+]
+
+
+def seed_fournisseurs(db: Session, user_ids: dict) -> dict:
+    """Cree les fournisseurs de demo. Retourne un dict raison_sociale -> fournisseur_id."""
+    print("\n=== Creation des fournisseurs ===")
+    fournisseur_ids = {}
+    admin_id = user_ids.get("admin@example.com") or 1
+
+    for fournisseur_data in FOURNISSEURS_DATA:
+        existing = db.query(FournisseurModel).filter(
+            FournisseurModel.raison_sociale == fournisseur_data["raison_sociale"]
+        ).first()
+
+        if existing:
+            print(f"  [EXISTE] {fournisseur_data['raison_sociale']}")
+            fournisseur_ids[fournisseur_data["raison_sociale"]] = existing.id
+            continue
+
+        fournisseur = FournisseurModel(
+            raison_sociale=fournisseur_data["raison_sociale"],
+            type=fournisseur_data["type"],
+            siret=fournisseur_data.get("siret"),
+            contact_principal=fournisseur_data.get("contact_principal"),
+            telephone=fournisseur_data.get("telephone"),
+            email=fournisseur_data.get("email"),
+            conditions_paiement=fournisseur_data.get("conditions_paiement"),
+            actif=True,
+            created_by=admin_id,
+        )
+        db.add(fournisseur)
+        db.flush()
+        fournisseur_ids[fournisseur_data["raison_sociale"]] = fournisseur.id
+        print(f"  [CREE] {fournisseur_data['raison_sociale']} (ID: {fournisseur.id})")
+
+    db.commit()
+    return fournisseur_ids
+
+
+def seed_budgets_financiers(db: Session, user_ids: dict, chantier_ids: dict) -> dict:
+    """Cree les budgets pour les chantiers en cours. Retourne un dict chantier_code -> budget_id."""
+    print("\n=== Creation des budgets financiers ===")
+    budget_ids = {}
+    admin_id = user_ids.get("admin@example.com") or 1
+
+    # Chantiers pour lesquels on cree un budget (les 5 principaux en cours)
+    chantiers_avec_budget = [
+        ("2025-11-TRIALP", 1200000.00),  # 1.2M €
+        ("2025-07-TOUR-LOGEMENTS", 750000.00),  # 750k €
+        ("2025-06-RAVOIRE-LOGEMENTS", 450000.00),  # 450k €
+        ("2025-03-TOURNON-COMMERCIAL", 850000.00),  # 850k €
+        ("2025-04-CHIGNIN-AGRICOLE", 380000.00),  # 380k €
+    ]
+
+    for chantier_code, montant_initial in chantiers_avec_budget:
+        chantier_id = chantier_ids.get(chantier_code)
+        if not chantier_id:
+            continue
+
+        # Verifier si budget existe
+        existing = db.query(BudgetModel).filter(
+            BudgetModel.chantier_id == chantier_id
+        ).first()
+
+        if existing:
+            print(f"  [EXISTE] Budget pour {chantier_code}")
+            budget_ids[chantier_code] = existing.id
+            continue
+
+        budget = BudgetModel(
+            chantier_id=chantier_id,
+            montant_initial_ht=montant_initial,
+            montant_avenants_ht=0,
+            retenue_garantie_pct=5.0,
+            seuil_alerte_pct=110.0,
+            seuil_validation_achat=5000.0,
+            created_by=admin_id,
+        )
+        db.add(budget)
+        db.flush()
+        budget_ids[chantier_code] = budget.id
+        print(f"  [CREE] Budget {chantier_code}: {montant_initial:,.2f} € HT (ID: {budget.id})")
+
+    db.commit()
+    return budget_ids
+
+
+def seed_lots_budgetaires(db: Session, user_ids: dict, budget_ids: dict) -> dict:
+    """Cree les lots budgetaires. Retourne un dict (chantier_code, code_lot) -> lot_id."""
+    print("\n=== Creation des lots budgetaires ===")
+    lot_ids = {}
+    admin_id = user_ids.get("admin@example.com") or 1
+
+    # Structure: chantier_code -> [(code_lot, libelle, quantite, prix_unitaire)]
+    lots_data = {
+        "2025-11-TRIALP": [
+            ("TERRASSEMENT", "Terrassement général", 850, 280.00),  # 238k€ - m3
+            ("FONDATIONS", "Fondations béton armé", 420, 450.00),  # 189k€ - m3
+            ("DALLE-BA", "Dalle béton armé", 1200, 180.00),  # 216k€ - m2
+            ("VOILES-BA", "Voiles béton armé", 680, 320.00),  # 217.6k€ - m2
+            ("POTEAUX-POUTRES", "Poteaux et poutres BA", 280, 520.00),  # 145.6k€ - m3
+            ("PLANCHERS", "Planchers préfabriqués", 950, 195.00),  # 185.25k€ - m2
+        ],
+        "2025-07-TOUR-LOGEMENTS": [
+            ("TERRASSEMENT", "Terrassement et VRD", 620, 245.00),  # 151.9k€ - m3
+            ("FONDATIONS", "Semelles et longrines", 280, 480.00),  # 134.4k€ - m3
+            ("DALLE-BA", "Dalle rez-de-chaussée", 850, 165.00),  # 140.25k€ - m2
+            ("VOILES-BA", "Refends et façades", 520, 295.00),  # 153.4k€ - m2
+            ("PLANCHERS", "Planchers étages", 780, 210.00),  # 163.8k€ - m2
+            ("ESCALIERS", "Escaliers béton", 45, 2800.00),  # 126k€ - u
+        ],
+        "2025-06-RAVOIRE-LOGEMENTS": [
+            ("TERRASSEMENT", "Décapage et terrassement", 420, 220.00),  # 92.4k€ - m3
+            ("FONDATIONS", "Fondations superficielles", 180, 420.00),  # 75.6k€ - m3
+            ("MURS-SOUBASSEMENT", "Murs de soubassement", 320, 280.00),  # 89.6k€ - m2
+            ("DALLE-BA", "Dalle sur terre-plein", 580, 155.00),  # 89.9k€ - m2
+            ("VOILES-BA", "Murs porteurs", 380, 285.00),  # 108.3k€ - m2
+        ],
+        "2025-03-TOURNON-COMMERCIAL": [
+            ("TERRASSEMENT", "Terrassement plateforme", 950, 195.00),  # 185.25k€ - m3
+            ("FONDATIONS", "Fondations bâtiment", 340, 510.00),  # 173.4k€ - m3
+            ("DALLAGE", "Dallage industriel", 1400, 125.00),  # 175k€ - m2
+            ("LONGRINES", "Longrines béton", 280, 380.00),  # 106.4k€ - ml
+            ("POTEAUX", "Poteaux préfabriqués", 85, 1850.00),  # 157.25k€ - u
+        ],
+        "2025-04-CHIGNIN-AGRICOLE": [
+            ("TERRASSEMENT", "Terrassement général", 520, 185.00),  # 96.2k€ - m3
+            ("FONDATIONS", "Semelles isolées", 150, 450.00),  # 67.5k€ - m3
+            ("DALLAGE", "Dallage béton", 680, 115.00),  # 78.2k€ - m2
+            ("MURS-PIGNON", "Murs pignons béton", 180, 295.00),  # 53.1k€ - m2
+            ("MURS-REFEND", "Murs de refend", 120, 285.00),  # 34.2k€ - m2
+        ],
+    }
+
+    for chantier_code, lots in lots_data.items():
+        budget_id = budget_ids.get(chantier_code)
+        if not budget_id:
+            continue
+
+        for ordre, (code_lot, libelle, quantite, prix_unitaire) in enumerate(lots, 1):
+            # Verifier si lot existe
+            existing = db.query(LotBudgetaireModel).filter(
+                LotBudgetaireModel.budget_id == budget_id,
+                LotBudgetaireModel.code_lot == code_lot
+            ).first()
+
+            if existing:
+                lot_ids[(chantier_code, code_lot)] = existing.id
+                continue
+
+            lot = LotBudgetaireModel(
+                budget_id=budget_id,
+                code_lot=code_lot,
+                libelle=libelle,
+                unite="ENS",
+                quantite_prevue=quantite,
+                prix_unitaire_ht=prix_unitaire,
+                ordre=ordre,
+                created_by=admin_id,
+            )
+            db.add(lot)
+            db.flush()
+            lot_ids[(chantier_code, code_lot)] = lot.id
+
+    db.commit()
+    print(f"  [CREE] {len(lot_ids)} lots budgétaires")
+    return lot_ids
+
+
+def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids: dict, lot_ids: dict):
+    """Cree des achats varies pour tester les graphiques."""
+    print("\n=== Creation des achats ===")
+    admin_id = user_ids.get("admin@example.com") or 1
+    chef_id = user_ids.get("martin.chef@example.com") or admin_id
+
+    # Recuperer les IDs
+    fournisseur_negoce = fournisseur_ids.get("Négoce Matériaux Pro")
+    fournisseur_beton = fournisseur_ids.get("Négoce Matériaux Pro")  # Utilisé pour béton
+    fournisseur_terrassement = fournisseur_ids.get("Négoce Matériaux Pro")  # Utilisé pour terrassement
+
+    today = date.today()
+
+    # Achats pour TRIALP (gros chantier)
+    achats_trialp = [
+        # GROS-OEUVRE - Livré
+        {
+            "chantier": "2025-11-TRIALP",
+            "lot": "GROS-OEUVRE",
+            "fournisseur": fournisseur_negoce,
+            "libelle": "Béton C30/37 - Dalle RDC",
+            "quantite": 120,
+            "unite": "m3",
+            "prix_unitaire": 135.00,
+            "statut": "livre",
+            "jours_avant": 15,
+        },
+        {
+            "chantier": "2025-11-TRIALP",
+            "lot": "TERRASSEMENT",
+            "fournisseur": fournisseur_terrassement,
+            "libelle": "Évacuation terres excavées",
+            "quantite": 350,
+            "unite": "m3",
+            "prix_unitaire": 25.00,
+            "statut": "livre",
+            "jours_avant": 22,
+        },
+        # FONDATIONS - Validé
+        {
+            "chantier": "2025-11-TRIALP",
+            "lot": "FONDATIONS",
+            "fournisseur": fournisseur_beton,
+            "libelle": "Béton C30/37 pour semelles",
+            "quantite": 180,
+            "unite": "m3",
+            "prix_unitaire": 145.00,
+            "statut": "valide",
+            "jours_avant": 18,
+        },
+        # DALLE-BA - Commandé
+        {
+            "chantier": "2025-11-TRIALP",
+            "lot": "DALLE-BA",
+            "fournisseur": fournisseur_beton,
+            "libelle": "Béton C25/30 dalle",
+            "quantite": 95,
+            "unite": "m3",
+            "prix_unitaire": 135.00,
+            "statut": "commande",
+            "jours_avant": 12,
+        },
+        # VOILES-BA - Demande
+        {
+            "chantier": "2025-11-TRIALP",
+            "lot": "VOILES-BA",
+            "fournisseur": fournisseur_beton,
+            "libelle": "Béton C30/37 voiles",
+            "quantite": 120,
+            "unite": "m3",
+            "prix_unitaire": 150.00,
+            "statut": "demande",
+            "jours_avant": 8,
+        },
+    ]
+
+    # Achats pour autres chantiers
+    achats_tour = [
+        {
+            "chantier": "2025-07-TOUR-LOGEMENTS",
+            "lot": "TERRASSEMENT",
+            "fournisseur": fournisseur_terrassement,
+            "libelle": "Terrassement fouilles",
+            "quantite": 280,
+            "unite": "m3",
+            "prix_unitaire": 245.00,
+            "statut": "livre",
+            "jours_avant": 18,
+        },
+        {
+            "chantier": "2025-07-TOUR-LOGEMENTS",
+            "lot": "FONDATIONS",
+            "fournisseur": fournisseur_beton,
+            "libelle": "Béton fondations C30/37",
+            "quantite": 120,
+            "unite": "m3",
+            "prix_unitaire": 150.00,
+            "statut": "valide",
+            "jours_avant": 12,
+        },
+    ]
+
+    achats_ravoire = [
+        {
+            "chantier": "2025-06-RAVOIRE-LOGEMENTS",
+            "lot": "GROS-OEUVRE",
+            "fournisseur": fournisseur_negoce,
+            "libelle": "Acier HA",
+            "quantite": 12,
+            "unite": "T",
+            "prix_unitaire": 850.00,
+            "statut": "livre",
+            "jours_avant": 12,
+        },
+    ]
+
+    achats_tournon = [
+        {
+            "chantier": "2025-03-TOURNON-COMMERCIAL",
+            "lot": "CHARPENTE",
+            "fournisseur": fournisseur_negoce,
+            "libelle": "Poutrelles métalliques IPE 300",
+            "quantite": 24,
+            "unite": "U",
+            "prix_unitaire": 450.00,
+            "statut": "commande",
+            "jours_avant": 5,
+        },
+    ]
+
+    tous_achats = achats_trialp + achats_tour + achats_ravoire + achats_tournon
+    created_count = 0
+
+    for achat_data in tous_achats:
+        chantier_id = chantier_ids.get(achat_data["chantier"])
+        lot_key = (achat_data["chantier"], achat_data["lot"])
+        lot_id = lot_ids.get(lot_key)
+        fournisseur_id = achat_data["fournisseur"]
+
+        if not chantier_id or not fournisseur_id:
+            continue
+
+        date_commande = today - timedelta(days=achat_data["jours_avant"])
+
+        achat = AchatModel(
+            chantier_id=chantier_id,
+            fournisseur_id=fournisseur_id,
+            lot_budgetaire_id=lot_id,
+            type_achat="materiau",
+            libelle=achat_data["libelle"],
+            quantite=achat_data["quantite"],
+            unite=achat_data["unite"],
+            prix_unitaire_ht=achat_data["prix_unitaire"],
+            taux_tva=20.0,
+            date_commande=date_commande,
+            statut=achat_data["statut"],
+            demandeur_id=chef_id,
+            valideur_id=admin_id if achat_data["statut"] in ["valide", "commande", "livre"] else None,
+            validated_at=datetime.now() - timedelta(days=achat_data["jours_avant"] - 1) if achat_data["statut"] in ["valide", "commande", "livre"] else None,
+            created_by=chef_id,
+        )
+        db.add(achat)
+        created_count += 1
+
+    db.commit()
+    print(f"  [CREE] {created_count} achats")
+
+
+def seed_situations_factures(db: Session, user_ids: dict, chantier_ids: dict, budget_ids: dict, lot_ids: dict):
+    """Cree des situations de travaux et factures pour tester les graphiques."""
+    print("\n=== Creation des situations et factures ===")
+    admin_id = user_ids.get("admin@example.com") or 1
+
+    today = date.today()
+    created_situations = 0
+    created_factures = 0
+
+    # Situation pour TRIALP (30% d'avancement)
+    if "2025-11-TRIALP" in budget_ids:
+        chantier_id = chantier_ids["2025-11-TRIALP"]
+        budget_id = budget_ids["2025-11-TRIALP"]
+
+        # Vérifier si situation existe déjà
+        existing_sit = db.query(SituationTravauxModel).filter(
+            SituationTravauxModel.chantier_id == chantier_id,
+            SituationTravauxModel.numero == "SIT-2026-001"
+        ).first()
+
+        if not existing_sit:
+            situation = SituationTravauxModel(
+                chantier_id=chantier_id,
+                budget_id=budget_id,
+                numero="SIT-2026-001",
+                periode_debut=date(2025, 11, 1),
+                periode_fin=date(2026, 1, 31),
+                montant_cumule_precedent_ht=0,
+                montant_periode_ht=360000.00,  # 30% de 1.2M
+                montant_cumule_ht=360000.00,
+                retenue_garantie_pct=5.0,
+                taux_tva=20.0,
+                statut="emise",
+                created_by=admin_id,
+                emise_at=datetime.now() - timedelta(days=5),
+            )
+            db.add(situation)
+            db.flush()
+            created_situations += 1
+        else:
+            situation = existing_sit
+
+        # Facture associée
+        existing_fac = db.query(FactureClientModel).filter(
+            FactureClientModel.numero_facture == "FAC-2026-001"
+        ).first()
+
+        if not existing_fac:
+            montant_ht = 360000.00
+            montant_tva = montant_ht * 0.20
+            montant_ttc = montant_ht + montant_tva
+            retenue = montant_ttc * 0.05
+
+            facture = FactureClientModel(
+                chantier_id=chantier_id,
+                situation_id=situation.id,
+                numero_facture="FAC-2026-001",
+                type_facture="situation",
+                montant_ht=montant_ht,
+                taux_tva=20.0,
+                montant_tva=montant_tva,
+                montant_ttc=montant_ttc,
+                retenue_garantie_montant=retenue,
+                montant_net=montant_ttc - retenue,
+                date_emission=today - timedelta(days=5),
+                date_echeance=today + timedelta(days=25),
+                statut="emise",
+                created_by=admin_id,
+            )
+            db.add(facture)
+            created_factures += 1
+
+    # Situation pour TOUR-LOGEMENTS (50% d'avancement)
+    if "2025-07-TOUR-LOGEMENTS" in budget_ids:
+        chantier_id = chantier_ids["2025-07-TOUR-LOGEMENTS"]
+        budget_id = budget_ids["2025-07-TOUR-LOGEMENTS"]
+
+        # Vérifier si situation existe déjà
+        existing_sit = db.query(SituationTravauxModel).filter(
+            SituationTravauxModel.chantier_id == chantier_id,
+            SituationTravauxModel.numero == "SIT-2026-002"
+        ).first()
+
+        if not existing_sit:
+            situation = SituationTravauxModel(
+                chantier_id=chantier_id,
+                budget_id=budget_id,
+                numero="SIT-2026-002",
+                periode_debut=date(2025, 7, 1),
+                periode_fin=date(2026, 1, 31),
+                montant_cumule_precedent_ht=0,
+                montant_periode_ht=375000.00,  # 50% de 750k
+                montant_cumule_ht=375000.00,
+                retenue_garantie_pct=5.0,
+                taux_tva=20.0,
+                statut="validee",
+                created_by=admin_id,
+                validated_by=admin_id,
+                validated_at=datetime.now() - timedelta(days=3),
+            )
+            db.add(situation)
+            db.flush()
+            created_situations += 1
+        else:
+            situation = existing_sit
+
+        # Facture associée
+        existing_fac = db.query(FactureClientModel).filter(
+            FactureClientModel.numero_facture == "FAC-2026-002"
+        ).first()
+
+        if not existing_fac:
+            montant_ht = 375000.00
+            montant_tva = montant_ht * 0.20
+            montant_ttc = montant_ht + montant_tva
+            retenue = montant_ttc * 0.05
+
+            facture = FactureClientModel(
+                chantier_id=chantier_id,
+                situation_id=situation.id,
+                numero_facture="FAC-2026-002",
+                type_facture="situation",
+                montant_ht=montant_ht,
+                taux_tva=20.0,
+                montant_tva=montant_tva,
+                montant_ttc=montant_ttc,
+                retenue_garantie_montant=retenue,
+                montant_net=montant_ttc - retenue,
+                date_emission=today - timedelta(days=3),
+                date_echeance=today + timedelta(days=27),
+                statut="envoyee",
+                created_by=admin_id,
+            )
+            db.add(facture)
+            created_factures += 1
+
+    db.commit()
+    print(f"  [CREE] {created_situations} situations de travaux")
+    print(f"  [CREE] {created_factures} factures")
+
+
 def main():
     """Point d'entree principal."""
     print("=" * 60)
@@ -1397,10 +1910,25 @@ def main():
         # 4. Creer les taches
         seed_taches(db, chantier_ids)
 
-        # 5. Creer les templates de formulaire
+        # 5. Creer les fournisseurs
+        fournisseur_ids = seed_fournisseurs(db, user_ids)
+
+        # 6. Creer les budgets financiers
+        budget_ids = seed_budgets_financiers(db, user_ids, chantier_ids)
+
+        # 7. Creer les lots budgetaires
+        lot_ids = seed_lots_budgetaires(db, user_ids, budget_ids)
+
+        # 8. Creer les achats
+        seed_achats(db, user_ids, chantier_ids, fournisseur_ids, lot_ids)
+
+        # 9. Creer les situations et factures
+        seed_situations_factures(db, user_ids, chantier_ids, budget_ids, lot_ids)
+
+        # 10. Creer les templates de formulaire
         template_ids = seed_templates_formulaires(db, user_ids)
 
-        # 6. Creer les formulaires remplis
+        # 11. Creer les formulaires remplis
         seed_formulaires_remplis(db, user_ids, chantier_ids, template_ids)
 
         print("\n" + "=" * 60)
