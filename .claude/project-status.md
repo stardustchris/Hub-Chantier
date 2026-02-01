@@ -19,15 +19,15 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
-| financier | 17 | FIN-01 a FIN-23 | 13/23 | 0 | **PHASE 1+2 COMPLET, Phase 3 UX specs ready** |
+| financier | 17 | FIN-01 a FIN-23 | 20/23 | 0 | **PHASE 1+2+3 COMPLET, Phase 4 futur** |
 
 ## Statistiques globales
 
-- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2)
-- **Module financier** : 13/23 features (Phase 1+2: 13/13 ✅, Phase 3 UX: 0/7 specs ready, Phase 4: 0/3 futur)
+- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2+3)
+- **Module financier** : 20/23 features (Phase 1+2+3: 20/20 ✅, Phase 4: 0/3 futur)
 - **Fonctionnalites totales** : 275 (+8 nouvelles features financier Phase 3)
-- **Fonctionnalites done** : 246 (89%)
-- **Fonctionnalites specs ready** : 10 (7 FIN Phase 3 + 3 FIN Phase 4)
+- **Fonctionnalites done** : 253 (92%)
+- **Fonctionnalites specs ready** : 3 (FIN Phase 4)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 3 (FIN-03, FIN-13, FIN-23 — Phase 4)
 
@@ -109,24 +109,17 @@
 | FIN-14 | Referentiel fournisseurs | ✅ Done (Phase 1) |
 | FIN-15 | Historique et tracabilite | ✅ Done (Phase 2) |
 
-#### Phase 3 - UX Moderne & Intelligence (0/7 🚧 SPECS READY)
+#### Phase 3 - UX Moderne & Intelligence (7/7 ✅ COMPLET)
 
-**Objectif** : Passer de "fonctionnel" a "moderne et competitif" vs Graneet/Kalitics
-
-| ID | Description | Impact Business | Effort |
-|----|-------------|-----------------|--------|
-| FIN-16 | Indicateur "Reste a depenser" | ⭐⭐⭐⭐⭐ Metrique cle manquante | 1h |
-| FIN-17 | Graphique evolution temporelle | ⭐⭐⭐⭐⭐ Tendances visuelles | 1 jour |
-| FIN-18 | Graphique repartition lots (camembert) | ⭐⭐⭐⭐ Comprehension immediate | 4h |
-| FIN-19 | Graphique barres comparatives par lot | ⭐⭐⭐⭐ Comparaison facile | 4h |
-| FIN-20 | Vue consolidee multi-chantiers | ⭐⭐⭐⭐⭐ Vision strategique CEO | 2 jours |
-| FIN-21 | Suggestions intelligentes | ⭐⭐⭐⭐⭐ Valeur ajoutee enorme | 2 jours |
-| FIN-22 | Indicateurs predictifs (burn rate, projection) | ⭐⭐⭐⭐ Anticipation problemes | 1 jour |
-
-**Roadmap Phase 3** :
-- Semaine 1 : Quick Wins (FIN-16 + ameliorations alertes + jauges) → Gain percu 70%
-- Semaine 2 : Graphiques (FIN-17, FIN-18, FIN-19) → Gain percu 90%
-- Semaines 3-4 : Refonte complete (FIN-20, FIN-21, FIN-22) → Niveau Graneet
+| ID | Description | Statut |
+|----|-------------|--------|
+| FIN-16 | Indicateur "Reste a depenser" (CircularGauge + alerte negatif) | ✅ Done |
+| FIN-17 | Graphique evolution temporelle (Recharts LineChart) | ✅ Done |
+| FIN-18 | Graphique repartition lots (Recharts PieChart) | ✅ Done |
+| FIN-19 | Graphique barres comparatives par lot (Recharts BarChart) | ✅ Done |
+| FIN-20 | Vue consolidee multi-chantiers (/finances page) | ✅ Done |
+| FIN-21 | Suggestions intelligentes (Gemini Flash + algorithmic fallback) | ✅ Done |
+| FIN-22 | Indicateurs predictifs (burn rate, date epuisement, projection) | ✅ Done |
 
 #### Phase 4 - Integration & Exports (0/3 🔮 FUTUR)
 
