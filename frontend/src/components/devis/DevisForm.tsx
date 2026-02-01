@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
-import type { DevisCreate, DevisUpdate, Devis } from '../../types'
+import type { DevisCreate, DevisUpdate, DevisDetail } from '../../types'
 import { TAUX_TVA_OPTIONS } from '../../types'
 
 interface DevisFormProps {
-  devis?: Devis | null
+  devis?: DevisDetail | null
   onSubmit: (data: DevisCreate | DevisUpdate) => Promise<void>
   onCancel: () => void
 }
@@ -18,11 +18,11 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
     client_email: devis?.client_email || '',
     client_telephone: devis?.client_telephone || '',
     date_validite: devis?.date_validite?.split('T')[0] || '',
-    taux_tva: devis?.taux_tva ?? 20,
+    taux_tva_defaut: devis?.taux_tva_defaut ?? 20,
     coefficient_frais_generaux: devis?.coefficient_frais_generaux ?? 12,
-    taux_marge_globale: devis?.taux_marge_globale ?? 15,
+    taux_marge_global: devis?.taux_marge_global ?? 15,
     notes: devis?.notes || '',
-    conditions_paiement: devis?.conditions_paiement || '',
+    conditions_generales: devis?.conditions_generales || '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,11 +36,10 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
         client_email: form.client_email || undefined,
         client_telephone: form.client_telephone || undefined,
         date_validite: form.date_validite || undefined,
-        taux_tva: form.taux_tva,
+        taux_tva_defaut: form.taux_tva_defaut,
         coefficient_frais_generaux: form.coefficient_frais_generaux,
-        taux_marge_globale: form.taux_marge_globale,
+        taux_marge_global: form.taux_marge_global,
         notes: form.notes || undefined,
-        conditions_paiement: form.conditions_paiement || undefined,
       }
       await onSubmit(data)
     } finally {
@@ -69,6 +68,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
             <input
               type="text"
               required
+              maxLength={500}
               value={form.objet}
               onChange={(e) => setForm({ ...form, objet: e.target.value })}
               placeholder="Ex: Renovation maison individuelle"
@@ -87,6 +87,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                 <input
                   type="text"
                   required
+                  maxLength={200}
                   value={form.client_nom}
                   onChange={(e) => setForm({ ...form, client_nom: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -96,6 +97,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
                   type="email"
+                  maxLength={255}
                   value={form.client_email}
                   onChange={(e) => setForm({ ...form, client_email: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -105,6 +107,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                 <label className="block text-sm font-medium text-gray-700 mb-1">Telephone</label>
                 <input
                   type="tel"
+                  maxLength={30}
                   value={form.client_telephone}
                   onChange={(e) => setForm({ ...form, client_telephone: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -114,6 +117,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
                 <input
                   type="text"
+                  maxLength={500}
                   value={form.client_adresse}
                   onChange={(e) => setForm({ ...form, client_adresse: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -129,8 +133,8 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Taux TVA</label>
                 <select
-                  value={form.taux_tva}
-                  onChange={(e) => setForm({ ...form, taux_tva: Number(e.target.value) })}
+                  value={form.taux_tva_defaut}
+                  onChange={(e) => setForm({ ...form, taux_tva_defaut: Number(e.target.value) })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {TAUX_TVA_OPTIONS.map((opt) => (
@@ -161,8 +165,8 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                   min="0"
                   max="100"
                   step="0.1"
-                  value={form.taux_marge_globale}
-                  onChange={(e) => setForm({ ...form, taux_marge_globale: Number(e.target.value) })}
+                  value={form.taux_marge_global}
+                  onChange={(e) => setForm({ ...form, taux_marge_global: Number(e.target.value) })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -189,19 +193,21 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={2}
+              maxLength={2000}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Conditions paiement */}
+          {/* Conditions generales */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Conditions de paiement
+              Conditions generales
             </label>
             <textarea
-              value={form.conditions_paiement}
-              onChange={(e) => setForm({ ...form, conditions_paiement: e.target.value })}
+              value={form.conditions_generales}
+              onChange={(e) => setForm({ ...form, conditions_generales: e.target.value })}
               rows={2}
+              maxLength={2000}
               placeholder="Ex: 30% a la commande, solde a la livraison"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />

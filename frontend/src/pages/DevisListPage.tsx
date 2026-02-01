@@ -9,7 +9,7 @@ import Layout from '../components/Layout'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import DevisForm from '../components/devis/DevisForm'
 import { devisService } from '../services/devis'
-import type { Devis, DevisCreate, StatutDevis } from '../types'
+import type { Devis, DevisCreate, DevisUpdate, StatutDevis } from '../types'
 import { STATUT_DEVIS_CONFIG } from '../types'
 import {
   Loader2,
@@ -123,7 +123,7 @@ export default function DevisListPage() {
     setPage(0)
   }
 
-  const handleCreateDevis = async (data: DevisCreate) => {
+  const handleCreateDevis = async (data: DevisCreate | DevisUpdate) => {
     const created = await devisService.createDevis(data as DevisCreate)
     setShowCreateForm(false)
     navigate(`/devis/${created.id}`)
@@ -323,12 +323,12 @@ export default function DevisListPage() {
                       <td className="px-4 py-3 font-mono text-xs text-gray-500">{devis.numero}</td>
                       <td className="px-4 py-3 font-medium text-gray-900">{devis.client_nom}</td>
                       <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{devis.objet}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatEUR(devis.montant_total_ht)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{formatEUR(Number(devis.montant_total_ht))}</td>
                       <td className="px-4 py-3 text-center">
                         <DevisStatusBadge statut={devis.statut} />
                       </td>
                       <td className="px-4 py-3 text-gray-500">
-                        {new Date(devis.date_creation).toLocaleDateString('fr-FR')}
+                        {devis.date_creation ? new Date(devis.date_creation).toLocaleDateString('fr-FR') : '-'}
                       </td>
                     </tr>
                   ))}

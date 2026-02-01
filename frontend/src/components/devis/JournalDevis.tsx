@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Clock, User, Loader2, AlertCircle } from 'lucide-react'
+import { Clock, Loader2, AlertCircle } from 'lucide-react'
 import { devisService } from '../../services/devis'
 import type { JournalDevisEntry } from '../../types'
 
@@ -74,45 +74,20 @@ export default function JournalDevis({ devisId }: JournalDevisProps) {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-medium text-gray-900">{entry.action}</span>
               <span className="text-xs text-gray-400">
-                {new Date(entry.created_at).toLocaleString('fr-FR', {
+                {entry.created_at ? new Date(entry.created_at).toLocaleString('fr-FR', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
-                })}
+                }) : ''}
               </span>
             </div>
 
-            {entry.champ_modifie && (
-              <p className="text-xs text-gray-500 mb-1">
-                Champ: <span className="font-medium">{entry.champ_modifie}</span>
+            {entry.details && (
+              <p className="text-xs text-gray-500">
+                {entry.details}
               </p>
-            )}
-
-            {(entry.ancienne_valeur || entry.nouvelle_valeur) && (
-              <div className="flex items-center gap-2 text-xs">
-                {entry.ancienne_valeur && (
-                  <span className="px-2 py-0.5 bg-red-50 text-red-700 rounded line-through">
-                    {entry.ancienne_valeur}
-                  </span>
-                )}
-                {entry.ancienne_valeur && entry.nouvelle_valeur && (
-                  <span className="text-gray-400">&rarr;</span>
-                )}
-                {entry.nouvelle_valeur && (
-                  <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded">
-                    {entry.nouvelle_valeur}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {entry.auteur_nom && (
-              <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
-                <User className="w-3 h-3" />
-                <span>{entry.auteur_nom}</span>
-              </div>
             )}
           </div>
         </div>

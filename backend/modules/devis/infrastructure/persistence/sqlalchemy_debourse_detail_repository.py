@@ -49,8 +49,12 @@ class SQLAlchemyDebourseDetailRepository(DebourseDetailRepository):
             libelle=model.designation,
             quantite=Decimal(str(model.quantite)),
             prix_unitaire=Decimal(str(model.prix_unitaire)),
-            metier=None,
-            taux_horaire=None,
+            metier=model.metier,
+            taux_horaire=(
+                Decimal(str(model.taux_horaire))
+                if model.taux_horaire is not None
+                else None
+            ),
             total=Decimal(str(model.montant)),
             created_at=model.created_at,
             updated_at=model.updated_at,
@@ -77,6 +81,8 @@ class SQLAlchemyDebourseDetailRepository(DebourseDetailRepository):
                 model.designation = debourse.libelle
                 model.quantite = debourse.quantite
                 model.prix_unitaire = debourse.prix_unitaire
+                model.metier = debourse.metier
+                model.taux_horaire = debourse.taux_horaire
                 model.montant = debourse.total
                 model.updated_at = datetime.utcnow()
         else:
@@ -87,6 +93,8 @@ class SQLAlchemyDebourseDetailRepository(DebourseDetailRepository):
                 quantite=debourse.quantite,
                 prix_unitaire=debourse.prix_unitaire,
                 unite="u",
+                metier=debourse.metier,
+                taux_horaire=debourse.taux_horaire,
                 montant=debourse.total,
                 created_at=debourse.created_at or datetime.utcnow(),
             )

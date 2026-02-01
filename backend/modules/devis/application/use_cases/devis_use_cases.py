@@ -4,7 +4,7 @@ DEV-03: Creation devis structure.
 """
 
 from datetime import date, datetime
-from typing import Optional, List
+from typing import Optional
 
 from ...domain.entities.devis import Devis
 from ...domain.entities.journal_devis import JournalDevis
@@ -106,7 +106,7 @@ class CreateDevisUseCase:
             JournalDevis(
                 devis_id=devis.id,
                 action="creation",
-                details=f"Creation du devis {numero} - {dto.objet}",
+                details_json={"message": f"Creation du devis {numero} - {dto.objet}"},
                 auteur_id=created_by,
                 created_at=datetime.utcnow(),
             )
@@ -219,7 +219,7 @@ class UpdateDevisUseCase:
                 JournalDevis(
                     devis_id=devis.id,
                     action="modification",
-                    details=f"Modification des champs: {', '.join(modifications)}",
+                    details_json={"message": f"Modification des champs: {', '.join(modifications)}"},
                     auteur_id=updated_by,
                     created_at=datetime.utcnow(),
                 )
@@ -253,13 +253,13 @@ class GetDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        lots = self._lot_repository.find_by_devis_id(devis_id)
+        lots = self._lot_repository.find_by_devis(devis_id)
         lot_dtos = []
         for lot in lots:
-            lignes = self._ligne_repository.find_by_lot_id(lot.id)
+            lignes = self._ligne_repository.find_by_lot(lot.id)
             ligne_dtos = []
             for ligne in lignes:
-                debourses = self._debourse_repository.find_by_ligne_id(ligne.id)
+                debourses = self._debourse_repository.find_by_ligne(ligne.id)
                 debourse_dtos = [DebourseDetailDTO.from_entity(d) for d in debourses]
                 ligne_dtos.append(LigneDevisDTO.from_entity(ligne, debourse_dtos))
             lot_dtos.append(LotDevisDTO.from_entity(lot, ligne_dtos))
@@ -320,7 +320,7 @@ class DeleteDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="suppression",
-                details=f"Suppression du devis {devis.numero}",
+                details_json={"message": f"Suppression du devis {devis.numero}"},
                 auteur_id=deleted_by,
                 created_at=datetime.utcnow(),
             )

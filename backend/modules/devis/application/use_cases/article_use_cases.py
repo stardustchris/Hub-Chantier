@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 from ...domain.entities.article import Article
+from ...domain.value_objects import CategorieArticle, UniteArticle
 from ...domain.repositories.article_repository import ArticleRepository
 from ...domain.repositories.journal_devis_repository import JournalDevisRepository
 from ...domain.entities.journal_devis import JournalDevis
@@ -62,14 +63,24 @@ class CreateArticleUseCase:
             if existing:
                 raise ArticleCodeExistsError(dto.code)
 
+        # Convertir unite et categorie string en enum
+        try:
+            unite_enum = UniteArticle(dto.unite.lower()) if dto.unite else UniteArticle.U
+        except ValueError:
+            unite_enum = UniteArticle.U
+
+        try:
+            categorie_enum = CategorieArticle(dto.categorie.lower()) if dto.categorie else CategorieArticle.DIVERS
+        except ValueError:
+            categorie_enum = CategorieArticle.DIVERS
+
         article = Article(
-            designation=dto.designation,
-            unite=dto.unite,
+            libelle=dto.designation,
+            unite=unite_enum,
             prix_unitaire_ht=dto.prix_unitaire_ht,
-            code=dto.code,
-            categorie=dto.categorie,
+            code=dto.code or f"ART-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+            categorie=categorie_enum,
             description=dto.description,
-            taux_tva=dto.taux_tva,
             actif=dto.actif,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
@@ -120,19 +131,23 @@ class UpdateArticleUseCase:
                 raise ArticleCodeExistsError(dto.code)
 
         if dto.designation is not None:
-            article.designation = dto.designation
+            article.libelle = dto.designation
         if dto.unite is not None:
-            article.unite = dto.unite
+            try:
+                article.unite = UniteArticle(dto.unite.lower())
+            except ValueError:
+                article.unite = UniteArticle.U
         if dto.prix_unitaire_ht is not None:
             article.prix_unitaire_ht = dto.prix_unitaire_ht
         if dto.code is not None:
             article.code = dto.code
         if dto.categorie is not None:
-            article.categorie = dto.categorie
+            try:
+                article.categorie = CategorieArticle(dto.categorie.lower())
+            except ValueError:
+                article.categorie = CategorieArticle.DIVERS
         if dto.description is not None:
             article.description = dto.description
-        if dto.taux_tva is not None:
-            article.taux_tva = dto.taux_tva
         if dto.actif is not None:
             article.actif = dto.actif
 
@@ -176,17 +191,24 @@ class ListArticlesUseCase:
         offset: int = 0,
     ) -> ArticleListDTO:
         """Liste les articles avec pagination et filtres."""
+        # Convertir categorie string en enum si fournie
+        categorie_enum = None
+        if categorie:
+            try:
+                categorie_enum = CategorieArticle(categorie.lower())
+            except ValueError:
+                categorie_enum = None
+
         articles = self._article_repository.find_all(
-            categorie=categorie,
-            actif_seulement=actif_seulement,
+            categorie=categorie_enum,
+            actif_only=actif_seulement,
             search=search,
-            skip=offset,
+            offset=offset,
             limit=limit,
         )
         total = self._article_repository.count(
-            categorie=categorie,
-            actif_seulement=actif_seulement,
-            search=search,
+            categorie=categorie_enum,
+            actif_only=actif_seulement,
         )
         return ArticleListDTO(
             items=[ArticleDTO.from_entity(a) for a in articles],

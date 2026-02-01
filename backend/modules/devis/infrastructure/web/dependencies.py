@@ -178,6 +178,41 @@ def get_perdu_devis_use_case(
     return PerduDevisUseCase(devis_repo, journal_repo)
 
 
+def get_marquer_vu_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> MarquerVuUseCase:
+    return MarquerVuUseCase(devis_repo, journal_repo)
+
+
+def get_passer_en_negociation_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> PasserEnNegociationUseCase:
+    return PasserEnNegociationUseCase(devis_repo, journal_repo)
+
+
+def get_marquer_expire_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> MarquerExpireUseCase:
+    return MarquerExpireUseCase(devis_repo, journal_repo)
+
+
+def get_reorder_lots_use_case(
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> ReorderLotsUseCase:
+    return ReorderLotsUseCase(lot_repo, journal_repo)
+
+
+def get_update_article_use_case(
+    article_repo: ArticleRepository = Depends(get_article_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> UpdateArticleUseCase:
+    return UpdateArticleUseCase(article_repo, journal_repo)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Use Cases - Search & Dashboard
 # ─────────────────────────────────────────────────────────────────────────────

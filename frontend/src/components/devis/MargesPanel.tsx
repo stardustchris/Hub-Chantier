@@ -27,10 +27,10 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
   // Calcul marges par lot
   const margesLots: LotMargeInfo[] = devis.lots.map((lot) => ({
     numero: lot.numero,
-    libelle: lot.libelle,
-    debourse: lot.total_debourse_ht,
-    vente: lot.total_vente_ht,
-    marge_pct: lot.marge_lot_pct,
+    libelle: lot.titre,
+    debourse: Number(lot.debourse_sec),
+    vente: Number(lot.total_ht),
+    marge_pct: Number(lot.marge_lot_pct ?? 0),
   }))
 
   // Calcul debourses par type
@@ -51,7 +51,7 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
     }))
     .sort((a, b) => b.total - a.total)
 
-  const margeGlobalePct = devis.marge_globale_pct
+  const margeGlobalePct = Number(devis.taux_marge_global)
   const isPositive = margeGlobalePct >= 0
 
   return (
@@ -73,18 +73,14 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
             )}
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">Debourse sec</span>
-            <p className="font-semibold text-orange-700">{formatEUR(devis.total_debourse_sec)}</p>
-          </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-500">Vente HT</span>
-            <p className="font-semibold">{formatEUR(devis.montant_total_ht)}</p>
+            <p className="font-semibold">{formatEUR(Number(devis.montant_total_ht))}</p>
           </div>
           <div>
             <span className="text-gray-500">TTC</span>
-            <p className="font-semibold">{formatEUR(devis.montant_total_ttc)}</p>
+            <p className="font-semibold">{formatEUR(Number(devis.montant_total_ttc))}</p>
           </div>
         </div>
       </div>
@@ -131,8 +127,9 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Repartition debourses par type</h4>
           <div className="space-y-2">
             {typesMarges.map((t) => {
-              const pct = devis.total_debourse_sec > 0
-                ? (t.total / devis.total_debourse_sec) * 100
+              const totalDebourse = typesMarges.reduce((sum, tm) => sum + tm.total, 0)
+              const pct = totalDebourse > 0
+                ? (t.total / totalDebourse) * 100
                 : 0
               return (
                 <div key={t.type} className="flex items-center gap-3">

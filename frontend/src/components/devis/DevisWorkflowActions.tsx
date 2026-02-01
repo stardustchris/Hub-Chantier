@@ -2,8 +2,7 @@ import { useState } from 'react'
 import {
   Send,
   CheckCircle,
-  Eye,
-  MessageSquare,
+  RotateCcw,
   ThumbsUp,
   ThumbsDown,
   XCircle,
@@ -15,9 +14,7 @@ interface DevisWorkflowActionsProps {
   statut: StatutDevis
   onSoumettre?: () => Promise<void>
   onValider?: () => Promise<void>
-  onEnvoyer?: () => Promise<void>
-  onMarquerVu?: () => Promise<void>
-  onNegocier?: () => Promise<void>
+  onRetournerBrouillon?: () => Promise<void>
   onAccepter?: () => Promise<void>
   onRefuser?: (motif?: string) => Promise<void>
   onPerdu?: (motif?: string) => Promise<void>
@@ -29,16 +26,13 @@ interface ActionButton {
   color: string
   bgColor: string
   action: () => Promise<void>
-  needsMotif?: boolean
 }
 
 export default function DevisWorkflowActions({
   statut,
   onSoumettre,
   onValider,
-  onEnvoyer,
-  onMarquerVu,
-  onNegocier,
+  onRetournerBrouillon,
   onAccepter,
   onRefuser,
   onPerdu,
@@ -57,10 +51,10 @@ export default function DevisWorkflowActions({
   }
 
   const handleMotifAction = async () => {
-    if (!showMotifModal) return
+    if (!showMotifModal || !motif.trim()) return
     try {
       setLoading(showMotifModal.action)
-      await showMotifModal.callback(motif || undefined)
+      await showMotifModal.callback(motif)
     } finally {
       setLoading(null)
       setShowMotifModal(null)
@@ -87,71 +81,26 @@ export default function DevisWorkflowActions({
       case 'en_validation':
         if (onValider) {
           actions.push({
-            label: 'Approuver',
+            label: 'Valider et envoyer',
             icon: CheckCircle,
             color: '#10B981',
             bgColor: '#D1FAE5',
             action: () => handleAction('valider', onValider),
           })
         }
-        break
-
-      case 'approuve':
-        if (onEnvoyer) {
+        if (onRetournerBrouillon) {
           actions.push({
-            label: 'Envoyer au client',
-            icon: Send,
-            color: '#3B82F6',
-            bgColor: '#DBEAFE',
-            action: () => handleAction('envoyer', onEnvoyer),
+            label: 'Retourner en brouillon',
+            icon: RotateCcw,
+            color: '#6B7280',
+            bgColor: '#F3F4F6',
+            action: () => handleAction('retourner', onRetournerBrouillon),
           })
         }
         break
 
       case 'envoye':
-        if (onMarquerVu) {
-          actions.push({
-            label: 'Marquer comme vu',
-            icon: Eye,
-            color: '#8B5CF6',
-            bgColor: '#EDE9FE',
-            action: () => handleAction('vu', onMarquerVu),
-          })
-        }
-        break
-
       case 'vu':
-        if (onNegocier) {
-          actions.push({
-            label: 'En negociation',
-            icon: MessageSquare,
-            color: '#F97316',
-            bgColor: '#FED7AA',
-            action: () => handleAction('negocier', onNegocier),
-          })
-        }
-        if (onAccepter) {
-          actions.push({
-            label: 'Accepter',
-            icon: ThumbsUp,
-            color: '#059669',
-            bgColor: '#D1FAE5',
-            action: () => handleAction('accepter', onAccepter),
-          })
-        }
-        if (onRefuser) {
-          actions.push({
-            label: 'Refuser',
-            icon: ThumbsDown,
-            color: '#EF4444',
-            bgColor: '#FEE2E2',
-            action: async () => {
-              setShowMotifModal({ action: 'refuser', callback: onRefuser })
-            },
-          })
-        }
-        break
-
       case 'en_negociation':
         if (onAccepter) {
           actions.push({
@@ -173,7 +122,7 @@ export default function DevisWorkflowActions({
             },
           })
         }
-        if (onPerdu) {
+        if (statut === 'en_negociation' && onPerdu) {
           actions.push({
             label: 'Marquer perdu',
             icon: XCircle,
@@ -231,7 +180,8 @@ export default function DevisWorkflowActions({
             <textarea
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
-              placeholder="Indiquez le motif (optionnel)..."
+              placeholder="Indiquez le motif (obligatoire)..."
+              maxLength={1000}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               rows={3}
             />
@@ -244,7 +194,7 @@ export default function DevisWorkflowActions({
               </button>
               <button
                 onClick={handleMotifAction}
-                disabled={loading !== null}
+                disabled={loading !== null || !motif.trim()}
                 className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50"
               >
                 {loading ? 'En cours...' : 'Confirmer'}

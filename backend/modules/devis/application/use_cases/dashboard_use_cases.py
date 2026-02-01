@@ -8,7 +8,6 @@ from decimal import Decimal
 from ...domain.value_objects import StatutDevis
 from ...domain.repositories.devis_repository import DevisRepository
 from ..dtos.dashboard_dtos import DashboardDevisDTO, KPIDevisDTO, DevisRecentDTO
-from ..dtos.devis_dtos import DevisDTO
 
 
 class GetDashboardDevisUseCase:

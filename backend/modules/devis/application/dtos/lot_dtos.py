@@ -61,13 +61,13 @@ class LotDevisDTO:
         return cls(
             id=lot.id,
             devis_id=lot.devis_id,
-            titre=lot.titre,
-            numero=lot.numero,
+            titre=lot.libelle,
+            numero=lot.code_lot,
             ordre=lot.ordre,
-            marge_lot_pct=str(lot.marge_lot_pct) if lot.marge_lot_pct is not None else None,
-            total_ht=str(lot.total_ht),
-            total_ttc=str(lot.total_ttc),
-            debourse_sec=str(lot.debourse_sec),
+            marge_lot_pct=str(lot.taux_marge_lot) if lot.taux_marge_lot is not None else None,
+            total_ht=str(lot.montant_vente_ht),
+            total_ttc=str(lot.montant_vente_ttc),
+            debourse_sec=str(lot.montant_debourse_ht),
             lignes=lignes or [],
         )
 

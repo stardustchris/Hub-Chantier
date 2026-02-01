@@ -55,10 +55,11 @@ class CreateLotDevisUseCase:
 
         lot = LotDevis(
             devis_id=dto.devis_id,
-            titre=dto.titre,
-            numero=dto.numero,
+            libelle=dto.titre,
+            code_lot=dto.numero or f"LOT-{dto.ordre:03d}",
             ordre=dto.ordre,
-            marge_lot_pct=dto.marge_lot_pct,
+            taux_marge_lot=dto.marge_lot_pct,
+            created_by=created_by,
         )
 
         lot = self._lot_repository.save(lot)
@@ -67,7 +68,7 @@ class CreateLotDevisUseCase:
             JournalDevis(
                 devis_id=dto.devis_id,
                 action="ajout_lot",
-                details=f"Ajout du lot '{dto.titre}'",
+                details_json={"message": f"Ajout du lot '{dto.titre}'"},
                 auteur_id=created_by,
                 created_at=datetime.utcnow(),
             )
@@ -100,13 +101,13 @@ class UpdateLotDevisUseCase:
             raise LotDevisNotFoundError(lot_id)
 
         if dto.titre is not None:
-            lot.titre = dto.titre
+            lot.libelle = dto.titre
         if dto.numero is not None:
-            lot.numero = dto.numero
+            lot.code_lot = dto.numero
         if dto.ordre is not None:
             lot.ordre = dto.ordre
         if dto.marge_lot_pct is not None:
-            lot.marge_lot_pct = dto.marge_lot_pct
+            lot.taux_marge_lot = dto.marge_lot_pct
 
         lot = self._lot_repository.save(lot)
 
@@ -114,7 +115,7 @@ class UpdateLotDevisUseCase:
             JournalDevis(
                 devis_id=lot.devis_id,
                 action="modification_lot",
-                details=f"Modification du lot '{lot.titre}'",
+                details_json={"message": f"Modification du lot '{lot.libelle}'"},
                 auteur_id=updated_by,
                 created_at=datetime.utcnow(),
             )
@@ -150,7 +151,7 @@ class DeleteLotDevisUseCase:
             JournalDevis(
                 devis_id=lot.devis_id,
                 action="suppression_lot",
-                details=f"Suppression du lot '{lot.titre}'",
+                details_json={"message": f"Suppression du lot '{lot.libelle}'"},
                 auteur_id=deleted_by,
                 created_at=datetime.utcnow(),
             )
@@ -181,17 +182,22 @@ class ReorderLotsUseCase:
         Returns:
             Liste des lots reordonnes.
         """
-        self._lot_repository.reorder(lot_ids)
+        # Reordonner manuellement en mettant a jour l'ordre de chaque lot
+        for new_order, lot_id in enumerate(lot_ids):
+            lot = self._lot_repository.find_by_id(lot_id)
+            if lot and lot.devis_id == devis_id:
+                lot.ordre = new_order
+                self._lot_repository.save(lot)
 
         self._journal_repository.save(
             JournalDevis(
                 devis_id=devis_id,
                 action="reordonnement_lots",
-                details="Reordonnement des lots",
+                details_json={"message": "Reordonnement des lots"},
                 auteur_id=updated_by,
                 created_at=datetime.utcnow(),
             )
         )
 
-        lots = self._lot_repository.find_by_devis_id(devis_id)
+        lots = self._lot_repository.find_by_devis(devis_id)
         return [LotDevisDTO.from_entity(lot) for lot in lots]

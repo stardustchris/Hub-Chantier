@@ -6,9 +6,14 @@ Regle de priorite: ligne > lot > type debours > global.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...domain.entities.devis import Devis
+    from ...domain.entities.debourse_detail import DebourseDetail
 
 from ...domain.entities.journal_devis import JournalDevis
+from ...domain.value_objects import TypeDebourse
 from ...domain.repositories.devis_repository import DevisRepository
 from ...domain.repositories.lot_devis_repository import LotDevisRepository
 from ...domain.repositories.ligne_devis_repository import LigneDevisRepository
@@ -68,17 +73,17 @@ class CalculerTotauxDevisUseCase:
         total_ht = Decimal("0")
         total_ttc = Decimal("0")
 
-        lots = self._lot_repository.find_by_devis_id(devis_id)
+        lots = self._lot_repository.find_by_devis(devis_id)
 
         for lot in lots:
             lot_debourse_sec = Decimal("0")
             lot_total_ht = Decimal("0")
             lot_total_ttc = Decimal("0")
 
-            lignes = self._ligne_repository.find_by_lot_id(lot.id)
+            lignes = self._ligne_repository.find_by_lot(lot.id)
 
             for ligne in lignes:
-                debourses = self._debourse_repository.find_by_ligne_id(ligne.id)
+                debourses = self._debourse_repository.find_by_ligne(ligne.id)
 
                 # Calculer le debourse sec de la ligne
                 ligne_debourse_sec = Decimal("0")
@@ -94,8 +99,8 @@ class CalculerTotauxDevisUseCase:
 
                 # Determiner la marge applicable (priorite)
                 marge = self._resolve_marge(
-                    ligne_marge=ligne.marge_ligne_pct,
-                    lot_marge=lot.marge_lot_pct,
+                    ligne_marge=ligne.taux_marge_ligne,
+                    lot_marge=lot.taux_marge_lot,
                     devis=devis,
                     debourses=debourses,
                 )
@@ -109,7 +114,7 @@ class CalculerTotauxDevisUseCase:
                 else:
                     ligne_montant_ht = ligne.prix_unitaire_ht * ligne.quantite
 
-                ligne.montant_ht = ligne_montant_ht
+                ligne.total_ht = ligne_montant_ht
                 ligne.montant_ttc = ligne_montant_ht * (
                     Decimal("1") + ligne.taux_tva / Decimal("100")
                 )
@@ -117,13 +122,13 @@ class CalculerTotauxDevisUseCase:
                 self._ligne_repository.save(ligne)
 
                 lot_debourse_sec += ligne_debourse_sec
-                lot_total_ht += ligne.montant_ht
+                lot_total_ht += ligne.total_ht
                 lot_total_ttc += ligne.montant_ttc
 
             # Mettre a jour les totaux du lot
-            lot.debourse_sec = lot_debourse_sec
-            lot.total_ht = lot_total_ht
-            lot.total_ttc = lot_total_ttc
+            lot.montant_debourse_ht = lot_debourse_sec
+            lot.montant_vente_ht = lot_total_ht
+            lot.montant_vente_ttc = lot_total_ttc
             self._lot_repository.save(lot)
 
             total_ht += lot_total_ht
@@ -140,10 +145,9 @@ class CalculerTotauxDevisUseCase:
             JournalDevis(
                 devis_id=devis_id,
                 action="recalcul_totaux",
-                details=(
-                    f"Recalcul des totaux - "
-                    f"Total HT: {total_ht}, Total TTC: {total_ttc}"
-                ),
+                details_json={
+                    "message": f"Recalcul des totaux - Total HT: {total_ht}, Total TTC: {total_ttc}",
+                },
                 auteur_id=updated_by,
                 created_at=datetime.utcnow(),
             )
@@ -158,8 +162,8 @@ class CalculerTotauxDevisUseCase:
         self,
         ligne_marge: Optional[Decimal],
         lot_marge: Optional[Decimal],
-        devis,
-        debourses: list,
+        devis: "Devis",
+        debourses: List["DebourseDetail"],
     ) -> Decimal:
         """Resout la marge applicable selon la priorite.
 
@@ -183,11 +187,11 @@ class CalculerTotauxDevisUseCase:
         # 4. Marge globale
         return devis.taux_marge_global
 
-    def _get_type_principal(self, debourses: list) -> Optional[str]:
+    def _get_type_principal(self, debourses: List["DebourseDetail"]) -> Optional[TypeDebourse]:
         """Determine le type de debourse principal (le plus cher)."""
         if not debourses:
             return None
-        type_totaux: dict = {}
+        type_totaux: Dict[TypeDebourse, Decimal] = {}
         for d in debourses:
             montant = d.quantite * d.prix_unitaire
             type_totaux[d.type_debourse] = type_totaux.get(d.type_debourse, Decimal("0")) + montant
@@ -195,15 +199,15 @@ class CalculerTotauxDevisUseCase:
             return max(type_totaux, key=type_totaux.get)
         return None
 
-    def _get_marge_by_type(self, devis, type_debourse: Optional[str]) -> Optional[Decimal]:
+    def _get_marge_by_type(self, devis: "Devis", type_debourse: Optional[TypeDebourse]) -> Optional[Decimal]:
         """Recupere la marge configuree pour un type de debourse."""
         if type_debourse is None:
             return None
         mapping = {
-            "main_oeuvre": devis.taux_marge_moe,
-            "materiaux": devis.taux_marge_materiaux,
-            "sous_traitance": devis.taux_marge_sous_traitance,
-            "materiel": devis.taux_marge_materiel,
-            "deplacement": devis.taux_marge_deplacement,
+            TypeDebourse.MOE: devis.taux_marge_moe,
+            TypeDebourse.MATERIAUX: devis.taux_marge_materiaux,
+            TypeDebourse.SOUS_TRAITANCE: devis.taux_marge_sous_traitance,
+            TypeDebourse.MATERIEL: devis.taux_marge_materiel,
+            TypeDebourse.DEPLACEMENT: devis.taux_marge_deplacement,
         }
         return mapping.get(type_debourse)

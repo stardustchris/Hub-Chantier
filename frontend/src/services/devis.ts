@@ -13,139 +13,127 @@ import type {
   LigneDevis,
   LigneDevisCreate,
   LigneDevisUpdate,
-  DebourseDetail,
-  DebourseDetailCreate,
   JournalDevisEntry,
   DashboardDevis,
 } from '../types'
 
+// Backend router: APIRouter(prefix="/devis") -> mounted at /api/devis
 const BASE = '/api/devis'
+// Articles have a separate router: APIRouter(prefix="/articles-devis")
+const ARTICLES_BASE = '/api/articles-devis'
 
 export const devisService = {
   // ===== Articles (DEV-01) =====
   async listArticles(params?: {
     categorie?: string
-    type_debourse?: string
-    actif_seulement?: boolean
     search?: string
+    actif?: boolean
     limit?: number
     offset?: number
   }): Promise<{ items: Article[]; total: number }> {
     const response = await api.get<{ items: Article[]; total: number }>(
-      `${BASE}/articles`,
+      ARTICLES_BASE,
       { params }
     )
     return response.data
   },
 
   async getArticle(id: number): Promise<Article> {
-    const response = await api.get<Article>(`${BASE}/articles/${id}`)
+    const response = await api.get<Article>(`${ARTICLES_BASE}/${id}`)
     return response.data
   },
 
   async createArticle(data: ArticleCreate): Promise<Article> {
-    const response = await api.post<Article>(`${BASE}/articles`, data)
+    const response = await api.post<Article>(ARTICLES_BASE, data)
     return response.data
   },
 
   async updateArticle(id: number, data: ArticleUpdate): Promise<Article> {
-    const response = await api.put<Article>(`${BASE}/articles/${id}`, data)
+    const response = await api.put<Article>(`${ARTICLES_BASE}/${id}`, data)
     return response.data
   },
 
   async deleteArticle(id: number): Promise<void> {
-    await api.delete(`${BASE}/articles/${id}`)
+    await api.delete(`${ARTICLES_BASE}/${id}`)
   },
 
   // ===== Devis (DEV-03) =====
   async listDevis(params?: {
     statut?: string
     client_nom?: string
-    date_debut?: string
-    date_fin?: string
+    date_min?: string
+    date_max?: string
     montant_min?: number
     montant_max?: number
     search?: string
-    sort_by?: string
-    sort_direction?: string
+    commercial_id?: number
     limit?: number
     offset?: number
   }): Promise<{ items: Devis[]; total: number }> {
     const response = await api.get<{ items: Devis[]; total: number }>(
-      `${BASE}/devis`,
+      BASE,
       { params }
     )
     return response.data
   },
 
   async getDevis(id: number): Promise<DevisDetail> {
-    const response = await api.get<DevisDetail>(`${BASE}/devis/${id}`)
+    const response = await api.get<DevisDetail>(`${BASE}/${id}`)
     return response.data
   },
 
   async createDevis(data: DevisCreate): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis`, data)
+    const response = await api.post<Devis>(BASE, data)
     return response.data
   },
 
   async updateDevis(id: number, data: DevisUpdate): Promise<Devis> {
-    const response = await api.put<Devis>(`${BASE}/devis/${id}`, data)
+    const response = await api.put<Devis>(`${BASE}/${id}`, data)
     return response.data
   },
 
   async deleteDevis(id: number): Promise<void> {
-    await api.delete(`${BASE}/devis/${id}`)
+    await api.delete(`${BASE}/${id}`)
   },
 
   // ===== Workflow (DEV-15) =====
   async soumettreDevis(id: number): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/soumettre`)
+    const response = await api.post<Devis>(`${BASE}/${id}/soumettre`)
     return response.data
   },
 
   async validerDevis(id: number): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/valider`)
+    const response = await api.post<Devis>(`${BASE}/${id}/valider`)
     return response.data
   },
 
-  async envoyerDevis(id: number): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/envoyer`)
-    return response.data
-  },
-
-  async marquerVu(id: number): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/vu`)
-    return response.data
-  },
-
-  async negocierDevis(id: number): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/negocier`)
+  async retournerBrouillon(id: number): Promise<Devis> {
+    const response = await api.post<Devis>(`${BASE}/${id}/retourner-brouillon`)
     return response.data
   },
 
   async accepterDevis(id: number): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/accepter`)
+    const response = await api.post<Devis>(`${BASE}/${id}/accepter`)
     return response.data
   },
 
-  async refuserDevis(id: number, motif?: string): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/refuser`, { motif })
+  async refuserDevis(id: number, motif: string): Promise<Devis> {
+    const response = await api.post<Devis>(`${BASE}/${id}/refuser`, { motif })
     return response.data
   },
 
-  async marquerPerdu(id: number, motif?: string): Promise<Devis> {
-    const response = await api.post<Devis>(`${BASE}/devis/${id}/perdu`, { motif })
+  async marquerPerdu(id: number, motif: string): Promise<Devis> {
+    const response = await api.post<Devis>(`${BASE}/${id}/perdu`, { motif })
+    return response.data
+  },
+
+  // ===== Calcul totaux (DEV-06) =====
+  async calculerTotaux(id: number): Promise<Record<string, unknown>> {
+    const response = await api.post<Record<string, unknown>>(`${BASE}/${id}/calculer`)
     return response.data
   },
 
   // ===== Lots (DEV-03) =====
-  async listLots(devisId: number): Promise<LotDevis[]> {
-    const response = await api.get<{ items: LotDevis[]; total: number }>(
-      `${BASE}/devis/${devisId}/lots`
-    )
-    return response.data.items
-  },
-
   async createLot(data: LotDevisCreate): Promise<LotDevis> {
     const response = await api.post<LotDevis>(`${BASE}/lots`, data)
     return response.data
@@ -158,10 +146,6 @@ export const devisService = {
 
   async deleteLot(id: number): Promise<void> {
     await api.delete(`${BASE}/lots/${id}`)
-  },
-
-  async reorderLots(devisId: number, lotIds: number[]): Promise<void> {
-    await api.post(`${BASE}/devis/${devisId}/lots/reorder`, { lot_ids: lotIds })
   },
 
   // ===== Lignes (DEV-03) =====
@@ -179,23 +163,6 @@ export const devisService = {
     await api.delete(`${BASE}/lignes/${id}`)
   },
 
-  // ===== Debourses (DEV-05) =====
-  async listDebourses(ligneId: number): Promise<DebourseDetail[]> {
-    const response = await api.get<{ items: DebourseDetail[]; total: number }>(
-      `${BASE}/lignes/${ligneId}/debourses`
-    )
-    return response.data.items
-  },
-
-  async createDebourse(data: DebourseDetailCreate): Promise<DebourseDetail> {
-    const response = await api.post<DebourseDetail>(`${BASE}/debourses`, data)
-    return response.data
-  },
-
-  async deleteDebourse(id: number): Promise<void> {
-    await api.delete(`${BASE}/debourses/${id}`)
-  },
-
   // ===== Dashboard (DEV-17) =====
   async getDashboard(): Promise<DashboardDevis> {
     const response = await api.get<DashboardDevis>(`${BASE}/dashboard`)
@@ -208,18 +175,29 @@ export const devisService = {
     offset?: number
   }): Promise<{ items: JournalDevisEntry[]; total: number }> {
     const response = await api.get<{ items: JournalDevisEntry[]; total: number }>(
-      `${BASE}/devis/${devisId}/journal`,
+      `${BASE}/${devisId}/journal`,
       { params }
     )
     return response.data
   },
 
   // ===== Search (DEV-19) =====
-  async searchDevis(query: string): Promise<Devis[]> {
+  async searchDevis(params?: {
+    client_nom?: string
+    statut?: string
+    date_min?: string
+    date_max?: string
+    montant_min?: number
+    montant_max?: number
+    commercial_id?: number
+    search?: string
+    limit?: number
+    offset?: number
+  }): Promise<{ items: Devis[]; total: number }> {
     const response = await api.get<{ items: Devis[]; total: number }>(
-      `${BASE}/devis/search`,
-      { params: { q: query } }
+      `${BASE}/search`,
+      { params }
     )
-    return response.data.items
+    return response.data
   },
 }

@@ -97,6 +97,7 @@ export const ROLES: Record<UserRole, { label: string; color: string }> = {
 // Types d'utilisateur avec labels et couleurs
 export const TYPES_UTILISATEUR: Record<UserType, { label: string; color: string }> = {
   employe: { label: 'Employe', color: '#3498DB' },
+  cadre: { label: 'Cadre', color: '#2E86C1' },
   interimaire: { label: 'Interimaire', color: '#FF9800' },
   sous_traitant: { label: 'Sous-traitant', color: '#9C27B0' },
 }
@@ -1478,14 +1479,13 @@ export interface AffectationBudgetTacheCreate {
 // =====================================================
 
 // Enums et types de base
-export type StatutDevis = 'brouillon' | 'en_validation' | 'approuve' | 'envoye' | 'vu' | 'en_negociation' | 'accepte' | 'refuse' | 'perdu' | 'expire'
+export type StatutDevis = 'brouillon' | 'en_validation' | 'envoye' | 'vu' | 'en_negociation' | 'accepte' | 'refuse' | 'perdu' | 'expire'
 export type TypeDebourse = 'moe' | 'materiaux' | 'materiel' | 'sous_traitance' | 'deplacement'
 
-// Configuration des statuts devis (label + couleur)
+// Configuration des statuts devis (label + couleur) - 9 valeurs (backend)
 export const STATUT_DEVIS_CONFIG: Record<StatutDevis, { label: string; couleur: string }> = {
   brouillon: { label: 'Brouillon', couleur: '#6B7280' },
   en_validation: { label: 'En validation', couleur: '#F59E0B' },
-  approuve: { label: 'Approuve', couleur: '#10B981' },
   envoye: { label: 'Envoye', couleur: '#3B82F6' },
   vu: { label: 'Vu', couleur: '#8B5CF6' },
   en_negociation: { label: 'En negociation', couleur: '#F97316' },
@@ -1539,118 +1539,155 @@ export interface ArticleUpdate {
   actif?: boolean
 }
 
-// Devis
+// Devis (matches backend DevisDTO)
 export interface Devis {
   id: number
   numero: string
   objet: string
   client_nom: string
-  client_adresse?: string
-  client_email?: string
-  client_telephone?: string
   statut: StatutDevis
-  date_creation: string
-  date_validite?: string
-  taux_tva: number
-  coefficient_frais_generaux: number
-  taux_marge_globale: number
   montant_total_ht: number
-  montant_tva: number
   montant_total_ttc: number
-  total_debourse_sec: number
-  marge_globale_pct: number
-  notes?: string
-  conditions_paiement?: string
-  created_by: number
-  created_by_nom?: string
-  created_at: string
-  updated_at?: string
+  date_creation?: string
+  date_validite?: string
+  commercial_id?: number
+  chantier_ref?: string
 }
 
 export interface DevisCreate {
   objet: string
   client_nom: string
+  chantier_ref?: string
   client_adresse?: string
   client_email?: string
   client_telephone?: string
   date_validite?: string
-  taux_tva?: number
+  taux_tva_defaut?: number
+  taux_marge_global?: number
+  taux_marge_moe?: number
+  taux_marge_materiaux?: number
+  taux_marge_sous_traitance?: number
+  taux_marge_materiel?: number
+  taux_marge_deplacement?: number
   coefficient_frais_generaux?: number
-  taux_marge_globale?: number
+  retenue_garantie_pct?: number
   notes?: string
-  conditions_paiement?: string
+  commercial_id?: number
+  conducteur_id?: number
 }
 
 export interface DevisUpdate {
   objet?: string
   client_nom?: string
+  chantier_ref?: string
   client_adresse?: string
   client_email?: string
   client_telephone?: string
   date_validite?: string
-  taux_tva?: number
+  taux_tva_defaut?: number
+  taux_marge_global?: number
+  taux_marge_moe?: number
+  taux_marge_materiaux?: number
+  taux_marge_sous_traitance?: number
+  taux_marge_materiel?: number
+  taux_marge_deplacement?: number
   coefficient_frais_generaux?: number
-  taux_marge_globale?: number
+  retenue_garantie_pct?: number
   notes?: string
-  conditions_paiement?: string
+  commercial_id?: number
+  conducteur_id?: number
 }
 
-export interface DevisDetail extends Devis {
+// DevisDetail (matches backend DevisDetailDTO)
+export interface DevisDetail {
+  id: number
+  numero: string
+  client_nom: string
+  client_adresse?: string
+  client_email?: string
+  client_telephone?: string
+  objet: string
+  statut: StatutDevis
+  montant_total_ht: number
+  montant_total_ttc: number
+  taux_marge_global: number
+  taux_marge_moe?: number
+  taux_marge_materiaux?: number
+  taux_marge_sous_traitance?: number
+  taux_marge_materiel?: number
+  taux_marge_deplacement?: number
+  coefficient_frais_generaux: number
+  retenue_garantie_pct: number
+  taux_tva_defaut: number
+  date_creation?: string
+  date_validite?: string
+  updated_at?: string
+  commercial_id?: number
+  conducteur_id?: number
+  chantier_ref?: string
+  created_by?: number
+  notes?: string
+  conditions_generales?: string
   lots: LotDevis[]
 }
 
-// Lots de devis
+// Lots de devis (matches backend LotDevisDTO)
 export interface LotDevis {
   id: number
   devis_id: number
+  titre: string
   numero: string
-  libelle: string
   ordre: number
-  taux_marge?: number
-  total_debourse_ht: number
-  total_vente_ht: number
-  marge_lot_pct: number
+  marge_lot_pct?: number
+  total_ht: number
+  total_ttc: number
+  debourse_sec: number
   lignes: LigneDevis[]
 }
 
 export interface LotDevisCreate {
   devis_id: number
-  libelle: string
+  titre: string
+  numero?: string
   ordre?: number
-  taux_marge?: number
+  marge_lot_pct?: number
 }
 
 export interface LotDevisUpdate {
-  libelle?: string
+  titre?: string
+  numero?: string
   ordre?: number
-  taux_marge?: number
+  marge_lot_pct?: number
 }
 
-// Lignes de devis
+// Lignes de devis (matches backend LigneDevisDTO)
 export interface LigneDevis {
   id: number
-  lot_id: number
+  lot_devis_id: number
   designation: string
   unite: string
   quantite: number
   prix_unitaire_ht: number
-  total_ht: number
-  taux_marge?: number
-  debourse_sec: number
-  prix_vente_ht: number
+  montant_ht: number
+  taux_tva: number
+  montant_ttc: number
   ordre: number
+  marge_ligne_pct?: number
   article_id?: number
+  debourse_sec: number
+  prix_revient: number
   debourses: DebourseDetail[]
 }
 
 export interface LigneDevisCreate {
-  lot_id: number
+  lot_devis_id: number
   designation: string
-  unite: string
-  quantite: number
-  prix_unitaire_ht: number
-  taux_marge?: number
+  unite?: string
+  quantite?: number
+  prix_unitaire_ht?: number
+  taux_tva?: number
   ordre?: number
+  marge_ligne_pct?: number
   article_id?: number
 }
 
@@ -1659,60 +1696,71 @@ export interface LigneDevisUpdate {
   unite?: string
   quantite?: number
   prix_unitaire_ht?: number
-  taux_marge?: number
+  taux_tva?: number
   ordre?: number
+  marge_ligne_pct?: number
+  article_id?: number
 }
 
-// Debourses detail par ligne
+// Debourses detail par ligne (matches backend DebourseDetailDTO)
 export interface DebourseDetail {
   id: number
-  ligne_id: number
+  ligne_devis_id: number
   type_debourse: TypeDebourse
   designation: string
-  unite: string
   quantite: number
   prix_unitaire: number
   montant: number
+  unite: string
 }
 
 export interface DebourseDetailCreate {
-  ligne_id: number
   type_debourse: TypeDebourse
   designation: string
-  unite: string
-  quantite: number
-  prix_unitaire: number
+  quantite?: number
+  prix_unitaire?: number
+  unite?: string
 }
 
-// Journal devis
+// Journal devis (matches backend JournalDevisDTO)
 export interface JournalDevisEntry {
   id: number
   devis_id: number
   action: string
-  champ_modifie?: string
-  ancienne_valeur?: string
-  nouvelle_valeur?: string
+  details?: string
   auteur_id: number
-  auteur_nom?: string
   created_at: string
 }
 
-// Dashboard devis
+// Dashboard devis (matches backend DashboardDevisDTO / KPIDevisDTO)
 export interface KPIDevis {
-  total_devis: number
-  total_brouillons: number
-  total_en_cours: number
-  total_acceptes: number
-  total_refuses: number
-  montant_pipeline_ht: number
-  montant_accepte_ht: number
+  nb_brouillon: number
+  nb_en_validation: number
+  nb_envoye: number
+  nb_vu: number
+  nb_en_negociation: number
+  nb_accepte: number
+  nb_refuse: number
+  nb_perdu: number
+  nb_expire: number
+  total_pipeline_ht: number
+  total_accepte_ht: number
   taux_conversion: number
-  marge_moyenne_pct: number
+  nb_total: number
+}
+
+// DevisRecent (matches backend DevisRecentDTO)
+export interface DevisRecent {
+  id: number
+  numero: string
+  client_nom: string
+  objet: string
+  statut: StatutDevis
+  montant_total_ht: number
+  date_creation: string
 }
 
 export interface DashboardDevis {
   kpi: KPIDevis
-  devis_par_statut: Record<StatutDevis, number>
-  derniers_devis: Devis[]
-  montant_par_mois: { mois: string; montant: number }[]
+  derniers_devis: DevisRecent[]
 }

@@ -64,13 +64,13 @@ class ArticleDTO:
         """Cree un DTO depuis une entite Article."""
         return cls(
             id=article.id,
-            designation=article.designation,
-            unite=article.unite,
+            designation=article.libelle,
+            unite=article.unite.value if hasattr(article.unite, 'value') else str(article.unite),
             prix_unitaire_ht=str(article.prix_unitaire_ht),
             code=article.code,
-            categorie=article.categorie,
+            categorie=article.categorie.value if hasattr(article.categorie, 'value') else str(article.categorie),
             description=article.description,
-            taux_tva=str(article.taux_tva),
+            taux_tva="20",  # TVA par defaut, pas de champ taux_tva sur l'entite Article
             actif=article.actif,
             created_at=article.created_at,
             updated_at=article.updated_at,

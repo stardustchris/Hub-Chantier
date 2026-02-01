@@ -48,7 +48,7 @@ class SQLAlchemyArticleRepository(ArticleRepository):
                 if model.categorie is not None
                 else CategorieArticle.DIVERS
             ),
-            composants_json=None,
+            composants_json=model.composants_json,
             actif=model.actif,
             created_at=model.created_at,
             updated_at=model.updated_at,
@@ -79,6 +79,7 @@ class SQLAlchemyArticleRepository(ArticleRepository):
                 model.unite = article.unite.value
                 model.prix_unitaire_ht = article.prix_unitaire_ht
                 model.categorie = article.categorie.value
+                model.composants_json = article.composants_json
                 model.actif = article.actif
                 model.updated_at = datetime.utcnow()
         else:
@@ -89,6 +90,7 @@ class SQLAlchemyArticleRepository(ArticleRepository):
                 unite=article.unite.value,
                 prix_unitaire_ht=article.prix_unitaire_ht,
                 categorie=article.categorie.value,
+                composants_json=article.composants_json,
                 taux_tva=Decimal("20"),
                 actif=article.actif,
                 created_at=article.created_at or datetime.utcnow(),
