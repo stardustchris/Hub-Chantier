@@ -88,6 +88,10 @@ from ...application.use_cases import (
     GetDashboardFinancierUseCase,
     # Evolution financiere (FIN-17)
     GetEvolutionFinanciereUseCase,
+    # Consolidation (FIN-20)
+    GetVueConsolideeFinancesUseCase,
+    # Suggestions (FIN-21/22)
+    GetSuggestionsFinancieresUseCase,
 )
 from ..persistence import (
     SQLAlchemyFournisseurRepository,
@@ -803,3 +807,37 @@ def get_list_alertes_use_case(
 ) -> ListAlertesUseCase:
     """Retourne le use case ListAlertes."""
     return ListAlertesUseCase(alerte_repository)
+
+
+# =============================================================================
+# Use Cases - Consolidation (FIN-20)
+# =============================================================================
+
+
+def get_vue_consolidee_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+) -> GetVueConsolideeFinancesUseCase:
+    """Retourne le use case GetVueConsolideeFinances."""
+    return GetVueConsolideeFinancesUseCase(
+        budget_repository, lot_repository, achat_repository, alerte_repository
+    )
+
+
+# =============================================================================
+# Use Cases - Suggestions (FIN-21/22)
+# =============================================================================
+
+
+def get_suggestions_financieres_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+) -> GetSuggestionsFinancieresUseCase:
+    """Retourne le use case GetSuggestionsFinancieres."""
+    return GetSuggestionsFinancieresUseCase(
+        budget_repository, achat_repository, lot_repository, alerte_repository
+    )

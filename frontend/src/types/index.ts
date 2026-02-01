@@ -1393,3 +1393,63 @@ export const TAUX_TVA_OPTIONS = [
   { value: 5.5, label: '5,5% (Reduit)' },
   { value: 0, label: '0% (Exonere)' },
 ]
+
+// ===== Phase 3 Types =====
+
+// Vue consolidee multi-chantiers (FIN-20)
+export interface ChantierFinancierSummary {
+  chantier_id: number
+  nom_chantier: string
+  montant_revise_ht: number
+  total_engage: number
+  total_realise: number
+  reste_a_depenser: number
+  marge_estimee_pct: number
+  pct_engage: number
+  pct_realise: number
+  statut: 'ok' | 'attention' | 'depassement'
+  nb_alertes: number
+}
+
+export interface KPIGlobaux {
+  total_budget_revise: number
+  total_engage: number
+  total_realise: number
+  total_reste_a_depenser: number
+  marge_moyenne_pct: number
+  nb_chantiers: number
+  nb_chantiers_ok: number
+  nb_chantiers_attention: number
+  nb_chantiers_depassement: number
+}
+
+export interface VueConsolidee {
+  kpi_globaux: KPIGlobaux
+  chantiers: ChantierFinancierSummary[]
+  top_rentables: ChantierFinancierSummary[]
+  top_derives: ChantierFinancierSummary[]
+}
+
+// Suggestions IA (FIN-21)
+export interface Suggestion {
+  type: string
+  severity: 'CRITICAL' | 'WARNING' | 'INFO'
+  titre: string
+  description: string
+  impact_estime_eur: number
+}
+
+export interface IndicateursPredictif {
+  burn_rate_mensuel: number
+  budget_moyen_mensuel: number
+  ecart_burn_rate_pct: number
+  mois_restants_budget: number
+  date_epuisement_estimee: string
+  avancement_financier_pct: number
+}
+
+export interface SuggestionsFinancieres {
+  chantier_id: number
+  suggestions: Suggestion[]
+  indicateurs: IndicateursPredictif
+}

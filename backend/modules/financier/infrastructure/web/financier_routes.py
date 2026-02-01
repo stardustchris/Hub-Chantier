@@ -136,6 +136,10 @@ from .dependencies import (
     get_dashboard_financier_use_case,
     # Evolution financiere (FIN-17)
     get_evolution_financiere_use_case,
+    # Consolidation (FIN-20)
+    get_vue_consolidee_use_case,
+    # Suggestions (FIN-21/22)
+    get_suggestions_financieres_use_case,
     # Journal
     get_journal_financier_repository,
 )
@@ -982,6 +986,80 @@ async def get_evolution_financiere(
     """Evolution financiere mensuelle d'un chantier.
 
     FIN-17: Courbes prevu/engage/realise cumules pour graphique Recharts.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    try:
+        result = use_case.execute(chantier_id)
+        return result.to_dict()
+    except BudgetNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucun budget pour ce chantier",
+        )
+
+
+# =============================================================================
+# Routes Consolidation Financiere (FIN-20)
+# =============================================================================
+
+
+@router.get("/finances/consolidation")
+async def get_vue_consolidee_finances(
+    chantier_ids: Optional[str] = Query(
+        None,
+        description="Liste d'IDs de chantiers separes par virgules (ex: 1,2,3)",
+    ),
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_vue_consolidee_use_case),
+):
+    """Vue consolidee financiere multi-chantiers.
+
+    FIN-20: Agrege les KPI de plusieurs chantiers pour la page /finances.
+    Admin voit tous les chantiers, les autres voient leurs chantiers assignes.
+    """
+    # Determiner les chantier_ids accessibles
+    if chantier_ids:
+        # Parse la liste depuis le query parameter
+        try:
+            requested_ids = [int(x.strip()) for x in chantier_ids.split(",") if x.strip()]
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Format invalide pour chantier_ids. Attendu: 1,2,3",
+            )
+        # Filtrer par les chantiers accessibles si restrictions
+        if user_chantier_ids is not None:
+            accessible_ids = [cid for cid in requested_ids if cid in user_chantier_ids]
+        else:
+            accessible_ids = requested_ids
+    elif user_chantier_ids is not None:
+        accessible_ids = user_chantier_ids
+    else:
+        # Admin sans filtre : on retourne une liste vide
+        # (le frontend doit fournir les IDs)
+        accessible_ids = []
+
+    result = use_case.execute(accessible_ids)
+    return result.to_dict()
+
+
+# =============================================================================
+# Routes Suggestions Financieres (FIN-21/22)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/suggestions")
+async def get_suggestions_financieres(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_suggestions_financieres_use_case),
+):
+    """Suggestions financieres algorithmiques pour un chantier.
+
+    FIN-21/22: Genere des suggestions deterministes (pas d'IA)
+    et des indicateurs predictifs (burn rate, date epuisement).
     """
     _check_chantier_access(chantier_id, _role, user_chantier_ids)
     try:

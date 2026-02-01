@@ -2,20 +2,37 @@
  * BudgetTab - Onglet principal Budget dans ChantierDetailPage
  *
  * Orchestrateur qui affiche :
- * 1. BudgetDashboard (KPI)
- * 2. Sub-tabs: Lots, Achats, Avenants, Situations, Factures, Couts MO, Couts Materiel, Alertes
- * 3. JournalFinancier (toggle)
+ * 1. BudgetDashboard (KPI + graphiques)
+ * 2. SuggestionsPanel (suggestions IA)
+ * 3. Sections collapsables: Lots, Achats, Avenants, Situations, Factures, Couts, Alertes
+ * 4. JournalFinancier (toggle)
  *
  * Si pas de budget, affiche un bouton "Creer le budget" (conducteur/admin).
  */
 
-import { useState, useEffect } from 'react'
-import { DollarSign, Plus, History, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import {
+  DollarSign,
+  Plus,
+  History,
+  Loader2,
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+  Package,
+  ShoppingCart,
+  FileText,
+  ClipboardList,
+  Receipt,
+  Wrench,
+  Bell,
+} from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { logger } from '../../services/logger'
 import BudgetDashboard from './BudgetDashboard'
+import SuggestionsPanel from './SuggestionsPanel'
 import LotsBudgetairesTable from './LotsBudgetairesTable'
 import AchatsList from './AchatsList'
 import JournalFinancier from './JournalFinancier'
@@ -31,17 +48,20 @@ interface BudgetTabProps {
   chantierId: number
 }
 
-type SubTab = 'lots' | 'achats' | 'avenants' | 'situations' | 'factures' | 'couts_mo' | 'couts_materiel' | 'alertes'
+interface SectionConfig {
+  key: string
+  label: string
+  icon: typeof Package
+}
 
-const SUB_TABS: { key: SubTab; label: string }[] = [
-  { key: 'lots', label: 'Lots' },
-  { key: 'achats', label: 'Achats' },
-  { key: 'avenants', label: 'Avenants' },
-  { key: 'situations', label: 'Situations' },
-  { key: 'factures', label: 'Factures' },
-  { key: 'couts_mo', label: 'Couts MO' },
-  { key: 'couts_materiel', label: 'Couts Materiel' },
-  { key: 'alertes', label: 'Alertes' },
+const SECTIONS: SectionConfig[] = [
+  { key: 'lots', label: 'Lots Budgetaires', icon: Package },
+  { key: 'achats', label: 'Achats', icon: ShoppingCart },
+  { key: 'avenants', label: 'Avenants', icon: FileText },
+  { key: 'situations', label: 'Situations de Travaux', icon: ClipboardList },
+  { key: 'factures', label: 'Factures', icon: Receipt },
+  { key: 'couts', label: 'Couts', icon: Wrench },
+  { key: 'alertes', label: 'Alertes', icon: Bell },
 ]
 
 export default function BudgetTab({ chantierId }: BudgetTabProps) {
@@ -54,15 +74,18 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
   const [montantInitial, setMontantInitial] = useState('')
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>('lots')
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
 
   const canEdit = user?.role === 'admin' || user?.role === 'conducteur'
 
-  useEffect(() => {
-    loadBudget()
-  }, [chantierId])
+  const toggleSection = useCallback((key: string) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }, [])
 
-  const loadBudget = async () => {
+  const loadBudget = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -74,9 +97,13 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [chantierId])
 
-  const handleCreateBudget = async () => {
+  useEffect(() => {
+    loadBudget()
+  }, [loadBudget])
+
+  const handleCreateBudget = useCallback(async () => {
     const montant = parseFloat(montantInitial)
     if (isNaN(montant) || montant <= 0) {
       addToast({ message: 'Le montant initial doit etre positif', type: 'error' })
@@ -95,19 +122,19 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
       setMontantInitial('')
       addToast({ message: 'Budget cree avec succes', type: 'success' })
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } }; message?: string }
-      const message = error.response?.data?.detail || error.message || 'Erreur lors de la creation'
+      const apiError = err as { response?: { data?: { detail?: string } }; message?: string }
+      const message = apiError.response?.data?.detail || apiError.message || 'Erreur lors de la creation'
       addToast({ message, type: 'error' })
       logger.error('Erreur creation budget', err, { context: 'BudgetTab' })
     } finally {
       setCreateLoading(false)
     }
-  }
+  }, [montantInitial, chantierId, addToast])
 
-  const renderSubTabContent = () => {
+  const renderSectionContent = (key: string): React.ReactNode => {
     if (!budget) return null
 
-    switch (activeSubTab) {
+    switch (key) {
       case 'lots':
         return <LotsBudgetairesTable budgetId={budget.id} onRefresh={loadBudget} />
       case 'achats':
@@ -118,10 +145,13 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
         return <SituationsList chantierId={chantierId} budgetId={budget.id} />
       case 'factures':
         return <FacturesList chantierId={chantierId} />
-      case 'couts_mo':
-        return <CoutsMainOeuvrePanel chantierId={chantierId} />
-      case 'couts_materiel':
-        return <CoutsMaterielPanel chantierId={chantierId} />
+      case 'couts':
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <CoutsMainOeuvrePanel chantierId={chantierId} />
+            <CoutsMaterielPanel chantierId={chantierId} />
+          </div>
+        )
       case 'alertes':
         return <AlertesPanel chantierId={chantierId} />
       default:
@@ -131,7 +161,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-12" aria-label="Chargement du budget">
         <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
       </div>
     )
@@ -139,7 +169,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-2">
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-2" role="alert">
         <AlertCircle className="flex-shrink-0 mt-0.5" size={18} />
         <div>
           <p>{error}</p>
@@ -191,6 +221,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
                 min={0}
                 step="0.01"
                 autoFocus
+                aria-label="Montant initial HT en euros"
               />
               <button
                 onClick={handleCreateBudget}
@@ -220,37 +251,53 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
 
   // Budget existant : afficher le contenu complet
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="region" aria-label="Budget du chantier">
       {/* Dashboard KPI */}
       <BudgetDashboard chantierId={chantierId} budget={budget} />
 
-      {/* Sub-tabs navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-0 overflow-x-auto" aria-label="Sous-onglets financier">
-          {SUB_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveSubTab(tab.key)}
-              className={`whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeSubTab === tab.key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Suggestions IA */}
+      <SuggestionsPanel chantierId={chantierId} />
 
-      {/* Sub-tab content */}
-      {renderSubTabContent()}
+      {/* Sections collapsables */}
+      {SECTIONS.map((section) => {
+        const isCollapsed = !!collapsedSections[section.key]
+        const SectionIcon = section.icon
+
+        return (
+          <div
+            key={section.key}
+            className="bg-white border border-gray-200 rounded-xl overflow-hidden"
+          >
+            <button
+              onClick={() => toggleSection(section.key)}
+              className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors"
+              aria-expanded={!isCollapsed}
+              aria-controls={`section-${section.key}`}
+            >
+              {isCollapsed ? (
+                <ChevronRight size={18} className="text-gray-400 flex-shrink-0" />
+              ) : (
+                <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
+              )}
+              <SectionIcon size={18} className="text-blue-600 flex-shrink-0" />
+              <h3 className="text-sm font-semibold text-gray-900">{section.label}</h3>
+            </button>
+
+            {!isCollapsed && (
+              <div id={`section-${section.key}`} className="px-4 pb-4">
+                {renderSectionContent(section.key)}
+              </div>
+            )}
+          </div>
+        )
+      })}
 
       {/* Toggle Journal */}
       <div>
         <button
           onClick={() => setShowJournal(!showJournal)}
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          aria-expanded={showJournal}
         >
           <History size={16} />
           {showJournal ? 'Masquer l\'historique' : 'Voir l\'historique des modifications'}
