@@ -62,6 +62,16 @@ from .evolution_dtos import (
     EvolutionMensuelleDTO,
     EvolutionFinanciereDTO,
 )
+from .consolidation_dtos import (
+    ChantierFinancierSummaryDTO,
+    KPIGlobauxDTO,
+    VueConsolideeDTO,
+)
+from .suggestions_dtos import (
+    SuggestionDTO,
+    IndicateursPredictifDTO,
+    SuggestionsFinancieresDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -104,4 +114,12 @@ __all__ = [
     "DashboardFinancierDTO",
     "EvolutionMensuelleDTO",
     "EvolutionFinanciereDTO",
+    # Consolidation (FIN-20)
+    "ChantierFinancierSummaryDTO",
+    "KPIGlobauxDTO",
+    "VueConsolideeDTO",
+    # Suggestions (FIN-21/22)
+    "SuggestionDTO",
+    "IndicateursPredictifDTO",
+    "SuggestionsFinancieresDTO",
 ]

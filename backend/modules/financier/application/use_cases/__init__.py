@@ -86,6 +86,8 @@ from .alerte_use_cases import (
 )
 from .dashboard_use_cases import GetDashboardFinancierUseCase
 from .evolution_use_cases import GetEvolutionFinanciereUseCase
+from .consolidation_use_cases import GetVueConsolideeFinancesUseCase
+from .suggestions_use_cases import GetSuggestionsFinancieresUseCase
 
 __all__ = [
     # Fournisseur
@@ -169,4 +171,8 @@ __all__ = [
     "GetDashboardFinancierUseCase",
     # Evolution financiere (FIN-17)
     "GetEvolutionFinanciereUseCase",
+    # Consolidation (FIN-20)
+    "GetVueConsolideeFinancesUseCase",
+    # Suggestions (FIN-21/22)
+    "GetSuggestionsFinancieresUseCase",
 ]

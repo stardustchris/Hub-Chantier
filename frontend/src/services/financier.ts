@@ -27,6 +27,8 @@ import type {
   CoutMainOeuvreSummary,
   CoutMaterielSummary,
   AlerteDepassement,
+  VueConsolidee,
+  SuggestionsFinancieres,
 } from '../types'
 
 const BASE = '/api/financier'
@@ -352,6 +354,24 @@ export const financierService = {
 
   async acquitterAlerte(id: number): Promise<AlerteDepassement> {
     const response = await api.post<AlerteDepassement>(`${BASE}/alertes/${id}/acquitter`)
+    return response.data
+  },
+
+  // ===== Vue consolidee multi-chantiers (FIN-20) =====
+  async getConsolidation(chantierIds: number[]): Promise<VueConsolidee> {
+    const ids = chantierIds.join(',')
+    const response = await api.get<VueConsolidee>(
+      `${BASE}/finances/consolidation`,
+      { params: { chantier_ids: ids } }
+    )
+    return response.data
+  },
+
+  // ===== Suggestions IA (FIN-21) =====
+  async getSuggestions(chantierId: number): Promise<SuggestionsFinancieres> {
+    const response = await api.get<SuggestionsFinancieres>(
+      `${BASE}/chantiers/${chantierId}/suggestions`
+    )
     return response.data
   },
 }
