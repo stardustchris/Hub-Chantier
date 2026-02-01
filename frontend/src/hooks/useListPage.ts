@@ -196,6 +196,14 @@ export function useListPage<T, TCreate = Partial<T>>(
     setPage(1)
   }, [])
 
+  // Cleanup - doit être avant le chargement initial
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
   // Charger quand les params changent
   useEffect(() => {
     if (autoLoad) {
@@ -203,14 +211,6 @@ export function useListPage<T, TCreate = Partial<T>>(
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, search, filters, autoLoad])
-
-  // Cleanup
-  useEffect(() => {
-    isMounted.current = true
-    return () => {
-      isMounted.current = false
-    }
-  }, [])
 
   return {
     // Data
