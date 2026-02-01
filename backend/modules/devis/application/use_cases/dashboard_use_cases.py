@@ -5,6 +5,7 @@ DEV-17: Tableau de bord devis - KPI pipeline commercial.
 
 from decimal import Decimal
 
+from ...domain.value_objects import StatutDevis
 from ...domain.repositories.devis_repository import DevisRepository
 from ..dtos.dashboard_dtos import DashboardDevisDTO, KPIDevisDTO, DevisRecentDTO
 from ..dtos.devis_dtos import DevisDTO
@@ -27,19 +28,24 @@ class GetDashboardDevisUseCase:
         """
         # Compter par statut
         counts = self._devis_repository.count_by_statut()
-        totaux = self._devis_repository.sum_total_ht_by_statut()
+        totaux = self._devis_repository.somme_montant_by_statut()
 
         nb_total = sum(counts.values())
-        nb_accepte = counts.get("accepte", 0)
-        nb_refuse = counts.get("refuse", 0)
-        nb_perdu = counts.get("perdu", 0)
+        nb_accepte = counts.get(StatutDevis.ACCEPTE.value, 0)
+        nb_refuse = counts.get(StatutDevis.REFUSE.value, 0)
+        nb_perdu = counts.get(StatutDevis.PERDU.value, 0)
 
         # Pipeline = devis en cours (pas brouillon, pas final)
-        statuts_pipeline = ["en_validation", "approuve", "envoye"]
+        statuts_pipeline = [
+            StatutDevis.EN_VALIDATION.value,
+            StatutDevis.ENVOYE.value,
+            StatutDevis.VU.value,
+            StatutDevis.EN_NEGOCIATION.value,
+        ]
         total_pipeline = sum(
             Decimal(str(totaux.get(s, 0))) for s in statuts_pipeline
         )
-        total_accepte = Decimal(str(totaux.get("accepte", 0)))
+        total_accepte = Decimal(str(totaux.get(StatutDevis.ACCEPTE.value, 0)))
 
         # Taux conversion = acceptes / (acceptes + refuses + perdus)
         nb_decides = nb_accepte + nb_refuse + nb_perdu
@@ -50,14 +56,15 @@ class GetDashboardDevisUseCase:
         )
 
         kpi = KPIDevisDTO(
-            nb_brouillon=counts.get("brouillon", 0),
-            nb_en_validation=counts.get("en_validation", 0),
-            nb_approuve=counts.get("approuve", 0),
-            nb_envoye=counts.get("envoye", 0),
+            nb_brouillon=counts.get(StatutDevis.BROUILLON.value, 0),
+            nb_en_validation=counts.get(StatutDevis.EN_VALIDATION.value, 0),
+            nb_envoye=counts.get(StatutDevis.ENVOYE.value, 0),
+            nb_vu=counts.get(StatutDevis.VU.value, 0),
+            nb_en_negociation=counts.get(StatutDevis.EN_NEGOCIATION.value, 0),
             nb_accepte=nb_accepte,
             nb_refuse=nb_refuse,
             nb_perdu=nb_perdu,
-            nb_expire=counts.get("expire", 0),
+            nb_expire=counts.get(StatutDevis.EXPIRE.value, 0),
             total_pipeline_ht=str(total_pipeline),
             total_accepte_ht=str(total_accepte),
             taux_conversion=str(taux_conversion.quantize(Decimal("0.01"))),
@@ -65,16 +72,16 @@ class GetDashboardDevisUseCase:
         )
 
         # Devis recents
-        recents = self._devis_repository.find_recent(limit=10)
+        recents = self._devis_repository.find_all(limit=10, offset=0)
         derniers_devis = [
             DevisRecentDTO(
                 id=d.id,
                 numero=d.numero,
                 client_nom=d.client_nom,
                 objet=d.objet,
-                statut=d.statut,
-                total_ht=str(d.total_ht),
-                date_creation=d.created_at.isoformat() if d.created_at else "",
+                statut=d.statut.value,
+                montant_total_ht=str(d.montant_total_ht),
+                date_creation=d.date_creation.isoformat() if d.date_creation else "",
             )
             for d in recents
         ]

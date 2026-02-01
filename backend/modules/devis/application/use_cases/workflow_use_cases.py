@@ -1,48 +1,20 @@
 """Use Cases pour le workflow des devis.
 
 DEV-15: Suivi statut devis - Transitions de statut.
+Utilise la state machine du domaine (StatutDevis + methodes entite Devis).
 """
 
 from datetime import datetime
 from typing import Optional
 
+from ...domain.entities.devis import (
+    TransitionStatutDevisInvalideError,
+)
 from ...domain.entities.journal_devis import JournalDevis
+from ...domain.value_objects import StatutDevis
 from ...domain.repositories.devis_repository import DevisRepository
 from ...domain.repositories.journal_devis_repository import JournalDevisRepository
 from ..dtos.devis_dtos import DevisDTO
-
-
-class DevisTransitionError(Exception):
-    """Erreur levee pour une transition de statut invalide."""
-
-    def __init__(self, devis_id: int, statut_actuel: str, statut_cible: str):
-        self.devis_id = devis_id
-        self.statut_actuel = statut_actuel
-        self.statut_cible = statut_cible
-        super().__init__(
-            f"Transition invalide pour le devis {devis_id}: "
-            f"'{statut_actuel}' -> '{statut_cible}'"
-        )
-
-
-# Matrice des transitions autorisees
-TRANSITIONS_AUTORISEES = {
-    "brouillon": ["en_validation"],
-    "en_validation": ["approuve", "brouillon"],
-    "approuve": ["envoye"],
-    "envoye": ["accepte", "refuse", "perdu"],
-    "accepte": [],
-    "refuse": [],
-    "perdu": [],
-    "expire": ["en_validation"],
-}
-
-
-def _validate_transition(devis_id: int, statut_actuel: str, statut_cible: str) -> None:
-    """Valide qu'une transition est autorisee."""
-    allowed = TRANSITIONS_AUTORISEES.get(statut_actuel, [])
-    if statut_cible not in allowed:
-        raise DevisTransitionError(devis_id, statut_actuel, statut_cible)
 
 
 class SoumettreDevisUseCase:
@@ -64,7 +36,7 @@ class SoumettreDevisUseCase:
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisTransitionError: Si la transition n'est pas autorisee.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
         """
         from .devis_use_cases import DevisNotFoundError
 
@@ -72,10 +44,7 @@ class SoumettreDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        _validate_transition(devis_id, devis.statut, "en_validation")
-
-        devis.statut = "en_validation"
-        devis.updated_at = datetime.utcnow()
+        devis.soumettre_validation()
         devis = self._devis_repository.save(devis)
 
         self._journal_repository.save(
@@ -92,9 +61,9 @@ class SoumettreDevisUseCase:
 
 
 class ValiderDevisUseCase:
-    """Transition: En validation -> Approuve.
+    """Transition: En validation -> Envoye.
 
-    DEV-15: Validation interne par direction.
+    DEV-15: Validation interne puis envoi.
     """
 
     def __init__(
@@ -106,11 +75,11 @@ class ValiderDevisUseCase:
         self._journal_repository = journal_repository
 
     def execute(self, devis_id: int, validated_by: int) -> DevisDTO:
-        """Valide un devis (marque comme approuve).
+        """Valide un devis et l'envoie au client.
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisTransitionError: Si la transition n'est pas autorisee.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
         """
         from .devis_use_cases import DevisNotFoundError
 
@@ -118,17 +87,14 @@ class ValiderDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        _validate_transition(devis_id, devis.statut, "approuve")
-
-        devis.statut = "approuve"
-        devis.updated_at = datetime.utcnow()
+        devis.envoyer()
         devis = self._devis_repository.save(devis)
 
         self._journal_repository.save(
             JournalDevis(
                 devis_id=devis_id,
-                action="validation",
-                details="Devis approuve par la direction",
+                action="validation_envoi",
+                details="Devis valide et envoye au client",
                 auteur_id=validated_by,
                 created_at=datetime.utcnow(),
             )
@@ -137,10 +103,10 @@ class ValiderDevisUseCase:
         return DevisDTO.from_entity(devis)
 
 
-class EnvoyerDevisUseCase:
-    """Transition: Approuve -> Envoye.
+class RetournerBrouillonUseCase:
+    """Transition: En validation -> Brouillon.
 
-    DEV-15: Envoi au client.
+    DEV-15: Retour en brouillon pour corrections.
     """
 
     def __init__(
@@ -151,12 +117,12 @@ class EnvoyerDevisUseCase:
         self._devis_repository = devis_repository
         self._journal_repository = journal_repository
 
-    def execute(self, devis_id: int, sent_by: int) -> DevisDTO:
-        """Marque un devis comme envoye au client.
+    def execute(self, devis_id: int, returned_by: int, motif: Optional[str] = None) -> DevisDTO:
+        """Retourne un devis en brouillon.
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisTransitionError: Si la transition n'est pas autorisee.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
         """
         from .devis_use_cases import DevisNotFoundError
 
@@ -164,18 +130,105 @@ class EnvoyerDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        _validate_transition(devis_id, devis.statut, "envoye")
+        devis.retourner_brouillon()
+        devis = self._devis_repository.save(devis)
 
-        devis.statut = "envoye"
-        devis.updated_at = datetime.utcnow()
+        details = "Devis retourne en brouillon"
+        if motif:
+            details += f" - Motif: {motif.strip()}"
+
+        self._journal_repository.save(
+            JournalDevis(
+                devis_id=devis_id,
+                action="retour_brouillon",
+                details=details,
+                auteur_id=returned_by,
+                created_at=datetime.utcnow(),
+            )
+        )
+
+        return DevisDTO.from_entity(devis)
+
+
+class MarquerVuUseCase:
+    """Transition: Envoye -> Vu.
+
+    DEV-15: Le client a vu le devis.
+    """
+
+    def __init__(
+        self,
+        devis_repository: DevisRepository,
+        journal_repository: JournalDevisRepository,
+    ):
+        self._devis_repository = devis_repository
+        self._journal_repository = journal_repository
+
+    def execute(self, devis_id: int) -> DevisDTO:
+        """Marque un devis comme vu par le client.
+
+        Raises:
+            DevisNotFoundError: Si le devis n'existe pas.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
+        """
+        from .devis_use_cases import DevisNotFoundError
+
+        devis = self._devis_repository.find_by_id(devis_id)
+        if not devis:
+            raise DevisNotFoundError(devis_id)
+
+        devis.marquer_vu()
         devis = self._devis_repository.save(devis)
 
         self._journal_repository.save(
             JournalDevis(
                 devis_id=devis_id,
-                action="envoi",
-                details="Devis envoye au client",
-                auteur_id=sent_by,
+                action="vu",
+                details="Devis consulte par le client",
+                auteur_id=None,
+                created_at=datetime.utcnow(),
+            )
+        )
+
+        return DevisDTO.from_entity(devis)
+
+
+class PasserEnNegociationUseCase:
+    """Transition: Envoye/Vu/Expire -> En negociation.
+
+    DEV-15: Passage en negociation.
+    """
+
+    def __init__(
+        self,
+        devis_repository: DevisRepository,
+        journal_repository: JournalDevisRepository,
+    ):
+        self._devis_repository = devis_repository
+        self._journal_repository = journal_repository
+
+    def execute(self, devis_id: int, initiated_by: int) -> DevisDTO:
+        """Passe un devis en negociation.
+
+        Raises:
+            DevisNotFoundError: Si le devis n'existe pas.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
+        """
+        from .devis_use_cases import DevisNotFoundError
+
+        devis = self._devis_repository.find_by_id(devis_id)
+        if not devis:
+            raise DevisNotFoundError(devis_id)
+
+        devis.passer_en_negociation()
+        devis = self._devis_repository.save(devis)
+
+        self._journal_repository.save(
+            JournalDevis(
+                devis_id=devis_id,
+                action="negociation",
+                details="Devis passe en negociation",
+                auteur_id=initiated_by,
                 created_at=datetime.utcnow(),
             )
         )
@@ -184,7 +237,7 @@ class EnvoyerDevisUseCase:
 
 
 class AccepterDevisUseCase:
-    """Transition: Envoye -> Accepte.
+    """Transition: Envoye/Vu/En negociation -> Accepte.
 
     DEV-15: Acceptation par le client.
     """
@@ -202,7 +255,7 @@ class AccepterDevisUseCase:
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisTransitionError: Si la transition n'est pas autorisee.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
         """
         from .devis_use_cases import DevisNotFoundError
 
@@ -210,10 +263,7 @@ class AccepterDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        _validate_transition(devis_id, devis.statut, "accepte")
-
-        devis.statut = "accepte"
-        devis.updated_at = datetime.utcnow()
+        devis.accepter()
         devis = self._devis_repository.save(devis)
 
         self._journal_repository.save(
@@ -230,7 +280,7 @@ class AccepterDevisUseCase:
 
 
 class RefuserDevisUseCase:
-    """Transition: Envoye -> Refuse.
+    """Transition: Envoye/Vu/En negociation -> Refuse.
 
     DEV-15: Refus par le client (motif obligatoire).
     """
@@ -255,7 +305,7 @@ class RefuserDevisUseCase:
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisTransitionError: Si la transition n'est pas autorisee.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
             ValueError: Si le motif est vide.
         """
         from .devis_use_cases import DevisNotFoundError
@@ -267,10 +317,7 @@ class RefuserDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        _validate_transition(devis_id, devis.statut, "refuse")
-
-        devis.statut = "refuse"
-        devis.updated_at = datetime.utcnow()
+        devis.refuser()
         devis = self._devis_repository.save(devis)
 
         self._journal_repository.save(
@@ -287,7 +334,7 @@ class RefuserDevisUseCase:
 
 
 class PerduDevisUseCase:
-    """Transition: Envoye -> Perdu.
+    """Transition: En negociation -> Perdu.
 
     DEV-15: Marque comme perdu (motif obligatoire pour reporting).
     """
@@ -312,7 +359,7 @@ class PerduDevisUseCase:
 
         Raises:
             DevisNotFoundError: Si le devis n'existe pas.
-            DevisTransitionError: Si la transition n'est pas autorisee.
+            TransitionStatutDevisInvalideError: Si la transition n'est pas autorisee.
             ValueError: Si le motif est vide.
         """
         from .devis_use_cases import DevisNotFoundError
@@ -324,10 +371,7 @@ class PerduDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
-        _validate_transition(devis_id, devis.statut, "perdu")
-
-        devis.statut = "perdu"
-        devis.updated_at = datetime.utcnow()
+        devis.marquer_perdu()
         devis = self._devis_repository.save(devis)
 
         self._journal_repository.save(
@@ -341,3 +385,47 @@ class PerduDevisUseCase:
         )
 
         return DevisDTO.from_entity(devis)
+
+
+class MarquerExpireUseCase:
+    """Transition: Envoye/Vu -> Expire.
+
+    DEV-15: Expiration automatique quand date validite depassee.
+    """
+
+    def __init__(
+        self,
+        devis_repository: DevisRepository,
+        journal_repository: JournalDevisRepository,
+    ):
+        self._devis_repository = devis_repository
+        self._journal_repository = journal_repository
+
+    def execute_batch(self) -> int:
+        """Marque tous les devis expires (date validite depassee).
+
+        Returns:
+            Le nombre de devis marques comme expires.
+        """
+        devis_expires = self._devis_repository.find_expires()
+        count = 0
+
+        for devis in devis_expires:
+            try:
+                devis.marquer_expire()
+                self._devis_repository.save(devis)
+
+                self._journal_repository.save(
+                    JournalDevis(
+                        devis_id=devis.id,
+                        action="expiration",
+                        details="Devis expire automatiquement (date de validite depassee)",
+                        auteur_id=None,
+                        created_at=datetime.utcnow(),
+                    )
+                )
+                count += 1
+            except TransitionStatutDevisInvalideError:
+                continue
+
+        return count

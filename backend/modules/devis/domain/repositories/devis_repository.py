@@ -19,6 +19,15 @@ class DevisRepository(ABC):
     """Interface abstraite pour la persistence des devis."""
 
     @abstractmethod
+    def generate_numero(self) -> str:
+        """Genere un numero unique pour un nouveau devis.
+
+        Returns:
+            Le numero genere (ex: DEV-2026-001).
+        """
+        pass
+
+    @abstractmethod
     def save(self, devis: Devis) -> Devis:
         """Persiste un devis (creation ou mise a jour).
 

@@ -39,6 +39,7 @@ from modules.signalements.infrastructure.web import router as signalements_route
 from modules.documents.infrastructure.web import router as documents_router
 from modules.logistique.infrastructure.web import router as logistique_router
 from modules.financier.infrastructure.web import router as financier_router
+from modules.devis.infrastructure.web import router as devis_router, articles_router as devis_articles_router
 # from modules.planning_charge.infrastructure import router as planning_charge_router
 from modules.interventions.infrastructure.web import router as interventions_router
 from modules.notifications.infrastructure.web import router as notifications_router
@@ -240,6 +241,8 @@ app.include_router(signalements_router, prefix="/api")
 app.include_router(documents_router, prefix="/api")
 app.include_router(logistique_router, prefix="/api")
 app.include_router(financier_router, prefix="/api")
+app.include_router(devis_router, prefix="/api")
+app.include_router(devis_articles_router, prefix="/api")
 # app.include_router(planning_charge_router, prefix="/api")
 app.include_router(interventions_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")

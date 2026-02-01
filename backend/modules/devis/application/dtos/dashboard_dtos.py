@@ -13,8 +13,9 @@ class KPIDevisDTO:
 
     nb_brouillon: int = 0
     nb_en_validation: int = 0
-    nb_approuve: int = 0
     nb_envoye: int = 0
+    nb_vu: int = 0
+    nb_en_negociation: int = 0
     nb_accepte: int = 0
     nb_refuse: int = 0
     nb_perdu: int = 0
@@ -29,8 +30,9 @@ class KPIDevisDTO:
         return {
             "nb_brouillon": self.nb_brouillon,
             "nb_en_validation": self.nb_en_validation,
-            "nb_approuve": self.nb_approuve,
             "nb_envoye": self.nb_envoye,
+            "nb_vu": self.nb_vu,
+            "nb_en_negociation": self.nb_en_negociation,
             "nb_accepte": self.nb_accepte,
             "nb_refuse": self.nb_refuse,
             "nb_perdu": self.nb_perdu,
@@ -51,7 +53,7 @@ class DevisRecentDTO:
     client_nom: str
     objet: str
     statut: str
-    total_ht: str
+    montant_total_ht: str
     date_creation: str
 
     def to_dict(self) -> dict:
@@ -62,7 +64,7 @@ class DevisRecentDTO:
             "client_nom": self.client_nom,
             "objet": self.objet,
             "statut": self.statut,
-            "total_ht": self.total_ht,
+            "montant_total_ht": self.montant_total_ht,
             "date_creation": self.date_creation,
         }
 
