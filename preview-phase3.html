@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hub Chantier - Preview Phase 3 Module Financier</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 600; }
+    .tab-inactive { border-bottom: 3px solid transparent; color: #6b7280; }
+    .tab-inactive:hover { color: #374151; border-color: #d1d5db; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    /* Circular gauge animation */
+    .gauge-circle { transition: stroke-dashoffset 1s ease-in-out; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- TAB NAVIGATION -->
+  <div class="sticky top-0 z-50 bg-white border-b shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 py-3">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          <span class="font-bold text-gray-900">Hub Chantier</span>
+        </div>
+        <div class="flex gap-0 ml-8">
+          <button onclick="showTab('chantier')" id="tab-chantier" class="px-4 py-3 text-sm tab-active transition-all">
+            Dashboard Chantier
+          </button>
+          <button onclick="showTab('finances')" id="tab-finances" class="px-4 py-3 text-sm tab-inactive transition-all">
+            Finances Consolidees
+          </button>
+        </div>
+      </div>
+      <span class="text-xs text-gray-400">Preview Phase 3 - Module Financier</span>
+    </div>
+  </div>
+
+  <!-- ==================== ECRAN 1 : DASHBOARD CHANTIER ==================== -->
+  <div id="view-chantier" class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Titre chantier -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">Villa Duplex - Lot 3 Extension</h1>
+        <p class="text-sm text-gray-500">Budget du chantier</p>
+      </div>
+      <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">En cours</span>
+    </div>
+
+    <!-- BANNIERE ALERTES -->
+    <div class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg" role="alert">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        <div class="flex-1">
+          <p class="font-medium text-orange-900">2 alertes budgetaires</p>
+          <ul class="text-sm text-orange-700 mt-1 space-y-0.5">
+            <li>- Seuil engage depasse 85% sur lot GROS-OEUVRE</li>
+            <li>- Depassement realise sur lot ELECTRICITE (+12%)</li>
+          </ul>
+        </div>
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-200 text-orange-800 text-sm font-bold flex-shrink-0">2</span>
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Budget revise -->
+      <div class="bg-white border border-blue-200 rounded-xl p-4">
+        <p class="text-sm text-gray-500 mb-1">Budget revise HT</p>
+        <p class="text-2xl font-bold text-blue-700">850 000 &euro;</p>
+        <div class="mt-2">
+          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Initial: 800 000 &euro;</span>
+        </div>
+      </div>
+      <!-- Engage -->
+      <div class="bg-white border border-orange-300 rounded-xl p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-500 mb-1">Engage</p>
+          <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        </div>
+        <p class="text-2xl font-bold text-orange-600">731 000 &euro;</p>
+        <div class="mt-2 flex justify-center">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#f59e0b" stroke-width="6"
+              stroke-dasharray="150.8" stroke-dashoffset="21.1"
+              transform="rotate(-90 30 30)" stroke-linecap="round" class="gauge-circle"/>
+            <text x="30" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#f59e0b">86%</text>
+          </svg>
+        </div>
+      </div>
+      <!-- Realise -->
+      <div class="bg-white border border-green-200 rounded-xl p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-500 mb-1">Realise</p>
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+        </div>
+        <p class="text-2xl font-bold text-green-700">520 000 &euro;</p>
+        <div class="mt-2 flex justify-center">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#10b981" stroke-width="6"
+              stroke-dasharray="150.8" stroke-dashoffset="58.8"
+              transform="rotate(-90 30 30)" stroke-linecap="round" class="gauge-circle"/>
+            <text x="30" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#10b981">61%</text>
+          </svg>
+        </div>
+      </div>
+      <!-- Reste a depenser -->
+      <div class="bg-white border border-blue-200 rounded-xl p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-500 mb-1">Reste a depenser</p>
+          <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3"/></svg>
+        </div>
+        <p class="text-2xl font-bold text-blue-700">119 000 &euro;</p>
+        <div class="mt-2 flex justify-center">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#3b82f6" stroke-width="6"
+              stroke-dasharray="150.8" stroke-dashoffset="129.7"
+              transform="rotate(-90 30 30)" stroke-linecap="round" class="gauge-circle"/>
+            <text x="30" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#3b82f6">14%</text>
+          </svg>
+        </div>
+      </div>
+      <!-- Marge -->
+      <div class="bg-white border border-green-200 rounded-xl p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-500 mb-1">Marge estimee</p>
+        </div>
+        <p class="text-2xl font-bold text-green-700">12,5 %</p>
+        <p class="text-xs text-gray-500 mt-2">Marge correcte</p>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUES -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Evolution -->
+      <div class="bg-white border rounded-xl p-4">
+        <h3 class="font-semibold text-gray-900 mb-4">Evolution financiere</h3>
+        <div class="h-[280px] relative">
+          <svg viewBox="0 0 500 250" class="w-full h-full">
+            <!-- Grid -->
+            <line x1="50" y1="20" x2="50" y2="220" stroke="#e5e7eb" stroke-width="1"/>
+            <line x1="50" y1="220" x2="480" y2="220" stroke="#e5e7eb" stroke-width="1"/>
+            <line x1="50" y1="170" x2="480" y2="170" stroke="#f3f4f6" stroke-width="1" stroke-dasharray="4"/>
+            <line x1="50" y1="120" x2="480" y2="120" stroke="#f3f4f6" stroke-width="1" stroke-dasharray="4"/>
+            <line x1="50" y1="70" x2="480" y2="70" stroke="#f3f4f6" stroke-width="1" stroke-dasharray="4"/>
+            <!-- Y labels -->
+            <text x="45" y="224" text-anchor="end" font-size="10" fill="#9ca3af">0</text>
+            <text x="45" y="174" text-anchor="end" font-size="10" fill="#9ca3af">250k</text>
+            <text x="45" y="124" text-anchor="end" font-size="10" fill="#9ca3af">500k</text>
+            <text x="45" y="74" text-anchor="end" font-size="10" fill="#9ca3af">750k</text>
+            <text x="45" y="24" text-anchor="end" font-size="10" fill="#9ca3af">1M</text>
+            <!-- X labels -->
+            <text x="100" y="238" text-anchor="middle" font-size="10" fill="#9ca3af">Oct</text>
+            <text x="186" y="238" text-anchor="middle" font-size="10" fill="#9ca3af">Nov</text>
+            <text x="272" y="238" text-anchor="middle" font-size="10" fill="#9ca3af">Dec</text>
+            <text x="358" y="238" text-anchor="middle" font-size="10" fill="#9ca3af">Jan</text>
+            <text x="444" y="238" text-anchor="middle" font-size="10" fill="#9ca3af">Fev</text>
+            <!-- Prevu (bleu) -->
+            <polyline points="100,195 186,170 272,140 358,105 444,60" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Engage (ambre) -->
+            <polyline points="100,200 186,178 272,148 358,115 444,80" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Realise (vert) -->
+            <polyline points="100,205 186,188 272,162 358,138 444,108" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Dots -->
+            <circle cx="444" cy="60" r="4" fill="#3b82f6"/>
+            <circle cx="444" cy="80" r="4" fill="#f59e0b"/>
+            <circle cx="444" cy="108" r="4" fill="#10b981"/>
+          </svg>
+          <!-- Legend -->
+          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-center gap-6 text-xs text-gray-600">
+            <div class="flex items-center gap-1"><div class="w-3 h-0.5 bg-blue-500 rounded"></div> Prevu</div>
+            <div class="flex items-center gap-1"><div class="w-3 h-0.5 bg-amber-500 rounded"></div> Engage</div>
+            <div class="flex items-center gap-1"><div class="w-3 h-0.5 bg-emerald-500 rounded"></div> Realise</div>
+          </div>
+        </div>
+      </div>
+      <!-- Camembert -->
+      <div class="bg-white border rounded-xl p-4">
+        <h3 class="font-semibold text-gray-900 mb-4">Repartition par lot</h3>
+        <div class="h-[280px] flex items-center justify-center gap-6">
+          <svg viewBox="0 0 200 200" width="200" height="200">
+            <!-- Gros Oeuvre 45% -->
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#3b82f6" stroke-width="40"
+              stroke-dasharray="226.2 276.5" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+            <!-- Electricite 22% -->
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#f59e0b" stroke-width="40"
+              stroke-dasharray="110.6 392.1" stroke-dashoffset="-226.2" transform="rotate(-90 100 100)"/>
+            <!-- Plomberie 18% -->
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#10b981" stroke-width="40"
+              stroke-dasharray="90.5 412.2" stroke-dashoffset="-336.8" transform="rotate(-90 100 100)"/>
+            <!-- VRD 15% -->
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#8b5cf6" stroke-width="40"
+              stroke-dasharray="75.4 427.3" stroke-dashoffset="-427.3" transform="rotate(-90 100 100)"/>
+          </svg>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-500"></div> GROS-OEU. <span class="text-gray-500">45%</span></div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-500"></div> ELECTRIC. <span class="text-gray-500">22%</span></div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-emerald-500"></div> PLOMBER. <span class="text-gray-500">18%</span></div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-violet-500"></div> VRD <span class="text-gray-500">15%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barres comparatives -->
+    <div class="bg-white border rounded-xl p-4">
+      <h3 class="font-semibold text-gray-900 mb-4">Comparaison par lot</h3>
+      <div class="space-y-4">
+        <!-- Lot GROS-OEUVRE -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">GROS-OEU.</span>
+            <span class="text-xs text-gray-500">383 000 &euro;</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Prevu</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-blue-500" style="width:100%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Engage</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-amber-500" style="width:88%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Realise</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-emerald-500" style="width:62%"></div></div></div>
+          </div>
+        </div>
+        <!-- Lot ELECTRICITE -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">ELECTRIC.</span>
+            <span class="text-xs text-gray-500">187 000 &euro;</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Prevu</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-blue-500" style="width:100%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Engage</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-amber-500" style="width:95%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Realise</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-emerald-500" style="width:112%;max-width:100%"></div></div></div>
+          </div>
+        </div>
+        <!-- Lot PLOMBERIE -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">PLOMBER.</span>
+            <span class="text-xs text-gray-500">153 000 &euro;</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Prevu</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-blue-500" style="width:100%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Engage</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-amber-500" style="width:72%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Realise</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-emerald-500" style="width:45%"></div></div></div>
+          </div>
+        </div>
+        <!-- Lot VRD -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">VRD</span>
+            <span class="text-xs text-gray-500">127 000 &euro;</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Prevu</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-blue-500" style="width:100%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Engage</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-amber-500" style="width:55%"></div></div></div>
+            <div class="flex items-center gap-2"><span class="text-xs text-gray-400 w-12">Realise</span><div class="flex-1 bg-gray-100 rounded-full h-4"><div class="h-4 rounded-full bg-emerald-500" style="width:35%"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-6 mt-4 pt-3 border-t text-xs text-gray-500">
+        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-blue-500"></div> Prevu</div>
+        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-amber-500"></div> Engage</div>
+        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-emerald-500"></div> Realise</div>
+      </div>
+    </div>
+
+    <!-- SUGGESTIONS PANEL (FIN-21/22) -->
+    <div>
+      <!-- Indicateurs predictifs -->
+      <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+        <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+          Indicateurs predictifs
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center justify-center gap-1 mb-1">
+              <svg class="w-3.5 h-3.5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+              <span class="text-xs text-gray-500">Burn rate</span>
+            </div>
+            <p class="text-sm font-bold text-gray-900">52 300 &euro;<span class="text-xs font-normal text-gray-500">/mois</span></p>
+            <p class="text-xs mt-0.5 text-red-600">+18,2% vs budget</p>
+          </div>
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center justify-center gap-1 mb-1">
+              <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span class="text-xs text-gray-500">Mois restants</span>
+            </div>
+            <p class="text-sm font-bold text-gray-900">2.3</p>
+          </div>
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <span class="text-xs text-gray-500">Date epuisement</span>
+            <p class="text-sm font-bold text-gray-900 mt-1">avr. 2026</p>
+          </div>
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <span class="text-xs text-gray-500">Avancement financier</span>
+            <p class="text-sm font-bold text-gray-900 mt-1">61,2%</p>
+          </div>
+        </div>
+      </div>
+      <!-- Suggestions -->
+      <div class="space-y-2">
+        <!-- CRITICAL -->
+        <div class="border-l-4 border-red-500 bg-red-50 rounded-r-lg p-3">
+          <div class="flex items-start gap-2">
+            <svg class="w-[18px] h-[18px] flex-shrink-0 mt-0.5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-semibold text-red-700">Creer un avenant de revision budgetaire</h4>
+              <p class="text-sm text-gray-700 mt-0.5">Le taux d'engagement (86%) approche le seuil critique avec une marge estimee de 12.5%. Anticipez une revision.</p>
+              <p class="text-xs font-medium text-gray-600 mt-1">Impact estime : 45 000 &euro;</p>
+            </div>
+          </div>
+        </div>
+        <!-- WARNING -->
+        <div class="border-l-4 border-orange-500 bg-orange-50 rounded-r-lg p-3">
+          <div class="flex items-start gap-2">
+            <svg class="w-[18px] h-[18px] flex-shrink-0 mt-0.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" stroke-linecap="round"/></svg>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-semibold text-orange-700">Rythme de depense trop eleve</h4>
+              <p class="text-sm text-gray-700 mt-0.5">Le burn rate mensuel (52 300 &euro;/mois) depasse le budget moyen de 18.2%. A ce rythme, le budget sera epuise en avril 2026.</p>
+            </div>
+          </div>
+        </div>
+        <!-- WARNING -->
+        <div class="border-l-4 border-orange-500 bg-orange-50 rounded-r-lg p-3">
+          <div class="flex items-start gap-2">
+            <svg class="w-[18px] h-[18px] flex-shrink-0 mt-0.5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" stroke-linecap="round"/></svg>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-semibold text-orange-700">Lot ELECTRICITE en depassement</h4>
+              <p class="text-sm text-gray-700 mt-0.5">Ecart prevu/realise de 35% sur le lot ELECTRICITE. Envisagez un reajustement des previsions ou un avenant.</p>
+              <p class="text-xs font-medium text-gray-600 mt-1">Impact estime : 22 400 &euro;</p>
+            </div>
+          </div>
+        </div>
+        <!-- INFO -->
+        <div class="border-l-4 border-blue-500 bg-blue-50 rounded-r-lg p-3">
+          <div class="flex items-start gap-2">
+            <svg class="w-[18px] h-[18px] flex-shrink-0 mt-0.5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="16" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="8" x2="12.01" y2="8" stroke-width="2" stroke-linecap="round"/></svg>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-semibold text-blue-700">Creer une situation de travaux</h4>
+              <p class="text-sm text-gray-700 mt-0.5">Aucune situation de travaux creee depuis 45 jours. Pensez a facturer l'avancement pour ameliorer la tresorerie.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTIONS COLLAPSABLES -->
+    <!-- Section Lots -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('lots')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-lots" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Lots Budgetaires</h3>
+      </button>
+      <div id="section-lots" class="px-4 pb-4">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b">
+            <tr>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Code</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Libelle</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Prevu HT</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Engage</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Realise</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Ecart</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr class="hover:bg-gray-50"><td class="px-3 py-2"><span class="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">GO-01</span></td><td class="px-3 py-2">Gros Oeuvre</td><td class="px-3 py-2 text-right">383 000 &euro;</td><td class="px-3 py-2 text-right">337 000 &euro;</td><td class="px-3 py-2 text-right">238 000 &euro;</td><td class="px-3 py-2 text-right text-green-600">-37,9%</td></tr>
+            <tr class="hover:bg-gray-50"><td class="px-3 py-2"><span class="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">EL-02</span></td><td class="px-3 py-2">Electricite</td><td class="px-3 py-2 text-right">187 000 &euro;</td><td class="px-3 py-2 text-right">178 000 &euro;</td><td class="px-3 py-2 text-right text-red-600 font-medium">209 000 &euro;</td><td class="px-3 py-2 text-right text-red-600 font-medium">+11,8%</td></tr>
+            <tr class="hover:bg-gray-50"><td class="px-3 py-2"><span class="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">PL-03</span></td><td class="px-3 py-2">Plomberie</td><td class="px-3 py-2 text-right">153 000 &euro;</td><td class="px-3 py-2 text-right">110 000 &euro;</td><td class="px-3 py-2 text-right">69 000 &euro;</td><td class="px-3 py-2 text-right text-green-600">-54,9%</td></tr>
+            <tr class="hover:bg-gray-50"><td class="px-3 py-2"><span class="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">VR-04</span></td><td class="px-3 py-2">VRD</td><td class="px-3 py-2 text-right">127 000 &euro;</td><td class="px-3 py-2 text-right">70 000 &euro;</td><td class="px-3 py-2 text-right">44 000 &euro;</td><td class="px-3 py-2 text-right text-green-600">-65,4%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section Achats (collapsed) -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('achats')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-achats" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Achats</h3>
+        <span class="text-xs text-gray-400 ml-auto">12 achats</span>
+      </button>
+      <div id="section-achats" class="px-4 pb-4 hidden">
+        <p class="text-sm text-gray-500">Tableau des achats...</p>
+      </div>
+    </div>
+
+    <!-- Section Avenants (collapsed) -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('avenants')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-avenants" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Avenants</h3>
+        <span class="text-xs text-gray-400 ml-auto">1 avenant</span>
+      </button>
+      <div id="section-avenants" class="px-4 pb-4 hidden"><p class="text-sm text-gray-500">Liste des avenants...</p></div>
+    </div>
+
+    <!-- Section Situations (collapsed) -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('situations')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-situations" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Situations de Travaux</h3>
+        <span class="text-xs text-gray-400 ml-auto">3 situations</span>
+      </button>
+      <div id="section-situations" class="px-4 pb-4 hidden"><p class="text-sm text-gray-500">Workflow situations...</p></div>
+    </div>
+
+    <!-- Section Factures (collapsed) -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('factures')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-factures" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Factures</h3>
+        <span class="text-xs text-gray-400 ml-auto">2 factures</span>
+      </button>
+      <div id="section-factures" class="px-4 pb-4 hidden"><p class="text-sm text-gray-500">Liste factures...</p></div>
+    </div>
+
+    <!-- Section Couts (collapsed) -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('couts')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-couts" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Couts</h3>
+      </button>
+      <div id="section-couts" class="px-4 pb-4 hidden"><p class="text-sm text-gray-500">Couts MO + Materiel...</p></div>
+    </div>
+
+    <!-- Section Alertes (collapsed) -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <button onclick="toggleSection('alertes')" class="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors">
+        <svg id="chevron-alertes" class="w-[18px] h-[18px] text-gray-400 flex-shrink-0 transition-transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-[18px] h-[18px] text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <h3 class="text-sm font-semibold text-gray-900">Alertes</h3>
+        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full ml-auto">2</span>
+      </button>
+      <div id="section-alertes" class="px-4 pb-4 hidden"><p class="text-sm text-gray-500">Liste alertes...</p></div>
+    </div>
+
+    <!-- Toggle Journal -->
+    <button class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Voir l'historique des modifications
+    </button>
+  </div>
+
+  <!-- ==================== ECRAN 2 : FINANCES CONSOLIDEES ==================== -->
+  <div id="view-finances" class="max-w-7xl mx-auto px-4 py-6 space-y-6 hidden">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold text-gray-900">Dashboard Financier</h1>
+      <button class="text-sm text-blue-600 hover:text-blue-800 transition-colors">Actualiser</button>
+    </div>
+
+    <!-- KPI globaux -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">Budget Total</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">3 450 000 &euro;</p>
+            <p class="text-xs text-gray-500 mt-1">5 chantiers</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">Engage Total</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">2 600 000 &euro;</p>
+            <p class="text-xs text-gray-500 mt-1">75,4% du budget</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">Realise Total</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">1 970 000 &euro;</p>
+            <p class="text-xs text-gray-500 mt-1">Reste : 1 480 000 &euro;</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">Marge Moyenne</p>
+            <p class="text-2xl font-bold text-green-600 mt-1">8,5%</p>
+            <p class="text-xs text-gray-500 mt-1">Sur 5 chantiers</p>
+          </div>
+          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compteurs statut -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+          <p class="text-2xl font-bold text-green-700">3</p>
+          <p class="text-sm text-green-600">Chantiers OK</p>
+        </div>
+      </div>
+      <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-3">
+        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        <div>
+          <p class="text-2xl font-bold text-orange-700">1</p>
+          <p class="text-sm text-orange-600">Chantiers attention</p>
+        </div>
+      </div>
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        <div>
+          <p class="text-2xl font-bold text-red-700">1</p>
+          <p class="text-sm text-red-600">Chantiers en depassement</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau chantiers -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Tous les chantiers</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Chantier</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500">Budget</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500">% Engage</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500">% Realise</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500">Reste</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500">Marge</th>
+              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500">Statut</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900">Villa Duplex - Lot 3</td>
+              <td class="px-4 py-3 text-right">850 000 &euro;</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-blue-500" style="width:86%"></div></div>
+                  <span>86,0%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-green-500" style="width:61%"></div></div>
+                  <span>61,2%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">119 000 &euro;</td>
+              <td class="px-4 py-3 text-right font-medium text-green-600">12,5%</td>
+              <td class="px-4 py-3 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-orange-600 bg-orange-100">Attention</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900">Residence du Parc</td>
+              <td class="px-4 py-3 text-right">1 200 000 &euro;</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-blue-500" style="width:72%"></div></div>
+                  <span>72,0%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-green-500" style="width:55%"></div></div>
+                  <span>55,0%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">336 000 &euro;</td>
+              <td class="px-4 py-3 text-right font-medium text-green-600">8,2%</td>
+              <td class="px-4 py-3 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-100">OK</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900">Entrepot Nord</td>
+              <td class="px-4 py-3 text-right">450 000 &euro;</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-blue-500" style="width:100%"></div></div>
+                  <span>106,7%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-green-500" style="width:78%"></div></div>
+                  <span>77,8%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right text-red-600 font-medium">-30 000 &euro;</td>
+              <td class="px-4 py-3 text-right font-medium text-red-600">-2,1%</td>
+              <td class="px-4 py-3 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-600 bg-red-100">Depassement</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900">Ecole Pasteur</td>
+              <td class="px-4 py-3 text-right">650 000 &euro;</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-blue-500" style="width:49%"></div></div>
+                  <span>49,2%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-green-500" style="width:34%"></div></div>
+                  <span>33,8%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">330 000 &euro;</td>
+              <td class="px-4 py-3 text-right font-medium text-green-600">11,0%</td>
+              <td class="px-4 py-3 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-100">OK</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900">Clinique Sud</td>
+              <td class="px-4 py-3 text-right">300 000 &euro;</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-blue-500" style="width:57%"></div></div>
+                  <span>56,7%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-green-500" style="width:43%"></div></div>
+                  <span>43,3%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">130 000 &euro;</td>
+              <td class="px-4 py-3 text-right font-medium text-green-600">9,8%</td>
+              <td class="px-4 py-3 text-center"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-100">OK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Top Rentables / Top Derives -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Top Rentables -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h3 class="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Top 3 Rentables
+        </h3>
+        <div class="space-y-3">
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">#1</span>
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span class="font-medium text-sm text-gray-900">Villa Duplex</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium text-orange-600 bg-orange-100">Attention</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Budget</span><p class="font-medium">850 000 &euro;</p></div>
+              <div><span class="text-gray-500">Marge</span><p class="font-medium text-green-600">12,5%</p></div>
+              <div><span class="text-gray-500">Engage</span><p class="font-medium">86,0%</p></div>
+              <div><span class="text-gray-500">Realise</span><p class="font-medium">61,2%</p></div>
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">#2</span>
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span class="font-medium text-sm text-gray-900">Ecole Pasteur</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-100">OK</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Budget</span><p class="font-medium">650 000 &euro;</p></div>
+              <div><span class="text-gray-500">Marge</span><p class="font-medium text-green-600">11,0%</p></div>
+              <div><span class="text-gray-500">Engage</span><p class="font-medium">49,2%</p></div>
+              <div><span class="text-gray-500">Realise</span><p class="font-medium">33,8%</p></div>
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">#3</span>
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span class="font-medium text-sm text-gray-900">Clinique Sud</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-100">OK</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Budget</span><p class="font-medium">300 000 &euro;</p></div>
+              <div><span class="text-gray-500">Marge</span><p class="font-medium text-green-600">9,8%</p></div>
+              <div><span class="text-gray-500">Engage</span><p class="font-medium">56,7%</p></div>
+              <div><span class="text-gray-500">Realise</span><p class="font-medium">43,3%</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Derives -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h3 class="text-sm font-semibold text-red-700 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+          Top 3 Derives
+        </h3>
+        <div class="space-y-3">
+          <div class="border border-red-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-red-50/30">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">#1</span>
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span class="font-medium text-sm text-gray-900">Entrepot Nord</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium text-red-600 bg-red-100">Depassement</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Budget</span><p class="font-medium">450 000 &euro;</p></div>
+              <div><span class="text-gray-500">Marge</span><p class="font-medium text-red-600">-2,1%</p></div>
+              <div><span class="text-gray-500">Engage</span><p class="font-medium text-red-600">106,7%</p></div>
+              <div><span class="text-gray-500">Realise</span><p class="font-medium">77,8%</p></div>
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">#2</span>
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span class="font-medium text-sm text-gray-900">Villa Duplex</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium text-orange-600 bg-orange-100">Attention</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Budget</span><p class="font-medium">850 000 &euro;</p></div>
+              <div><span class="text-gray-500">Marge</span><p class="font-medium text-green-600">12,5%</p></div>
+              <div><span class="text-gray-500">Engage</span><p class="font-medium">86,0%</p></div>
+              <div><span class="text-gray-500">Realise</span><p class="font-medium">61,2%</p></div>
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">#3</span>
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span class="font-medium text-sm text-gray-900">Residence du Parc</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-100">OK</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Budget</span><p class="font-medium">1 200 000 &euro;</p></div>
+              <div><span class="text-gray-500">Marge</span><p class="font-medium text-green-600">8,2%</p></div>
+              <div><span class="text-gray-500">Engage</span><p class="font-medium">72,0%</p></div>
+              <div><span class="text-gray-500">Realise</span><p class="font-medium">55,0%</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tab) {
+      document.getElementById('view-chantier').classList.toggle('hidden', tab !== 'chantier');
+      document.getElementById('view-finances').classList.toggle('hidden', tab !== 'finances');
+      document.getElementById('tab-chantier').className = 'px-4 py-3 text-sm ' + (tab === 'chantier' ? 'tab-active' : 'tab-inactive');
+      document.getElementById('tab-finances').className = 'px-4 py-3 text-sm ' + (tab === 'finances' ? 'tab-active' : 'tab-inactive');
+    }
+
+    function toggleSection(key) {
+      const section = document.getElementById('section-' + key);
+      const chevron = document.getElementById('chevron-' + key);
+      if (section) {
+        section.classList.toggle('hidden');
+        if (chevron) {
+          chevron.classList.toggle('-rotate-90');
+        }
+      }
+    }
+  </script>
+</body>
+</html>
