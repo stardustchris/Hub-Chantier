@@ -11,7 +11,7 @@
  * - Repartition par lot
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, AlertTriangle, Loader2, Wallet } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
@@ -35,11 +35,7 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadDashboard()
-  }, [chantierId])
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -55,7 +51,11 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
     } finally {
       setLoading(false)
     }
-  }
+  }, [chantierId])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
 
   if (loading) {
     return (
@@ -85,7 +85,7 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
     <div className="space-y-6">
       {/* Banniere alertes actives */}
       {alertes.length > 0 && (
-        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg" role="alert" aria-label={`${alertes.length} alerte${alertes.length > 1 ? 's' : ''} budgetaire${alertes.length > 1 ? 's' : ''}`}>
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">

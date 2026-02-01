@@ -43,7 +43,13 @@ export default function CircularGauge({
 
   return (
     <div className="inline-flex items-center gap-2">
-      <svg width={size} height={size} className="transform -rotate-90">
+      <svg
+        width={size}
+        height={size}
+        className="transform -rotate-90"
+        role="img"
+        aria-label={`Jauge ${value.toFixed(1)}% sur ${max}%`}
+      >
         {/* Background circle */}
         <circle
           cx={size / 2}
