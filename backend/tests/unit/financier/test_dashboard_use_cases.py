@@ -133,6 +133,8 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.pct_realise == "50.00"
         assert result.kpi.reste_a_depenser == "20000"  # 100000 - 80000
         assert result.kpi.pct_reste == "20.00"  # (20000/100000)*100
+        # marge_estimee en % : ((100000 - 80000) / 100000) * 100 = 20.00%
+        assert result.kpi.marge_estimee == "20.00"
 
     def test_dashboard_budget_zero_montant(self):
         """Test: pourcentages a 0 si budget revise a 0."""
@@ -158,6 +160,7 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.pct_realise == "0.00"
         assert result.kpi.reste_a_depenser == "0"  # 0 - 0
         assert result.kpi.pct_reste == "0.00"  # division par zero evitee
+        assert result.kpi.marge_estimee == "0.00"  # marge_estimee en % (0 sans division)
 
     def test_dashboard_repartition_par_lot(self):
         """Test: repartition correcte par lot budgetaire."""
@@ -267,6 +270,8 @@ class TestGetDashboardFinancierUseCase:
 
         assert result.kpi.reste_a_depenser == "0"
         assert result.kpi.pct_reste == "0.00"
+        # marge_estimee en % : ((200000 - 200000) / 200000) * 100 = 0.00%
+        assert result.kpi.marge_estimee == "0.00"
 
     def test_dashboard_derniers_achats(self):
         """Test: les derniers achats sont retournes correctement."""
@@ -317,3 +322,118 @@ class TestGetDashboardFinancierUseCase:
         assert result.derniers_achats[0].statut == "demande"
         assert result.derniers_achats[1].libelle == "Sable"
         assert result.derniers_achats[1].statut == "valide"
+
+    def test_dashboard_marge_estimee_pourcentage_avec_avenants(self):
+        """Test: marge_estimee retourne un pourcentage (pas EUR) avec avenants."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("400000"),
+            montant_avenants_ht=Decimal("100000"),  # revise = 500000
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("300000"),  # total_engage
+            Decimal("150000"),  # total_realise
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # marge_estimee = ((500000 - 300000) / 500000) * 100 = 40.00%
+        assert result.kpi.marge_estimee == "40.00"
+        # Verifie que ce n'est PAS en EUR (200000) mais bien en %
+        assert result.kpi.marge_estimee != "200000"
+        assert result.kpi.montant_revise_ht == "500000"
+        assert result.kpi.reste_a_depenser == "200000"
+
+    def test_dashboard_marge_estimee_haute_precision(self):
+        """Test: marge_estimee arrondie a 2 decimales."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("333333"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("111111"),  # total_engage
+            Decimal("50000"),
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # marge_estimee = ((333333 - 111111) / 333333) * 100 = 66.6667...%
+        assert result.kpi.marge_estimee == "66.67"
+
+    def test_dashboard_derniers_achats_sans_created_at(self):
+        """Test: achat sans created_at ne provoque pas d'erreur."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("100000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("0"), Decimal("0"),
+        ]
+        achat_sans_date = Achat(
+            id=1,
+            chantier_id=100,
+            libelle="Beton",
+            quantite=Decimal("5"),
+            prix_unitaire_ht=Decimal("200"),
+            taux_tva=Decimal("20"),
+            statut=StatutAchat.DEMANDE,
+            created_at=None,
+        )
+        self.mock_achat_repo.find_by_chantier.return_value = [achat_sans_date]
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        result = self.use_case.execute(chantier_id=100)
+
+        assert len(result.derniers_achats) == 1
+        assert result.derniers_achats[0].created_at is None
+
+    def test_dashboard_repartition_lot_ecart_negatif(self):
+        """Test: ecart negatif quand engage > prevu pour un lot."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("500000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("300000"), Decimal("100000"),
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+
+        lot = LotBudgetaire(
+            id=1,
+            budget_id=1,
+            code_lot="GO-01",
+            libelle="Gros oeuvre",
+            quantite_prevue=Decimal("50"),
+            prix_unitaire_ht=Decimal("2000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_lot_repo.find_by_budget_id.return_value = [lot]
+
+        self.mock_achat_repo.somme_by_lot.side_effect = [
+            Decimal("150000"),  # engage > prevu (100000)
+            Decimal("80000"),
+        ]
+
+        result = self.use_case.execute(chantier_id=100)
+
+        assert len(result.repartition_par_lot) == 1
+        assert result.repartition_par_lot[0].ecart == "-50000"  # 100000 - 150000
