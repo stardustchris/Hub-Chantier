@@ -12,6 +12,7 @@
 **Modules implémentés**: Auth, Dashboard, Chantiers, Planning, **Pointages Phase 1+2**, **Financier Phase 1**, Formulaires, GED, Signalements, Logistique, Interventions, Tâches
 
 **Highlights**:
+- ✅ **01 fév**: Connecteurs Webhooks Pennylane (compta) + Silae (paie) — 97 tests, 94% couverture, RGPD compliant
 - ✅ **01 fév**: Multi-métier selection (jusqu'à 5 métiers) + ajout type Cadre
 - ✅ **31 jan**: Module Financier Phase 2 (FIN-04, 07, 08, 09, 10, 12) — 6 features, 403 tests, 23+ API routes
 - ✅ **31 jan**: Module Financier Phase 1 (FIN-01, 02, 05, 06, 11, 14, 15) - Budget, Achats, Fournisseurs
