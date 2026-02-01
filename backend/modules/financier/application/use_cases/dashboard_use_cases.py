@@ -65,7 +65,6 @@ class GetDashboardFinancierUseCase:
         total_realise = self._achat_repository.somme_by_chantier(
             chantier_id, statuts=STATUTS_REALISES
         )
-        marge_estimee = montant_revise_ht - total_engage
         reste_a_depenser = montant_revise_ht - total_engage
 
         # Pourcentages
@@ -73,16 +72,18 @@ class GetDashboardFinancierUseCase:
             pct_engage = (total_engage / montant_revise_ht) * Decimal("100")
             pct_realise = (total_realise / montant_revise_ht) * Decimal("100")
             pct_reste = (reste_a_depenser / montant_revise_ht) * Decimal("100")
+            marge_estimee = ((montant_revise_ht - total_engage) / montant_revise_ht) * Decimal("100")
         else:
             pct_engage = Decimal("0")
             pct_realise = Decimal("0")
             pct_reste = Decimal("0")
+            marge_estimee = Decimal("0")
 
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),
             total_engage=str(total_engage),
             total_realise=str(total_realise),
-            marge_estimee=str(marge_estimee),
+            marge_estimee=str(marge_estimee.quantize(Decimal("0.01"))),
             pct_engage=str(pct_engage.quantize(Decimal("0.01"))),
             pct_realise=str(pct_realise.quantize(Decimal("0.01"))),
             reste_a_depenser=str(reste_a_depenser),

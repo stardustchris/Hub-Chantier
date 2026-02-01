@@ -24,6 +24,7 @@ import type { Budget, DashboardFinancier, AlerteDepassement } from '../../types'
 interface BudgetDashboardProps {
   chantierId: number
   budget: Budget
+  onDashboardLoaded?: (dashboard: DashboardFinancier) => void
 }
 
 const formatEUR = (value: number): string =>
@@ -32,7 +33,7 @@ const formatEUR = (value: number): string =>
 const formatPct = (value: number): string =>
   new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 1 }).format(value / 100)
 
-export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardProps) {
+export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded }: BudgetDashboardProps) {
   const [dashboard, setDashboard] = useState<DashboardFinancier | null>(null)
   const [alertes, setAlertes] = useState<AlerteDepassement[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,13 +49,14 @@ export default function BudgetDashboard({ chantierId, budget }: BudgetDashboardP
       ])
       setDashboard(data)
       setAlertes(alertesData)
+      onDashboardLoaded?.(data)
     } catch (err) {
       setError('Erreur lors du chargement du dashboard financier')
       logger.error('Erreur chargement dashboard financier', err, { context: 'BudgetDashboard' })
     } finally {
       setLoading(false)
     }
-  }, [chantierId])
+  }, [chantierId, onDashboardLoaded])
 
   useEffect(() => {
     loadDashboard()
