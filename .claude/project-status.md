@@ -19,14 +19,14 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
-| financier | 17 | FIN-01 a FIN-15 | 14/15 | 0 | **PHASE 3 COMPLET** |
+| financier | 17 | FIN-01 a FIN-15 | 15/15 | 0 | **COMPLET** |
 
 ## Statistiques globales
 
-- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2+3)
-- **Module financier** : 14/15 features done (Phase 1: 6, Phase 2: 6, Phase 3: 2), 1 remaining (FIN-15 already done)
+- **Modules complets** : 13/13 (tous modules implementes, y compris financier Phase 1+2+3)
+- **Module financier** : 15/15 features done (Phase 1: 6, Phase 2: 6, Phase 3: 2, FIN-15 deja fait)
 - **Fonctionnalites totales** : 267 (+15 FIN)
-- **Fonctionnalites done** : 248 (93%)
+- **Fonctionnalites done** : 249 (93%)
 - **Fonctionnalites specs ready** : 0
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 2 (prevues pour versions futures)
@@ -35,7 +35,7 @@
 
 ### Code source
 
-- **Backend** : 16 modules, 35+ entites, 50+ value objects, 150+ use cases, 40+ repositories
+- **Backend** : 16 modules, 45+ entites, 60+ value objects, 160+ use cases, 50+ repositories
 - **Frontend** : 11 pages, 28 hooks, 23 services, 80+ composants, 3 contextes
 - **Architecture** : Clean Architecture 4 layers (Domain > Application > Adapters > Infrastructure)
 
@@ -87,7 +87,7 @@
 
 ## Prochaines taches prioritaires
 
-### Module Financier (14/15 features done — COMPLET)
+### Module Financier (15/15 features — COMPLET)
 
 | ID | Description | Statut |
 |----|-------------|--------|
