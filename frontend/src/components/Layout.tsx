@@ -15,6 +15,7 @@ import {
   X,
   Bell,
   ChevronDown,
+  ChevronRight,
   Webhook,
   Building2,
   Handshake,
@@ -36,6 +37,7 @@ interface NavItem {
   href: string
   icon: typeof Home
   disabled?: boolean
+  children?: NavItem[]
 }
 
 const navigation: NavItem[] = [
@@ -44,13 +46,19 @@ const navigation: NavItem[] = [
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
   { name: 'Planning', href: '/planning', icon: Calendar },
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
-  { name: 'Budgets', href: '/budgets', icon: Euro },
-  { name: 'Achats', href: '/achats', icon: ShoppingCart },
-  { name: 'Dashboard Financier', href: '/finances', icon: BarChart3 },
+  {
+    name: 'Finances',
+    href: '/finances',
+    icon: BarChart3,
+    children: [
+      { name: 'Budgets', href: '/budgets', icon: Euro },
+      { name: 'Achats', href: '/achats', icon: ShoppingCart },
+      { name: 'Fournisseurs', href: '/fournisseurs', icon: Handshake },
+    ],
+  },
   { name: 'Formulaires', href: '/formulaires', icon: FileText },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
   { name: 'Logistique', href: '/logistique', icon: Truck },
-  { name: 'Fournisseurs', href: '/fournisseurs', icon: Handshake },
   { name: 'Webhooks', href: '/webhooks', icon: Webhook },
 ]
 
@@ -61,9 +69,70 @@ interface NavLinksProps {
 }
 
 function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
+  const financePaths = ['/finances', '/budgets', '/achats', '/fournisseurs']
+  const isFinanceActive = financePaths.some((p) => currentPath.startsWith(p))
+  const [financesOpen, setFinancesOpen] = useState(isFinanceActive)
+
   return (
     <>
       {navigation.map((item) => {
+        if (item.children) {
+          const isParentActive = currentPath === item.href
+          return (
+            <div key={item.name}>
+              <div className="flex items-center">
+                <Link
+                  to={item.href}
+                  onClick={() => onItemClick?.()}
+                  className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isParentActive
+                      ? 'bg-primary-50 text-primary-600'
+                      : isFinanceActive
+                      ? 'text-primary-600'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+                <button
+                  onClick={() => setFinancesOpen(!financesOpen)}
+                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+                  aria-label={financesOpen ? 'Replier le sous-menu' : 'Déplier le sous-menu'}
+                >
+                  {financesOpen ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {financesOpen && (
+                <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
+                  {item.children.map((child) => {
+                    const isChildActive = currentPath.startsWith(child.href)
+                    return (
+                      <Link
+                        key={child.name}
+                        to={child.href}
+                        onClick={() => onItemClick?.()}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
+                          isChildActive
+                            ? 'bg-primary-50 text-primary-600'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        <child.icon className="w-4 h-4" />
+                        <span className="font-medium">{child.name}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        }
+
         const isActive = currentPath === item.href
         return (
           <Link
