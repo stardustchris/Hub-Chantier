@@ -167,7 +167,7 @@ class SQLAlchemyAchatRepository(AchatRepository):
         """Liste les achats d'un chantier (exclut les supprimes).
 
         Args:
-            chantier_id: L'ID du chantier.
+            chantier_id: L'ID du chantier (0 = tous les chantiers).
             statut: Filtrer par statut (optionnel).
             limit: Nombre maximum de resultats.
             offset: Decalage pour pagination.
@@ -176,9 +176,11 @@ class SQLAlchemyAchatRepository(AchatRepository):
             Liste des achats.
         """
         query = self._session.query(AchatModel).filter(
-            AchatModel.chantier_id == chantier_id,
             AchatModel.deleted_at.is_(None),
         )
+
+        if chantier_id and chantier_id > 0:
+            query = query.filter(AchatModel.chantier_id == chantier_id)
 
         if statut:
             query = query.filter(AchatModel.statut == statut.value)
@@ -285,16 +287,18 @@ class SQLAlchemyAchatRepository(AchatRepository):
         """Compte les achats d'un chantier (exclut les supprimes).
 
         Args:
-            chantier_id: L'ID du chantier.
+            chantier_id: L'ID du chantier (0 = tous les chantiers).
             statuts: Filtrer par statuts (optionnel).
 
         Returns:
             Le nombre d'achats.
         """
         query = self._session.query(AchatModel).filter(
-            AchatModel.chantier_id == chantier_id,
             AchatModel.deleted_at.is_(None),
         )
+
+        if chantier_id and chantier_id > 0:
+            query = query.filter(AchatModel.chantier_id == chantier_id)
 
         if statuts:
             query = query.filter(

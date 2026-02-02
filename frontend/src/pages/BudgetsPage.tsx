@@ -2,7 +2,7 @@
  * BudgetsPage - Gestion des budgets par chantier
  * CDC Module 17 - FIN-01, FIN-02
  *
- * Connecté à l'API : GET /api/financier/chantiers/{id}/dashboard-financier
+ * Connecté à l'API : GET /api/financier/chantiers/{id}/budget + achats
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -10,7 +10,7 @@ import Layout from '../components/Layout'
 import { financierService } from '../services/financier'
 import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
-import type { Chantier, KPIFinancier } from '../types'
+import type { Chantier, Budget } from '../types'
 import {
   TrendingUp,
   TrendingDown,
@@ -22,9 +22,17 @@ import {
   Loader2,
 } from 'lucide-react'
 
+interface BudgetKPI {
+  montant_prevu: number
+  montant_engage: number
+  montant_realise: number
+  pct_engage: number
+  pct_realise: number
+}
+
 interface BudgetChantier {
   chantier: Chantier
-  kpi: KPIFinancier | null
+  kpi: BudgetKPI | null
 }
 
 export default function BudgetsPage() {
@@ -37,26 +45,58 @@ export default function BudgetsPage() {
     setLoading(true)
     setError(null)
     try {
-      // Charger les chantiers actifs
+      // Charger les chantiers
       const chantiersData = await chantiersService.list()
       const chantiersList: Chantier[] = Array.isArray(chantiersData)
         ? chantiersData
         : (chantiersData as { items?: Chantier[] }).items || []
 
-      // Charger le dashboard financier de chaque chantier
+      // Pour chaque chantier, tenter de charger le budget + achats
       const results: BudgetChantier[] = await Promise.all(
         chantiersList.map(async (chantier) => {
           try {
-            const dashboard = await financierService.getDashboardFinancier(Number(chantier.id))
-            return { chantier, kpi: dashboard.kpi }
+            const budget: Budget | null = await financierService.getBudgetByChantier(Number(chantier.id))
+            if (!budget) return { chantier, kpi: null }
+
+            const montant_prevu = Number(budget.montant_revise_ht || budget.montant_initial_ht || 0)
+
+            // Charger les achats pour calculer engagé/réalisé
+            let montant_engage = 0
+            let montant_realise = 0
+            try {
+              const achatsData = await financierService.listAchats({ chantier_id: Number(chantier.id) })
+              const achats = achatsData.items || []
+              for (const a of achats) {
+                const total = Number(a.quantite) * Number(a.prix_unitaire_ht)
+                // Engagé = tout sauf "demande" et "refuse"
+                if (!['demande', 'refuse'].includes(a.statut)) {
+                  montant_engage += total
+                }
+                // Réalisé = livré
+                if (a.statut === 'livre') {
+                  montant_realise += total
+                }
+              }
+            } catch {
+              // Pas d'achats = 0
+            }
+
+            return {
+              chantier,
+              kpi: {
+                montant_prevu,
+                montant_engage,
+                montant_realise,
+                pct_engage: montant_prevu > 0 ? (montant_engage / montant_prevu) * 100 : 0,
+                pct_realise: montant_prevu > 0 ? (montant_realise / montant_prevu) * 100 : 0,
+              },
+            }
           } catch {
-            // Pas de budget pour ce chantier = KPI null
             return { chantier, kpi: null }
           }
         })
       )
 
-      // Ne garder que les chantiers qui ont un budget
       setBudgetChantiers(results.filter((r) => r.kpi !== null))
     } catch (err) {
       logger.error('Erreur chargement budgets', err, { context: 'BudgetsPage' })
@@ -70,7 +110,7 @@ export default function BudgetsPage() {
     loadData()
   }, [loadData])
 
-  const getStatut = (kpi: KPIFinancier): 'actif' | 'depasse' | 'termine' => {
+  const getStatut = (kpi: BudgetKPI): 'actif' | 'depasse' | 'termine' => {
     if (kpi.pct_engage > 100) return 'depasse'
     if (kpi.pct_realise >= 100) return 'termine'
     return 'actif'
@@ -110,9 +150,9 @@ export default function BudgetsPage() {
   )
 
   // Calcul des totaux
-  const totalPrevu = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.montant_revise_ht || 0), 0)
-  const totalEngage = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.total_engage || 0), 0)
-  const totalRealise = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.total_realise || 0), 0)
+  const totalPrevu = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.montant_prevu || 0), 0)
+  const totalEngage = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.montant_engage || 0), 0)
+  const totalRealise = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.montant_realise || 0), 0)
 
   return (
     <Layout title="Budgets">
@@ -254,19 +294,19 @@ export default function BudgetsPage() {
                     <div>
                       <p className="text-xs text-gray-500">Prévu</p>
                       <p className="text-lg font-semibold text-gray-900">
-                        {formatMontant(kpi.montant_revise_ht)}
+                        {formatMontant(kpi.montant_prevu)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Engagé</p>
                       <p className="text-lg font-semibold text-orange-600">
-                        {formatMontant(kpi.total_engage)}
+                        {formatMontant(kpi.montant_engage)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Déboursé</p>
                       <p className="text-lg font-semibold text-green-600">
-                        {formatMontant(kpi.total_realise)}
+                        {formatMontant(kpi.montant_realise)}
                       </p>
                     </div>
                   </div>
@@ -320,7 +360,7 @@ export default function BudgetsPage() {
                         <p className="text-sm font-medium text-red-800">Budget dépassé</p>
                         <p className="text-xs text-red-600 mt-1">
                           Dépassement de{' '}
-                          {formatMontant(kpi.total_engage - kpi.montant_revise_ht)}
+                          {formatMontant(kpi.montant_engage - kpi.montant_prevu)}
                         </p>
                       </div>
                     </div>

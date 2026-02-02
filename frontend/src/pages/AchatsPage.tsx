@@ -29,12 +29,12 @@ import {
 } from 'lucide-react'
 
 const STATUT_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  validee: { label: 'Validée', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
-  livree: { label: 'Livrée', color: 'bg-green-100 text-green-800', icon: Package },
-  annulee: { label: 'Annulée', color: 'bg-red-100 text-red-800', icon: XCircle },
-  facturee: { label: 'Facturée', color: 'bg-indigo-100 text-indigo-800', icon: FileText },
-  refusee: { label: 'Refusée', color: 'bg-red-100 text-red-800', icon: XCircle },
+  demande: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  valide: { label: 'Validé', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+  commande: { label: 'Commandé', color: 'bg-purple-100 text-purple-800', icon: Package },
+  livre: { label: 'Livré', color: 'bg-green-100 text-green-800', icon: Package },
+  facture: { label: 'Facturé', color: 'bg-indigo-100 text-indigo-800', icon: FileText },
+  refuse: { label: 'Refusé', color: 'bg-red-100 text-red-800', icon: XCircle },
 }
 
 function formatMontant(montant: number) {
@@ -122,11 +122,11 @@ export default function AchatsPage() {
     return matchSearch
   })
 
-  // Statistiques
-  const totalHT = achats.reduce((sum, a) => sum + (a.total_ht || 0), 0)
-  const totalTTC = achats.reduce((sum, a) => sum + (a.total_ttc || 0), 0)
-  const enAttente = achats.filter((a) => a.statut === 'en_attente').length
-  const validees = achats.filter((a) => a.statut === 'validee').length
+  // Statistiques (les montants sont des strings depuis l'API)
+  const totalHT = achats.reduce((sum, a) => sum + Number(a.total_ht || 0), 0)
+  const totalTTC = achats.reduce((sum, a) => sum + Number(a.total_ttc || 0), 0)
+  const enAttente = achats.filter((a) => a.statut === 'demande').length
+  const validees = achats.filter((a) => ['valide', 'commande', 'livre', 'facture'].includes(a.statut)).length
 
   return (
     <Layout title="Achats & Bons de commande">
@@ -329,13 +329,13 @@ export default function AchatsPage() {
                     <div>
                       <p className="text-xs text-gray-500">Montant HT</p>
                       <p className="text-sm font-semibold text-gray-900 mt-1">
-                        {formatMontant(achat.total_ht)}
+                        {formatMontant(Number(achat.total_ht))}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Montant TTC</p>
                       <p className="text-sm font-semibold text-blue-600 mt-1">
-                        {formatMontant(achat.total_ttc)}
+                        {formatMontant(Number(achat.total_ttc))}
                       </p>
                     </div>
                   </div>

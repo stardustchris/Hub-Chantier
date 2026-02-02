@@ -19,6 +19,7 @@ class UniteMesure(str, Enum):
     KG = "kg"
     HEURE = "heure"
     ML = "ml"
+    T = "T"
     U = "u"
 
     @property
@@ -31,6 +32,7 @@ class UniteMesure(str, Enum):
             self.KG: "Kilogramme",
             self.HEURE: "Heure",
             self.ML: "Mètre linéaire",
+            self.T: "Tonne",
             self.U: "Unité",
         }
         return labels[self]
@@ -45,6 +47,7 @@ class UniteMesure(str, Enum):
             self.KG: "kg",
             self.HEURE: "h",
             self.ML: "ml",
+            self.T: "T",
             self.U: "u",
         }
         return symboles[self]
