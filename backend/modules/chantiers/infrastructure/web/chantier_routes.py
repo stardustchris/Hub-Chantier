@@ -1,5 +1,7 @@
 """Routes FastAPI pour la gestion des chantiers."""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -26,6 +28,8 @@ from shared.infrastructure.web import (
 )
 from shared.infrastructure.event_bus.dependencies import get_event_bus
 from shared.infrastructure.event_bus import EventBus
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 
@@ -642,11 +646,13 @@ def update_chantier(
             detail=str(e),
         )
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception(
+            "Erreur mise a jour chantier %d", chantier_id,
+            extra={"event": "chantier.update.error", "chantier_id": chantier_id},
+        )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error updating chantier: {type(e).__name__}: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la mise a jour du chantier",
         )
 
 
@@ -813,15 +819,88 @@ def receptionner_chantier(
 @router.post("/{chantier_id}/fermer", response_model=ChantierResponse)
 def fermer_chantier(
     chantier_id: int,
+    force: bool = Query(False, description="Forcer la fermeture sans verification des pre-requis"),
+    db: Session = Depends(get_db),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ) -> ChantierResponse:
-    """Passe le chantier en statut 'Fermé'. RBAC: conducteur ou admin requis."""
+    """Passe le chantier en statut 'Ferme'. RBAC: conducteur ou admin requis.
+
+    Verifie les pre-requis financiers avant fermeture (GAP #8):
+    - Achats tous clotures (factures ou refuses)
+    - Situations de travaux toutes validees ou facturees
+    - Avenants en brouillon (avertissement non bloquant)
+
+    Si les pre-requis ne sont pas remplis, retourne HTTP 409 Conflict.
+    Le parametre force=True permet de bypasser les verifications.
+
+    Args:
+        chantier_id: ID du chantier a fermer.
+        force: Si True, ignore les verifications de pre-requis.
+        db: Session base de donnees.
+        controller: Controller des chantiers.
+        user_repo: Repository utilisateurs.
+        current_user_id: ID de l'utilisateur connecte.
+
+    Returns:
+        Le chantier mis a jour, avec avertissements eventuels.
+
+    Raises:
+        HTTPException 404: Chantier non trouve.
+        HTTPException 400: Transition non autorisee.
+        HTTPException 409: Pre-requis de cloture non remplis.
+    """
+    # Finding #1: Restreindre force=True au role admin
+    if force and _role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seul un administrateur peut forcer la fermeture d'un chantier",
+        )
+
+    # Finding #4: Log quand force est utilise
+    if force:
+        logger.warning(
+            "Fermeture forcee du chantier",
+            extra={
+                "event": "chantier.fermeture_forcee",
+                "chantier_id": chantier_id,
+                "user_id": current_user_id,
+            },
+        )
+
+    # Verification des pre-requis financiers (mode degrade si indisponible)
+    avertissements: List[str] = []
+
+    if not force:
+        cloture_check = _get_cloture_check_port(db)
+        if cloture_check is not None:
+            check_result = cloture_check.verifier_prerequis_cloture(chantier_id)
+            if not check_result.peut_fermer:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "error": "prerequis_cloture_non_remplis",
+                        "message": "Impossible de fermer le chantier : pre-requis non remplis",
+                        "blocages": check_result.blocages,
+                        "avertissements": check_result.avertissements,
+                    },
+                )
+            avertissements = check_result.avertissements
+
     try:
         result = controller.fermer(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        response = _transform_chantier_response(result, controller, user_repo)
+        # Inclure les avertissements dans les headers si presents
+        if avertissements:
+            # Note: les avertissements sont aussi loggues cote serveur
+            logger.info(
+                "Chantier %d ferme avec avertissements: %s",
+                chantier_id,
+                avertissements,
+            )
+        return response
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1393,6 +1472,48 @@ def delete_phase(
 # =============================================================================
 # Helpers
 # =============================================================================
+
+
+def _get_cloture_check_port(
+    db: Session,
+) -> Optional["ChantierClotureCheckPort"]:
+    """Instancie le port de verification des pre-requis de cloture.
+
+    Utilise le Service Registry pour recuperer les repositories financiers
+    sans import direct, avec graceful degradation si le module financier
+    n'est pas disponible.
+
+    Args:
+        db: Session base de donnees.
+
+    Returns:
+        ChantierClotureCheckPort ou None si les dependances sont indisponibles.
+    """
+    try:
+        from modules.financier.infrastructure.persistence import (
+            SQLAlchemyAchatRepository,
+            SQLAlchemySituationRepository,
+            SQLAlchemyAvenantRepository,
+            SQLAlchemyBudgetRepository,
+        )
+        from shared.infrastructure.adapters import ChantierClotureCheckAdapter
+
+        return ChantierClotureCheckAdapter(
+            achat_repo=SQLAlchemyAchatRepository(db),
+            situation_repo=SQLAlchemySituationRepository(db),
+            avenant_repo=SQLAlchemyAvenantRepository(db),
+            budget_repo=SQLAlchemyBudgetRepository(db),
+        )
+    except ImportError as e:
+        logger.warning(
+            "Module financier non disponible pour la verification de cloture: %s", e
+        )
+        return None
+    except Exception as e:
+        logger.warning(
+            "Erreur lors de l'initialisation du port de cloture: %s", e
+        )
+        return None
 
 
 def _get_user_summary(user_id: int, user_repo: "UserRepository", include_telephone: bool = False) -> Optional[UserPublicSummary]:

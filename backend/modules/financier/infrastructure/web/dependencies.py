@@ -107,6 +107,10 @@ from ...application.use_cases import (
     GetAffectationsByTacheUseCase,
     # Export comptable (FIN-13)
     ExportComptableUseCase,
+    # P&L (GAP #9)
+    GetPnLChantierUseCase,
+    # Bilan de cloture (GAP #10)
+    GetBilanClotureUseCase,
 )
 from ..persistence import (
     SQLAlchemyFournisseurRepository,
@@ -835,10 +839,20 @@ def get_vue_consolidee_use_case(
     lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
     achat_repository: AchatRepository = Depends(get_achat_repository),
     alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+    db: Session = Depends(get_db),
 ) -> GetVueConsolideeFinancesUseCase:
     """Retourne le use case GetVueConsolideeFinances."""
+    from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
+        SQLAlchemyChantierRepository,
+    )
+    from shared.infrastructure.adapters.chantier_info_adapter import ChantierInfoAdapter
+
+    chantier_repo = SQLAlchemyChantierRepository(db)
+    chantier_info_port = ChantierInfoAdapter(chantier_repo)
+
     return GetVueConsolideeFinancesUseCase(
-        budget_repository, lot_repository, achat_repository, alerte_repository
+        budget_repository, lot_repository, achat_repository, alerte_repository,
+        chantier_info_port=chantier_info_port,
     )
 
 
@@ -976,4 +990,62 @@ def get_export_comptable_use_case(
     return ExportComptableUseCase(
         budget_repository, achat_repository, situation_repository,
         facture_repository, fournisseur_repository, lot_repository,
+    )
+
+
+# =============================================================================
+# Use Cases - P&L (GAP #9)
+# =============================================================================
+
+
+def get_pnl_chantier_use_case(
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
+    db: Session = Depends(get_db),
+) -> GetPnLChantierUseCase:
+    """Retourne le use case GetPnLChantier."""
+    from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
+        SQLAlchemyChantierRepository,
+    )
+    from shared.infrastructure.adapters.chantier_info_adapter import ChantierInfoAdapter
+
+    chantier_repo = SQLAlchemyChantierRepository(db)
+    chantier_info_port = ChantierInfoAdapter(chantier_repo)
+
+    return GetPnLChantierUseCase(
+        facture_repository, achat_repository, budget_repository,
+        cout_mo_repository, cout_materiel_repository,
+        chantier_info_port=chantier_info_port,
+    )
+
+
+# =============================================================================
+# Use Cases - Bilan de Cloture (GAP #10)
+# =============================================================================
+
+
+def get_bilan_cloture_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    avenant_repository: AvenantRepository = Depends(get_avenant_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    db: Session = Depends(get_db),
+) -> GetBilanClotureUseCase:
+    """Retourne le use case GetBilanCloture."""
+    from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
+        SQLAlchemyChantierRepository,
+    )
+    from shared.infrastructure.adapters.chantier_info_adapter import ChantierInfoAdapter
+
+    chantier_repo = SQLAlchemyChantierRepository(db)
+    chantier_info_port = ChantierInfoAdapter(chantier_repo)
+
+    return GetBilanClotureUseCase(
+        budget_repository, lot_repository, achat_repository,
+        avenant_repository, situation_repository,
+        chantier_info_port=chantier_info_port,
     )

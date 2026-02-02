@@ -3,6 +3,7 @@
 FIN-01 a FIN-15: API REST complete pour la gestion financiere des chantiers.
 """
 
+import logging
 from datetime import date
 from decimal import Decimal
 from typing import Optional
@@ -11,6 +12,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from sqlalchemy.orm import Session
+
+from shared.infrastructure.database import get_db
 from shared.infrastructure.web import (
     get_current_user_id,
     get_current_user_role,
@@ -61,6 +65,12 @@ from ...application.use_cases.affectation_use_cases import (
     LotBudgetaireIntrouvableError,
 )
 from ...application.use_cases.export_comptable_use_cases import ExportComptableError
+from ...application.use_cases.pnl_use_cases import PnLChantierNotFoundError
+from ...application.use_cases.bilan_cloture_use_cases import (
+    BilanClotureError,
+    BudgetNonTrouveError as BilanBudgetNonTrouveError,
+    ChantierNonTrouveError as BilanChantierNonTrouveError,
+)
 from ...application.dtos import (
     FournisseurCreateDTO,
     FournisseurUpdateDTO,
@@ -155,10 +165,16 @@ from .dependencies import (
     get_affectations_by_tache_use_case,
     # Export comptable (FIN-13)
     get_export_comptable_use_case,
+    # P&L (GAP #9)
+    get_pnl_chantier_use_case,
+    # Bilan de cloture (GAP #10)
+    get_bilan_cloture_use_case,
     # Journal
     get_journal_financier_repository,
 )
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/financier", tags=["financier"])
 
@@ -178,6 +194,40 @@ def _check_chantier_access(chantier_id: int, user_role: str, user_chantier_ids: 
         raise HTTPException(
             status_code=403,
             detail="Vous n'avez pas accès à ce chantier",
+        )
+
+
+# =============================================================================
+# Helper - Gel financier chantier ferme
+# =============================================================================
+
+
+def _check_chantier_not_closed(chantier_id: int, db: Session) -> None:
+    """Verifie que le chantier n'est pas ferme avant operation financiere.
+
+    Un chantier ferme ne doit plus accepter d'operations financieres
+    d'ecriture (creation achat, avenant, situation, mise a jour achat).
+
+    Note: On utilise is_active (False uniquement pour "ferme") plutot que
+    allows_modifications (False pour "ferme" ET "receptionne"). Un chantier
+    receptionne peut encore avoir des operations financieres (dernieres
+    factures, etc.).
+
+    Args:
+        chantier_id: ID du chantier.
+        db: Session base de donnees.
+
+    Raises:
+        HTTPException 403 si le chantier est ferme.
+    """
+    from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
+
+    chantier_repo = SQLAlchemyChantierRepository(db)
+    chantier = chantier_repo.find_by_id(chantier_id)
+    if chantier and not chantier.statut.is_active():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operations financieres interdites sur un chantier ferme",
         )
 
 
@@ -710,6 +760,7 @@ async def create_achat(
     _role: str = Depends(require_chef_or_above),
     current_user_id: int = Depends(get_current_user_id),
     user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    db: Session = Depends(get_db),
     use_case=Depends(get_create_achat_use_case),
 ):
     """Cree un nouvel achat.
@@ -718,6 +769,7 @@ async def create_achat(
     FIN-07: Auto-validation si montant < seuil budget.
     """
     _check_chantier_access(request.chantier_id, _role, user_chantier_ids)
+    _check_chantier_not_closed(request.chantier_id, db)
     try:
         dto = AchatCreateDTO(
             chantier_id=request.chantier_id,
@@ -818,6 +870,7 @@ async def update_achat(
     _role: str = Depends(require_chef_or_above),
     current_user_id: int = Depends(get_current_user_id),
     user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    db: Session = Depends(get_db),
     use_case=Depends(get_update_achat_use_case),
     get_achat_uc=Depends(get_get_achat_use_case),
 ):
@@ -831,6 +884,7 @@ async def update_achat(
         _check_chantier_access(existing_achat.chantier_id, _role, user_chantier_ids)
     except AchatNotFoundError:
         raise HTTPException(status_code=404, detail="Achat non trouve")
+    _check_chantier_not_closed(existing_achat.chantier_id, db)
     try:
         dto = AchatUpdateDTO(
             fournisseur_id=request.fournisseur_id,
@@ -858,12 +912,19 @@ async def valider_achat(
     achat_id: int,
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
     use_case=Depends(get_valider_achat_use_case),
+    get_achat_uc=Depends(get_get_achat_use_case),
 ):
     """Valide un achat (demande -> valide).
 
     FIN-07: Validation N+1 - Conducteurs et admins.
     """
+    try:
+        existing = get_achat_uc.execute(achat_id)
+    except AchatNotFoundError:
+        raise HTTPException(status_code=404, detail="Achat non trouve")
+    _check_chantier_not_closed(existing.chantier_id, db)
     try:
         result = use_case.execute(achat_id, current_user_id)
         return result.to_dict()
@@ -901,12 +962,19 @@ async def passer_commande_achat(
     achat_id: int,
     _role: str = Depends(require_chef_or_above),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
     use_case=Depends(get_passer_commande_achat_use_case),
+    get_achat_uc=Depends(get_get_achat_use_case),
 ):
     """Passe un achat en commande (valide -> commande).
 
     FIN-06: Workflow - Chef de chantier et superieur.
     """
+    try:
+        existing = get_achat_uc.execute(achat_id)
+    except AchatNotFoundError:
+        raise HTTPException(status_code=404, detail="Achat non trouve")
+    _check_chantier_not_closed(existing.chantier_id, db)
     try:
         result = use_case.execute(achat_id, current_user_id)
         return result.to_dict()
@@ -921,12 +989,19 @@ async def marquer_livre_achat(
     achat_id: int,
     _role: str = Depends(require_chef_or_above),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
     use_case=Depends(get_marquer_livre_achat_use_case),
+    get_achat_uc=Depends(get_get_achat_use_case),
 ):
     """Marque un achat comme livre (commande -> livre).
 
     FIN-06: Workflow - Chef de chantier et superieur.
     """
+    try:
+        existing = get_achat_uc.execute(achat_id)
+    except AchatNotFoundError:
+        raise HTTPException(status_code=404, detail="Achat non trouve")
+    _check_chantier_not_closed(existing.chantier_id, db)
     try:
         result = use_case.execute(achat_id, current_user_id)
         return result.to_dict()
@@ -942,12 +1017,19 @@ async def marquer_facture_achat(
     request: FacturerAchatRequest,
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
     use_case=Depends(get_marquer_facture_achat_use_case),
+    get_achat_uc=Depends(get_get_achat_use_case),
 ):
     """Marque un achat comme facture (livre -> facture).
 
     FIN-06: Workflow - Conducteurs et admins.
     """
+    try:
+        existing = get_achat_uc.execute(achat_id)
+    except AchatNotFoundError:
+        raise HTTPException(status_code=404, detail="Achat non trouve")
+    _check_chantier_not_closed(existing.chantier_id, db)
     try:
         result = use_case.execute(achat_id, request.numero_facture, current_user_id)
         return result.to_dict()
@@ -985,11 +1067,13 @@ async def get_dashboard_financier(
             detail="Aucun budget pour ce chantier",
         )
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception(
+            "Erreur lors du calcul du dashboard financier",
+            extra={"event": "dashboard.error", "chantier_id": chantier_id},
+        )
         raise HTTPException(
             status_code=500,
-            detail=f"Erreur serveur: {str(e)}",
+            detail="Erreur serveur interne",
         )
 
 
@@ -1031,6 +1115,11 @@ async def get_vue_consolidee_finances(
         None,
         description="Liste d'IDs de chantiers separes par virgules (ex: 1,2,3)",
     ),
+    statut_chantier: Optional[str] = Query(
+        None,
+        description="Filtre par statut chantier (ouvert, en_cours, receptionne, ferme)",
+        pattern="^(ouvert|en_cours|receptionne|ferme)$",
+    ),
     _role: str = Depends(require_chef_or_above),
     user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
     use_case=Depends(get_vue_consolidee_use_case),
@@ -1039,6 +1128,7 @@ async def get_vue_consolidee_finances(
 
     FIN-20: Agrege les KPI de plusieurs chantiers pour la page /finances.
     Admin voit tous les chantiers, les autres voient leurs chantiers assignes.
+    Peut etre filtre par statut operationnel du chantier.
     """
     # Determiner les chantier_ids accessibles
     if chantier_ids:
@@ -1062,7 +1152,7 @@ async def get_vue_consolidee_finances(
         # (le frontend doit fournir les IDs)
         accessible_ids = []
 
-    result = use_case.execute(accessible_ids)
+    result = use_case.execute(accessible_ids, statut_chantier=statut_chantier)
     return result.to_dict()
 
 
@@ -1215,12 +1305,20 @@ async def create_avenant(
     request: AvenantCreateRequest,
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
     use_case=Depends(get_create_avenant_use_case),
+    budget_use_case=Depends(get_get_budget_use_case),
 ):
     """Cree un nouvel avenant budgetaire.
 
     FIN-04: Conducteurs et admins.
     """
+    # Gel financier : verifier que le chantier du budget n'est pas ferme
+    try:
+        budget_dto = budget_use_case.execute(request.budget_id)
+        _check_chantier_not_closed(budget_dto.chantier_id, db)
+    except BudgetNotFoundError:
+        raise HTTPException(status_code=404, detail="Budget non trouve")
     try:
         dto = AvenantCreateDTO(
             budget_id=request.budget_id,
@@ -1370,6 +1468,7 @@ async def create_situation(
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    db: Session = Depends(get_db),
     use_case=Depends(get_create_situation_use_case),
 ):
     """Cree une situation de travaux (auto-creation des lignes depuis les lots).
@@ -1377,6 +1476,7 @@ async def create_situation(
     FIN-07: Conducteurs et admins.
     """
     _check_chantier_access(request.chantier_id, _role, user_chantier_ids)
+    _check_chantier_not_closed(request.chantier_id, db)
     try:
         lignes_dto = [
             LigneSituationCreateDTO(
@@ -1444,12 +1544,19 @@ async def soumettre_situation(
     situation_id: int,
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
     use_case=Depends(get_soumettre_situation_use_case),
+    get_situation_uc=Depends(get_get_situation_use_case),
 ):
     """Soumet une situation pour validation (brouillon -> en_validation).
 
     FIN-07: Conducteurs et admins.
     """
+    try:
+        existing = get_situation_uc.execute(situation_id)
+    except SituationNotFoundError:
+        raise HTTPException(status_code=404, detail="Situation non trouvee")
+    _check_chantier_not_closed(existing.chantier_id, db)
     try:
         result = use_case.execute(situation_id, current_user_id)
         return result.to_dict()
@@ -1799,22 +1906,6 @@ async def get_couts_materiel(
         "cout_total": "0",
         "details": [],
     }
-    # result = use_case.execute(chantier_id, date_debut, date_fin)
-    # return {
-    #     "chantier_id": result.chantier_id,
-    #     "cout_total": result.cout_total,
-    #     "details": [
-    #         {
-    #             "ressource_id": d.ressource_id,
-    #             "nom": d.nom,
-    #             "code": d.code,
-    #             "jours_reservation": d.jours_reservation,
-    #             "tarif_journalier": d.tarif_journalier,
-    #             "cout_total": d.cout_total,
-    #         }
-    #         for d in result.details
-    #     ],
-    # }
 
 
 # =============================================================================
@@ -2039,4 +2130,95 @@ async def export_comptable(
     except ExportComptableError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur export: {str(e)}")
+        logger.exception(
+            "Erreur lors de l'export comptable",
+            extra={"event": "export.error", "chantier_id": chantier_id},
+        )
+        raise HTTPException(status_code=500, detail="Erreur serveur interne")
+
+
+# =============================================================================
+# Routes P&L - Profit & Loss (GAP #9)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/pnl")
+async def get_pnl_chantier(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_pnl_chantier_use_case),
+):
+    """Profit & Loss d'un chantier.
+
+    GAP #9: Vue P&L montrant CA (factures emises), couts reels
+    (achats + MO + materiel), marge brute et marge %.
+    Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    try:
+        result = use_case.execute(chantier_id)
+        return result.to_dict()
+    except PnLChantierNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucun budget pour ce chantier",
+        )
+    except Exception as e:
+        logger.exception(
+            "Erreur lors du calcul du P&L",
+            extra={"event": "pnl.error", "chantier_id": chantier_id},
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur serveur interne",
+        )
+
+
+# =============================================================================
+# Routes Bilan de Cloture (GAP #10)
+# =============================================================================
+
+
+@router.get("/chantiers/{chantier_id}/bilan-cloture")
+async def get_bilan_cloture(
+    chantier_id: int,
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_bilan_cloture_use_case),
+):
+    """Bilan de cloture d'un chantier.
+
+    GAP #10: Rapport recapitulatif financier aggregeant budget, achats,
+    avenants, situations et ecarts par lot. Disponible pour tout chantier,
+    le champ ``est_definitif`` indique si le chantier est ferme.
+    Accessible aux chefs de chantier et superieurs.
+    """
+    _check_chantier_access(chantier_id, _role, user_chantier_ids)
+    try:
+        result = use_case.execute(chantier_id)
+        return result.to_dict()
+    except BilanChantierNonTrouveError:
+        raise HTTPException(
+            status_code=404,
+            detail="Chantier non trouve",
+        )
+    except BilanBudgetNonTrouveError:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucun budget pour ce chantier",
+        )
+    except BilanClotureError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=e.message,
+        )
+    except Exception as e:
+        logger.exception(
+            "Erreur lors du calcul du bilan de cloture",
+            extra={"event": "bilan_cloture.error", "chantier_id": chantier_id},
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur serveur interne",
+        )

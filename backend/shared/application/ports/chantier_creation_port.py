@@ -34,6 +34,7 @@ class BudgetCreationData:
     retenue_garantie_pct: Decimal
     seuil_alerte_pct: Decimal = Decimal("80")
     seuil_validation_achat: Decimal = Decimal("5000")
+    devis_id: Optional[int] = None
 
 
 @dataclass

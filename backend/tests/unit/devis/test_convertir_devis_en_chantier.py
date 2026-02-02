@@ -16,6 +16,7 @@ from modules.devis.domain.value_objects.statut_devis import StatutDevis
 from modules.devis.domain.repositories.devis_repository import DevisRepository
 from modules.devis.domain.repositories.lot_devis_repository import LotDevisRepository
 from modules.devis.domain.repositories.journal_devis_repository import JournalDevisRepository
+from modules.devis.domain.repositories.signature_devis_repository import SignatureDevisRepository
 
 from shared.application.ports.chantier_creation_port import (
     ChantierCreationPort,
@@ -102,12 +103,17 @@ class TestConvertirDevisEnChantierUseCase:
         self.mock_lot_devis_repo = Mock(spec=LotDevisRepository)
         self.mock_journal_repo = Mock(spec=JournalDevisRepository)
         self.mock_chantier_creation_port = Mock(spec=ChantierCreationPort)
+        self.mock_signature_repo = Mock(spec=SignatureDevisRepository)
+
+        # Par defaut, le devis est signe (happy path)
+        self.mock_signature_repo.find_by_devis_id.return_value = Mock()
 
         self.use_case = ConvertirDevisEnChantierUseCase(
             devis_repo=self.mock_devis_repo,
             lot_devis_repo=self.mock_lot_devis_repo,
             journal_repo=self.mock_journal_repo,
             chantier_creation_port=self.mock_chantier_creation_port,
+            signature_repo=self.mock_signature_repo,
         )
 
     # ─────────────────────────────────────────────────────────────────────
@@ -286,6 +292,22 @@ class TestConvertirDevisEnChantierUseCase:
         assert exc_info.value.chantier_ref == "42"
 
     # ─────────────────────────────────────────────────────────────────────
+    # Devis non signe
+    # ─────────────────────────────────────────────────────────────────────
+
+    def test_devis_non_signe_raises_non_convertible(self):
+        """Test: echec si devis accepte mais non signe -> DevisNonConvertibleError."""
+        devis = _make_devis()
+        self.mock_devis_repo.find_by_id.return_value = devis
+        self.mock_signature_repo.find_by_devis_id.return_value = None
+
+        with pytest.raises(DevisNonConvertibleError, match="signe"):
+            self.use_case.execute(devis_id=1, current_user_id=5)
+
+        # Aucune creation ne doit avoir eu lieu
+        self.mock_chantier_creation_port.create_chantier_from_devis.assert_not_called()
+
+    # ─────────────────────────────────────────────────────────────────────
     # Montant invalide
     # ─────────────────────────────────────────────────────────────────────
 
@@ -458,18 +480,35 @@ class TestConvertirDevisEnChantierUseCase:
         assert budget_data.seuil_alerte_pct == Decimal("80")
         assert budget_data.seuil_validation_achat == Decimal("5000")
 
+    def test_budget_data_includes_devis_id(self):
+        """Test GAP #6: budget_data transmet devis_id pour tracabilite."""
+        devis = _make_devis(id=42)
+        lot = _make_lot_devis(id=10, devis_id=42)
+        conversion_result = _make_conversion_result()
+
+        self.mock_devis_repo.find_by_id.return_value = devis
+        self.mock_lot_devis_repo.find_by_devis.return_value = [lot]
+        self.mock_chantier_creation_port.create_chantier_from_devis.return_value = conversion_result
+
+        self.use_case.execute(devis_id=42, current_user_id=5)
+
+        call_args = self.mock_chantier_creation_port.create_chantier_from_devis.call_args
+        budget_data = call_args.kwargs["budget_data"]
+        assert budget_data.devis_id == 42
+
     # ─────────────────────────────────────────────────────────────────────
     # Lots data mapping
     # ─────────────────────────────────────────────────────────────────────
 
     def test_lots_data_mapping_correct(self):
-        """Test: les lots budgetaires data sont crees avec les bons champs du lot devis."""
+        """Test: les lots budgetaires transferent debourse et vente du devis."""
         devis = _make_devis()
         lot1 = _make_lot_devis(
             id=10,
             code_lot="GOE",
             libelle="Gros oeuvre",
             ordre=1,
+            montant_debourse_ht=Decimal("22000"),
             montant_vente_ht=Decimal("30000"),
         )
         lot2 = _make_lot_devis(
@@ -477,6 +516,7 @@ class TestConvertirDevisEnChantierUseCase:
             code_lot="ELEC",
             libelle="Electricite",
             ordre=2,
+            montant_debourse_ht=Decimal("14000"),
             montant_vente_ht=Decimal("20000"),
         )
         conversion_result = _make_conversion_result(nb_lots_transferes=2)
@@ -491,20 +531,45 @@ class TestConvertirDevisEnChantierUseCase:
         lots_data = call_args.kwargs["lots_data"]
         assert len(lots_data) == 2
 
-        # Premier lot
+        # Premier lot - prix_unitaire_ht = debourse, prix_vente_ht = vente
         assert lots_data[0].code_lot == "GOE"
         assert lots_data[0].libelle == "Gros oeuvre"
-        assert lots_data[0].unite == "U"
+        assert lots_data[0].unite == "forfait"
         assert lots_data[0].quantite_prevue == Decimal("1")
-        assert lots_data[0].prix_unitaire_ht == Decimal("30000")
+        assert lots_data[0].prix_unitaire_ht == Decimal("22000")
         assert lots_data[0].ordre == 1
         assert lots_data[0].prix_vente_ht == Decimal("30000")
 
         # Deuxieme lot
         assert lots_data[1].code_lot == "ELEC"
         assert lots_data[1].libelle == "Electricite"
-        assert lots_data[1].prix_unitaire_ht == Decimal("20000")
+        assert lots_data[1].prix_unitaire_ht == Decimal("14000")
+        assert lots_data[1].prix_vente_ht == Decimal("20000")
         assert lots_data[1].ordre == 2
+
+    def test_lots_data_fallback_debourse_zero(self):
+        """Test: si montant_debourse_ht est 0, prix_unitaire_ht utilise montant_vente_ht."""
+        devis = _make_devis()
+        lot = _make_lot_devis(
+            id=10,
+            code_lot="GOE",
+            libelle="Gros oeuvre",
+            ordre=1,
+            montant_debourse_ht=Decimal("0"),
+            montant_vente_ht=Decimal("30000"),
+        )
+        conversion_result = _make_conversion_result(nb_lots_transferes=1)
+
+        self.mock_devis_repo.find_by_id.return_value = devis
+        self.mock_lot_devis_repo.find_by_devis.return_value = [lot]
+        self.mock_chantier_creation_port.create_chantier_from_devis.return_value = conversion_result
+
+        self.use_case.execute(devis_id=1, current_user_id=5)
+
+        call_args = self.mock_chantier_creation_port.create_chantier_from_devis.call_args
+        lots_data = call_args.kwargs["lots_data"]
+        assert lots_data[0].prix_unitaire_ht == Decimal("30000")
+        assert lots_data[0].prix_vente_ht == Decimal("30000")
 
     def test_plusieurs_lots_count_correct(self):
         """Test: le nombre de lots transferes correspond au resultat du port."""

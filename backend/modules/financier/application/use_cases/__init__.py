@@ -101,6 +101,16 @@ from .export_comptable_use_cases import (
     ExportComptableUseCase,
     ExportComptableError,
 )
+from .pnl_use_cases import (
+    GetPnLChantierUseCase,
+    PnLChantierNotFoundError,
+)
+from .bilan_cloture_use_cases import (
+    GetBilanClotureUseCase,
+    BilanClotureError,
+    BudgetNonTrouveError,
+    ChantierNonTrouveError,
+)
 
 __all__ = [
     # Fournisseur
@@ -199,4 +209,12 @@ __all__ = [
     # Export comptable (FIN-13)
     "ExportComptableUseCase",
     "ExportComptableError",
+    # P&L (GAP #9)
+    "GetPnLChantierUseCase",
+    "PnLChantierNotFoundError",
+    # Bilan de cloture (GAP #10)
+    "GetBilanClotureUseCase",
+    "BilanClotureError",
+    "BudgetNonTrouveError",
+    "ChantierNonTrouveError",
 ]

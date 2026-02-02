@@ -247,9 +247,12 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ClockCard
               isClockedIn={clock.isClockedIn}
+              hasClockedOut={clock.hasClockedOut}
               clockInTime={clock.clockState?.clockInTime}
+              clockOutTime={clock.clockState?.clockOutTime}
               lastClockIn={clock.clockState?.clockOutTime ? `Aujourd'hui ${clock.clockState.clockOutTime}` : 'Hier 17:32'}
               canEdit={canEditTime}
+              canReclockIn={isDirectionOrConducteur}
               onClockIn={clock.handleClockIn}
               onClockOut={clock.handleClockOut}
               onEditTime={clock.handleEditTime}

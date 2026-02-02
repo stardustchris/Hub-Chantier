@@ -81,6 +81,14 @@ from .export_dtos import (
     LigneExportComptableDTO,
     ExportComptableDTO,
 )
+from .bilan_cloture_dtos import (
+    EcartLotDTO,
+    BilanClotureDTO,
+)
+from .pnl_dtos import (
+    LignePnLDTO,
+    PnLChantierDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -138,4 +146,10 @@ __all__ = [
     # Export comptable (FIN-13)
     "LigneExportComptableDTO",
     "ExportComptableDTO",
+    # Bilan de cloture (GAP #10)
+    "EcartLotDTO",
+    "BilanClotureDTO",
+    # P&L (GAP #9)
+    "LignePnLDTO",
+    "PnLChantierDTO",
 ]

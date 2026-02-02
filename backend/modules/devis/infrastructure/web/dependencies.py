@@ -665,6 +665,7 @@ def get_convertir_devis_en_chantier_use_case(
     devis_repo: DevisRepository = Depends(get_devis_repository),
     lot_devis_repo: LotDevisRepository = Depends(get_lot_devis_repository),
     journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
 ) -> ConvertirDevisEnChantierUseCase:
     """Retourne le use case de conversion devis -> chantier.
 
@@ -694,4 +695,5 @@ def get_convertir_devis_en_chantier_use_case(
         lot_devis_repo=lot_devis_repo,
         journal_repo=journal_repo,
         chantier_creation_port=chantier_creation_port,
+        signature_repo=signature_repo,
     )

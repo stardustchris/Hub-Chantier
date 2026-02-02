@@ -23,6 +23,8 @@ class ChantierFinancierSummaryDTO:
         pct_realise: Pourcentage realise (Decimal->str).
         statut: Statut financier du chantier ('ok' | 'attention' | 'depassement').
         nb_alertes: Nombre d'alertes non acquittees.
+        statut_chantier: Statut operationnel du chantier
+            ('ouvert' | 'en_cours' | 'receptionne' | 'ferme', vide si inconnu).
     """
 
     chantier_id: int
@@ -36,6 +38,7 @@ class ChantierFinancierSummaryDTO:
     pct_realise: str
     statut: str
     nb_alertes: int
+    statut_chantier: str = ""
 
     def to_dict(self) -> dict:
         """Convertit le DTO en dictionnaire."""
@@ -51,6 +54,7 @@ class ChantierFinancierSummaryDTO:
             "pct_realise": self.pct_realise,
             "statut": self.statut,
             "nb_alertes": self.nb_alertes,
+            "statut_chantier": self.statut_chantier,
         }
 
 

@@ -289,6 +289,41 @@ class TestBudget:
         assert budget.deleted_at is not None
         assert budget.deleted_by == 1
 
+    def test_create_budget_with_devis_id(self):
+        """Test GAP #6: creation d'un budget avec devis_id."""
+        budget = Budget(
+            chantier_id=1,
+            montant_initial_ht=Decimal("100000"),
+            devis_id=42,
+        )
+        assert budget.devis_id == 42
+
+    def test_create_budget_without_devis_id(self):
+        """Test GAP #6: budget sans devis_id a None par defaut."""
+        budget = Budget(chantier_id=1)
+        assert budget.devis_id is None
+
+    def test_to_dict_includes_devis_id(self):
+        """Test GAP #6: to_dict contient devis_id."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("500000"),
+            devis_id=7,
+        )
+        d = budget.to_dict()
+        assert d["devis_id"] == 7
+
+    def test_to_dict_devis_id_none(self):
+        """Test GAP #6: to_dict avec devis_id None."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("500000"),
+        )
+        d = budget.to_dict()
+        assert d["devis_id"] is None
+
     def test_to_dict(self):
         """Test: conversion en dictionnaire."""
         budget = Budget(

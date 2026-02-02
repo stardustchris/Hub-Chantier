@@ -214,6 +214,9 @@ class BudgetModel(FinancierBase):
     seuil_validation_achat = Column(Numeric(10, 2), nullable=False, default=5000.0)
     notes = Column(Text, nullable=True)
 
+    # Tracabilite devis source (pas de FK pour eviter couplage cross-module)
+    devis_id = Column(Integer, nullable=True, index=True)
+
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)

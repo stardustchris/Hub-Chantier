@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
 
+from sqlalchemy import text as sql_text
+
 from shared.infrastructure.database import get_db
 from shared.infrastructure.web.dependencies import (
     get_current_user_id,
@@ -28,6 +30,34 @@ from ...domain.value_objects.periode_paie import PeriodePaie
 
 
 router = APIRouter(prefix="/pointages", tags=["Feuilles d'heures"])
+
+
+# ===== Permission Helpers =====
+
+
+def _get_chef_chantier_ids(user_id: int, user_role: str, db: Session) -> set[int] | None:
+    """Recupere les IDs des chantiers d'un chef de chantier.
+
+    Pour les conducteurs/admins, retourne None (acces total).
+    Pour les compagnons, retourne None (pas utilise).
+    Pour les chefs, requete la table chantier_chefs.
+
+    Args:
+        user_id: ID de l'utilisateur.
+        user_role: Role de l'utilisateur.
+        db: Session SQLAlchemy.
+
+    Returns:
+        Set d'IDs de chantiers pour un chef, None pour les autres roles.
+    """
+    if user_role != "chef_chantier":
+        return None
+
+    result = db.execute(
+        sql_text("SELECT chantier_id FROM chantier_chefs WHERE user_id = :uid"),
+        {"uid": user_id},
+    )
+    return {row[0] for row in result.fetchall()}
 
 
 # ===== Validation Helpers =====
@@ -201,6 +231,7 @@ def create_pointage(
     current_user_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
+    db: Session = Depends(get_db),
 ):
     """
     Crée un nouveau pointage.
@@ -213,13 +244,17 @@ def create_pointage(
 
     Permissions:
     - Compagnon: Peut créer uniquement pour lui-même
-    - Chef/Conducteur/Admin: Peut créer pour n'importe qui
+    - Chef de chantier: Peut créer pour les compagnons de SES chantiers
+    - Conducteur/Admin: Peut créer pour n'importe qui
     """
     # Vérification des permissions (SEC-PTG-002)
+    chef_chantier_ids = _get_chef_chantier_ids(current_user_id, current_user_role, db)
     if not PointagePermissionService.can_create_for_user(
         current_user_id=current_user_id,
         target_user_id=request.utilisateur_id,
         user_role=current_user_role,
+        pointage_chantier_id=request.chantier_id,
+        user_chantier_ids=chef_chantier_ids,
     ):
         raise HTTPException(
             status_code=403,
@@ -494,24 +529,29 @@ def update_pointage(
     current_user_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
+    db: Session = Depends(get_db),
 ):
     """
     Met à jour un pointage (si en brouillon ou rejeté).
 
     Permissions:
     - Compagnon: Peut modifier uniquement ses propres pointages
-    - Chef/Conducteur/Admin: Peut modifier n'importe quel pointage
+    - Chef de chantier: Peut modifier les pointages de SES chantiers
+    - Conducteur/Admin: Peut modifier n'importe quel pointage
     """
     # Récupérer le pointage pour vérifier le propriétaire (SEC-PTG-002)
     pointage = controller.get_pointage(pointage_id)
     if not pointage:
         raise HTTPException(status_code=404, detail="Pointage non trouvé")
 
-    # Vérification des permissions
+    # Vérification des permissions avec restriction par chantier pour les chefs
+    chef_chantier_ids = _get_chef_chantier_ids(current_user_id, current_user_role, db)
     if not PointagePermissionService.can_modify(
         current_user_id=current_user_id,
         pointage_owner_id=pointage.get("utilisateur_id"),
         user_role=current_user_role,
+        pointage_chantier_id=pointage.get("chantier_id"),
+        user_chantier_ids=chef_chantier_ids,
     ):
         raise HTTPException(
             status_code=403,
@@ -580,10 +620,21 @@ async def validate_pointage(
     current_user_role: str = Depends(get_current_user_role),
     event_bus = Depends(get_event_bus),
     controller: PointageController = Depends(get_controller),
+    db: Session = Depends(get_db),
 ):
     """Valide un pointage soumis. ⚡ CRITIQUE: Déclenche la synchronisation avec la paie."""
-    # Vérification des permissions (SEC-PTG-003)
-    if not PointagePermissionService.can_validate(current_user_role):
+    # Récupérer le pointage pour vérifier le chantier
+    pointage = controller.get_pointage(pointage_id)
+    if not pointage:
+        raise HTTPException(status_code=404, detail="Pointage non trouvé")
+
+    # Vérification des permissions avec restriction par chantier pour les chefs
+    chef_chantier_ids = _get_chef_chantier_ids(validateur_id, current_user_role, db)
+    if not PointagePermissionService.can_validate(
+        current_user_role,
+        pointage_chantier_id=pointage.get("chantier_id"),
+        user_chantier_ids=chef_chantier_ids,
+    ):
         raise HTTPException(
             status_code=403,
             detail="Vous n'avez pas la permission de valider des pointages"
@@ -621,10 +672,21 @@ def reject_pointage(
     validateur_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
+    db: Session = Depends(get_db),
 ):
     """Rejette un pointage soumis."""
-    # Vérification des permissions (SEC-PTG-003)
-    if not PointagePermissionService.can_reject(current_user_role):
+    # Récupérer le pointage pour vérifier le chantier
+    pointage = controller.get_pointage(pointage_id)
+    if not pointage:
+        raise HTTPException(status_code=404, detail="Pointage non trouvé")
+
+    # Vérification des permissions avec restriction par chantier pour les chefs
+    chef_chantier_ids = _get_chef_chantier_ids(validateur_id, current_user_role, db)
+    if not PointagePermissionService.can_reject(
+        current_user_role,
+        pointage_chantier_id=pointage.get("chantier_id"),
+        user_chantier_ids=chef_chantier_ids,
+    ):
         raise HTTPException(
             status_code=403,
             detail="Vous n'avez pas la permission de rejeter des pointages"
@@ -669,6 +731,7 @@ def bulk_validate_pointages(
     validateur_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
+    db: Session = Depends(get_db),
 ):
     """
     Valide plusieurs pointages en une seule opération (GAP-FDH-004).
@@ -677,13 +740,36 @@ def bulk_validate_pointages(
     d'une feuille d'heures en un seul clic.
 
     Retourne un résultat détaillé avec les succès et les échecs.
+
+    Permissions:
+    - Chef de chantier: Peut valider uniquement les pointages de SES chantiers
+    - Conducteur/Admin: Peut valider n'importe quel pointage
     """
     # SEC-PTG-P2-001: Vérification des permissions avant validation en masse
+    chef_chantier_ids = _get_chef_chantier_ids(validateur_id, current_user_role, db)
+
+    # Vérification de base : est-ce un manager ?
     if not PointagePermissionService.can_validate(current_user_role):
         raise HTTPException(
             status_code=403,
             detail="Seuls les chefs de chantier, conducteurs et admins peuvent valider des pointages"
         )
+
+    # Pour les chefs : vérifier que tous les pointages sont dans leurs chantiers
+    if current_user_role == "chef_chantier" and chef_chantier_ids is not None:
+        for pid in request.pointage_ids:
+            pointage = controller.get_pointage(pid)
+            if not pointage:
+                continue  # sera géré par le controller
+            if not PointagePermissionService.can_validate(
+                current_user_role,
+                pointage_chantier_id=pointage.get("chantier_id"),
+                user_chantier_ids=chef_chantier_ids,
+            ):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Vous n'avez pas la permission de valider le pointage #{pid} (chantier non assigné)",
+                )
 
     try:
         return controller.bulk_validate_pointages(request.pointage_ids, validateur_id)

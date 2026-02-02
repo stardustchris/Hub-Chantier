@@ -5,7 +5,9 @@ Agrege les KPI financiers de plusieurs chantiers.
 """
 
 from decimal import Decimal
-from typing import List
+from typing import Dict, List, Optional
+
+from shared.application.ports.chantier_info_port import ChantierInfoPort, ChantierInfoDTO
 
 from ...domain.repositories import (
     BudgetRepository,
@@ -33,6 +35,7 @@ class GetVueConsolideeFinancesUseCase:
         _lot_repository: Repository pour acceder aux lots budgetaires.
         _achat_repository: Repository pour acceder aux achats.
         _alerte_repository: Repository pour acceder aux alertes.
+        _chantier_info_port: Port pour acceder aux noms des chantiers.
     """
 
     def __init__(
@@ -41,6 +44,7 @@ class GetVueConsolideeFinancesUseCase:
         lot_repository: LotBudgetaireRepository,
         achat_repository: AchatRepository,
         alerte_repository: AlerteRepository,
+        chantier_info_port: Optional[ChantierInfoPort] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -49,14 +53,18 @@ class GetVueConsolideeFinancesUseCase:
             lot_repository: Repository LotBudgetaire (interface).
             achat_repository: Repository Achat (interface).
             alerte_repository: Repository Alerte (interface).
+            chantier_info_port: Port pour les infos chantiers (optionnel).
         """
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
         self._achat_repository = achat_repository
         self._alerte_repository = alerte_repository
+        self._chantier_info_port = chantier_info_port
 
     def execute(
-        self, user_accessible_chantier_ids: List[int]
+        self,
+        user_accessible_chantier_ids: List[int],
+        statut_chantier: Optional[str] = None,
     ) -> VueConsolideeDTO:
         """Construit la vue consolidee multi-chantiers.
 
@@ -67,12 +75,32 @@ class GetVueConsolideeFinancesUseCase:
         Args:
             user_accessible_chantier_ids: Liste des IDs de chantiers
                 accessibles par l'utilisateur.
+            statut_chantier: Filtre optionnel par statut operationnel du
+                chantier (ouvert, en_cours, receptionne, ferme). Si None,
+                tous les chantiers sont inclus. Ignore si chantier_info_port
+                n'est pas disponible.
 
         Returns:
             VueConsolideeDTO avec KPI globaux, liste chantiers,
             top 3 rentables et top 3 derives.
         """
         chantiers_summaries: List[ChantierFinancierSummaryDTO] = []
+
+        # Recuperer les noms des chantiers via le port (si disponible)
+        chantiers_info: Dict[int, ChantierInfoDTO] = {}
+        if self._chantier_info_port is not None:
+            chantiers_info = self._chantier_info_port.get_chantiers_info_batch(
+                user_accessible_chantier_ids
+            )
+
+        # Filtrer par statut chantier si demande
+        if statut_chantier and self._chantier_info_port:
+            filtered_ids = [
+                cid for cid in user_accessible_chantier_ids
+                if cid in chantiers_info and chantiers_info[cid].statut == statut_chantier
+            ]
+        else:
+            filtered_ids = user_accessible_chantier_ids
 
         # Totaux globaux
         total_budget_revise = Decimal("0")
@@ -85,7 +113,7 @@ class GetVueConsolideeFinancesUseCase:
         nb_attention = 0
         nb_depassement = 0
 
-        for chantier_id in user_accessible_chantier_ids:
+        for chantier_id in filtered_ids:
             budget = self._budget_repository.find_by_chantier_id(chantier_id)
             if not budget:
                 # Chantier sans budget, on l'ignore
@@ -101,11 +129,20 @@ class GetVueConsolideeFinancesUseCase:
             )
             reste = montant_revise - engage
 
+            # Marge : definitive pour chantiers fermes, estimee sinon
+            chantier_info = chantiers_info.get(chantier_id)
+            is_ferme = chantier_info is not None and chantier_info.statut == "ferme"
+
             # Pourcentages
             if montant_revise > Decimal("0"):
                 pct_engage = (engage / montant_revise) * Decimal("100")
                 pct_realise = (realise / montant_revise) * Decimal("100")
-                marge_pct = ((montant_revise - engage) / montant_revise) * Decimal("100")
+                if is_ferme:
+                    # Marge definitive basee sur le realise (chantier clos)
+                    marge_pct = ((montant_revise - realise) / montant_revise) * Decimal("100")
+                else:
+                    # Marge estimee basee sur l'engage (chantier en cours)
+                    marge_pct = ((montant_revise - engage) / montant_revise) * Decimal("100")
             else:
                 pct_engage = Decimal("0")
                 pct_realise = Decimal("0")
@@ -126,8 +163,9 @@ class GetVueConsolideeFinancesUseCase:
             alertes = self._alerte_repository.find_non_acquittees(chantier_id)
             nb_alertes = len(alertes)
 
-            # Nom chantier : on utilise l'ID comme fallback
-            nom_chantier = f"Chantier {chantier_id}"
+            # Nom et statut chantier : utiliser le port si disponible, sinon fallback
+            nom_chantier = chantier_info.nom if chantier_info is not None else f"Chantier {chantier_id}"
+            statut_ch = chantier_info.statut if chantier_info is not None else ""
 
             summary = ChantierFinancierSummaryDTO(
                 chantier_id=chantier_id,
@@ -141,6 +179,7 @@ class GetVueConsolideeFinancesUseCase:
                 pct_realise=str(pct_realise.quantize(Decimal("0.01"))),
                 statut=statut,
                 nb_alertes=nb_alertes,
+                statut_chantier=statut_ch,
             )
             chantiers_summaries.append(summary)
 

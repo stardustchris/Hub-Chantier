@@ -25,6 +25,7 @@ class Budget:
     seuil_alerte_pct: Decimal = Decimal("80")
     seuil_validation_achat: Decimal = Decimal("1000")
     notes: Optional[str] = None
+    devis_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     created_by: Optional[int] = None
@@ -116,6 +117,7 @@ class Budget:
             "seuil_alerte_pct": str(self.seuil_alerte_pct),
             "seuil_validation_achat": str(self.seuil_validation_achat),
             "notes": self.notes,
+            "devis_id": self.devis_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "created_by": self.created_by,

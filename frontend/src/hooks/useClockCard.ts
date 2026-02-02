@@ -29,6 +29,8 @@ export interface ClockState {
 export interface UseClockCardReturn {
   clockState: ClockState | null
   isClockedIn: boolean
+  /** True si l'utilisateur a déjà pointé le départ aujourd'hui */
+  hasClockedOut: boolean
   showEditModal: boolean
   editTimeType: 'arrival' | 'departure'
   editTimeValue: string
@@ -180,12 +182,12 @@ export function useClockCard(): UseClockCardReturn {
    * - Si le pointage est en brouillon, pas de clockOutTime (en cours de pointage)
    */
   const extractClockOutTime = (pointage: Pointage): string | undefined => {
-    // Si brouillon, pas de clockOutTime (l'utilisateur n'a pointé que l'arrivée)
-    if (pointage.statut === 'brouillon') {
+    // Si brouillon avec 00:00, l'utilisateur n'a pointé que l'arrivée (pas encore de départ)
+    if (pointage.statut === 'brouillon' && (!pointage.heures_normales || pointage.heures_normales === '00:00')) {
       return undefined
     }
 
-    // Si validé/soumis et a des heures_normales, calculer clockOutTime
+    // Si le pointage a des heures_normales > 00:00, calculer clockOutTime (quel que soit le statut)
     if (pointage.heures_normales && pointage.heures_normales !== '00:00') {
       const clockInTime = extractClockInTime(pointage)
       if (!clockInTime) return undefined
@@ -420,6 +422,7 @@ export function useClockCard(): UseClockCardReturn {
   return {
     clockState,
     isClockedIn: !!clockState?.clockInTime && !clockState?.clockOutTime,
+    hasClockedOut: !!clockState?.clockInTime && !!clockState?.clockOutTime,
     showEditModal,
     editTimeType,
     editTimeValue,

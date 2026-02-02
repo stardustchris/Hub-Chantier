@@ -14,6 +14,14 @@ from .chantier_creation_port import (
     LotBudgetaireCreationData,
     ConversionChantierResult,
 )
+from .chantier_info_port import (
+    ChantierInfoPort,
+    ChantierInfoDTO,
+)
+from .chantier_cloture_check_port import (
+    ChantierClotureCheckPort,
+    ClotureCheckResult,
+)
 
 __all__ = [
     "EntityInfoService",
@@ -26,4 +34,8 @@ __all__ = [
     "BudgetCreationData",
     "LotBudgetaireCreationData",
     "ConversionChantierResult",
+    "ChantierInfoPort",
+    "ChantierInfoDTO",
+    "ChantierClotureCheckPort",
+    "ClotureCheckResult",
 ]

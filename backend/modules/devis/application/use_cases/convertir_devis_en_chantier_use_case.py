@@ -18,6 +18,7 @@ from ...domain.entities.journal_devis import JournalDevis
 from ...domain.repositories.devis_repository import DevisRepository
 from ...domain.repositories.lot_devis_repository import LotDevisRepository
 from ...domain.repositories.journal_devis_repository import JournalDevisRepository
+from ...domain.repositories.signature_devis_repository import SignatureDevisRepository
 from ...domain.value_objects import StatutDevis
 
 # Import du port shared (pas de dependance cross-module)
@@ -86,6 +87,7 @@ class ConvertirDevisEnChantierUseCase:
         _lot_devis_repo: Repository pour acceder aux lots du devis.
         _journal_repo: Repository pour le journal d'audit.
         _chantier_creation_port: Port pour creer le chantier/budget/lots.
+        _signature_repo: Repository pour verifier la signature du devis.
     """
 
     def __init__(
@@ -94,6 +96,7 @@ class ConvertirDevisEnChantierUseCase:
         lot_devis_repo: LotDevisRepository,
         journal_repo: JournalDevisRepository,
         chantier_creation_port: ChantierCreationPort,
+        signature_repo: SignatureDevisRepository,
         event_publisher: Optional[Callable] = None,
     ) -> None:
         """Initialise le use case.
@@ -103,12 +106,14 @@ class ConvertirDevisEnChantierUseCase:
             lot_devis_repo: Repository lots devis (interface).
             journal_repo: Repository journal d'audit (interface).
             chantier_creation_port: Port pour la creation chantier (interface).
+            signature_repo: Repository signatures (interface).
             event_publisher: Fonction pour publier les domain events.
         """
         self._devis_repo = devis_repo
         self._lot_devis_repo = lot_devis_repo
         self._journal_repo = journal_repo
         self._chantier_creation_port = chantier_creation_port
+        self._signature_repo = signature_repo
         self._event_publisher = event_publisher
 
     def execute(
@@ -268,6 +273,13 @@ class ConvertirDevisEnChantierUseCase:
                 f"(statut actuel: {devis.statut.label})"
             )
 
+        # Verifier que le devis est signe (regle metier obligatoire)
+        signature = self._signature_repo.find_by_devis_id(devis.id)
+        if signature is None:
+            raise DevisNonConvertibleError(
+                "Le devis doit etre signe avant conversion en chantier"
+            )
+
         # Verifier que le montant est positif
         if devis.montant_total_ht <= Decimal("0"):
             raise DevisNonConvertibleError(
@@ -329,12 +341,25 @@ class ConvertirDevisEnChantierUseCase:
             retenue_garantie_pct=devis.retenue_garantie_pct,
             seuil_alerte_pct=Decimal("80"),
             seuil_validation_achat=Decimal("5000"),
+            devis_id=devis.id,
         )
 
     def _build_lots_data(
         self, lots_devis: list[LotDevis]
     ) -> list[LotBudgetaireCreationData]:
         """Construit les donnees de creation des lots budgetaires.
+
+        Transfere les montants reels du devis pour permettre le suivi
+        des ecarts debourse/vente dans le budget operationnel.
+
+        - prix_unitaire_ht : cout reel (debourse) du lot, utilise pour
+          le suivi budgetaire des depenses.
+        - prix_vente_ht : montant de vente au client, utilise pour
+          calculer la marge previsionnelle.
+
+        Si le montant de debourse n'est pas renseigne (None ou 0),
+        le montant de vente est utilise en fallback pour eviter
+        toute regression.
 
         Args:
             lots_devis: Les lots du devis source.
@@ -346,9 +371,13 @@ class ConvertirDevisEnChantierUseCase:
             LotBudgetaireCreationData(
                 code_lot=lot.code_lot,
                 libelle=lot.libelle,
-                unite="U",
+                unite="forfait",
                 quantite_prevue=Decimal("1"),
-                prix_unitaire_ht=lot.montant_vente_ht,
+                prix_unitaire_ht=(
+                    lot.montant_debourse_ht
+                    if lot.montant_debourse_ht
+                    else lot.montant_vente_ht
+                ),
                 ordre=lot.ordre,
                 prix_vente_ht=lot.montant_vente_ht,
             )

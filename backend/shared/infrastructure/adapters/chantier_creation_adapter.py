@@ -104,6 +104,7 @@ class ChantierCreationAdapter(ChantierCreationPort):
             seuil_alerte_pct=budget_data.seuil_alerte_pct,
             seuil_validation_achat=budget_data.seuil_validation_achat,
             notes=f"Budget initial depuis conversion devis",
+            devis_id=budget_data.devis_id,
         )
         budget = self._budget_repo.save(budget)
 

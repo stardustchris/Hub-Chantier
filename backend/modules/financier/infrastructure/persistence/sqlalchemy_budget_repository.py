@@ -43,6 +43,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
             seuil_alerte_pct=Decimal(str(model.seuil_alerte_pct)),
             seuil_validation_achat=Decimal(str(model.seuil_validation_achat)),
             notes=model.notes,
+            devis_id=model.devis_id,
             created_at=model.created_at,
             updated_at=model.updated_at,
             created_by=model.created_by,
@@ -68,6 +69,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
             seuil_alerte_pct=entity.seuil_alerte_pct,
             seuil_validation_achat=entity.seuil_validation_achat,
             notes=entity.notes,
+            devis_id=entity.devis_id,
             created_at=entity.created_at or datetime.utcnow(),
             updated_at=entity.updated_at,
             created_by=entity.created_by,
@@ -96,6 +98,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
                 model.seuil_alerte_pct = budget.seuil_alerte_pct
                 model.seuil_validation_achat = budget.seuil_validation_achat
                 model.notes = budget.notes
+                model.devis_id = budget.devis_id
                 model.updated_at = datetime.utcnow()
         else:
             # Creation
