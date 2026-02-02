@@ -37,6 +37,25 @@ import type {
   ConvertirDevisResult,
 } from '../types'
 
+/**
+ * Helper: le backend Phase 2 peut renvoyer soit un tableau direct,
+ * soit un objet wrappé { items: [...] } ou { key: [...] }.
+ * Cette fonction extrait toujours un tableau.
+ */
+function extractArray<T>(data: unknown, key?: string): T[] {
+  if (Array.isArray(data)) return data as T[]
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>
+    if (key && Array.isArray(obj[key])) return obj[key] as T[]
+    if (Array.isArray(obj.items)) return obj.items as T[]
+    // Cherche le premier champ qui est un tableau
+    for (const v of Object.values(obj)) {
+      if (Array.isArray(v)) return v as T[]
+    }
+  }
+  return []
+}
+
 // Backend router: APIRouter(prefix="/devis") -> mounted at /api/devis
 const BASE = '/api/devis'
 // Articles have a separate router: APIRouter(prefix="/articles-devis")
@@ -257,8 +276,8 @@ export const devisService = {
   },
 
   async listerVersions(devisId: number): Promise<VersionDevis[]> {
-    const response = await api.get<VersionDevis[]>(`${BASE}/${devisId}/versions`)
-    return response.data
+    const response = await api.get(`${BASE}/${devisId}/versions`)
+    return extractArray<VersionDevis>(response.data, 'versions')
   },
 
   async genererComparatif(sourceId: number, cibleId: number): Promise<ComparatifDevis> {
@@ -298,8 +317,8 @@ export const devisService = {
 
   // ===== Frais de chantier (DEV-25) =====
   async listFraisChantier(devisId: number): Promise<FraisChantierDevis[]> {
-    const response = await api.get<FraisChantierDevis[]>(`${BASE}/${devisId}/frais-chantier`)
-    return response.data
+    const response = await api.get(`${BASE}/${devisId}/frais-chantier`)
+    return extractArray<FraisChantierDevis>(response.data)
   },
 
   async createFraisChantier(devisId: number, data: FraisChantierCreate): Promise<FraisChantierDevis> {
@@ -317,14 +336,14 @@ export const devisService = {
   },
 
   async getRepartitionFrais(devisId: number): Promise<RepartitionFraisLot[]> {
-    const response = await api.get<RepartitionFraisLot[]>(`${BASE}/${devisId}/frais-chantier/repartition`)
-    return response.data
+    const response = await api.get(`${BASE}/${devisId}/frais-chantier/repartition`)
+    return extractArray<RepartitionFraisLot>(response.data)
   },
 
   // ===== Options de presentation (DEV-11) =====
   async getTemplatesPresentation(): Promise<TemplatePresentation[]> {
-    const response = await api.get<TemplatePresentation[]>(`${BASE}/templates-presentation`)
-    return response.data
+    const response = await api.get(`${BASE}/templates-presentation`)
+    return extractArray<TemplatePresentation>(response.data, 'templates')
   },
 
   async getOptionsPresentation(devisId: number): Promise<OptionsPresentation> {
