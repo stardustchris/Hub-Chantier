@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
-import { api } from '../services/api';
+import api from '../services/api';
 import type { ApiError, InvitationInfo } from '../types/api';
 
 export function AcceptInvitationPage(): JSX.Element {

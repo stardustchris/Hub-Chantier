@@ -1,0 +1,12 @@
+node_modules
+dist
+.vite
+*.test.ts
+*.test.tsx
+**/*.test.ts
+**/*.test.tsx
+**/__tests__
+coverage
+.env
+.env.*
+!.env.example

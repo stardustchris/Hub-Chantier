@@ -13,10 +13,59 @@
 
 ---
 
+## ENVIRONNEMENT DOCKER (mode par defaut)
+
+Le projet tourne sur Docker. Toujours verifier/lancer Docker AVANT de coder.
+
+### Demarrage
+
+```bash
+docker compose up -d          # Lance db + api + frontend + adminer
+docker compose ps              # Verifier que tout est "running"
+```
+
+### Services et ports
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **frontend** | http://localhost | Nginx + SPA React (production build) |
+| **api** | http://localhost:8000 | FastAPI backend |
+| **db** | localhost:5432 | PostgreSQL 16 |
+| **adminer** | http://localhost:8080 | Admin BDD |
+
+### Apres modification de code
+
+```bash
+# Backend : rebuild + restart
+docker compose build api && docker compose up -d api
+
+# Frontend : rebuild + restart + VIDER LE CACHE NAVIGATEUR
+docker compose build frontend && docker compose up -d frontend
+```
+
+⚠️ **Service Worker (PWA)** : Apres chaque rebuild frontend, le navigateur sert l'ancienne version en cache. Il FAUT vider le Service Worker et les caches du navigateur (via DevTools ou MCP Chrome).
+
+### Logs
+
+```bash
+docker compose logs -f api       # Logs backend
+docker compose logs -f frontend  # Logs nginx
+```
+
+---
+
 ## REGLES OBLIGATOIRES
 
 ### 1. Debut de session (AVANT tout dev)
 
+**Mode Docker (par defaut)** :
+```bash
+docker compose ps                # Verifier que les containers tournent
+docker compose logs api --tail=20  # Verifier que l'API repond
+curl -s http://localhost/api/health  # Health check
+```
+
+**Mode local (si Docker non disponible)** :
 ```bash
 cd backend && pip install -r requirements.txt && python -m pytest tests/unit -v --tb=short
 cd ../frontend && npm install && npm run build
@@ -150,6 +199,18 @@ Clean Architecture 4 layers : `Domain -> Application -> Adapters -> Infrastructu
 
 ## Commandes utiles
 
+### Docker
+```bash
+docker compose up -d                 # Demarrer la stack
+docker compose ps                    # Etat des containers
+docker compose build api frontend    # Rebuild apres modifs
+docker compose up -d api frontend    # Relancer apres rebuild
+docker compose logs -f api           # Logs backend temps reel
+docker compose exec api bash         # Shell dans le container API
+docker compose exec db psql -U hubchantier hub_chantier  # Acces BDD
+```
+
+### Local
 ```bash
 ./scripts/start-dev.sh              # Dev
 pytest backend/tests/unit -v        # Tests

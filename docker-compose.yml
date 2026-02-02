@@ -1,5 +1,7 @@
-# Hub Chantier - Docker Compose Stack
+# Hub Chantier - Docker Compose Stack (Development)
 # Usage: docker compose up -d
+# Seed:  docker compose exec api python -m scripts.seed_demo_data
+# Logs:  docker compose logs -f api
 
 services:
   # ===========================================
@@ -34,11 +36,16 @@ services:
     restart: unless-stopped
     environment:
       - APP_NAME=${APP_NAME:-Hub Chantier}
-      - DEBUG=${DEBUG:-false}
+      - DEBUG=${DEBUG:-true}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-hubchantier}:${POSTGRES_PASSWORD:-hubchantier_dev}@db:5432/${POSTGRES_DB:-hub_chantier}
-      - SECRET_KEY=${SECRET_KEY:-change-me-in-production-at-least-32-chars}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost}
+      - SECRET_KEY=${SECRET_KEY:-dev-docker-secret-key-at-least-32-chars-long}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-dev-docker-encrypt-key-32chars!}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173}
+      - COOKIE_SECURE=false
+      - COOKIE_SAMESITE=lax
+    volumes:
+      - uploads_data:/app/uploads
     ports:
       - "8000:8000"
     depends_on:
@@ -49,9 +56,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
   # ===========================================
-  # React Frontend (Production build)
+  # React Frontend (nginx)
   # ===========================================
   frontend:
     build:
@@ -63,8 +71,6 @@ services:
       - "80:80"
     depends_on:
       - api
-    environment:
-      - VITE_API_URL=http://localhost:8000
 
   # ===========================================
   # Adminer - Database Management UI
@@ -82,4 +88,6 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  uploads_data:
     driver: local

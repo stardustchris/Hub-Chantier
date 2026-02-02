@@ -158,11 +158,11 @@ class EncryptedString(TypeDecorator):
     def __init__(self, length: int = 500, **kwargs):
         """
         Args:
-            length: Longueur maximale du champ chiffre.
-                   Note: Le chiffrement augmente la taille (~1.5x).
+            length: Longueur maximale du champ en clair.
+                   Note: Le chiffrement AES-256 + base64 augmente la taille (~4x).
         """
-        # Augmente la taille pour accommoder le chiffrement
-        super().__init__(length=length * 2, **kwargs)
+        # Augmente la taille pour accommoder le chiffrement AES + base64
+        super().__init__(length=max(length * 4, 255), **kwargs)
 
     def process_bind_param(self, value, dialect) -> Optional[str]:
         """Chiffre la valeur avant stockage."""

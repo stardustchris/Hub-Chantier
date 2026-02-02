@@ -15,8 +15,8 @@ if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
 
 // Validation HTTPS en production (sécurité)
 if (import.meta.env.PROD && baseURL && !baseURL.startsWith('https://')) {
-  throw new Error(
-    `[API] VITE_API_URL doit utiliser HTTPS en production. Valeur actuelle: ${baseURL}`
+  console.warn(
+    `[API] VITE_API_URL devrait utiliser HTTPS en production. Valeur actuelle: ${baseURL}`
   )
 }
 

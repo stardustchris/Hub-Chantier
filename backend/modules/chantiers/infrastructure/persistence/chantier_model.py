@@ -28,7 +28,7 @@ class ChantierModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     # Identification (CHT-19)
-    code = Column(String(4), unique=True, nullable=False, index=True)
+    code = Column(String(50), unique=True, nullable=False, index=True)
 
     # Informations générales
     nom = Column(String(255), nullable=False)
