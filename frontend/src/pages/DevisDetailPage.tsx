@@ -12,6 +12,13 @@ import LotDevisPanel from '../components/devis/LotDevisPanel'
 import MargesPanel from '../components/devis/MargesPanel'
 import JournalDevis from '../components/devis/JournalDevis'
 import DevisForm from '../components/devis/DevisForm'
+import VersionsPanel from '../components/devis/VersionsPanel'
+import AttestationTVAPanel from '../components/devis/AttestationTVAPanel'
+import FraisChantierPanel from '../components/devis/FraisChantierPanel'
+import OptionsPresentationPanel from '../components/devis/OptionsPresentationPanel'
+import SignaturePanel from '../components/devis/SignaturePanel'
+import ConversionChantierPanel from '../components/devis/ConversionChantierPanel'
+import RelancesPanel from '../components/devis/RelancesPanel'
 import { devisService } from '../services/devis'
 import type {
   DevisDetail,
@@ -22,6 +29,7 @@ import type {
   LigneDevisCreate,
   LigneDevisUpdate,
 } from '../types'
+import { TYPE_VERSION_CONFIG, LABEL_VARIANTE_CONFIG } from '../types'
 import {
   Loader2,
   AlertCircle,
@@ -35,6 +43,9 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  Lock,
+  GitBranch,
+  Copy,
 } from 'lucide-react'
 
 const formatEUR = (value: number) =>
@@ -172,13 +183,43 @@ export default function DevisDetailPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
                     <h1 className="text-xl font-bold text-gray-900">{devis.numero}</h1>
                     <DevisStatusBadge statut={devis.statut} size="md" />
+                    {/* Version badge (DEV-08) */}
+                    {devis.type_version && devis.type_version !== 'originale' && (
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor: `${TYPE_VERSION_CONFIG[devis.type_version].couleur}20`,
+                          color: TYPE_VERSION_CONFIG[devis.type_version].couleur,
+                        }}
+                      >
+                        <GitBranch className="w-3 h-3" />
+                        {devis.type_version === 'variante' && devis.label_variante
+                          ? LABEL_VARIANTE_CONFIG[devis.label_variante].label
+                          : TYPE_VERSION_CONFIG[devis.type_version].label}
+                      </span>
+                    )}
+                    {devis.numero_version !== undefined && devis.numero_version > 1 && (
+                      <span className="text-xs text-gray-500">v{devis.numero_version}</span>
+                    )}
+                    {/* Indicateur fige (DEV-08) */}
+                    {devis.version_figee && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                        <Lock className="w-3 h-3" />
+                        Version figee
+                      </span>
+                    )}
                   </div>
                   <p className="text-gray-700 font-medium">{devis.objet}</p>
                   <p className="text-sm text-gray-500 mt-1">
                     {devis.date_creation && `Cree le ${new Date(devis.date_creation).toLocaleDateString('fr-FR')}`}
+                    {devis.version_commentaire && (
+                      <span className="ml-2 italic text-gray-400">
+                        - {devis.version_commentaire}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-3">
@@ -186,16 +227,43 @@ export default function DevisDetailPage() {
                     <p className="text-sm text-gray-500">Montant HT</p>
                     <p className="text-2xl font-bold text-gray-900">{formatEUR(Number(devis.montant_total_ht))}</p>
                     <p className="text-sm text-gray-500">TTC: {formatEUR(Number(devis.montant_total_ttc))}</p>
+                    {Number(devis.retenue_garantie_pct) > 0 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Retenue de garantie : {devis.retenue_garantie_pct}%
+                        {devis.montant_retenue_garantie != null && (
+                          <span> ({formatEUR(Number(devis.montant_retenue_garantie))})</span>
+                        )}
+                      </p>
+                    )}
+                    {devis.montant_net_a_payer != null && Number(devis.retenue_garantie_pct) > 0 && (
+                      <p className="text-sm font-semibold text-blue-700">
+                        Net a payer : {formatEUR(Number(devis.montant_net_a_payer))}
+                      </p>
+                    )}
                   </div>
-                  {isEditable && (
-                    <button
-                      onClick={() => setShowEditForm(true)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      Modifier
-                    </button>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {isEditable && (
+                      <>
+                        <button
+                          onClick={() => setShowEditForm(true)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Modifier
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const nouveau = await devisService.creerRevision(devisId)
+                            navigate(`/devis/${nouveau.id}`)
+                          }}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <Copy className="w-4 h-4" />
+                          Creer revision
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -298,10 +366,74 @@ export default function DevisDetailPage() {
               />
             </div>
 
+            {/* Section frais de chantier (DEV-25) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Frais de chantier</h2>
+              <FraisChantierPanel
+                devisId={devisId}
+                isEditable={isEditable ?? false}
+                lots={devis.lots}
+              />
+            </div>
+
             {/* Section marges */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-sm font-semibold text-gray-700 mb-4">Recapitulatif marges</h2>
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Recapitulatif financier et marges</h2>
               <MargesPanel devis={devis} />
+            </div>
+
+            {/* Section options de presentation (DEV-11) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Mise en page du devis</h2>
+              <OptionsPresentationPanel devisId={devisId} />
+            </div>
+
+            {/* Section attestation TVA (DEV-23) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Attestation TVA</h2>
+              <AttestationTVAPanel devisId={devisId} devis={devis} />
+            </div>
+
+            {/* Section signature electronique (DEV-14) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Signature electronique</h2>
+              <SignaturePanel
+                devisId={devisId}
+                statut={devis.statut}
+                onSignatureChange={loadDevis}
+              />
+            </div>
+
+            {/* Section relances automatiques (DEV-24) */}
+            {(devis.statut === 'envoye' || devis.statut === 'vu' || devis.statut === 'en_negociation') && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-sm font-semibold text-gray-700 mb-4">Relances automatiques</h2>
+                <RelancesPanel
+                  devisId={devisId}
+                  devisStatut={devis.statut}
+                />
+              </div>
+            )}
+
+            {/* Section conversion en chantier (DEV-16) */}
+            {(devis.statut === 'accepte') && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-sm font-semibold text-gray-700 mb-4">Conversion en chantier</h2>
+                <ConversionChantierPanel
+                  devisId={devisId}
+                  devisStatut={devis.statut}
+                />
+              </div>
+            )}
+
+            {/* Section versions et variantes (DEV-08) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <VersionsPanel
+                devisId={devisId}
+                devisParentId={devis.devis_parent_id}
+                isEditable={isEditable}
+                onVersionCreated={loadDevis}
+              />
             </div>
 
             {/* Section journal (collapsible) */}

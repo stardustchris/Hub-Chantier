@@ -1,6 +1,7 @@
 """Interface du repository pour les devis.
 
 DEV-03: Creation devis structure - CRUD des devis.
+DEV-08: Variantes et revisions - Gestion des versions.
 DEV-15: Suivi statut devis - Filtrage par statut.
 DEV-17: Dashboard devis - Agregations pour KPI.
 DEV-19: Recherche et filtres - Filtres avances.
@@ -144,6 +145,33 @@ class DevisRepository(ABC):
 
         Returns:
             Liste des devis a marquer comme expires.
+        """
+        pass
+
+    @abstractmethod
+    def find_versions(self, devis_id: int) -> List[Devis]:
+        """Liste toutes les versions/variantes d'un devis (DEV-08).
+
+        Retourne l'original et toutes ses revisions/variantes.
+        Si le devis_id est un enfant, remonte au parent pour lister la famille.
+
+        Args:
+            devis_id: L'ID du devis (original ou enfant).
+
+        Returns:
+            Liste des devis de la meme famille, triee par numero_version.
+        """
+        pass
+
+    @abstractmethod
+    def get_next_version_number(self, devis_parent_id: int) -> int:
+        """Retourne le prochain numero de version pour un devis parent (DEV-08).
+
+        Args:
+            devis_parent_id: L'ID du devis parent (original).
+
+        Returns:
+            Le prochain numero de version disponible.
         """
         pass
 

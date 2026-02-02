@@ -15,6 +15,25 @@ import type {
   LigneDevisUpdate,
   JournalDevisEntry,
   DashboardDevis,
+  VersionDevis,
+  ComparatifDevis,
+  LabelVariante,
+  EligibiliteTVA,
+  AttestationTVA,
+  AttestationTVACreate,
+  FraisChantierDevis,
+  FraisChantierCreate,
+  FraisChantierUpdate,
+  RepartitionFraisLot,
+  OptionsPresentation,
+  TemplatePresentation,
+  SignatureDevis,
+  SignatureCreate,
+  VerificationSignature,
+  ConversionInfo,
+  ConversionDevis,
+  RelancesHistorique,
+  ConfigRelances,
 } from '../types'
 
 // Backend router: APIRouter(prefix="/devis") -> mounted at /api/devis
@@ -198,6 +217,178 @@ export const devisService = {
       `${BASE}/search`,
       { params }
     )
+    return response.data
+  },
+
+  // ===== Versions et variantes (DEV-08) =====
+  async creerRevision(devisId: number, commentaire?: string): Promise<Devis> {
+    const response = await api.post<Devis>(
+      `${BASE}/${devisId}/revisions`,
+      commentaire ? { commentaire } : {}
+    )
+    return response.data
+  },
+
+  async creerVariante(devisId: number, labelVariante: LabelVariante, commentaire?: string): Promise<Devis> {
+    const body: { label_variante: LabelVariante; commentaire?: string } = {
+      label_variante: labelVariante,
+    }
+    if (commentaire) {
+      body.commentaire = commentaire
+    }
+    const response = await api.post<Devis>(`${BASE}/${devisId}/variantes`, body)
+    return response.data
+  },
+
+  async listerVersions(devisId: number): Promise<VersionDevis[]> {
+    const response = await api.get<VersionDevis[]>(`${BASE}/${devisId}/versions`)
+    return response.data
+  },
+
+  async genererComparatif(sourceId: number, cibleId: number): Promise<ComparatifDevis> {
+    const response = await api.post<ComparatifDevis>(
+      `${BASE}/${sourceId}/comparer/${cibleId}`
+    )
+    return response.data
+  },
+
+  async getComparatif(comparatifId: number): Promise<ComparatifDevis> {
+    const response = await api.get<ComparatifDevis>(
+      `${BASE}/comparatifs/${comparatifId}`
+    )
+    return response.data
+  },
+
+  async figerVersion(devisId: number): Promise<Devis> {
+    const response = await api.post<Devis>(`${BASE}/${devisId}/figer`)
+    return response.data
+  },
+
+  // ===== Attestation TVA (DEV-23) =====
+  async verifierEligibiliteTVA(devisId: number): Promise<EligibiliteTVA> {
+    const response = await api.get<EligibiliteTVA>(`${BASE}/${devisId}/eligibilite-tva`)
+    return response.data
+  },
+
+  async genererAttestationTVA(devisId: number, data: AttestationTVACreate): Promise<AttestationTVA> {
+    const response = await api.post<AttestationTVA>(`${BASE}/${devisId}/attestation-tva`, data)
+    return response.data
+  },
+
+  async getAttestationTVA(devisId: number): Promise<AttestationTVA> {
+    const response = await api.get<AttestationTVA>(`${BASE}/${devisId}/attestation-tva`)
+    return response.data
+  },
+
+  // ===== Frais de chantier (DEV-25) =====
+  async listFraisChantier(devisId: number): Promise<FraisChantierDevis[]> {
+    const response = await api.get<FraisChantierDevis[]>(`${BASE}/${devisId}/frais-chantier`)
+    return response.data
+  },
+
+  async createFraisChantier(devisId: number, data: FraisChantierCreate): Promise<FraisChantierDevis> {
+    const response = await api.post<FraisChantierDevis>(`${BASE}/${devisId}/frais-chantier`, data)
+    return response.data
+  },
+
+  async updateFraisChantier(fraisId: number, data: FraisChantierUpdate): Promise<FraisChantierDevis> {
+    const response = await api.put<FraisChantierDevis>(`${BASE}/frais-chantier/${fraisId}`, data)
+    return response.data
+  },
+
+  async deleteFraisChantier(fraisId: number): Promise<void> {
+    await api.delete(`${BASE}/frais-chantier/${fraisId}`)
+  },
+
+  async getRepartitionFrais(devisId: number): Promise<RepartitionFraisLot[]> {
+    const response = await api.get<RepartitionFraisLot[]>(`${BASE}/${devisId}/frais-chantier/repartition`)
+    return response.data
+  },
+
+  // ===== Options de presentation (DEV-11) =====
+  async getTemplatesPresentation(): Promise<TemplatePresentation[]> {
+    const response = await api.get<TemplatePresentation[]>(`${BASE}/templates-presentation`)
+    return response.data
+  },
+
+  async getOptionsPresentation(devisId: number): Promise<OptionsPresentation> {
+    const response = await api.get<OptionsPresentation>(`${BASE}/${devisId}/options-presentation`)
+    return response.data
+  },
+
+  async updateOptionsPresentation(
+    devisId: number,
+    data: { template_nom?: string } & Partial<OptionsPresentation>
+  ): Promise<OptionsPresentation> {
+    const response = await api.put<OptionsPresentation>(`${BASE}/${devisId}/options-presentation`, data)
+    return response.data
+  },
+
+  // ===== Signature electronique (DEV-14) =====
+  async signerDevis(devisId: number, data: SignatureCreate): Promise<SignatureDevis> {
+    const response = await api.post<SignatureDevis>(`${BASE}/${devisId}/signature`, data)
+    return response.data
+  },
+
+  async getSignature(devisId: number): Promise<SignatureDevis | null> {
+    try {
+      const response = await api.get<SignatureDevis>(`${BASE}/${devisId}/signature`)
+      return response.data
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } }
+      if (axiosErr.response?.status === 404) {
+        return null
+      }
+      throw err
+    }
+  },
+
+  async revoquerSignature(devisId: number, motif: string): Promise<void> {
+    await api.post(`${BASE}/${devisId}/signature/revoquer`, { motif })
+  },
+
+  async verifierSignature(devisId: number): Promise<VerificationSignature> {
+    const response = await api.get<VerificationSignature>(`${BASE}/${devisId}/signature/verifier`)
+    return response.data
+  },
+
+  // ===== Conversion en chantier (DEV-16) =====
+  async getConversionInfo(devisId: number): Promise<ConversionInfo> {
+    const response = await api.get<ConversionInfo>(`${BASE}/${devisId}/conversion-info`)
+    return response.data
+  },
+
+  async convertirEnChantier(devisId: number): Promise<ConversionDevis> {
+    const response = await api.post<ConversionDevis>(`${BASE}/${devisId}/convertir`)
+    return response.data
+  },
+
+  // ===== Relances automatiques (DEV-24) =====
+  async getRelances(devisId: number): Promise<RelancesHistorique> {
+    const response = await api.get<RelancesHistorique>(`${BASE}/${devisId}/relances`)
+    return response.data
+  },
+
+  async planifierRelances(devisId: number, config?: Partial<ConfigRelances>): Promise<{ relances_planifiees: RelancesHistorique['relances']; nb_planifiees: number }> {
+    const response = await api.post<{ relances_planifiees: RelancesHistorique['relances']; nb_planifiees: number }>(
+      `${BASE}/${devisId}/relances/planifier`,
+      config ?? {}
+    )
+    return response.data
+  },
+
+  async annulerRelances(devisId: number): Promise<{ nb_annulees: number }> {
+    const response = await api.post<{ nb_annulees: number }>(`${BASE}/${devisId}/relances/annuler`)
+    return response.data
+  },
+
+  async getConfigRelances(devisId: number): Promise<ConfigRelances> {
+    const response = await api.get<ConfigRelances>(`${BASE}/${devisId}/config-relances`)
+    return response.data
+  },
+
+  async updateConfigRelances(devisId: number, config: Partial<ConfigRelances>): Promise<ConfigRelances> {
+    const response = await api.put<ConfigRelances>(`${BASE}/${devisId}/config-relances`, config)
     return response.data
   },
 }

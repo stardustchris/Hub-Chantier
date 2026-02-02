@@ -1,6 +1,7 @@
 """Use Cases pour le calcul des totaux et marges.
 
 DEV-06: Gestion marges et coefficients.
+DEV-25: Integration des frais de chantier dans les totaux.
 Regle de priorite: ligne > lot > type debours > global.
 """
 
@@ -19,6 +20,7 @@ from ...domain.repositories.lot_devis_repository import LotDevisRepository
 from ...domain.repositories.ligne_devis_repository import LigneDevisRepository
 from ...domain.repositories.debourse_detail_repository import DebourseDetailRepository
 from ...domain.repositories.journal_devis_repository import JournalDevisRepository
+from ...domain.repositories.frais_chantier_repository import FraisChantierRepository
 
 
 class CalculerTotauxDevisUseCase:
@@ -41,12 +43,14 @@ class CalculerTotauxDevisUseCase:
         ligne_repository: LigneDevisRepository,
         debourse_repository: DebourseDetailRepository,
         journal_repository: JournalDevisRepository,
+        frais_chantier_repository: Optional["FraisChantierRepository"] = None,
     ):
         self._devis_repository = devis_repository
         self._lot_repository = lot_repository
         self._ligne_repository = ligne_repository
         self._debourse_repository = debourse_repository
         self._journal_repository = journal_repository
+        self._frais_chantier_repository = frais_chantier_repository
 
     def execute(self, devis_id: int, updated_by: int) -> dict:
         """Recalcule tous les totaux du devis.
@@ -134,11 +138,24 @@ class CalculerTotauxDevisUseCase:
             total_ht += lot_total_ht
             total_ttc += lot_total_ttc
 
-        # Mettre a jour les totaux du devis
-        devis.montant_total_ht = total_ht
-        devis.montant_total_ttc = total_ttc
+        # DEV-25: Ajouter les frais de chantier aux totaux
+        total_frais_ht = Decimal("0")
+        total_frais_ttc = Decimal("0")
+        if self._frais_chantier_repository:
+            frais_list = self._frais_chantier_repository.find_by_devis(devis_id)
+            for frais in frais_list:
+                total_frais_ht += frais.montant_ht
+                total_frais_ttc += frais.montant_ttc
+
+        # Mettre a jour les totaux du devis (lots + frais de chantier)
+        devis.montant_total_ht = total_ht + total_frais_ht
+        devis.montant_total_ttc = total_ttc + total_frais_ttc
         devis.updated_at = datetime.utcnow()
         self._devis_repository.save(devis)
+
+        # DEV-22: Calcul retenue de garantie
+        montant_retenue_garantie = devis.montant_retenue_garantie
+        montant_net_a_payer = devis.montant_net_a_payer
 
         # Journal
         self._journal_repository.save(
@@ -146,7 +163,13 @@ class CalculerTotauxDevisUseCase:
                 devis_id=devis_id,
                 action="recalcul_totaux",
                 details_json={
-                    "message": f"Recalcul des totaux - Total HT: {total_ht}, Total TTC: {total_ttc}",
+                    "message": (
+                        f"Recalcul des totaux - Total HT: {devis.montant_total_ht}, "
+                        f"Total TTC: {devis.montant_total_ttc}, "
+                        f"Frais chantier HT: {total_frais_ht}, "
+                        f"Retenue garantie: {montant_retenue_garantie}, "
+                        f"Net a payer: {montant_net_a_payer}"
+                    ),
                 },
                 auteur_id=updated_by,
                 created_at=datetime.utcnow(),
@@ -154,8 +177,15 @@ class CalculerTotauxDevisUseCase:
         )
 
         return {
-            "montant_total_ht": str(total_ht),
-            "montant_total_ttc": str(total_ttc),
+            "montant_total_ht": str(devis.montant_total_ht),
+            "montant_total_ttc": str(devis.montant_total_ttc),
+            "total_lots_ht": str(total_ht),
+            "total_lots_ttc": str(total_ttc),
+            "total_frais_chantier_ht": str(total_frais_ht),
+            "total_frais_chantier_ttc": str(total_frais_ttc),
+            "retenue_garantie_pct": str(devis.retenue_garantie_pct),
+            "montant_retenue_garantie": str(montant_retenue_garantie),
+            "montant_net_a_payer": str(montant_net_a_payer),
         }
 
     def _resolve_marge(

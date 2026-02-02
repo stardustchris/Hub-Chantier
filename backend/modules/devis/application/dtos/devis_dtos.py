@@ -1,7 +1,9 @@
 """DTOs pour les devis.
 
 DEV-03: Creation devis structure.
+DEV-08: Variantes et revisions.
 DEV-15: Suivi statut devis.
+DEV-22: Retenue de garantie.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ from decimal import Decimal
 from typing import Optional, List, TYPE_CHECKING
 
 from .lot_dtos import LotDevisDTO
+from ...domain.value_objects.retenue_garantie import RetenueGarantie, RetenueGarantieInvalideError
 
 if TYPE_CHECKING:
     from ...domain.entities.devis import Devis
@@ -41,6 +44,14 @@ class DevisCreateDTO:
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
+    def __post_init__(self) -> None:
+        """Valide les donnees a la creation."""
+        # DEV-22: Validation stricte retenue de garantie
+        try:
+            RetenueGarantie(self.retenue_garantie_pct)
+        except RetenueGarantieInvalideError as e:
+            raise ValueError(str(e))
+
 
 @dataclass
 class DevisUpdateDTO:
@@ -66,6 +77,15 @@ class DevisUpdateDTO:
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
+    def __post_init__(self) -> None:
+        """Valide les donnees a la mise a jour."""
+        # DEV-22: Validation stricte retenue de garantie (si fourni)
+        if self.retenue_garantie_pct is not None:
+            try:
+                RetenueGarantie(self.retenue_garantie_pct)
+            except RetenueGarantieInvalideError as e:
+                raise ValueError(str(e))
+
 
 @dataclass
 class DevisDTO:
@@ -78,10 +98,20 @@ class DevisDTO:
     statut: str
     montant_total_ht: str
     montant_total_ttc: str
+    # DEV-22: Montants retenue de garantie
+    retenue_garantie_pct: str
+    montant_retenue_garantie: str
+    montant_net_a_payer: str
     date_creation: Optional[str]
     date_validite: Optional[str]
     commercial_id: Optional[int]
     chantier_ref: Optional[str]
+    # DEV-08: Versioning
+    type_version: str = "originale"
+    numero_version: int = 1
+    version_figee: bool = False
+    devis_parent_id: Optional[int] = None
+    label_variante: Optional[str] = None
 
     @classmethod
     def from_entity(cls, devis: Devis) -> DevisDTO:
@@ -94,10 +124,18 @@ class DevisDTO:
             statut=devis.statut.value,
             montant_total_ht=str(devis.montant_total_ht),
             montant_total_ttc=str(devis.montant_total_ttc),
+            retenue_garantie_pct=str(devis.retenue_garantie_pct),
+            montant_retenue_garantie=str(devis.montant_retenue_garantie),
+            montant_net_a_payer=str(devis.montant_net_a_payer),
             date_creation=devis.date_creation.isoformat() if devis.date_creation else None,
             date_validite=devis.date_validite.isoformat() if devis.date_validite else None,
             commercial_id=devis.commercial_id,
             chantier_ref=devis.chantier_ref,
+            type_version=devis.type_version.value,
+            numero_version=devis.numero_version,
+            version_figee=devis.version_figee,
+            devis_parent_id=devis.devis_parent_id,
+            label_variante=devis.label_variante,
         )
 
     def to_dict(self) -> dict:
@@ -110,10 +148,18 @@ class DevisDTO:
             "statut": self.statut,
             "montant_total_ht": self.montant_total_ht,
             "montant_total_ttc": self.montant_total_ttc,
+            "retenue_garantie_pct": self.retenue_garantie_pct,
+            "montant_retenue_garantie": self.montant_retenue_garantie,
+            "montant_net_a_payer": self.montant_net_a_payer,
             "date_creation": self.date_creation,
             "date_validite": self.date_validite,
             "commercial_id": self.commercial_id,
             "chantier_ref": self.chantier_ref,
+            "type_version": self.type_version,
+            "numero_version": self.numero_version,
+            "version_figee": self.version_figee,
+            "devis_parent_id": self.devis_parent_id,
+            "label_variante": self.label_variante,
         }
 
 
@@ -139,6 +185,8 @@ class DevisDetailDTO:
     taux_marge_deplacement: Optional[str]
     coefficient_frais_generaux: str
     retenue_garantie_pct: str
+    montant_retenue_garantie: str
+    montant_net_a_payer: str
     taux_tva_defaut: str
     date_creation: Optional[str]
     date_validite: Optional[str]
@@ -150,6 +198,14 @@ class DevisDetailDTO:
     notes: Optional[str]
     conditions_generales: Optional[str]
     lots: List[LotDevisDTO]
+    # DEV-08: Versioning
+    type_version: str = "originale"
+    numero_version: int = 1
+    version_figee: bool = False
+    version_figee_at: Optional[str] = None
+    devis_parent_id: Optional[int] = None
+    label_variante: Optional[str] = None
+    version_commentaire: Optional[str] = None
 
     @classmethod
     def from_entity(
@@ -177,6 +233,8 @@ class DevisDetailDTO:
             taux_marge_deplacement=str(devis.taux_marge_deplacement) if devis.taux_marge_deplacement is not None else None,
             coefficient_frais_generaux=str(devis.coefficient_frais_generaux),
             retenue_garantie_pct=str(devis.retenue_garantie_pct),
+            montant_retenue_garantie=str(devis.montant_retenue_garantie),
+            montant_net_a_payer=str(devis.montant_net_a_payer),
             taux_tva_defaut=str(devis.taux_tva_defaut),
             date_creation=devis.date_creation.isoformat() if devis.date_creation else None,
             date_validite=devis.date_validite.isoformat() if devis.date_validite else None,
@@ -188,6 +246,14 @@ class DevisDetailDTO:
             notes=devis.notes,
             conditions_generales=devis.conditions_generales,
             lots=lots or [],
+            # DEV-08: Versioning
+            type_version=devis.type_version.value,
+            numero_version=devis.numero_version,
+            version_figee=devis.version_figee,
+            version_figee_at=devis.version_figee_at.isoformat() if devis.version_figee_at else None,
+            devis_parent_id=devis.devis_parent_id,
+            label_variante=devis.label_variante,
+            version_commentaire=devis.version_commentaire,
         )
 
     def to_dict(self) -> dict:
@@ -211,6 +277,8 @@ class DevisDetailDTO:
             "taux_marge_deplacement": self.taux_marge_deplacement,
             "coefficient_frais_generaux": self.coefficient_frais_generaux,
             "retenue_garantie_pct": self.retenue_garantie_pct,
+            "montant_retenue_garantie": self.montant_retenue_garantie,
+            "montant_net_a_payer": self.montant_net_a_payer,
             "taux_tva_defaut": self.taux_tva_defaut,
             "date_creation": self.date_creation,
             "date_validite": self.date_validite,
@@ -222,6 +290,13 @@ class DevisDetailDTO:
             "notes": self.notes,
             "conditions_generales": self.conditions_generales,
             "lots": [l.to_dict() for l in self.lots],
+            "type_version": self.type_version,
+            "numero_version": self.numero_version,
+            "version_figee": self.version_figee,
+            "version_figee_at": self.version_figee_at,
+            "devis_parent_id": self.devis_parent_id,
+            "label_variante": self.label_variante,
+            "version_commentaire": self.version_commentaire,
         }
 
 

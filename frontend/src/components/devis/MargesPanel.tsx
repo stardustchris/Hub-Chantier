@@ -1,6 +1,6 @@
 import type { DevisDetail, TypeDebourse } from '../../types'
 import { TYPE_DEBOURSE_LABELS } from '../../types'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Shield } from 'lucide-react'
 
 const formatEUR = (value: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
@@ -54,6 +54,19 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
   const margeGlobalePct = Number(devis.taux_marge_global)
   const isPositive = margeGlobalePct >= 0
 
+  // Calcul recap financier (DEV-22)
+  const totalHT = Number(devis.montant_total_ht)
+  const tvaRate = Number(devis.taux_tva_defaut) / 100
+  const montantTVA = totalHT * tvaRate
+  const totalTTC = Number(devis.montant_total_ttc)
+  const retenueGarantiePct = Number(devis.retenue_garantie_pct ?? 0)
+  const montantRetenue = devis.montant_retenue_garantie != null
+    ? Number(devis.montant_retenue_garantie)
+    : totalTTC * (retenueGarantiePct / 100)
+  const netAPayer = devis.montant_net_a_payer != null
+    ? Number(devis.montant_net_a_payer)
+    : totalTTC - montantRetenue
+
   return (
     <div className="space-y-6">
       {/* Marge globale */}
@@ -81,6 +94,42 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
           <div>
             <span className="text-gray-500">TTC</span>
             <p className="font-semibold">{formatEUR(Number(devis.montant_total_ttc))}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recapitulatif financier (DEV-22) */}
+      <div className="rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
+          <h4 className="text-sm font-semibold text-gray-700">Recapitulatif financier</h4>
+        </div>
+        <div className="divide-y divide-gray-100">
+          <div className="flex items-center justify-between px-5 py-3">
+            <span className="text-sm text-gray-600">Total HT</span>
+            <span className="text-sm font-medium text-gray-900">{formatEUR(totalHT)}</span>
+          </div>
+          <div className="flex items-center justify-between px-5 py-3">
+            <span className="text-sm text-gray-600">TVA ({devis.taux_tva_defaut}%)</span>
+            <span className="text-sm font-medium text-gray-900">{formatEUR(montantTVA)}</span>
+          </div>
+          <div className="flex items-center justify-between px-5 py-3 bg-gray-50">
+            <span className="text-sm font-semibold text-gray-700">Total TTC</span>
+            <span className="text-sm font-bold text-gray-900">{formatEUR(totalTTC)}</span>
+          </div>
+          {retenueGarantiePct > 0 && (
+            <div className="flex items-center justify-between px-5 py-3">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-amber-500" />
+                <span className="text-sm text-amber-700">
+                  Retenue de garantie ({retenueGarantiePct}%)
+                </span>
+              </div>
+              <span className="text-sm font-medium text-amber-700">- {formatEUR(montantRetenue)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between px-5 py-4 bg-blue-50">
+            <span className="text-base font-bold text-blue-800">Net a payer</span>
+            <span className="text-lg font-bold text-blue-800">{formatEUR(netAPayer)}</span>
           </div>
         </div>
       </div>

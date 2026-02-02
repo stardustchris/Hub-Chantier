@@ -19,24 +19,24 @@ Ce module se positionne **en amont** du cycle de vie actuel de Hub Chantier, cou
 | DEV-05  | Détail déboursés avancés                    | Breakdown par ligne : main-d'œuvre (heures × taux), matériaux, sous-traitance, matériel, frais avec calcul automatique prix de revient | 🔮     |
 | DEV-06  | Gestion marges et coefficients              | Application de marges globales/par lot/par ligne, coefficients déboursés secs et prix de vente, avec règle de priorité (ligne > lot > global) | 🔮     |
 | DEV-07  | Insertion multimédia                        | Ajout photos, fiches techniques ou documents par ligne/lot pour enrichissement visuel du devis client | 🔮     |
-| DEV-08  | Variantes et révisions                      | Création de versions alternatives (économique/standard/premium) ou révisions avec comparatif détaillé automatique (écarts quantités/montants/marges) | 🔮     |
+| DEV-08  | Variantes et révisions                      | Création de versions alternatives (économique/standard/premium) ou révisions avec comparatif détaillé automatique (écarts quantités/montants/marges) | ✅     |
 | DEV-09  | Gestion consultations sous-traitants        | Création packages par lot, envoi email automatisé avec plans/annexes, tracking réponses et dates limites | 🔮     |
 | DEV-10  | Réception et comparaison offres             | Import offres reçues, tableau comparatif normalisé (prix, délais, conditions) avec sélection gagnante et mise à jour automatique déboursé lot | 🔮     |
-| DEV-11  | Personnalisation présentation               | Modèles de mise en page configurables (avec/sans détail déboursés, avec/sans multimédia, avec/sans composants) | 🔮     |
+| DEV-11  | Personnalisation présentation               | Modèles de mise en page configurables (avec/sans détail déboursés, avec/sans multimédia, avec/sans composants) | ✅     |
 | DEV-12  | Génération PDF devis                        | Export PDF professionnel avec entête personnalisé, conditions générales, annexes et multimédia intégré | 🔮     |
 | DEV-13  | Envoi par email intégré                     | Envoi direct depuis l'app avec tracking ouverture/clics et lien signature sécurisé | 🔮     |
-| DEV-14  | Signature électronique client               | Intégration signature simple (dessin tactile ou upload scan) avec validation légale horodatée et auditée | 🔮     |
+| DEV-14  | Signature électronique client               | Intégration signature simple (dessin tactile ou upload scan) avec validation légale horodatée et auditée | ✅     |
 | DEV-15  | Suivi statut devis                          | Workflow complet : Brouillon / En validation / Envoyé / Vu / En négociation / Accepté / Refusé / Perdu / Expiré | 🔮     |
-| DEV-16  | Conversion en chantier                      | Transformation automatique devis accepté → création chantier avec budget, lots, déboursés et planning initial | 🔮     |
+| DEV-16  | Conversion en chantier                      | Transformation automatique devis accepté → création chantier avec budget, lots, déboursés et planning initial | ✅     |
 | DEV-17  | Tableau de bord devis                       | Vue liste/kanban des devis en cours par statut, client, montant, avec KPI pipeline commercial et alertes délais | 🔮     |
 | DEV-18  | Historique modifications                    | Journal complet des changements avec auteur, timestamp, type modification et valeurs avant/après | 🔮     |
 | DEV-19  | Recherche et filtres                        | Filtres avancés par client, date, montant, statut, commercial assigné, lot, marge | 🔮     |
 | DEV-20  | Accès hors-ligne                            | Consultation/modification devis brouillons et métrés simples, synchronisation à la reconnexion avec gestion conflits | 🔮     |
 | DEV-21  | Import DPGF automatique                     | Import fichier DPGF (Décomposition Prix Global Forfaitaire) Excel/CSV/PDF des appels d'offres avec mapping colonnes et pré-remplissage lots/lignes | 🔮     |
-| DEV-22  | Retenue de garantie                         | Paramétrage retenue de garantie par devis (0%, 5%, 10%) avec affichage dans PDF client et report automatique lors conversion chantier | 🔮     |
-| DEV-23  | Génération attestation TVA                  | Création automatique attestation TVA réglementaire selon taux appliqué (5.5% rénovation énergétique, 10% rénovation, 20% standard) | 🔮     |
-| DEV-24  | Relances automatiques                       | Notifications push/email automatiques si délai de réponse dépassé (configurable : 7j, 15j, 30j) avec historique relances | 🔮     |
-| DEV-25  | Frais de chantier                           | Ajout compte prorata, frais généraux, installations de chantier avec répartition globale ou par lot | 🔮     |
+| DEV-22  | Retenue de garantie                         | Paramétrage retenue de garantie par devis (0%, 5%, 10%) avec affichage dans PDF client et report automatique lors conversion chantier | ✅     |
+| DEV-23  | Génération attestation TVA                  | Création automatique attestation TVA réglementaire selon taux appliqué (5.5% rénovation énergétique, 10% rénovation, 20% standard) | ✅     |
+| DEV-24  | Relances automatiques                       | Notifications push/email automatiques si délai de réponse dépassé (configurable : 7j, 15j, 30j) avec historique relances | ✅     |
+| DEV-25  | Frais de chantier                           | Ajout compte prorata, frais généraux, installations de chantier avec répartition globale ou par lot | ✅     |
 
 ### 20.3 Déboursé sec et pilotage des marges
 
