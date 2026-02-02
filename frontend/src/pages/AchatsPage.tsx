@@ -1,16 +1,21 @@
 /**
  * AchatsPage - Gestion des achats et bons de commande
  * CDC Module 17 - FIN-05
+ *
+ * Connecté à l'API GET /api/financier/achats.
  */
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
+import AchatModal from '../components/financier/AchatModal'
+import { financierService } from '../services/financier'
+import { chantiersService } from '../services/chantiers'
+import { logger } from '../services/logger'
+import type { Achat, Chantier, Fournisseur, LotBudgetaire, StatutAchat } from '../types'
 import {
   ShoppingCart,
   Plus,
   Search,
-  Filter,
-  FileText,
   CheckCircle,
   Clock,
   XCircle,
@@ -18,122 +23,110 @@ import {
   Building2,
   Calendar,
   Euro,
+  FileText,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react'
 
-interface BonCommande {
-  id: string
-  numero: string
-  chantier_nom: string
-  fournisseur: string
-  date_emission: string
-  date_livraison_prevue?: string
-  montant_ht: number
-  montant_ttc: number
-  statut: 'en_attente' | 'validee' | 'livree' | 'annulee'
-  articles_count: number
+const STATUT_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
+  en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  validee: { label: 'Validée', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+  livree: { label: 'Livrée', color: 'bg-green-100 text-green-800', icon: Package },
+  annulee: { label: 'Annulée', color: 'bg-red-100 text-red-800', icon: XCircle },
+  facturee: { label: 'Facturée', color: 'bg-indigo-100 text-indigo-800', icon: FileText },
+  refusee: { label: 'Refusée', color: 'bg-red-100 text-red-800', icon: XCircle },
+}
+
+function formatMontant(montant: number) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant)
 }
 
 export default function AchatsPage() {
-  const [bonCommandes] = useState<BonCommande[]>([
-    {
-      id: '1',
-      numero: 'BC-2026-001',
-      chantier_nom: 'Villa Moderne Duplex',
-      fournisseur: 'Béton Express',
-      date_emission: '2026-01-20',
-      date_livraison_prevue: '2026-01-27',
-      montant_ht: 12500,
-      montant_ttc: 15000,
-      statut: 'validee',
-      articles_count: 3,
-    },
-    {
-      id: '2',
-      numero: 'BC-2026-002',
-      chantier_nom: 'Résidence Les Jardins',
-      fournisseur: 'Acier Pro',
-      date_emission: '2026-01-22',
-      date_livraison_prevue: '2026-02-05',
-      montant_ht: 28000,
-      montant_ttc: 33600,
-      statut: 'en_attente',
-      articles_count: 5,
-    },
-    {
-      id: '3',
-      numero: 'BC-2026-003',
-      chantier_nom: 'École Jean Jaurès',
-      fournisseur: 'Matériaux du Bâtiment',
-      date_emission: '2026-01-15',
-      date_livraison_prevue: '2026-01-22',
-      montant_ht: 8500,
-      montant_ttc: 10200,
-      statut: 'livree',
-      articles_count: 8,
-    },
-  ])
-
+  const [achats, setAchats] = useState<Achat[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [statutFilter, setStatutFilter] = useState<string>('tous')
 
-  const getStatutConfig = (statut: BonCommande['statut']) => {
-    switch (statut) {
-      case 'en_attente':
-        return {
-          label: 'En attente',
-          color: 'bg-yellow-100 text-yellow-800',
-          icon: Clock,
-        }
-      case 'validee':
-        return {
-          label: 'Validée',
-          color: 'bg-blue-100 text-blue-800',
-          icon: CheckCircle,
-        }
-      case 'livree':
-        return {
-          label: 'Livrée',
-          color: 'bg-green-100 text-green-800',
-          icon: Package,
-        }
-      case 'annulee':
-        return {
-          label: 'Annulée',
-          color: 'bg-red-100 text-red-800',
-          icon: XCircle,
-        }
-      default:
-        return {
-          label: statut,
-          color: 'bg-gray-100 text-gray-800',
-          icon: FileText,
-        }
+  // Modal state
+  const [showModal, setShowModal] = useState(false)
+  const [selectedChantierId, setSelectedChantierId] = useState<number | null>(null)
+  const [chantiers, setChantiers] = useState<Chantier[]>([])
+  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([])
+  const [lots, setLots] = useState<LotBudgetaire[]>([])
+  const [showChantierPicker, setShowChantierPicker] = useState(false)
+
+  const loadAchats = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const params: { statut?: string } = {}
+      if (statutFilter !== 'tous') params.statut = statutFilter
+      const data = await financierService.listAchats(params)
+      setAchats(data.items)
+    } catch (err) {
+      logger.error('Erreur chargement achats', err, { context: 'AchatsPage' })
+      setError('Erreur lors du chargement des achats')
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [statutFilter])
 
-  const formatMontant = (montant: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(montant)
-  }
+  const loadChantiers = useCallback(async () => {
+    try {
+      const data = await chantiersService.list({ size: 100 })
+      setChantiers(data.items.filter((c) => c.statut !== 'ferme'))
+    } catch (err) {
+      logger.error('Erreur chargement chantiers', err, { context: 'AchatsPage' })
+    }
+  }, [])
 
-  const filteredBonCommandes = bonCommandes.filter((bc) => {
+  useEffect(() => {
+    loadAchats()
+    loadChantiers()
+  }, [loadAchats, loadChantiers])
+
+  // Charger fournisseurs + lots quand un chantier est sélectionné
+  const handleOpenModal = useCallback(async (chantierId: number) => {
+    try {
+      const [fournData, budgetData] = await Promise.all([
+        financierService.listFournisseurs(),
+        financierService.getBudgetByChantier(chantierId).catch(() => null),
+      ])
+      setFournisseurs(fournData.items || fournData)
+      setLots(budgetData?.lots || [])
+      setSelectedChantierId(chantierId)
+      setShowChantierPicker(false)
+      setShowModal(true)
+    } catch (err) {
+      logger.error('Erreur chargement données modal', err, { context: 'AchatsPage' })
+    }
+  }, [])
+
+  const handleNewClick = useCallback(() => {
+    if (chantiers.length === 1) {
+      handleOpenModal(Number(chantiers[0].id))
+    } else {
+      setShowChantierPicker(true)
+    }
+  }, [chantiers, handleOpenModal])
+
+  const filteredAchats = achats.filter((a) => {
+    const q = searchQuery.toLowerCase()
     const matchSearch =
-      bc.numero.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bc.chantier_nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bc.fournisseur.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchStatut = statutFilter === 'tous' || bc.statut === statutFilter
-
-    return matchSearch && matchStatut
+      !q ||
+      (a.libelle || '').toLowerCase().includes(q) ||
+      (a.chantier_nom || '').toLowerCase().includes(q) ||
+      (a.fournisseur_nom || '').toLowerCase().includes(q) ||
+      (a.numero_facture || '').toLowerCase().includes(q)
+    return matchSearch
   })
 
   // Statistiques
-  const totalHT = bonCommandes.reduce((sum, bc) => sum + bc.montant_ht, 0)
-  const totalTTC = bonCommandes.reduce((sum, bc) => sum + bc.montant_ttc, 0)
-  const enAttente = bonCommandes.filter((bc) => bc.statut === 'en_attente').length
-  const validees = bonCommandes.filter((bc) => bc.statut === 'validee').length
+  const totalHT = achats.reduce((sum, a) => sum + (a.total_ht || 0), 0)
+  const totalTTC = achats.reduce((sum, a) => sum + (a.total_ttc || 0), 0)
+  const enAttente = achats.filter((a) => a.statut === 'en_attente').length
+  const validees = achats.filter((a) => a.statut === 'validee').length
 
   return (
     <Layout title="Achats & Bons de commande">
@@ -144,9 +137,7 @@ export default function AchatsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total HT</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatMontant(totalHT)}
-                </p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{formatMontant(totalHT)}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Euro className="w-6 h-6 text-blue-600" />
@@ -158,9 +149,7 @@ export default function AchatsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total TTC</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatMontant(totalTTC)}
-                </p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{formatMontant(totalTTC)}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <ShoppingCart className="w-6 h-6 text-purple-600" />
@@ -201,7 +190,7 @@ export default function AchatsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Rechercher un bon de commande..."
+                  placeholder="Rechercher un achat..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="input pl-10 w-full"
@@ -216,104 +205,169 @@ export default function AchatsPage() {
                 <option value="en_attente">En attente</option>
                 <option value="validee">Validée</option>
                 <option value="livree">Livrée</option>
+                <option value="facturee">Facturée</option>
                 <option value="annulee">Annulée</option>
               </select>
             </div>
-            <button className="btn btn-primary flex items-center gap-2 w-full md:w-auto">
+            <button
+              onClick={handleNewClick}
+              className="btn btn-primary flex items-center gap-2 w-full md:w-auto"
+            >
               <Plus className="w-4 h-4" />
               Nouveau bon de commande
             </button>
           </div>
         </div>
 
-        {/* Liste des bons de commande */}
-        <div className="space-y-4">
-          {filteredBonCommandes.map((bc) => {
-            const statutConfig = getStatutConfig(bc.statut)
-            const StatutIcon = statutConfig.icon
-
-            return (
-              <div
-                key={bc.id}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+        {/* Picker chantier (popup simple) */}
+        {showChantierPicker && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setShowChantierPicker(false)} />
+            <div className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4">Sélectionner un chantier</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {chantiers.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleOpenModal(Number(c.id))}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors border border-gray-200"
+                  >
+                    <div className="font-medium">{c.nom}</div>
+                    <div className="text-sm text-gray-500">{c.code}</div>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowChantierPicker(false)}
+                className="mt-4 w-full px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{bc.numero}</h3>
-                      <div className="flex items-center gap-4 mt-1">
-                        <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                          <Building2 className="w-4 h-4" />
-                          <span>{bc.chantier_nom}</span>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Fournisseur: <span className="font-medium">{bc.fournisseur}</span>
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+          </div>
+        )}
+
+        {/* Erreur */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Liste des achats */}
+        {!loading && !error && (
+          <div className="space-y-4">
+            {filteredAchats.map((achat) => {
+              const config = STATUT_CONFIG[achat.statut] || STATUT_CONFIG.en_attente
+              const StatutIcon = config.icon
+
+              return (
+                <div
+                  key={achat.id}
+                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{achat.libelle}</h3>
+                        <div className="flex items-center gap-4 mt-1 flex-wrap">
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                            <Building2 className="w-4 h-4" />
+                            <span>{achat.chantier_nom || `Chantier #${achat.chantier_id}`}</span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Fournisseur:{' '}
+                            <span className="font-medium">
+                              {achat.fournisseur_nom || `#${achat.fournisseur_id}`}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 ${config.color}`}
+                    >
+                      <StatutIcon className="w-3.5 h-3.5" />
+                      {config.label}
+                    </span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${statutConfig.color}`}>
-                    <StatutIcon className="w-3.5 h-3.5" />
-                    {statutConfig.label}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <p className="text-xs text-gray-500">Date émission</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm font-medium text-gray-900">
-                        {new Date(bc.date_emission).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                  </div>
-                  {bc.date_livraison_prevue && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500">Livraison prévue</p>
+                      <p className="text-xs text-gray-500">Date commande</p>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Package className="w-4 h-4 text-gray-400" />
+                        <Calendar className="w-4 h-4 text-gray-400" />
                         <p className="text-sm font-medium text-gray-900">
-                          {new Date(bc.date_livraison_prevue).toLocaleDateString('fr-FR')}
+                          {new Date(achat.date_commande + 'T00:00:00').toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-xs text-gray-500">Montant HT</p>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {formatMontant(bc.montant_ht)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Montant TTC</p>
-                    <p className="text-sm font-semibold text-blue-600 mt-1">
-                      {formatMontant(bc.montant_ttc)}
-                    </p>
+                    {achat.date_livraison_prevue && (
+                      <div>
+                        <p className="text-xs text-gray-500">Livraison prévue</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Package className="w-4 h-4 text-gray-400" />
+                          <p className="text-sm font-medium text-gray-900">
+                            {new Date(achat.date_livraison_prevue + 'T00:00:00').toLocaleDateString(
+                              'fr-FR'
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs text-gray-500">Montant HT</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                        {formatMontant(achat.total_ht)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Montant TTC</p>
+                      <p className="text-sm font-semibold text-blue-600 mt-1">
+                        {formatMontant(achat.total_ttc)}
+                      </p>
+                    </div>
                   </div>
                 </div>
+              )
+            })}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="text-sm text-gray-500">
-                    {bc.articles_count} article{bc.articles_count > 1 ? 's' : ''}
-                  </div>
-                  <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    Voir les détails →
-                  </button>
-                </div>
+            {filteredAchats.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+                <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">Aucun achat trouvé</p>
               </div>
-            )
-          })}
-        </div>
-
-        {filteredBonCommandes.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">Aucun bon de commande trouvé</p>
+            )}
           </div>
+        )}
+
+        {/* Modal création achat */}
+        {showModal && selectedChantierId && (
+          <AchatModal
+            chantierId={selectedChantierId}
+            fournisseurs={fournisseurs}
+            lots={lots}
+            onClose={() => {
+              setShowModal(false)
+              setSelectedChantierId(null)
+            }}
+            onSuccess={() => {
+              setShowModal(false)
+              setSelectedChantierId(null)
+              loadAchats()
+            }}
+          />
         )}
       </div>
     </Layout>
