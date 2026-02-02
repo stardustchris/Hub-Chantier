@@ -34,6 +34,7 @@ import type {
   ConversionDevis,
   RelancesHistorique,
   ConfigRelances,
+  ConvertirDevisResult,
 } from '../types'
 
 // Backend router: APIRouter(prefix="/devis") -> mounted at /api/devis
@@ -154,7 +155,8 @@ export const devisService = {
 
   // ===== Lots (DEV-03) =====
   async createLot(data: LotDevisCreate): Promise<LotDevis> {
-    const response = await api.post<LotDevis>(`${BASE}/lots`, data)
+    const { devis_id } = data
+    const response = await api.post<LotDevis>(`${BASE}/${devis_id}/lots`, data)
     return response.data
   },
 
@@ -169,7 +171,8 @@ export const devisService = {
 
   // ===== Lignes (DEV-03) =====
   async createLigne(data: LigneDevisCreate): Promise<LigneDevis> {
-    const response = await api.post<LigneDevis>(`${BASE}/lignes`, data)
+    const { lot_devis_id } = data
+    const response = await api.post<LigneDevis>(`${BASE}/lots/${lot_devis_id}/lignes`, data)
     return response.data
   },
 
@@ -184,8 +187,21 @@ export const devisService = {
 
   // ===== Dashboard (DEV-17) =====
   async getDashboard(): Promise<DashboardDevis> {
-    const response = await api.get<DashboardDevis>(`${BASE}/dashboard`)
-    return response.data
+    const response = await api.get(`${BASE}/dashboard`)
+    const raw = response.data
+    // Le backend renvoie certains champs numériques en string (Decimal serialisé)
+    return {
+      kpi: {
+        ...raw.kpi,
+        total_pipeline_ht: Number(raw.kpi.total_pipeline_ht) || 0,
+        total_accepte_ht: Number(raw.kpi.total_accepte_ht) || 0,
+        taux_conversion: Number(raw.kpi.taux_conversion) || 0,
+      },
+      derniers_devis: (raw.derniers_devis || []).map((d: Record<string, unknown>) => ({
+        ...d,
+        montant_total_ht: Number(d.montant_total_ht) || 0,
+      })),
+    } as DashboardDevis
   },
 
   // ===== Journal (DEV-18) =====
@@ -358,9 +374,19 @@ export const devisService = {
     return response.data
   },
 
-  async convertirEnChantier(devisId: number): Promise<ConversionDevis> {
-    const response = await api.post<ConversionDevis>(`${BASE}/${devisId}/convertir`)
-    return response.data
+  async convertirEnChantier(
+    devisId: number,
+    options?: { notify_client?: boolean; notify_team?: boolean }
+  ): Promise<ConvertirDevisResult> {
+    const response = await api.post<{
+      success: boolean
+      message: string
+      data: ConvertirDevisResult
+    }>(`${BASE}/${devisId}/convertir-en-chantier`, {
+      notify_client: options?.notify_client ?? false,
+      notify_team: options?.notify_team ?? true,
+    })
+    return response.data.data
   },
 
   // ===== Relances automatiques (DEV-24) =====

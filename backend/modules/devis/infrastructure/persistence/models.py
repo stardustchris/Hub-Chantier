@@ -52,6 +52,7 @@ DEVIS_STATUTS = (
     "vu",
     "en_negociation",
     "accepte",
+    "converti",
     "refuse",
     "perdu",
     "expire",
@@ -123,6 +124,7 @@ JOURNAL_DEVIS_ACTIONS = (
     "acceptation",
     "refus",
     "perdu",
+    "conversion",
     "ajout_lot",
     "modification_lot",
     "suppression_lot",
@@ -366,6 +368,14 @@ class DevisModel(DevisBase):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
     created_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # Conversion devis -> chantier (DEV-16)
+    converti_at = Column(DateTime, nullable=True)
+    converti_by = Column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,

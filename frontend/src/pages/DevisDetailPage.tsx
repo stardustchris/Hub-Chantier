@@ -28,6 +28,7 @@ import type {
   LotDevisUpdate,
   LigneDevisCreate,
   LigneDevisUpdate,
+  ConvertirDevisResult,
 } from '../types'
 import { TYPE_VERSION_CONFIG, LABEL_VARIANTE_CONFIG } from '../types'
 import {
@@ -46,6 +47,9 @@ import {
   Lock,
   GitBranch,
   Copy,
+  Building2,
+  CheckCircle,
+  X,
 } from 'lucide-react'
 
 const formatEUR = (value: number) =>
@@ -59,6 +63,12 @@ export default function DevisDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showEditForm, setShowEditForm] = useState(false)
   const [journalOpen, setJournalOpen] = useState(false)
+  const [showConvertModal, setShowConvertModal] = useState(false)
+  const [convertLoading, setConvertLoading] = useState(false)
+  const [convertError, setConvertError] = useState<string | null>(null)
+  const [convertResult, setConvertResult] = useState<ConvertirDevisResult | null>(null)
+  const [notifyClient, setNotifyClient] = useState(false)
+  const [notifyTeam, setNotifyTeam] = useState(true)
 
   const devisId = Number(id)
   const isEditable = devis?.statut === 'brouillon'
@@ -108,6 +118,28 @@ export default function DevisDetailPage() {
     if (motif) {
       await devisService.marquerPerdu(devisId, motif)
       await loadDevis()
+    }
+  }
+
+  // Conversion devis -> chantier (DEV-16)
+  const handleConvertir = async () => {
+    try {
+      setConvertLoading(true)
+      setConvertError(null)
+      const result = await devisService.convertirEnChantier(devisId, {
+        notify_client: notifyClient,
+        notify_team: notifyTeam,
+      })
+      setConvertResult(result)
+      setShowConvertModal(false)
+      await loadDevis()
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string; error?: string } } }
+      const message = axiosError.response?.data?.message
+        || 'Erreur lors de la conversion du devis en chantier'
+      setConvertError(message)
+    } finally {
+      setConvertLoading(false)
     }
   }
 
@@ -264,6 +296,21 @@ export default function DevisDetailPage() {
                       </>
                     )}
                   </div>
+                  {devis.statut === 'accepte' && (
+                    <button
+                      onClick={() => {
+                        setConvertError(null)
+                        setShowConvertModal(true)
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                      style={{ backgroundColor: '#009688' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#00796B' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#009688' }}
+                    >
+                      <Building2 className="w-4 h-4" />
+                      Convertir en chantier
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -458,6 +505,41 @@ export default function DevisDetailPage() {
           </>
         )}
 
+        {/* Bandeau succes conversion */}
+        {convertResult && (
+          <div className="bg-teal-50 border border-teal-200 text-teal-800 px-4 py-4 rounded-lg" role="status">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="flex-shrink-0 mt-0.5 text-teal-600" size={20} />
+              <div className="flex-1">
+                <p className="font-medium">
+                  Chantier cree avec succes !
+                </p>
+                <p className="text-sm mt-1">
+                  Code chantier : <span className="font-semibold">{convertResult.code_chantier}</span>
+                  {' '}&mdash;{' '}
+                  {convertResult.nb_lots_transferes} lot{convertResult.nb_lots_transferes > 1 ? 's' : ''} transfere{convertResult.nb_lots_transferes > 1 ? 's' : ''}
+                  {' '}&mdash;{' '}
+                  Montant : {formatEUR(convertResult.montant_total_ht)} HT
+                </p>
+                <button
+                  onClick={() => navigate(`/chantiers/${convertResult.chantier_id}`)}
+                  className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 text-sm font-medium text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: '#009688' }}
+                >
+                  <Building2 className="w-4 h-4" />
+                  Voir le chantier
+                </button>
+              </div>
+              <button
+                onClick={() => setConvertResult(null)}
+                className="text-teal-400 hover:text-teal-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Modal edition */}
         {showEditForm && devis && (
           <DevisForm
@@ -465,6 +547,82 @@ export default function DevisDetailPage() {
             onSubmit={handleUpdateDevis}
             onCancel={() => setShowEditForm(false)}
           />
+        )}
+
+        {/* Modal confirmation conversion devis -> chantier */}
+        {showConvertModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full" style={{ backgroundColor: '#E0F2F1' }}>
+                  <Building2 className="w-5 h-5" style={{ color: '#009688' }} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Convertir en chantier
+                </h3>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">
+                Cette action va creer un chantier a partir du devis{' '}
+                <span className="font-semibold">{devis?.numero}</span> et transferer les lots budgetaires.
+                Le devis passera en statut &laquo; Converti &raquo;.
+              </p>
+
+              {convertError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm mb-4 flex items-start gap-2">
+                  <AlertCircle className="flex-shrink-0 mt-0.5" size={16} />
+                  <p>{convertError}</p>
+                </div>
+              )}
+
+              <div className="space-y-3 mb-6">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notifyClient}
+                    onChange={(e) => setNotifyClient(e.target.checked)}
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  />
+                  <span className="text-sm text-gray-700">Notifier le client</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notifyTeam}
+                    onChange={(e) => setNotifyTeam(e.target.checked)}
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  />
+                  <span className="text-sm text-gray-700">Notifier l'equipe</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setShowConvertModal(false)
+                    setConvertError(null)
+                  }}
+                  disabled={convertLoading}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleConvertir}
+                  disabled={convertLoading}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: '#009688' }}
+                >
+                  {convertLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Building2 className="w-4 h-4" />
+                  )}
+                  {convertLoading ? 'Conversion en cours...' : 'Confirmer la conversion'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </Layout>

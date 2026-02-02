@@ -23,6 +23,7 @@ import {
   DocumentsCard,
   DashboardPostCard,
   WeatherBulletinPost,
+  DevisPipelineCard,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { weatherNotificationService } from '../services/weatherNotifications'
@@ -480,6 +481,7 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-4">
+              {isDirectionOrConducteur && <DevisPipelineCard />}
               <DocumentsCard />
               <TeamCard members={currentTeamMembers} chantierName={currentSlot?.siteName} />
             </div>

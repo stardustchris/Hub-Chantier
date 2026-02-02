@@ -41,8 +41,8 @@ class TestStatutDevisValues:
         assert isinstance(StatutDevis.BROUILLON, str)
 
     def test_total_statuts_count(self):
-        """Test: il y a exactement 9 statuts."""
-        assert len(StatutDevis) == 9
+        """Test: il y a exactement 10 statuts (incluant CONVERTI - DEV-16)."""
+        assert len(StatutDevis) == 10
 
 
 class TestStatutDevisLabels:
@@ -88,9 +88,9 @@ class TestStatutDevisProprietesMetier:
     """Tests pour les proprietes metier (est_final, est_modifiable, est_actif)."""
 
     # est_final
-    def test_accepte_est_final(self):
-        """Test: ACCEPTE est un etat final."""
-        assert StatutDevis.ACCEPTE.est_final is True
+    def test_accepte_non_final(self):
+        """Test: ACCEPTE n'est pas un etat final (peut etre converti)."""
+        assert StatutDevis.ACCEPTE.est_final is False
 
     def test_refuse_est_final(self):
         """Test: REFUSE est un etat final."""
@@ -99,6 +99,10 @@ class TestStatutDevisProprietesMetier:
     def test_perdu_est_final(self):
         """Test: PERDU est un etat final."""
         assert StatutDevis.PERDU.est_final is True
+
+    def test_converti_est_final(self):
+        """Test: CONVERTI est un etat final."""
+        assert StatutDevis.CONVERTI.est_final is True
 
     def test_brouillon_non_final(self):
         """Test: BROUILLON n'est pas un etat final."""
@@ -290,10 +294,16 @@ class TestStatutDevisTransitions:
             StatutDevis.REFUSE, StatutDevis.PERDU,
         }
 
-    # Statuts terminaux
-    def test_accepte_aucune_transition(self):
-        """Test: ACCEPTE ne peut transitionner vers aucun statut."""
-        assert len(StatutDevis.ACCEPTE.transitions_possibles()) == 0
+    # Statuts terminaux et conversion
+    def test_accepte_transition_vers_converti(self):
+        """Test: ACCEPTE peut transitionner uniquement vers CONVERTI (DEV-16)."""
+        transitions = StatutDevis.ACCEPTE.transitions_possibles()
+        assert len(transitions) == 1
+        assert StatutDevis.CONVERTI in transitions
+
+    def test_converti_aucune_transition(self):
+        """Test: CONVERTI ne peut transitionner vers aucun statut (terminal)."""
+        assert len(StatutDevis.CONVERTI.transitions_possibles()) == 0
 
     def test_refuse_aucune_transition(self):
         """Test: REFUSE ne peut transitionner vers aucun statut."""

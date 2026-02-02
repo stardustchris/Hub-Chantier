@@ -1486,7 +1486,7 @@ export interface AffectationBudgetTacheCreate {
 // =====================================================
 
 // Enums et types de base
-export type StatutDevis = 'brouillon' | 'en_validation' | 'envoye' | 'vu' | 'en_negociation' | 'accepte' | 'refuse' | 'perdu' | 'expire'
+export type StatutDevis = 'brouillon' | 'en_validation' | 'envoye' | 'vu' | 'en_negociation' | 'accepte' | 'refuse' | 'perdu' | 'expire' | 'converti'
 export type TypeDebourse = 'moe' | 'materiaux' | 'materiel' | 'sous_traitance' | 'deplacement'
 
 // Configuration des statuts devis (label + couleur) - 9 valeurs (backend)
@@ -1500,6 +1500,7 @@ export const STATUT_DEVIS_CONFIG: Record<StatutDevis, { label: string; couleur: 
   refuse: { label: 'Refuse', couleur: '#EF4444' },
   perdu: { label: 'Perdu', couleur: '#991B1B' },
   expire: { label: 'Expire', couleur: '#9CA3AF' },
+  converti: { label: 'Converti', couleur: '#009688' },
 }
 
 export const TYPE_DEBOURSE_LABELS: Record<TypeDebourse, string> = {
@@ -2109,4 +2110,14 @@ export interface ConversionDevis {
   retenue_garantie_pct: number
   date_conversion: string
   chantier_id?: number
+
+// Resultat de la conversion devis -> chantier (DEV-16)
+export interface ConvertirDevisResult {
+  chantier_id: number
+  code_chantier: string
+  budget_id: number
+  nb_lots_transferes: number
+  montant_total_ht: number
+  devis_id: number
+  devis_numero: string
 }

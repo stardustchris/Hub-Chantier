@@ -18,7 +18,10 @@ from typing import Literal, Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
+from sqlalchemy.orm import Session
 
+from shared.infrastructure.database import get_db
+from shared.infrastructure.rate_limiter import limiter
 from shared.infrastructure.web import (
     get_current_user_id,
     get_current_user_role,
@@ -145,6 +148,13 @@ from ...application.use_cases.signature_use_cases import (
 )
 from ...domain.entities.signature_devis import SignatureDevisValidationError
 from ...application.dtos.signature_dtos import SignatureCreateDTO
+from ...application.use_cases.convertir_devis_en_chantier_use_case import (
+    ConvertirDevisEnChantierUseCase,
+    DevisNonConvertibleError,
+    DevisDejaConvertiError,
+    ConversionError,
+)
+from ...application.dtos.convertir_devis_dto import ConvertirDevisOptionsDTO
 
 from .dependencies import (
     get_create_devis_use_case,
@@ -201,6 +211,8 @@ from .dependencies import (
     # DEV-16: Conversion en chantier
     get_convertir_devis_use_case,
     get_get_conversion_info_use_case,
+    # DEV-16: Conversion devis -> chantier (use case enrichi)
+    get_convertir_devis_en_chantier_use_case,
     # DEV-24: Relances automatiques
     get_planifier_relances_use_case,
     get_executer_relances_use_case,
@@ -278,8 +290,14 @@ class MotifRequest(BaseModel):
     motif: str = Field(..., min_length=1, max_length=1000)
 
 
+class ConvertirDevisRequest(BaseModel):
+    """Options pour la conversion d'un devis en chantier."""
+    notify_client: bool = False
+    notify_team: bool = True
+
+
 class LotCreateRequest(BaseModel):
-    devis_id: int
+    devis_id: Optional[int] = None  # Optionnel car fourni par le path param
     titre: str = Field(..., min_length=1, max_length=300)
     numero: str = ""
     ordre: int = 0
@@ -302,7 +320,7 @@ class DebourseCreateRequest(BaseModel):
 
 
 class LigneCreateRequest(BaseModel):
-    lot_devis_id: int
+    lot_devis_id: Optional[int] = None  # Optionnel car fourni par le path param
     designation: str = Field(..., min_length=1, max_length=500)
     unite: str = "U"
     quantite: Decimal = Field(Decimal("0"), ge=0)
@@ -311,7 +329,7 @@ class LigneCreateRequest(BaseModel):
     ordre: int = 0
     marge_ligne_pct: Optional[Decimal] = Field(None, ge=0, le=100)
     article_id: Optional[int] = None
-    debourses: List[DebourseCreateRequest] = []
+    debourses: list[DebourseCreateRequest] = []
 
 
 class ArticleCreateRequest(BaseModel):
@@ -334,7 +352,7 @@ class LigneUpdateRequest(BaseModel):
     ordre: Optional[int] = None
     marge_ligne_pct: Optional[Decimal] = None
     article_id: Optional[int] = None
-    debourses: Optional[List[DebourseCreateRequest]] = None
+    debourses: Optional[list[DebourseCreateRequest]] = None
 
 
 # DEV-08: Request models pour versioning
@@ -656,6 +674,7 @@ async def get_devis(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_devis(
     request: DevisCreateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: CreateDevisUseCase = Depends(get_create_devis_use_case),
@@ -683,6 +702,7 @@ async def create_devis(
         conducteur_id=request.conducteur_id,
     )
     result = use_case.execute(dto, current_user_id)
+    db.commit()
     return result.to_dict()
 
 
@@ -690,6 +710,7 @@ async def create_devis(
 async def update_devis(
     devis_id: int,
     request: DevisUpdateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: UpdateDevisUseCase = Depends(get_update_devis_use_case),
@@ -698,6 +719,7 @@ async def update_devis(
     dto = DevisUpdateDTO(**request.model_dump(exclude_unset=True))
     try:
         result = use_case.execute(devis_id, dto, current_user_id)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -708,6 +730,7 @@ async def update_devis(
 @router.delete("/{devis_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_devis(
     devis_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: DeleteDevisUseCase = Depends(get_delete_devis_use_case),
@@ -715,6 +738,7 @@ async def delete_devis(
     """Supprime un devis en brouillon (DEV-03)."""
     try:
         use_case.execute(devis_id, current_user_id)
+        db.commit()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
     except DevisNotModifiableError as e:
@@ -728,6 +752,7 @@ async def delete_devis(
 @router.post("/{devis_id}/soumettre")
 async def soumettre_devis(
     devis_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: SoumettreDevisUseCase = Depends(get_soumettre_devis_use_case),
@@ -735,6 +760,7 @@ async def soumettre_devis(
     """Soumet un devis pour validation (brouillon -> en_validation)."""
     try:
         result = use_case.execute(devis_id, current_user_id)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -745,6 +771,7 @@ async def soumettre_devis(
 @router.post("/{devis_id}/valider")
 async def valider_devis(
     devis_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: ValiderDevisUseCase = Depends(get_valider_devis_use_case),
@@ -752,6 +779,7 @@ async def valider_devis(
     """Valide et envoie un devis (en_validation -> envoye)."""
     try:
         result = use_case.execute(devis_id, current_user_id)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -762,6 +790,7 @@ async def valider_devis(
 @router.post("/{devis_id}/retourner-brouillon")
 async def retourner_brouillon(
     devis_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: RetournerBrouillonUseCase = Depends(get_retourner_brouillon_use_case),
@@ -769,6 +798,7 @@ async def retourner_brouillon(
     """Retourne un devis en brouillon (en_validation -> brouillon)."""
     try:
         result = use_case.execute(devis_id, current_user_id)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -779,6 +809,7 @@ async def retourner_brouillon(
 @router.post("/{devis_id}/accepter")
 async def accepter_devis(
     devis_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: AccepterDevisUseCase = Depends(get_accepter_devis_use_case),
@@ -786,6 +817,7 @@ async def accepter_devis(
     """Accepte un devis (envoye/vu/en_negociation -> accepte)."""
     try:
         result = use_case.execute(devis_id, current_user_id)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -797,6 +829,7 @@ async def accepter_devis(
 async def refuser_devis(
     devis_id: int,
     body: MotifRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: RefuserDevisUseCase = Depends(get_refuser_devis_use_case),
@@ -804,6 +837,7 @@ async def refuser_devis(
     """Refuse un devis avec motif (envoye/vu/en_negociation -> refuse)."""
     try:
         result = use_case.execute(devis_id, current_user_id, body.motif)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -815,6 +849,7 @@ async def refuser_devis(
 async def marquer_perdu(
     devis_id: int,
     body: MotifRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: PerduDevisUseCase = Depends(get_perdu_devis_use_case),
@@ -822,6 +857,7 @@ async def marquer_perdu(
     """Marque un devis comme perdu avec motif (en_negociation -> perdu)."""
     try:
         result = use_case.execute(devis_id, current_user_id, body.motif)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -984,12 +1020,66 @@ async def figer_version(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Conversion Devis -> Chantier (DEV-16)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/{devis_id}/convertir-en-chantier", status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
+async def convertir_devis_en_chantier(
+    request: Request,
+    devis_id: int,
+    body: ConvertirDevisRequest = ConvertirDevisRequest(),
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case: ConvertirDevisEnChantierUseCase = Depends(get_convertir_devis_en_chantier_use_case),
+):
+    """Convertit un devis accepte en chantier operationnel (DEV-16).
+
+    Cree un chantier, un budget et des lots budgetaires a partir du devis.
+    Le devis passe en statut 'converti' et devient immutable.
+    """
+    try:
+        options = ConvertirDevisOptionsDTO(
+            notify_client=body.notify_client,
+            notify_team=body.notify_team,
+        )
+        result = use_case.execute(devis_id, current_user_id, options)
+        db.commit()
+        return {
+            "success": True,
+            "message": "Devis converti en chantier avec succes",
+            "data": result.to_dict(),
+        }
+    except DevisNonConvertibleError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except DevisDejaConvertiError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "DEVIS_ALREADY_CONVERTED",
+                "message": e.message,
+                "chantier_ref": e.chantier_ref,
+            },
+        )
+    except ConversionError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur technique lors de la conversion. Veuillez reessayer ou contacter l'administrateur.",
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Calcul totaux (DEV-06)
 # ─────────────────────────────────────────────────────────────────────────────
 
 @router.post("/{devis_id}/calculer")
 async def calculer_totaux(
     devis_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: CalculerTotauxDevisUseCase = Depends(get_calculer_totaux_use_case),
@@ -997,6 +1087,7 @@ async def calculer_totaux(
     """Recalcule les totaux et marges du devis (DEV-06)."""
     try:
         result = use_case.execute(devis_id, current_user_id)
+        db.commit()
         return result
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -1576,6 +1667,7 @@ async def get_article(
 @articles_router.post("", status_code=status.HTTP_201_CREATED)
 async def create_article(
     request: ArticleCreateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: CreateArticleUseCase = Depends(get_create_article_use_case),
@@ -1583,12 +1675,14 @@ async def create_article(
     """Cree un nouvel article (DEV-01)."""
     dto = ArticleCreateDTO(**request.model_dump())
     result = use_case.execute(dto, current_user_id)
+    db.commit()
     return result.to_dict()
 
 
 @articles_router.delete("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_article(
     article_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: DeleteArticleUseCase = Depends(get_delete_article_use_case),
@@ -1596,6 +1690,7 @@ async def delete_article(
     """Supprime un article (DEV-01)."""
     try:
         use_case.execute(article_id, current_user_id)
+        db.commit()
     except ArticleNotFoundError:
         raise HTTPException(status_code=404, detail=f"Article {article_id} non trouve")
 
@@ -1608,6 +1703,7 @@ async def delete_article(
 async def create_lot(
     devis_id: int,
     request: LotCreateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: CreateLotDevisUseCase = Depends(get_create_lot_use_case),
@@ -1622,6 +1718,7 @@ async def create_lot(
     )
     try:
         result = use_case.execute(dto, current_user_id)
+        db.commit()
         return result.to_dict()
     except DevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
@@ -1631,6 +1728,7 @@ async def create_lot(
 async def update_lot(
     lot_id: int,
     request: LotUpdateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: UpdateLotDevisUseCase = Depends(get_update_lot_use_case),
@@ -1639,6 +1737,7 @@ async def update_lot(
     dto = LotDevisUpdateDTO(**request.model_dump(exclude_unset=True))
     try:
         result = use_case.execute(lot_id, dto, current_user_id)
+        db.commit()
         return result.to_dict()
     except LotDevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Lot {lot_id} non trouve")
@@ -1647,6 +1746,7 @@ async def update_lot(
 @router.delete("/lots/{lot_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_lot(
     lot_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: DeleteLotDevisUseCase = Depends(get_delete_lot_use_case),
@@ -1654,6 +1754,7 @@ async def delete_lot(
     """Supprime un lot (DEV-03)."""
     try:
         use_case.execute(lot_id, current_user_id)
+        db.commit()
     except LotDevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Lot {lot_id} non trouve")
 
@@ -1666,6 +1767,7 @@ async def delete_lot(
 async def create_ligne(
     lot_id: int,
     request: LigneCreateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: CreateLigneDevisUseCase = Depends(get_create_ligne_use_case),
@@ -1695,6 +1797,7 @@ async def create_ligne(
     )
     try:
         result = use_case.execute(dto, current_user_id)
+        db.commit()
         return result.to_dict()
     except LotDevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Lot {lot_id} non trouve")
@@ -1704,6 +1807,7 @@ async def create_ligne(
 async def update_ligne(
     ligne_id: int,
     request: LigneUpdateRequest,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: UpdateLigneDevisUseCase = Depends(get_update_ligne_use_case),
@@ -1726,6 +1830,7 @@ async def update_ligne(
     dto = LigneDevisUpdateDTO(**update_data, debourses=debourses_dto)
     try:
         result = use_case.execute(ligne_id, dto, current_user_id)
+        db.commit()
         return result.to_dict()
     except LigneDevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Ligne {ligne_id} non trouvee")
@@ -1734,6 +1839,7 @@ async def update_ligne(
 @router.delete("/lignes/{ligne_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ligne(
     ligne_id: int,
+    db: Session = Depends(get_db),
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: DeleteLigneDevisUseCase = Depends(get_delete_ligne_use_case),
@@ -1741,5 +1847,6 @@ async def delete_ligne(
     """Supprime une ligne et ses debourses (DEV-03)."""
     try:
         use_case.execute(ligne_id, current_user_id)
+        db.commit()
     except LigneDevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Ligne {ligne_id} non trouvee")

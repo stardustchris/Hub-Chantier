@@ -16,7 +16,8 @@ class StatutDevis(str, Enum):
         envoye -> vu, en_negociation, accepte, refuse, expire
         vu -> en_negociation, accepte, refuse, expire
         en_negociation -> envoye (nouvelle version), accepte, refuse, perdu
-        accepte -> (terminal)
+        accepte -> converti
+        converti -> (terminal, read-only)
         refuse -> (terminal)
         perdu -> (terminal)
         expire -> en_negociation
@@ -28,6 +29,7 @@ class StatutDevis(str, Enum):
     VU = "vu"
     EN_NEGOCIATION = "en_negociation"
     ACCEPTE = "accepte"
+    CONVERTI = "converti"
     REFUSE = "refuse"
     PERDU = "perdu"
     EXPIRE = "expire"
@@ -42,6 +44,7 @@ class StatutDevis(str, Enum):
             self.VU: "Vu",
             self.EN_NEGOCIATION: "En negociation",
             self.ACCEPTE: "Accepte",
+            self.CONVERTI: "Converti en chantier",
             self.REFUSE: "Refuse",
             self.PERDU: "Perdu",
             self.EXPIRE: "Expire",
@@ -58,6 +61,7 @@ class StatutDevis(str, Enum):
             self.VU: "#9C27B0",               # Violet
             self.EN_NEGOCIATION: "#FF9800",   # Orange
             self.ACCEPTE: "#4CAF50",          # Vert
+            self.CONVERTI: "#009688",         # Teal
             self.REFUSE: "#F44336",           # Rouge
             self.PERDU: "#795548",            # Marron
             self.EXPIRE: "#607D8B",           # Gris bleu
@@ -67,7 +71,7 @@ class StatutDevis(str, Enum):
     @property
     def est_final(self) -> bool:
         """Indique si le statut est final (pas de transition possible)."""
-        return self in {self.ACCEPTE, self.REFUSE, self.PERDU}
+        return self in {self.CONVERTI, self.REFUSE, self.PERDU}
 
     @property
     def est_modifiable(self) -> bool:
@@ -77,7 +81,7 @@ class StatutDevis(str, Enum):
     @property
     def est_actif(self) -> bool:
         """Indique si le devis est dans un statut actif (pipeline commercial)."""
-        return self not in {self.REFUSE, self.PERDU, self.EXPIRE}
+        return self not in {self.CONVERTI, self.REFUSE, self.PERDU, self.EXPIRE}
 
     def transitions_possibles(self) -> Set["StatutDevis"]:
         """Retourne les statuts vers lesquels on peut transitionner.
@@ -91,7 +95,8 @@ class StatutDevis(str, Enum):
             self.ENVOYE: {self.VU, self.EN_NEGOCIATION, self.ACCEPTE, self.REFUSE, self.EXPIRE},
             self.VU: {self.EN_NEGOCIATION, self.ACCEPTE, self.REFUSE, self.EXPIRE},
             self.EN_NEGOCIATION: {self.ENVOYE, self.ACCEPTE, self.REFUSE, self.PERDU},
-            self.ACCEPTE: set(),
+            self.ACCEPTE: {self.CONVERTI},
+            self.CONVERTI: set(),
             self.REFUSE: set(),
             self.PERDU: set(),
             self.EXPIRE: {self.EN_NEGOCIATION},

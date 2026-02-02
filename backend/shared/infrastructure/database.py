@@ -3,7 +3,7 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool
 
 from .config import settings
 
@@ -19,7 +19,7 @@ if settings.DATABASE_URL.startswith("sqlite"):
             "check_same_thread": False,
             "timeout": 30,  # P2-7: SQLite busy timeout 30s
         },
-        poolclass=StaticPool,
+        poolclass=NullPool,
         echo=settings.DEBUG,
     )
 else:
@@ -35,6 +35,16 @@ else:
             "connect_timeout": 10,  # P2-7: Timeout connexion 10s
         },
     )
+
+# Activer le mode WAL pour SQLite (lectures concurrentes)
+if settings.DATABASE_URL.startswith("sqlite"):
+    from sqlalchemy import event
+
+    @event.listens_for(engine, "connect")
+    def _set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.close()
 
 # Factory de sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -102,7 +112,13 @@ def init_db() -> None:
     )
     from modules.financier.infrastructure.persistence import (  # noqa: F401
         FournisseurModel, BudgetModel, LotBudgetaireModel,
-        AchatModel, JournalFinancierModel
+        AchatModel, JournalFinancierModel,
+        AvenantBudgetaireModel, SituationTravauxModel, LigneSituationModel,
+        FactureClientModel, AlerteDepassementModel, AffectationBudgetTacheModel,
+    )
+    from modules.devis.infrastructure.persistence.models import (  # noqa: F401
+        ArticleDevisModel, DevisModel, LotDevisModel, LigneDevisModel,
+        DebourseDetailModel, JournalDevisModel,
     )
 
     # Crée toutes les tables en une seule fois avec la Base partagée

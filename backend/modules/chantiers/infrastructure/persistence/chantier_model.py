@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
@@ -81,6 +81,14 @@ class ChantierModel(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+    )
+
+    # Traçabilité devis -> chantier (DEV-16)
+    source_devis_id = Column(
+        Integer,
+        ForeignKey("devis.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     # Soft delete - permet de "supprimer" sans perdre les données (RGPD compliant)

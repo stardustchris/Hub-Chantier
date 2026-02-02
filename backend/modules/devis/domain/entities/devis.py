@@ -406,6 +406,24 @@ class Devis:
         self.converti_en_chantier_id = chantier_id
         self.updated_at = datetime.utcnow()
 
+    def convertir(self, chantier_ref: str) -> None:
+        """Convertit le devis en chantier (accepte -> converti).
+
+        Marque le devis comme converti et le lie au chantier cree.
+        Le devis devient immutable apres cette operation.
+
+        Args:
+            chantier_ref: L'identifiant du chantier cree (ID sous forme de string).
+
+        Raises:
+            TransitionStatutDevisInvalideError: Si le devis n'est pas en statut accepte.
+            DevisValidationError: Si le chantier_ref est vide.
+        """
+        if not chantier_ref or not chantier_ref.strip():
+            raise DevisValidationError("La reference chantier est obligatoire pour la conversion")
+        self._transitionner(StatutDevis.CONVERTI)
+        self.chantier_ref = chantier_ref.strip()
+
     def supprimer(self, deleted_by: int) -> None:
         """Marque le devis comme supprime (soft delete).
 

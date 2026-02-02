@@ -110,6 +110,10 @@ from ...application.use_cases.conversion_use_cases import (
     GetConversionInfoUseCase,
 )
 
+from ...application.use_cases.convertir_devis_en_chantier_use_case import (
+    ConvertirDevisEnChantierUseCase,
+)
+
 from ..persistence.sqlalchemy_devis_repository import SQLAlchemyDevisRepository
 from ..persistence.sqlalchemy_lot_devis_repository import SQLAlchemyLotDevisRepository
 from ..persistence.sqlalchemy_ligne_devis_repository import SQLAlchemyLigneDevisRepository
@@ -651,3 +655,43 @@ def get_update_config_relances_use_case(
     journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
 ) -> UpdateConfigRelancesUseCase:
     return UpdateConfigRelancesUseCase(devis_repo, journal_repo)
+
+
+# Use Cases - Conversion Devis -> Chantier (DEV-16)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_convertir_devis_en_chantier_use_case(
+    db: Session = Depends(get_db),
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_devis_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> ConvertirDevisEnChantierUseCase:
+    """Retourne le use case de conversion devis -> chantier.
+
+    Injecte le ChantierCreationAdapter (couche Infrastructure shared)
+    qui encapsule les imports cross-module (chantiers, financier).
+    Le use case n'a plus de dependance directe sur ces modules.
+    """
+    from shared.infrastructure.adapters import ChantierCreationAdapter
+    from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
+    from modules.financier.infrastructure.persistence import (
+        SQLAlchemyBudgetRepository,
+        SQLAlchemyLotBudgetaireRepository,
+    )
+
+    chantier_repo = SQLAlchemyChantierRepository(db)
+    budget_repo = SQLAlchemyBudgetRepository(db)
+    lot_budgetaire_repo = SQLAlchemyLotBudgetaireRepository(db)
+
+    chantier_creation_port = ChantierCreationAdapter(
+        chantier_repo=chantier_repo,
+        budget_repo=budget_repo,
+        lot_budgetaire_repo=lot_budgetaire_repo,
+    )
+
+    return ConvertirDevisEnChantierUseCase(
+        devis_repo=devis_repo,
+        lot_devis_repo=lot_devis_repo,
+        journal_repo=journal_repo,
+        chantier_creation_port=chantier_creation_port,
+    )

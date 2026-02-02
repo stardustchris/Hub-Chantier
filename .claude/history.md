@@ -26,6 +26,7 @@
 **Modules implémentés**: Auth, Dashboard, Chantiers, Planning, **Pointages Phase 1+2**, **Financier Phase 1**, Formulaires, GED, Signalements, Logistique, Interventions, Tâches
 
 **Highlights**:
+- ✅ **02 fév**: DEV-16 Conversion devis → chantier — Use case + route API + UI frontend, 31 tests (100% couverture), 7 agents validés
 - ✅ **01 fév**: Résolution finding HIGH rate limiting (fausse alerte) — Score 9.5→10/10, 0 finding réel
 - ✅ **01 fév**: Connecteurs Webhooks Pennylane (compta) + Silae (paie) — 97 tests, 94% couverture, RGPD compliant
 - ✅ **01 fév**: Multi-métier selection (jusqu'à 5 métiers) + ajout type Cadre
