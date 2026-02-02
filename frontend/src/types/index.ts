@@ -2110,6 +2110,7 @@ export interface ConversionDevis {
   retenue_garantie_pct: number
   date_conversion: string
   chantier_id?: number
+}
 
 // Resultat de la conversion devis -> chantier (DEV-16)
 export interface ConvertirDevisResult {

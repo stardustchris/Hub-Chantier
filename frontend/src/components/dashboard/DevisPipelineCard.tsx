@@ -145,7 +145,7 @@ export default function DevisPipelineCard() {
             <div className="bg-green-50 rounded-xl p-3 text-center">
               <TrendingUp className="w-4 h-4 text-green-600 mx-auto mb-1" />
               <p className="text-lg font-bold text-gray-900">
-                {data.kpi.taux_conversion.toFixed(1)}%
+                {Number(data.kpi.taux_conversion).toFixed(1)}%
               </p>
               <p className="text-xs text-gray-500">Conversion</p>
             </div>
