@@ -140,7 +140,7 @@ export default function BudgetsPage() {
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Réalisé</p>
+                <p className="text-sm text-gray-600">Déboursé</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {formatMontant(totalRealise)}
                 </p>
@@ -234,7 +234,7 @@ export default function BudgetsPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Réalisé</p>
+                    <p className="text-xs text-gray-500">Déboursé</p>
                     <p className="text-lg font-semibold text-green-600">
                       {formatMontant(budget.montant_realise)}
                     </p>

@@ -4,7 +4,7 @@
  * LineChart Recharts avec 3 courbes :
  * - Prevu cumule (bleu)
  * - Engage cumule (ambre)
- * - Realise cumule (vert)
+ * - Debourse cumule (vert)
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -79,7 +79,7 @@ export default function EvolutionChart({ chantierId }: EvolutionChartProps) {
   }
 
   return (
-    <div role="img" aria-label="Graphique d'evolution financiere du chantier avec courbes prevu, engage et realise">
+    <div role="img" aria-label="Graphique d'evolution financiere du chantier avec courbes prevu, engage et debourse">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -98,7 +98,7 @@ export default function EvolutionChart({ chantierId }: EvolutionChartProps) {
           <Line
             type="monotone"
             dataKey="prevu_cumule"
-            name="Prevu"
+            name="Prévu"
             stroke="#3b82f6"
             strokeWidth={2}
             dot={{ r: 3 }}
@@ -107,7 +107,7 @@ export default function EvolutionChart({ chantierId }: EvolutionChartProps) {
           <Line
             type="monotone"
             dataKey="engage_cumule"
-            name="Engage"
+            name="Engagé"
             stroke="#f59e0b"
             strokeWidth={2}
             dot={{ r: 3 }}
@@ -116,7 +116,7 @@ export default function EvolutionChart({ chantierId }: EvolutionChartProps) {
           <Line
             type="monotone"
             dataKey="realise_cumule"
-            name="Realise"
+            name="Déboursé"
             stroke="#10b981"
             strokeWidth={2}
             dot={{ r: 3 }}

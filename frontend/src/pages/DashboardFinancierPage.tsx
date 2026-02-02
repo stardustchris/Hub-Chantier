@@ -145,11 +145,11 @@ export default function DashboardFinancierPage() {
             </p>
           </div>
           <div>
-            <span className="text-gray-500">Engage</span>
+            <span className="text-gray-500">Engagé</span>
             <p className="font-medium">{Number(chantier.pct_engage).toFixed(1)}%</p>
           </div>
           <div>
-            <span className="text-gray-500">Realise</span>
+            <span className="text-gray-500">Déboursé</span>
             <p className="font-medium">{Number(chantier.pct_realise).toFixed(1)}%</p>
           </div>
         </div>
@@ -230,7 +230,7 @@ export default function DashboardFinancierPage() {
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Engage Total</p>
+                    <p className="text-sm text-gray-600">Engagé Total</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
                       {formatEUR(data.kpi_globaux.total_engage)}
                     </p>
@@ -249,7 +249,7 @@ export default function DashboardFinancierPage() {
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Realise Total</p>
+                    <p className="text-sm text-gray-600">Déboursé Total</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
                       {formatEUR(data.kpi_globaux.total_realise)}
                     </p>
@@ -319,8 +319,8 @@ export default function DashboardFinancierPage() {
                     <tr>
                       <th className="px-4 py-3 text-left">{renderSortButton('nom_chantier', 'Chantier')}</th>
                       <th className="px-4 py-3 text-right">{renderSortButton('montant_revise_ht', 'Budget')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('pct_engage', '% Engage')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('pct_realise', '% Realise')}</th>
+                      <th className="px-4 py-3 text-right">{renderSortButton('pct_engage', '% Engagé')}</th>
+                      <th className="px-4 py-3 text-right">{renderSortButton('pct_realise', '% Déboursé')}</th>
                       <th className="px-4 py-3 text-right">{renderSortButton('reste_a_depenser', 'Reste')}</th>
                       <th className="px-4 py-3 text-right">{renderSortButton('marge_estimee_pct', 'Marge')}</th>
                       <th className="px-4 py-3 text-center">Statut</th>

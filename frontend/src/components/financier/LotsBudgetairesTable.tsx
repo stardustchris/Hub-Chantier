@@ -2,7 +2,7 @@
  * LotsBudgetairesTable - Table des lots budgetaires (FIN-02)
  *
  * Affiche les lots d'un budget avec :
- * - Colonnes: Code, Libelle, Unite, Qte, PU HT, Total, Engage, Realise, Ecart
+ * - Colonnes: Code, Libelle, Unite, Qte, PU HT, Total, Engage, Debourse, Ecart
  * - Barre de progression par lot
  * - Actions CRUD (creation, edition, suppression)
  */
@@ -136,10 +136,10 @@ export default function LotsBudgetairesTable({ budgetId, onRefresh }: LotsBudget
                 <th className="text-center px-4 py-3 font-medium text-gray-500">Unite</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">Qte</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">PU HT</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Total prevu</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Engage</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Realise</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">Ecart</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500">Total prévu</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500">Engagé</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500">Déboursé</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500">Écart</th>
                 {canEdit && (
                   <th className="text-center px-4 py-3 font-medium text-gray-500">Actions</th>
                 )}

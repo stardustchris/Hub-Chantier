@@ -99,13 +99,15 @@ class GetEvolutionFinanciereUseCase:
         realise_par_mois: dict[tuple[int, int], Decimal] = {}
 
         for achat in achats:
-            if achat.created_at is None:
+            # Utiliser date_commande (date métier) avec fallback sur created_at
+            raw_date = achat.date_commande or achat.created_at
+            if raw_date is None:
                 continue
 
             achat_date = (
-                achat.created_at.date()
-                if isinstance(achat.created_at, datetime)
-                else achat.created_at
+                raw_date.date()
+                if isinstance(raw_date, datetime)
+                else raw_date
             )
 
             cle_mois = (achat_date.year, achat_date.month)
@@ -162,11 +164,13 @@ class GetEvolutionFinanciereUseCase:
         dates: List[date] = []
 
         for achat in achats:
-            if achat.created_at is not None:
-                if isinstance(achat.created_at, datetime):
-                    dates.append(achat.created_at.date())
+            # Utiliser date_commande (date métier) avec fallback sur created_at
+            raw_date = achat.date_commande or achat.created_at
+            if raw_date is not None:
+                if isinstance(raw_date, datetime):
+                    dates.append(raw_date.date())
                 else:
-                    dates.append(achat.created_at)
+                    dates.append(raw_date)
 
         if budget_created_at is not None:
             if isinstance(budget_created_at, datetime):

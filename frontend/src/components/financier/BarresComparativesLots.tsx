@@ -4,7 +4,7 @@
  * BarChart Recharts avec 3 barres par lot :
  * - Prevu (bleu)
  * - Engage (ambre)
- * - Realise (vert)
+ * - Debourse (vert)
  */
 
 import {
@@ -38,9 +38,9 @@ export default function BarresComparativesLots({ lots }: BarresComparativesLotsP
 
   const chartData = lots.map((lot) => ({
     code_lot: lot.code_lot,
-    Prevu: lot.total_prevu_ht,
-    Engage: lot.engage,
-    Realise: lot.realise,
+    "Prévu": lot.total_prevu_ht,
+    "Engagé": lot.engage,
+    "Déboursé": lot.realise,
   }))
 
   return (
@@ -60,9 +60,9 @@ export default function BarresComparativesLots({ lots }: BarresComparativesLotsP
           />
           <Tooltip content={<ChartTooltip />} />
           <Legend />
-          <Bar dataKey="Prevu" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Engage" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Realise" fill="#10b981" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Prévu" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Engagé" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Déboursé" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

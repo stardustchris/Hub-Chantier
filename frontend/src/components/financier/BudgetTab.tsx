@@ -295,9 +295,9 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
                 <tr className="border-b border-gray-200 text-left text-xs text-gray-500 uppercase">
                   <th className="pb-2 pr-4">Code</th>
                   <th className="pb-2 pr-4">Libelle</th>
-                  <th className="pb-2 pr-4 text-right">Engage</th>
-                  <th className="pb-2 pr-4 min-w-[120px]">% Engage</th>
-                  <th className="pb-2 text-right">Ecart</th>
+                  <th className="pb-2 pr-4 text-right">Engagé</th>
+                  <th className="pb-2 pr-4 min-w-[120px]">% Engagé</th>
+                  <th className="pb-2 text-right">Écart</th>
                 </tr>
               </thead>
               <tbody>

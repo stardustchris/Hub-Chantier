@@ -5,7 +5,7 @@
  * - Banniere alertes actives (Phase 1)
  * - Budget revise HT
  * - Montant engage (avec jauge circulaire)
- * - Montant realise (avec jauge circulaire)
+ * - Montant debourse (avec jauge circulaire)
  * - Reste a depenser (FIN-16)
  * - Marge estimee
  * - Repartition par lot
@@ -82,7 +82,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
   if (!kpi) return null
 
   const engageAlerte = Number(kpi.pct_engage) > Number(budget.seuil_alerte_pct)
-  const realiseDepasse = Number(kpi.pct_realise) > 100
+  const debourseDepasse = Number(kpi.pct_realise) > 100
   const margeFaible = Number(kpi.marge_estimee) < 5
   const resteNegatif = Number(kpi.reste_a_depenser) < 0
 
@@ -119,7 +119,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Budget revise */}
         <div className="bg-white border border-blue-200 rounded-xl p-4">
-          <p className="text-sm text-gray-500 mb-1">Budget revise HT</p>
+          <p className="text-sm text-gray-500 mb-1">Budget révisé HT</p>
           <p className="text-2xl font-bold text-blue-700">
             {formatEUR(kpi.montant_revise_ht)}
           </p>
@@ -133,7 +133,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
         {/* Engage */}
         <div className={`bg-white border rounded-xl p-4 ${engageAlerte ? 'border-orange-300' : 'border-green-200'}`}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 mb-1">Engage</p>
+            <p className="text-sm text-gray-500 mb-1">Engagé</p>
             {engageAlerte && <AlertTriangle className="w-4 h-4 text-orange-500" />}
           </div>
           <p className={`text-2xl font-bold ${engageAlerte ? 'text-orange-600' : 'text-green-700'}`}>
@@ -147,17 +147,17 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           </div>
         </div>
 
-        {/* Realise */}
-        <div className={`bg-white border rounded-xl p-4 ${realiseDepasse ? 'border-red-300' : 'border-green-200'}`}>
+        {/* Debourse */}
+        <div className={`bg-white border rounded-xl p-4 ${debourseDepasse ? 'border-red-300' : 'border-green-200'}`}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 mb-1">Realise</p>
-            {realiseDepasse ? (
+            <p className="text-sm text-gray-500 mb-1">Déboursé</p>
+            {debourseDepasse ? (
               <TrendingUp className="w-4 h-4 text-red-500" />
             ) : (
               <TrendingDown className="w-4 h-4 text-green-500" />
             )}
           </div>
-          <p className={`text-2xl font-bold ${realiseDepasse ? 'text-red-600' : 'text-green-700'}`}>
+          <p className={`text-2xl font-bold ${debourseDepasse ? 'text-red-600' : 'text-green-700'}`}>
             {formatEUR(kpi.total_realise)}
           </p>
           <div className="mt-2">
@@ -168,7 +168,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
         {/* Reste a depenser (FIN-16) */}
         <div className={`bg-white border rounded-xl p-4 ${resteNegatif ? 'border-red-300' : 'border-blue-200'}`}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 mb-1">Reste a depenser</p>
+            <p className="text-sm text-gray-500 mb-1">Reste à dépenser</p>
             <Wallet className={`w-4 h-4 ${resteNegatif ? 'text-red-500' : 'text-blue-500'}`} />
           </div>
           <p className={`text-2xl font-bold ${resteNegatif ? 'text-red-600' : 'text-blue-700'}`}>
@@ -186,14 +186,14 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
         {/* Marge */}
         <div className={`bg-white border rounded-xl p-4 ${margeFaible ? 'border-red-300' : 'border-green-200'}`}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 mb-1">Marge estimee</p>
+            <p className="text-sm text-gray-500 mb-1">Marge estimée</p>
             {margeFaible && <AlertTriangle className="w-4 h-4 text-red-500" />}
           </div>
           <p className={`text-2xl font-bold ${margeFaible ? 'text-red-600' : 'text-green-700'}`}>
             {formatPct(kpi.marge_estimee)}
           </p>
           <p className="text-xs text-gray-500 mt-2">
-            {margeFaible ? 'Marge inferieure a 5%' : 'Marge correcte'}
+            {margeFaible ? 'Marge inférieure à 5%' : 'Marge correcte'}
           </p>
         </div>
       </div>
@@ -238,11 +238,11 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
                   <div className="flex gap-2 items-center">
                     <div className="flex-1 bg-gray-100 rounded-full h-3 relative overflow-hidden">
                       <div
-                        className="absolute inset-y-0 left-0 bg-blue-400 rounded-full"
+                        className="absolute inset-y-0 left-0 bg-amber-400 rounded-full"
                         style={{ width: `${Math.min(pctEngage, 100)}%` }}
                       />
                       <div
-                        className="absolute inset-y-0 left-0 bg-green-500 rounded-full"
+                        className="absolute inset-y-0 left-0 bg-emerald-600 rounded-full"
                         style={{ width: `${Math.min(pctRealise, 100)}%` }}
                       />
                     </div>
@@ -256,12 +256,12 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           </div>
           <div className="flex items-center gap-4 mt-4 pt-3 border-t text-xs text-gray-500">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-blue-400" />
-              <span>Engage</span>
+              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <span>Engagé</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span>Realise</span>
+              <div className="w-3 h-3 rounded-full bg-emerald-600" />
+              <span>Déboursé</span>
             </div>
           </div>
         </div>
