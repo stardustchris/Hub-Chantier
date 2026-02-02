@@ -97,9 +97,9 @@ export default function PointageModal({
                   {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
                 </p>
               )}
-              {pointage && (
+              {pointage && pointage.date_pointage && (
                 <p className="text-sm text-gray-500">
-                  {format(new Date(pointage.date_pointage), 'EEEE d MMMM yyyy', { locale: fr })}
+                  {format(new Date(pointage.date_pointage + 'T00:00:00'), 'EEEE d MMMM yyyy', { locale: fr })}
                 </p>
               )}
             </div>

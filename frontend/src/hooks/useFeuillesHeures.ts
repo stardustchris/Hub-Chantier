@@ -12,7 +12,7 @@ export type ViewTab = 'compagnons' | 'chantiers'
 export function useFeuillesHeures() {
   const { user: currentUser } = useAuth()
   const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'conducteur' || currentUser?.role === 'chef_chantier'
-  const isValidateur = currentUser?.role === 'admin' || currentUser?.role === 'conducteur'
+  const isValidateur = currentUser?.role === 'admin' || currentUser?.role === 'conducteur' || currentUser?.role === 'chef_chantier'
 
   // État principal
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -70,18 +70,32 @@ export function useFeuillesHeures() {
 
       // Tous les utilisateurs actifs pour le filtre (admin peut s'ajouter)
       const allActive = usersData.items.filter((u) => u.is_active)
+      const chantiersActifs = chantiersData.items.filter((c) => c.statut !== 'ferme')
+
+      // Chef de chantier : restreindre aux chantiers dont il est chef
+      const isChef = currentUser?.role === 'chef_chantier'
+      const mesChantiers = isChef
+        ? chantiersActifs.filter((c) =>
+            c.chefs?.some((chef) => String(chef.id) === String(currentUser?.id))
+          )
+        : chantiersActifs
+
       setUtilisateurs(allActive)
-      setChantiers(chantiersData.items.filter((c) => c.statut !== 'ferme'))
+      setChantiers(mesChantiers)
 
       // Par défaut : exclure admin/conducteur de la vue (ne travaillent pas sur chantier)
       // Mais si un filtre est actif, respecter la sélection de l'utilisateur
       const ROLES_CHANTIER = ['chef_chantier', 'compagnon']
+
+      // Chef : restreindre les chantier_ids à ses chantiers même si pas de filtre actif
+      const mesChantierIds = mesChantiers.map((c) => Number(c.id))
+
       const utilisateurIds = filterUtilisateurs.length > 0
         ? filterUtilisateurs
         : allActive.filter((u) => ROLES_CHANTIER.includes(u.role)).map((u) => Number(u.id))
       const chantierIds = filterChantiers.length > 0
-        ? filterChantiers
-        : chantiersData.items.filter((c) => c.statut !== 'ferme').map((c) => Number(c.id))
+        ? filterChantiers.filter((id) => !isChef || mesChantierIds.includes(id))
+        : mesChantierIds
 
       if (viewTab === 'compagnons') {
         const vueData = await pointagesService.getVueCompagnons(semaineDebut, utilisateurIds)
@@ -105,7 +119,7 @@ export function useFeuillesHeures() {
     } finally {
       setLoading(false)
     }
-  }, [semaineDebut, viewTab, filterUtilisateurs, filterChantiers])
+  }, [semaineDebut, viewTab, filterUtilisateurs, filterChantiers, currentUser?.id, currentUser?.role])
 
   useEffect(() => {
     loadData()
