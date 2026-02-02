@@ -171,26 +171,26 @@ export default function PointageModal({
           </form>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-            <div>
+          <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50 gap-2">
+            <div className="shrink-0">
               {form.isEditing && form.isEditable && onDelete && (
                 <button
                   type="button"
                   onClick={form.handleDelete}
                   disabled={form.saving}
-                  className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-2.5 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Supprimer
+                  <span className="hidden sm:inline">Supprimer</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
               >
                 Annuler
               </button>
@@ -201,9 +201,9 @@ export default function PointageModal({
                   type="button"
                   onClick={form.handleSubmitForValidation}
                   disabled={form.saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   Soumettre
                 </button>
               )}
@@ -214,10 +214,10 @@ export default function PointageModal({
                   type="submit"
                   onClick={form.handleSubmit}
                   disabled={form.saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4" />
-                  {form.saving ? 'Enregistrement...' : 'Enregistrer'}
+                  <Check className="w-3.5 h-3.5" />
+                  {form.saving ? 'En cours...' : 'Enregistrer'}
                 </button>
               )}
             </div>

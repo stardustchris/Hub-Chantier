@@ -97,7 +97,11 @@ export default function TimesheetChantierGrid({
                   : ''
               }`}
               onClick={() =>
-                pointage.is_editable !== false && canEdit && onPointageClick(pointage)
+                pointage.is_editable !== false && canEdit && onPointageClick({
+                  ...pointage,
+                  id: pointage.id ?? (pointage as Record<string, unknown>).pointage_id as number,
+                  chantier_id: pointage.chantier_id ?? chantierId,
+                })
               }
             >
               <span className="truncate text-gray-700" title={pointage.utilisateur_nom}>

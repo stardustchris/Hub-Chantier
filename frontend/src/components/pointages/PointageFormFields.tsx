@@ -40,14 +40,14 @@ export function PointageFormFields({
           Chantier *
         </label>
         <select
-          value={chantierId}
+          value={String(chantierId)}
           onChange={(e) => setChantierId(e.target.value ? Number(e.target.value) : '')}
           disabled={isEditing || !isEditable}
           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
         >
           <option value="">Selectionner un chantier</option>
           {chantiers.map((chantier) => (
-            <option key={chantier.id} value={chantier.id}>
+            <option key={chantier.id} value={String(chantier.id)}>
               {chantier.nom}
             </option>
           ))}
