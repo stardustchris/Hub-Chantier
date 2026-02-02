@@ -134,8 +134,9 @@ export default function DevisDetailPage() {
       setShowConvertModal(false)
       await loadDevis()
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string; error?: string } } }
-      const message = axiosError.response?.data?.message
+      const axiosError = err as { response?: { data?: { detail?: string; message?: string; error?: string } } }
+      const message = axiosError.response?.data?.detail
+        || axiosError.response?.data?.message
         || 'Erreur lors de la conversion du devis en chantier'
       setConvertError(message)
     } finally {
@@ -143,39 +144,49 @@ export default function DevisDetailPage() {
     }
   }
 
+  // Recalculer les totaux et recharger le devis
+  const recalculerEtRecharger = async () => {
+    try {
+      await devisService.calculerTotaux(devisId)
+    } catch {
+      // Le recalcul peut echouer si le devis n'a pas de lignes, on continue
+    }
+    await loadDevis()
+  }
+
   // Edition devis
   const handleUpdateDevis = async (data: DevisCreate | DevisUpdate) => {
     await devisService.updateDevis(devisId, data as DevisUpdate)
     setShowEditForm(false)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
 
   // CRUD lots
   const handleCreateLot = async (data: LotDevisCreate) => {
     await devisService.createLot(data)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
   const handleUpdateLot = async (lotId: number, data: LotDevisUpdate) => {
     await devisService.updateLot(lotId, data)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
   const handleDeleteLot = async (lotId: number) => {
     await devisService.deleteLot(lotId)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
 
   // CRUD lignes
   const handleCreateLigne = async (data: LigneDevisCreate) => {
     await devisService.createLigne(data)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
   const handleUpdateLigne = async (ligneId: number, data: LigneDevisUpdate) => {
     await devisService.updateLigne(ligneId, data)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
   const handleDeleteLigne = async (ligneId: number) => {
     await devisService.deleteLigne(ligneId)
-    await loadDevis()
+    await recalculerEtRecharger()
   }
 
   return (
