@@ -6,13 +6,27 @@
  * via financierService.getConsolidation().
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Layout from '../components/Layout'
 import { chantiersService } from '../services/chantiers'
 import { financierService } from '../services/financier'
 import { logger } from '../services/logger'
 import { formatEUR } from '../components/financier/ChartTooltip'
+import ChartTooltip from '../components/financier/ChartTooltip'
 import type { VueConsolidee, ChantierFinancierSummary } from '../types'
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 import {
   Loader2,
   AlertCircle,
@@ -29,9 +43,21 @@ type SortField = 'nom_chantier' | 'montant_revise_ht' | 'pct_engage' | 'pct_real
 type SortDirection = 'asc' | 'desc'
 
 const STATUT_CONFIG: Record<ChantierFinancierSummary['statut'], { label: string; colorClass: string; Icon: typeof CheckCircle }> = {
-  ok: { label: 'OK', colorClass: 'text-green-600 bg-green-100', Icon: CheckCircle },
+  ok: { label: 'OK', colorClass: 'text-blue-600 bg-blue-100', Icon: CheckCircle },
   attention: { label: 'Attention', colorClass: 'text-orange-600 bg-orange-100', Icon: AlertTriangle },
   depassement: { label: 'Depassement', colorClass: 'text-red-600 bg-red-100', Icon: TrendingUp },
+}
+
+const STATUT_COLORS: Record<string, string> = {
+  ok: '#3b82f6',
+  attention: '#f59e0b',
+  depassement: '#dc2626',
+}
+
+const CHART_COLORS = {
+  budget: '#3b82f6',
+  engage: '#f59e0b',
+  realise: '#475569',
 }
 
 export default function DashboardFinancierPage() {
@@ -111,6 +137,46 @@ export default function DashboardFinancierPage() {
     return sorted
   }, [data, sortField, sortDirection])
 
+  // Donnees pour le camembert des statuts
+  const statutPieData = useMemo(() => {
+    if (!data) return []
+    return [
+      { name: 'OK', value: data.kpi_globaux.nb_chantiers_ok, color: STATUT_COLORS.ok },
+      { name: 'Attention', value: data.kpi_globaux.nb_chantiers_attention, color: STATUT_COLORS.attention },
+      { name: 'Depassement', value: data.kpi_globaux.nb_chantiers_depassement, color: STATUT_COLORS.depassement },
+    ].filter((d) => d.value > 0)
+  }, [data])
+
+  // Donnees pour le graphique barres Budget vs Engage vs Realise
+  const budgetBarData = useMemo(() => {
+    if (!data) return []
+    return data.chantiers.slice(0, 8).map((c) => ({
+      name: c.nom_chantier.length > 15 ? c.nom_chantier.substring(0, 15) + '...' : c.nom_chantier,
+      Budget: Number(c.montant_revise_ht),
+      Engage: Number(c.total_engage),
+      Realise: Number(c.total_realise),
+    }))
+  }, [data])
+
+  // Donnees pour le graphique marges par chantier
+  const margesBarData = useMemo(() => {
+    if (!data) return []
+    return [...data.chantiers]
+      .sort((a, b) => Number(b.marge_estimee_pct) - Number(a.marge_estimee_pct))
+      .slice(0, 8)
+      .map((c) => ({
+        name: c.nom_chantier.length > 15 ? c.nom_chantier.substring(0, 15) + '...' : c.nom_chantier,
+        marge: Number(c.marge_estimee_pct),
+        fill: Number(c.marge_estimee_pct) >= 0 ? '#3b82f6' : '#dc2626',
+      }))
+  }, [data])
+
+  // Custom label pour le camembert
+  const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
+    if (percent < 0.05) return null
+    return `${name} (${(percent * 100).toFixed(0)}%)`
+  }
+
   const renderChantierCard = (chantier: ChantierFinancierSummary, rank?: number) => {
     const config = STATUT_CONFIG[chantier.statut]
     const StatutIcon = config.Icon
@@ -140,7 +206,7 @@ export default function DashboardFinancierPage() {
           </div>
           <div>
             <span className="text-gray-500">Marge</span>
-            <p className={`font-medium ${Number(chantier.marge_estimee_pct) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`font-medium ${Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
               {Number(chantier.marge_estimee_pct).toFixed(1)}%
             </p>
           </div>
@@ -257,8 +323,8 @@ export default function DashboardFinancierPage() {
                       Reste : {formatEUR(data.kpi_globaux.total_reste_a_depenser)}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
               </div>
@@ -268,7 +334,7 @@ export default function DashboardFinancierPage() {
                   <div>
                     <p className="text-sm text-gray-600">Marge Moyenne</p>
                     <p className={`text-2xl font-bold mt-1 ${
-                      Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-green-600' : 'text-red-600'
+                      Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                     }`}>
                       {Number(data.kpi_globaux.marge_moyenne_pct).toFixed(1)}%
                     </p>
@@ -285,11 +351,11 @@ export default function DashboardFinancierPage() {
 
             {/* Compteurs statut */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role="region" aria-label="Repartition des chantiers par statut">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+                <CheckCircle className="w-8 h-8 text-blue-600" />
                 <div>
-                  <p className="text-2xl font-bold text-green-700">{data.kpi_globaux.nb_chantiers_ok}</p>
-                  <p className="text-sm text-green-600">Chantiers OK</p>
+                  <p className="text-2xl font-bold text-blue-700">{data.kpi_globaux.nb_chantiers_ok}</p>
+                  <p className="text-sm text-blue-600">Chantiers OK</p>
                 </div>
               </div>
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-3">
@@ -307,6 +373,102 @@ export default function DashboardFinancierPage() {
                 </div>
               </div>
             </div>
+
+            {/* Graphiques */}
+            {data.chantiers.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" role="region" aria-label="Graphiques financiers">
+                {/* Camembert repartition statuts */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Repartition par statut</h3>
+                  {statutPieData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={statutPieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={90}
+                          paddingAngle={3}
+                          dataKey="value"
+                          label={renderPieLabel}
+                          labelLine={false}
+                        >
+                          {statutPieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => (
+                            <ChartTooltip
+                              active={active}
+                              payload={payload?.map((p) => ({
+                                name: String(p.name),
+                                value: Number(p.value),
+                                color: String(p.payload?.color || p.payload?.fill || '#374151'),
+                              }))}
+                            />
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm">
+                      Aucune donnee
+                    </div>
+                  )}
+                </div>
+
+                {/* Barres Budget vs Engage vs Realise */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:col-span-2">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Budget / Engage / Realise par chantier</h3>
+                  {budgetBarData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={budgetBarData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                        <Tooltip
+                          formatter={(value: number, name: string) => [formatEUR(value), name]}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Bar dataKey="Budget" fill={CHART_COLORS.budget} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Engage" fill={CHART_COLORS.engage} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Realise" fill={CHART_COLORS.realise} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm">
+                      Aucune donnee
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Graphique marges */}
+            {margesBarData.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4" role="region" aria-label="Graphique des marges">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Marges estimees par chantier</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={margesBarData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
+                    <Tooltip
+                      formatter={(value: number) => [`${value.toFixed(1)}%`, 'Marge']}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                    />
+                    <Bar dataKey="marge" radius={[0, 4, 4, 0]}>
+                      {margesBarData.map((entry, index) => (
+                        <Cell key={`marge-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
 
             {/* Tableau des chantiers */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" role="region" aria-label="Tableau des chantiers">
@@ -350,7 +512,7 @@ export default function DashboardFinancierPage() {
                             <div className="flex items-center justify-end gap-2">
                               <div className="w-16 bg-gray-200 rounded-full h-1.5">
                                 <div
-                                  className="h-1.5 rounded-full bg-green-500"
+                                  className="h-1.5 rounded-full bg-blue-500"
                                   style={{ width: `${Math.min(Number(chantier.pct_realise), 100)}%` }}
                                 />
                               </div>
@@ -359,7 +521,7 @@ export default function DashboardFinancierPage() {
                           </td>
                           <td className="px-4 py-3 text-right">{formatEUR(chantier.reste_a_depenser)}</td>
                           <td className={`px-4 py-3 text-right font-medium ${
-                            Number(chantier.marge_estimee_pct) >= 0 ? 'text-green-600' : 'text-red-600'
+                            Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                           }`}>
                             {Number(chantier.marge_estimee_pct).toFixed(1)}%
                           </td>
@@ -388,7 +550,7 @@ export default function DashboardFinancierPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" role="region" aria-label="Top chantiers">
                 {/* Top Rentables */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                  <h3 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
                     <TrendingUp size={16} />
                     Top 3 Rentables
                   </h3>
