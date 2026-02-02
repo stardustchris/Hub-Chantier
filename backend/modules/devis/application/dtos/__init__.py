@@ -8,6 +8,8 @@ from .lot_dtos import LotDevisDTO, LotDevisCreateDTO, LotDevisUpdateDTO
 from .ligne_dtos import LigneDevisDTO, LigneDevisCreateDTO, LigneDevisUpdateDTO
 from .debourse_dtos import DebourseDetailDTO, DebourseDetailCreateDTO
 from .dashboard_dtos import KPIDevisDTO, DevisRecentDTO, DashboardDevisDTO
+from .attestation_tva_dtos import AttestationTVACreateDTO, AttestationTVADTO, EligibiliteTVADTO
+from .frais_chantier_dtos import FraisChantierCreateDTO, FraisChantierUpdateDTO, FraisChantierDTO
 
 __all__ = [
     "DevisDTO",
@@ -25,4 +27,10 @@ __all__ = [
     "KPIDevisDTO",
     "DevisRecentDTO",
     "DashboardDevisDTO",
+    "AttestationTVACreateDTO",
+    "AttestationTVADTO",
+    "EligibiliteTVADTO",
+    "FraisChantierCreateDTO",
+    "FraisChantierUpdateDTO",
+    "FraisChantierDTO",
 ]

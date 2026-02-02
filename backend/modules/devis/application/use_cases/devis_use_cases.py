@@ -311,6 +311,13 @@ class DeleteDevisUseCase:
         if not devis:
             raise DevisNotFoundError(devis_id)
 
+        # DEV-08: Les versions figees ne peuvent pas etre supprimees
+        if devis.version_figee:
+            from ...domain.entities.devis import DevisValidationError
+            raise DevisValidationError(
+                f"Le devis {devis.numero} est fige et ne peut pas etre supprime"
+            )
+
         if devis.statut != StatutDevis.BROUILLON:
             raise DevisNotModifiableError(devis_id, devis.statut)
 

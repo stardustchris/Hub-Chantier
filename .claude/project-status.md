@@ -20,16 +20,18 @@
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
 | financier | 17 | FIN-01 a FIN-23 | 20/23 | 0 | **PHASE 1+2+3 COMPLET, Phase 4 futur** |
+| devis | 20 | DEV-01 a DEV-25 | 8/25 | 0 | **PHASE 2 COMPLET** (Phase 1 merged PR#210) |
 
 ## Statistiques globales
 
-- **Modules complets** : 13/13 (dashboard cards + planning unifie + financier Phase 1+2+3)
+- **Modules complets** : 14/14 (dashboard cards + planning unifie + financier Phase 1+2+3 + devis Phase 2)
 - **Module financier** : 20/23 features (Phase 1+2+3: 20/20 ✅, Phase 4: 0/3 futur)
-- **Fonctionnalites totales** : 275 (+8 nouvelles features financier Phase 3)
-- **Fonctionnalites done** : 253 (92%)
+- **Module devis** : 8/25 features (Phase 2: 8/8 ✅, Phase 1: PR#210, Phase 3+4: futur)
+- **Fonctionnalites totales** : 300 (+25 nouvelles features devis)
+- **Fonctionnalites done** : 261 (87%)
 - **Fonctionnalites specs ready** : 3 (FIN Phase 4)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
-- **Fonctionnalites future** : 3 (FIN-03, FIN-13, FIN-23 — Phase 4)
+- **Fonctionnalites future** : 20 (FIN-03, FIN-13, FIN-23 + DEV Phase 3+4)
 
 **Note**: Le module `planning_charge` a été fusionné dans `planning` (28 jan 2026) pour conformité Clean Architecture. Score architect review: 87/100, 186 tests unitaires passent.
 
@@ -129,6 +131,27 @@
 | FIN-13 | Export comptable | 🔮 Phase 4 |
 | FIN-23 | Integration ERP (Sage, Cegid) | 🔮 Phase 4 |
 
+### Module Devis (8/25 features — Phase 2 Automatisation COMPLET)
+
+**Statut global** : Phase 2 implementee (8 features), Phase 1 mergee via PR#210
+
+#### Phase 2 - Automatisation (8/8 ✅ COMPLET)
+
+| ID | Description | Statut |
+|----|-------------|--------|
+| DEV-08 | Variantes et revisions (deep copy, comparatif) | ✅ Done |
+| DEV-11 | Personnalisation presentation (4 templates) | ✅ Done |
+| DEV-14 | Signature electronique (eIDAS, SHA-512, 3 modes) | ✅ Done |
+| DEV-16 | Conversion en chantier (Domain Event) | ✅ Done |
+| DEV-22 | Retenue de garantie (0/5/10%) | ✅ Done |
+| DEV-23 | Attestation TVA (CERFA 1300-SD/1301-SD) | ✅ Done |
+| DEV-24 | Relances automatiques (7j/15j/30j configurable) | ✅ Done |
+| DEV-25 | Frais de chantier (prorata, frais generaux) | ✅ Done |
+
+#### Phase 3+4 (0/17 🔮 FUTUR)
+
+DEV-01 a DEV-07, DEV-09, DEV-10, DEV-12, DEV-13, DEV-15, DEV-17, DEV-18, DEV-19, DEV-20, DEV-21
+
 ### Infrastructure (16 features)
 
 | ID | Description |
@@ -204,6 +227,22 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-02-01 - Module Devis Phase 2 Automatisation (8 features)
+- **Objectif**: Implementer les 8 features Phase 2 du module Devis
+- **DEV-08**: Variantes et revisions (TypeVersion, TypeEcart VOs, ComparatifDevis entity, 6 use cases)
+- **DEV-11**: Personnalisation presentation (OptionsPresentation VO, 4 templates, 3 use cases)
+- **DEV-14**: Signature electronique (eIDAS, SHA-512, 3 modes: dessin/upload/texte, 4 use cases)
+- **DEV-16**: Conversion en chantier (DevisConvertEvent domain event, pre-requis checks)
+- **DEV-22**: Retenue de garantie (RetenueGarantie VO, 0/5/10%, montant_net_a_payer)
+- **DEV-23**: Attestation TVA (TauxTVA VO, CERFA 1300-SD/1301-SD, 3 use cases)
+- **DEV-24**: Relances automatiques (ConfigRelances VO, RelanceDevis entity, 5 use cases)
+- **DEV-25**: Frais de chantier (TypeFraisChantier, ModeRepartition VOs, 5 use cases)
+- **Architecture**: 76 fichiers (18 modifies + 58 nouveaux), 30+ routes API, 8 composants React
+- **Validation agents**: architect 9.5/10 PASS, test-automator 542 tests, code-reviewer APPROVED, security PASS
+- **Fixes**: 1 CRITICAL (auth routes), 7 HIGH (type hints, domain methods, broad except, email validation, max_length)
+- **Tests**: 542 pass (Phase 2), 0 fail
+- Verdict : ✅ **MODULE DEVIS PHASE 2 COMPLET**
 
 Session 2026-01-31 - Module Financier Phase 2 (6 features)
 - **Objectif**: Implementer les 6 features Phase 2 du module financier

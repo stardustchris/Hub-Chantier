@@ -1395,6 +1395,13 @@ export const TAUX_TVA_OPTIONS = [
   { value: 0, label: '0% (Exonere)' },
 ]
 
+// Options retenue de garantie (DEV-22)
+export const RETENUE_GARANTIE_OPTIONS = [
+  { value: 0, label: '0% (Aucune)' },
+  { value: 5, label: '5%' },
+  { value: 10, label: '10%' },
+]
+
 // ===== Phase 3 Types =====
 
 // Vue consolidee multi-chantiers (FIN-20)
@@ -1539,6 +1546,86 @@ export interface ArticleUpdate {
   actif?: boolean
 }
 
+// Versions et variantes (DEV-08)
+export type TypeVersion = 'originale' | 'revision' | 'variante'
+export type LabelVariante = 'ECO' | 'STD' | 'PREM' | 'ALT'
+export type TypeEcart = 'ajout' | 'suppression' | 'modification' | 'identique'
+
+export const LABEL_VARIANTE_CONFIG: Record<LabelVariante, { label: string; couleur: string }> = {
+  ECO: { label: 'Economique', couleur: '#10B981' },
+  STD: { label: 'Standard', couleur: '#3B82F6' },
+  PREM: { label: 'Premium', couleur: '#8B5CF6' },
+  ALT: { label: 'Alternative', couleur: '#F59E0B' },
+}
+
+export const TYPE_VERSION_CONFIG: Record<TypeVersion, { label: string; couleur: string }> = {
+  originale: { label: 'Originale', couleur: '#6B7280' },
+  revision: { label: 'Revision', couleur: '#3B82F6' },
+  variante: { label: 'Variante', couleur: '#8B5CF6' },
+}
+
+export const TYPE_ECART_CONFIG: Record<TypeEcart, { label: string; couleur: string; bgColor: string }> = {
+  ajout: { label: 'Ajout', couleur: '#10B981', bgColor: '#D1FAE5' },
+  suppression: { label: 'Suppression', couleur: '#EF4444', bgColor: '#FEE2E2' },
+  modification: { label: 'Modification', couleur: '#F59E0B', bgColor: '#FEF3C7' },
+  identique: { label: 'Identique', couleur: '#6B7280', bgColor: '#F3F4F6' },
+}
+
+// Resume d'une version (retourne par GET /versions)
+export interface VersionDevis {
+  id: number
+  numero: string
+  type_version: TypeVersion
+  numero_version: number
+  label_variante?: LabelVariante
+  version_commentaire?: string
+  version_figee: boolean
+  version_figee_at?: string
+  statut: StatutDevis
+  montant_total_ht: number
+  montant_total_ttc: number
+  date_creation?: string
+  devis_parent_id?: number
+}
+
+// Resultat d'un comparatif entre 2 versions
+export interface ComparatifDevis {
+  id: number
+  source_id: number
+  cible_id: number
+  source_numero: string
+  cible_numero: string
+  ecart_montant_ht: number
+  ecart_montant_ttc: number
+  ecart_marge: number
+  ecart_debourse: number
+  variation_montant_ht_pct: number
+  variation_montant_ttc_pct: number
+  variation_marge_pct: number
+  variation_debourse_pct: number
+  nb_lots_ajoutes: number
+  nb_lots_supprimes: number
+  nb_lots_modifies: number
+  nb_lignes_ajoutees: number
+  nb_lignes_supprimees: number
+  nb_lignes_modifiees: number
+  lignes: ComparatifLigne[]
+  created_at: string
+}
+
+// Detail ligne par ligne du comparatif
+export interface ComparatifLigne {
+  designation: string
+  lot_titre?: string
+  type_ecart: TypeEcart
+  quantite_source?: number
+  quantite_cible?: number
+  ecart_quantite?: number
+  montant_source?: number
+  montant_cible?: number
+  ecart_montant?: number
+}
+
 // Devis (matches backend DevisDTO)
 export interface Devis {
   id: number
@@ -1552,6 +1639,18 @@ export interface Devis {
   date_validite?: string
   commercial_id?: number
   chantier_ref?: string
+  // Champs retenue de garantie (DEV-22)
+  retenue_garantie_pct?: number
+  montant_retenue_garantie?: number
+  montant_net_a_payer?: number
+  // Champs version (DEV-08)
+  type_version?: TypeVersion
+  numero_version?: number
+  version_figee?: boolean
+  devis_parent_id?: number
+  label_variante?: LabelVariante
+  version_commentaire?: string
+  version_figee_at?: string
 }
 
 export interface DevisCreate {
@@ -1618,6 +1717,8 @@ export interface DevisDetail {
   taux_marge_deplacement?: number
   coefficient_frais_generaux: number
   retenue_garantie_pct: number
+  montant_retenue_garantie?: number
+  montant_net_a_payer?: number
   taux_tva_defaut: number
   date_creation?: string
   date_validite?: string
@@ -1629,6 +1730,14 @@ export interface DevisDetail {
   notes?: string
   conditions_generales?: string
   lots: LotDevis[]
+  // Champs version (DEV-08)
+  type_version?: TypeVersion
+  numero_version?: number
+  version_figee?: boolean
+  devis_parent_id?: number
+  label_variante?: LabelVariante
+  version_commentaire?: string
+  version_figee_at?: string
 }
 
 // Lots de devis (matches backend LotDevisDTO)
@@ -1763,4 +1872,241 @@ export interface DevisRecent {
 export interface DashboardDevis {
   kpi: KPIDevis
   derniers_devis: DevisRecent[]
+}
+
+// Attestation TVA (DEV-23)
+export type TypeCerfa = '1300-SD' | '1301-SD'
+export type NatureImmeuble = 'maison' | 'appartement' | 'immeuble'
+export type NatureTravaux = 'amelioration' | 'entretien' | 'transformation'
+
+export interface EligibiliteTVA {
+  eligible: boolean
+  taux_tva: number
+  type_cerfa?: TypeCerfa
+  libelle_taux: string
+  message: string
+}
+
+export interface AttestationTVA {
+  id: number
+  devis_id: number
+  type_cerfa: TypeCerfa
+  taux_tva: number
+  nom_client: string
+  adresse_client: string
+  telephone_client?: string
+  adresse_immeuble: string
+  nature_immeuble: NatureImmeuble
+  date_construction_plus_2ans: boolean
+  description_travaux: string
+  nature_travaux: NatureTravaux
+  atteste_par: string
+  date_attestation: string
+  generee_at: string
+}
+
+export interface AttestationTVACreate {
+  nom_client: string
+  adresse_client: string
+  telephone_client?: string
+  adresse_immeuble: string
+  nature_immeuble: NatureImmeuble
+  date_construction_plus_2ans: boolean
+  description_travaux: string
+  nature_travaux: NatureTravaux
+  atteste_par: string
+}
+
+export const NATURE_IMMEUBLE_LABELS: Record<NatureImmeuble, string> = {
+  maison: 'Maison individuelle',
+  appartement: 'Appartement',
+  immeuble: 'Immeuble collectif',
+}
+
+export const NATURE_TRAVAUX_LABELS: Record<NatureTravaux, string> = {
+  amelioration: 'Amelioration',
+  entretien: 'Entretien / reparation',
+  transformation: 'Transformation',
+}
+
+// Frais de chantier (DEV-25)
+export type TypeFraisChantier = 'compte_prorata' | 'frais_generaux' | 'installation_chantier' | 'autre'
+export type ModeRepartition = 'global' | 'prorata_lots'
+
+export interface FraisChantierDevis {
+  id: number
+  devis_id: number
+  type_frais: TypeFraisChantier
+  libelle: string
+  montant_ht: number
+  montant_ttc: number
+  mode_repartition: ModeRepartition
+  taux_tva: number
+  ordre: number
+  lot_devis_id?: number
+}
+
+export interface FraisChantierCreate {
+  type_frais: TypeFraisChantier
+  libelle: string
+  montant_ht: number
+  mode_repartition: ModeRepartition
+  taux_tva?: number
+  ordre?: number
+  lot_devis_id?: number
+}
+
+export interface FraisChantierUpdate {
+  type_frais?: TypeFraisChantier
+  libelle?: string
+  montant_ht?: number
+  mode_repartition?: ModeRepartition
+  taux_tva?: number
+  ordre?: number
+  lot_devis_id?: number
+}
+
+export interface RepartitionFraisLot {
+  lot_id: number
+  lot_libelle: string
+  lot_total_ht: number
+  montant_frais_repercute: number
+  poids_pct: number
+}
+
+export const TYPE_FRAIS_LABELS: Record<TypeFraisChantier, string> = {
+  compte_prorata: 'Compte prorata',
+  frais_generaux: 'Frais generaux',
+  installation_chantier: 'Installation chantier',
+  autre: 'Autre',
+}
+
+export const MODE_REPARTITION_LABELS: Record<ModeRepartition, string> = {
+  global: 'Global',
+  prorata_lots: 'Au prorata des lots',
+}
+
+// Relances automatiques (DEV-24)
+export type StatutRelance = 'planifiee' | 'envoyee' | 'annulee'
+export type TypeRelance = 'email' | 'push' | 'les_deux'
+
+export interface RelanceDevis {
+  id: number
+  devis_id: number
+  numero_relance: number
+  type_relance: TypeRelance
+  date_envoi?: string
+  date_prevue: string
+  statut: StatutRelance
+  message_personnalise?: string
+}
+
+export interface ConfigRelances {
+  delais: number[]
+  actif: boolean
+  type_relance_defaut: TypeRelance
+}
+
+export interface RelancesHistorique {
+  relances: RelanceDevis[]
+  config: ConfigRelances
+  nb_envoyees: number
+  nb_planifiees: number
+  nb_annulees: number
+}
+
+export const STATUT_RELANCE_CONFIG: Record<StatutRelance, { label: string; couleur: string }> = {
+  planifiee: { label: 'Planifiee', couleur: '#3B82F6' },
+  envoyee: { label: 'Envoyee', couleur: '#10B981' },
+  annulee: { label: 'Annulee', couleur: '#9CA3AF' },
+}
+
+export const TYPE_RELANCE_LABELS: Record<TypeRelance, string> = {
+  email: 'Email',
+  push: 'Notification push',
+  les_deux: 'Email + Push',
+}
+
+// Signature electronique (DEV-14)
+export type TypeSignature = 'dessin_tactile' | 'upload_scan' | 'nom_prenom'
+
+export interface SignatureDevis {
+  id: number
+  devis_id: number
+  type_signature: TypeSignature
+  signataire_nom: string
+  signataire_email: string
+  signataire_telephone?: string
+  signature_data: string
+  ip_adresse: string
+  horodatage: string
+  hash_document: string
+  valide: boolean
+  revoquee_at?: string
+  motif_revocation?: string
+}
+
+export interface SignatureCreate {
+  type_signature: TypeSignature
+  signataire_nom: string
+  signataire_email: string
+  signataire_telephone?: string
+  signature_data: string
+}
+
+export interface VerificationSignature {
+  valide: boolean
+  hash_actuel: string
+  hash_signature: string
+  integre: boolean
+  message: string
+}
+
+export const TYPE_SIGNATURE_LABELS: Record<TypeSignature, string> = {
+  dessin_tactile: 'Dessin tactile',
+  upload_scan: 'Upload scan',
+  nom_prenom: 'Nom et prenom',
+}
+
+// Options de presentation du devis PDF (DEV-11)
+export interface OptionsPresentation {
+  afficher_debourses: boolean
+  afficher_composants: boolean
+  afficher_quantites: boolean
+  afficher_prix_unitaires: boolean
+  afficher_tva_detaillee: boolean
+  afficher_conditions_generales: boolean
+  afficher_logo: boolean
+  afficher_coordonnees_entreprise: boolean
+  afficher_retenue_garantie: boolean
+  afficher_frais_chantier_detail: boolean
+  template_nom: string
+}
+
+export interface TemplatePresentation {
+  nom: string
+  description: string
+  options: OptionsPresentation
+}
+
+// Conversion en chantier (DEV-16)
+export interface ConversionInfo {
+  conversion_possible: boolean
+  deja_converti: boolean
+  est_accepte: boolean
+  est_signe: boolean
+  pre_requis_manquants: string[]
+  chantier_id?: number
+  chantier_numero?: string
+}
+
+export interface ConversionDevis {
+  devis_id: number
+  numero: string
+  client: string
+  budget: number
+  lots: { code_lot: string; libelle: string; montant_ht: number }[]
+  retenue_garantie_pct: number
+  date_conversion: string
+  chantier_id?: number
 }

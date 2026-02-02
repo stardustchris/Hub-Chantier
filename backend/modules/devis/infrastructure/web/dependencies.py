@@ -1,6 +1,13 @@
 """Dependency injection pour le module Devis.
 
 Fournit les factories FastAPI pour les repositories et use cases.
+
+DEV-08: Ajout des factories pour les use cases de versioning.
+DEV-11: Ajout des factories pour les use cases de presentation.
+DEV-14: Ajout des factories pour les use cases de signature electronique.
+DEV-23: Ajout des factories pour les use cases d'attestation TVA.
+DEV-24: Ajout des factories pour les use cases de relances automatiques.
+DEV-25: Ajout des factories pour les use cases de frais de chantier.
 """
 
 from fastapi import Depends
@@ -14,6 +21,11 @@ from ...domain.repositories.ligne_devis_repository import LigneDevisRepository
 from ...domain.repositories.debourse_detail_repository import DebourseDetailRepository
 from ...domain.repositories.article_repository import ArticleRepository
 from ...domain.repositories.journal_devis_repository import JournalDevisRepository
+from ...domain.repositories.comparatif_repository import ComparatifRepository
+from ...domain.repositories.attestation_tva_repository import AttestationTVARepository
+from ...domain.repositories.frais_chantier_repository import FraisChantierRepository
+from ...domain.repositories.signature_devis_repository import SignatureDevisRepository
+from ...domain.repositories.relance_devis_repository import RelanceDevisRepository
 
 from ...application.use_cases.devis_use_cases import (
     CreateDevisUseCase,
@@ -48,12 +60,54 @@ from ...application.use_cases.ligne_use_cases import (
 )
 from ...application.use_cases.calcul_totaux_use_cases import CalculerTotauxDevisUseCase
 from ...application.use_cases.journal_use_cases import GetJournalDevisUseCase
+from ...application.use_cases.version_use_cases import (
+    CreerRevisionUseCase,
+    CreerVarianteUseCase,
+    ListerVersionsUseCase,
+    GenererComparatifUseCase,
+    GetComparatifUseCase,
+    FigerVersionUseCase,
+)
 from ...application.use_cases.article_use_cases import (
     CreateArticleUseCase,
     UpdateArticleUseCase,
     ListArticlesUseCase,
     GetArticleUseCase,
     DeleteArticleUseCase,
+)
+from ...application.use_cases.attestation_tva_use_cases import (
+    GenererAttestationTVAUseCase,
+    GetAttestationTVAUseCase,
+    VerifierEligibiliteTVAUseCase,
+)
+from ...application.use_cases.frais_chantier_use_cases import (
+    CreateFraisChantierUseCase,
+    UpdateFraisChantierUseCase,
+    DeleteFraisChantierUseCase,
+    ListFraisChantierUseCase,
+    CalculerRepartitionFraisUseCase,
+)
+from ...application.use_cases.presentation_use_cases import (
+    UpdateOptionsPresentationUseCase,
+    GetOptionsPresentationUseCase,
+    ListTemplatesPresentationUseCase,
+)
+from ...application.use_cases.signature_use_cases import (
+    SignerDevisUseCase,
+    GetSignatureUseCase,
+    RevoquerSignatureUseCase,
+    VerifierSignatureUseCase,
+)
+from ...application.use_cases.relance_use_cases import (
+    PlanifierRelancesUseCase,
+    ExecuterRelancesUseCase,
+    AnnulerRelancesUseCase,
+    GetRelancesDevisUseCase,
+    UpdateConfigRelancesUseCase,
+)
+from ...application.use_cases.conversion_use_cases import (
+    ConvertirDevisUseCase,
+    GetConversionInfoUseCase,
 )
 
 from ..persistence.sqlalchemy_devis_repository import SQLAlchemyDevisRepository
@@ -62,6 +116,11 @@ from ..persistence.sqlalchemy_ligne_devis_repository import SQLAlchemyLigneDevis
 from ..persistence.sqlalchemy_debourse_detail_repository import SQLAlchemyDebourseDetailRepository
 from ..persistence.sqlalchemy_article_repository import SQLAlchemyArticleRepository
 from ..persistence.sqlalchemy_journal_devis_repository import SQLAlchemyJournalDevisRepository
+from ..persistence.sqlalchemy_comparatif_repository import SQLAlchemyComparatifRepository
+from ..persistence.sqlalchemy_attestation_tva_repository import SQLAlchemyAttestationTVARepository
+from ..persistence.sqlalchemy_frais_chantier_repository import SQLAlchemyFraisChantierRepository
+from ..persistence.sqlalchemy_signature_devis_repository import SQLAlchemySignatureDevisRepository
+from ..persistence.sqlalchemy_relance_devis_repository import SQLAlchemyRelanceDevisRepository
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -90,6 +149,26 @@ def get_article_repository(db: Session = Depends(get_db)) -> ArticleRepository:
 
 def get_journal_devis_repository(db: Session = Depends(get_db)) -> JournalDevisRepository:
     return SQLAlchemyJournalDevisRepository(db)
+
+
+def get_comparatif_repository(db: Session = Depends(get_db)) -> ComparatifRepository:
+    return SQLAlchemyComparatifRepository(db)
+
+
+def get_attestation_tva_repository(db: Session = Depends(get_db)) -> AttestationTVARepository:
+    return SQLAlchemyAttestationTVARepository(db)
+
+
+def get_frais_chantier_repository(db: Session = Depends(get_db)) -> FraisChantierRepository:
+    return SQLAlchemyFraisChantierRepository(db)
+
+
+def get_signature_devis_repository(db: Session = Depends(get_db)) -> SignatureDevisRepository:
+    return SQLAlchemySignatureDevisRepository(db)
+
+
+def get_relance_devis_repository(db: Session = Depends(get_db)) -> RelanceDevisRepository:
+    return SQLAlchemyRelanceDevisRepository(db)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -296,8 +375,11 @@ def get_calculer_totaux_use_case(
     ligne_repo: LigneDevisRepository = Depends(get_ligne_devis_repository),
     debourse_repo: DebourseDetailRepository = Depends(get_debourse_detail_repository),
     journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+    frais_chantier_repo: FraisChantierRepository = Depends(get_frais_chantier_repository),
 ) -> CalculerTotauxDevisUseCase:
-    return CalculerTotauxDevisUseCase(devis_repo, lot_repo, ligne_repo, debourse_repo, journal_repo)
+    return CalculerTotauxDevisUseCase(
+        devis_repo, lot_repo, ligne_repo, debourse_repo, journal_repo, frais_chantier_repo
+    )
 
 
 def get_journal_devis_use_case(
@@ -330,3 +412,242 @@ def get_delete_article_use_case(
     journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
 ) -> DeleteArticleUseCase:
     return DeleteArticleUseCase(article_repo, journal_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Versioning (DEV-08)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_creer_revision_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    ligne_repo: LigneDevisRepository = Depends(get_ligne_devis_repository),
+    debourse_repo: DebourseDetailRepository = Depends(get_debourse_detail_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> CreerRevisionUseCase:
+    return CreerRevisionUseCase(devis_repo, lot_repo, ligne_repo, debourse_repo, journal_repo)
+
+
+def get_creer_variante_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    ligne_repo: LigneDevisRepository = Depends(get_ligne_devis_repository),
+    debourse_repo: DebourseDetailRepository = Depends(get_debourse_detail_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> CreerVarianteUseCase:
+    return CreerVarianteUseCase(devis_repo, lot_repo, ligne_repo, debourse_repo, journal_repo)
+
+
+def get_lister_versions_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+) -> ListerVersionsUseCase:
+    return ListerVersionsUseCase(devis_repo)
+
+
+def get_generer_comparatif_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    ligne_repo: LigneDevisRepository = Depends(get_ligne_devis_repository),
+    comparatif_repo: ComparatifRepository = Depends(get_comparatif_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> GenererComparatifUseCase:
+    return GenererComparatifUseCase(devis_repo, lot_repo, ligne_repo, comparatif_repo, journal_repo)
+
+
+def get_get_comparatif_use_case(
+    comparatif_repo: ComparatifRepository = Depends(get_comparatif_repository),
+) -> GetComparatifUseCase:
+    return GetComparatifUseCase(comparatif_repo)
+
+
+def get_figer_version_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> FigerVersionUseCase:
+    return FigerVersionUseCase(devis_repo, journal_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Attestation TVA (DEV-23)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_generer_attestation_tva_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    attestation_repo: AttestationTVARepository = Depends(get_attestation_tva_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> GenererAttestationTVAUseCase:
+    return GenererAttestationTVAUseCase(devis_repo, attestation_repo, journal_repo)
+
+
+def get_get_attestation_tva_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    attestation_repo: AttestationTVARepository = Depends(get_attestation_tva_repository),
+) -> GetAttestationTVAUseCase:
+    return GetAttestationTVAUseCase(devis_repo, attestation_repo)
+
+
+def get_verifier_eligibilite_tva_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+) -> VerifierEligibiliteTVAUseCase:
+    return VerifierEligibiliteTVAUseCase(devis_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Frais de chantier (DEV-25)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_create_frais_chantier_use_case(
+    frais_repo: FraisChantierRepository = Depends(get_frais_chantier_repository),
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> CreateFraisChantierUseCase:
+    return CreateFraisChantierUseCase(frais_repo, devis_repo, journal_repo)
+
+
+def get_update_frais_chantier_use_case(
+    frais_repo: FraisChantierRepository = Depends(get_frais_chantier_repository),
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> UpdateFraisChantierUseCase:
+    return UpdateFraisChantierUseCase(frais_repo, devis_repo, journal_repo)
+
+
+def get_delete_frais_chantier_use_case(
+    frais_repo: FraisChantierRepository = Depends(get_frais_chantier_repository),
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> DeleteFraisChantierUseCase:
+    return DeleteFraisChantierUseCase(frais_repo, devis_repo, journal_repo)
+
+
+def get_list_frais_chantier_use_case(
+    frais_repo: FraisChantierRepository = Depends(get_frais_chantier_repository),
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+) -> ListFraisChantierUseCase:
+    return ListFraisChantierUseCase(frais_repo, devis_repo)
+
+
+def get_calculer_repartition_frais_use_case(
+    frais_repo: FraisChantierRepository = Depends(get_frais_chantier_repository),
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+) -> CalculerRepartitionFraisUseCase:
+    return CalculerRepartitionFraisUseCase(frais_repo, devis_repo, lot_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Options de presentation (DEV-11)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_update_options_presentation_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> UpdateOptionsPresentationUseCase:
+    return UpdateOptionsPresentationUseCase(devis_repo, journal_repo)
+
+
+def get_get_options_presentation_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+) -> GetOptionsPresentationUseCase:
+    return GetOptionsPresentationUseCase(devis_repo)
+
+
+def get_list_templates_presentation_use_case() -> ListTemplatesPresentationUseCase:
+    return ListTemplatesPresentationUseCase()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Signature electronique (DEV-14)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_signer_devis_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> SignerDevisUseCase:
+    return SignerDevisUseCase(devis_repo, signature_repo, journal_repo)
+
+
+def get_get_signature_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
+) -> GetSignatureUseCase:
+    return GetSignatureUseCase(devis_repo, signature_repo)
+
+
+def get_revoquer_signature_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> RevoquerSignatureUseCase:
+    return RevoquerSignatureUseCase(devis_repo, signature_repo, journal_repo)
+
+
+def get_verifier_signature_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
+) -> VerifierSignatureUseCase:
+    return VerifierSignatureUseCase(devis_repo, signature_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Conversion en chantier (DEV-16)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_convertir_devis_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
+) -> ConvertirDevisUseCase:
+    return ConvertirDevisUseCase(
+        devis_repo, lot_repo, journal_repo, signature_repo
+    )
+
+
+def get_get_conversion_info_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    signature_repo: SignatureDevisRepository = Depends(get_signature_devis_repository),
+) -> GetConversionInfoUseCase:
+    return GetConversionInfoUseCase(devis_repo, signature_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Relances automatiques (DEV-24)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_planifier_relances_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    relance_repo: RelanceDevisRepository = Depends(get_relance_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> PlanifierRelancesUseCase:
+    return PlanifierRelancesUseCase(devis_repo, relance_repo, journal_repo)
+
+
+def get_executer_relances_use_case(
+    relance_repo: RelanceDevisRepository = Depends(get_relance_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> ExecuterRelancesUseCase:
+    return ExecuterRelancesUseCase(relance_repo, journal_repo)
+
+
+def get_annuler_relances_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    relance_repo: RelanceDevisRepository = Depends(get_relance_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> AnnulerRelancesUseCase:
+    return AnnulerRelancesUseCase(devis_repo, relance_repo, journal_repo)
+
+
+def get_get_relances_devis_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    relance_repo: RelanceDevisRepository = Depends(get_relance_devis_repository),
+) -> GetRelancesDevisUseCase:
+    return GetRelancesDevisUseCase(devis_repo, relance_repo)
+
+
+def get_update_config_relances_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> UpdateConfigRelancesUseCase:
+    return UpdateConfigRelancesUseCase(devis_repo, journal_repo)

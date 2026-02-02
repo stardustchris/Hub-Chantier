@@ -1,6 +1,7 @@
 """Implementation SQLAlchemy du repository Devis.
 
 DEV-03: Creation devis structure - CRUD des devis.
+DEV-08: Variantes et revisions - Gestion des versions.
 DEV-15: Suivi statut devis - Filtrage par statut.
 DEV-17: Dashboard devis - Agregations pour KPI.
 DEV-19: Recherche et filtres - Filtres avances.
@@ -10,12 +11,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from sqlalchemy import extract, func, or_
+from sqlalchemy import extract, func, or_, and_
 from sqlalchemy.orm import Session
 
 from ...domain.entities import Devis
 from ...domain.repositories.devis_repository import DevisRepository
 from ...domain.value_objects import StatutDevis
+from ...domain.value_objects.type_version import TypeVersion
 from .models import DevisModel
 
 
@@ -91,6 +93,21 @@ class SQLAlchemyDevisRepository(DevisRepository):
             updated_at=model.updated_at,
             deleted_at=model.deleted_at,
             deleted_by=model.deleted_by,
+            # DEV-08: Versioning
+            devis_parent_id=model.devis_parent_id,
+            numero_version=model.numero_version or 1,
+            type_version=TypeVersion(model.type_version) if model.type_version else TypeVersion.ORIGINALE,
+            label_variante=model.label_variante,
+            version_commentaire=model.version_commentaire,
+            version_figee=model.version_figee or False,
+            version_figee_at=model.version_figee_at,
+            version_figee_par=model.version_figee_par,
+            # DEV-11: Options de presentation
+            options_presentation_json=model.options_presentation_json,
+            # DEV-24: Configuration des relances
+            config_relances_json=model.config_relances_json,
+            # DEV-16: Conversion en chantier
+            converti_en_chantier_id=model.converti_en_chantier_id,
         )
 
     def _update_model(self, model: DevisModel, devis: Devis) -> None:
@@ -130,6 +147,21 @@ class SQLAlchemyDevisRepository(DevisRepository):
         model.commercial_id = devis.commercial_id
         model.conducteur_id = devis.conducteur_id
         model.updated_at = datetime.utcnow()
+        # DEV-08: Versioning
+        model.devis_parent_id = devis.devis_parent_id
+        model.numero_version = devis.numero_version
+        model.type_version = devis.type_version.value
+        model.label_variante = devis.label_variante
+        model.version_commentaire = devis.version_commentaire
+        model.version_figee = devis.version_figee
+        model.version_figee_at = devis.version_figee_at
+        model.version_figee_par = devis.version_figee_par
+        # DEV-11: Options de presentation
+        model.options_presentation_json = devis.options_presentation_json
+        # DEV-24: Configuration des relances
+        model.config_relances_json = devis.config_relances_json
+        # DEV-16: Conversion en chantier
+        model.converti_en_chantier_id = devis.converti_en_chantier_id
 
     def generate_numero(self) -> str:
         """Genere un numero unique pour un nouveau devis.
@@ -199,6 +231,21 @@ class SQLAlchemyDevisRepository(DevisRepository):
                 conducteur_id=devis.conducteur_id,
                 created_at=devis.created_at or datetime.utcnow(),
                 created_by=devis.created_by,
+                # DEV-08: Versioning
+                devis_parent_id=devis.devis_parent_id,
+                numero_version=devis.numero_version,
+                type_version=devis.type_version.value,
+                label_variante=devis.label_variante,
+                version_commentaire=devis.version_commentaire,
+                version_figee=devis.version_figee,
+                version_figee_at=devis.version_figee_at,
+                version_figee_par=devis.version_figee_par,
+                # DEV-11: Options de presentation
+                options_presentation_json=devis.options_presentation_json,
+                # DEV-24: Configuration des relances
+                config_relances_json=devis.config_relances_json,
+                # DEV-16: Conversion en chantier
+                converti_en_chantier_id=devis.converti_en_chantier_id,
             )
             self._session.add(model)
 
@@ -412,6 +459,67 @@ class SQLAlchemyDevisRepository(DevisRepository):
             .filter(DevisModel.statut.in_(expirable_statuts))
         )
         return [self._to_entity(model) for model in query.all()]
+
+    def find_versions(self, devis_id: int) -> List[Devis]:
+        """Liste toutes les versions/variantes d'un devis (DEV-08).
+
+        Retourne l'original et toutes ses revisions/variantes.
+        Si le devis_id est un enfant, remonte au parent pour lister la famille.
+
+        Args:
+            devis_id: L'ID du devis (original ou enfant).
+
+        Returns:
+            Liste des devis de la meme famille, triee par numero_version.
+        """
+        # Trouver le parent (original)
+        devis = (
+            self._session.query(DevisModel)
+            .filter(DevisModel.id == devis_id)
+            .filter(DevisModel.deleted_at.is_(None))
+            .first()
+        )
+        if not devis:
+            return []
+
+        parent_id = devis.devis_parent_id if devis.devis_parent_id else devis.id
+
+        # Lister le parent + tous ses enfants
+        query = (
+            self._session.query(DevisModel)
+            .filter(DevisModel.deleted_at.is_(None))
+            .filter(
+                or_(
+                    DevisModel.id == parent_id,
+                    DevisModel.devis_parent_id == parent_id,
+                )
+            )
+            .order_by(DevisModel.numero_version.asc())
+        )
+
+        return [self._to_entity(model) for model in query.all()]
+
+    def get_next_version_number(self, devis_parent_id: int) -> int:
+        """Retourne le prochain numero de version pour un devis parent (DEV-08).
+
+        Args:
+            devis_parent_id: L'ID du devis parent (original).
+
+        Returns:
+            Le prochain numero de version disponible.
+        """
+        max_version = (
+            self._session.query(func.max(DevisModel.numero_version))
+            .filter(
+                or_(
+                    DevisModel.id == devis_parent_id,
+                    DevisModel.devis_parent_id == devis_parent_id,
+                )
+            )
+            .filter(DevisModel.deleted_at.is_(None))
+            .scalar()
+        )
+        return (max_version or 1) + 1
 
     def delete(self, devis_id: int, deleted_by: Optional[int] = None) -> bool:
         """Supprime un devis (soft delete - H10).

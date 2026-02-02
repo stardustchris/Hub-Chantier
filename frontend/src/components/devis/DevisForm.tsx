@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import type { DevisCreate, DevisUpdate, DevisDetail } from '../../types'
-import { TAUX_TVA_OPTIONS } from '../../types'
+import { TAUX_TVA_OPTIONS, RETENUE_GARANTIE_OPTIONS } from '../../types'
 
 interface DevisFormProps {
   devis?: DevisDetail | null
@@ -21,6 +21,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
     taux_tva_defaut: devis?.taux_tva_defaut ?? 20,
     coefficient_frais_generaux: devis?.coefficient_frais_generaux ?? 12,
     taux_marge_global: devis?.taux_marge_global ?? 15,
+    retenue_garantie_pct: devis?.retenue_garantie_pct ?? 0,
     notes: devis?.notes || '',
     conditions_generales: devis?.conditions_generales || '',
   })
@@ -39,6 +40,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
         taux_tva_defaut: form.taux_tva_defaut,
         coefficient_frais_generaux: form.coefficient_frais_generaux,
         taux_marge_global: form.taux_marge_global,
+        retenue_garantie_pct: form.retenue_garantie_pct,
         notes: form.notes || undefined,
       }
       await onSubmit(data)
@@ -169,6 +171,29 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                   onChange={(e) => setForm({ ...form, taux_marge_global: Number(e.target.value) })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+              </div>
+            </div>
+
+            {/* Retenue de garantie (DEV-22) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Retenue de garantie
+              </label>
+              <div className="flex gap-2">
+                {RETENUE_GARANTIE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm({ ...form, retenue_garantie_pct: opt.value })}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      form.retenue_garantie_pct === opt.value
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
