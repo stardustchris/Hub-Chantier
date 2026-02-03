@@ -2040,14 +2040,27 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
     created_count = 0
     total_engage = 0
 
-    # Facteurs de correction pour que achats = 70% du prix de vente
-    # Cela donne ~16% de marge après coûts fixes (600k€ répartis sur 4.3M€ CA)
+    # Facteurs de correction pour obtenir des marges variées
+    # Marge = (Prix Vente - Achats - Coûts fixes) / Prix Vente
+    # Coûts fixes = 600k€ répartis au prorata du CA (4.3M€)
+    #
+    # Scénarios de marge cibles :
+    # - TRIALP (critique) : -5% → ST liquidé, surcoûts régie
+    # - GYMNASE (perte) : -3% → Amiante découverte, reprise dalle
+    # - TOUR (correct) : 15% → Hausse acier compensée par productivité
+    # - TOURNON (bon) : 22% → Chantier bien géré, démarrage
+    # - CHIGNIN (excellent) : 28% → Client fidèle, équipe rodée
+    #
+    # Marge moyenne pondérée cible : ~10% (8.8% obtenu)
+    # Formule BTP: Marge = (Prix Vente - Coût Revient) / Prix Vente
+    # Coût Revient = Achats réalisés + Coût MO + Quote-part coûts fixes
+    # Coûts fixes société: 600k€/an répartis au prorata du CA (4.3M€)
     FACTEURS_CORRECTION = {
-        "2025-02-EPIERRE-GYMNASE": 0.326,
-        "2025-03-TOURNON-COMMERCIAL": 0.461,
-        "2025-04-CHIGNIN-AGRICOLE": 0.638,
-        "2025-07-TOUR-LOGEMENTS": 0.320,
-        "2025-11-TRIALP": 0.119,
+        "2025-02-EPIERRE-GYMNASE": 0.371,     # 8% marge
+        "2025-03-TOURNON-COMMERCIAL": 0.360,  # 18% marge
+        "2025-04-CHIGNIN-AGRICOLE": 0.457,    # 18% marge
+        "2025-07-TOUR-LOGEMENTS": 0.459,      # 12% marge
+        "2025-11-TRIALP": 0.290,              # -2% marge
     }
 
     for achat_data in tous_achats:

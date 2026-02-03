@@ -2,9 +2,9 @@
  * EvolutionChart - Courbes d'evolution financiere cumulative (FIN-17)
  *
  * LineChart Recharts avec 3 courbes :
- * - Prevu cumule (bleu)
- * - Engage cumule (ambre)
- * - Debourse cumule (vert)
+ * - Prévu cumulé (bleu)
+ * - Engagé cumulé (ambre)
+ * - Déboursé cumulé (vert)
  */
 
 import { useState, useEffect, useCallback } from 'react'

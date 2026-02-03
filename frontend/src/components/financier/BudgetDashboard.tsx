@@ -147,7 +147,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           </div>
         </div>
 
-        {/* Debourse */}
+        {/* Déboursé */}
         <div className={`bg-white border rounded-xl p-4 ${debourseDepasse ? 'border-red-300' : 'border-green-200'}`}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500 mb-1">Déboursé</p>

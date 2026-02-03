@@ -113,8 +113,8 @@ describe('BudgetDashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Budget revise HT')).toBeInTheDocument()
     })
-    expect(screen.getByText('Engage')).toBeInTheDocument()
-    expect(screen.getByText('Realise')).toBeInTheDocument()
+    expect(screen.getByText('Engagé')).toBeInTheDocument()
+    expect(screen.getByText('Réalisé')).toBeInTheDocument()
     expect(screen.getByText('Reste a depenser')).toBeInTheDocument()
     expect(screen.getByText('Marge estimee')).toBeInTheDocument()
   })

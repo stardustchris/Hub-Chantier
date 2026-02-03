@@ -147,7 +147,7 @@ export default function LotDevisPanel({
                   </div>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="text-right">
-                      <span className="text-gray-500 text-xs">Debourse</span>
+                      <span className="text-gray-500 text-xs">Déboursé</span>
                       <p className="font-medium text-orange-600">{formatEUR(Number(lot.debourse_sec))}</p>
                     </div>
                     <div className="text-right">

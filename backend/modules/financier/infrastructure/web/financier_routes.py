@@ -1207,7 +1207,16 @@ async def get_analyse_ia_consolidee(
         accessible_ids = []
 
     # Recuperer les donnees consolidees
-    consolidated = use_case.execute(accessible_ids, statut_chantier=statut_chantier)
+    # CA total annuel de l'entreprise pour répartition des coûts fixes
+    # Greg Constructions : 4.3M€ de CA annuel (cf. specs projet)
+    from decimal import Decimal
+    CA_TOTAL_ENTREPRISE = Decimal("4300000")
+
+    consolidated = use_case.execute(
+        accessible_ids,
+        statut_chantier=statut_chantier,
+        ca_total_entreprise=CA_TOTAL_ENTREPRISE,
+    )
     consolidated_dict = consolidated.to_dict()
 
     # Essayer d'obtenir le provider IA

@@ -2,7 +2,7 @@
  * LotsBudgetairesTable - Table des lots budgetaires (FIN-02)
  *
  * Affiche les lots d'un budget avec :
- * - Colonnes: Code, Libelle, Unite, Qte, PU HT, Total, Engage, Debourse, Ecart
+ * - Colonnes: Code, Libelle, Unite, Qte, PU HT, Total, Engagé, Déboursé, Ecart
  * - Barre de progression par lot
  * - Actions CRUD (creation, edition, suppression)
  */

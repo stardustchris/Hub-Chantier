@@ -104,7 +104,7 @@ export default function LigneDevisTable({
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Qte</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">PU HT</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Total HT</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Debourse</th>
+            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Déboursé</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">PV HT</th>
             {editable && <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-20">Actions</th>}
           </tr>

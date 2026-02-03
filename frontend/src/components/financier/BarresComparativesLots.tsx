@@ -2,9 +2,9 @@
  * BarresComparativesLots - Comparaison prevu/engage/realise par lot (FIN-17)
  *
  * BarChart Recharts avec 3 barres par lot :
- * - Prevu (bleu)
- * - Engage (ambre)
- * - Debourse (vert)
+ * - Prévu (bleu)
+ * - Engagé (ambre)
+ * - Déboursé (vert)
  */
 
 import {
