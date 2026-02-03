@@ -2040,6 +2040,16 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
     created_count = 0
     total_engage = 0
 
+    # Facteurs de correction pour que achats = 70% du prix de vente
+    # Cela donne ~16% de marge après coûts fixes (600k€ répartis sur 4.3M€ CA)
+    FACTEURS_CORRECTION = {
+        "2025-02-EPIERRE-GYMNASE": 0.326,
+        "2025-03-TOURNON-COMMERCIAL": 0.461,
+        "2025-04-CHIGNIN-AGRICOLE": 0.638,
+        "2025-07-TOUR-LOGEMENTS": 0.320,
+        "2025-11-TRIALP": 0.119,
+    }
+
     for achat_data in tous_achats:
         chantier_id = chantier_ids.get(achat_data["chantier"])
         lot_key = (achat_data["chantier"], achat_data["lot"])
@@ -2050,7 +2060,12 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
             continue
 
         date_commande = today - timedelta(days=achat_data["jours_avant"])
-        montant_ht = achat_data["quantite"] * achat_data["prix_unitaire"]
+
+        # Appliquer le facteur de correction pour calibrer les marges
+        facteur = FACTEURS_CORRECTION.get(achat_data["chantier"], 1.0)
+        prix_unitaire_corrige = achat_data["prix_unitaire"] * facteur
+
+        montant_ht = achat_data["quantite"] * prix_unitaire_corrige
 
         achat = AchatModel(
             chantier_id=chantier_id,
@@ -2060,7 +2075,7 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
             libelle=achat_data["libelle"],
             quantite=achat_data["quantite"],
             unite=achat_data["unite"],
-            prix_unitaire_ht=achat_data["prix_unitaire"],
+            prix_unitaire_ht=prix_unitaire_corrige,
             taux_tva=20.0,
             date_commande=date_commande,
             statut=achat_data["statut"],

@@ -10,12 +10,18 @@ from typing import List, Optional
 
 @dataclass
 class KPIFinancierDTO:
-    """DTO pour les indicateurs clés financiers d'un chantier."""
+    """DTO pour les indicateurs clés financiers d'un chantier.
+
+    Attributes:
+        marge_estimee: La marge en pourcentage, ou None si non calculable.
+        marge_statut: "calculee" si marge disponible, "en_attente" si pas de situation.
+    """
 
     montant_revise_ht: str
     total_engage: str
     total_realise: str
-    marge_estimee: str
+    marge_estimee: Optional[str]  # None si pas de situation de travaux
+    marge_statut: str  # "calculee" ou "en_attente"
     pct_engage: str
     pct_realise: str
     reste_a_depenser: str
@@ -28,6 +34,7 @@ class KPIFinancierDTO:
             "total_engage": self.total_engage,
             "total_realise": self.total_realise,
             "marge_estimee": self.marge_estimee,
+            "marge_statut": self.marge_statut,
             "pct_engage": self.pct_engage,
             "pct_realise": self.pct_realise,
             "reste_a_depenser": self.reste_a_depenser,

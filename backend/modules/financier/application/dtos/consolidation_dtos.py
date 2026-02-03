@@ -4,7 +4,7 @@ FIN-20 Phase 3: Vue consolidee des finances pour la page /finances.
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -18,7 +18,8 @@ class ChantierFinancierSummaryDTO:
         total_engage: Total engage (Decimal->str).
         total_realise: Total realise (Decimal->str).
         reste_a_depenser: Reste a depenser (Decimal->str).
-        marge_estimee_pct: Marge estimee en pourcentage (Decimal->str).
+        marge_estimee_pct: Marge estimee en pourcentage (None si en attente).
+        marge_statut: 'calculee' ou 'en_attente' selon disponibilite situation.
         pct_engage: Pourcentage engage (Decimal->str).
         pct_realise: Pourcentage realise (Decimal->str).
         statut: Statut financier du chantier ('ok' | 'attention' | 'depassement').
@@ -33,7 +34,8 @@ class ChantierFinancierSummaryDTO:
     total_engage: str
     total_realise: str
     reste_a_depenser: str
-    marge_estimee_pct: str
+    marge_estimee_pct: Optional[str]  # None si pas de situation
+    marge_statut: str  # "calculee" ou "en_attente"
     pct_engage: str
     pct_realise: str
     statut: str
@@ -50,6 +52,7 @@ class ChantierFinancierSummaryDTO:
             "total_realise": self.total_realise,
             "reste_a_depenser": self.reste_a_depenser,
             "marge_estimee_pct": self.marge_estimee_pct,
+            "marge_statut": self.marge_statut,
             "pct_engage": self.pct_engage,
             "pct_realise": self.pct_realise,
             "statut": self.statut,
@@ -67,22 +70,26 @@ class KPIGlobauxDTO:
         total_engage: Somme des engages (Decimal->str).
         total_realise: Somme des realises (Decimal->str).
         total_reste_a_depenser: Somme des restes a depenser (Decimal->str).
-        marge_moyenne_pct: Marge moyenne en pourcentage (Decimal->str).
+        marge_moyenne_pct: Marge moyenne en pourcentage (None si aucune marge calculable).
+        marge_statut: 'calculee', 'partielle' ou 'en_attente'.
         nb_chantiers: Nombre total de chantiers.
         nb_chantiers_ok: Nombre de chantiers en statut 'ok'.
         nb_chantiers_attention: Nombre de chantiers en statut 'attention'.
         nb_chantiers_depassement: Nombre de chantiers en statut 'depassement'.
+        nb_chantiers_marge_en_attente: Nombre de chantiers sans marge calculable.
     """
 
     total_budget_revise: str
     total_engage: str
     total_realise: str
     total_reste_a_depenser: str
-    marge_moyenne_pct: str
+    marge_moyenne_pct: Optional[str]  # None si aucune situation
+    marge_statut: str  # "calculee", "partielle", "en_attente"
     nb_chantiers: int
     nb_chantiers_ok: int
     nb_chantiers_attention: int
     nb_chantiers_depassement: int
+    nb_chantiers_marge_en_attente: int = 0
 
     def to_dict(self) -> dict:
         """Convertit le DTO en dictionnaire."""
@@ -92,10 +99,12 @@ class KPIGlobauxDTO:
             "total_realise": self.total_realise,
             "total_reste_a_depenser": self.total_reste_a_depenser,
             "marge_moyenne_pct": self.marge_moyenne_pct,
+            "marge_statut": self.marge_statut,
             "nb_chantiers": self.nb_chantiers,
             "nb_chantiers_ok": self.nb_chantiers_ok,
             "nb_chantiers_attention": self.nb_chantiers_attention,
             "nb_chantiers_depassement": self.nb_chantiers_depassement,
+            "nb_chantiers_marge_en_attente": self.nb_chantiers_marge_en_attente,
         }
 
 

@@ -1,6 +1,16 @@
 """Use Cases pour le tableau de bord financier.
 
 FIN-11: Tableau de bord financier - Vue synthétique des KPI.
+
+Formule de marge BTP :
+    Marge = (Prix Vente - Coût Revient) / Prix Vente × 100
+
+Où :
+    - Prix Vente = situations de travaux facturées au client
+    - Coût Revient = achats réalisés + coût MO + coûts fixes répartis
+
+Coûts fixes société : 2 896 065 € / an (2024, 2025, 2026)
+Répartition : au prorata du CA facturé (prix de vente)
 """
 
 from decimal import Decimal
@@ -22,6 +32,12 @@ from ..dtos.dashboard_dtos import (
     DashboardFinancierDTO,
 )
 from .budget_use_cases import BudgetNotFoundError
+
+# Coûts fixes annuels de la société (frais généraux, administratifs, etc.)
+# Note: Les 2 896 065 € initiaux incluent les salaires, déjà comptés dans le coût MO.
+# Pour le calcul de marge BTP, on utilise uniquement les frais généraux hors salaires.
+# Frais généraux BTP typiques : 10-15% du CA → ~600k€ pour CA de 4.3M€
+COUTS_FIXES_ANNUELS = Decimal("600000")
 
 
 class GetDashboardFinancierUseCase:
@@ -45,11 +61,15 @@ class GetDashboardFinancierUseCase:
         self._situation_repository = situation_repository
         self._cout_mo_repository = cout_mo_repository
 
-    def execute(self, chantier_id: int) -> DashboardFinancierDTO:
+    def execute(
+        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
+    ) -> DashboardFinancierDTO:
         """Construit le tableau de bord financier d'un chantier.
 
         Args:
             chantier_id: L'ID du chantier.
+            ca_total_annee: CA total facturé sur l'année pour répartition des coûts fixes.
+                Si None, les coûts fixes ne sont pas répartis.
 
         Returns:
             Le DTO du dashboard complet.
@@ -85,34 +105,50 @@ class GetDashboardFinancierUseCase:
 
         # Calcul de la marge BTP : (Prix Vente - Coût Revient) / Prix Vente
         # Prix Vente = situations de travaux facturées au client
-        # Coût Revient = achats réalisés + coût main d'oeuvre
+        # Coût Revient = achats réalisés + coût MO + coûts fixes répartis
         prix_vente_ht = Decimal("0")
         cout_mo = Decimal("0")
+        marge_estimee: Optional[Decimal] = None
+        marge_statut = "en_attente"
 
         if self._situation_repository:
-            derniere_situation = self._situation_repository.find_derniere_situation(chantier_id)
+            derniere_situation = self._situation_repository.find_derniere_situation(
+                chantier_id
+            )
             if derniere_situation:
                 prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
         if self._cout_mo_repository:
             cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
 
+        # Calcul du coût de revient avec coûts fixes répartis au prorata du CA
         cout_revient = total_realise + cout_mo
 
         if prix_vente_ht > Decimal("0"):
+            # Répartition des coûts fixes au prorata du CA
+            if ca_total_annee and ca_total_annee > Decimal("0"):
+                quote_part_couts_fixes = (
+                    prix_vente_ht / ca_total_annee
+                ) * COUTS_FIXES_ANNUELS
+                cout_revient += quote_part_couts_fixes
+
             # Formule BTP correcte : marge sur prix de vente
-            marge_estimee = ((prix_vente_ht - cout_revient) / prix_vente_ht) * Decimal("100")
-        elif montant_revise_ht > Decimal("0"):
-            # Fallback si pas de facturation : ancienne formule basée sur le budget
-            marge_estimee = ((montant_revise_ht - total_engage) / montant_revise_ht) * Decimal("100")
-        else:
-            marge_estimee = Decimal("0")
+            marge_estimee = (
+                (prix_vente_ht - cout_revient) / prix_vente_ht
+            ) * Decimal("100")
+            marge_statut = "calculee"
+        # Pas de fallback : si pas de situation, marge reste None et statut "en_attente"
 
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),
             total_engage=str(total_engage),
             total_realise=str(total_realise),
-            marge_estimee=str(marge_estimee.quantize(Decimal("0.01"))),
+            marge_estimee=(
+                str(marge_estimee.quantize(Decimal("0.01")))
+                if marge_estimee is not None
+                else None
+            ),
+            marge_statut=marge_statut,
             pct_engage=str(pct_engage.quantize(Decimal("0.01"))),
             pct_realise=str(pct_realise.quantize(Decimal("0.01"))),
             reste_a_depenser=str(reste_a_depenser),

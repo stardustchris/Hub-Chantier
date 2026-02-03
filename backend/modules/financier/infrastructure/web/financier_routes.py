@@ -1154,7 +1154,16 @@ async def get_vue_consolidee_finances(
         # (le frontend doit fournir les IDs)
         accessible_ids = []
 
-    result = use_case.execute(accessible_ids, statut_chantier=statut_chantier)
+    # CA total annuel de l'entreprise pour répartition des coûts fixes
+    # Greg Construction : 4.3M€ de CA annuel (cf. specs projet)
+    from decimal import Decimal
+    CA_TOTAL_ENTREPRISE = Decimal("4300000")
+
+    result = use_case.execute(
+        accessible_ids,
+        statut_chantier=statut_chantier,
+        ca_total_entreprise=CA_TOTAL_ENTREPRISE,
+    )
     return result.to_dict()
 
 
