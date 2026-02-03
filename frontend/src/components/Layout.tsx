@@ -24,6 +24,7 @@ import {
   BarChart3,
   Package,
   PieChart,
+  RefreshCw,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
@@ -56,6 +57,7 @@ const navigation: NavItem[] = [
       { name: 'Budgets', href: '/budgets', icon: Euro },
       { name: 'Achats', href: '/achats', icon: ShoppingCart },
       { name: 'Fournisseurs', href: '/fournisseurs', icon: Handshake },
+      { name: 'Pennylane', href: '/financier/pennylane', icon: RefreshCw },
     ],
   },
   {
