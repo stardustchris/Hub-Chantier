@@ -6,17 +6,38 @@
 
 ---
 
-## Agents disponibles (7 agents)
+## Agents disponibles (16 agents)
+
+### Agents d'implementation (6)
 
 | Agent | Prompt | Role | Outils |
 |-------|--------|------|--------|
 | sql-pro | `agents/sql-pro.md` | Expert SQL/PostgreSQL, schema, migrations | Read, Glob, Grep, Bash |
+| postgres-pro | `agents/postgres-pro.md` | Expert PostgreSQL avance (replication, PITR, tuning) | Read, Write, Edit, Bash, Glob, Grep |
 | python-pro | `agents/python-pro.md` | Expert FastAPI/SQLAlchemy | Read, Write, Edit, Bash |
 | typescript-pro | `agents/typescript-pro.md` | Expert React/TypeScript | Read, Write, Edit, Bash |
+| react-specialist | `agents/react-specialist.md` | Expert React 18+ (hooks, SSR, performance) | Read, Write, Edit, Bash, Glob, Grep |
+| api-designer | `agents/api-designer.md` | Expert REST/GraphQL API design, OpenAPI | Read, Write, Edit, Bash, Glob, Grep |
+
+### Agents de validation (5)
+
+| Agent | Prompt | Role | Outils |
+|-------|--------|------|--------|
 | architect-reviewer | `agents/architect-reviewer.md` | Validation Clean Architecture | Read, Glob, Grep |
-| test-automator | `agents/test-automator.md` | Generation de tests pytest | Read, Write, Edit, Bash |
-| code-reviewer | `agents/code-reviewer.md` | Qualite et securite du code | Read, Glob, Grep |
-| security-auditor | `agents/security-auditor.md` | Audit securite et conformite RGPD | Read, Glob, Grep |
+| test-automator | `agents/test-automator.md` | Generation de tests pytest/vitest | Read, Write, Edit, Bash |
+| code-reviewer | `agents/code-reviewer.md` | Qualite et conventions du code | Read, Glob, Grep |
+| security-auditor | `agents/security-auditor.md` | Audit securite et vulnerabilites | Read, Glob, Grep |
+| compliance-auditor | `agents/compliance-auditor.md` | Conformite RGPD, SOC2, ISO 27001 | Read, Glob, Grep |
+
+### Agents specialises (5)
+
+| Agent | Prompt | Role | Outils |
+|-------|--------|------|--------|
+| performance-engineer | `agents/performance-engineer.md` | Optimisation performance, profiling, load testing | Read, Write, Edit, Bash, Glob, Grep |
+| accessibility-tester | `agents/accessibility-tester.md` | Conformite WCAG, accessibilite PWA | Read, Glob, Grep, Bash |
+| business-analyst | `agents/business-analyst.md` | Analyse specs metier BTP, requirements | Read, Write, Edit, Glob, Grep, WebFetch, WebSearch |
+| documentation-engineer | `agents/documentation-engineer.md` | Documentation technique, API docs | Read, Write, Edit, Glob, Grep, WebFetch, WebSearch |
+| devops-engineer | `agents/devops-engineer.md` | CI/CD, Docker, deploiement, monitoring | Read, Write, Edit, Bash, Glob, Grep |
 
 ---
 
@@ -97,7 +118,119 @@ Utilisateur demande: "Modifie X" ou "Corrige Y"
 
 ---
 
-## Workflow detaille (7 agents)
+## Quand utiliser les nouveaux agents
+
+### postgres-pro (complementaire a sql-pro)
+```
+Utilisateur demande: "Optimise les requetes" ou "Configure la replication"
+
+→ Utiliser postgres-pro pour:
+  - Replication streaming/logique
+  - PITR (Point-In-Time Recovery)
+  - Tuning avance (vacuum, checkpoints)
+  - Extensions (pg_stat_statements, PostGIS)
+  - Partitionnement de tables
+```
+
+### react-specialist (complementaire a typescript-pro)
+```
+Utilisateur demande: "Optimise le frontend" ou "Ajoute du SSR"
+
+→ Utiliser react-specialist pour:
+  - React 18+ features (Suspense, Transitions)
+  - Performance (memo, useMemo, code splitting)
+  - State management (Zustand, React Query)
+  - Server-side rendering
+  - Testing React (Testing Library)
+```
+
+### api-designer
+```
+Utilisateur demande: "Conçois l'API" ou "Documente les endpoints"
+
+→ Utiliser api-designer pour:
+  - Design REST/GraphQL
+  - OpenAPI 3.1 specifications
+  - Pagination, filtrage, versioning
+  - Webhooks design
+  - SDK generation
+```
+
+### compliance-auditor (complementaire a security-auditor)
+```
+Utilisateur demande: "Verifie la conformite RGPD" ou "Prepare l'audit"
+
+→ Utiliser compliance-auditor pour:
+  - RGPD (donnees personnelles employes)
+  - Audit trail et logs
+  - Politiques de retention
+  - Documentation conformite
+  - Evidence collection
+```
+
+### performance-engineer
+```
+Utilisateur demande: "L'app est lente" ou "Fais des tests de charge"
+
+→ Utiliser performance-engineer pour:
+  - Profiling application
+  - Load testing (Locust, k6)
+  - Bottleneck identification
+  - Caching strategies
+  - Monitoring setup
+```
+
+### accessibility-tester
+```
+Utilisateur demande: "Verifie l'accessibilite" ou "PWA mobile"
+
+→ Utiliser accessibility-tester pour:
+  - WCAG 2.1 compliance
+  - Screen reader compatibility
+  - Keyboard navigation
+  - Color contrast
+  - Mobile accessibility
+```
+
+### business-analyst
+```
+Utilisateur demande: "Analyse les specs" ou "Comprends le metier BTP"
+
+→ Utiliser business-analyst pour:
+  - Analyse des requirements
+  - Process mapping
+  - Gap analysis
+  - ROI calculation
+  - Stakeholder management
+```
+
+### documentation-engineer
+```
+Utilisateur demande: "Documente l'API" ou "Cree le guide utilisateur"
+
+→ Utiliser documentation-engineer pour:
+  - API documentation (Swagger)
+  - Architecture docs
+  - User guides
+  - Code examples
+  - Search optimization
+```
+
+### devops-engineer
+```
+Utilisateur demande: "Configure le CI/CD" ou "Deploie en production"
+
+→ Utiliser devops-engineer pour:
+  - Docker/Docker Compose
+  - CI/CD pipelines (GitHub Actions)
+  - Monitoring (Prometheus, Grafana)
+  - Infrastructure as Code
+  - Deployment strategies
+```
+
+---
+
+## Workflow detaille (16 agents)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
