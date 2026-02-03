@@ -1058,10 +1058,16 @@ async def get_dashboard_financier(
     """Tableau de bord financier d'un chantier.
 
     FIN-11: KPI, derniers achats, repartition par lot.
+    Calcule la marge BTP avec repartition des couts fixes.
     """
     _check_chantier_access(chantier_id, _role, user_chantier_ids)
     try:
-        result = use_case.execute(chantier_id)
+        # Greg Construction : 4.3M€ de CA annuel (cf. specs projet)
+        # Permet repartition prorata des couts fixes dans le calcul de marge BTP
+        from decimal import Decimal
+        CA_TOTAL_ENTREPRISE = Decimal("4300000")
+
+        result = use_case.execute(chantier_id, ca_total_annee=CA_TOTAL_ENTREPRISE)
         return result.to_dict()
     except BudgetNotFoundError:
         raise HTTPException(

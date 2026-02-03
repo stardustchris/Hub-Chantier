@@ -9,10 +9,12 @@ class StatutTache(Enum):
 
     Selon CDC Section 13 - TAC-13:
     - A faire (A_FAIRE)
+    - En cours (EN_COURS)
     - Termine (TERMINE)
     """
 
     A_FAIRE = "a_faire"
+    EN_COURS = "en_cours"
     TERMINE = "termine"
 
     @classmethod
@@ -46,6 +48,7 @@ class StatutTache(Enum):
         """Retourne le nom d'affichage du statut."""
         mapping = {
             StatutTache.A_FAIRE: "A faire",
+            StatutTache.EN_COURS: "En cours",
             StatutTache.TERMINE: "Termine",
         }
         return mapping.get(self, self.value)
@@ -55,6 +58,7 @@ class StatutTache(Enum):
         """Retourne l'icone du statut selon CDC TAC-13."""
         mapping = {
             StatutTache.A_FAIRE: "☐",
+            StatutTache.EN_COURS: "🔄",
             StatutTache.TERMINE: "✅",
         }
         return mapping.get(self, "")
