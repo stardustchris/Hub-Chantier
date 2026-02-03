@@ -80,3 +80,14 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# Claude Code - validation reports and internal docs
+.claude/reports/
+**/CLAUDE.md
+
+# Database backups
+*.db.bak
+
+# Test/temp files
+cookies.txt
+backend/test_evolution_api.py
