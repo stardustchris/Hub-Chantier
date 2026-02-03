@@ -9,9 +9,7 @@
 
 **NE PAS coder sans avoir lu ces deux fichiers.**
 
----
-
-## Mode de travail (Senior Engineer)
+### Mode de travail (Senior Engineer)
 
 > **Role**: Senior software engineer in an agentic workflow. Write, refactor, debug, and architect code alongside the human developer.
 >
