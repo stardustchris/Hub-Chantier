@@ -123,6 +123,32 @@ ALERTE_TYPES = (
     "depassement_lot",
 )
 
+# CONN-10 to CONN-15: Pennylane Inbound enums
+SYNC_TYPES = (
+    "supplier_invoices",
+    "customer_invoices",
+    "suppliers",
+)
+
+SYNC_STATUS = (
+    "running",
+    "completed",
+    "failed",
+    "partial",
+)
+
+RECONCILIATION_STATUS = (
+    "pending",
+    "matched",
+    "rejected",
+    "manual",
+)
+
+SOURCE_DONNEE = (
+    "HUB",
+    "PENNYLANE",
+)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FIN-14: Fournisseurs
@@ -168,6 +194,43 @@ class FournisseurModel(FinancierBase):
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    # CONN-12: Champs Pennylane Inbound
+    pennylane_supplier_id = Column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="ID unique fournisseur Pennylane",
+    )
+    delai_paiement_jours = Column(
+        Integer,
+        nullable=False,
+        default=30,
+        comment="Delai de paiement par defaut en jours",
+    )
+    iban = Column(
+        String(34),
+        nullable=True,
+        comment="IBAN du fournisseur (34 caracteres max)",
+    )
+    bic = Column(
+        String(11),
+        nullable=True,
+        comment="Code BIC/SWIFT du fournisseur (8 ou 11 caracteres)",
+    )
+    source_donnee = Column(
+        SQLEnum(*SOURCE_DONNEE, name="fournisseur_source_donnee_enum", native_enum=False),
+        nullable=False,
+        default="HUB",
+        index=True,
+        comment="Source de la donnee: HUB (saisie manuelle) ou PENNYLANE (import)",
+    )
+    derniere_sync_pennylane = Column(
+        DateTime,
+        nullable=True,
+        comment="Date/heure de la derniere synchronisation avec Pennylane",
     )
 
     __table_args__ = (
@@ -476,6 +539,32 @@ class AchatModel(FinancierBase):
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    # CONN-10: Champs Pennylane Inbound
+    montant_ht_reel = Column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Montant HT facture reelle importee de Pennylane",
+    )
+    date_facture_reelle = Column(
+        Date,
+        nullable=True,
+        comment="Date de la facture reelle depuis Pennylane",
+    )
+    pennylane_invoice_id = Column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="ID unique facture Pennylane (idempotence)",
+    )
+    source_donnee = Column(
+        SQLEnum(*SOURCE_DONNEE, name="achat_source_donnee_enum", native_enum=False),
+        nullable=False,
+        default="HUB",
+        index=True,
+        comment="Source de la donnee: HUB (saisie manuelle) ou PENNYLANE (import)",
     )
 
     __table_args__ = (
@@ -889,6 +978,27 @@ class FactureClientModel(FinancierBase):
         nullable=True,
     )
 
+    # CONN-11: Champs Pennylane encaissements
+    date_paiement_reel = Column(
+        Date,
+        nullable=True,
+        index=True,
+        comment="Date de paiement reelle constatee depuis Pennylane",
+    )
+    montant_encaisse = Column(
+        Numeric(15, 2),
+        nullable=False,
+        default=0,
+        comment="Montant reellement encaisse (peut differer du montant_ttc)",
+    )
+    pennylane_invoice_id = Column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="ID unique facture client Pennylane (idempotence)",
+    )
+
     __table_args__ = (
         Index("ix_factures_client_chantier_statut", "chantier_id", "statut"),
         Index("ix_factures_client_chantier_type", "chantier_id", "type_facture"),
@@ -921,6 +1031,10 @@ class FactureClientModel(FinancierBase):
         CheckConstraint(
             "date_echeance IS NULL OR date_emission IS NULL OR date_echeance >= date_emission",
             name="check_factures_client_echeance_coherente",
+        ),
+        CheckConstraint(
+            "montant_encaisse >= 0",
+            name="check_factures_client_montant_encaisse_positif",
         ),
     )
 
@@ -1072,4 +1186,231 @@ class AffectationBudgetTacheModel(FinancierBase):
             f"lot_budgetaire_id={self.lot_budgetaire_id}, "
             f"tache_id={self.tache_id}, "
             f"pourcentage={self.pourcentage_allocation}%)>"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONN-14: Pennylane Mapping Analytique
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PennylaneMappingAnalytiqueModel(FinancierBase):
+    """Modele SQLAlchemy pour le mapping codes analytiques Pennylane.
+
+    CONN-14: Table de correspondance entre les codes analytiques utilises
+    dans Pennylane et les ID de chantiers dans Hub Chantier.
+    """
+
+    __tablename__ = "pennylane_mapping_analytique"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code_analytique = Column(
+        String(50),
+        nullable=False,
+        unique=True,
+        index=True,
+        comment="Code analytique Pennylane (ex: MONTMELIAN, CHT001)",
+    )
+    chantier_id = Column(
+        Integer,
+        ForeignKey("chantiers.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="ID du chantier Hub Chantier associe",
+    )
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        comment="Date de creation du mapping",
+    )
+    created_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Utilisateur ayant cree le mapping",
+    )
+
+    __table_args__ = (
+        {"comment": "Table de correspondance entre codes analytiques Pennylane et chantiers Hub"},
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<PennylaneMappingAnalytique(id={self.id}, "
+            f"code_analytique='{self.code_analytique}', "
+            f"chantier_id={self.chantier_id})>"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONN-10/11/12: Pennylane Sync Log
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PennylaneSyncLogModel(FinancierBase):
+    """Modele SQLAlchemy pour le journal des synchronisations Pennylane.
+
+    CONN-10/11/12: Audit trail des synchronisations periodiques avec Pennylane.
+    Table append-only (pas de modification, pas de suppression).
+    """
+
+    __tablename__ = "pennylane_sync_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sync_type = Column(
+        SQLEnum(*SYNC_TYPES, name="sync_type_enum", native_enum=False),
+        nullable=False,
+        index=True,
+        comment="Type de sync: supplier_invoices, customer_invoices, suppliers",
+    )
+    started_at = Column(
+        DateTime,
+        nullable=False,
+        index=True,
+        comment="Debut de la synchronisation",
+    )
+    completed_at = Column(
+        DateTime,
+        nullable=True,
+        comment="Fin de la synchronisation (NULL si en cours)",
+    )
+    records_processed = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        comment="Nombre total de records traites",
+    )
+    records_created = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        comment="Nombre de nouveaux records crees",
+    )
+    records_updated = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        comment="Nombre de records mis a jour",
+    )
+    records_pending = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        comment="Nombre de records en attente de reconciliation",
+    )
+    error_message = Column(
+        Text,
+        nullable=True,
+        comment="Message d'erreur si echec",
+    )
+    status = Column(
+        SQLEnum(*SYNC_STATUS, name="sync_status_enum", native_enum=False),
+        nullable=False,
+        default="running",
+        index=True,
+        comment="Statut: running, completed, failed, partial",
+    )
+
+    __table_args__ = (
+        Index("ix_pennylane_sync_log_type_status", "sync_type", "status"),
+        {"comment": "Journal des synchronisations Pennylane (audit trail)"},
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<PennylaneSyncLog(id={self.id}, "
+            f"sync_type='{self.sync_type}', "
+            f"status='{self.status}')>"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONN-15: Pennylane Pending Reconciliation
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PennylanePendingReconciliationModel(FinancierBase):
+    """Modele SQLAlchemy pour la file d'attente de reconciliation Pennylane.
+
+    CONN-15: Stocke les factures Pennylane importees qui n'ont pas pu
+    etre matchees automatiquement avec un achat existant.
+    """
+
+    __tablename__ = "pennylane_pending_reconciliation"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    pennylane_invoice_id = Column(
+        String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+        comment="ID unique facture Pennylane (idempotence)",
+    )
+    supplier_name = Column(
+        String(255),
+        nullable=True,
+        comment="Nom du fournisseur depuis Pennylane",
+    )
+    supplier_siret = Column(
+        String(14),
+        nullable=True,
+        comment="SIRET du fournisseur depuis Pennylane",
+    )
+    amount_ht = Column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Montant HT de la facture",
+    )
+    code_analytique = Column(
+        String(50),
+        nullable=True,
+        index=True,
+        comment="Code analytique Pennylane associe",
+    )
+    invoice_date = Column(
+        Date,
+        nullable=True,
+        comment="Date de la facture",
+    )
+    suggested_achat_id = Column(
+        Integer,
+        ForeignKey("achats.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="ID de l'achat suggere par le matching intelligent",
+    )
+    status = Column(
+        SQLEnum(*RECONCILIATION_STATUS, name="reconciliation_status_enum", native_enum=False),
+        nullable=False,
+        default="pending",
+        index=True,
+        comment="Statut: pending, matched, rejected, manual",
+    )
+    resolved_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Utilisateur ayant resolu la reconciliation",
+    )
+    resolved_at = Column(
+        DateTime,
+        nullable=True,
+        comment="Date/heure de resolution",
+    )
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+        comment="Date de creation de la demande",
+    )
+
+    __table_args__ = (
+        Index("ix_pennylane_pending_status_created", "status", "created_at"),
+        {"comment": "File d'attente des factures Pennylane non matchees automatiquement"},
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<PennylanePendingReconciliation(id={self.id}, "
+            f"pennylane_invoice_id='{self.pennylane_invoice_id}', "
+            f"status='{self.status}')>"
         )

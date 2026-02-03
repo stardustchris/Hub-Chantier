@@ -8,7 +8,7 @@ Le module Connecteurs Webhooks permet l'intégration temps réel avec les logici
 
 | ID | Fonctionnalité | Description | Statut |
 |----|----------------|-------------|--------|
-| CONN-01 | Connecteur Pennylane | Export automatique données comptables (achats, situations, paiements) | ✅ |
+| CONN-01 | Connecteur Pennylane Outbound | Export automatique données comptables (achats, situations, paiements) | ✅ |
 | CONN-02 | Connecteur Silae | Export automatique données paie (heures, variables) | ✅ |
 | CONN-03 | Formatage données | Transformation événements Hub Chantier → format API cible | ✅ |
 | CONN-04 | Validation sécurité | Protection XSS, injection SQL, validation codes/montants | ✅ |
@@ -16,6 +16,14 @@ Le module Connecteurs Webhooks permet l'intégration temps réel avec les logici
 | CONN-06 | Audit trail | Traçabilité complète transformations avec hash SHA-256 | ✅ |
 | CONN-07 | Registry connecteurs | Découverte dynamique connecteurs disponibles | ✅ |
 | CONN-08 | Tests unitaires | 97 tests, 94% couverture module security | ✅ |
+| **CONN-10** | **Sync factures fournisseurs** | Import factures payées depuis Pennylane (polling 15 min) | ✅ |
+| **CONN-11** | **Sync encaissements clients** | Mise à jour statut paiement FactureClient | ✅ |
+| **CONN-12** | **Import fournisseurs** | Création automatique fiches fournisseurs depuis Pennylane | ✅ |
+| **CONN-13** | **Matching intelligent** | Fournisseur + Chantier + Montant ±10% + Fenêtre 30j | ✅ |
+| **CONN-14** | **Table mapping analytique** | Correspondance code_analytique_pennylane ↔ chantier_id | ✅ |
+| **CONN-15** | **Dashboard réconciliation** | File d'attente achats non matchés + validation manuelle | ✅ |
+| **CONN-16** | **Alertes dépassement** | Notification si facture > 110% prévisionnel | ⏳ |
+| **CONN-17** | **Import historique** | Commande one-shot pour importer factures existantes | ⏳ |
 
 ### 18.3 Connecteur Pennylane (Comptabilité)
 
@@ -201,23 +209,202 @@ payload = connector.transform_event(event)
 | Feuilles Heures | `feuille_heures.validated` | Silae | Heures employé période |
 | Pointages | `pointage.validated` | Silae | Heures employé journalières |
 
-### 18.12 Roadmap
+### 18.12 Intégration Pennylane Inbound (Import Données Comptables)
 
-**Phase 1 (Actuelle - ✅ Complète)** :
-- ✅ Connecteur Pennylane (achats, situations, paiements)
+> **Objectif** : Importer les factures payées depuis Pennylane pour calculer la rentabilité réelle des chantiers (Budget vs Réalisé).
+
+#### 18.12.1 Architecture : Polling (Synchronisation Périodique)
+
+**Pourquoi pas de webhooks ?**
+- L'API Pennylane ne propose **pas de webhooks natifs** (confirmé via documentation officielle)
+- Les "webhooks Pennylane" trouvés en ligne passent par Zapier/Pipedream (services tiers payants)
+- L'API est explicitement "request-based" et non "event-based"
+
+**Architecture retenue** :
+```
+┌─────────────────┐     Toutes les 15 min      ┌──────────────────┐
+│  HUB CHANTIER   │ ──────────────────────────>│   PENNYLANE      │
+│                 │  GET /supplier_invoices    │                  │
+│ • Scheduler     │  ?is_paid=true             │ • Factures       │
+│ • Sync Service  │  &updated_since=...        │ • Fournisseurs   │
+│                 │<──────────────────────────│                  │
+│ • Matching      │  JSON Response             │                  │
+│ • Budget update │                            │                  │
+└─────────────────┘                            └──────────────────┘
+```
+
+**Coût API Pennylane** : **Gratuit** (inclus dans abonnement Essentiel 24€+/mois)
+- Rate limit : 5 requêtes/seconde
+- Consommation estimée : ~100 appels/jour << limite 432 000/jour
+
+#### 18.12.2 Fonctionnalités Import Pennylane
+
+| ID | Fonctionnalité | Description | Statut |
+|----|----------------|-------------|--------|
+| CONN-10 | Sync factures fournisseurs | Import factures payées avec matching achats prévisionnels | ⏳ |
+| CONN-11 | Sync encaissements clients | Mise à jour statut paiement FactureClient | ⏳ |
+| CONN-12 | Import fournisseurs | Création automatique fiches fournisseurs depuis Pennylane | ⏳ |
+| CONN-13 | Matching intelligent | Fournisseur + Chantier + Montant ±10% + Fenêtre temporelle | ⏳ |
+| CONN-14 | Table mapping analytique | Correspondance code_analytique_pennylane ↔ chantier_id | ⏳ |
+| CONN-15 | Dashboard réconciliation | File d'attente achats non matchés à valider manuellement | ⏳ |
+| CONN-16 | Alertes dépassement | Notification si facture > 110% prévisionnel | ⏳ |
+| CONN-17 | Import historique | Commande one-shot pour importer factures existantes | ⏳ |
+
+#### 18.12.3 Enrichissement Entités
+
+**Achat** (nouveaux champs) :
+- `montant_ht_reel` : Montant facture réelle (Pennylane)
+- `date_facture_reelle` : Date facture Pennylane
+- `pennylane_invoice_id` : ID externe pour idempotence
+- `source_donnee` : "HUB" | "PENNYLANE"
+
+**FactureClient** (nouveaux champs) :
+- `date_paiement_reel` : Date encaissement constaté
+- `montant_encaisse` : Montant réellement encaissé
+- `pennylane_invoice_id` : ID externe
+
+**Fournisseur** (nouveaux champs) :
+- `pennylane_supplier_id` : ID externe
+- `delai_paiement_jours` : Délai paiement par défaut
+- `iban` / `bic` : Coordonnées bancaires (optionnel)
+- `source_donnee` : "HUB" | "PENNYLANE"
+
+#### 18.12.4 Workflow Synchronisation
+
+```
+Job PennylaneSyncJob (toutes les 15 min)
+│
+├─ 1. Récupérer last_sync_timestamp
+│
+├─ 2. GET /supplier_invoices?is_paid=true&updated_since=<timestamp>
+│
+├─ 3. Pour chaque facture non importée :
+│   │
+│   ├─ 3a. Find/Create Fournisseur (par SIRET)
+│   │
+│   ├─ 3b. Find Chantier (par code analytique via table mapping)
+│   │
+│   ├─ 3c. Matching intelligent Achat existant :
+│   │   • Même fournisseur + même chantier
+│   │   • Montant dans tolérance ±10%
+│   │   • Statut COMMANDE ou LIVRE
+│   │   • Fenêtre temporelle < 30 jours
+│   │
+│   ├─ 3d. Si match trouvé :
+│   │   → Update Achat.montant_ht_reel
+│   │   → Update Achat.statut = FACTURE
+│   │
+│   └─ 3e. Si pas de match :
+│       → Créer PendingReconciliation (file d'attente)
+│       → Alerter conducteur travaux
+│
+├─ 4. Mettre à jour Budget.total_realise_ht
+│
+└─ 5. Enregistrer sync_timestamp
+```
+
+#### 18.12.5 Dashboard Réconciliation
+
+Page `/financier/reconciliation` :
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Réconciliation Pennylane                    [Sync manuelle] │
+├─────────────────────────────────────────────────────────────┤
+│ ✅ Matchés automatiquement (42)                             │
+│ ⚠️  À vérifier (7)                                          │
+│ ❌ Non matchés (3)                                          │
+├─────────────────────────────────────────────────────────────┤
+│ Facture ACME #F2026-0234 - 5 200€                           │
+│ Code analytique: MONTMELIAN                                 │
+│ ┌────────────────────────────────────────┐                  │
+│ │ Match suggéré: Achat #A-2026-089       │ [Valider]       │
+│ │ Prévisionnel: 5 000€ | Écart: +4%      │ [Réaffecter]    │
+│ └────────────────────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 18.12.6 Alertes Intelligentes
+
+| Alerte | Trigger | Destinataire |
+|--------|---------|--------------|
+| Dépassement budget | Facture > 110% prévisionnel | Chef de chantier |
+| Facture non prévue | Aucun Achat matching | Conducteur travaux |
+| Fournisseur inconnu | SIRET absent de Hub | Admin |
+| Code analytique inconnu | Mapping non trouvé | Admin |
+
+#### 18.12.7 Tables SQL Additionnelles
+
+```sql
+-- Table de mapping codes analytiques
+CREATE TABLE pennylane_mapping_analytique (
+    id SERIAL PRIMARY KEY,
+    code_analytique VARCHAR(50) UNIQUE NOT NULL,
+    chantier_id INTEGER REFERENCES chantiers(id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    created_by INTEGER REFERENCES utilisateurs(id)
+);
+
+-- Table de suivi synchronisation
+CREATE TABLE pennylane_sync_log (
+    id SERIAL PRIMARY KEY,
+    sync_type VARCHAR(50) NOT NULL,
+    started_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP,
+    records_processed INTEGER DEFAULT 0,
+    records_created INTEGER DEFAULT 0,
+    records_updated INTEGER DEFAULT 0,
+    records_pending INTEGER DEFAULT 0,
+    error_message TEXT,
+    status VARCHAR(20) DEFAULT 'running'
+);
+
+-- File d'attente réconciliation
+CREATE TABLE pennylane_pending_reconciliation (
+    id SERIAL PRIMARY KEY,
+    pennylane_invoice_id VARCHAR(255) UNIQUE NOT NULL,
+    supplier_name VARCHAR(255),
+    supplier_siret VARCHAR(14),
+    amount_ht DECIMAL(15,2),
+    code_analytique VARCHAR(50),
+    invoice_date DATE,
+    suggested_achat_id INTEGER REFERENCES achats(id),
+    status VARCHAR(20) DEFAULT 'pending',
+    resolved_by INTEGER REFERENCES utilisateurs(id),
+    resolved_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 18.13 Roadmap
+
+**Phase 1 (✅ Complète)** :
+- ✅ Connecteur Pennylane Outbound (achats, situations, paiements)
 - ✅ Connecteur Silae (heures, variables paie)
 - ✅ Module de sécurité (XSS, RGPD, injection)
 - ✅ Tests unitaires >= 90%
 
-**Phase 2 (Prévue)** :
-- ⏳ Dashboard monitoring des livraisons webhook
-- ⏳ Retry avancé avec exponential backoff configurable
-- ⏳ Connecteur Sage (comptabilité)
-- ⏳ Connecteur QuickBooks (comptabilité)
+**Phase 2 (⏳ En cours)** :
+- ⏳ **Import Pennylane Inbound** (CONN-10 à CONN-17)
+- ⏳ Dashboard monitoring des livraisons
+- ⏳ Retry avancé avec exponential backoff
 
-**Phase 3 (Future)** :
-- 🔮 Webhooks bidirectionnels (import depuis ERP)
-- 🔮 Mapping personnalisé par utilisateur
+**Phase 3 (Prévue)** :
+- 🔮 Génération factures depuis devis (`/create_from_quote`)
+- 🔮 Rapprochement bancaire automatique (DSO)
+- 🔮 Prévisionnel trésorerie enrichi
+- 🔮 Connecteur Sage / QuickBooks
+
+**Phase 4 (Future)** :
+- 🔮 Export FEC automatisé
+- 🔮 Suivi TVA construction (autoliquidation)
 - 🔮 Interface graphique configuration connecteurs
+
+### 18.14 Références
+
+- [Documentation API Pennylane](https://pennylane.readme.io/)
+- [Rate Limiting API v2](https://pennylane.readme.io/docs/rate-limiting-1)
+- [Data Sharing Pennylane](https://data-sharing.pennylane.com/)
+- [Plan d'intégration détaillé](/.claude/plans/twinkly-shimmying-rose.md)
 
 ---

@@ -158,6 +158,8 @@ from .dependencies import (
     get_vue_consolidee_use_case,
     # Suggestions (FIN-21/22)
     get_suggestions_financieres_use_case,
+    # AI Provider (FIN-21)
+    get_ai_suggestion_provider,
     # Affectation (FIN-03)
     get_create_affectation_use_case,
     get_delete_affectation_use_case,
@@ -1154,6 +1156,138 @@ async def get_vue_consolidee_finances(
 
     result = use_case.execute(accessible_ids, statut_chantier=statut_chantier)
     return result.to_dict()
+
+
+@router.get("/finances/consolidation/ia")
+async def get_analyse_ia_consolidee(
+    chantier_ids: Optional[str] = Query(
+        None,
+        description="Liste d'IDs de chantiers separes par virgules (ex: 1,2,3)",
+    ),
+    statut_chantier: Optional[str] = Query(
+        None,
+        description="Filtre par statut chantier (ouvert, en_cours, receptionne, ferme)",
+        pattern="^(ouvert|en_cours|receptionne|ferme)$",
+    ),
+    _role: str = Depends(require_chef_or_above),
+    user_chantier_ids: list[int] | None = Depends(get_current_user_chantier_ids),
+    use_case=Depends(get_vue_consolidee_use_case),
+):
+    """Analyse IA consolidee multi-chantiers via Gemini 3 Flash.
+
+    FIN-20+: Genere une analyse strategique IA basee sur les KPI consolides.
+    Utilise Gemini 3 Flash pour fournir synthese, alertes et recommandations.
+    Retourne un fallback algorithmique si Gemini n'est pas disponible.
+    """
+    # Determiner les chantier_ids accessibles (meme logique que consolidation)
+    if chantier_ids:
+        try:
+            requested_ids = [int(x.strip()) for x in chantier_ids.split(",") if x.strip()]
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Format invalide pour chantier_ids. Attendu: 1,2,3",
+            )
+        if user_chantier_ids is not None:
+            accessible_ids = [cid for cid in requested_ids if cid in user_chantier_ids]
+        else:
+            accessible_ids = requested_ids
+    elif user_chantier_ids is not None:
+        accessible_ids = user_chantier_ids
+    else:
+        accessible_ids = []
+
+    # Recuperer les donnees consolidees
+    consolidated = use_case.execute(accessible_ids, statut_chantier=statut_chantier)
+    consolidated_dict = consolidated.to_dict()
+
+    # Essayer d'obtenir le provider IA
+    ai_provider = get_ai_suggestion_provider()
+    if ai_provider is None:
+        # Fallback algorithmique si Gemini non disponible
+        return _generate_fallback_analysis(consolidated_dict)
+
+    try:
+        # Appeler Gemini 3 Flash pour l'analyse consolidee
+        analysis = ai_provider.generate_consolidated_analysis(consolidated_dict)
+        if analysis:
+            return analysis
+        # Si analyse vide, fallback
+        return _generate_fallback_analysis(consolidated_dict)
+    except Exception as e:
+        logger.warning("Erreur analyse IA consolidee: %s", str(e))
+        return _generate_fallback_analysis(consolidated_dict)
+
+
+def _generate_fallback_analysis(consolidated_dict: dict) -> dict:
+    """Genere une analyse algorithmique de fallback si Gemini non disponible."""
+    kpi = consolidated_dict.get("kpi_globaux", {})
+    nb_chantiers = kpi.get("nb_chantiers", 0)
+    nb_ok = kpi.get("nb_chantiers_ok", 0)
+    nb_attention = kpi.get("nb_chantiers_attention", 0)
+    nb_depassement = kpi.get("nb_chantiers_depassement", 0)
+    marge_moyenne = float(kpi.get("marge_moyenne_pct", "0"))
+
+    # Synthese
+    if nb_depassement > 0:
+        synthese = (
+            f"{nb_chantiers} chantiers suivis. {nb_depassement} chantier(s) en depassement "
+            f"necessitent une attention immediate. Marge moyenne: {marge_moyenne:.1f}%."
+        )
+    elif nb_attention > 0:
+        synthese = (
+            f"{nb_chantiers} chantiers suivis dont {nb_attention} a surveiller. "
+            f"Situation globale sous controle. Marge moyenne: {marge_moyenne:.1f}%."
+        )
+    else:
+        synthese = (
+            f"{nb_chantiers} chantiers suivis, tous en bonne sante financiere. "
+            f"Marge moyenne: {marge_moyenne:.1f}%."
+        )
+
+    # Alertes
+    alertes = []
+    if nb_depassement > 0:
+        alertes.append(f"{nb_depassement} chantier(s) en depassement budgetaire")
+    if nb_attention > 0:
+        alertes.append(f"{nb_attention} chantier(s) approchent du seuil d'alerte (>80%)")
+    if marge_moyenne < 10:
+        alertes.append(f"Marge moyenne faible ({marge_moyenne:.1f}%)")
+
+    # Recommandations
+    recommandations = []
+    if nb_depassement > 0:
+        recommandations.append("Examiner les chantiers en depassement pour creer des avenants")
+    if nb_attention > 0:
+        recommandations.append("Planifier une revue des chantiers a risque cette semaine")
+    if marge_moyenne < 15:
+        recommandations.append("Negocier les tarifs fournisseurs pour ameliorer les marges")
+    if not recommandations:
+        recommandations.append("Maintenir le suivi actuel, situation saine")
+
+    # Score de sante
+    if nb_chantiers > 0:
+        score = int((nb_ok / nb_chantiers) * 100)
+    else:
+        score = 100
+
+    # Tendance
+    if nb_depassement > nb_chantiers * 0.2:
+        tendance = "baisse"
+    elif nb_ok > nb_chantiers * 0.8:
+        tendance = "hausse"
+    else:
+        tendance = "stable"
+
+    return {
+        "synthese": synthese,
+        "alertes": alertes[:3],
+        "recommandations": recommandations[:3],
+        "tendance": tendance,
+        "score_sante": score,
+        "source": "regles",
+        "ai_available": False,
+    }
 
 
 # =============================================================================

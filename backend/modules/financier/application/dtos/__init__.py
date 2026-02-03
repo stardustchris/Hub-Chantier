@@ -89,6 +89,18 @@ from .pnl_dtos import (
     LignePnLDTO,
     PnLChantierDTO,
 )
+# CONN-10 to CONN-17: Pennylane Inbound DTOs
+from .pennylane_dtos import (
+    PennylaneSyncResultDTO,
+    PennylaneSyncHistoryDTO,
+    PennylanePendingReconciliationDTO,
+    PennylaneMappingDTO,
+    PendingReconciliationListDTO,
+    CreateMappingDTO,
+    ResolveReconciliationDTO,
+    TriggerSyncDTO,
+    PennylaneDashboardDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -152,4 +164,14 @@ __all__ = [
     # P&L (GAP #9)
     "LignePnLDTO",
     "PnLChantierDTO",
+    # Pennylane Inbound (CONN-10 to CONN-17)
+    "PennylaneSyncResultDTO",
+    "PennylaneSyncHistoryDTO",
+    "PennylanePendingReconciliationDTO",
+    "PennylaneMappingDTO",
+    "PendingReconciliationListDTO",
+    "CreateMappingDTO",
+    "ResolveReconciliationDTO",
+    "TriggerSyncDTO",
+    "PennylaneDashboardDTO",
 ]

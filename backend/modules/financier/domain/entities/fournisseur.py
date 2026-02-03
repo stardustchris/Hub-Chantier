@@ -1,14 +1,19 @@
 """Entité Fournisseur - Représente un fournisseur BTP.
 
 FIN-14: Répertoire fournisseurs - Base fournisseurs partagée.
+CONN-12: Import fournisseurs Pennylane.
 """
 
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from ..value_objects import TypeFournisseur
+
+
+# Type pour la source de donnée
+SourceDonnee = Literal["HUB", "PENNYLANE"]
 
 
 @dataclass
@@ -36,6 +41,13 @@ class Fournisseur:
     # H10: Soft delete fields
     deleted_at: Optional[datetime] = None
     deleted_by: Optional[int] = None
+    # CONN-12: Champs Pennylane Inbound
+    pennylane_supplier_id: Optional[str] = None
+    delai_paiement_jours: int = 30
+    iban: Optional[str] = None
+    bic: Optional[str] = None
+    source_donnee: SourceDonnee = "HUB"
+    derniere_sync_pennylane: Optional[datetime] = None
 
     def __post_init__(self) -> None:
         """Validation à la création."""
@@ -50,6 +62,22 @@ class Fournisseur:
         if self.email is not None and self.email.strip():
             if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", self.email.strip()):
                 raise ValueError("Format d'email invalide")
+        # CONN-12: Validation IBAN (format basique)
+        if self.iban is not None and self.iban.strip():
+            iban_clean = self.iban.strip().replace(" ", "").upper()
+            if len(iban_clean) < 15 or len(iban_clean) > 34:
+                raise ValueError(
+                    "L'IBAN doit comporter entre 15 et 34 caractères"
+                )
+            if not re.match(r"^[A-Z]{2}[0-9]{2}[A-Z0-9]+$", iban_clean):
+                raise ValueError("Format d'IBAN invalide")
+        # CONN-12: Validation BIC (format basique)
+        if self.bic is not None and self.bic.strip():
+            bic_clean = self.bic.strip().upper()
+            if not re.match(r"^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$", bic_clean):
+                raise ValueError(
+                    "Format de BIC invalide (8 ou 11 caractères alphanumériques)"
+                )
 
     def activer(self) -> None:
         """Active le fournisseur."""
@@ -99,6 +127,19 @@ class Fournisseur:
         self.deleted_at = datetime.utcnow()
         self.deleted_by = deleted_by
 
+    def marquer_sync_pennylane(self) -> None:
+        """Marque le fournisseur comme synchronisé avec Pennylane.
+
+        CONN-12: Permet de suivre la date de dernière synchronisation.
+        """
+        self.derniere_sync_pennylane = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+
+    @property
+    def est_importe_pennylane(self) -> bool:
+        """Indique si le fournisseur provient de Pennylane."""
+        return self.source_donnee == "PENNYLANE"
+
     def to_dict(self) -> dict:
         """Convertit l'entité en dictionnaire."""
         return {
@@ -116,4 +157,13 @@ class Fournisseur:
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "created_by": self.created_by,
+            # CONN-12: Champs Pennylane
+            "pennylane_supplier_id": self.pennylane_supplier_id,
+            "delai_paiement_jours": self.delai_paiement_jours,
+            "iban": self.iban,
+            "bic": self.bic,
+            "source_donnee": self.source_donnee,
+            "derniere_sync_pennylane": self.derniere_sync_pennylane.isoformat()
+            if self.derniere_sync_pennylane
+            else None,
         }

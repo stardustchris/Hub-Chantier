@@ -10,6 +10,12 @@ from .ligne_situation import LigneSituation
 from .facture_client import FactureClient
 from .alerte_depassement import AlerteDepassement
 from .affectation_budget_tache import AffectationBudgetTache
+# CONN-10 to CONN-15: Entites Pennylane Inbound
+from .pennylane_sync import (
+    PennylaneSyncLog,
+    PennylaneMappingAnalytique,
+    PennylanePendingReconciliation,
+)
 
 __all__ = [
     "Fournisseur",
@@ -24,4 +30,8 @@ __all__ = [
     "FactureClient",
     "AlerteDepassement",
     "AffectationBudgetTache",
+    # Pennylane Inbound
+    "PennylaneSyncLog",
+    "PennylaneMappingAnalytique",
+    "PennylanePendingReconciliation",
 ]

@@ -8,6 +8,19 @@
 
 **Sessions**:
 
+**Session 2026-02-03** — Intégration Pennylane Inbound (Import données comptables)
+- **Objectif**: Importer factures payées depuis Pennylane pour rentabilité Budget vs Réalisé
+- **Critique plan original**: Webhooks Pennylane INEXISTANTS → Solution polling 15 min
+- **Features**: CONN-10 à CONN-17 (8 nouvelles fonctionnalités)
+- **Pipeline agents**: sql-pro → python-pro → typescript-pro → architect-reviewer → test-automator → code-reviewer → security-auditor
+- **Backend**: 1 migration SQL + 11 fichiers Python (entités, use cases, routes, repositories)
+- **Frontend**: 6 fichiers TypeScript (types, service, 3 composants, 1 page)
+- **Tests**: 175 tests unitaires générés, couverture 90%+
+- **Validation**: architect 9/10 PASS, test-automator 175/175, code-reviewer CHANGES_REQUESTED, security 2 HIGH
+- **Fixes post-validation**: Validation clé API production, .env.example, alignement types frontend/backend, format réponses API
+- **API Pennylane**: GRATUIT (inclus abonnement Essentiel 24€+/mois), rate limit 5 req/sec
+- Verdict : ✅ **PENNYLANE INBOUND COMPLET**
+
 **Session 2026-02-01** — Module Devis Phase 2 Automatisation (8 features)
 - **Branche**: `claude/review-quote-specs-viCUM`
 - **Features**: DEV-08, DEV-11, DEV-14, DEV-16, DEV-22, DEV-23, DEV-24, DEV-25
@@ -59,5 +72,5 @@ Chaque fichier mensuel contient:
 
 ---
 
-**Dernière mise à jour**: 1er février 2026
+**Dernière mise à jour**: 3 février 2026
 **Archive courante**: Février 2026 (inline) + 2026-01.md (4304 lignes, ~58k tokens)

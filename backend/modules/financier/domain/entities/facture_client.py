@@ -2,6 +2,7 @@
 
 FIN-08: Facturation client - generee a partir des situations de travaux
 ou en acompte.
+CONN-11: Sync encaissements clients Pennylane.
 """
 
 from dataclasses import dataclass
@@ -62,6 +63,10 @@ class FactureClient:
     # H10: Soft delete fields
     deleted_at: Optional[datetime] = None
     deleted_by: Optional[int] = None
+    # CONN-11: Champs Pennylane encaissements
+    date_paiement_reel: Optional[date] = None
+    montant_encaisse: Decimal = Decimal("0")
+    pennylane_invoice_id: Optional[str] = None
 
     def __post_init__(self) -> None:
         """Validation a la creation.
@@ -172,6 +177,59 @@ class FactureClient:
         """Verifie si la facture a ete supprimee (soft delete)."""
         return self.deleted_at is not None
 
+    @property
+    def est_encaissee(self) -> bool:
+        """Indique si la facture a ete entierement encaissee.
+
+        CONN-11: Une facture est consideree encaissee si le montant
+        encaisse est >= au montant net.
+
+        Returns:
+            True si entierement encaissee, False sinon.
+        """
+        return self.montant_encaisse >= self.montant_net
+
+    @property
+    def reste_a_encaisser(self) -> Decimal:
+        """Calcule le montant restant a encaisser.
+
+        CONN-11: Permet le suivi des creances clients.
+
+        Returns:
+            Le montant net moins le montant deja encaisse.
+        """
+        reste = self.montant_net - self.montant_encaisse
+        return max(Decimal("0"), reste)
+
+    def enregistrer_encaissement(
+        self,
+        montant: Decimal,
+        date_paiement: date,
+    ) -> None:
+        """Enregistre un encaissement sur la facture.
+
+        CONN-11: Permet de mettre a jour le montant encaisse depuis Pennylane.
+
+        Args:
+            montant: Montant encaisse.
+            date_paiement: Date du paiement.
+
+        Raises:
+            ValueError: Si le montant est negatif ou si la facture est annulee.
+        """
+        if montant < Decimal("0"):
+            raise ValueError("Le montant encaisse ne peut pas etre negatif")
+        if self.statut == "annulee":
+            raise ValueError("Impossible d'enregistrer un encaissement sur une facture annulee")
+
+        self.montant_encaisse = montant
+        self.date_paiement_reel = date_paiement
+        self.updated_at = datetime.utcnow()
+
+        # Si entierement encaissee et en statut envoyee, passer en payee
+        if self.est_encaissee and self.statut == "envoyee":
+            self.statut = "payee"
+
     def to_dict(self) -> dict:
         """Convertit l'entite en dictionnaire."""
         return {
@@ -201,4 +259,12 @@ class FactureClient:
             "updated_at": (
                 self.updated_at.isoformat() if self.updated_at else None
             ),
+            # CONN-11: Champs Pennylane encaissements
+            "date_paiement_reel": (
+                self.date_paiement_reel.isoformat() if self.date_paiement_reel else None
+            ),
+            "montant_encaisse": str(self.montant_encaisse),
+            "pennylane_invoice_id": self.pennylane_invoice_id,
+            "est_encaissee": self.est_encaissee,
+            "reste_a_encaisser": str(self.reste_a_encaisser),
         }

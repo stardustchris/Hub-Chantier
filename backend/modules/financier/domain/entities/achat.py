@@ -2,15 +2,20 @@
 
 FIN-05: Saisie achat - Formulaire de saisie des achats.
 FIN-06: Suivi achat - Workflow de validation et suivi.
+CONN-10: Import factures fournisseurs Pennylane.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, date
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Literal
 
 from ..value_objects import TypeAchat, StatutAchat, UniteMesure
 from ..value_objects.taux_tva import TAUX_VALIDES
+
+
+# Type pour la source de donnée
+SourceDonnee = Literal["HUB", "PENNYLANE"]
 
 
 class AchatValidationError(Exception):
@@ -65,6 +70,11 @@ class Achat:
     # H10: Soft delete fields
     deleted_at: Optional[datetime] = None
     deleted_by: Optional[int] = None
+    # CONN-10: Champs Pennylane Inbound
+    montant_ht_reel: Optional[Decimal] = None
+    date_facture_reelle: Optional[date] = None
+    pennylane_invoice_id: Optional[str] = None
+    source_donnee: SourceDonnee = "HUB"
 
     def __post_init__(self) -> None:
         """Validation à la création."""
@@ -102,6 +112,39 @@ class Achat:
     def est_supprime(self) -> bool:
         """Vérifie si l'achat a été supprimé (soft delete)."""
         return self.deleted_at is not None
+
+    @property
+    def ecart_budget_reel(self) -> Optional[Decimal]:
+        """Calcule l'écart entre le montant prévu et le montant réel.
+
+        CONN-10: Permet d'analyser les écarts budget/réalisé.
+
+        Returns:
+            L'écart (réel - prévu) si montant_ht_reel disponible, sinon None.
+            Positif = dépassement, Négatif = économie.
+        """
+        if self.montant_ht_reel is None:
+            return None
+        return self.montant_ht_reel - self.total_ht
+
+    @property
+    def montant_pour_budget(self) -> Decimal:
+        """Retourne le montant à utiliser pour les calculs budgétaires.
+
+        CONN-10: Utilise le montant réel si disponible (donnée Pennylane),
+        sinon le montant prévisionnel.
+
+        Returns:
+            Le montant HT réel si disponible, sinon total_ht prévu.
+        """
+        if self.montant_ht_reel is not None:
+            return self.montant_ht_reel
+        return self.total_ht
+
+    @property
+    def a_montant_reel(self) -> bool:
+        """Indique si l'achat a un montant réel importé depuis Pennylane."""
+        return self.montant_ht_reel is not None
 
     def _transitionner(self, nouveau_statut: StatutAchat) -> None:
         """Effectue une transition de statut avec validation.
@@ -233,4 +276,17 @@ class Achat:
             if self.updated_at
             else None,
             "created_by": self.created_by,
+            # CONN-10: Champs Pennylane
+            "montant_ht_reel": str(self.montant_ht_reel)
+            if self.montant_ht_reel
+            else None,
+            "date_facture_reelle": self.date_facture_reelle.isoformat()
+            if self.date_facture_reelle
+            else None,
+            "pennylane_invoice_id": self.pennylane_invoice_id,
+            "source_donnee": self.source_donnee,
+            "ecart_budget_reel": str(self.ecart_budget_reel)
+            if self.ecart_budget_reel is not None
+            else None,
+            "montant_pour_budget": str(self.montant_pour_budget),
         }
