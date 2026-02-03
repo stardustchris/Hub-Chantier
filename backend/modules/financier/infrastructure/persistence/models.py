@@ -56,6 +56,7 @@ ACHAT_TYPES = (
     "materiel",
     "sous_traitance",
     "service",
+    "main_oeuvre",
 )
 
 ACHAT_STATUTS = (

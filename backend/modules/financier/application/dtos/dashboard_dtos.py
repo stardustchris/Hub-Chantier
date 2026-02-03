@@ -87,10 +87,10 @@ class RepartitionLotDTO:
             "lot_id": self.lot_id,
             "code_lot": self.code_lot,
             "libelle": self.libelle,
-            "total_prevu_ht": self.total_prevu_ht,
-            "engage": self.engage,
-            "realise": self.realise,
-            "ecart": self.ecart,
+            "total_prevu_ht": float(self.total_prevu_ht),
+            "engage": float(self.engage),
+            "realise": float(self.realise),
+            "ecart": float(self.ecart),
         }
 
 

@@ -17,6 +17,7 @@ class TypeAchat(str, Enum):
     MATERIEL = "materiel"
     SOUS_TRAITANCE = "sous_traitance"
     SERVICE = "service"
+    MAIN_OEUVRE = "main_oeuvre"
 
     @property
     def label(self) -> str:
@@ -26,5 +27,6 @@ class TypeAchat(str, Enum):
             self.MATERIEL: "Matériel",
             self.SOUS_TRAITANCE: "Sous-traitance",
             self.SERVICE: "Service",
+            self.MAIN_OEUVRE: "Main d'œuvre",
         }
         return labels[self]

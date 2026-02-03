@@ -20,7 +20,10 @@ class UniteMesure(str, Enum):
     HEURE = "heure"
     ML = "ml"
     T = "T"
-    U = "u"
+    U = "U"
+    ENS = "ENS"
+    JOUR = "jour"
+    H = "h"
 
     @property
     def label(self) -> str:
@@ -34,6 +37,9 @@ class UniteMesure(str, Enum):
             self.ML: "Mètre linéaire",
             self.T: "Tonne",
             self.U: "Unité",
+            self.ENS: "Ensemble",
+            self.JOUR: "Jour",
+            self.H: "Heure",
         }
         return labels[self]
 
@@ -49,5 +55,8 @@ class UniteMesure(str, Enum):
             self.ML: "ml",
             self.T: "T",
             self.U: "u",
+            self.ENS: "ens",
+            self.JOUR: "j",
+            self.H: "h",
         }
         return symboles[self]
