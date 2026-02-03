@@ -14,6 +14,8 @@ from ...domain.repositories import (
     LotBudgetaireRepository,
     AchatRepository,
     AlerteRepository,
+    SituationRepository,
+    CoutMainOeuvreRepository,
 )
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.consolidation_dtos import (
@@ -45,6 +47,8 @@ class GetVueConsolideeFinancesUseCase:
         achat_repository: AchatRepository,
         alerte_repository: AlerteRepository,
         chantier_info_port: Optional[ChantierInfoPort] = None,
+        situation_repository: Optional[SituationRepository] = None,
+        cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -54,12 +58,16 @@ class GetVueConsolideeFinancesUseCase:
             achat_repository: Repository Achat (interface).
             alerte_repository: Repository Alerte (interface).
             chantier_info_port: Port pour les infos chantiers (optionnel).
+            situation_repository: Repository Situation pour prix de vente (optionnel).
+            cout_mo_repository: Repository Cout MO pour calcul marge BTP (optionnel).
         """
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
         self._achat_repository = achat_repository
         self._alerte_repository = alerte_repository
         self._chantier_info_port = chantier_info_port
+        self._situation_repository = situation_repository
+        self._cout_mo_repository = cout_mo_repository
 
     def execute(
         self,
@@ -107,7 +115,9 @@ class GetVueConsolideeFinancesUseCase:
         total_engage = Decimal("0")
         total_realise = Decimal("0")
         total_reste = Decimal("0")
-        somme_marges_pct = Decimal("0")
+        # Marge moyenne ponderee par prix de vente
+        total_prix_vente = Decimal("0")
+        somme_marges_ponderees = Decimal("0")
 
         nb_ok = 0
         nb_attention = 0
@@ -129,23 +139,44 @@ class GetVueConsolideeFinancesUseCase:
             )
             reste = montant_revise - engage
 
-            # Marge : definitive pour chantiers fermes, estimee sinon
+            # Infos chantier pour determiner si ferme
             chantier_info = chantiers_info.get(chantier_id)
             is_ferme = chantier_info is not None and chantier_info.statut == "ferme"
 
-            # Pourcentages
+            # Pourcentages bases sur le budget
             if montant_revise > Decimal("0"):
                 pct_engage = (engage / montant_revise) * Decimal("100")
                 pct_realise = (realise / montant_revise) * Decimal("100")
-                if is_ferme:
-                    # Marge definitive basee sur le realise (chantier clos)
-                    marge_pct = ((montant_revise - realise) / montant_revise) * Decimal("100")
-                else:
-                    # Marge estimee basee sur l'engage (chantier en cours)
-                    marge_pct = ((montant_revise - engage) / montant_revise) * Decimal("100")
             else:
                 pct_engage = Decimal("0")
                 pct_realise = Decimal("0")
+
+            # Calcul de la marge BTP : (Prix Vente - Cout Revient) / Prix Vente
+            # Prix Vente = situations de travaux facturees au client
+            # Cout Revient = achats realises + cout main d'oeuvre
+            prix_vente_ht = Decimal("0")
+            cout_mo = Decimal("0")
+
+            if self._situation_repository:
+                derniere_situation = self._situation_repository.find_derniere_situation(chantier_id)
+                if derniere_situation:
+                    prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
+
+            if self._cout_mo_repository:
+                cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+
+            cout_revient = realise + cout_mo
+
+            if prix_vente_ht > Decimal("0"):
+                # Formule BTP correcte : marge sur prix de vente
+                marge_pct = ((prix_vente_ht - cout_revient) / prix_vente_ht) * Decimal("100")
+            elif montant_revise > Decimal("0"):
+                # Fallback si pas de facturation : ancienne formule basee sur le budget
+                if is_ferme:
+                    marge_pct = ((montant_revise - realise) / montant_revise) * Decimal("100")
+                else:
+                    marge_pct = ((montant_revise - engage) / montant_revise) * Decimal("100")
+            else:
                 marge_pct = Decimal("0")
 
             # Classification
@@ -188,13 +219,18 @@ class GetVueConsolideeFinancesUseCase:
             total_engage += engage
             total_realise += realise
             total_reste += reste
-            somme_marges_pct += marge_pct
 
-        # Marge moyenne
+            # Pour marge moyenne ponderee par prix de vente
+            # Utiliser prix_vente si disponible, sinon le budget
+            poids = prix_vente_ht if prix_vente_ht > Decimal("0") else montant_revise
+            total_prix_vente += poids
+            somme_marges_ponderees += marge_pct * poids
+
+        # Marge moyenne ponderee par prix de vente (ou budget si pas de situation)
         nb_chantiers = len(chantiers_summaries)
         marge_moyenne = (
-            somme_marges_pct / Decimal(str(nb_chantiers))
-            if nb_chantiers > 0
+            somme_marges_ponderees / total_prix_vente
+            if total_prix_vente > Decimal("0")
             else Decimal("0")
         )
 

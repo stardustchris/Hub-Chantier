@@ -10,6 +10,8 @@ from ...domain.repositories import (
     BudgetRepository,
     LotBudgetaireRepository,
     AchatRepository,
+    SituationRepository,
+    CoutMainOeuvreRepository,
 )
 from ...domain.value_objects import StatutAchat
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
@@ -34,10 +36,14 @@ class GetDashboardFinancierUseCase:
         budget_repository: BudgetRepository,
         lot_repository: LotBudgetaireRepository,
         achat_repository: AchatRepository,
+        situation_repository: SituationRepository = None,
+        cout_mo_repository: CoutMainOeuvreRepository = None,
     ):
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
         self._achat_repository = achat_repository
+        self._situation_repository = situation_repository
+        self._cout_mo_repository = cout_mo_repository
 
     def execute(self, chantier_id: int) -> DashboardFinancierDTO:
         """Construit le tableau de bord financier d'un chantier.
@@ -67,16 +73,39 @@ class GetDashboardFinancierUseCase:
         )
         reste_a_depenser = montant_revise_ht - total_engage
 
-        # Pourcentages
+        # Pourcentages basés sur le budget
         if montant_revise_ht > Decimal("0"):
             pct_engage = (total_engage / montant_revise_ht) * Decimal("100")
             pct_realise = (total_realise / montant_revise_ht) * Decimal("100")
             pct_reste = (reste_a_depenser / montant_revise_ht) * Decimal("100")
-            marge_estimee = ((montant_revise_ht - total_engage) / montant_revise_ht) * Decimal("100")
         else:
             pct_engage = Decimal("0")
             pct_realise = Decimal("0")
             pct_reste = Decimal("0")
+
+        # Calcul de la marge BTP : (Prix Vente - Coût Revient) / Prix Vente
+        # Prix Vente = situations de travaux facturées au client
+        # Coût Revient = achats réalisés + coût main d'oeuvre
+        prix_vente_ht = Decimal("0")
+        cout_mo = Decimal("0")
+
+        if self._situation_repository:
+            derniere_situation = self._situation_repository.find_derniere_situation(chantier_id)
+            if derniere_situation:
+                prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
+
+        if self._cout_mo_repository:
+            cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+
+        cout_revient = total_realise + cout_mo
+
+        if prix_vente_ht > Decimal("0"):
+            # Formule BTP correcte : marge sur prix de vente
+            marge_estimee = ((prix_vente_ht - cout_revient) / prix_vente_ht) * Decimal("100")
+        elif montant_revise_ht > Decimal("0"):
+            # Fallback si pas de facturation : ancienne formule basée sur le budget
+            marge_estimee = ((montant_revise_ht - total_engage) / montant_revise_ht) * Decimal("100")
+        else:
             marge_estimee = Decimal("0")
 
         kpi = KPIFinancierDTO(

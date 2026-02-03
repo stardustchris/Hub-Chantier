@@ -7,6 +7,7 @@ globaux, classification ok/attention/depassement, top rentables/derives.
 GAP #1: Noms chantiers via ChantierInfoPort
 GAP #3: Filtre par statut chantier
 GAP #4: Marge definitive vs estimee (chantier ferme)
+GAP #5: Calcul marge BTP avec situations et cout MO
 """
 
 import pytest
@@ -15,11 +16,14 @@ from datetime import datetime
 from unittest.mock import Mock, MagicMock
 
 from modules.financier.domain.entities import Budget
+from modules.financier.domain.entities.situation_travaux import SituationTravaux
 from modules.financier.domain.repositories import (
     BudgetRepository,
     LotBudgetaireRepository,
     AchatRepository,
     AlerteRepository,
+    SituationRepository,
+    CoutMainOeuvreRepository,
 )
 from modules.financier.domain.value_objects.statuts_financiers import (
     STATUTS_ENGAGES,
@@ -38,7 +42,11 @@ class TestGetVueConsolideeFinancesUseCase:
     """Tests pour le use case de vue consolidee multi-chantiers."""
 
     def setup_method(self):
-        """Configuration avant chaque test."""
+        """Configuration avant chaque test.
+
+        Note: situation_repository et cout_mo_repository sont explicitement
+        None pour tester le mode fallback (ancienne formule basee sur budget).
+        """
         self.mock_budget_repo = Mock(spec=BudgetRepository)
         self.mock_lot_repo = Mock(spec=LotBudgetaireRepository)
         self.mock_achat_repo = Mock(spec=AchatRepository)
@@ -49,6 +57,8 @@ class TestGetVueConsolideeFinancesUseCase:
             lot_repository=self.mock_lot_repo,
             achat_repository=self.mock_achat_repo,
             alerte_repository=self.mock_alerte_repo,
+            situation_repository=None,  # Mode fallback
+            cout_mo_repository=None,     # Mode fallback
         )
 
     def _make_budget(self, chantier_id, initial, avenants=Decimal("0")):
@@ -284,7 +294,7 @@ class TestGetVueConsolideeFinancesUseCase:
         assert len(result.top_derives) == 0
 
     def test_marge_moyenne_calculation(self):
-        """Test: la marge moyenne est bien la moyenne des marges individuelles."""
+        """Test: la marge moyenne est ponderee par le budget (fallback mode sans situation)."""
         # Arrange - 2 chantiers
         budgets = {
             1: self._make_budget(1, Decimal("100000")),
@@ -294,7 +304,8 @@ class TestGetVueConsolideeFinancesUseCase:
 
         # Chantier 1: engage 40000 -> marge 60%
         # Chantier 2: engage 100000 -> marge 50%
-        # Marge moyenne = (60 + 50) / 2 = 55%
+        # Marge moyenne PONDEREE = (60*100000 + 50*200000) / (100000+200000)
+        #                        = (6000000 + 10000000) / 300000 = 53.33%
         def somme_by_chantier(cid, statuts):
             if statuts == STATUTS_ENGAGES:
                 return {1: Decimal("40000"), 2: Decimal("100000")}[cid]
@@ -306,8 +317,8 @@ class TestGetVueConsolideeFinancesUseCase:
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1, 2])
 
-        # Assert
-        assert result.kpi_globaux.marge_moyenne_pct == "55.00"
+        # Assert - marge moyenne ponderee par budget (en mode fallback)
+        assert result.kpi_globaux.marge_moyenne_pct == "53.33"
 
     def test_nb_alertes_per_chantier(self):
         """Test: le nombre d'alertes non acquittees est bien reporte."""
@@ -818,3 +829,276 @@ class TestConsolidationMargeDefinitive:
 
         # Assert
         assert result.kpi_globaux.marge_moyenne_pct == "40.00"
+
+
+# ============================================================
+# GAP #5 - Calcul marge BTP avec situations et cout MO
+# ============================================================
+
+
+class TestConsolidationMargeBTP:
+    """Tests pour le calcul de marge BTP avec situations et cout MO.
+
+    Formule BTP correcte:
+        marge = (prix_vente_ht - cout_revient) / prix_vente_ht × 100
+    Où:
+        - prix_vente_ht = montant_cumule_ht de la dernière situation
+        - cout_revient = achats réalisés + coût main d'oeuvre
+    """
+
+    def setup_method(self):
+        """Configuration avec tous les repositories necessaires."""
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_lot_repo = Mock(spec=LotBudgetaireRepository)
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_alerte_repo = Mock(spec=AlerteRepository)
+        self.mock_situation_repo = Mock(spec=SituationRepository)
+        self.mock_cout_mo_repo = Mock(spec=CoutMainOeuvreRepository)
+
+        self.use_case = GetVueConsolideeFinancesUseCase(
+            budget_repository=self.mock_budget_repo,
+            lot_repository=self.mock_lot_repo,
+            achat_repository=self.mock_achat_repo,
+            alerte_repository=self.mock_alerte_repo,
+            situation_repository=self.mock_situation_repo,
+            cout_mo_repository=self.mock_cout_mo_repo,
+        )
+
+    def _make_budget(self, chantier_id, initial, avenants=Decimal("0")):
+        """Helper pour creer un budget mock."""
+        return Budget(
+            id=chantier_id * 10,
+            chantier_id=chantier_id,
+            montant_initial_ht=initial,
+            montant_avenants_ht=avenants,
+            created_at=datetime(2026, 1, 1),
+        )
+
+    def _make_situation(self, chantier_id, montant_cumule):
+        """Helper pour creer une situation mock."""
+        return SituationTravaux(
+            id=chantier_id * 100,
+            chantier_id=chantier_id,
+            budget_id=chantier_id * 10,
+            numero=f"SIT-2026-{chantier_id:02d}",
+            periode_debut=datetime(2026, 1, 1).date(),
+            periode_fin=datetime(2026, 1, 31).date(),
+            montant_cumule_ht=montant_cumule,
+            statut="facturee",
+        )
+
+    def test_marge_btp_formule_correcte(self):
+        """Test: marge BTP = (prix_vente - cout_revient) / prix_vente."""
+        # Arrange
+        budget = self._make_budget(1, Decimal("100000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Prix de vente (situation): 120000 €
+        situation = self._make_situation(1, Decimal("120000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Cout achats realises: 90000 €
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("80000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("90000")
+        )
+
+        # Cout MO: 18000 €
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("18000")
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Cout revient = 90000 + 18000 = 108000
+        # Marge = (120000 - 108000) / 120000 = 10%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "10.00"
+        assert result.kpi_globaux.marge_moyenne_pct == "10.00"
+
+    def test_marge_btp_chantier_deficitaire(self):
+        """Test: marge BTP negative quand cout_revient > prix_vente."""
+        # Arrange
+        budget = self._make_budget(1, Decimal("100000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Prix de vente: 100000 €
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Cout achats realises: 95000 €
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("90000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("95000")
+        )
+
+        # Cout MO: 10000 €
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Cout revient = 95000 + 10000 = 105000
+        # Marge = (100000 - 105000) / 100000 = -5%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "-5.00"
+
+    def test_marge_moyenne_ponderee_par_prix_vente(self):
+        """Test: marge moyenne ponderee par prix de vente, pas arithmetique."""
+        # Arrange
+        budgets = {
+            1: self._make_budget(1, Decimal("100000")),
+            2: self._make_budget(2, Decimal("500000")),
+        }
+        self.mock_budget_repo.find_by_chantier_id.side_effect = lambda cid: budgets.get(cid)
+
+        # Chantier 1: petit, marge 20%
+        # Prix vente: 50000, cout revient: 40000
+        situation1 = self._make_situation(1, Decimal("50000"))
+
+        # Chantier 2: gros, marge 8%
+        # Prix vente: 400000, cout revient: 368000
+        situation2 = self._make_situation(2, Decimal("400000"))
+
+        def find_situation(cid):
+            return {1: situation1, 2: situation2}.get(cid)
+
+        self.mock_situation_repo.find_derniere_situation.side_effect = find_situation
+
+        # Achats realises
+        achat_map = {
+            (1, tuple(STATUTS_ENGAGES)): Decimal("30000"),
+            (2, tuple(STATUTS_ENGAGES)): Decimal("350000"),
+            (1, tuple(STATUTS_REALISES)): Decimal("35000"),
+            (2, tuple(STATUTS_REALISES)): Decimal("350000"),
+        }
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: achat_map.get((cid, tuple(statuts)), Decimal("0"))
+        )
+
+        # Cout MO
+        cout_mo_map = {1: Decimal("5000"), 2: Decimal("18000")}
+        self.mock_cout_mo_repo.calculer_cout_chantier.side_effect = (
+            lambda cid: cout_mo_map.get(cid, Decimal("0"))
+        )
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Chantier 1: marge = (50000 - 40000) / 50000 = 20%
+        # Chantier 2: marge = (400000 - 368000) / 400000 = 8%
+        # Marge moyenne ponderee = (20*50000 + 8*400000) / (50000+400000)
+        #                        = (1000000 + 3200000) / 450000
+        #                        = 4200000 / 450000 = 9.33%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1, 2])
+
+        # Assert - marge ponderee, pas simple moyenne (14%)
+        assert result.kpi_globaux.marge_moyenne_pct == "9.33"
+
+    def test_fallback_sans_situation(self):
+        """Test: fallback vers ancienne formule quand pas de situation."""
+        # Arrange
+        budget = self._make_budget(1, Decimal("100000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Pas de situation
+        self.mock_situation_repo.find_derniere_situation.return_value = None
+
+        # Engage: 60000
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("60000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("50000")
+        )
+
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("0")
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Fallback: marge = (budget - engage) / budget = (100000-60000)/100000 = 40%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "40.00"
+
+    def test_fallback_situation_zero(self):
+        """Test: fallback si situation avec montant_cumule_ht = 0."""
+        # Arrange
+        budget = self._make_budget(1, Decimal("100000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Situation avec montant 0
+        situation = self._make_situation(1, Decimal("0"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Engage: 70000
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("70000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("60000")
+        )
+
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("5000")
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Fallback: marge = (budget - engage) / budget = (100000-70000)/100000 = 30%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "30.00"
+
+    def test_mix_chantiers_avec_et_sans_situation(self):
+        """Test: mix de chantiers avec et sans situations."""
+        # Arrange
+        budgets = {
+            1: self._make_budget(1, Decimal("100000")),  # Avec situation
+            2: self._make_budget(2, Decimal("200000")),  # Sans situation
+        }
+        self.mock_budget_repo.find_by_chantier_id.side_effect = lambda cid: budgets.get(cid)
+
+        # Chantier 1: situation 80000, cout 72000 -> marge 10%
+        situation1 = self._make_situation(1, Decimal("80000"))
+
+        def find_situation(cid):
+            return {1: situation1, 2: None}.get(cid)
+
+        self.mock_situation_repo.find_derniere_situation.side_effect = find_situation
+
+        achat_map = {
+            (1, tuple(STATUTS_ENGAGES)): Decimal("60000"),
+            (2, tuple(STATUTS_ENGAGES)): Decimal("120000"),
+            (1, tuple(STATUTS_REALISES)): Decimal("65000"),
+            (2, tuple(STATUTS_REALISES)): Decimal("100000"),
+        }
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: achat_map.get((cid, tuple(statuts)), Decimal("0"))
+        )
+
+        cout_mo_map = {1: Decimal("7000"), 2: Decimal("0")}
+        self.mock_cout_mo_repo.calculer_cout_chantier.side_effect = (
+            lambda cid: cout_mo_map.get(cid, Decimal("0"))
+        )
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Chantier 1: marge BTP = (80000 - 72000) / 80000 = 10%
+        # Chantier 2 (fallback): marge = (200000 - 120000) / 200000 = 40%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1, 2])
+
+        # Assert
+        marges = {c.chantier_id: c.marge_estimee_pct for c in result.chantiers}
+        assert marges[1] == "10.00"
+        assert marges[2] == "40.00"

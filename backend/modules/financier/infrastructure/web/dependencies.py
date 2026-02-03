@@ -407,22 +407,6 @@ def get_list_achats_en_attente_use_case(
 
 
 # =============================================================================
-# Use Cases - Dashboard (FIN-11)
-# =============================================================================
-
-
-def get_dashboard_financier_use_case(
-    budget_repository: BudgetRepository = Depends(get_budget_repository),
-    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
-    achat_repository: AchatRepository = Depends(get_achat_repository),
-) -> GetDashboardFinancierUseCase:
-    """Retourne le use case GetDashboardFinancier."""
-    return GetDashboardFinancierUseCase(
-        budget_repository, lot_repository, achat_repository
-    )
-
-
-# =============================================================================
 # Use Cases - Evolution Financiere (FIN-17)
 # =============================================================================
 
@@ -757,6 +741,31 @@ def get_cout_main_oeuvre_use_case(
 
 
 # =============================================================================
+# Use Cases - Dashboard (FIN-11)
+# Note: Placé après les repositories SituationRepository et CoutMainOeuvreRepository
+# =============================================================================
+
+
+def get_dashboard_financier_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+) -> GetDashboardFinancierUseCase:
+    """Retourne le use case GetDashboardFinancier.
+
+    Utilise la formule BTP correcte pour le calcul de marge:
+    Marge = (Prix Vente - Coût Revient) / Prix Vente
+    où Prix Vente = situations facturées, Coût Revient = achats + MO.
+    """
+    return GetDashboardFinancierUseCase(
+        budget_repository, lot_repository, achat_repository,
+        situation_repository, cout_mo_repository,
+    )
+
+
+# =============================================================================
 # Repositories - Couts Materiel (FIN-10)
 # =============================================================================
 
@@ -839,9 +848,17 @@ def get_vue_consolidee_use_case(
     lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
     achat_repository: AchatRepository = Depends(get_achat_repository),
     alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
     db: Session = Depends(get_db),
 ) -> GetVueConsolideeFinancesUseCase:
-    """Retourne le use case GetVueConsolideeFinances."""
+    """Retourne le use case GetVueConsolideeFinances.
+
+    Utilise la formule BTP correcte pour le calcul de marge:
+    Marge = (Prix Vente - Cout Revient) / Prix Vente
+    ou Prix Vente = situations facturees, Cout Revient = achats + MO.
+    La marge moyenne est ponderee par le prix de vente.
+    """
     from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
         SQLAlchemyChantierRepository,
     )
@@ -853,6 +870,8 @@ def get_vue_consolidee_use_case(
     return GetVueConsolideeFinancesUseCase(
         budget_repository, lot_repository, achat_repository, alerte_repository,
         chantier_info_port=chantier_info_port,
+        situation_repository=situation_repository,
+        cout_mo_repository=cout_mo_repository,
     )
 
 

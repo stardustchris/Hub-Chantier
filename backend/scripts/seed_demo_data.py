@@ -86,7 +86,7 @@ def hash_password(password: str) -> str:
 # =============================================================================
 
 USERS_DATA = [
-    # Admin
+    # Admin - pas de taux horaire (personnel administratif)
     {
         "email": "admin@example.com",
         "password": "Admin123!",
@@ -98,6 +98,7 @@ USERS_DATA = [
         "metiers": None,
         "code_utilisateur": "ADM001",
         "couleur": "#9B59B6",
+        "taux_horaire": None,
     },
     {
         "email": "dupont.admin@example.com",
@@ -110,8 +111,9 @@ USERS_DATA = [
         "metiers": ["assistante_administrative"],
         "code_utilisateur": "ADM002",
         "couleur": "#8E44AD",
+        "taux_horaire": None,
     },
-    # Chefs de chantier et d'équipe
+    # Chefs de chantier et d'équipe - 50-55 EUR/h (cout entreprise avec charges)
     {
         "email": "martin.chef@example.com",
         "password": "Test123!",
@@ -123,6 +125,7 @@ USERS_DATA = [
         "metiers": ["chef_chantier"],
         "code_utilisateur": "CHF001",
         "couleur": "#27AE60",
+        "taux_horaire": 55.00,  # Chef de chantier senior
     },
     {
         "email": "bernard.chef@example.com",
@@ -135,6 +138,7 @@ USERS_DATA = [
         "metiers": ["chef_equipe"],
         "code_utilisateur": "CHF002",
         "couleur": "#E67E22",
+        "taux_horaire": 50.00,  # Chef d'equipe
     },
     {
         "email": "thomas.chef@example.com",
@@ -147,6 +151,7 @@ USERS_DATA = [
         "metiers": ["chef_equipe"],
         "code_utilisateur": "CHF003",
         "couleur": "#16A085",
+        "taux_horaire": 50.00,  # Chef d'equipe
     },
     {
         "email": "petit.chef@example.com",
@@ -159,8 +164,9 @@ USERS_DATA = [
         "metiers": ["chef_equipe"],
         "code_utilisateur": "CHF004",
         "couleur": "#D35400",
+        "taux_horaire": 50.00,  # Chef d'equipe
     },
-    # Compagnons - Maçons
+    # Compagnons - Macons qualifies 38-42 EUR/h
     {
         "email": "robert.macon@example.com",
         "password": "Test123!",
@@ -172,6 +178,7 @@ USERS_DATA = [
         "metiers": ["macon"],
         "code_utilisateur": "CMP001",
         "couleur": "#E74C3C",
+        "taux_horaire": 42.00,  # Macon qualifie senior
     },
     {
         "email": "richard.macon@example.com",
@@ -184,6 +191,7 @@ USERS_DATA = [
         "metiers": ["macon_coffreur"],
         "code_utilisateur": "CMP002",
         "couleur": "#C0392B",
+        "taux_horaire": 44.00,  # Coffreur specialise
     },
     {
         "email": "durand.macon@example.com",
@@ -196,6 +204,7 @@ USERS_DATA = [
         "metiers": ["macon"],
         "code_utilisateur": "CMP003",
         "couleur": "#E84393",
+        "taux_horaire": 40.00,  # Macon qualifie
     },
     {
         "email": "dubois.macon@example.com",
@@ -208,6 +217,7 @@ USERS_DATA = [
         "metiers": ["macon"],
         "code_utilisateur": "CMP004",
         "couleur": "#F1C40F",
+        "taux_horaire": 40.00,  # Macon qualifie
     },
     {
         "email": "moreau.macon@example.com",
@@ -220,6 +230,7 @@ USERS_DATA = [
         "metiers": ["macon"],
         "code_utilisateur": "CMP005",
         "couleur": "#F39C12",
+        "taux_horaire": 38.00,  # Macon
     },
     {
         "email": "laurent.macon@example.com",
@@ -232,6 +243,7 @@ USERS_DATA = [
         "metiers": ["macon"],
         "code_utilisateur": "CMP006",
         "couleur": "#3498DB",
+        "taux_horaire": 38.00,  # Macon
     },
     {
         "email": "simon.macon@example.com",
@@ -244,8 +256,9 @@ USERS_DATA = [
         "metiers": ["macon_polyvalent"],
         "code_utilisateur": "CMP007",
         "couleur": "#2980B9",
+        "taux_horaire": 40.00,  # Macon polyvalent
     },
-    # Compagnons - Ouvriers
+    # Compagnons - Ouvriers 28-32 EUR/h
     {
         "email": "michel.ouvrier@example.com",
         "password": "Test123!",
@@ -257,6 +270,7 @@ USERS_DATA = [
         "metiers": ["ouvrier"],
         "code_utilisateur": "CMP008",
         "couleur": "#9B59B6",
+        "taux_horaire": 32.00,  # Ouvrier qualifie
     },
     {
         "email": "leroy.ouvrier@example.com",
@@ -269,6 +283,7 @@ USERS_DATA = [
         "metiers": ["ouvrier"],
         "code_utilisateur": "CMP009",
         "couleur": "#8E44AD",
+        "taux_horaire": 30.00,  # Ouvrier
     },
     {
         "email": "lefebvre.ouvrier@example.com",
@@ -281,6 +296,7 @@ USERS_DATA = [
         "metiers": ["ouvrier"],
         "code_utilisateur": "CMP010",
         "couleur": "#1ABC9C",
+        "taux_horaire": 30.00,  # Ouvrier
     },
     {
         "email": "garnier.ouvrier@example.com",
@@ -293,6 +309,7 @@ USERS_DATA = [
         "metiers": ["ouvrier"],
         "code_utilisateur": "CMP011",
         "couleur": "#16A085",
+        "taux_horaire": 28.00,  # Ouvrier debutant
     },
     {
         "email": "roux.ouvrier@example.com",
@@ -305,8 +322,9 @@ USERS_DATA = [
         "metiers": ["ouvrier"],
         "code_utilisateur": "CMP012",
         "couleur": "#EC407A",
+        "taux_horaire": 28.00,  # Ouvrier debutant
     },
-    # Grutier
+    # Grutier - specialiste 45 EUR/h
     {
         "email": "blanc.grutier@example.com",
         "password": "Test123!",
@@ -318,6 +336,7 @@ USERS_DATA = [
         "metiers": ["grutier"],
         "code_utilisateur": "CMP013",
         "couleur": "#3F51B5",
+        "taux_horaire": 45.00,  # Grutier specialise
     },
 ]
 
@@ -558,13 +577,18 @@ def seed_users(db: Session) -> dict:
     user_ids = {}
 
     for user_data in USERS_DATA:
+        taux_horaire = user_data.get("taux_horaire")
+
         # Verifier si l'utilisateur existe deja
         existing = db.query(UserModel).filter(UserModel.email == user_data["email"]).first()
         if existing:
-            # Mettre a jour le mot de passe pour s'assurer qu'il correspond
+            # Mettre a jour le mot de passe et le taux horaire
             existing.password_hash = hash_password(user_data["password"])
             existing.is_active = True  # S'assurer que le compte est actif
-            print(f"  [MAJ] {user_data['prenom']} {user_data['nom']} ({user_data['role']}) - mot de passe mis a jour")
+            if taux_horaire is not None:
+                existing.taux_horaire = taux_horaire
+            taux_info = f" - {taux_horaire} EUR/h" if taux_horaire else ""
+            print(f"  [MAJ] {user_data['prenom']} {user_data['nom']} ({user_data['role']}){taux_info}")
             user_ids[user_data["email"]] = existing.id
             continue
 
@@ -580,12 +604,14 @@ def seed_users(db: Session) -> dict:
             metiers=user_data.get("metiers"),
             code_utilisateur=user_data.get("code_utilisateur"),
             couleur=user_data.get("couleur", "#3498DB"),
+            taux_horaire=taux_horaire,
             is_active=True,
         )
         db.add(user)
         db.flush()  # Pour obtenir l'ID
         user_ids[user_data["email"]] = user.id
-        print(f"  [CREE] {user_data['prenom']} {user_data['nom']} ({user_data['role']}) - ID: {user.id}")
+        taux_info = f" - {taux_horaire} EUR/h" if taux_horaire else ""
+        print(f"  [CREE] {user_data['prenom']} {user_data['nom']} ({user_data['role']}){taux_info} - ID: {user.id}")
 
     db.commit()
     return user_ids
@@ -794,9 +820,175 @@ def seed_taches(db: Session, chantier_ids: dict):
     print(f"  [CREE] {created_count} taches")
 
 
-# SUPPRIMÉ : seed_pointages() n'est plus nécessaire.
-# Les pointages sont désormais créés automatiquement par FDH-10
-# lorsqu'un événement AffectationCreatedEvent est publié.
+def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
+    """Cree des pointages VALIDES historiques pour generer le cout MO.
+
+    Les heures sont calibrees pour obtenir les marges cibles :
+    - Marge BTP = (Prix Vente - Cout Revient) / Prix Vente
+    - Cout Revient = Achats realises + Cout MO
+
+    Configuration des couts MO par chantier :
+    - TOURNON : ~19,750 EUR (395h x 50 EUR/h moyen)
+    - TOUR : ~72,500 EUR (1,812h x 40 EUR/h moyen)
+    - TRIALP : ~32,760 EUR (780h x 42 EUR/h moyen)
+    - GYMNASE : ~39,650 EUR (965h x 41 EUR/h moyen)
+    - CHIGNIN : ~15,400 EUR (385h x 40 EUR/h moyen)
+    """
+    print("\n=== Creation des pointages valides (cout MO) ===")
+    admin_id = user_ids.get("admin@example.com") or 1
+
+    # Configuration des pointages par chantier
+    # Les heures sont distribuees sur plusieurs semaines passees
+    # pour simuler l'historique du chantier
+    POINTAGES_CONFIG = [
+        # TOURNON (sain) - 395h total, marge 10%
+        # Demarrage recent, peu d'heures, 2 ouvriers + 1 chef partiel
+        {
+            "chantier_code": "2025-03-TOURNON-COMMERCIAL",
+            "semaines": 4,  # 4 semaines de travail
+            "equipe": [
+                ("garnier.ouvrier@example.com", 35),  # 35h/sem ouvrier 1
+                ("roux.ouvrier@example.com", 35),     # 35h/sem ouvrier 2
+                ("thomas.chef@example.com", 20),      # 20h/sem chef (partiel)
+            ],
+        },
+        # TOUR-LOGEMENTS (derive legere) - 1,812h total, marge 6%
+        # Chantier bien avance, 6 personnes sur 8 semaines
+        {
+            "chantier_code": "2025-07-TOUR-LOGEMENTS",
+            "semaines": 8,
+            "equipe": [
+                ("simon.macon@example.com", 38),
+                ("michel.ouvrier@example.com", 38),
+                ("leroy.ouvrier@example.com", 38),
+                ("lefebvre.ouvrier@example.com", 38),
+                ("dubois.macon@example.com", 35),
+                ("bernard.chef@example.com", 25),
+            ],
+        },
+        # TRIALP (derive critique) - 780h total, marge 2%
+        # Equipe surchargee pendant 4 semaines intensives (problemes ST)
+        {
+            "chantier_code": "2025-11-TRIALP",
+            "semaines": 4,
+            "equipe": [
+                ("robert.macon@example.com", 42),     # Heures sup
+                ("richard.macon@example.com", 42),
+                ("durand.macon@example.com", 38),
+                ("moreau.macon@example.com", 38),
+                ("martin.chef@example.com", 25),
+            ],
+        },
+        # GYMNASE (perte) - 965h total, marge -4%
+        # Chantier ancien, beaucoup d'heures sur 6 semaines
+        {
+            "chantier_code": "2025-02-EPIERRE-GYMNASE",
+            "semaines": 6,
+            "equipe": [
+                ("laurent.macon@example.com", 40),
+                ("dubois.macon@example.com", 40),
+                ("garnier.ouvrier@example.com", 38),
+                ("petit.chef@example.com", 22),
+            ],
+        },
+        # CHIGNIN (rentable) - 385h total, marge 14%
+        # Equipe efficace sur 3 semaines
+        {
+            "chantier_code": "2025-04-CHIGNIN-AGRICOLE",
+            "semaines": 3,
+            "equipe": [
+                ("moreau.macon@example.com", 40),
+                ("laurent.macon@example.com", 40),
+                ("roux.ouvrier@example.com", 35),
+                ("petit.chef@example.com", 15),
+            ],
+        },
+    ]
+
+    created_count = 0
+    total_cout_mo = 0
+
+    for config in POINTAGES_CONFIG:
+        chantier_code = config["chantier_code"]
+        chantier_id = chantier_ids.get(chantier_code)
+
+        if not chantier_id:
+            print(f"  [SKIP] {chantier_code} - chantier non trouve")
+            continue
+
+        cout_chantier = 0
+        heures_chantier = 0
+
+        # Calculer la date de debut (semaines avant aujourd'hui)
+        today = date.today()
+        start_date = today - timedelta(weeks=config["semaines"])
+
+        for email, heures_semaine in config["equipe"]:
+            user_id = user_ids.get(email)
+            if not user_id:
+                continue
+
+            # Recuperer le taux horaire de l'utilisateur
+            user = db.query(UserModel).filter(UserModel.id == user_id).first()
+            taux = float(user.taux_horaire) if user and user.taux_horaire else 35.0
+
+            # Creer un pointage par semaine
+            for week in range(config["semaines"]):
+                week_start = start_date + timedelta(weeks=week)
+
+                # Un pointage par jour de travail (5 jours)
+                heures_par_jour = heures_semaine / 5
+                for day in range(5):
+                    pointage_date = week_start + timedelta(days=day)
+
+                    # Verifier si existe deja
+                    existing = db.query(PointageModel).filter(
+                        PointageModel.utilisateur_id == user_id,
+                        PointageModel.chantier_id == chantier_id,
+                        PointageModel.date_pointage == pointage_date,
+                    ).first()
+
+                    if existing:
+                        # Mettre a jour le statut a valide si necessaire
+                        if existing.statut != "valide":
+                            existing.statut = "valide"
+                            existing.validateur_id = admin_id
+                            existing.validation_date = datetime.now()
+                        continue
+
+                    # Convertir heures en minutes
+                    heures_normales_min = int(heures_par_jour * 60)
+                    heures_sup_min = 0
+                    if heures_par_jour > 8:
+                        heures_normales_min = 8 * 60
+                        heures_sup_min = int((heures_par_jour - 8) * 60)
+
+                    pointage = PointageModel(
+                        utilisateur_id=user_id,
+                        chantier_id=chantier_id,
+                        date_pointage=pointage_date,
+                        heures_normales_minutes=heures_normales_min,
+                        heures_supplementaires_minutes=heures_sup_min,
+                        statut="valide",
+                        validateur_id=admin_id,
+                        validation_date=datetime.now(),
+                        created_by=admin_id,
+                    )
+                    db.add(pointage)
+                    created_count += 1
+
+                    # Calculer le cout
+                    heures_total = (heures_normales_min + heures_sup_min) / 60
+                    cout_chantier += heures_total * taux
+                    heures_chantier += heures_total
+
+        total_cout_mo += cout_chantier
+        chantier_nom = chantier_code.split("-")[-1]
+        print(f"  [CREE] {chantier_nom}: {heures_chantier:,.0f}h -> {cout_chantier:,.0f} EUR")
+
+    db.commit()
+    print(f"\n  [TOTAL] {created_count} pointages valides")
+    print(f"  [TOTAL] Cout MO: {total_cout_mo:,.0f} EUR")
 
 
 TEMPLATES_FORMULAIRES_DATA = [
@@ -1506,12 +1698,24 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
     """
     Cree des achats réalistes avec scénarios de dérive financière.
 
-    PRIX DE RÉFÉRENCE 2025-2026 (marché français gros œuvre):
-    - Béton C25/30: 145 €/m³ livré
-    - Béton C30/37: 165 €/m³ livré
-    - Acier HA: 1.20-1.40 €/kg (hausse +15% en 2025)
-    - Coffrage traditionnel: 45-65 €/m²
-    - Location grue mobile 40T: 850 €/jour
+    MÉTRIQUES CIBLES RÉALISTES (gros œuvre BTP):
+    - Marge nette chantier: 8-12% (objectif standard)
+    - Marge MOE: 25-30% sur le taux horaire
+    - Marge matériaux: 20-30%
+    - Marge sous-traitance: 15-20%
+
+    SCÉNARIOS DE DÉRIVE:
+    - TRIALP: 45% avancement, marge 2% (critique - ST liquidé)
+    - GYMNASE: 75% avancement, marge -3.5% (perte - amiante)
+    - TOUR: 35% avancement, marge 6% (sous pression - hausse acier)
+    - TOURNON: 15% avancement, marge 10.5% (sain - démarrage)
+    - CHIGNIN: 55% avancement, marge 14% (excellent - client fidèle)
+
+    STATUTS ACHATS:
+    - "paye" = réalisé (facturé et payé)
+    - "livre" = engagé (livré, en attente paiement)
+    - "commande" = engagé (commandé)
+    - "valide" = engagé (validé, non commandé)
     """
     print("\n=== Creation des achats avec scénarios de dérive ===")
     admin_id = user_ids.get("admin@example.com") or 1
@@ -1519,161 +1723,317 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
 
     # Recuperer les IDs fournisseurs
     fournisseur_negoce = fournisseur_ids.get("Négoce Matériaux Pro")
-    fournisseur_beton = fournisseur_ids.get("Négoce Matériaux Pro")
+    fournisseur_location = fournisseur_ids.get("Location Matériel BTP")
+    fournisseur_st = fournisseur_ids.get("Sous-Traitance Élec Plus")
 
     today = date.today()
 
     # =================================================================
-    # TRIALP - DÉRIVE CRITIQUE (520k€ engagés sur 1.2M€)
-    # Problèmes: ST liquidé, erreur métré +180m³, pénalités 15k€
+    # TRIALP - DÉRIVE CRITIQUE
+    # Budget: 1.2M€, Avancement: 45%, Marge cible: 2% (très tendu)
+    # Engagé total cible: ~530k€, Réalisé: ~450k€
+    # Problèmes: ST liquidé, erreur métré +180m³, pénalités retard
     # =================================================================
     achats_trialp = [
-        # Achats normaux livrés
-        {"chantier": "2025-11-TRIALP", "lot": "TERRASSEMENT", "fournisseur": fournisseur_beton,
+        # === RÉALISÉ (paye) - 450k€ ===
+        {"chantier": "2025-11-TRIALP", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
          "libelle": "Terrassement décapage 850m³", "quantite": 850, "unite": "m3",
-         "prix_unitaire": 28.00, "statut": "livre", "jours_avant": 60, "type": "materiau"},
+         "prix_unitaire": 28.00, "statut": "facture", "jours_avant": 75, "type": "materiau"},
 
-        {"chantier": "2025-11-TRIALP", "lot": "FONDATIONS", "fournisseur": fournisseur_beton,
-         "libelle": "Béton C30/37 fondations", "quantite": 420, "unite": "m3",
-         "prix_unitaire": 165.00, "statut": "livre", "jours_avant": 45, "type": "materiau"},
+        {"chantier": "2025-11-TRIALP", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C30/37 fondations 420m³", "quantite": 420, "unite": "m3",
+         "prix_unitaire": 168.00, "statut": "facture", "jours_avant": 60, "type": "materiau"},
 
-        # ERREUR MÉTRÉ - Supplément béton non prévu (+180m³)
-        {"chantier": "2025-11-TRIALP", "lot": "FONDATIONS-SUPPL", "fournisseur": fournisseur_beton,
+        {"chantier": "2025-11-TRIALP", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA fondations 28T", "quantite": 28000, "unite": "kg",
+         "prix_unitaire": 1.35, "statut": "facture", "jours_avant": 58, "type": "materiau"},
+
+        {"chantier": "2025-11-TRIALP", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre fondations", "quantite": 520, "unite": "h",
+         "prix_unitaire": 48.00, "statut": "facture", "jours_avant": 55, "type": "main_oeuvre"},
+
+        # ERREUR MÉTRÉ - Supplément béton non prévu (+180m³) - IMPRÉVU
+        {"chantier": "2025-11-TRIALP", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
          "libelle": "IMPRÉVU: Béton supplément erreur métré +180m³", "quantite": 180, "unite": "m3",
-         "prix_unitaire": 175.00, "statut": "livre", "jours_avant": 30, "type": "materiau"},
+         "prix_unitaire": 175.00, "statut": "facture", "jours_avant": 45, "type": "materiau"},
 
-        {"chantier": "2025-11-TRIALP", "lot": "DALLE-BA", "fournisseur": fournisseur_beton,
+        {"chantier": "2025-11-TRIALP", "lot": "DALLE-BA", "fournisseur": fournisseur_negoce,
          "libelle": "Béton C25/30 dalle 1200m²", "quantite": 240, "unite": "m3",
-         "prix_unitaire": 145.00, "statut": "livre", "jours_avant": 25, "type": "materiau"},
+         "prix_unitaire": 148.00, "statut": "facture", "jours_avant": 40, "type": "materiau"},
 
-        # REPRISE RÉGIE - ST ferraillage liquidé
+        {"chantier": "2025-11-TRIALP", "lot": "DALLE-BA", "fournisseur": fournisseur_negoce,
+         "libelle": "Treillis soudé ST25 1200m²", "quantite": 1320, "unite": "m2",
+         "prix_unitaire": 4.80, "statut": "facture", "jours_avant": 42, "type": "materiau"},
+
+        {"chantier": "2025-11-TRIALP", "lot": "DALLE-BA", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre dalle", "quantite": 380, "unite": "h",
+         "prix_unitaire": 45.00, "statut": "facture", "jours_avant": 35, "type": "main_oeuvre"},
+
+        # ST FERRAILLAGE LIQUIDÉ - Reprise en régie (surcoût +40%)
         {"chantier": "2025-11-TRIALP", "lot": "FERRAILLAGE", "fournisseur": fournisseur_negoce,
-         "libelle": "Acier HA - reprise régie suite liquidation ST", "quantite": 45000, "unite": "kg",
-         "prix_unitaire": 1.45, "statut": "livre", "jours_avant": 20, "type": "materiau"},
+         "libelle": "Acier HA voiles - reprise régie (ST liquidé)", "quantite": 45000, "unite": "kg",
+         "prix_unitaire": 1.48, "statut": "facture", "jours_avant": 30, "type": "materiau"},
 
         {"chantier": "2025-11-TRIALP", "lot": "FERRAILLAGE", "fournisseur": fournisseur_negoce,
-         "libelle": "Main d'œuvre ferraillage régie (ST liquidé)", "quantite": 320, "unite": "h",
-         "prix_unitaire": 48.00, "statut": "livre", "jours_avant": 15, "type": "main_oeuvre"},
+         "libelle": "MO ferraillage régie (surcoût ST liquidé)", "quantite": 480, "unite": "h",
+         "prix_unitaire": 52.00, "statut": "facture", "jours_avant": 25, "type": "main_oeuvre"},
 
-        # En cours / à venir
-        {"chantier": "2025-11-TRIALP", "lot": "VOILES-BA", "fournisseur": fournisseur_beton,
+        {"chantier": "2025-11-TRIALP", "lot": "VOILES-BA", "fournisseur": fournisseur_location,
+         "libelle": "Location banches 45 jours", "quantite": 45, "unite": "jour",
+         "prix_unitaire": 320.00, "statut": "facture", "jours_avant": 20, "type": "materiel"},
+
+        # === ENGAGÉ NON PAYÉ (livre/commande) - 80k€ ===
+        {"chantier": "2025-11-TRIALP", "lot": "VOILES-BA", "fournisseur": fournisseur_negoce,
          "libelle": "Béton C30/37 voiles 680m²", "quantite": 136, "unite": "m3",
-         "prix_unitaire": 168.00, "statut": "commande", "jours_avant": 5, "type": "materiau"},
+         "prix_unitaire": 172.00, "statut": "livre", "jours_avant": 10, "type": "materiau"},
 
-        {"chantier": "2025-11-TRIALP", "lot": "STRUCTURE-METAL", "fournisseur": fournisseur_negoce,
-         "libelle": "Acompte charpente métallique hall", "quantite": 1, "unite": "ENS",
-         "prix_unitaire": 54000.00, "statut": "valide", "jours_avant": 10, "type": "sous_traitance"},
+        {"chantier": "2025-11-TRIALP", "lot": "STRUCTURE-METAL", "fournisseur": fournisseur_st,
+         "libelle": "Acompte 30% charpente métallique hall", "quantite": 1, "unite": "ENS",
+         "prix_unitaire": 48000.00, "statut": "commande", "jours_avant": 5, "type": "sous_traitance"},
     ]
 
     # =================================================================
-    # TOUR LOGEMENTS - DÉRIVE LÉGÈRE (95k€ engagés sur 750k€)
+    # TOUR LOGEMENTS - DÉRIVE LÉGÈRE
+    # Budget: 750k€, Avancement: 35%, Marge cible: 6% (sous pression)
+    # Engagé total cible: ~280k€, Réalisé: ~210k€
     # Problèmes: hausse acier +15%, heures sup retard livraison
     # =================================================================
     achats_tour = [
-        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "TERRASSEMENT", "fournisseur": fournisseur_beton,
+        # === RÉALISÉ (paye) - 210k€ ===
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
          "libelle": "Terrassement VRD 620m³", "quantite": 620, "unite": "m3",
-         "prix_unitaire": 32.00, "statut": "livre", "jours_avant": 40, "type": "materiau"},
+         "prix_unitaire": 32.00, "statut": "facture", "jours_avant": 60, "type": "materiau"},
 
-        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "FONDATIONS", "fournisseur": fournisseur_beton,
-         "libelle": "Béton C30/37 semelles", "quantite": 280, "unite": "m3",
-         "prix_unitaire": 165.00, "statut": "livre", "jours_avant": 30, "type": "materiau"},
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Évacuation terres 480m³", "quantite": 480, "unite": "m3",
+         "prix_unitaire": 28.00, "statut": "facture", "jours_avant": 55, "type": "materiau"},
 
-        # HAUSSE ACIER +15% non anticipée
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C30/37 semelles filantes", "quantite": 195, "unite": "m3",
+         "prix_unitaire": 168.00, "statut": "facture", "jours_avant": 45, "type": "materiau"},
+
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre fondations", "quantite": 320, "unite": "h",
+         "prix_unitaire": 46.00, "statut": "facture", "jours_avant": 42, "type": "main_oeuvre"},
+
+        # HAUSSE ACIER +15% non anticipée (budget à 1.20€, réel 1.38€)
         {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "FERRAILLAGE", "fournisseur": fournisseur_negoce,
-         "libelle": "Acier HA (HAUSSE +15% vs budget)", "quantite": 25000, "unite": "kg",
-         "prix_unitaire": 1.38, "statut": "livre", "jours_avant": 25, "type": "materiau"},
+         "libelle": "Acier HA Ø8-16 (HAUSSE +15%)", "quantite": 18500, "unite": "kg",
+         "prix_unitaire": 1.38, "statut": "facture", "jours_avant": 35, "type": "materiau"},
 
-        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "DALLE-RDC", "fournisseur": fournisseur_beton,
-         "libelle": "Béton C25/30 dalle RDC", "quantite": 153, "unite": "m3",
-         "prix_unitaire": 145.00, "statut": "livre", "jours_avant": 15, "type": "materiau"},
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "DALLE-RDC", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 dalle RDC 620m²", "quantite": 93, "unite": "m3",
+         "prix_unitaire": 148.00, "statut": "facture", "jours_avant": 25, "type": "materiau"},
 
-        # HEURES SUP retard livraison
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "DALLE-RDC", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre dalle + finitions", "quantite": 240, "unite": "h",
+         "prix_unitaire": 45.00, "statut": "facture", "jours_avant": 20, "type": "main_oeuvre"},
+
+        # HEURES SUP rattrapage retard livraison béton
         {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "HEURES-SUP", "fournisseur": fournisseur_negoce,
-         "libelle": "Heures supplémentaires rattrapage retard", "quantite": 80, "unite": "h",
-         "prix_unitaire": 58.00, "statut": "livre", "jours_avant": 10, "type": "main_oeuvre"},
+         "libelle": "Heures supplémentaires rattrapage retard", "quantite": 96, "unite": "h",
+         "prix_unitaire": 62.00, "statut": "facture", "jours_avant": 15, "type": "main_oeuvre"},
 
-        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "VOILES", "fournisseur": fournisseur_beton,
-         "libelle": "Béton C30/37 voiles bât A", "quantite": 78, "unite": "m3",
-         "prix_unitaire": 168.00, "statut": "commande", "jours_avant": 3, "type": "materiau"},
+        # === ENGAGÉ NON PAYÉ (livre/commande) - 70k€ ===
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "VOILES", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C30/37 voiles bât A", "quantite": 112, "unite": "m3",
+         "prix_unitaire": 172.00, "statut": "livre", "jours_avant": 8, "type": "materiau"},
+
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "VOILES", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA voiles 12T", "quantite": 12000, "unite": "kg",
+         "prix_unitaire": 1.42, "statut": "livre", "jours_avant": 10, "type": "materiau"},
+
+        {"chantier": "2025-07-TOUR-LOGEMENTS", "lot": "VOILES", "fournisseur": fournisseur_location,
+         "libelle": "Location banches 30 jours", "quantite": 30, "unite": "jour",
+         "prix_unitaire": 280.00, "statut": "commande", "jours_avant": 3, "type": "materiel"},
     ]
 
     # =================================================================
-    # GYMNASE EPIERRE - PERTE (485k€ engagés sur 520k€ révisé)
-    # Problèmes: amiante 45k€, malfaçon dalle 28k€
+    # GYMNASE EPIERRE - PERTE
+    # Budget: 520k€ (450k + 70k avenant), Avancement: 75%, Marge: -3.5%
+    # Engagé total cible: ~510k€, Réalisé: ~420k€
+    # Problèmes: amiante 45k€, malfaçon dalle 28k€, retards
     # =================================================================
     achats_gymnase = [
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DEMOLITION", "fournisseur": fournisseur_beton,
+        # === RÉALISÉ (paye) - 420k€ ===
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DEMOLITION", "fournisseur": fournisseur_negoce,
          "libelle": "Démolition extension existante", "quantite": 200, "unite": "m2",
-         "prix_unitaire": 65.00, "statut": "livre", "jours_avant": 120, "type": "materiau"},
+         "prix_unitaire": 68.00, "statut": "facture", "jours_avant": 150, "type": "materiau"},
 
-        # AMIANTE IMPRÉVU - 45k€
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DESAMIANTAGE", "fournisseur": fournisseur_negoce,
-         "libelle": "IMPRÉVU: Désamiantage (non visible au DCE)", "quantite": 1, "unite": "ENS",
-         "prix_unitaire": 45000.00, "statut": "livre", "jours_avant": 100, "type": "sous_traitance"},
+        # AMIANTE IMPRÉVU - 45k€ (non dans le DCE initial)
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DESAMIANTAGE", "fournisseur": fournisseur_st,
+         "libelle": "IMPRÉVU: Désamiantage (découvert en démolition)", "quantite": 1, "unite": "ENS",
+         "prix_unitaire": 47500.00, "statut": "facture", "jours_avant": 130, "type": "sous_traitance"},
 
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "TERRASSEMENT", "fournisseur": fournisseur_beton,
-         "libelle": "Terrassement fouilles", "quantite": 380, "unite": "m3",
-         "prix_unitaire": 28.00, "statut": "livre", "jours_avant": 90, "type": "materiau"},
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Terrassement fouilles 380m³", "quantite": 380, "unite": "m3",
+         "prix_unitaire": 29.00, "statut": "facture", "jours_avant": 110, "type": "materiau"},
 
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "FONDATIONS", "fournisseur": fournisseur_beton,
-         "libelle": "Béton fondations", "quantite": 95, "unite": "m3",
-         "prix_unitaire": 165.00, "statut": "livre", "jours_avant": 80, "type": "materiau"},
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C30/37 fondations", "quantite": 115, "unite": "m3",
+         "prix_unitaire": 168.00, "statut": "facture", "jours_avant": 95, "type": "materiau"},
 
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DALLE", "fournisseur": fournisseur_beton,
-         "libelle": "Béton dalle 800m²", "quantite": 120, "unite": "m3",
-         "prix_unitaire": 145.00, "statut": "livre", "jours_avant": 70, "type": "materiau"},
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA fondations 9T", "quantite": 9000, "unite": "kg",
+         "prix_unitaire": 1.35, "statut": "facture", "jours_avant": 92, "type": "materiau"},
 
-        # MALFAÇON DALLE - Reprise 28k€
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DALLE-REPRISE", "fournisseur": fournisseur_beton,
-         "libelle": "REPRISE: Dalle fissurée (malfaçon)", "quantite": 400, "unite": "m2",
-         "prix_unitaire": 70.00, "statut": "livre", "jours_avant": 50, "type": "materiau"},
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre fondations", "quantite": 280, "unite": "h",
+         "prix_unitaire": 46.00, "statut": "facture", "jours_avant": 88, "type": "main_oeuvre"},
 
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "ELEVATION", "fournisseur": fournisseur_beton,
-         "libelle": "Béton murs porteurs", "quantite": 84, "unite": "m3",
-         "prix_unitaire": 168.00, "statut": "livre", "jours_avant": 30, "type": "materiau"},
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DALLE", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 dalle 800m²", "quantite": 128, "unite": "m3",
+         "prix_unitaire": 148.00, "statut": "facture", "jours_avant": 75, "type": "materiau"},
 
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "POTEAUX", "fournisseur": fournisseur_beton,
-         "libelle": "Poteaux BA préfabriqués", "quantite": 24, "unite": "U",
-         "prix_unitaire": 1200.00, "statut": "livre", "jours_avant": 25, "type": "materiau"},
+        # MALFAÇON DALLE - Reprise 32k€ (fissures, planéité non conforme)
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "DALLE", "fournisseur": fournisseur_negoce,
+         "libelle": "REPRISE: Dalle fissurée + ragréage", "quantite": 400, "unite": "m2",
+         "prix_unitaire": 78.00, "statut": "facture", "jours_avant": 55, "type": "materiau"},
 
-        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "POUTRES", "fournisseur": fournisseur_beton,
-         "libelle": "Poutres BA 180ml", "quantite": 180, "unite": "ml",
-         "prix_unitaire": 320.00, "statut": "valide", "jours_avant": 10, "type": "materiau"},
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "ELEVATION", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C30/37 murs porteurs", "quantite": 98, "unite": "m3",
+         "prix_unitaire": 172.00, "statut": "facture", "jours_avant": 45, "type": "materiau"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "ELEVATION", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA murs 8T", "quantite": 8000, "unite": "kg",
+         "prix_unitaire": 1.38, "statut": "facture", "jours_avant": 48, "type": "materiau"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "POTEAUX", "fournisseur": fournisseur_negoce,
+         "libelle": "Poteaux BA préfabriqués 24U", "quantite": 24, "unite": "U",
+         "prix_unitaire": 1350.00, "statut": "facture", "jours_avant": 35, "type": "materiau"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "POTEAUX", "fournisseur": fournisseur_location,
+         "libelle": "Location grue 12 jours", "quantite": 12, "unite": "jour",
+         "prix_unitaire": 920.00, "statut": "facture", "jours_avant": 32, "type": "materiel"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "POUTRES", "fournisseur": fournisseur_negoce,
+         "libelle": "Poutres BA 145ml", "quantite": 145, "unite": "ml",
+         "prix_unitaire": 285.00, "statut": "facture", "jours_avant": 25, "type": "materiau"},
+
+        # === ENGAGÉ NON PAYÉ (livre/commande) - 90k€ ===
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "POUTRES", "fournisseur": fournisseur_negoce,
+         "libelle": "Poutres BA complément 35ml", "quantite": 35, "unite": "ml",
+         "prix_unitaire": 295.00, "statut": "livre", "jours_avant": 12, "type": "materiau"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "PLANCHER", "fournisseur": fournisseur_negoce,
+         "libelle": "Prédalles + poutrelles 420m²", "quantite": 420, "unite": "m2",
+         "prix_unitaire": 85.00, "statut": "livre", "jours_avant": 8, "type": "materiau"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "PLANCHER", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton table compression", "quantite": 42, "unite": "m3",
+         "prix_unitaire": 152.00, "statut": "commande", "jours_avant": 5, "type": "materiau"},
+
+        {"chantier": "2025-02-EPIERRE-GYMNASE", "lot": "FINITIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Enduits + finitions GO", "quantite": 1, "unite": "ENS",
+         "prix_unitaire": 28000.00, "statut": "valide", "jours_avant": 3, "type": "materiau"},
     ]
 
     # =================================================================
-    # TOURNON COMMERCIAL - SAIN (12k€ engagés sur 850k€ - démarrage)
+    # TOURNON COMMERCIAL - SAIN
+    # Budget: 850k€, Avancement: 15%, Marge cible: 10.5%
+    # Engagé total cible: ~140k€, Réalisé: ~95k€
+    # Chantier en démarrage, tout se passe bien
     # =================================================================
     achats_tournon = [
+        # === RÉALISÉ (paye) - 95k€ ===
         {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "INSTALLATION", "fournisseur": fournisseur_negoce,
          "libelle": "Installation chantier (base vie, clôture)", "quantite": 1, "unite": "ENS",
-         "prix_unitaire": 8500.00, "statut": "livre", "jours_avant": 15, "type": "materiau"},
+         "prix_unitaire": 12500.00, "statut": "facture", "jours_avant": 45, "type": "materiau"},
 
-        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "TERRASSEMENT", "fournisseur": fournisseur_beton,
-         "libelle": "Terrassement décapage (acompte)", "quantite": 300, "unite": "m3",
-         "prix_unitaire": 26.00, "statut": "commande", "jours_avant": 5, "type": "materiau"},
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Décapage terre végétale 1200m²", "quantite": 360, "unite": "m3",
+         "prix_unitaire": 26.00, "statut": "facture", "jours_avant": 35, "type": "materiau"},
+
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Terrassement fouilles", "quantite": 280, "unite": "m3",
+         "prix_unitaire": 32.00, "statut": "facture", "jours_avant": 28, "type": "materiau"},
+
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Évacuation terres excédentaires", "quantite": 420, "unite": "m3",
+         "prix_unitaire": 28.00, "statut": "facture", "jours_avant": 25, "type": "materiau"},
+
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C30/37 semelles isolées", "quantite": 85, "unite": "m3",
+         "prix_unitaire": 165.00, "statut": "facture", "jours_avant": 18, "type": "materiau"},
+
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA fondations 6T", "quantite": 6000, "unite": "kg",
+         "prix_unitaire": 1.32, "statut": "facture", "jours_avant": 20, "type": "materiau"},
+
+        # === ENGAGÉ NON PAYÉ (livre/commande) - 45k€ ===
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "FONDATIONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre fondations", "quantite": 185, "unite": "h",
+         "prix_unitaire": 46.00, "statut": "livre", "jours_avant": 10, "type": "main_oeuvre"},
+
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "DALLE", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 dalle (acompte)", "quantite": 120, "unite": "m3",
+         "prix_unitaire": 148.00, "statut": "commande", "jours_avant": 5, "type": "materiau"},
+
+        {"chantier": "2025-03-TOURNON-COMMERCIAL", "lot": "DALLE", "fournisseur": fournisseur_negoce,
+         "libelle": "Treillis soudé ST25", "quantite": 950, "unite": "m2",
+         "prix_unitaire": 4.65, "statut": "commande", "jours_avant": 5, "type": "materiau"},
     ]
 
     # =================================================================
-    # CHIGNIN AGRICOLE - TRÈS RENTABLE (42k€ engagés sur 380k€)
-    # Client fidèle, équipe expérimentée
+    # CHIGNIN AGRICOLE - TRÈS RENTABLE
+    # Budget: 380k€, Avancement: 55%, Marge cible: 14% (excellent)
+    # Engagé total cible: ~195k€, Réalisé: ~165k€
+    # Client fidèle, équipe expérimentée, pas d'imprévus
     # =================================================================
     achats_chignin = [
-        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "TERRASSEMENT", "fournisseur": fournisseur_beton,
-         "libelle": "Terrassement plateforme 520m³", "quantite": 520, "unite": "m3",
-         "prix_unitaire": 22.00, "statut": "livre", "jours_avant": 45, "type": "materiau"},
+        # === RÉALISÉ (paye) - 165k€ ===
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Terrassement plateforme 650m³", "quantite": 650, "unite": "m3",
+         "prix_unitaire": 21.00, "statut": "facture", "jours_avant": 65, "type": "materiau"},
 
-        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H1", "fournisseur": fournisseur_beton,
-         "libelle": "Béton fondations hangar 1", "quantite": 75, "unite": "m3",
-         "prix_unitaire": 155.00, "statut": "livre", "jours_avant": 35, "type": "materiau"},
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "TERRASSEMENT", "fournisseur": fournisseur_negoce,
+         "libelle": "Compactage + réglage", "quantite": 600, "unite": "m2",
+         "prix_unitaire": 8.50, "statut": "facture", "jours_avant": 60, "type": "materiau"},
 
-        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "DALLAGE-H1", "fournisseur": fournisseur_beton,
-         "libelle": "Béton dallage hangar 1", "quantite": 51, "unite": "m3",
-         "prix_unitaire": 145.00, "statut": "livre", "jours_avant": 20, "type": "materiau"},
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H1", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 fondations hangar 1", "quantite": 72, "unite": "m3",
+         "prix_unitaire": 152.00, "statut": "facture", "jours_avant": 50, "type": "materiau"},
 
-        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H2", "fournisseur": fournisseur_beton,
-         "libelle": "Béton fondations hangar 2", "quantite": 75, "unite": "m3",
-         "prix_unitaire": 155.00, "statut": "commande", "jours_avant": 5, "type": "materiau"},
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H1", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA fondations H1 4.5T", "quantite": 4500, "unite": "kg",
+         "prix_unitaire": 1.28, "statut": "facture", "jours_avant": 52, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H1", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre fondations H1", "quantite": 145, "unite": "h",
+         "prix_unitaire": 44.00, "statut": "facture", "jours_avant": 48, "type": "main_oeuvre"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "DALLAGE-H1", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 dallage hangar 1", "quantite": 54, "unite": "m3",
+         "prix_unitaire": 145.00, "statut": "facture", "jours_avant": 38, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "DALLAGE-H1", "fournisseur": fournisseur_negoce,
+         "libelle": "Treillis + joints dallage H1", "quantite": 320, "unite": "m2",
+         "prix_unitaire": 12.50, "statut": "facture", "jours_avant": 40, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H2", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 fondations hangar 2", "quantite": 72, "unite": "m3",
+         "prix_unitaire": 152.00, "statut": "facture", "jours_avant": 28, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H2", "fournisseur": fournisseur_negoce,
+         "libelle": "Acier HA fondations H2 4.5T", "quantite": 4500, "unite": "kg",
+         "prix_unitaire": 1.28, "statut": "facture", "jours_avant": 30, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "FONDATIONS-H2", "fournisseur": fournisseur_negoce,
+         "libelle": "Main d'œuvre fondations H2", "quantite": 145, "unite": "h",
+         "prix_unitaire": 44.00, "statut": "facture", "jours_avant": 25, "type": "main_oeuvre"},
+
+        # === ENGAGÉ NON PAYÉ (livre/commande) - 30k€ ===
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "DALLAGE-H2", "fournisseur": fournisseur_negoce,
+         "libelle": "Béton C25/30 dallage hangar 2", "quantite": 54, "unite": "m3",
+         "prix_unitaire": 145.00, "statut": "livre", "jours_avant": 12, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "DALLAGE-H2", "fournisseur": fournisseur_negoce,
+         "libelle": "Treillis + joints dallage H2", "quantite": 320, "unite": "m2",
+         "prix_unitaire": 12.50, "statut": "livre", "jours_avant": 14, "type": "materiau"},
+
+        {"chantier": "2025-04-CHIGNIN-AGRICOLE", "lot": "MURS-PIGNONS", "fournisseur": fournisseur_negoce,
+         "libelle": "Parpaings murs pignons (acompte)", "quantite": 2400, "unite": "U",
+         "prix_unitaire": 1.85, "statut": "commande", "jours_avant": 5, "type": "materiau"},
     ]
 
     tous_achats = achats_trialp + achats_tour + achats_gymnase + achats_tournon + achats_chignin
@@ -1719,54 +2079,139 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
 
 
 def seed_situations_factures(db: Session, user_ids: dict, chantier_ids: dict, budget_ids: dict, lot_ids: dict):
-    """Cree des situations de travaux et factures pour tester les graphiques."""
+    """Cree des situations de travaux et factures pour tous les chantiers actifs.
+
+    Les montants sont calibres pour obtenir une marge moyenne d'environ 10% :
+    - Marge BTP = (Prix Vente - Cout Revient) / Prix Vente
+    - Cout Revient = Achats realises + Cout MO (pointages valorises)
+
+    Scenarios :
+    - TOURNON (sain) : 15% avancement, marge 10%
+    - TOUR-LOGEMENTS (derive legere) : 50% avancement, marge 6%
+    - TRIALP (derive critique) : 30% avancement, marge 2%
+    - GYMNASE (perte) : 75% avancement, marge -4%
+    - CHIGNIN (rentable) : 55% avancement, marge 14%
+    """
     print("\n=== Creation des situations et factures ===")
     admin_id = user_ids.get("admin@example.com") or 1
-
     today = date.today()
     created_situations = 0
     created_factures = 0
 
-    # Situation pour TRIALP (30% d'avancement)
-    if "2025-11-TRIALP" in budget_ids:
-        chantier_id = chantier_ids["2025-11-TRIALP"]
-        budget_id = budget_ids["2025-11-TRIALP"]
+    # Configuration des situations par chantier
+    # Les prix de vente sont calibres pour obtenir les marges cibles
+    # en fonction des achats realises et du cout MO genere par les pointages
+    SITUATIONS_CONFIG = [
+        {
+            "chantier_code": "2025-03-TOURNON-COMMERCIAL",
+            "numero": "SIT-2026-TOURNON",
+            "fac_numero": "FAC-2026-TOURNON",
+            "prix_vente_ht": 127500.00,  # 15% de 850k
+            "periode_debut": date(2025, 10, 1),
+            "periode_fin": date(2026, 1, 31),
+            "statut": "emise",
+            "jours_avant": 10,
+            "description": "Situation n°1 - Fondations et infrastructure",
+        },
+        {
+            "chantier_code": "2025-07-TOUR-LOGEMENTS",
+            "numero": "SIT-2026-TOUR",
+            "fac_numero": "FAC-2026-TOUR",
+            "prix_vente_ht": 375000.00,  # 50% de 750k
+            "periode_debut": date(2025, 7, 1),
+            "periode_fin": date(2026, 1, 31),
+            "statut": "validee",
+            "jours_avant": 5,
+            "description": "Situation n°3 - Gros oeuvre R+1 a R+3",
+        },
+        {
+            "chantier_code": "2025-11-TRIALP",
+            "numero": "SIT-2026-TRIALP",
+            "fac_numero": "FAC-2026-TRIALP",
+            "prix_vente_ht": 360000.00,  # 30% de 1.2M
+            "periode_debut": date(2025, 11, 1),
+            "periode_fin": date(2026, 1, 31),
+            "statut": "emise",
+            "jours_avant": 8,
+            "description": "Situation n°2 - Structure metallique et voiles",
+        },
+        {
+            "chantier_code": "2025-02-EPIERRE-GYMNASE",
+            "numero": "SIT-2026-GYMNASE",
+            "fac_numero": "FAC-2026-GYMNASE",
+            "prix_vente_ht": 390000.00,  # 75% de 520k (budget revise avec avenant)
+            "periode_debut": date(2025, 2, 1),
+            "periode_fin": date(2026, 1, 15),
+            "statut": "facturee",
+            "jours_avant": 15,
+            "description": "Situation n°4 - Extension complete + desamiantage",
+        },
+        {
+            "chantier_code": "2025-04-CHIGNIN-AGRICOLE",
+            "numero": "SIT-2026-CHIGNIN",
+            "fac_numero": "FAC-2026-CHIGNIN",
+            "prix_vente_ht": 210000.00,  # 55% de 380k
+            "periode_debut": date(2025, 4, 1),
+            "periode_fin": date(2026, 1, 20),
+            "statut": "validee",
+            "jours_avant": 3,
+            "description": "Situation n°2 - Hangar 1 termine + Hangar 2 en cours",
+        },
+    ]
 
-        # Vérifier si situation existe déjà
+    for config in SITUATIONS_CONFIG:
+        chantier_code = config["chantier_code"]
+
+        if chantier_code not in budget_ids:
+            print(f"  [SKIP] {chantier_code} - pas de budget")
+            continue
+
+        chantier_id = chantier_ids[chantier_code]
+        budget_id = budget_ids[chantier_code]
+
+        # Verifier si situation existe deja
         existing_sit = db.query(SituationTravauxModel).filter(
             SituationTravauxModel.chantier_id == chantier_id,
-            SituationTravauxModel.numero == "SIT-2026-001"
+            SituationTravauxModel.numero == config["numero"]
         ).first()
 
         if not existing_sit:
             situation = SituationTravauxModel(
                 chantier_id=chantier_id,
                 budget_id=budget_id,
-                numero="SIT-2026-001",
-                periode_debut=date(2025, 11, 1),
-                periode_fin=date(2026, 1, 31),
+                numero=config["numero"],
+                periode_debut=config["periode_debut"],
+                periode_fin=config["periode_fin"],
                 montant_cumule_precedent_ht=0,
-                montant_periode_ht=360000.00,  # 30% de 1.2M
-                montant_cumule_ht=360000.00,
+                montant_periode_ht=config["prix_vente_ht"],
+                montant_cumule_ht=config["prix_vente_ht"],
                 retenue_garantie_pct=5.0,
                 taux_tva=20.0,
-                statut="emise",
+                statut=config["statut"],
                 created_by=admin_id,
-                emise_at=datetime.now() - timedelta(days=5),
+                emise_at=datetime.now() - timedelta(days=config["jours_avant"]) if config["statut"] in ["emise", "validee", "facturee"] else None,
+                validated_by=admin_id if config["statut"] in ["validee", "facturee"] else None,
+                validated_at=datetime.now() - timedelta(days=config["jours_avant"] - 1) if config["statut"] in ["validee", "facturee"] else None,
             )
             db.add(situation)
             db.flush()
             created_situations += 1
+            print(f"  [CREE] Situation {config['numero']} - {config['prix_vente_ht']:,.0f} EUR")
         else:
             situation = existing_sit
+            # Mettre a jour le montant si necessaire
+            if float(existing_sit.montant_cumule_ht) != config["prix_vente_ht"]:
+                existing_sit.montant_periode_ht = config["prix_vente_ht"]
+                existing_sit.montant_cumule_ht = config["prix_vente_ht"]
+                print(f"  [MAJ] Situation {config['numero']} - {config['prix_vente_ht']:,.0f} EUR")
 
-        # Facture associée
+        # Facture associee
         existing_fac = db.query(FactureClientModel).filter(
-            FactureClientModel.numero_facture == "FAC-2026-001"
+            FactureClientModel.numero_facture == config["fac_numero"]
         ).first()
 
         if not existing_fac:
-            montant_ht = 360000.00
+            montant_ht = config["prix_vente_ht"]
             montant_tva = montant_ht * 0.20
             montant_ttc = montant_ht + montant_tva
             retenue = montant_ttc * 0.05
@@ -1774,7 +2219,7 @@ def seed_situations_factures(db: Session, user_ids: dict, chantier_ids: dict, bu
             facture = FactureClientModel(
                 chantier_id=chantier_id,
                 situation_id=situation.id,
-                numero_facture="FAC-2026-001",
+                numero_facture=config["fac_numero"],
                 type_facture="situation",
                 montant_ht=montant_ht,
                 taux_tva=20.0,
@@ -1782,81 +2227,25 @@ def seed_situations_factures(db: Session, user_ids: dict, chantier_ids: dict, bu
                 montant_ttc=montant_ttc,
                 retenue_garantie_montant=retenue,
                 montant_net=montant_ttc - retenue,
-                date_emission=today - timedelta(days=5),
-                date_echeance=today + timedelta(days=25),
-                statut="emise",
-                created_by=admin_id,
-            )
-            db.add(facture)
-            created_factures += 1
-
-    # Situation pour TOUR-LOGEMENTS (50% d'avancement)
-    if "2025-07-TOUR-LOGEMENTS" in budget_ids:
-        chantier_id = chantier_ids["2025-07-TOUR-LOGEMENTS"]
-        budget_id = budget_ids["2025-07-TOUR-LOGEMENTS"]
-
-        # Vérifier si situation existe déjà
-        existing_sit = db.query(SituationTravauxModel).filter(
-            SituationTravauxModel.chantier_id == chantier_id,
-            SituationTravauxModel.numero == "SIT-2026-002"
-        ).first()
-
-        if not existing_sit:
-            situation = SituationTravauxModel(
-                chantier_id=chantier_id,
-                budget_id=budget_id,
-                numero="SIT-2026-002",
-                periode_debut=date(2025, 7, 1),
-                periode_fin=date(2026, 1, 31),
-                montant_cumule_precedent_ht=0,
-                montant_periode_ht=375000.00,  # 50% de 750k
-                montant_cumule_ht=375000.00,
-                retenue_garantie_pct=5.0,
-                taux_tva=20.0,
-                statut="validee",
-                created_by=admin_id,
-                validated_by=admin_id,
-                validated_at=datetime.now() - timedelta(days=3),
-            )
-            db.add(situation)
-            db.flush()
-            created_situations += 1
-        else:
-            situation = existing_sit
-
-        # Facture associée
-        existing_fac = db.query(FactureClientModel).filter(
-            FactureClientModel.numero_facture == "FAC-2026-002"
-        ).first()
-
-        if not existing_fac:
-            montant_ht = 375000.00
-            montant_tva = montant_ht * 0.20
-            montant_ttc = montant_ht + montant_tva
-            retenue = montant_ttc * 0.05
-
-            facture = FactureClientModel(
-                chantier_id=chantier_id,
-                situation_id=situation.id,
-                numero_facture="FAC-2026-002",
-                type_facture="situation",
-                montant_ht=montant_ht,
-                taux_tva=20.0,
-                montant_tva=montant_tva,
-                montant_ttc=montant_ttc,
-                retenue_garantie_montant=retenue,
-                montant_net=montant_ttc - retenue,
-                date_emission=today - timedelta(days=3),
-                date_echeance=today + timedelta(days=27),
-                statut="envoyee",
+                date_emission=today - timedelta(days=config["jours_avant"]),
+                date_echeance=today + timedelta(days=30 - config["jours_avant"]),
+                statut="emise" if config["statut"] != "facturee" else "envoyee",
                 created_by=admin_id,
             )
             db.add(facture)
             created_factures += 1
 
     db.commit()
-    print(f"  [CREE] {created_situations} situations de travaux")
-    print(f"  [CREE] {created_factures} factures")
+    print(f"  [TOTAL] {created_situations} situations de travaux")
+    print(f"  [TOTAL] {created_factures} factures client")
+
+    # Afficher le resume des prix de vente pour verification
+    print("\n  [RECAP] Prix de vente factures (situations) :")
+    total_pv = 0
+    for config in SITUATIONS_CONFIG:
+        print(f"    - {config['chantier_code'].split('-')[-1]}: {config['prix_vente_ht']:>12,.0f} EUR")
+        total_pv += config["prix_vente_ht"]
+    print(f"    {'TOTAL':>30}: {total_pv:>12,.0f} EUR")
 
 
 def seed_ressources_logistique(db: Session, user_ids: dict) -> dict:
@@ -2450,25 +2839,28 @@ def main():
         # 8. Creer les achats
         seed_achats(db, user_ids, chantier_ids, fournisseur_ids, lot_ids)
 
-        # 9. Creer les situations et factures
+        # 9. Creer les situations et factures (prix de vente)
         seed_situations_factures(db, user_ids, chantier_ids, budget_ids, lot_ids)
 
-        # 10. Creer les templates de formulaire
+        # 10. Creer les pointages valides (cout MO)
+        seed_pointages_valides(db, user_ids, chantier_ids)
+
+        # 11. Creer les templates de formulaire
         template_ids = seed_templates_formulaires(db, user_ids)
 
-        # 11. Creer les formulaires remplis
+        # 12. Creer les formulaires remplis
         seed_formulaires_remplis(db, user_ids, chantier_ids, template_ids)
 
-        # 12. Creer les ressources logistique (matériel)
+        # 13. Creer les ressources logistique (matériel)
         ressource_ids = seed_ressources_logistique(db, user_ids)
 
-        # 13. Creer les réservations logistique
+        # 14. Creer les réservations logistique
         seed_reservations_logistique(db, user_ids, chantier_ids, ressource_ids)
 
-        # 14. Creer les articles de la bibliothèque devis
+        # 15. Creer les articles de la bibliothèque devis
         article_ids = seed_articles_devis(db, user_ids)
 
-        # 15. Creer les devis complets
+        # 16. Creer les devis complets
         seed_devis(db, user_ids, chantier_ids, article_ids)
 
         print("\n" + "=" * 60)

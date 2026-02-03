@@ -1,4 +1,16 @@
-"""Tests unitaires pour les Use Cases Dashboard du module Financier."""
+"""Tests unitaires pour les Use Cases Dashboard du module Financier.
+
+Note: La formule de marge BTP correcte est:
+  Marge = (Prix Vente - Cout Revient) / Prix Vente
+  ou Prix Vente = situations de travaux, Cout Revient = achats + MO
+
+Quand aucune situation n'existe (fallback), la formule utilisee est:
+  Marge = (Budget - Engage) / Budget
+
+Les tests existants verifient le mode fallback (pas de SituationRepository
+ou CoutMainOeuvreRepository fournis). Les nouveaux tests verifient la
+logique complete avec situations.
+"""
 
 import pytest
 from datetime import datetime
@@ -9,11 +21,14 @@ from modules.financier.domain.entities import (
     Achat,
     Budget,
     LotBudgetaire,
+    SituationTravaux,
 )
 from modules.financier.domain.repositories import (
     BudgetRepository,
     LotBudgetaireRepository,
     AchatRepository,
+    SituationRepository,
+    CoutMainOeuvreRepository,
 )
 from modules.financier.domain.value_objects import StatutAchat, UniteMesure
 from modules.financier.application.use_cases.dashboard_use_cases import (
@@ -25,17 +40,24 @@ from modules.financier.application.use_cases.budget_use_cases import (
 
 
 class TestGetDashboardFinancierUseCase:
-    """Tests pour le use case du tableau de bord financier."""
+    """Tests pour le use case du tableau de bord financier.
+
+    Ces tests verifient principalement le mode fallback (sans situation)
+    pour maintenir la compatibilite avec les tests existants.
+    """
 
     def setup_method(self):
-        """Configuration avant chaque test."""
+        """Configuration avant chaque test (mode fallback sans situation)."""
         self.mock_budget_repo = Mock(spec=BudgetRepository)
         self.mock_lot_repo = Mock(spec=LotBudgetaireRepository)
         self.mock_achat_repo = Mock(spec=AchatRepository)
+        # Mode fallback: pas de SituationRepository ni CoutMainOeuvreRepository
         self.use_case = GetDashboardFinancierUseCase(
             budget_repository=self.mock_budget_repo,
             lot_repository=self.mock_lot_repo,
             achat_repository=self.mock_achat_repo,
+            situation_repository=None,
+            cout_mo_repository=None,
         )
 
     def test_dashboard_success(self):
@@ -437,3 +459,206 @@ class TestGetDashboardFinancierUseCase:
 
         assert len(result.repartition_par_lot) == 1
         assert result.repartition_par_lot[0].ecart == "-50000"  # 100000 - 150000
+
+
+class TestGetDashboardFinancierUseCaseWithSituations:
+    """Tests pour le calcul de marge BTP avec situations de travaux.
+
+    Formule BTP:
+      Marge = (Prix Vente - Cout Revient) / Prix Vente
+      ou Prix Vente = situations de travaux, Cout Revient = achats realises + MO
+    """
+
+    def setup_method(self):
+        """Configuration avant chaque test (mode complet avec situation)."""
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_lot_repo = Mock(spec=LotBudgetaireRepository)
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_situation_repo = Mock(spec=SituationRepository)
+        self.mock_cout_mo_repo = Mock(spec=CoutMainOeuvreRepository)
+        self.use_case = GetDashboardFinancierUseCase(
+            budget_repository=self.mock_budget_repo,
+            lot_repository=self.mock_lot_repo,
+            achat_repository=self.mock_achat_repo,
+            situation_repository=self.mock_situation_repo,
+            cout_mo_repository=self.mock_cout_mo_repo,
+        )
+
+    def test_marge_btp_formule_correcte(self):
+        """Test: marge calculee avec formule BTP (prix vente - cout revient)."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("500000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Achats: engage=200k, realise=100k
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("200000"),  # total_engage
+            Decimal("100000"),  # total_realise
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        # Situation de travaux: 150k factures au client
+        situation = SituationTravaux(
+            id=1,
+            chantier_id=100,
+            budget_id=1,
+            numero="SIT-001",
+            montant_cumule_ht=Decimal("150000"),
+            montant_periode_ht=Decimal("150000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Cout MO: 20k
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("20000")
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Cout revient = realise (100k) + MO (20k) = 120k
+        # Marge = (150k - 120k) / 150k * 100 = 20%
+        assert result.kpi.marge_estimee == "20.00"
+
+    def test_marge_btp_chantier_deficitaire(self):
+        """Test: marge negative quand cout revient > prix vente."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("500000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("400000"),  # total_engage
+            Decimal("350000"),  # total_realise
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        # Situation: 400k factures
+        situation = SituationTravaux(
+            id=1,
+            chantier_id=100,
+            budget_id=1,
+            numero="SIT-001",
+            montant_cumule_ht=Decimal("400000"),
+            montant_periode_ht=Decimal("400000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Cout MO: 60k
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("60000")
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Cout revient = 350k + 60k = 410k
+        # Marge = (400k - 410k) / 400k * 100 = -2.5%
+        assert result.kpi.marge_estimee == "-2.50"
+
+    def test_marge_btp_marge_10_pourcent(self):
+        """Test: marge cible 10% typique BTP."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("850000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("140000"),  # total_engage
+            Decimal("95000"),   # total_realise
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        # Situation: 127.5k (15% avancement sur 850k)
+        situation = SituationTravaux(
+            id=1,
+            chantier_id=100,
+            budget_id=1,
+            numero="SIT-001",
+            montant_cumule_ht=Decimal("127500"),
+            montant_periode_ht=Decimal("127500"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Cout MO calibre pour 10% de marge
+        # Cout revient = 95k + MO = 114.75k pour 10% de marge
+        # MO = 114750 - 95000 = 19750
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("19750")
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Marge = (127500 - 114750) / 127500 * 100 = 10%
+        assert result.kpi.marge_estimee == "10.00"
+
+    def test_fallback_sans_situation(self):
+        """Test: fallback vers ancienne formule si pas de situation."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("100000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("80000"),  # total_engage
+            Decimal("50000"),  # total_realise
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        # Pas de situation
+        self.mock_situation_repo.find_derniere_situation.return_value = None
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Fallback: marge = (budget - engage) / budget
+        # = (100k - 80k) / 100k * 100 = 20%
+        assert result.kpi.marge_estimee == "20.00"
+
+    def test_fallback_situation_zero(self):
+        """Test: fallback si situation a montant zero."""
+        budget = Budget(
+            id=1,
+            chantier_id=100,
+            montant_initial_ht=Decimal("100000"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("60000"),
+            Decimal("40000"),
+        ]
+        self.mock_achat_repo.find_by_chantier.return_value = []
+        self.mock_lot_repo.find_by_budget_id.return_value = []
+
+        # Situation avec montant zero
+        situation = SituationTravaux(
+            id=1,
+            chantier_id=100,
+            budget_id=1,
+            numero="SIT-001",
+            montant_cumule_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
+            created_at=datetime.utcnow(),
+        )
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("5000")
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Fallback: marge = (budget - engage) / budget
+        # = (100k - 60k) / 100k * 100 = 40%
+        assert result.kpi.marge_estimee == "40.00"
