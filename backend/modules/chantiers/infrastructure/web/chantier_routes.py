@@ -456,12 +456,17 @@ async def create_chantier(
         )
 
 
+# Codes des chantiers spéciaux (absences) à exclure par défaut
+CHANTIERS_SPECIAUX_CODES = ['CONGES', 'MALADIE', 'FORMATION', 'RTT', 'ABSENT']
+
+
 @router.get("", response_model=ChantierListResponse)
 def list_chantiers(
     page: int = Query(1, ge=1, description="Numéro de page"),
     size: int = Query(100, ge=1, le=500, description="Nombre d'éléments par page"),
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
     search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
+    exclude_special: bool = Query(True, description="Exclure les chantiers spéciaux (absences)"),
     db: Session = Depends(get_db),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
@@ -475,6 +480,7 @@ def list_chantiers(
         size: Nombre d'éléments par page.
         statut: Filtrer par statut (optionnel).
         search: Recherche textuelle par nom ou code.
+        exclude_special: Exclure les chantiers spéciaux (CONGES, MALADIE, etc.).
         controller: Controller des chantiers.
         user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecté.
@@ -485,11 +491,15 @@ def list_chantiers(
     # Convertir page/size en skip/limit
     skip = (page - 1) * size
 
+    # Codes à exclure si exclude_special est True
+    exclude_codes = CHANTIERS_SPECIAUX_CODES if exclude_special else None
+
     result = controller.list(
         skip=skip,
         limit=size,
         statut=statut,
         search=search,
+        exclude_codes=exclude_codes,
     )
 
     # Convertir au format frontend

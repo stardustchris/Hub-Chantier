@@ -1,13 +1,17 @@
 """Use Case: Créer un pointage."""
 
+from datetime import datetime
 from typing import Optional
 
 from ...domain.entities import Pointage
 from ...domain.repositories import PointageRepository, FeuilleHeuresRepository
-from ...domain.value_objects import Duree
+from ...domain.value_objects import Duree, StatutPointage
 from ...domain.events import PointageCreatedEvent
 from ..dtos import CreatePointageDTO, PointageDTO
 from ..ports import EventBus, NullEventBus
+
+# Rôles avec auto-validation des pointages (pas de workflow brouillon → soumis → validé)
+ROLES_AUTO_VALIDATION = {"admin", "conducteur", "chef_chantier"}
 
 
 class CreatePointageUseCase:
@@ -35,7 +39,7 @@ class CreatePointageUseCase:
         self.feuille_repo = feuille_repo
         self.event_bus = event_bus or NullEventBus()
 
-    def execute(self, dto: CreatePointageDTO, created_by: int) -> PointageDTO:
+    def execute(self, dto: CreatePointageDTO, created_by: int, created_by_role: str = "compagnon") -> PointageDTO:
         """
         Exécute la création d'un pointage.
 
@@ -76,6 +80,13 @@ class CreatePointageUseCase:
             affectation_id=dto.affectation_id,
             created_by=created_by,
         )
+
+        # Auto-validation pour admin/conducteur/chef_chantier
+        # Ces rôles n'ont pas besoin du workflow brouillon → soumis → validé
+        if created_by_role in ROLES_AUTO_VALIDATION:
+            pointage.statut = StatutPointage.VALIDE
+            pointage.validateur_id = created_by
+            pointage.validation_date = datetime.now()
 
         # Persiste
         pointage = self.pointage_repo.save(pointage)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { chantiersService } from '../services/chantiers'
 import { useListPage } from '../hooks/useListPage'
 import { logger } from '../services/logger'
@@ -14,12 +14,8 @@ import {
 import type { Chantier, ChantierStatut, ChantierCreate } from '../types'
 import { CHANTIER_STATUTS } from '../types'
 
-// Codes des chantiers spéciaux (absences) à exclure de la liste des chantiers
-const CHANTIERS_SPECIAUX_CODES = ['CONGES', 'MALADIE', 'FORMATION', 'RTT', 'ABSENT']
-
-// Filtre pour exclure les chantiers spéciaux (absences)
-const filterOutSpecialChantiers = (chantiers: Chantier[]) =>
-  chantiers.filter(c => !CHANTIERS_SPECIAUX_CODES.includes(c.code))
+// Note: Le filtrage des chantiers spéciaux (CONGES, MALADIE, etc.)
+// est maintenant fait côté backend via le paramètre exclude_special=true
 
 export default function ChantiersListPage() {
   // Use the reusable list hook for pagination, search, and loading
@@ -49,16 +45,13 @@ export default function ChantiersListPage() {
   const [allChantiers, setAllChantiers] = useState<Chantier[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // Filter out special chantiers (absences) from the displayed list
-  const filteredChantiers = useMemo(() => filterOutSpecialChantiers(chantiers), [chantiers])
-
   const statutFilter = (filters.statut as ChantierStatut | undefined) || ''
 
-  // Load all chantiers for counters (excluding special chantiers like absences)
+  // Load all chantiers for counters (backend already excludes special chantiers)
   const loadAllChantiers = useCallback(async () => {
     try {
       const response = await chantiersService.list({ size: 500 })
-      setAllChantiers(filterOutSpecialChantiers(response.items))
+      setAllChantiers(response.items)
     } catch (error) {
       logger.error('Error loading all chantiers', error, { context: 'ChantiersListPage' })
     }
@@ -224,7 +217,7 @@ export default function ChantiersListPage() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
           </div>
-        ) : filteredChantiers.length === 0 ? (
+        ) : chantiers.length === 0 ? (
           <div className="card text-center py-12">
             <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">Aucun chantier trouve</p>
@@ -240,7 +233,7 @@ export default function ChantiersListPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {filteredChantiers.map((chantier) => (
+              {chantiers.map((chantier) => (
                 <ChantierCard key={chantier.id} chantier={chantier} />
               ))}
             </div>

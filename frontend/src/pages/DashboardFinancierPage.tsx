@@ -6,14 +6,14 @@
  * via financierService.getConsolidation().
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Layout from '../components/Layout'
 import { chantiersService } from '../services/chantiers'
 import { financierService } from '../services/financier'
 import { logger } from '../services/logger'
 import { formatEUR } from '../components/financier/ChartTooltip'
 import ChartTooltip from '../components/financier/ChartTooltip'
-import type { VueConsolidee, ChantierFinancierSummary } from '../types'
+import type { VueConsolidee, ChantierFinancierSummary, AnalyseIAConsolidee } from '../types'
 import {
   PieChart,
   Pie,
@@ -37,10 +37,92 @@ import {
   AlertTriangle,
   Building2,
   ArrowUpDown,
+  HelpCircle,
+  Sparkles,
+  Wallet,
 } from 'lucide-react'
 
 type SortField = 'nom_chantier' | 'montant_revise_ht' | 'pct_engage' | 'pct_realise' | 'marge_estimee_pct' | 'reste_a_depenser'
 type SortDirection = 'asc' | 'desc'
+
+// Définitions des termes financiers pour les tooltips
+const DEFINITIONS: Record<string, { titre: string; definition: string }> = {
+  budget: {
+    titre: 'Budget',
+    definition: 'Montant total prévu pour le chantier (HT). Inclut le montant initial + avenants validés.',
+  },
+  engage: {
+    titre: 'Engagé',
+    definition: 'Commandes passées et contrats signés. Dépenses futures certaines même si pas encore payées.',
+  },
+  realise: {
+    titre: 'Réalisé / Déboursé',
+    definition: 'Montants réellement payés. Factures fournisseurs réglées.',
+  },
+  reste: {
+    titre: 'Reste à Dépenser',
+    definition: 'Budget - Engagé = ce qu\'on peut encore commander sans dépasser le budget.',
+  },
+  marge: {
+    titre: 'Marge',
+    definition: '(Budget - Coûts) / Budget × 100. Estimée sur l\'engagé pour chantiers en cours, définitive sur le réalisé pour chantiers clôturés.',
+  },
+}
+
+// Composant Tooltip avec définition - affichage au survol du ?
+function DefinitionTooltip({ term, children }: { term: keyof typeof DEFINITIONS; children: React.ReactNode }) {
+  const [show, setShow] = useState(false)
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const iconRef = useRef<HTMLSpanElement>(null)
+  const def = DEFINITIONS[term]
+
+  const handleMouseEnter = () => {
+    if (iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect()
+      setPosition({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      })
+    }
+    setShow(true)
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {children}
+      <span
+        ref={iconRef}
+        className="cursor-help"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setShow(false)}
+        onClick={() => {
+          handleMouseEnter()
+          setShow(!show)
+        }}
+      >
+        <HelpCircle size={14} className="text-gray-400 hover:text-blue-500 transition-colors" />
+      </span>
+      {show && (
+        <div
+          className="fixed bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl pointer-events-none"
+          style={{
+            zIndex: 9999,
+            width: '280px',
+            top: position.top,
+            left: position.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <p className="font-semibold mb-1 text-blue-300">{def.titre}</p>
+          <p className="text-gray-300 leading-relaxed">{def.definition}</p>
+          <div className="absolute left-1/2 -translate-x-1/2" style={{ top: '100%', marginTop: '-1px' }}>
+            <div className="border-4 border-transparent border-t-gray-900" />
+          </div>
+        </div>
+      )}
+    </span>
+  )
+}
 
 const STATUT_CONFIG: Record<ChantierFinancierSummary['statut'], { label: string; colorClass: string; Icon: typeof CheckCircle }> = {
   ok: { label: 'OK', colorClass: 'text-blue-600 bg-blue-100', Icon: CheckCircle },
@@ -60,12 +142,49 @@ const CHART_COLORS = {
   realise: '#475569',
 }
 
+// Type local pour adapter l'interface de l'API à l'affichage
+interface AnalyseIADisplay {
+  synthese: string
+  alertes_prioritaires: string[]
+  recommandations: string[]
+  source: 'gemini-3-flash' | 'regles'
+  ai_available: boolean
+  tendance?: 'hausse' | 'stable' | 'baisse'
+  score_sante?: number
+}
+
 export default function DashboardFinancierPage() {
   const [data, setData] = useState<VueConsolidee | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('nom_chantier')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [analyseIA, setAnalyseIA] = useState<AnalyseIADisplay | null>(null)
+  const [loadingIA, setLoadingIA] = useState(false)
+
+  // Charge l'analyse IA depuis Gemini 3 Flash (ou fallback règles)
+  const loadAnalyseIA = useCallback(async (chantierIds: number[]) => {
+    try {
+      setLoadingIA(true)
+      const analyse = await financierService.getAnalyseIAConsolidee(chantierIds)
+      // Adapter la réponse API à l'interface d'affichage
+      setAnalyseIA({
+        synthese: analyse.synthese,
+        alertes_prioritaires: analyse.alertes,
+        recommandations: analyse.recommandations,
+        source: analyse.source,
+        ai_available: analyse.ai_available,
+        tendance: analyse.tendance,
+        score_sante: analyse.score_sante,
+      })
+    } catch (err) {
+      logger.error('Erreur chargement analyse IA Gemini 3 Flash', err, { context: 'DashboardFinancierPage' })
+      // En cas d'erreur, pas d'analyse IA
+      setAnalyseIA(null)
+    } finally {
+      setLoadingIA(false)
+    }
+  }, [])
 
   const loadData = useCallback(async () => {
     try {
@@ -93,18 +212,22 @@ export default function DashboardFinancierPage() {
           top_rentables: [],
           top_derives: [],
         })
+        setAnalyseIA(null)
         return
       }
 
       const consolidation = await financierService.getConsolidation(chantierIds)
       setData(consolidation)
+
+      // Charger l'analyse IA depuis Gemini 3 Flash en parallèle
+      loadAnalyseIA(chantierIds)
     } catch (err) {
       setError('Erreur lors du chargement des donnees financieres')
       logger.error('Erreur chargement consolidation', err, { context: 'DashboardFinancierPage' })
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [loadAnalyseIA])
 
   useEffect(() => {
     loadData()
@@ -274,12 +397,103 @@ export default function DashboardFinancierPage() {
         {/* Content */}
         {!loading && !error && data && (
           <>
+            {/* Panel Analyse IA - Gemini 3 Flash */}
+            {loadingIA && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-5 shadow-sm border border-purple-200 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  <span className="text-sm text-purple-600">Chargement de l'analyse Gemini 3 Flash...</span>
+                </div>
+              </div>
+            )}
+            {!loadingIA && analyseIA && (analyseIA.alertes_prioritaires.length > 0 || analyseIA.recommandations.length > 0 || analyseIA.synthese) && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-5 shadow-sm border border-purple-200" role="region" aria-label="Analyse IA Gemini 3 Flash">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    <h2 className="text-lg font-semibold text-purple-900">Analyse Intelligente</h2>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      analyseIA.ai_available
+                        ? 'bg-green-100 text-green-700 border border-green-200'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    }`}>
+                      {analyseIA.source === 'gemini-3-flash' ? '✨ Gemini 3 Flash' : 'Règles métier'}
+                    </span>
+                  </div>
+                  {/* Score de santé et tendance */}
+                  {analyseIA.score_sante !== undefined && (
+                    <div className="flex items-center gap-3">
+                      {analyseIA.tendance && (
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          analyseIA.tendance === 'hausse' ? 'bg-green-100 text-green-700' :
+                          analyseIA.tendance === 'baisse' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {analyseIA.tendance === 'hausse' ? '↗ Hausse' :
+                           analyseIA.tendance === 'baisse' ? '↘ Baisse' : '→ Stable'}
+                        </span>
+                      )}
+                      <div className="text-center">
+                        <div className={`text-lg font-bold ${
+                          analyseIA.score_sante >= 70 ? 'text-green-600' :
+                          analyseIA.score_sante >= 40 ? 'text-orange-500' :
+                          'text-red-600'
+                        }`}>
+                          {analyseIA.score_sante}%
+                        </div>
+                        <div className="text-xs text-gray-500">Santé</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Synthèse */}
+                <p className="text-sm text-gray-700 mb-4 bg-white/60 rounded-lg p-3">
+                  {analyseIA.synthese}
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Alertes */}
+                  {analyseIA.alertes_prioritaires.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <h3 className="text-sm font-semibold text-red-800 flex items-center gap-1 mb-2">
+                        <AlertTriangle size={14} />
+                        Alertes prioritaires
+                      </h3>
+                      <ul className="text-xs text-red-700 space-y-1">
+                        {analyseIA.alertes_prioritaires.map((alerte, i) => (
+                          <li key={i}>{alerte}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Recommandations */}
+                  {analyseIA.recommandations.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <h3 className="text-sm font-semibold text-blue-800 flex items-center gap-1 mb-2">
+                        <CheckCircle size={14} />
+                        Recommandations
+                      </h3>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        {analyseIA.recommandations.map((reco, i) => (
+                          <li key={i}>• {reco}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* KPI globaux */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="region" aria-label="Indicateurs cles">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" role="region" aria-label="Indicateurs cles">
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Budget Total</p>
+                    <DefinitionTooltip term="budget">
+                      <p className="text-sm text-gray-600">Budget Total</p>
+                    </DefinitionTooltip>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
                       {formatEUR(data.kpi_globaux.total_budget_revise)}
                     </p>
@@ -296,18 +510,20 @@ export default function DashboardFinancierPage() {
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Engagé Total</p>
+                    <DefinitionTooltip term="engage">
+                      <p className="text-sm text-gray-600">Engagé Total</p>
+                    </DefinitionTooltip>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
                       {formatEUR(data.kpi_globaux.total_engage)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {data.kpi_globaux.total_budget_revise > 0
-                        ? ((data.kpi_globaux.total_engage / data.kpi_globaux.total_budget_revise) * 100).toFixed(1)
+                        ? ((Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100).toFixed(1)
                         : '0'}% du budget
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-orange-600" />
                   </div>
                 </div>
               </div>
@@ -315,16 +531,42 @@ export default function DashboardFinancierPage() {
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Déboursé Total</p>
+                    <DefinitionTooltip term="realise">
+                      <p className="text-sm text-gray-600">Déboursé Total</p>
+                    </DefinitionTooltip>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
                       {formatEUR(data.kpi_globaux.total_realise)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Reste : {formatEUR(data.kpi_globaux.total_reste_a_depenser)}
+                      {data.kpi_globaux.total_budget_revise > 0
+                        ? ((Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100).toFixed(1)
+                        : '0'}% du budget
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-slate-600" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Nouvelle carte Reste à Dépenser */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 shadow-sm border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DefinitionTooltip term="reste">
+                      <p className="text-sm text-green-700 font-medium">Reste à Dépenser</p>
+                    </DefinitionTooltip>
+                    <p className="text-2xl font-bold text-green-800 mt-1">
+                      {formatEUR(data.kpi_globaux.total_reste_a_depenser)}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      {data.kpi_globaux.total_budget_revise > 0
+                        ? ((Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100).toFixed(1)
+                        : '0'}% disponible
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Wallet className="w-6 h-6 text-green-600" />
                   </div>
                 </div>
               </div>
@@ -332,7 +574,9 @@ export default function DashboardFinancierPage() {
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Marge Moyenne</p>
+                    <DefinitionTooltip term="marge">
+                      <p className="text-sm text-gray-600">Marge Moyenne</p>
+                    </DefinitionTooltip>
                     <p className={`text-2xl font-bold mt-1 ${
                       Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                     }`}>
@@ -342,8 +586,8 @@ export default function DashboardFinancierPage() {
                       Sur {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <TrendingDown className="w-6 h-6 text-orange-600" />
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <TrendingDown className="w-6 h-6 text-purple-600" />
                   </div>
                 </div>
               </div>
@@ -480,11 +724,31 @@ export default function DashboardFinancierPage() {
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th className="px-4 py-3 text-left">{renderSortButton('nom_chantier', 'Chantier')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('montant_revise_ht', 'Budget')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('pct_engage', '% Engagé')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('pct_realise', '% Déboursé')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('reste_a_depenser', 'Reste')}</th>
-                      <th className="px-4 py-3 text-right">{renderSortButton('marge_estimee_pct', 'Marge')}</th>
+                      <th className="px-4 py-3 text-right">
+                        <DefinitionTooltip term="budget">
+                          {renderSortButton('montant_revise_ht', 'Budget')}
+                        </DefinitionTooltip>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <DefinitionTooltip term="engage">
+                          {renderSortButton('pct_engage', '% Engagé')}
+                        </DefinitionTooltip>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <DefinitionTooltip term="realise">
+                          {renderSortButton('pct_realise', '% Déboursé')}
+                        </DefinitionTooltip>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <DefinitionTooltip term="reste">
+                          {renderSortButton('reste_a_depenser', 'Reste')}
+                        </DefinitionTooltip>
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <DefinitionTooltip term="marge">
+                          {renderSortButton('marge_estimee_pct', 'Marge')}
+                        </DefinitionTooltip>
+                      </th>
                       <th className="px-4 py-3 text-center">Statut</th>
                     </tr>
                   </thead>

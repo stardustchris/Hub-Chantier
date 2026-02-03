@@ -31,6 +31,24 @@ class ListChantiersUseCase:
         """
         self.chantier_repo = chantier_repo
 
+    def _filter_by_codes(
+        self, items: List[Chantier], exclude_codes: Optional[List[str]]
+    ) -> List[Chantier]:
+        """
+        Filtre les chantiers en excluant certains codes.
+
+        Args:
+            items: Liste de chantiers.
+            exclude_codes: Codes à exclure (ex: CONGES, MALADIE).
+
+        Returns:
+            Liste filtrée.
+        """
+        if not exclude_codes:
+            return items
+        # Convertir code en string pour la comparaison (code est un ValueObject CodeChantier)
+        return [c for c in items if str(c.code) not in exclude_codes]
+
     def _paginate(
         self, all_items: List[Chantier], skip: int, limit: int
     ) -> tuple[List[Chantier], int]:
@@ -59,6 +77,7 @@ class ListChantiersUseCase:
         responsable_id: Optional[int] = None,
         actifs_uniquement: bool = False,
         search: Optional[str] = None,
+        exclude_codes: Optional[List[str]] = None,
     ) -> ChantierListDTO:
         """
         Liste les chantiers avec filtres optionnels.
@@ -72,6 +91,7 @@ class ListChantiersUseCase:
             responsable_id: Filtre par ID du responsable (conducteur OU chef).
             actifs_uniquement: Si True, ne retourne que les chantiers actifs.
             search: Recherche textuelle par nom ou code.
+            exclude_codes: Liste de codes chantiers à exclure (ex: CONGES, MALADIE).
 
         Returns:
             ChantierListDTO avec la liste paginée.
@@ -97,24 +117,36 @@ class ListChantiersUseCase:
         )
 
         try:
-            # Cas par défaut: pas de filtre -> utiliser count() du repository
-            if not (search or responsable_id or conducteur_id or chef_chantier_id or statut or actifs_uniquement):
-                chantiers = self.chantier_repo.find_all(
-                    skip=skip,
-                    limit=limit,
-                )
-                total = self.chantier_repo.count()
-                return ChantierListDTO(
-                    chantiers=[ChantierDTO.from_entity(c) for c in chantiers],
-                    total=total,
-                    skip=skip,
-                    limit=limit,
-                )
-
-            # Pour les filtres, récupérer tous les résultats puis paginer
+            # Pour les filtres (y compris exclude_codes), récupérer tous les résultats puis paginer
             # Note: Acceptable pour le volume PME (<500 chantiers)
             # À optimiser si volume > 1000 avec count_* dans le repository
             max_results = 10000  # Limite de sécurité
+
+            # Cas par défaut: pas de filtre complexe
+            if not (search or responsable_id or conducteur_id or chef_chantier_id or statut or actifs_uniquement):
+                # Si exclusion de codes, on doit charger tous puis filtrer
+                if exclude_codes:
+                    all_results = self.chantier_repo.find_all(skip=0, limit=max_results)
+                    logger.info(f"Avant filtrage: {len(all_results)} chantiers, exclude_codes={exclude_codes}")
+                    all_results = self._filter_by_codes(all_results, exclude_codes)
+                    logger.info(f"Après filtrage: {len(all_results)} chantiers")
+                    chantiers, total = self._paginate(all_results, skip, limit)
+                    return ChantierListDTO(
+                        chantiers=[ChantierDTO.from_entity(c) for c in chantiers],
+                        total=total,
+                        skip=skip,
+                        limit=limit,
+                    )
+                else:
+                    # Pas d'exclusion: utiliser count() du repository directement
+                    chantiers = self.chantier_repo.find_all(skip=skip, limit=limit)
+                    total = self.chantier_repo.count()
+                    return ChantierListDTO(
+                        chantiers=[ChantierDTO.from_entity(c) for c in chantiers],
+                        total=total,
+                        skip=skip,
+                        limit=limit,
+                    )
 
             if search:
                 statut_obj = None
@@ -164,6 +196,9 @@ class ListChantiersUseCase:
 
             else:
                 all_results = []
+
+            # Filtrer les codes exclus AVANT pagination
+            all_results = self._filter_by_codes(all_results, exclude_codes)
 
             # Paginer les résultats
             chantiers, total = self._paginate(all_results, skip, limit)

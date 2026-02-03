@@ -121,6 +121,7 @@ class PointageController:
         commentaire: Optional[str] = None,
         affectation_id: Optional[int] = None,
         created_by: int = None,
+        created_by_role: str = "compagnon",
     ) -> Dict[str, Any]:
         """Crée un pointage."""
         dto = CreatePointageDTO(
@@ -132,7 +133,7 @@ class PointageController:
             commentaire=commentaire,
             affectation_id=affectation_id,
         )
-        result = self._create_uc.execute(dto, created_by or utilisateur_id)
+        result = self._create_uc.execute(dto, created_by or utilisateur_id, created_by_role)
         return self._pointage_to_dict(result)
 
     def update_pointage(

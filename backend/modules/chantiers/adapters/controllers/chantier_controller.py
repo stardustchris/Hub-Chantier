@@ -215,6 +215,7 @@ class ChantierController:
         responsable_id: Optional[int] = None,
         actifs_uniquement: bool = False,
         search: Optional[str] = None,
+        exclude_codes: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Liste les chantiers avec pagination et filtres.
@@ -228,6 +229,7 @@ class ChantierController:
             responsable_id: Filtrer par responsable.
             actifs_uniquement: Uniquement les actifs.
             search: Recherche textuelle.
+            exclude_codes: Liste de codes chantiers à exclure.
 
         Returns:
             Dictionnaire avec liste paginée.
@@ -241,6 +243,7 @@ class ChantierController:
             responsable_id=responsable_id,
             actifs_uniquement=actifs_uniquement,
             search=search,
+            exclude_codes=exclude_codes,
         )
         return {
             "chantiers": [self._chantier_dto_to_dict(c) for c in result.chantiers],

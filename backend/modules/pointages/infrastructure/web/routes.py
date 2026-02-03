@@ -271,6 +271,7 @@ def create_pointage(
             commentaire=request.commentaire,
             affectation_id=request.affectation_id,
             created_by=current_user_id,
+            created_by_role=current_user_role,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

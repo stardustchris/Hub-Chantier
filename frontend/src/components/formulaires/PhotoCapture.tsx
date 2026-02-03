@@ -117,6 +117,33 @@ export default function PhotoCapture({
 
   const startCamera = async () => {
     try {
+      // Vérifier si mediaDevices est disponible
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        logger.warn('La capture vidéo n\'est pas disponible sur ce navigateur. Utilisez la galerie.', null, {
+          context: 'PhotoCapture',
+          showToast: true
+        })
+        // Fallback immédiat vers sélecteur de fichier
+        setTimeout(() => fileInputRef.current?.click(), 100)
+        return
+      }
+
+      // Vérifier d'abord si la permission est déjà refusée
+      if (navigator.permissions) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName })
+          if (permissionStatus.state === 'denied') {
+            logger.warn('Accès à la caméra refusé. Cliquez sur "Galerie" pour sélectionner une image, ou autorisez la caméra dans les paramètres du navigateur.', null, {
+              context: 'PhotoCapture',
+              showToast: true
+            })
+            return // Ne pas ouvrir automatiquement le file picker pour éviter la confusion
+          }
+        } catch {
+          // Ignorer si permissions API n'est pas supportée
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }, // Caméra arrière sur mobile
         audio: false,
@@ -128,12 +155,25 @@ export default function PhotoCapture({
         setShowCameraModal(true)
       }
     } catch (err) {
-      logger.error('Impossible d\'accéder à la caméra', err, {
-        context: 'PhotoCapture',
-        showToast: true
-      })
-      // Fallback vers l'input file
-      cameraInputRef.current?.click()
+      const error = err as Error
+      // Identifier le type d'erreur pour un message approprié
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        logger.warn('Accès à la caméra refusé. Cliquez sur "Galerie" pour sélectionner une image, ou autorisez la caméra dans les paramètres du navigateur.', null, {
+          context: 'PhotoCapture',
+          showToast: true
+        })
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        logger.warn('Aucune caméra détectée. Utilisez la galerie pour sélectionner une image.', null, {
+          context: 'PhotoCapture',
+          showToast: true
+        })
+      } else {
+        logger.error('Impossible d\'accéder à la caméra', err, {
+          context: 'PhotoCapture',
+          showToast: true
+        })
+      }
+      // Ne pas ouvrir automatiquement le file picker - l'utilisateur peut cliquer sur Galerie
     }
   }
 

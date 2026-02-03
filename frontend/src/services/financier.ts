@@ -31,6 +31,7 @@ import type {
   SuggestionsFinancieres,
   AffectationBudgetTache,
   AffectationBudgetTacheCreate,
+  AnalyseIAConsolidee,
 } from '../types'
 
 const BASE = '/api/financier'
@@ -364,6 +365,16 @@ export const financierService = {
     const ids = chantierIds.join(',')
     const response = await api.get<VueConsolidee>(
       `${BASE}/finances/consolidation`,
+      { params: { chantier_ids: ids } }
+    )
+    return response.data
+  },
+
+  // ===== Analyse IA consolidée multi-chantiers (Gemini 3 Flash) =====
+  async getAnalyseIAConsolidee(chantierIds: number[]): Promise<AnalyseIAConsolidee> {
+    const ids = chantierIds.join(',')
+    const response = await api.get<AnalyseIAConsolidee>(
+      `${BASE}/finances/consolidation/ia`,
       { params: { chantier_ids: ids } }
     )
     return response.data

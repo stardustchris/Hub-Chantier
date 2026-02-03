@@ -79,24 +79,37 @@ export default function ClockCard({
               <CheckCircle className="w-4 h-4 text-white/90" />
               <p className="text-xs font-semibold text-white/90">Journee terminee</p>
             </div>
-            <div className="flex items-center justify-between">
+            {canEdit && canReclockIn ? (
+              /* Admin/Conducteur : permet de modifier arrivée ET départ */
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onEditTime?.('arrival', clockInTime)}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm"
+                  title="Modifier l'heure d'arrivee"
+                >
+                  <span>{clockInTime || '--:--'}</span>
+                  <Pencil className="w-3 h-3" />
+                </button>
+                <span className="text-white/60">→</span>
+                <button
+                  onClick={() => onEditTime?.('departure', clockOutTime)}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm"
+                  title="Modifier l'heure de depart"
+                >
+                  <span>{clockOutTime || '--:--'}</span>
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              /* Compagnon/Chef : affichage simple sans édition */
               <p className="text-sm text-white/80">
                 {clockInTime || '--:--'} → {clockOutTime || '--:--'}
               </p>
-              {canEdit && canReclockIn && (
-                <button
-                  onClick={() => onEditTime?.('arrival', clockInTime)}
-                  className="p-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
-                  title="Modifier le pointage"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
           {canReclockIn ? (
-            /* Conducteur/Admin : bouton modifier */
+            /* Conducteur/Admin : bouton modifier global */
             <button
               onClick={() => onEditTime?.('arrival', clockInTime)}
               className={`w-full ${buttonBg} font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md`}

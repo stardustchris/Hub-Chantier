@@ -1438,6 +1438,17 @@ export interface VueConsolidee {
   top_derives: ChantierFinancierSummary[]
 }
 
+// Analyse IA consolidée multi-chantiers (Gemini 3 Flash)
+export interface AnalyseIAConsolidee {
+  synthese: string
+  alertes: string[]
+  recommandations: string[]
+  tendance: 'hausse' | 'stable' | 'baisse'
+  score_sante: number
+  source: 'gemini-3-flash' | 'regles'
+  ai_available: boolean
+}
+
 // Suggestions IA (FIN-21)
 export interface Suggestion {
   type: string
