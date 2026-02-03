@@ -65,7 +65,7 @@ const DEFINITIONS: Record<string, { titre: string; definition: string }> = {
   },
   marge: {
     titre: 'Marge',
-    definition: '(Budget - Coûts) / Budget × 100. Estimée sur l\'engagé pour chantiers en cours, définitive sur le réalisé pour chantiers clôturés.',
+    definition: '(Prix de Vente - Coût de Revient) / Prix de Vente × 100. Marge commerciale standard BTP.',
   },
 }
 
@@ -270,14 +270,14 @@ export default function DashboardFinancierPage() {
     ].filter((d) => d.value > 0)
   }, [data])
 
-  // Donnees pour le graphique barres Budget vs Engage vs Realise
+  // Donnees pour le graphique barres Budget vs Engagé vs Réalisé
   const budgetBarData = useMemo(() => {
     if (!data) return []
     return data.chantiers.slice(0, 8).map((c) => ({
       name: c.nom_chantier.length > 15 ? c.nom_chantier.substring(0, 15) + '...' : c.nom_chantier,
       Budget: Number(c.montant_revise_ht),
-      Engage: Number(c.total_engage),
-      Realise: Number(c.total_realise),
+      Engagé: Number(c.total_engage),
+      Réalisé: Number(c.total_realise),
     }))
   }, [data])
 
@@ -663,9 +663,9 @@ export default function DashboardFinancierPage() {
                   )}
                 </div>
 
-                {/* Barres Budget vs Engage vs Realise */}
+                {/* Barres Budget vs Engage vs Réalisé */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:col-span-2">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Budget / Engage / Realise par chantier</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Budget / Engagé / Réalisé par chantier</h3>
                   {budgetBarData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={budgetBarData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -678,8 +678,8 @@ export default function DashboardFinancierPage() {
                         />
                         <Legend wrapperStyle={{ fontSize: '12px' }} />
                         <Bar dataKey="Budget" fill={CHART_COLORS.budget} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Engage" fill={CHART_COLORS.engage} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Realise" fill={CHART_COLORS.realise} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Engagé" fill={CHART_COLORS.engage} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Réalisé" fill={CHART_COLORS.realise} radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (

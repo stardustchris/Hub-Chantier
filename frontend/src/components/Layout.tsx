@@ -230,7 +230,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <div className="flex items-center gap-3">
-            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-20 h-20 object-contain" />
+            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-16 h-16 object-contain" />
             <span className="text-xl font-bold text-primary-600">Hub Chantier</span>
           </div>
           <button
@@ -251,7 +251,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex flex-col flex-grow bg-white border-r">
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b">
-            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-20 h-20 object-contain" />
+            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-16 h-16 object-contain" />
             <span className="ml-3 text-xl font-bold text-primary-600">Hub Chantier</span>
           </div>
 
@@ -305,13 +305,13 @@ export default function Layout({ children }: LayoutProps) {
             {/* Page title - hidden on mobile */}
             <div className="hidden lg:block">
               <h1 className="text-lg font-semibold text-gray-900">
-                Greg Construction
+                Greg Constructions
               </h1>
             </div>
 
             {/* Mobile logo */}
             <div className="lg:hidden flex items-center gap-3">
-              <img src="/logo.png?v=2" alt="Hub Chantier" className="w-20 h-20 object-contain" />
+              <img src="/logo.png?v=2" alt="Hub Chantier" className="w-16 h-16 object-contain" />
               <span className="text-lg font-bold text-primary-600">Hub Chantier</span>
             </div>
 

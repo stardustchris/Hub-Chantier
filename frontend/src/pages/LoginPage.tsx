@@ -46,7 +46,7 @@ export default function LoginPage() {
             Hub Chantier
           </h1>
           <h2 className="mt-2 text-center text-xl text-gray-600">
-            Greg Construction
+            Greg Constructions
           </h2>
           <p className="mt-4 text-center text-sm text-gray-500">
             Connectez-vous pour acceder a votre espace

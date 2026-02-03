@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Couleurs Greg Construction
+        // Couleurs Greg Constructions
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

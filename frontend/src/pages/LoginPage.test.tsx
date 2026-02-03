@@ -48,7 +48,7 @@ describe('LoginPage', () => {
     renderLoginPage()
 
     expect(screen.getByText('Hub Chantier')).toBeInTheDocument()
-    expect(screen.getByText('Greg Construction')).toBeInTheDocument()
+    expect(screen.getByText('Greg Constructions')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText('Mot de passe')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument()

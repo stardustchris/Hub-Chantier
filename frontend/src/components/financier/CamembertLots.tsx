@@ -90,14 +90,25 @@ export default function CamembertLots({ lots }: CamembertLotsProps) {
             ))}
           </Pie>
           <Tooltip content={<ChartTooltip />} />
-          <Legend
-            formatter={(value: string) => {
-              const lot = lots.find((l) => l.code_lot === value)
-              return lot ? `${value} - ${lot.libelle}` : value
-            }}
-          />
         </PieChart>
       </ResponsiveContainer>
+      {/* Légende personnalisée sur 2 colonnes */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+        {chartData.map((item, index) => {
+          const lot = lots.find((l) => l.code_lot === item.name)
+          return (
+            <div key={item.name} className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              />
+              <span className="text-gray-700 truncate" title={lot ? `${item.name} - ${lot.libelle}` : item.name}>
+                {lot ? `${item.name} - ${lot.libelle}` : item.name}
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
