@@ -36,6 +36,7 @@ const DevisDetailPage = lazy(() => import('./pages/DevisDetailPage'))
 const DevisGeneratorPage = lazy(() => import('./pages/DevisGeneratorPage'))
 const DevisDashboardPage = lazy(() => import('./pages/DevisDashboardPage'))
 const ArticlesPage = lazy(() => import('./pages/ArticlesPage'))
+const DevisPreviewPage = lazy(() => import('./pages/DevisPreviewPage'))
 const PennylaneIntegrationPage = lazy(() => import('./pages/PennylaneIntegrationPage'))
 
 // CSS-only loading spinner (no lucide-react dependency)
@@ -211,6 +212,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ArticlesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/:id/preview"
+            element={
+              <ProtectedRoute>
+                <DevisPreviewPage />
               </ProtectedRoute>
             }
           />
