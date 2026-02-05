@@ -60,6 +60,10 @@ class Chantier:
     description: Optional[str] = None
     conducteur_ids: list[int] = field(default_factory=list)
     chef_chantier_ids: list[int] = field(default_factory=list)
+    # DEV-TVA: Contexte TVA pour pre-remplissage taux devis
+    type_travaux: Optional[str] = None  # "renovation", "renovation_energetique", "construction_neuve"
+    batiment_plus_2ans: Optional[bool] = None
+    usage_habitation: Optional[bool] = None
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 

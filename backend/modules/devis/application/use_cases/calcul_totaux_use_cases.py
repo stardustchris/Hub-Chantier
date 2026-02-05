@@ -76,6 +76,7 @@ class CalculerTotauxDevisUseCase:
 
         total_ht = Decimal("0")
         total_ttc = Decimal("0")
+        ventilation_tva: Dict[str, Decimal] = {}  # taux -> base_ht
 
         lots = self._lot_repository.find_by_devis(devis_id)
 
@@ -125,6 +126,10 @@ class CalculerTotauxDevisUseCase:
 
                 self._ligne_repository.save(ligne)
 
+                # Ventilation TVA: accumuler base HT par taux
+                taux_key = str(ligne.taux_tva)
+                ventilation_tva[taux_key] = ventilation_tva.get(taux_key, Decimal("0")) + ligne.total_ht
+
                 lot_debourse_sec += ligne_debourse_sec
                 lot_total_ht += ligne.total_ht
                 lot_total_ttc += ligne.montant_ttc
@@ -146,6 +151,9 @@ class CalculerTotauxDevisUseCase:
             for frais in frais_list:
                 total_frais_ht += frais.montant_ht
                 total_frais_ttc += frais.montant_ttc
+                # Ventilation TVA: inclure les frais de chantier
+                taux_key = str(frais.taux_tva)
+                ventilation_tva[taux_key] = ventilation_tva.get(taux_key, Decimal("0")) + frais.montant_ht
 
         # Mettre a jour les totaux du devis (lots + frais de chantier)
         devis.montant_total_ht = total_ht + total_frais_ht
@@ -176,6 +184,21 @@ class CalculerTotauxDevisUseCase:
             )
         )
 
+        # Construire la ventilation TVA triee par taux
+        ventilation_tva_list = sorted(
+            [
+                {
+                    "taux": taux,
+                    "base_ht": str(base_ht.quantize(Decimal("0.01"))),
+                    "montant_tva": str(
+                        (base_ht * Decimal(taux) / Decimal("100")).quantize(Decimal("0.01"))
+                    ),
+                }
+                for taux, base_ht in ventilation_tva.items()
+            ],
+            key=lambda x: Decimal(x["taux"]),
+        )
+
         return {
             "montant_total_ht": str(devis.montant_total_ht),
             "montant_total_ttc": str(devis.montant_total_ttc),
@@ -186,6 +209,7 @@ class CalculerTotauxDevisUseCase:
             "retenue_garantie_pct": str(devis.retenue_garantie_pct),
             "montant_retenue_garantie": str(montant_retenue_garantie),
             "montant_net_a_payer": str(montant_net_a_payer),
+            "ventilation_tva": ventilation_tva_list,
         }
 
     def _resolve_marge(

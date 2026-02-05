@@ -212,6 +212,9 @@ class CreateChantierUseCase:
             description=dto.description,
             conducteur_ids=list(dto.conducteur_ids or []),
             chef_chantier_ids=list(dto.chef_chantier_ids or []),
+            type_travaux=dto.type_travaux,
+            batiment_plus_2ans=dto.batiment_plus_2ans,
+            usage_habitation=dto.usage_habitation,
         )
 
     def _publish_created_event(self, chantier: Chantier) -> None:

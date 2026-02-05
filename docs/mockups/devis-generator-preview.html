@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub Chantier - Générateur de Devis (Preview)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+        .card { @apply bg-white rounded-xl shadow-sm border border-gray-100; }
+        .btn-primary { @apply bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors; }
+        .btn-secondary { @apply bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors; }
+        .input-field { @apply w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all; }
+        .badge { @apply px-2 py-1 rounded-full text-xs font-medium; }
+        .table-header { @apply bg-indigo-600 text-white text-sm font-medium; }
+        .tooltip { @apply invisible group-hover:visible absolute bg-gray-900 text-white text-xs px-2 py-1 rounded -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-header text-white px-6 py-4 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">Nouveau Devis</h1>
+                    <p class="text-indigo-200 text-sm">DEV-2026-0042 • Brouillon</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="badge bg-yellow-400 text-yellow-900">Brouillon</span>
+                <button class="btn-secondary bg-white/10 hover:bg-white/20 text-white border-0">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Aperçu PDF
+                    </span>
+                </button>
+                <button class="btn-primary bg-white text-indigo-600 hover:bg-indigo-50">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        Envoyer au client
+                    </span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-6">
+        <div class="grid grid-cols-12 gap-6">
+            <!-- Main Content -->
+            <div class="col-span-9 space-y-6">
+
+                <!-- Client & Chantier -->
+                <div class="card p-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </span>
+                                    Client
+                                </span>
+                            </label>
+                            <div class="flex gap-2">
+                                <select class="input-field flex-1">
+                                    <option value="">Sélectionner un client...</option>
+                                    <option selected>Dupont Jean - 12 Rue des Lilas, 75001 Paris</option>
+                                    <option>Martin Sophie - 8 Avenue Foch, 75016 Paris</option>
+                                    <option>Leroy Pierre - 45 Rue de la Paix, 69001 Lyon</option>
+                                </select>
+                                <button onclick="openClientModal()" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1" title="Nouveau client">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+                                        </svg>
+                                    </span>
+                                    Chantier
+                                </span>
+                            </label>
+                            <select class="input-field">
+                                <option>Rénovation appartement Haussmann</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dates & Durée -->
+                <div class="card p-6">
+                    <div class="grid grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date d'émission</label>
+                            <input type="date" value="2026-02-04" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date d'expiration</label>
+                            <input type="date" value="2026-03-04" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Visite préalable</label>
+                            <input type="date" class="input-field" placeholder="Non précisée">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Début travaux</label>
+                            <input type="date" class="input-field" placeholder="Non précisé">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Durée estimée</label>
+                            <div class="flex">
+                                <input type="number" value="45" class="input-field rounded-r-none border-r-0 w-20">
+                                <span class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-r-lg text-gray-600 text-sm">jours</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table des lignes -->
+                <div class="card overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="font-semibold text-gray-900">Détail du devis</h2>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-2 text-sm text-gray-600">
+                                <input type="checkbox" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                Mode expert (débourses)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Table Header -->
+                    <table class="w-full">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="px-4 py-3 text-left w-12">N°</th>
+                                <th class="px-4 py-3 text-left">DÉSIGNATION</th>
+                                <th class="px-4 py-3 text-right w-20">QTÉ</th>
+                                <th class="px-4 py-3 text-center w-20">UNITÉ</th>
+                                <th class="px-4 py-3 text-right w-24">P.U. HT</th>
+                                <th class="px-4 py-3 text-center w-20">TVA</th>
+                                <th class="px-4 py-3 text-right w-28">TOTAL HT</th>
+                                <th class="px-4 py-3 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <!-- Section 1 -->
+                            <tr class="bg-indigo-50">
+                                <td class="px-4 py-3 font-semibold text-indigo-900" colspan="7">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                        1. Démolition et préparation
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-indigo-900">2 450,00 €</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">1.1</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span>Dépose carrelage existant</span>
+                                        <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded font-medium flex items-center gap-1">
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                            </svg>
+                                            Batiprix
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-right">45</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m²</td>
+                                <td class="px-4 py-3 text-right">25,00 €</td>
+                                <td class="px-4 py-3 text-center"><span class="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">10%</span></td>
+                                <td class="px-4 py-3 text-right font-medium">1 125,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Nouvelle ligne en cours d'édition avec autocomplete Batiprix -->
+                            <tr class="bg-amber-50 border-2 border-amber-300">
+                                <td class="px-4 py-3 text-gray-500">1.4</td>
+                                <td class="px-4 py-3 relative">
+                                    <div class="relative">
+                                        <input type="text" id="batiprixSearch" value="pose parquet" class="w-full px-3 py-2 border border-amber-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none" placeholder="Rechercher un ouvrage...">
+                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            <div class="animate-spin w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full"></div>
+                                            <span class="text-xs text-amber-600">Batiprix</span>
+                                        </div>
+                                    </div>
+                                    <!-- Dropdown autocomplete -->
+                                    <div class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                                        <div class="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                                            <span class="text-xs text-gray-500">Résultats Batiprix</span>
+                                            <span class="text-xs text-gray-400">3 résultats</span>
+                                        </div>
+                                        <div class="max-h-64 overflow-y-auto">
+                                            <!-- Résultat 1 -->
+                                            <div class="px-3 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 group">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-medium text-gray-900 group-hover:text-indigo-600">Pose parquet flottant stratifié</span>
+                                                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">REV.PAR.01</span>
+                                                        </div>
+                                                        <p class="text-sm text-gray-500 mt-0.5">Pose de parquet stratifié ép. 8mm, y compris sous-couche acoustique, clips et plinthes</p>
+                                                        <div class="flex items-center gap-3 mt-1.5">
+                                                            <span class="text-xs text-gray-400">Unité: m²</span>
+                                                            <span class="text-xs text-gray-400">•</span>
+                                                            <span class="text-xs text-gray-400">Catégorie: Revêtement de sol</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right ml-4">
+                                                        <span class="font-semibold text-indigo-600">32,50 €</span>
+                                                        <p class="text-xs text-gray-400">HT / m²</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Résultat 2 -->
+                                            <div class="px-3 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 group">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-medium text-gray-900 group-hover:text-indigo-600">Pose parquet massif cloué</span>
+                                                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">REV.PAR.02</span>
+                                                        </div>
+                                                        <p class="text-sm text-gray-500 mt-0.5">Pose parquet massif chêne 14mm sur lambourdes, ponçage et vitrification 2 couches</p>
+                                                        <div class="flex items-center gap-3 mt-1.5">
+                                                            <span class="text-xs text-gray-400">Unité: m²</span>
+                                                            <span class="text-xs text-gray-400">•</span>
+                                                            <span class="text-xs text-gray-400">Catégorie: Revêtement de sol</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right ml-4">
+                                                        <span class="font-semibold text-indigo-600">78,00 €</span>
+                                                        <p class="text-xs text-gray-400">HT / m²</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Résultat 3 -->
+                                            <div class="px-3 py-3 hover:bg-indigo-50 cursor-pointer group">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-medium text-gray-900 group-hover:text-indigo-600">Pose parquet contrecollé clipsé</span>
+                                                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">REV.PAR.03</span>
+                                                        </div>
+                                                        <p class="text-sm text-gray-500 mt-0.5">Parquet contrecollé chêne 15mm pose flottante, sous-couche et plinthes incluses</p>
+                                                        <div class="flex items-center gap-3 mt-1.5">
+                                                            <span class="text-xs text-gray-400">Unité: m²</span>
+                                                            <span class="text-xs text-gray-400">•</span>
+                                                            <span class="text-xs text-gray-400">Catégorie: Revêtement de sol</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right ml-4">
+                                                        <span class="font-semibold text-indigo-600">55,00 €</span>
+                                                        <p class="text-xs text-gray-400">HT / m²</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-3 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                                            <button class="text-xs text-gray-500 hover:text-gray-700">Créer un ouvrage personnalisé</button>
+                                            <a href="#" class="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                                                Ouvrir Batiprix
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3"><input type="number" class="w-16 px-2 py-1 border border-gray-200 rounded text-right" placeholder="0"></td>
+                                <td class="px-4 py-3 text-center text-gray-400">-</td>
+                                <td class="px-4 py-3 text-right text-gray-400">-</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium text-gray-400">0,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-red-400 hover:text-red-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">1.2</td>
+                                <td class="px-4 py-3">Évacuation gravats</td>
+                                <td class="px-4 py-3 text-right">3</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m³</td>
+                                <td class="px-4 py-3 text-right">180,00 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">540,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">1.3</td>
+                                <td class="px-4 py-3">Préparation support (ragréage)</td>
+                                <td class="px-4 py-3 text-right">45</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m²</td>
+                                <td class="px-4 py-3 text-right">17,44 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">785,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Ligne texte -->
+                            <tr class="bg-gray-50/50">
+                                <td class="px-4 py-2 text-gray-400"></td>
+                                <td class="px-4 py-2 text-gray-500 italic text-sm" colspan="7">
+                                    <svg class="w-4 h-4 inline mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                    </svg>
+                                    Note : Inclut protection des zones non concernées par les travaux
+                                </td>
+                            </tr>
+
+                            <!-- Section 2 -->
+                            <tr class="bg-indigo-50">
+                                <td class="px-4 py-3 font-semibold text-indigo-900" colspan="7">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                        2. Revêtement de sol
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-indigo-900">4 275,00 €</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">2.1</td>
+                                <td class="px-4 py-3">Fourniture carrelage grès cérame 60x60</td>
+                                <td class="px-4 py-3 text-right">50</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m²</td>
+                                <td class="px-4 py-3 text-right">45,00 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">2 250,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">2.2</td>
+                                <td class="px-4 py-3">Pose carrelage avec joints</td>
+                                <td class="px-4 py-3 text-right">50</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m²</td>
+                                <td class="px-4 py-3 text-right">38,00 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">1 900,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">2.3</td>
+                                <td class="px-4 py-3">Plinthes assorties</td>
+                                <td class="px-4 py-3 text-right">25</td>
+                                <td class="px-4 py-3 text-center text-gray-500">ml</td>
+                                <td class="px-4 py-3 text-right">5,00 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">125,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Section 3 -->
+                            <tr class="bg-indigo-50">
+                                <td class="px-4 py-3 font-semibold text-indigo-900" colspan="7">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                        3. Peinture
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-indigo-900">1 890,00 €</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">3.1</td>
+                                <td class="px-4 py-3">Peinture murs 2 couches (blanc mat)</td>
+                                <td class="px-4 py-3 text-right">85</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m²</td>
+                                <td class="px-4 py-3 text-right">18,00 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">1 530,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-gray-500">3.2</td>
+                                <td class="px-4 py-3">Peinture plafond 2 couches</td>
+                                <td class="px-4 py-3 text-right">45</td>
+                                <td class="px-4 py-3 text-center text-gray-500">m²</td>
+                                <td class="px-4 py-3 text-right">8,00 €</td>
+                                <td class="px-4 py-3 text-center text-gray-500">20%</td>
+                                <td class="px-4 py-3 text-right font-medium">360,00 €</td>
+                                <td class="px-4 py-3">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Boutons d'ajout -->
+                    <div class="p-4 border-t border-gray-100 flex flex-wrap gap-2">
+                        <button class="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Nouvelle ligne
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Section
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Sous-section
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4"/>
+                            </svg>
+                            Texte
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16"/>
+                            </svg>
+                            Saut de ligne
+                        </button>
+                        <button class="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Saut de page
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conditions de paiement -->
+                <div class="card p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Conditions de paiement</h3>
+                    <div class="grid grid-cols-3 gap-6">
+                        <!-- Acompte -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">Acompte à la commande</label>
+                            <div class="flex gap-2">
+                                <div class="relative flex-1">
+                                    <input type="number" value="30" class="input-field pr-8">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                                </div>
+                                <span class="px-3 py-2 text-gray-500">=</span>
+                                <div class="relative flex-1">
+                                    <input type="text" value="2 584,50" class="input-field pr-8 bg-gray-50" readonly>
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Retenue de garantie -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">Retenue de garantie</label>
+                            <select class="input-field">
+                                <option value="0">Aucune</option>
+                                <option value="5" selected>5%</option>
+                                <option value="10">10%</option>
+                            </select>
+                            <p class="text-xs text-gray-500">Soit 517,75 € retenus</p>
+                        </div>
+
+                        <!-- Échéances -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">Échéances</label>
+                            <select class="input-field">
+                                <option>Paiement à réception</option>
+                                <option selected>30 jours fin de mois</option>
+                                <option>45 jours fin de mois</option>
+                                <option>60 jours</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moyens de paiement -->
+                <div class="card p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Moyens de paiement acceptés</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+                            <input type="checkbox" checked class="mt-1 rounded border-gray-300 text-indigo-600">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                    </svg>
+                                    <span class="font-medium text-gray-900">Virement bancaire</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">FR76 3000 4000 0300 0012 3456 789</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+                            <input type="checkbox" checked class="mt-1 rounded border-gray-300 text-indigo-600">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <span class="font-medium text-gray-900">Chèque</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">À l'ordre de Greg Construction</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-300">
+                            <input type="checkbox" class="mt-1 rounded border-gray-300 text-indigo-600">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="font-medium text-gray-900">Espèces</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Limité à 1 000 € (réglementation)</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Notes de bas de page -->
+                <div class="card p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Notes de bas de page</h3>
+                    <textarea class="input-field h-24" placeholder="Texte affiché en bas du devis (conditions particulières, mentions légales complémentaires...)">Ce devis est valable 30 jours à compter de sa date d'émission. Les travaux seront réalisés conformément aux règles de l'art et aux DTU en vigueur. Garantie décennale : Assurance AXA n°123456789.</textarea>
+                </div>
+
+                <!-- Pièces jointes -->
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900">Pièces jointes</h3>
+                        <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Ajouter
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900 text-sm">Plan_cuisine_v2.pdf</p>
+                                    <p class="text-xs text-gray-500">1.2 MB • Ajouté le 03/02/2026</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-1 text-xs text-gray-500">
+                                    <input type="checkbox" checked class="rounded border-gray-300 text-indigo-600 w-3 h-3">
+                                    Visible client
+                                </label>
+                                <button class="text-gray-400 hover:text-red-500">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900 text-sm">Photo_etat_actuel.jpg</p>
+                                    <p class="text-xs text-gray-500">856 KB • Ajouté le 02/02/2026</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-1 text-xs text-gray-500">
+                                    <input type="checkbox" checked class="rounded border-gray-300 text-indigo-600 w-3 h-3">
+                                    Visible client
+                                </label>
+                                <button class="text-gray-400 hover:text-red-500">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-span-3 space-y-6">
+
+                <!-- Rentabilité -->
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900">Rentabilité</h3>
+                        <button class="text-indigo-600 hover:text-indigo-700 text-sm">Détails</button>
+                    </div>
+
+                    <!-- Donut Chart -->
+                    <div class="relative mx-auto w-40 h-40 mb-4">
+                        <canvas id="rentabiliteChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-2xl font-bold text-gray-900">23%</span>
+                            <span class="text-xs text-gray-500">Marge</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+                                <span class="text-sm text-gray-600">Main d'œuvre</span>
+                            </div>
+                            <span class="text-sm font-medium">3 240,00 €</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-amber-500 rounded-full"></span>
+                                <span class="text-sm text-gray-600">Matériaux</span>
+                            </div>
+                            <span class="text-sm font-medium">2 890,00 €</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-purple-500 rounded-full"></span>
+                                <span class="text-sm text-gray-600">Frais généraux</span>
+                            </div>
+                            <span class="text-sm font-medium">485,00 €</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-emerald-500 rounded-full"></span>
+                                <span class="text-sm text-gray-600">Bénéfice</span>
+                            </div>
+                            <span class="text-sm font-medium text-emerald-600">2 000,00 €</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full mt-4 text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                        </svg>
+                        Ajuster les marges
+                    </button>
+                </div>
+
+                <!-- Totaux -->
+                <div class="card p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Récapitulatif</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Total HT</span>
+                            <span class="font-medium">8 615,00 €</span>
+                        </div>
+
+                        <!-- Remise globale -->
+                        <div class="flex justify-between text-sm items-center">
+                            <button class="text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Remise globale
+                            </button>
+                            <span class="text-red-500 font-medium">- 0,00 €</span>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-3 flex justify-between text-sm">
+                            <span class="text-gray-600">Total HT net</span>
+                            <span class="font-medium">8 615,00 €</span>
+                        </div>
+
+                        <!-- DEV-TVA: Ventilation TVA multi-taux -->
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">TVA 10% <span class="text-xs text-gray-400">(base 2 450,00 €)</span></span>
+                            <span class="font-medium">245,00 €</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">TVA 20% <span class="text-xs text-gray-400">(base 6 165,00 €)</span></span>
+                            <span class="font-medium">1 233,00 €</span>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-3 flex justify-between">
+                            <span class="font-medium text-gray-900">Total TTC</span>
+                            <span class="font-bold text-lg">10 093,00 €</span>
+                        </div>
+
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>Retenue de garantie (5%)</span>
+                            <span>- 516,90 €</span>
+                        </div>
+
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>Acompte (30%)</span>
+                            <span>- 3 101,40 €</span>
+                        </div>
+
+                        <div class="bg-indigo-600 text-white rounded-lg p-4 -mx-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">Net à payer</span>
+                                <span class="text-2xl font-bold">6 719,70 €</span>
+                            </div>
+                            <p class="text-indigo-200 text-xs mt-1">Après déduction acompte et retenue</p>
+                        </div>
+                    </div>
+
+                    <!-- DEV-TVA: Mention legale TVA reduite (reforme 01/2025) -->
+                    <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <div class="flex gap-2">
+                            <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            <p class="text-xs text-amber-800 leading-relaxed">
+                                Le signataire atteste que les travaux vises portent sur un immeuble acheve
+                                depuis plus de deux ans et sont affectes a l'habitation. Ces travaux remplissent
+                                les conditions d'application du taux reduit de TVA.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options internes -->
+                <div class="card p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Options internes</h3>
+                    <p class="text-xs text-gray-500 mb-4">Non visible par le client</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nom interne</label>
+                            <input type="text" placeholder="ex: Dupont Réno Cuisine" class="input-field text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+                            <select class="input-field text-sm">
+                                <option>Marc Durand (Commercial)</option>
+                                <option>Sophie Martin (Conductrice)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notes internes</label>
+                            <textarea class="input-field text-sm h-20" placeholder="Notes pour l'équipe...">Client recommandé par M. Lambert. Budget flexible si qualité.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Intégration Batiprix -->
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-semibold text-gray-900">Batiprix</h3>
+                        </div>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">Connecté</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Accédez à plus de 50 000 prix d'ouvrages BTP actualisés.</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Ouvrages utilisés ce mois</span>
+                            <span class="font-medium">127 / 500</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    <button onclick="openBatiprixModal()" class="w-full mt-4 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Paramètres API
+                    </button>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="card p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Actions</h3>
+                    <div class="space-y-2">
+                        <button class="w-full btn-secondary text-left flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                            </svg>
+                            Dupliquer
+                        </button>
+                        <button class="w-full btn-secondary text-left flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Créer variante
+                        </button>
+                        <button class="w-full btn-secondary text-left flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Générer CERFA TVA
+                        </button>
+                        <button class="w-full btn-secondary text-left flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Historique
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Configuration Batiprix -->
+    <div id="batiprixModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Configuration Batiprix</h2>
+                        <p class="text-sm text-gray-500">Connectez votre compte Batiprix</p>
+                    </div>
+                </div>
+                <button onclick="closeBatiprixModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-5">
+                <!-- Status -->
+                <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl mb-6">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-green-800">Connexion active</p>
+                        <p class="text-sm text-green-600">Dernière synchronisation : il y a 2 heures</p>
+                    </div>
+                </div>
+
+                <!-- API Key -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Clé API Batiprix</label>
+                        <div class="relative">
+                            <input type="password" id="batiprixApiKey" value="bp_live_a1b2c3d4e5f6g7h8i9j0" class="input-field pr-24 font-mono text-sm">
+                            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                <button onclick="toggleApiKeyVisibility()" class="p-1 text-gray-400 hover:text-gray-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </button>
+                                <button class="p-1 text-gray-400 hover:text-gray-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Obtenez votre clé sur <a href="#" class="text-indigo-600 hover:underline">batiprix.com/api</a>
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Environnement</label>
+                        <div class="flex gap-3">
+                            <label class="flex-1 flex items-center gap-2 p-3 border-2 border-green-500 bg-green-50 rounded-lg cursor-pointer">
+                                <input type="radio" name="batiprixEnv" value="production" checked class="text-green-600">
+                                <span class="text-sm font-medium text-gray-900">Production</span>
+                            </label>
+                            <label class="flex-1 flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-gray-300">
+                                <input type="radio" name="batiprixEnv" value="sandbox" class="text-green-600">
+                                <span class="text-sm font-medium text-gray-900">Sandbox</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Options de recherche</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" checked class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span class="text-sm text-gray-700">Recherche automatique en tapant (min. 3 caractères)</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" checked class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span class="text-sm text-gray-700">Afficher les prix actualisés (mise à jour mensuelle)</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span class="text-sm text-gray-700">Inclure les ouvrages obsolètes</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" checked class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span class="text-sm text-gray-700">Copier les débourses détaillés (matériaux, MO)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Quota -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Utilisation mensuelle</span>
+                        <span class="text-sm text-gray-500">127 / 500 requêtes</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 25%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500">Renouvellement le 1er mars 2026</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+                <button class="text-red-600 hover:text-red-700 text-sm font-medium">Déconnecter</button>
+                <div class="flex gap-3">
+                    <button onclick="closeBatiprixModal()" class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium">
+                        Annuler
+                    </button>
+                    <button onclick="saveBatiprixConfig()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nouveau Client -->
+    <div id="clientModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Nouveau client</h2>
+                        <p class="text-sm text-gray-500">Créer un client pour ce devis</p>
+                    </div>
+                </div>
+                <button onclick="closeClientModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-5 overflow-y-auto max-h-[60vh]">
+                <!-- Type de client -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Type de client</label>
+                    <div class="flex gap-3">
+                        <label class="flex-1 flex items-center gap-3 p-4 border-2 border-indigo-500 bg-indigo-50 rounded-xl cursor-pointer">
+                            <input type="radio" name="typeClient" value="particulier" checked class="text-indigo-600">
+                            <div>
+                                <span class="font-medium text-gray-900">Particulier</span>
+                                <p class="text-xs text-gray-500">Personne physique</p>
+                            </div>
+                        </label>
+                        <label class="flex-1 flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-300">
+                            <input type="radio" name="typeClient" value="professionnel" class="text-indigo-600">
+                            <div>
+                                <span class="font-medium text-gray-900">Professionnel</span>
+                                <p class="text-xs text-gray-500">Entreprise / Société</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Informations principales -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs">1</span>
+                        Informations principales
+                    </h3>
+
+                    <!-- Particulier -->
+                    <div id="formParticulier" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
+                            <select class="input-field">
+                                <option>M.</option>
+                                <option>Mme</option>
+                                <option>M. et Mme</option>
+                            </select>
+                        </div>
+                        <div></div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom <span class="text-red-500">*</span></label>
+                            <input type="text" class="input-field" placeholder="Jean">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nom <span class="text-red-500">*</span></label>
+                            <input type="text" class="input-field" placeholder="Dupont">
+                        </div>
+                    </div>
+
+                    <!-- Professionnel (hidden by default) -->
+                    <div id="formProfessionnel" class="hidden grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Raison sociale <span class="text-red-500">*</span></label>
+                            <input type="text" class="input-field" placeholder="Entreprise SAS">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SIRET</label>
+                            <input type="text" class="input-field" placeholder="123 456 789 00012">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">N° TVA Intracommunautaire</label>
+                            <input type="text" class="input-field" placeholder="FR12345678901">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact (Prénom)</label>
+                            <input type="text" class="input-field" placeholder="Marie">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact (Nom)</label>
+                            <input type="text" class="input-field" placeholder="Martin">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coordonnées -->
+                <div class="space-y-4 mt-6">
+                    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs">2</span>
+                        Coordonnées
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                            <input type="email" class="input-field" placeholder="jean.dupont@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone <span class="text-red-500">*</span></label>
+                            <input type="tel" class="input-field" placeholder="06 12 34 56 78">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone secondaire</label>
+                            <input type="tel" class="input-field" placeholder="01 23 45 67 89">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adresse -->
+                <div class="space-y-4 mt-6">
+                    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs">3</span>
+                        Adresse de facturation
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Adresse <span class="text-red-500">*</span></label>
+                            <input type="text" class="input-field" placeholder="12 Rue des Lilas">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Complément d'adresse</label>
+                            <input type="text" class="input-field" placeholder="Bâtiment A, Apt 34">
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Code postal <span class="text-red-500">*</span></label>
+                                <input type="text" class="input-field" placeholder="75001">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ville <span class="text-red-500">*</span></label>
+                                <input type="text" class="input-field" placeholder="Paris">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adresse chantier différente -->
+                    <label class="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                        <input type="checkbox" class="rounded border-gray-300 text-indigo-600">
+                        L'adresse du chantier est différente de l'adresse de facturation
+                    </label>
+                </div>
+
+                <!-- Notes -->
+                <div class="space-y-4 mt-6">
+                    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs">4</span>
+                        Informations complémentaires
+                    </h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes internes</label>
+                        <textarea class="input-field h-20" placeholder="Commentaires privés sur ce client (non visibles par le client)..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Source / Origine</label>
+                        <select class="input-field">
+                            <option value="">Non renseignée</option>
+                            <option>Bouche à oreille</option>
+                            <option>Site internet</option>
+                            <option>Réseaux sociaux</option>
+                            <option>Ancien client</option>
+                            <option>Partenaire / Apporteur</option>
+                            <option>Salon / Foire</option>
+                            <option>Autre</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+                <p class="text-xs text-gray-500">
+                    <span class="text-red-500">*</span> Champs obligatoires
+                </p>
+                <div class="flex gap-3">
+                    <button onclick="closeClientModal()" class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium">
+                        Annuler
+                    </button>
+                    <button onclick="saveClient()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Créer le client
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Batiprix Modal functions
+        function openBatiprixModal() {
+            document.getElementById('batiprixModal').classList.remove('hidden');
+            document.getElementById('batiprixModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBatiprixModal() {
+            document.getElementById('batiprixModal').classList.add('hidden');
+            document.getElementById('batiprixModal').classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        function saveBatiprixConfig() {
+            alert('Configuration Batiprix enregistrée !');
+            closeBatiprixModal();
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('batiprixApiKey');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // Close Batiprix modal on backdrop click
+        document.getElementById('batiprixModal')?.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('batiprixModal')) {
+                closeBatiprixModal();
+            }
+        });
+
+        // Client Modal functions
+        function openClientModal() {
+            document.getElementById('clientModal').classList.remove('hidden');
+            document.getElementById('clientModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeClientModal() {
+            document.getElementById('clientModal').classList.add('hidden');
+            document.getElementById('clientModal').classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        function saveClient() {
+            // Simulate saving
+            alert('Client créé avec succès !');
+            closeClientModal();
+        }
+
+        // Toggle between Particulier / Professionnel forms
+        document.querySelectorAll('input[name="typeClient"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const formParticulier = document.getElementById('formParticulier');
+                const formProfessionnel = document.getElementById('formProfessionnel');
+
+                // Update styling
+                document.querySelectorAll('input[name="typeClient"]').forEach(r => {
+                    const label = r.closest('label');
+                    if (r.checked) {
+                        label.classList.remove('border-gray-200');
+                        label.classList.add('border-indigo-500', 'bg-indigo-50');
+                    } else {
+                        label.classList.add('border-gray-200');
+                        label.classList.remove('border-indigo-500', 'bg-indigo-50');
+                    }
+                });
+
+                if (e.target.value === 'particulier') {
+                    formParticulier.classList.remove('hidden');
+                    formProfessionnel.classList.add('hidden');
+                } else {
+                    formParticulier.classList.add('hidden');
+                    formProfessionnel.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('clientModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('clientModal')) {
+                closeClientModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeClientModal();
+            }
+        });
+
+        // Donut Chart
+        const ctx = document.getElementById('rentabiliteChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Main d\'œuvre', 'Matériaux', 'Frais généraux', 'Bénéfice'],
+                datasets: [{
+                    data: [3240, 2890, 485, 2000],
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#a855f7', '#10b981'],
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

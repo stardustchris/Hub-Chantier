@@ -146,6 +146,9 @@ class SQLAlchemyChantierRepository(ChantierRepository):
                 model.date_debut = chantier.date_debut
                 model.date_fin = chantier.date_fin
                 model.maitre_ouvrage = chantier.maitre_ouvrage
+                model.type_travaux = chantier.type_travaux
+                model.batiment_plus_2ans = chantier.batiment_plus_2ans
+                model.usage_habitation = chantier.usage_habitation
                 model.conducteur_ids = list(chantier.conducteur_ids)
                 model.chef_chantier_ids = list(chantier.chef_chantier_ids)
                 model.updated_at = chantier.updated_at
@@ -548,6 +551,9 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             date_fin=model.date_fin,
             conducteur_ids=conducteur_ids,
             chef_chantier_ids=chef_ids,
+            type_travaux=model.type_travaux,
+            batiment_plus_2ans=model.batiment_plus_2ans,
+            usage_habitation=model.usage_habitation,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
@@ -591,6 +597,9 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             date_fin=chantier.date_fin,
             conducteur_ids=list(chantier.conducteur_ids),
             chef_chantier_ids=list(chantier.chef_chantier_ids),
+            type_travaux=chantier.type_travaux,
+            batiment_plus_2ans=chantier.batiment_plus_2ans,
+            usage_habitation=chantier.usage_habitation,
             created_at=chantier.created_at,
             updated_at=chantier.updated_at,
         )

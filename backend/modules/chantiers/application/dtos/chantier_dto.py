@@ -45,6 +45,10 @@ class ChantierDTO:
     created_at: datetime
     updated_at: datetime
     contacts: List[ContactDTO] = field(default_factory=list)  # Liste des contacts (CHT-07)
+    # DEV-TVA: Contexte TVA pour pre-remplissage taux devis
+    type_travaux: Optional[str] = None
+    batiment_plus_2ans: Optional[bool] = None
+    usage_habitation: Optional[bool] = None
 
     @classmethod
     def from_entity(cls, chantier: Chantier) -> "ChantierDTO":
@@ -95,6 +99,9 @@ class ChantierDTO:
             created_at=chantier.created_at,
             updated_at=chantier.updated_at,
             contacts=[],  # Les contacts sont chargés séparément via l'infrastructure
+            type_travaux=chantier.type_travaux,
+            batiment_plus_2ans=chantier.batiment_plus_2ans,
+            usage_habitation=chantier.usage_habitation,
         )
 
 
@@ -144,6 +151,10 @@ class CreateChantierDTO:
     description: Optional[str] = None
     conducteur_ids: Optional[List[int]] = None  # CHT-05
     chef_chantier_ids: Optional[List[int]] = None  # CHT-06
+    # DEV-TVA: Contexte TVA
+    type_travaux: Optional[str] = None
+    batiment_plus_2ans: Optional[bool] = None
+    usage_habitation: Optional[bool] = None
 
 
 @dataclass
@@ -168,6 +179,10 @@ class UpdateChantierDTO:
     date_fin: Optional[str] = None
     description: Optional[str] = None
     maitre_ouvrage: Optional[str] = None
+    # DEV-TVA: Contexte TVA
+    type_travaux: Optional[str] = None
+    batiment_plus_2ans: Optional[bool] = None
+    usage_habitation: Optional[bool] = None
 
 
 @dataclass(frozen=True)

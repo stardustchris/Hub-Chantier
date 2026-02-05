@@ -452,3 +452,152 @@ class TestResolveMarge:
             debourses=[debourse_moe],
         )
         assert result == Decimal("15")
+
+
+class TestVentilationTVA:
+    """DEV-TVA: Tests pour la ventilation TVA multi-taux."""
+
+    def setup_method(self):
+        self.mock_devis_repo = Mock(spec=DevisRepository)
+        self.mock_lot_repo = Mock(spec=LotDevisRepository)
+        self.mock_ligne_repo = Mock(spec=LigneDevisRepository)
+        self.mock_debourse_repo = Mock(spec=DebourseDetailRepository)
+        self.mock_journal_repo = Mock(spec=JournalDevisRepository)
+        self.use_case = CalculerTotauxDevisUseCase(
+            devis_repository=self.mock_devis_repo,
+            lot_repository=self.mock_lot_repo,
+            ligne_repository=self.mock_ligne_repo,
+            debourse_repository=self.mock_debourse_repo,
+            journal_repository=self.mock_journal_repo,
+        )
+
+    def _setup_mocks(self, devis, lots, lignes_by_lot):
+        """Helper pour configurer les mocks."""
+        self.mock_devis_repo.find_by_id.return_value = devis
+        self.mock_lot_repo.find_by_devis.return_value = lots
+        self.mock_ligne_repo.find_by_lot.side_effect = [
+            lignes_by_lot.get(lot.id, []) for lot in lots
+        ]
+        self.mock_debourse_repo.find_by_ligne.return_value = []
+        self.mock_devis_repo.save.return_value = devis
+        self.mock_lot_repo.save.side_effect = lambda l: l
+        self.mock_ligne_repo.save.side_effect = lambda l: l
+        self.mock_journal_repo.save.return_value = Mock()
+
+    def test_ventilation_mono_taux_20(self):
+        """Test: ventilation avec un seul taux (20%)."""
+        devis = _make_devis()
+        lot = LotDevis(id=10, devis_id=1, code_lot="LOT-001", libelle="Lot 1")
+        ligne1 = LigneDevis(
+            id=100, lot_devis_id=10, libelle="L1",
+            quantite=Decimal("5"), prix_unitaire_ht=Decimal("100"),
+            taux_tva=Decimal("20"),
+        )
+        ligne2 = LigneDevis(
+            id=101, lot_devis_id=10, libelle="L2",
+            quantite=Decimal("3"), prix_unitaire_ht=Decimal("200"),
+            taux_tva=Decimal("20"),
+        )
+
+        self._setup_mocks(devis, [lot], {10: [ligne1, ligne2]})
+        result = self.use_case.execute(devis_id=1, updated_by=1)
+
+        # Total HT = 500 + 600 = 1100, tout a 20%
+        ventilation = result["ventilation_tva"]
+        assert len(ventilation) == 1
+        assert ventilation[0]["taux"] == "20"
+        assert Decimal(ventilation[0]["base_ht"]) == Decimal("1100.00")
+        assert Decimal(ventilation[0]["montant_tva"]) == Decimal("220.00")
+
+    def test_ventilation_multi_taux(self):
+        """Test: ventilation avec plusieurs taux (5.5%, 10%, 20%)."""
+        devis = _make_devis()
+        lot = LotDevis(id=10, devis_id=1, code_lot="LOT-001", libelle="Lot 1")
+        ligne_55 = LigneDevis(
+            id=100, lot_devis_id=10, libelle="Isolation",
+            quantite=Decimal("1"), prix_unitaire_ht=Decimal("1000"),
+            taux_tva=Decimal("5.5"),
+        )
+        ligne_10 = LigneDevis(
+            id=101, lot_devis_id=10, libelle="Renovation",
+            quantite=Decimal("1"), prix_unitaire_ht=Decimal("2000"),
+            taux_tva=Decimal("10"),
+        )
+        ligne_20 = LigneDevis(
+            id=102, lot_devis_id=10, libelle="Neuf",
+            quantite=Decimal("1"), prix_unitaire_ht=Decimal("3000"),
+            taux_tva=Decimal("20"),
+        )
+
+        self._setup_mocks(devis, [lot], {10: [ligne_55, ligne_10, ligne_20]})
+        result = self.use_case.execute(devis_id=1, updated_by=1)
+
+        ventilation = result["ventilation_tva"]
+        assert len(ventilation) == 3
+
+        # Trie par taux croissant
+        assert ventilation[0]["taux"] == "5.5"
+        assert Decimal(ventilation[0]["base_ht"]) == Decimal("1000.00")
+        assert Decimal(ventilation[0]["montant_tva"]) == Decimal("55.00")
+
+        assert ventilation[1]["taux"] == "10"
+        assert Decimal(ventilation[1]["base_ht"]) == Decimal("2000.00")
+        assert Decimal(ventilation[1]["montant_tva"]) == Decimal("200.00")
+
+        assert ventilation[2]["taux"] == "20"
+        assert Decimal(ventilation[2]["base_ht"]) == Decimal("3000.00")
+        assert Decimal(ventilation[2]["montant_tva"]) == Decimal("600.00")
+
+    def test_ventilation_coherence_totaux(self):
+        """Test: sum(montant_tva) + total_ht == total_ttc."""
+        devis = _make_devis()
+        lot = LotDevis(id=10, devis_id=1, code_lot="LOT-001", libelle="Lot 1")
+        ligne_10 = LigneDevis(
+            id=100, lot_devis_id=10, libelle="Renovation",
+            quantite=Decimal("10"), prix_unitaire_ht=Decimal("150"),
+            taux_tva=Decimal("10"),
+        )
+        ligne_20 = LigneDevis(
+            id=101, lot_devis_id=10, libelle="Standard",
+            quantite=Decimal("5"), prix_unitaire_ht=Decimal("200"),
+            taux_tva=Decimal("20"),
+        )
+
+        self._setup_mocks(devis, [lot], {10: [ligne_10, ligne_20]})
+        result = self.use_case.execute(devis_id=1, updated_by=1)
+
+        total_ht = Decimal(result["montant_total_ht"])
+        total_ttc = Decimal(result["montant_total_ttc"])
+        total_tva = sum(
+            Decimal(v["montant_tva"]) for v in result["ventilation_tva"]
+        )
+
+        assert total_ht + total_tva == total_ttc
+
+    def test_ventilation_devis_vide(self):
+        """Test: ventilation vide pour un devis sans lignes."""
+        devis = _make_devis()
+        self._setup_mocks(devis, [], {})
+        result = self.use_case.execute(devis_id=1, updated_by=1)
+
+        assert result["ventilation_tva"] == []
+
+    def test_ventilation_arrondis(self):
+        """Test: montants arrondis a 2 decimales."""
+        devis = _make_devis()
+        lot = LotDevis(id=10, devis_id=1, code_lot="LOT-001", libelle="Lot 1")
+        ligne = LigneDevis(
+            id=100, lot_devis_id=10, libelle="L",
+            quantite=Decimal("3"), prix_unitaire_ht=Decimal("33.33"),
+            taux_tva=Decimal("5.5"),
+        )
+
+        self._setup_mocks(devis, [lot], {10: [ligne]})
+        result = self.use_case.execute(devis_id=1, updated_by=1)
+
+        ventilation = result["ventilation_tva"]
+        # Verifier que les montants n'ont que 2 decimales
+        base_ht = Decimal(ventilation[0]["base_ht"])
+        montant_tva = Decimal(ventilation[0]["montant_tva"])
+        assert base_ht == base_ht.quantize(Decimal("0.01"))
+        assert montant_tva == montant_tva.quantize(Decimal("0.01"))

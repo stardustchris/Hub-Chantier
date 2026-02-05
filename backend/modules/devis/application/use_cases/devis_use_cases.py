@@ -1,10 +1,12 @@
 """Use Cases pour la gestion des devis.
 
 DEV-03: Creation devis structure.
+DEV-TVA: Ventilation TVA multi-taux et mention TVA reduite.
 """
 
 from datetime import date, datetime
-from typing import Optional
+from decimal import Decimal
+from typing import Callable, Optional, Protocol, Tuple
 
 from ...domain.entities.devis import Devis
 from ...domain.entities.journal_devis import JournalDevis
@@ -20,10 +22,17 @@ from ..dtos.devis_dtos import (
     DevisDTO,
     DevisDetailDTO,
     DevisListDTO,
+    VentilationTVADTO,
+    MENTION_TVA_REDUITE,
 )
 from ..dtos.lot_dtos import LotDevisDTO
 from ..dtos.ligne_dtos import LigneDevisDTO
 from ..dtos.debourse_dtos import DebourseDetailDTO
+from ...domain.value_objects.taux_tva import TauxTVA
+
+# DEV-TVA: Type pour le resolveur de contexte TVA chantier (evite couplage inter-modules)
+# Signature: (chantier_ref) -> (type_travaux, batiment_plus_2ans, usage_habitation) ou None
+ChantierTVAResolver = Callable[[str], Optional[Tuple[Optional[str], Optional[bool], Optional[bool]]]]
 
 
 class DevisNotFoundError(Exception):
@@ -55,9 +64,11 @@ class CreateDevisUseCase:
         self,
         devis_repository: DevisRepository,
         journal_repository: JournalDevisRepository,
+        chantier_tva_resolver: Optional[ChantierTVAResolver] = None,
     ):
         self._devis_repository = devis_repository
         self._journal_repository = journal_repository
+        self._chantier_tva_resolver = chantier_tva_resolver
 
     def execute(self, dto: DevisCreateDTO, created_by: int) -> DevisDTO:
         """Cree un nouveau devis en statut Brouillon.
@@ -71,6 +82,19 @@ class CreateDevisUseCase:
         """
         numero = self._devis_repository.generate_numero()
 
+        # DEV-TVA: Pre-remplissage du taux TVA par defaut selon le contexte chantier
+        taux_tva_defaut = dto.taux_tva_defaut
+        if dto.chantier_ref and self._chantier_tva_resolver:
+            # Utiliser le taux du DTO seulement si l'utilisateur l'a explicitement change
+            # (i.e. different du defaut 20%)
+            if taux_tva_defaut == Decimal("20"):
+                contexte = self._chantier_tva_resolver(dto.chantier_ref)
+                if contexte:
+                    type_travaux, bat_2ans, usage_hab = contexte
+                    taux_tva_defaut = TauxTVA.taux_defaut_pour_chantier(
+                        type_travaux, bat_2ans, usage_hab,
+                    )
+
         devis = Devis(
             numero=numero,
             client_nom=dto.client_nom,
@@ -82,7 +106,7 @@ class CreateDevisUseCase:
             client_telephone=dto.client_telephone,
             date_creation=date.today(),
             date_validite=dto.date_validite,
-            taux_tva_defaut=dto.taux_tva_defaut,
+            taux_tva_defaut=taux_tva_defaut,
             taux_marge_global=dto.taux_marge_global,
             taux_marge_moe=dto.taux_marge_moe,
             taux_marge_materiaux=dto.taux_marge_materiaux,
@@ -255,6 +279,8 @@ class GetDevisUseCase:
 
         lots = self._lot_repository.find_by_devis(devis_id)
         lot_dtos = []
+        ventilation: dict[str, Decimal] = {}  # taux -> base_ht
+
         for lot in lots:
             lignes = self._ligne_repository.find_by_lot(lot.id)
             ligne_dtos = []
@@ -262,9 +288,34 @@ class GetDevisUseCase:
                 debourses = self._debourse_repository.find_by_ligne(ligne.id)
                 debourse_dtos = [DebourseDetailDTO.from_entity(d) for d in debourses]
                 ligne_dtos.append(LigneDevisDTO.from_entity(ligne, debourse_dtos))
+                # DEV-TVA: Accumuler base HT par taux
+                taux_key = str(ligne.taux_tva)
+                ventilation[taux_key] = ventilation.get(taux_key, Decimal("0")) + ligne.total_ht
             lot_dtos.append(LotDevisDTO.from_entity(lot, ligne_dtos))
 
-        return DevisDetailDTO.from_entity(devis, lot_dtos)
+        dto = DevisDetailDTO.from_entity(devis, lot_dtos)
+
+        # DEV-TVA: Construire ventilation TVA triee par taux
+        dto.ventilation_tva = sorted(
+            [
+                VentilationTVADTO(
+                    taux=taux,
+                    base_ht=str(base_ht.quantize(Decimal("0.01"))),
+                    montant_tva=str(
+                        (base_ht * Decimal(taux) / Decimal("100")).quantize(Decimal("0.01"))
+                    ),
+                )
+                for taux, base_ht in ventilation.items()
+            ],
+            key=lambda v: Decimal(v.taux),
+        )
+
+        # DEV-TVA: Mention legale si taux reduit detecte (reforme 01/2025)
+        has_taux_reduit = any(Decimal(t) < Decimal("20") for t in ventilation.keys())
+        if has_taux_reduit:
+            dto.mention_tva_reduite = MENTION_TVA_REDUITE
+
+        return dto
 
 
 class ListDevisUseCase:

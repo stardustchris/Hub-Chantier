@@ -87,6 +87,7 @@ class UpdateChantierUseCase:
             self._update_coordonnees_et_contact(chantier, dto, changes)
             self._update_dates_et_heures(chantier, dto, changes)
             self._update_photo_couverture(chantier, dto, changes)
+            self._update_contexte_tva(chantier, dto, changes)
 
             # Sauvegarder et publier l'event
             chantier = self.chantier_repo.save(chantier)
@@ -193,6 +194,18 @@ class UpdateChantierUseCase:
         if dto.photo_couverture is not None:
             chantier.update_photo_couverture(dto.photo_couverture)
             changes.append(("photo_couverture", dto.photo_couverture))
+
+    def _update_contexte_tva(self, chantier: Any, dto: UpdateChantierDTO, changes: List[Tuple[str, str]]) -> None:
+        """Met a jour le contexte TVA du chantier (DEV-TVA)."""
+        if dto.type_travaux is not None:
+            chantier.type_travaux = dto.type_travaux
+            changes.append(("type_travaux", dto.type_travaux))
+        if dto.batiment_plus_2ans is not None:
+            chantier.batiment_plus_2ans = dto.batiment_plus_2ans
+            changes.append(("batiment_plus_2ans", str(dto.batiment_plus_2ans)))
+        if dto.usage_habitation is not None:
+            chantier.usage_habitation = dto.usage_habitation
+            changes.append(("usage_habitation", str(dto.usage_habitation)))
 
     def _publish_update_event(self, chantier: Any, changes: List[Tuple[str, str]]) -> None:
         """Publie l'événement de mise à jour si des changements ont été effectués."""

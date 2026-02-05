@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, JSON, ForeignKey, Index, Boolean
 from sqlalchemy.orm import relationship
 
 from shared.infrastructure.database_base import Base
@@ -70,6 +70,11 @@ class ChantierModel(Base):
     # Dates prévisionnelles (CHT-20)
     date_debut = Column(Date, nullable=True)
     date_fin = Column(Date, nullable=True)
+
+    # DEV-TVA: Contexte TVA pour pre-remplissage taux devis
+    type_travaux = Column(String(50), nullable=True)  # "renovation", "renovation_energetique", "construction_neuve"
+    batiment_plus_2ans = Column(Boolean, nullable=True)
+    usage_habitation = Column(Boolean, nullable=True)
 
     # Responsables (CHT-05, CHT-06) - DEPRECATED: Utiliser conducteurs_rel/chefs_rel
     # Ces colonnes JSON sont conservées pour backward compatibility mais les tables

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, Edit2, Check, X, Loader2 } from 'lucide-react'
 import type { LigneDevis, LigneDevisCreate, LigneDevisUpdate } from '../../types'
+import { TAUX_TVA_OPTIONS } from '../../types'
 
 const formatEUR = (value: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
@@ -33,6 +34,7 @@ export default function LigneDevisTable({
     quantite: 0,
     prix_unitaire_ht: 0,
     marge_ligne_pct: undefined as number | undefined,
+    taux_tva: 20,
   })
   const [newForm, setNewForm] = useState({
     designation: '',
@@ -40,6 +42,7 @@ export default function LigneDevisTable({
     quantite: 1,
     prix_unitaire_ht: 0,
     marge_ligne_pct: undefined as number | undefined,
+    taux_tva: 20,
   })
 
   const startEdit = (ligne: LigneDevis) => {
@@ -50,6 +53,7 @@ export default function LigneDevisTable({
       quantite: Number(ligne.quantite),
       prix_unitaire_ht: Number(ligne.prix_unitaire_ht),
       marge_ligne_pct: ligne.marge_ligne_pct != null ? Number(ligne.marge_ligne_pct) : undefined,
+      taux_tva: Number(ligne.taux_tva),
     })
   }
 
@@ -75,8 +79,9 @@ export default function LigneDevisTable({
         quantite: newForm.quantite,
         prix_unitaire_ht: newForm.prix_unitaire_ht,
         marge_ligne_pct: newForm.marge_ligne_pct,
+        taux_tva: newForm.taux_tva,
       })
-      setNewForm({ designation: '', unite: 'u', quantite: 1, prix_unitaire_ht: 0, marge_ligne_pct: undefined })
+      setNewForm({ designation: '', unite: 'u', quantite: 1, prix_unitaire_ht: 0, marge_ligne_pct: undefined, taux_tva: 20 })
       setShowAdd(false)
     } finally {
       setLoading(false)
@@ -103,6 +108,7 @@ export default function LigneDevisTable({
             <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Unite</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Qte</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">PU HT</th>
+            <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">TVA</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Total HT</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Déboursé</th>
             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">PV HT</th>
@@ -153,6 +159,17 @@ export default function LigneDevisTable({
                       step="0.01"
                     />
                   </td>
+                  <td className="px-3 py-2">
+                    <select
+                      value={editForm.taux_tva}
+                      onChange={(e) => setEditForm({ ...editForm, taux_tva: Number(e.target.value) })}
+                      className="w-20 border border-gray-300 rounded px-1 py-1 text-sm text-center"
+                    >
+                      {TAUX_TVA_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.value}%</option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-3 py-2 text-right text-gray-500">-</td>
                   <td className="px-3 py-2 text-right text-gray-500">-</td>
                   <td className="px-3 py-2 text-right text-gray-500">-</td>
@@ -180,6 +197,11 @@ export default function LigneDevisTable({
                   <td className="px-3 py-2 text-center text-gray-500">{ligne.unite}</td>
                   <td className="px-3 py-2 text-right">{Number(ligne.quantite)}</td>
                   <td className="px-3 py-2 text-right">{formatEUR(Number(ligne.prix_unitaire_ht))}</td>
+                  <td className="px-3 py-2 text-center">
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${Number(ligne.taux_tva) < 20 ? 'bg-amber-100 text-amber-700' : 'text-gray-500'}`}>
+                      {Number(ligne.taux_tva)}%
+                    </span>
+                  </td>
                   <td className="px-3 py-2 text-right font-medium">{formatEUR(Number(ligne.montant_ht))}</td>
                   <td className="px-3 py-2 text-right text-orange-600">{formatEUR(Number(ligne.debourse_sec))}</td>
                   <td className="px-3 py-2 text-right text-green-600 font-medium">{formatEUR(Number(ligne.prix_revient))}</td>
@@ -244,6 +266,17 @@ export default function LigneDevisTable({
                   className="w-24 border border-gray-300 rounded px-2 py-1 text-sm text-right"
                   step="0.01"
                 />
+              </td>
+              <td className="px-3 py-2">
+                <select
+                  value={newForm.taux_tva}
+                  onChange={(e) => setNewForm({ ...newForm, taux_tva: Number(e.target.value) })}
+                  className="w-20 border border-gray-300 rounded px-1 py-1 text-sm text-center"
+                >
+                  {TAUX_TVA_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.value}%</option>
+                  ))}
+                </select>
               </td>
               <td className="px-3 py-2 text-right text-gray-500">-</td>
               <td className="px-3 py-2 text-right text-gray-500">-</td>

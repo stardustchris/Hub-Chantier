@@ -1,6 +1,6 @@
-import type { DevisDetail, TypeDebourse } from '../../types'
+import type { DevisDetail, TypeDebourse, VentilationTVA } from '../../types'
 import { TYPE_DEBOURSE_LABELS } from '../../types'
-import { TrendingUp, TrendingDown, Shield } from 'lucide-react'
+import { TrendingUp, TrendingDown, Shield, AlertTriangle } from 'lucide-react'
 
 const formatEUR = (value: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
@@ -54,11 +54,15 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
   const margeGlobalePct = Number(devis.taux_marge_global)
   const isPositive = margeGlobalePct >= 0
 
-  // Calcul recap financier (DEV-22)
+  // Calcul recap financier (DEV-22 + DEV-TVA)
   const totalHT = Number(devis.montant_total_ht)
-  const tvaRate = Number(devis.taux_tva_defaut) / 100
-  const montantTVA = totalHT * tvaRate
   const totalTTC = Number(devis.montant_total_ttc)
+
+  // DEV-TVA: Ventilation multi-taux (fallback sur taux defaut si absent)
+  const ventilationTVA: VentilationTVA[] = devis.ventilation_tva?.length
+    ? devis.ventilation_tva
+    : [{ taux: Number(devis.taux_tva_defaut), base_ht: totalHT, montant_tva: totalHT * (Number(devis.taux_tva_defaut) / 100) }]
+  const montantTVA = ventilationTVA.reduce((sum, v) => sum + Number(v.montant_tva), 0)
   const retenueGarantiePct = Number(devis.retenue_garantie_pct ?? 0)
   const montantRetenue = devis.montant_retenue_garantie != null
     ? Number(devis.montant_retenue_garantie)
@@ -108,10 +112,18 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
             <span className="text-sm text-gray-600">Total HT</span>
             <span className="text-sm font-medium text-gray-900">{formatEUR(totalHT)}</span>
           </div>
-          <div className="flex items-center justify-between px-5 py-3">
-            <span className="text-sm text-gray-600">TVA ({devis.taux_tva_defaut}%)</span>
-            <span className="text-sm font-medium text-gray-900">{formatEUR(montantTVA)}</span>
-          </div>
+          {/* DEV-TVA: Ventilation TVA multi-taux */}
+          {ventilationTVA.map((v) => (
+            <div key={v.taux} className="flex items-center justify-between px-5 py-3">
+              <span className="text-sm text-gray-600">
+                TVA {Number(v.taux)}%
+                {ventilationTVA.length > 1 && (
+                  <span className="text-xs text-gray-400 ml-1">(base {formatEUR(Number(v.base_ht))})</span>
+                )}
+              </span>
+              <span className="text-sm font-medium text-gray-900">{formatEUR(Number(v.montant_tva))}</span>
+            </div>
+          ))}
           <div className="flex items-center justify-between px-5 py-3 bg-gray-50">
             <span className="text-sm font-semibold text-gray-700">Total TTC</span>
             <span className="text-sm font-bold text-gray-900">{formatEUR(totalTTC)}</span>
@@ -132,6 +144,17 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
             <span className="text-lg font-bold text-blue-800">{formatEUR(netAPayer)}</span>
           </div>
         </div>
+        {/* DEV-TVA: Mention legale TVA reduite (reforme 01/2025) */}
+        {devis.mention_tva_reduite && (
+          <div className="px-5 py-3 bg-amber-50 border-t border-amber-200">
+            <div className="flex gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 leading-relaxed">
+                {devis.mention_tva_reduite}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Marges par lot */}

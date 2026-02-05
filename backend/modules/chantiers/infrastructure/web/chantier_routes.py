@@ -136,6 +136,10 @@ class CreateChantierRequest(BaseModel):
     date_debut_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
     date_fin_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
     description: Optional[str] = None
+    # DEV-TVA: Contexte TVA
+    type_travaux: Optional[str] = None  # "renovation", "renovation_energetique", "construction_neuve"
+    batiment_plus_2ans: Optional[bool] = None
+    usage_habitation: Optional[bool] = None
 
 
 class UpdateChantierRequest(BaseModel):
@@ -156,6 +160,10 @@ class UpdateChantierRequest(BaseModel):
     date_fin_prevue: Optional[str] = None  # Renommé pour frontend
     description: Optional[str] = None
     maitre_ouvrage: Optional[str] = None
+    # DEV-TVA: Contexte TVA
+    type_travaux: Optional[str] = None
+    batiment_plus_2ans: Optional[bool] = None
+    usage_habitation: Optional[bool] = None
 
 
 class ChangeStatutRequest(BaseModel):
@@ -313,6 +321,19 @@ class ChantierResponse(BaseModel):
         description="Date de dernière modification (ISO 8601)",
         example="2026-01-28T14:22:00Z"
     )
+    # DEV-TVA: Contexte TVA pour pre-remplissage
+    type_travaux: Optional[str] = Field(
+        None,
+        description="Type de travaux: renovation, renovation_energetique, construction_neuve"
+    )
+    batiment_plus_2ans: Optional[bool] = Field(
+        None,
+        description="Batiment acheve depuis plus de 2 ans"
+    )
+    usage_habitation: Optional[bool] = Field(
+        None,
+        description="Immeuble affecte a l'habitation"
+    )
 
     class Config:
         from_attributes = True
@@ -422,6 +443,9 @@ async def create_chantier(
             date_debut=request.date_debut_prevue,  # Mapping frontend -> backend
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
+            type_travaux=request.type_travaux,
+            batiment_plus_2ans=request.batiment_plus_2ans,
+            usage_habitation=request.usage_habitation,
         )
 
         # Publish event after database commit
@@ -637,6 +661,9 @@ def update_chantier(
             date_fin=request.date_fin_prevue,  # Mapping frontend -> backend
             description=request.description,
             maitre_ouvrage=request.maitre_ouvrage,
+            type_travaux=request.type_travaux,
+            batiment_plus_2ans=request.batiment_plus_2ans,
+            usage_habitation=request.usage_habitation,
         )
         response = _transform_chantier_response(result, controller, user_repo)
         return response
@@ -1656,4 +1683,7 @@ def _transform_chantier_response(
         ouvriers=ouvriers,
         created_at=chantier_dict.get("created_at", ""),
         updated_at=chantier_dict.get("updated_at"),
+        type_travaux=chantier_dict.get("type_travaux"),
+        batiment_plus_2ans=chantier_dict.get("batiment_plus_2ans"),
+        usage_habitation=chantier_dict.get("usage_habitation"),
     )

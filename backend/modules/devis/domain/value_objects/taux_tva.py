@@ -140,6 +140,35 @@ class TauxTVA:
         """
         return (montant_ht * self._taux / Decimal("100")).quantize(Decimal("0.01"))
 
+    @staticmethod
+    def taux_defaut_pour_chantier(
+        type_travaux: Optional[str],
+        batiment_plus_2ans: Optional[bool],
+        usage_habitation: Optional[bool],
+    ) -> Decimal:
+        """Determine le taux TVA par defaut selon le contexte chantier.
+
+        Regle BTP France:
+        - Batiment > 2 ans + habitation + renovation energetique -> 5.5%
+        - Batiment > 2 ans + habitation + renovation standard -> 10%
+        - Tout le reste -> 20%
+
+        Args:
+            type_travaux: "renovation", "renovation_energetique", "construction_neuve" ou None.
+            batiment_plus_2ans: True si le batiment a plus de 2 ans.
+            usage_habitation: True si le batiment est a usage d'habitation.
+
+        Returns:
+            Le taux TVA par defaut en Decimal.
+        """
+        if not batiment_plus_2ans or not usage_habitation:
+            return Decimal("20")
+        if type_travaux == "renovation_energetique":
+            return Decimal("5.5")
+        if type_travaux == "renovation":
+            return Decimal("10")
+        return Decimal("20")
+
     def __eq__(self, other: object) -> bool:
         """Egalite basee sur le taux."""
         if not isinstance(other, TauxTVA):

@@ -179,11 +179,40 @@ def get_relance_devis_repository(db: Session = Depends(get_db)) -> RelanceDevisR
 # Use Cases - Devis CRUD
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _build_chantier_tva_resolver(db: Session):
+    """Construit un resolveur de contexte TVA chantier (DEV-TVA).
+
+    Retourne un callable qui, a partir d'un chantier_ref (code ou id),
+    renvoie (type_travaux, batiment_plus_2ans, usage_habitation) ou None.
+    Evite le couplage direct entre modules devis et chantiers.
+    """
+    from modules.chantiers.infrastructure.persistence.chantier_model import ChantierModel
+
+    def resolver(chantier_ref: str):
+        model = (
+            db.query(ChantierModel)
+            .filter(
+                (ChantierModel.code == chantier_ref) | (ChantierModel.id == int(chantier_ref) if chantier_ref.isdigit() else False)
+            )
+            .filter(ChantierModel.deleted_at.is_(None))
+            .first()
+        )
+        if not model:
+            return None
+        return (model.type_travaux, model.batiment_plus_2ans, model.usage_habitation)
+
+    return resolver
+
+
 def get_create_devis_use_case(
+    db: Session = Depends(get_db),
     devis_repo: DevisRepository = Depends(get_devis_repository),
     journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
 ) -> CreateDevisUseCase:
-    return CreateDevisUseCase(devis_repo, journal_repo)
+    return CreateDevisUseCase(
+        devis_repo, journal_repo,
+        chantier_tva_resolver=_build_chantier_tva_resolver(db),
+    )
 
 
 def get_update_devis_use_case(

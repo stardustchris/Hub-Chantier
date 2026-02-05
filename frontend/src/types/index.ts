@@ -160,7 +160,19 @@ export interface Chantier {
   ouvriers?: User[]  // Ouvriers, intérimaires, sous-traitants assignés
   created_at: string
   updated_at?: string
+  // DEV-TVA: Contexte TVA
+  type_travaux?: string  // "renovation", "renovation_energetique", "construction_neuve"
+  batiment_plus_2ans?: boolean
+  usage_habitation?: boolean
 }
+
+// DEV-TVA: Options pour le type de travaux
+export type TypeTravaux = 'renovation' | 'renovation_energetique' | 'construction_neuve'
+export const TYPE_TRAVAUX_OPTIONS: { value: TypeTravaux; label: string; tva: string }[] = [
+  { value: 'renovation', label: 'Renovation', tva: '10%' },
+  { value: 'renovation_energetique', label: 'Renovation energetique', tva: '5.5%' },
+  { value: 'construction_neuve', label: 'Construction neuve', tva: '20%' },
+]
 
 export interface ChantierCreate {
   nom: string
@@ -175,6 +187,10 @@ export interface ChantierCreate {
   date_debut_prevue?: string
   date_fin_prevue?: string
   description?: string
+  // DEV-TVA: Contexte TVA
+  type_travaux?: TypeTravaux
+  batiment_plus_2ans?: boolean
+  usage_habitation?: boolean
 }
 
 export interface ChantierUpdate {
@@ -193,6 +209,10 @@ export interface ChantierUpdate {
   date_fin_prevue?: string
   description?: string
   maitre_ouvrage?: string
+  // DEV-TVA: Contexte TVA
+  type_travaux?: TypeTravaux
+  batiment_plus_2ans?: boolean
+  usage_habitation?: boolean
 }
 
 // Statuts de chantier avec labels, couleurs et icones
@@ -1709,6 +1729,13 @@ export interface DevisUpdate {
   conducteur_id?: number
 }
 
+// DEV-TVA: Ventilation TVA par taux (art. 242 nonies A CGI)
+export interface VentilationTVA {
+  taux: number
+  base_ht: number
+  montant_tva: number
+}
+
 // DevisDetail (matches backend DevisDetailDTO)
 export interface DevisDetail {
   id: number
@@ -1750,6 +1777,9 @@ export interface DevisDetail {
   label_variante?: LabelVariante
   version_commentaire?: string
   version_figee_at?: string
+  // DEV-TVA: Ventilation TVA multi-taux et mention legale
+  ventilation_tva?: VentilationTVA[]
+  mention_tva_reduite?: string
 }
 
 // Lots de devis (matches backend LotDevisDTO)

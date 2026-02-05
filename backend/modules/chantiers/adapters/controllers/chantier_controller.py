@@ -88,6 +88,9 @@ class ChantierController:
             "conducteur_ids": dto.conducteur_ids,
             "chef_chantier_ids": dto.chef_chantier_ids,
             "is_active": dto.is_active,
+            "type_travaux": dto.type_travaux,
+            "batiment_plus_2ans": dto.batiment_plus_2ans,
+            "usage_habitation": dto.usage_habitation,
             "created_at": dto.created_at.isoformat() if dto.created_at else None,
             "updated_at": dto.updated_at.isoformat() if dto.updated_at else None,
         }
@@ -110,6 +113,9 @@ class ChantierController:
         description: Optional[str] = None,
         conducteur_ids: Optional[List[int]] = None,
         chef_chantier_ids: Optional[List[int]] = None,
+        type_travaux: Optional[str] = None,
+        batiment_plus_2ans: Optional[bool] = None,
+        usage_habitation: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         Crée un nouveau chantier.
@@ -131,6 +137,9 @@ class ChantierController:
             description: Description.
             conducteur_ids: IDs des conducteurs (CHT-05).
             chef_chantier_ids: IDs des chefs (CHT-06).
+            type_travaux: Type de travaux (DEV-TVA).
+            batiment_plus_2ans: Batiment > 2 ans (DEV-TVA).
+            usage_habitation: Usage habitation (DEV-TVA).
 
         Returns:
             Dictionnaire avec le chantier créé.
@@ -169,6 +178,9 @@ class ChantierController:
             description=description,
             conducteur_ids=conducteur_ids,
             chef_chantier_ids=chef_chantier_ids,
+            type_travaux=type_travaux,
+            batiment_plus_2ans=batiment_plus_2ans,
+            usage_habitation=usage_habitation,
         )
         result = self.create_use_case.execute(dto)
         return self._chantier_dto_to_dict(result)
@@ -272,6 +284,9 @@ class ChantierController:
         date_fin: Optional[str] = None,
         description: Optional[str] = None,
         maitre_ouvrage: Optional[str] = None,
+        type_travaux: Optional[str] = None,
+        batiment_plus_2ans: Optional[bool] = None,
+        usage_habitation: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         Met à jour un chantier.
@@ -293,6 +308,9 @@ class ChantierController:
             date_fin: Nouvelle date fin.
             description: Nouvelle description.
             maitre_ouvrage: Nouveau maître d'ouvrage.
+            type_travaux: Type de travaux (DEV-TVA).
+            batiment_plus_2ans: Batiment > 2 ans (DEV-TVA).
+            usage_habitation: Usage habitation (DEV-TVA).
 
         Returns:
             Dictionnaire avec le chantier mis à jour.
@@ -329,6 +347,9 @@ class ChantierController:
             date_fin=date_fin,
             description=description,
             maitre_ouvrage=maitre_ouvrage,
+            type_travaux=type_travaux,
+            batiment_plus_2ans=batiment_plus_2ans,
+            usage_habitation=usage_habitation,
         )
         result = self.update_use_case.execute(chantier_id, dto)
 

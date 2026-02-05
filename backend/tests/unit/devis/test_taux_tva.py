@@ -195,3 +195,79 @@ class TestTauxTVA:
         """Test: str affiche le pourcentage."""
         t = TauxTVA(Decimal("20.0"))
         assert str(t) == "20.0%"
+
+
+class TestTauxDefautPourChantier:
+    """Tests pour la resolution du taux TVA par defaut selon le contexte chantier (DEV-TVA)."""
+
+    def test_renovation_habitation_plus_2ans(self):
+        """Renovation standard + habitation > 2 ans -> 10%."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux="renovation",
+            batiment_plus_2ans=True,
+            usage_habitation=True,
+        )
+        assert taux == Decimal("10")
+
+    def test_renovation_energetique_habitation_plus_2ans(self):
+        """Renovation energetique + habitation > 2 ans -> 5.5%."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux="renovation_energetique",
+            batiment_plus_2ans=True,
+            usage_habitation=True,
+        )
+        assert taux == Decimal("5.5")
+
+    def test_construction_neuve(self):
+        """Construction neuve -> 20% (meme si habitation > 2 ans)."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux="construction_neuve",
+            batiment_plus_2ans=True,
+            usage_habitation=True,
+        )
+        assert taux == Decimal("20")
+
+    def test_batiment_moins_2ans(self):
+        """Renovation mais batiment < 2 ans -> 20%."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux="renovation",
+            batiment_plus_2ans=False,
+            usage_habitation=True,
+        )
+        assert taux == Decimal("20")
+
+    def test_pas_habitation(self):
+        """Renovation > 2 ans mais pas habitation -> 20%."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux="renovation",
+            batiment_plus_2ans=True,
+            usage_habitation=False,
+        )
+        assert taux == Decimal("20")
+
+    def test_aucune_info(self):
+        """Aucun contexte -> 20% (fallback standard)."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux=None,
+            batiment_plus_2ans=None,
+            usage_habitation=None,
+        )
+        assert taux == Decimal("20")
+
+    def test_type_travaux_none_mais_batiment_ok(self):
+        """Batiment ok mais pas de type travaux -> 20%."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux=None,
+            batiment_plus_2ans=True,
+            usage_habitation=True,
+        )
+        assert taux == Decimal("20")
+
+    def test_batiment_none(self):
+        """Batiment None (inconnu) -> 20%."""
+        taux = TauxTVA.taux_defaut_pour_chantier(
+            type_travaux="renovation",
+            batiment_plus_2ans=None,
+            usage_habitation=True,
+        )
+        assert taux == Decimal("20")

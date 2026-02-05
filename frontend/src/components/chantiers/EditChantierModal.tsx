@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { X, Plus, Trash2, Loader2, Calendar, MapPin } from 'lucide-react'
+import { X, Plus, Trash2, Loader2, Calendar, MapPin, Info } from 'lucide-react'
 import { logger } from '../../services/logger'
-import type { Chantier, ChantierUpdate, ContactChantier, PhaseChantierCreate } from '../../types'
-import { CHANTIER_STATUTS, USER_COLORS } from '../../types'
+import type { Chantier, ChantierUpdate, ContactChantier, PhaseChantierCreate, TypeTravaux } from '../../types'
+import { CHANTIER_STATUTS, USER_COLORS, TYPE_TRAVAUX_OPTIONS } from '../../types'
 import { chantiersService } from '../../services/chantiers'
 import { geocodeAddress } from '../../services/geocoding'
 
@@ -29,6 +29,9 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
     date_fin_prevue: chantier.date_fin_prevue,
     description: chantier.description,
     maitre_ouvrage: chantier.maitre_ouvrage,
+    type_travaux: chantier.type_travaux as TypeTravaux | undefined,
+    batiment_plus_2ans: chantier.batiment_plus_2ans,
+    usage_habitation: chantier.usage_habitation,
   })
 
   // Les contacts seront chargés depuis l'API
@@ -555,6 +558,59 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
               className="input"
               min={0}
             />
+          </div>
+
+          {/* DEV-TVA: Contexte TVA pour pre-remplissage devis */}
+          <div className="border-t pt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <Info className="w-4 h-4 text-blue-500" />
+              Contexte TVA (pre-remplissage devis)
+            </label>
+            <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Type de travaux</label>
+                <select
+                  value={formData.type_travaux || ''}
+                  onChange={(e) => setFormData({ ...formData, type_travaux: e.target.value as TypeTravaux || undefined })}
+                  className="input"
+                >
+                  <option value="">Non defini</option>
+                  {TYPE_TRAVAUX_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label} (TVA {opt.tva})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.batiment_plus_2ans || false}
+                    onChange={(e) => setFormData({ ...formData, batiment_plus_2ans: e.target.checked })}
+                    className="rounded border-gray-300 text-blue-600"
+                  />
+                  Batiment &gt; 2 ans
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.usage_habitation || false}
+                    onChange={(e) => setFormData({ ...formData, usage_habitation: e.target.checked })}
+                    className="rounded border-gray-300 text-blue-600"
+                  />
+                  Usage habitation
+                </label>
+              </div>
+              {formData.type_travaux && formData.batiment_plus_2ans && formData.usage_habitation && formData.type_travaux !== 'construction_neuve' && (
+                <div className="text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded">
+                  Taux TVA par defaut pour les devis : <strong>{formData.type_travaux === 'renovation_energetique' ? '5.5%' : '10%'}</strong>
+                </div>
+              )}
+              {(!formData.type_travaux || !formData.batiment_plus_2ans || !formData.usage_habitation || formData.type_travaux === 'construction_neuve') && formData.type_travaux && (
+                <div className="text-xs text-gray-500 px-3 py-2">
+                  Taux TVA par defaut : <strong>20%</strong> (conditions taux reduit non remplies)
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

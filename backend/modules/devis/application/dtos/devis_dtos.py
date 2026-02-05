@@ -4,6 +4,7 @@ DEV-03: Creation devis structure.
 DEV-08: Variantes et revisions.
 DEV-15: Suivi statut devis.
 DEV-22: Retenue de garantie.
+DEV-TVA: Ventilation TVA multi-taux et mention TVA reduite.
 """
 
 from __future__ import annotations
@@ -18,6 +19,36 @@ from ...domain.value_objects.retenue_garantie import RetenueGarantie, RetenueGar
 
 if TYPE_CHECKING:
     from ...domain.entities.devis import Devis
+
+
+# DEV-TVA: Mention legale TVA reduite (reforme 01/2025, remplace CERFA 1300-SD/1301-SD)
+MENTION_TVA_REDUITE = (
+    "Le signataire atteste que les travaux vises portent sur un immeuble acheve "
+    "depuis plus de deux ans a la date de commencement des travaux et sont affectes "
+    "a l'habitation. Ces travaux ne repondent pas aux criteres d'exclusion prevus "
+    "par la reglementation et remplissent les conditions d'application du taux "
+    "reduit de TVA."
+)
+
+
+@dataclass
+class VentilationTVADTO:
+    """DEV-TVA: Ventilation TVA par taux applicable.
+
+    Obligation legale: art. 242 nonies A du CGI - la facture doit mentionner
+    par taux d'imposition le total HT et le montant de TVA correspondant.
+    """
+
+    taux: str          # "5.5", "10.0", "20.0"
+    base_ht: str       # Montant HT soumis a ce taux
+    montant_tva: str   # Montant TVA calcule
+
+    def to_dict(self) -> dict:
+        return {
+            "taux": self.taux,
+            "base_ht": self.base_ht,
+            "montant_tva": self.montant_tva,
+        }
 
 
 @dataclass
@@ -206,6 +237,10 @@ class DevisDetailDTO:
     devis_parent_id: Optional[int] = None
     label_variante: Optional[str] = None
     version_commentaire: Optional[str] = None
+    # DEV-TVA: Ventilation TVA multi-taux
+    ventilation_tva: List[VentilationTVADTO] = field(default_factory=list)
+    # DEV-TVA: Mention legale TVA reduite (reforme 01/2025)
+    mention_tva_reduite: Optional[str] = None
 
     @classmethod
     def from_entity(
@@ -297,6 +332,8 @@ class DevisDetailDTO:
             "devis_parent_id": self.devis_parent_id,
             "label_variante": self.label_variante,
             "version_commentaire": self.version_commentaire,
+            "ventilation_tva": [v.to_dict() for v in self.ventilation_tva],
+            "mention_tva_reduite": self.mention_tva_reduite,
         }
 
 
