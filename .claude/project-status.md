@@ -10,7 +10,7 @@
 | auth (utilisateurs) | 3 | USR-01 a USR-17 + AUTH-01 a AUTH-11 | 28/28 | 0 | **COMPLET + RGPD** |
 | dashboard (feed) | 2 | FEED-01 a FEED-20 | 18/20 | 1 | **COMPLET** (1 future) |
 | dashboard (cards) | 2 | DASH-01 a DASH-15 | 15/15 | 0 | **COMPLET** |
-| chantiers | 4 | CHT-01 a CHT-21 | 19/21 | 1 | **COMPLET** (1 future) |
+| chantiers | 4 | CHT-01 a CHT-21 + CHT-TVA | 20/22 | 1 | **COMPLET + TVA** (1 future) |
 | planning (+ charge) | 5-6 | PLN-01 a PLN-28 + PDC-01 a PDC-17 | 43/45 | 2 | **COMPLET** (2 infra) |
 | feuilles_heures | 7 | FDH-01 a FDH-20 | 16/20 | 4 | **COMPLET** (4 infra) |
 | formulaires | 8 | FOR-01 a FOR-11 | 11/11 | 0 | **COMPLET** |
@@ -20,15 +20,15 @@
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
 | financier | 17 | FIN-01 a FIN-23 | 20/23 | 0 | **PHASE 1+2+3 COMPLET, Phase 4 futur** |
-| devis | 20 | DEV-01 a DEV-25 | 8/25 | 0 | **PHASE 2 COMPLET** (Phase 1 merged PR#210) |
+| devis | 20 | DEV-01 a DEV-25 + DEV-TVA | 9/26 | 0 | **PHASE 2 + TVA COMPLET** (Phase 1 merged PR#210) |
 
 ## Statistiques globales
 
 - **Modules complets** : 14/14 (dashboard cards + planning unifie + financier Phase 1+2+3 + devis Phase 2)
 - **Module financier** : 20/23 features (Phase 1+2+3: 20/20 ✅, Phase 4: 0/3 futur)
-- **Module devis** : 8/25 features (Phase 2: 8/8 ✅, Phase 1: PR#210, Phase 3+4: futur)
-- **Fonctionnalites totales** : 300 (+25 nouvelles features devis)
-- **Fonctionnalites done** : 261 (87%)
+- **Module devis** : 9/26 features (Phase 2: 8/8 ✅, DEV-TVA ✅, Phase 1: PR#210, Phase 3+4: futur)
+- **Fonctionnalites totales** : 302 (+2 features TVA: DEV-TVA, CHT-TVA)
+- **Fonctionnalites done** : 263 (87%)
 - **Fonctionnalites specs ready** : 3 (FIN Phase 4)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 20 (FIN-03, FIN-13, FIN-23 + DEV Phase 3+4)
@@ -131,9 +131,9 @@
 | FIN-13 | Export comptable | 🔮 Phase 4 |
 | FIN-23 | Integration ERP (Sage, Cegid) | 🔮 Phase 4 |
 
-### Module Devis (8/25 features — Phase 2 Automatisation COMPLET)
+### Module Devis (9/26 features — Phase 2 + TVA COMPLET)
 
-**Statut global** : Phase 2 implementee (8 features), Phase 1 mergee via PR#210
+**Statut global** : Phase 2 implementee (8 features) + DEV-TVA (ventilation multi-taux + pre-remplissage), Phase 1 mergee via PR#210
 
 #### Phase 2 - Automatisation (8/8 ✅ COMPLET)
 
@@ -147,6 +147,12 @@
 | DEV-23 | Attestation TVA (CERFA 1300-SD/1301-SD) | ✅ Done |
 | DEV-24 | Relances automatiques (7j/15j/30j configurable) | ✅ Done |
 | DEV-25 | Frais de chantier (prorata, frais generaux) | ✅ Done |
+
+#### DEV-TVA - Ventilation multi-taux + pre-remplissage (1/1 ✅ COMPLET)
+
+| ID | Description | Statut |
+|----|-------------|--------|
+| DEV-TVA | Ventilation TVA multi-taux (5.5/10/20%), selecteur par ligne, pre-remplissage intelligent selon contexte chantier, mention legale taux reduit | ✅ Done |
 
 #### Phase 3+4 (0/17 🔮 FUTUR)
 
@@ -227,6 +233,20 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-02-05 - DEV-TVA: Ventilation multi-taux + pre-remplissage intelligent
+- **Objectif**: Corriger le calcul TVA mono-taux + ajouter pre-remplissage selon contexte chantier
+- **Backend ventilation** (etapes 1-3): Accumulation base_ht par taux dans calcul_totaux et GetDevisUseCase, VentilationTVADTO, mention legale TVA reduite (reforme 01/2025)
+- **Frontend multi-taux** (etapes 5-6): MargesPanel affiche N lignes TVA, LigneDevisTable selecteur taux par ligne
+- **Modele Chantier** (etape 9a): 3 champs TVA (type_travaux, batiment_plus_2ans, usage_habitation) + migration SQL
+- **TauxTVA** (etape 9b): Methode statique taux_defaut_pour_chantier() (5.5% reno energetique, 10% reno, 20% defaut)
+- **CreateDevisUseCase** (etape 9c): Pre-remplissage taux via ChantierTVAResolver (decouplage Clean Architecture)
+- **Frontend chantier** (etapes 9d-9e): Section contexte TVA dans formulaires Create/Edit avec apercu taux
+- **Tests**: 37 tests TauxTVA (8 nouveaux) + 21 tests calcul_totaux (6 nouveaux), tous pass
+- **Fichiers**: 22 fichiers modifies (backend: 16, frontend: 5, mockup: 1)
+- **Validation pre-commit**: 0 CRITICAL, security PASS, code-reviewer PASS
+- **Commits**: 98c60b3 (DEV-TVA), 7291040 (pointages fixes)
+- Verdict : ✅ **DEV-TVA COMPLET — MULTI-TAUX + PRE-REMPLISSAGE INTELLIGENT**
 
 Session 2026-02-01 - Module Devis Phase 2 Automatisation (8 features)
 - **Objectif**: Implementer les 8 features Phase 2 du module Devis

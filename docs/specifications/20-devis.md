@@ -37,6 +37,7 @@ Ce module se positionne **en amont** du cycle de vie actuel de Hub Chantier, cou
 | DEV-23  | Génération attestation TVA                  | Création automatique attestation TVA réglementaire selon taux appliqué (5.5% rénovation énergétique, 10% rénovation, 20% standard) | ✅     |
 | DEV-24  | Relances automatiques                       | Notifications push/email automatiques si délai de réponse dépassé (configurable : 7j, 15j, 30j) avec historique relances | ✅     |
 | DEV-25  | Frais de chantier                           | Ajout compte prorata, frais généraux, installations de chantier avec répartition globale ou par lot | ✅     |
+| DEV-TVA | Ventilation TVA multi-taux + pré-remplissage | Ventilation TVA par taux (5.5%, 10%, 20%) dans récapitulatif, sélecteur taux par ligne, pré-remplissage intelligent du taux par défaut selon contexte chantier (type travaux, ancienneté bâtiment, usage habitation), mention légale TVA réduite | ✅     |
 
 ### 20.3 Déboursé sec et pilotage des marges
 
@@ -136,6 +137,9 @@ Les marges sont pilotables à chaque niveau de la hiérarchie du devis avec règ
 - La validation Direction est requise si montant total HT ≥ seuil configurable (défaut 50 000€)
 - Le statut "Expiré" est déclenché automatiquement à la date de validité
 - Les montants sont toujours saisis en HT ; TVA calculée automatiquement
+- Chaque ligne peut avoir un taux TVA différent (5.5%, 10%, 20%) ; le récapitulatif affiche la ventilation par taux
+- Le taux TVA par défaut est pré-rempli selon le contexte chantier : rénovation + bâtiment > 2 ans + habitation → 10%, rénovation énergétique idem → 5.5%, sinon 20%
+- Si un taux réduit est appliqué (< 20%), une mention légale est ajoutée automatiquement (réforme 01/2025)
 - Le versioning conserve chaque état du devis (impossible de supprimer une version)
 - Le PDF client ne contient jamais les déboursés secs ni les marges détaillées
 - Les quantités issues de métrés numériques sont verrouillables pour éviter modifications accidentelles

@@ -8,6 +8,18 @@
 
 **Sessions**:
 
+**Session 2026-02-05** — DEV-TVA: Ventilation TVA multi-taux + pré-remplissage intelligent
+- **Objectif**: Corriger le calcul TVA mono-taux erroné + pré-remplissage automatique du taux selon contexte chantier
+- **Bug corrigé**: Récapitulatif appliquait un seul taux (défaut 20%) sur tout le HT → maintenant ventilation par taux réel (5.5%, 10%, 20%)
+- **Backend**: VentilationTVADTO, calcul ventilation dans calcul_totaux + GetDevisUseCase, mention légale TVA réduite, TauxTVA.taux_defaut_pour_chantier(), ChantierTVAResolver dans CreateDevisUseCase
+- **Modèle Chantier enrichi**: 3 champs (type_travaux, batiment_plus_2ans, usage_habitation) + migration SQL
+- **Frontend**: MargesPanel multi-taux, LigneDevisTable sélecteur TVA par ligne, section contexte TVA dans formulaires chantier (Create/Edit) avec aperçu taux
+- **Tests**: 37 tests TauxTVA (29+8), 21 tests calcul_totaux (15+6), tous pass
+- **Architecture**: Découplage inter-modules via ChantierTVAResolver (Callable), pas d'import direct chantiers→devis au niveau domain/application
+- **Fichiers**: 22 modifiés (16 backend, 5 frontend, 1 mockup HTML)
+- **Commits**: `98c60b3` (DEV-TVA), `7291040` (fixes pointages)
+- Verdict : ✅ **DEV-TVA COMPLET**
+
 **Session 2026-02-03** — Intégration Pennylane Inbound (Import données comptables)
 - **Objectif**: Importer factures payées depuis Pennylane pour rentabilité Budget vs Réalisé
 - **Critique plan original**: Webhooks Pennylane INEXISTANTS → Solution polling 15 min
@@ -72,5 +84,5 @@ Chaque fichier mensuel contient:
 
 ---
 
-**Dernière mise à jour**: 3 février 2026
+**Dernière mise à jour**: 5 février 2026
 **Archive courante**: Février 2026 (inline) + 2026-01.md (4304 lignes, ~58k tokens)

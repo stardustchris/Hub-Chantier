@@ -29,6 +29,7 @@ Le module Chantiers centralise toutes les informations d'un projet de constructi
 | CHT-19 | Code chantier | Identifiant unique (ex: A001, B023, 2026-01-MONTMELIAN) | ✅ |
 | CHT-20 | Dates debut/fin previsionnelles | Planning macro du projet | ✅ |
 | CHT-21 | Onglet Logistique | Reservations materiel, stats et planning dans la fiche | ✅ |
+| CHT-TVA | Contexte TVA chantier | Type de travaux (renovation/energetique/neuf), anciennete batiment (> 2 ans), usage habitation — pour pre-remplissage automatique du taux TVA dans les devis | ✅ |
 
 **Note**: CHT-10 a CHT-12 sont implementes via le module Dashboard avec ciblage par chantier. Les posts cibles sur un chantier specifique apparaissent dans le fil d'actualite de ce chantier.
 
