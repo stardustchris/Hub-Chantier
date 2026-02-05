@@ -602,7 +602,7 @@ def sign_pointage(
 
 
 @router.post("/{pointage_id}/submit")
-async def submit_pointage(
+def submit_pointage(
     pointage_id: int,
     current_user_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
@@ -619,7 +619,7 @@ async def submit_pointage(
 
             # Publier l'événement de validation (sync paie)
             from datetime import datetime
-            await event_bus.publish(HeuresValidatedEvent(
+            event_bus.publish(HeuresValidatedEvent(
                 heures_id=result.get("id", pointage_id),
                 user_id=result.get("utilisateur_id"),
                 chantier_id=result.get("chantier_id"),
