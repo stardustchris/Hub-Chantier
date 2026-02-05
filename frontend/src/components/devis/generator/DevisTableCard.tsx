@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Plus, ChevronDown, ChevronRight, Type, Minus, FileText } from 'lucide-react'
+import { Plus, ChevronDown, ChevronRight, Type, Minus, FileText, Trash2 } from 'lucide-react'
 import { devisService } from '../../../services/devis'
 import ArticleAutocomplete from './ArticleAutocomplete'
 import LineKebabMenu from './LineKebabMenu'
@@ -243,7 +243,7 @@ interface LotSectionProps {
 function LotSection({
   lot, collapsed, onToggle, modeExpert, isEditable,
   editingLine, editValues, onStartEdit, onSaveEdit, onCancelEdit, onEditValueChange,
-  onAddLigne: _onAddLigne, onDeleteLigne, onDuplicateLigne, onDeleteLot: _onDeleteLot,
+  onAddLigne, onDeleteLigne, onDuplicateLigne, onDeleteLot,
   onSelectArticle, tvaBadgeColor,
 }: LotSectionProps) {
   const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -254,15 +254,39 @@ function LotSection({
   return (
     <>
       {/* Lot header row */}
-      <tr className="bg-indigo-50 cursor-pointer" onClick={onToggle}>
-        <td className="px-4 py-3 font-semibold text-indigo-900" colSpan={colSpan - 1}>
+      <tr className="bg-indigo-50 group">
+        <td
+          className="px-4 py-3 font-semibold text-indigo-900 cursor-pointer"
+          colSpan={colSpan - 2}
+          onClick={onToggle}
+        >
           <span className="flex items-center gap-2">
             <CollapseIcon className="w-4 h-4" />
             {lot.numero}. {lot.titre}
           </span>
         </td>
-        <td className="px-4 py-3 text-right font-semibold text-indigo-900">
+        <td className="px-4 py-3 text-right font-semibold text-indigo-900 cursor-pointer" onClick={onToggle}>
           {formatEUR(lot.total_ht)}
+        </td>
+        <td className="px-4 py-3 text-right">
+          {isEditable && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={onAddLigne}
+                title="Ajouter une ligne"
+                className="p-1 text-indigo-600 hover:bg-indigo-100 rounded"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onDeleteLot}
+                title="Supprimer ce lot"
+                className="p-1 text-red-400 hover:bg-red-50 hover:text-red-600 rounded"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </td>
       </tr>
 
