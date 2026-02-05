@@ -42,6 +42,8 @@ export interface UseClockCardReturn {
   closeEditModal: () => void
   /** Définir le chantier pour le pointage du jour */
   setChantierId: (id: string) => void
+  /** Label formaté de la dernière pointée (ex: "Hier 17:32") */
+  lastPointageLabel: string
 }
 
 /**
@@ -66,6 +68,7 @@ export function useClockCard(): UseClockCardReturn {
   const { addToast } = useToast()
   const { user } = useAuth()
   const [clockState, setClockState] = useState<ClockState | null>(null)
+  const [lastPointageLabel, setLastPointageLabel] = useState('Aucune pointee')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editTimeType, setEditTimeType] = useState<'arrival' | 'departure'>('arrival')
   const [editTimeValue, setEditTimeValue] = useState('')
@@ -73,6 +76,11 @@ export function useClockCard(): UseClockCardReturn {
   // Charger l'état du pointage depuis le backend au montage
   useEffect(() => {
     loadClockStateFromBackend()
+  }, [user?.id])
+
+  // Charger la dernière pointée (pour affichage "Dernière pointée: ...")
+  useEffect(() => {
+    loadLastPointage()
   }, [user?.id])
 
   /**
@@ -125,6 +133,35 @@ export function useClockCard(): UseClockCardReturn {
       logger.warn('Impossible de charger le pointage depuis le backend, fallback sessionStorage', err)
       // 3. Fallback sur sessionStorage en cas d'erreur réseau
       loadClockStateFromSession(today)
+    }
+  }
+
+  /**
+   * Charge la dernière pointée de l'utilisateur (tous jours confondus)
+   * pour afficher "Dernière pointée : Hier 17:32" avec la vraie valeur
+   */
+  const loadLastPointage = async () => {
+    if (!user?.id) return
+
+    const userId = Number(user.id)
+    if (isNaN(userId)) return
+
+    try {
+      const response = await pointagesService.list({
+        utilisateur_id: userId,
+        page: 1,
+        page_size: 1,
+      })
+
+      if (response.items.length === 0) {
+        setLastPointageLabel('Aucune pointee')
+        return
+      }
+
+      const label = formatLastPointageLabel(response.items[0])
+      setLastPointageLabel(label)
+    } catch (err) {
+      logger.warn('Impossible de charger la dernière pointée', err)
     }
   }
 
@@ -202,6 +239,42 @@ export function useClockCard(): UseClockCardReturn {
       return `${String(outH).padStart(2, '0')}:${String(outM).padStart(2, '0')}`
     }
     return undefined
+  }
+
+  /**
+   * Formate le label de la dernière pointée
+   *
+   * Priorité : heure de départ si disponible, sinon heure d'arrivée
+   * Format : "Aujourd'hui HH:MM" | "Hier HH:MM" | "DD/MM HH:MM"
+   */
+  const formatLastPointageLabel = (pointage: Pointage): string => {
+    // Choisir l'heure : départ si terminé, sinon arrivée
+    const clockOut = extractClockOutTime(pointage)
+    const clockIn = extractClockInTime(pointage)
+    const timeToShow = clockOut || clockIn
+
+    if (!timeToShow) return 'Aucune pointee'
+
+    // Comparer la date du pointage avec aujourd'hui / hier
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    const pointageDate = new Date(pointage.date_pointage + 'T00:00:00')
+
+    if (pointageDate.getTime() === today.getTime()) {
+      return `Aujourd'hui ${timeToShow}`
+    }
+    if (pointageDate.getTime() === yesterday.getTime()) {
+      return `Hier ${timeToShow}`
+    }
+
+    // Format DD/MM pour les dates plus anciennes
+    const day = String(pointageDate.getDate()).padStart(2, '0')
+    const month = String(pointageDate.getMonth() + 1).padStart(2, '0')
+    return `${day}/${month} ${timeToShow}`
   }
 
   /**
@@ -433,6 +506,7 @@ export function useClockCard(): UseClockCardReturn {
     handleSaveEditedTime,
     closeEditModal,
     setChantierId,
+    lastPointageLabel,
   }
 }
 

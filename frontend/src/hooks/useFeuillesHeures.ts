@@ -83,16 +83,35 @@ export function useFeuillesHeures() {
       setUtilisateurs(allActive)
       setChantiers(mesChantiers)
 
-      // Par défaut : exclure admin/conducteur de la vue (ne travaillent pas sur chantier)
-      // Mais si un filtre est actif, respecter la sélection de l'utilisateur
+      // Visibilité par rôle :
+      // - compagnon : uniquement lui-même
+      // - chef_chantier : compagnons de ses chantiers + lui-même
+      // - conducteur : tous les compagnons/chefs
+      // - admin : tous les compagnons/chefs + lui-même
       const ROLES_CHANTIER = ['chef_chantier', 'compagnon']
 
       // Chef : restreindre les chantier_ids à ses chantiers même si pas de filtre actif
       const mesChantierIds = mesChantiers.map((c) => Number(c.id))
 
+      const currentUserId = currentUser?.id ? Number(currentUser.id) : null
+      const isAdmin = currentUser?.role === 'admin'
+      const isCompagnon = currentUser?.role === 'compagnon'
+
+      let defaultIds: number[]
+      if (isCompagnon && currentUserId) {
+        // Compagnon : ne voit que sa propre feuille
+        defaultIds = [currentUserId]
+      } else {
+        defaultIds = allActive.filter((u) => ROLES_CHANTIER.includes(u.role)).map((u) => Number(u.id))
+        // L'admin voit aussi sa propre feuille
+        if (isAdmin && currentUserId && !defaultIds.includes(currentUserId)) {
+          defaultIds.push(currentUserId)
+        }
+      }
+
       const utilisateurIds = filterUtilisateurs.length > 0
         ? filterUtilisateurs
-        : allActive.filter((u) => ROLES_CHANTIER.includes(u.role)).map((u) => Number(u.id))
+        : defaultIds
       const chantierIds = filterChantiers.length > 0
         ? filterChantiers.filter((id) => !isChef || mesChantierIds.includes(id))
         : mesChantierIds

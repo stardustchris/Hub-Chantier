@@ -602,14 +602,40 @@ def sign_pointage(
 
 
 @router.post("/{pointage_id}/submit")
-def submit_pointage(
+async def submit_pointage(
     pointage_id: int,
     current_user_id: int = Depends(get_current_user_id),
+    current_user_role: str = Depends(get_current_user_role),
+    event_bus=Depends(get_event_bus),
     controller: PointageController = Depends(get_controller),
 ):
-    """Soumet un pointage pour validation."""
+    """Soumet un pointage pour validation. Auto-valide si l'utilisateur est admin."""
     try:
-        return controller.submit_pointage(pointage_id)
+        result = controller.submit_pointage(pointage_id)
+
+        # Auto-validation pour l'admin (pas de validateur au-dessus de lui)
+        if current_user_role == 'admin':
+            result = controller.validate_pointage(pointage_id, current_user_id)
+
+            # Publier l'événement de validation (sync paie)
+            from datetime import datetime
+            await event_bus.publish(HeuresValidatedEvent(
+                heures_id=result.get("id", pointage_id),
+                user_id=result.get("utilisateur_id"),
+                chantier_id=result.get("chantier_id"),
+                date=result.get("date_pointage") if isinstance(result.get("date_pointage"), date) else date.today(),
+                heures_travaillees=float(result.get("heures_normales", "0:0").split(":")[0]) if isinstance(result.get("heures_normales"), str) else float(result.get("heures_normales", 0)),
+                heures_supplementaires=float(result.get("heures_supplementaires", "0:0").split(":")[0]) if isinstance(result.get("heures_supplementaires"), str) else float(result.get("heures_supplementaires", 0)),
+                validated_by=current_user_id,
+                validated_at=datetime.now(),
+                metadata={
+                    'user_id': current_user_id,
+                    'pointage_id': pointage_id,
+                    'auto_validated': True,
+                }
+            ))
+
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

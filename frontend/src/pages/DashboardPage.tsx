@@ -250,7 +250,7 @@ export default function DashboardPage() {
               hasClockedOut={clock.hasClockedOut}
               clockInTime={clock.clockState?.clockInTime}
               clockOutTime={clock.clockState?.clockOutTime}
-              lastClockIn={clock.clockState?.clockOutTime ? `Aujourd'hui ${clock.clockState.clockOutTime}` : 'Hier 17:32'}
+              lastClockIn={clock.lastPointageLabel}
               canEdit={canEditTime}
               canReclockIn={isDirectionOrConducteur}
               onClockIn={clock.handleClockIn}
