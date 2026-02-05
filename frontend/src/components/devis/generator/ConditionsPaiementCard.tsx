@@ -50,38 +50,31 @@ export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: P
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <h3 className="font-semibold text-gray-900 mb-4">Conditions de paiement</h3>
-      <div className="grid grid-cols-3 gap-6">
+      <div className="space-y-4">
         {/* Acompte */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Acompte a la commande</label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
+          <div className="flex items-center gap-2">
+            <div className="relative w-20">
               <input
                 type="number"
                 value={acomptePct}
                 onChange={e => setAcomptePct(Number(e.target.value))}
                 onBlur={() => handleChange('acompte_pct', acomptePct)}
                 disabled={!isEditable || saving}
-                className={`${inputClass} pr-8`}
+                className={`${inputClass} pr-7`}
                 min={0}
                 max={100}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
             </div>
-            <span className="px-3 py-2 text-gray-500">=</span>
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={formatEUR(acompteAmount)}
-                readOnly
-                className={`${inputClass} pr-8 bg-gray-50`}
-              />
-            </div>
+            <span className="text-gray-400">=</span>
+            <span className="text-sm text-gray-600">{formatEUR(acompteAmount)}</span>
           </div>
         </div>
 
         {/* Retenue de garantie */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Retenue de garantie</label>
           <select
             value={retenuePct}
@@ -103,7 +96,7 @@ export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: P
         </div>
 
         {/* Echeances */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Echeances</label>
           <select
             value={echeance}

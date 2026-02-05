@@ -19,7 +19,7 @@ import OptionsInternesSidebar from '../components/devis/generator/OptionsInterne
 import BatiprixSidebar from '../components/devis/generator/BatiprixSidebar'
 import ActionsRapidesSidebar from '../components/devis/generator/ActionsRapidesSidebar'
 import { devisService } from '../services/devis'
-import type { DevisDetail, DevisUpdate } from '../types'
+import type { DevisDetail } from '../types'
 import { Loader2, AlertCircle } from 'lucide-react'
 
 export default function DevisGeneratorPage() {
@@ -74,11 +74,7 @@ export default function DevisGeneratorPage() {
   const handleRefuser = async (motif?: string) => { if (motif) { await devisService.refuserDevis(devisId, motif); await loadDevis() } }
   const handlePerdu = async (motif?: string) => { if (motif) { await devisService.marquerPerdu(devisId, motif); await loadDevis() } }
 
-  // Generic devis field update handler for bottom cards
-  const handleUpdateDevis = async (data: DevisUpdate) => {
-    await devisService.updateDevis(devisId, data)
-    recalcAndReload()
-  }
+
 
   if (loading && !devis) {
     return (
@@ -122,11 +118,11 @@ export default function DevisGeneratorPage() {
           <div className="col-span-12 lg:col-span-9 space-y-6">
             <ClientChantierCard devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
             <DatesCard devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
-            <DevisTableCard devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
+            <DevisTableCard devis={devis} isEditable={isEditable ?? false} onChanged={recalcAndReload} />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <ConditionsPaiementCard devis={devis} editable={isEditable ?? false} onUpdate={handleUpdateDevis} />
-              <MoyensPaiementCard devis={devis} editable={isEditable ?? false} onUpdate={handleUpdateDevis} />
-              <NotesBasPageCard devis={devis} editable={isEditable ?? false} onUpdate={handleUpdateDevis} />
+              <ConditionsPaiementCard devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
+              <MoyensPaiementCard devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
+              <NotesBasPageCard devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
             </div>
           </div>
 
@@ -134,12 +130,11 @@ export default function DevisGeneratorPage() {
           <div className="col-span-12 lg:col-span-3 space-y-6">
             <RentabiliteSidebar devis={devis} onSaved={recalcAndReload} />
             <RecapitulatifSidebar devis={devis} />
-            <OptionsInternesSidebar devis={devis} onSaved={recalcAndReload} />
+            <OptionsInternesSidebar devis={devis} isEditable={isEditable ?? false} onSaved={recalcAndReload} />
             <BatiprixSidebar />
             <ActionsRapidesSidebar
               devis={devis}
-              onNavigate={(newId: number) => navigate(`/devis/${newId}`)}
-              onSaved={recalcAndReload}
+              onReload={recalcAndReload}
             />
           </div>
         </div>

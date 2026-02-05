@@ -33,13 +33,13 @@ export default function MoyensPaiementCard({ devis, isEditable, onSaved }: Props
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <h3 className="font-semibold text-gray-900 mb-4">Moyens de paiement acceptes</h3>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="space-y-3">
         {MOYENS.map(moyen => {
           const isChecked = selected.includes(moyen.id)
           return (
             <label
               key={moyen.id}
-              className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+              className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                 isChecked
                   ? 'border-indigo-500 bg-indigo-50'
                   : 'border-gray-200 hover:border-indigo-300'
@@ -50,14 +50,14 @@ export default function MoyensPaiementCard({ devis, isEditable, onSaved }: Props
                 checked={isChecked}
                 onChange={() => handleToggle(moyen.id)}
                 disabled={!isEditable}
-                className="mt-1 rounded border-gray-300 text-indigo-600"
+                className="mt-0.5 rounded border-gray-300 text-indigo-600 shrink-0"
               />
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <moyen.icon className={`w-5 h-5 ${isChecked ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <span className="font-medium text-gray-900">{moyen.label}</span>
+                  <moyen.icon className={`w-4 h-4 shrink-0 ${isChecked ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <span className="font-medium text-sm text-gray-900 truncate">{moyen.label}</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{moyen.desc}</p>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">{moyen.desc}</p>
               </div>
             </label>
           )
