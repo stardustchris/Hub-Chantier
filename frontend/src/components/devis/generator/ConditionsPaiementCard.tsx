@@ -25,12 +25,12 @@ const RETENUE_OPTIONS = [
 ]
 
 export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: Props) {
-  const [acomptePct, setAcomptePct] = useState(devis.acompte_pct || 30)
-  const [retenuePct, setRetenuePct] = useState(devis.retenue_garantie_pct || 0)
+  const [acomptePct, setAcomptePct] = useState(Number(devis.acompte_pct || 30))
+  const [retenuePct, setRetenuePct] = useState(Number(devis.retenue_garantie_pct || 0))
   const [echeance, setEcheance] = useState(devis.echeance || '30_jours_fin_mois')
   const [saving, setSaving] = useState(false)
 
-  const totalTTC = devis.montant_total_ttc || 0
+  const totalTTC = Number(devis.montant_total_ttc || 0)
   const acompteAmount = totalTTC * acomptePct / 100
   const retenueAmount = totalTTC * retenuePct / 100
 

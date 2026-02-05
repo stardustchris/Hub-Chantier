@@ -9,13 +9,13 @@ interface Props {
 }
 
 export default function RecapitulatifSidebar({ devis }: Props) {
-  const totalHT = devis.montant_total_ht || 0
-  const totalTTC = devis.montant_total_ttc || 0
-  const retenuePct = devis.retenue_garantie_pct || 0
-  const retenueAmount = devis.montant_retenue_garantie || (totalTTC * retenuePct / 100)
-  const acomptePct = devis.acompte_pct || 0
+  const totalHT = Number(devis.montant_total_ht || 0)
+  const totalTTC = Number(devis.montant_total_ttc || 0)
+  const retenuePct = Number(devis.retenue_garantie_pct || 0)
+  const retenueAmount = Number(devis.montant_retenue_garantie || 0) || (totalTTC * retenuePct / 100)
+  const acomptePct = Number(devis.acompte_pct || 0)
   const acompteAmount = totalTTC * acomptePct / 100
-  const netAPayer = devis.montant_net_a_payer || (totalTTC - retenueAmount - acompteAmount)
+  const netAPayer = Number(devis.montant_net_a_payer || 0) || (totalTTC - retenueAmount - acompteAmount)
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
