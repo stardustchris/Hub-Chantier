@@ -1705,6 +1705,14 @@ export interface DevisCreate {
   notes?: string
   commercial_id?: number
   conducteur_id?: number
+  acompte_pct?: number
+  echeance?: string
+  moyens_paiement?: string[]
+  date_visite?: string | null
+  date_debut_travaux?: string | null
+  duree_estimee_jours?: number | null
+  notes_bas_page?: string | null
+  nom_interne?: string | null
 }
 
 export interface DevisUpdate {
@@ -1725,8 +1733,17 @@ export interface DevisUpdate {
   coefficient_frais_generaux?: number
   retenue_garantie_pct?: number
   notes?: string
+  conditions_generales?: string
   commercial_id?: number
   conducteur_id?: number
+  acompte_pct?: number
+  echeance?: string
+  moyens_paiement?: string[]
+  date_visite?: string | null
+  date_debut_travaux?: string | null
+  duree_estimee_jours?: number | null
+  notes_bas_page?: string | null
+  nom_interne?: string | null
 }
 
 // DEV-TVA: Ventilation TVA par taux (art. 242 nonies A CGI)
@@ -1780,6 +1797,15 @@ export interface DevisDetail {
   // DEV-TVA: Ventilation TVA multi-taux et mention legale
   ventilation_tva?: VentilationTVA[]
   mention_tva_reduite?: string
+  // Generateur de devis - nouveaux champs
+  acompte_pct?: number
+  echeance?: string
+  moyens_paiement?: string[]
+  date_visite?: string | null
+  date_debut_travaux?: string | null
+  duree_estimee_jours?: number | null
+  notes_bas_page?: string | null
+  nom_interne?: string | null
 }
 
 // Lots de devis (matches backend LotDevisDTO)
@@ -2162,4 +2188,20 @@ export interface ConvertirDevisResult {
   montant_total_ht: number
   devis_id: number
   devis_numero: string
+}
+
+// DEV-07: Pieces jointes devis
+export interface PieceJointeDevis {
+  id: number
+  devis_id: number
+  document_id: number | null
+  lot_devis_id: number | null
+  ligne_devis_id: number | null
+  visible_client: boolean
+  ordre: number
+  nom_fichier: string | null
+  type_fichier: string | null
+  taille_octets: number | null
+  mime_type: string | null
+  created_at: string | null
 }

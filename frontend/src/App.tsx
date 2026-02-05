@@ -33,6 +33,7 @@ const AchatsPage = lazy(() => import('./pages/AchatsPage'))
 const DashboardFinancierPage = lazy(() => import('./pages/DashboardFinancierPage'))
 const DevisListPage = lazy(() => import('./pages/DevisListPage'))
 const DevisDetailPage = lazy(() => import('./pages/DevisDetailPage'))
+const DevisGeneratorPage = lazy(() => import('./pages/DevisGeneratorPage'))
 const DevisDashboardPage = lazy(() => import('./pages/DevisDashboardPage'))
 const ArticlesPage = lazy(() => import('./pages/ArticlesPage'))
 const PennylaneIntegrationPage = lazy(() => import('./pages/PennylaneIntegrationPage'))
@@ -214,10 +215,18 @@ function App() {
             }
           />
           <Route
-            path="/devis/:id"
+            path="/devis/:id/legacy"
             element={
               <ProtectedRoute>
                 <DevisDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/devis/:id"
+            element={
+              <ProtectedRoute>
+                <DevisGeneratorPage />
               </ProtectedRoute>
             }
           />

@@ -347,6 +347,16 @@ class DevisModel(DevisBase):
     notes = Column(Text, nullable=True)
     conditions_generales = Column(Text, nullable=True)
 
+    # Generateur de devis - champs complementaires
+    acompte_pct = Column(Numeric(5, 2), nullable=False, default=30)
+    echeance = Column(String(50), nullable=False, default="30_jours_fin_mois")
+    moyens_paiement = Column(JSON, nullable=True, default=None)
+    date_visite = Column(Date, nullable=True)
+    date_debut_travaux = Column(Date, nullable=True)
+    duree_estimee_jours = Column(Integer, nullable=True)
+    notes_bas_page = Column(Text, nullable=True)
+    nom_interne = Column(String(255), nullable=True)
+
     # Date de creation metier (distincte de created_at technique)
     date_creation = Column(Date, nullable=True)
 

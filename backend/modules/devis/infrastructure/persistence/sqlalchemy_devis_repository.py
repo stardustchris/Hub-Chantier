@@ -86,6 +86,19 @@ class SQLAlchemyDevisRepository(DevisRepository):
             ),
             notes=model.notes,
             conditions_generales=model.conditions_generales,
+            # Generateur de devis - champs complementaires
+            acompte_pct=(
+                Decimal(str(model.acompte_pct))
+                if model.acompte_pct is not None
+                else Decimal("30")
+            ),
+            echeance=model.echeance or "30_jours_fin_mois",
+            moyens_paiement=model.moyens_paiement,
+            date_visite=model.date_visite,
+            date_debut_travaux=model.date_debut_travaux,
+            duree_estimee_jours=model.duree_estimee_jours,
+            notes_bas_page=model.notes_bas_page,
+            nom_interne=model.nom_interne,
             commercial_id=model.commercial_id,
             conducteur_id=model.conducteur_id,
             created_by=model.created_by,
@@ -143,6 +156,15 @@ class SQLAlchemyDevisRepository(DevisRepository):
         model.retenue_garantie_pct = devis.retenue_garantie_pct
         model.notes = devis.notes
         model.conditions_generales = devis.conditions_generales
+        # Generateur de devis - champs complementaires
+        model.acompte_pct = devis.acompte_pct
+        model.echeance = devis.echeance
+        model.moyens_paiement = devis.moyens_paiement
+        model.date_visite = devis.date_visite
+        model.date_debut_travaux = devis.date_debut_travaux
+        model.duree_estimee_jours = devis.duree_estimee_jours
+        model.notes_bas_page = devis.notes_bas_page
+        model.nom_interne = devis.nom_interne
         model.date_creation = devis.date_creation
         model.commercial_id = devis.commercial_id
         model.conducteur_id = devis.conducteur_id
@@ -226,6 +248,15 @@ class SQLAlchemyDevisRepository(DevisRepository):
                 retenue_garantie_pct=devis.retenue_garantie_pct,
                 notes=devis.notes,
                 conditions_generales=devis.conditions_generales,
+                # Generateur de devis - champs complementaires
+                acompte_pct=devis.acompte_pct,
+                echeance=devis.echeance,
+                moyens_paiement=devis.moyens_paiement,
+                date_visite=devis.date_visite,
+                date_debut_travaux=devis.date_debut_travaux,
+                duree_estimee_jours=devis.duree_estimee_jours,
+                notes_bas_page=devis.notes_bas_page,
+                nom_interne=devis.nom_interne,
                 date_creation=devis.date_creation,
                 commercial_id=devis.commercial_id,
                 conducteur_id=devis.conducteur_id,

@@ -116,6 +116,15 @@ class CreateDevisUseCase:
             coefficient_frais_generaux=dto.coefficient_frais_generaux,
             retenue_garantie_pct=dto.retenue_garantie_pct,
             notes=dto.notes,
+            # Generateur de devis - champs complementaires
+            acompte_pct=dto.acompte_pct,
+            echeance=dto.echeance,
+            moyens_paiement=dto.moyens_paiement,
+            date_visite=dto.date_visite,
+            date_debut_travaux=dto.date_debut_travaux,
+            duree_estimee_jours=dto.duree_estimee_jours,
+            notes_bas_page=dto.notes_bas_page,
+            nom_interne=dto.nom_interne,
             commercial_id=dto.commercial_id,
             conducteur_id=dto.conducteur_id,
             created_at=datetime.utcnow(),
@@ -227,6 +236,30 @@ class UpdateDevisUseCase:
         if dto.notes is not None:
             devis.notes = dto.notes
             modifications.append("notes")
+        if dto.acompte_pct is not None:
+            devis.acompte_pct = dto.acompte_pct
+            modifications.append("acompte_pct")
+        if dto.echeance is not None:
+            devis.echeance = dto.echeance
+            modifications.append("echeance")
+        if dto.moyens_paiement is not None:
+            devis.moyens_paiement = dto.moyens_paiement
+            modifications.append("moyens_paiement")
+        if dto.date_visite is not None:
+            devis.date_visite = dto.date_visite
+            modifications.append("date_visite")
+        if dto.date_debut_travaux is not None:
+            devis.date_debut_travaux = dto.date_debut_travaux
+            modifications.append("date_debut_travaux")
+        if dto.duree_estimee_jours is not None:
+            devis.duree_estimee_jours = dto.duree_estimee_jours
+            modifications.append("duree_estimee_jours")
+        if dto.notes_bas_page is not None:
+            devis.notes_bas_page = dto.notes_bas_page
+            modifications.append("notes_bas_page")
+        if dto.nom_interne is not None:
+            devis.nom_interne = dto.nom_interne
+            modifications.append("nom_interne")
         if dto.commercial_id is not None:
             devis.commercial_id = dto.commercial_id
             modifications.append("commercial_id")

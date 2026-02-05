@@ -9,7 +9,8 @@ import Layout from '../components/Layout'
 import DevisKanban from '../components/devis/DevisKanban'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import { devisService } from '../services/devis'
-import type { DashboardDevis } from '../types'
+import type { DashboardDevis, DevisRecent } from '../types'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import {
   Loader2,
   AlertCircle,
@@ -17,6 +18,10 @@ import {
   Euro,
   TrendingUp,
   User,
+  AlertTriangle,
+  Clock,
+  Eye,
+  MessageSquare,
 } from 'lucide-react'
 
 const formatEUR = (value: number) =>
@@ -136,6 +141,12 @@ export default function DevisDashboardPage() {
               </div>
             </div>
 
+            {/* Alertes DEV-17 */}
+            <AlertsPanel devis={data.derniers_devis} kpi={data.kpi} />
+
+            {/* Funnel conversion DEV-17 */}
+            <ConversionFunnel kpi={data.kpi} />
+
             {/* Vue Kanban */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" role="region" aria-label="Vue kanban des devis">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Pipeline par statut</h2>
@@ -207,5 +218,105 @@ export default function DevisDashboardPage() {
         )}
       </div>
     </Layout>
+  )
+}
+
+// --- DEV-17: Alerts Panel ---
+
+interface AlertItem {
+  icon: typeof AlertTriangle
+  color: string
+  bgColor: string
+  label: string
+  count: number
+}
+
+function AlertsPanel({ devis, kpi }: { devis: DevisRecent[]; kpi: DashboardDevis['kpi'] }) {
+  const now = new Date()
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+  // Compute alert counts from available data
+  const expiringSoon = devis.filter(d => {
+    if (d.statut !== 'envoye' && d.statut !== 'vu') return false
+    // Assume 30-day validity from creation
+    const created = new Date(d.date_creation)
+    const expiry = new Date(created.getTime() + 30 * 24 * 60 * 60 * 1000)
+    const daysLeft = (expiry.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+    return daysLeft <= 7 && daysLeft > 0
+  }).length
+
+  const pendingValidation = kpi.nb_en_validation
+
+  const notViewedOld = devis.filter(d => {
+    if (d.statut !== 'envoye') return false
+    const created = new Date(d.date_creation)
+    return created < sevenDaysAgo
+  }).length
+
+  const longNegotiation = kpi.nb_en_negociation
+
+  const alerts: AlertItem[] = [
+    { icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-50 border-amber-200', label: 'Expiration < 7j', count: expiringSoon },
+    { icon: AlertTriangle, color: 'text-orange-600', bgColor: 'bg-orange-50 border-orange-200', label: 'En attente validation', count: pendingValidation },
+    { icon: Eye, color: 'text-blue-600', bgColor: 'bg-blue-50 border-blue-200', label: 'Non vu > 7j', count: notViewedOld },
+    { icon: MessageSquare, color: 'text-purple-600', bgColor: 'bg-purple-50 border-purple-200', label: 'En negociation', count: longNegotiation },
+  ].filter(a => a.count > 0)
+
+  if (alerts.length === 0) return null
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" role="region" aria-label="Alertes">
+      {alerts.map(alert => (
+        <div key={alert.label} className={`rounded-xl p-4 border ${alert.bgColor}`}>
+          <div className="flex items-center gap-3">
+            <alert.icon className={`w-5 h-5 ${alert.color}`} />
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{alert.count}</p>
+              <p className="text-xs text-gray-600">{alert.label}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// --- DEV-17: Conversion Funnel Chart ---
+
+function ConversionFunnel({ kpi }: { kpi: DashboardDevis['kpi'] }) {
+  const funnelData = [
+    { name: 'Brouillon', value: kpi.nb_brouillon, color: '#6B7280' },
+    { name: 'En validation', value: kpi.nb_en_validation, color: '#F59E0B' },
+    { name: 'Envoye', value: kpi.nb_envoye, color: '#3B82F6' },
+    { name: 'Vu', value: kpi.nb_vu, color: '#8B5CF6' },
+    { name: 'Negociation', value: kpi.nb_en_negociation, color: '#F97316' },
+    { name: 'Accepte', value: kpi.nb_accepte, color: '#10B981' },
+    { name: 'Refuse', value: kpi.nb_refuse, color: '#EF4444' },
+    { name: 'Perdu', value: kpi.nb_perdu, color: '#9CA3AF' },
+  ].filter(d => d.value > 0)
+
+  if (funnelData.length === 0) return null
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" role="region" aria-label="Funnel de conversion">
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Funnel de conversion</h2>
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={funnelData} layout="vertical" margin={{ left: 80 }}>
+            <XAxis type="number" hide />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#6B7280' }} />
+            <Tooltip
+              formatter={(value) => [`${value} devis`]}
+              contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB' }}
+            />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={32}>
+              {funnelData.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   )
 }

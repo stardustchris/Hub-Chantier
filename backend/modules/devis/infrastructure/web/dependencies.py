@@ -26,6 +26,7 @@ from ...domain.repositories.attestation_tva_repository import AttestationTVARepo
 from ...domain.repositories.frais_chantier_repository import FraisChantierRepository
 from ...domain.repositories.signature_devis_repository import SignatureDevisRepository
 from ...domain.repositories.relance_devis_repository import RelanceDevisRepository
+from ...domain.repositories.piece_jointe_repository import PieceJointeDevisRepository
 
 from ...application.use_cases.devis_use_cases import (
     CreateDevisUseCase,
@@ -105,6 +106,12 @@ from ...application.use_cases.relance_use_cases import (
     GetRelancesDevisUseCase,
     UpdateConfigRelancesUseCase,
 )
+from ...application.use_cases.piece_jointe_use_cases import (
+    ListerPiecesJointesUseCase,
+    AjouterPieceJointeUseCase,
+    SupprimerPieceJointeUseCase,
+    ToggleVisibiliteUseCase,
+)
 from ...application.use_cases.conversion_use_cases import (
     ConvertirDevisUseCase,
     GetConversionInfoUseCase,
@@ -125,6 +132,7 @@ from ..persistence.sqlalchemy_attestation_tva_repository import SQLAlchemyAttest
 from ..persistence.sqlalchemy_frais_chantier_repository import SQLAlchemyFraisChantierRepository
 from ..persistence.sqlalchemy_signature_devis_repository import SQLAlchemySignatureDevisRepository
 from ..persistence.sqlalchemy_relance_devis_repository import SQLAlchemyRelanceDevisRepository
+from ..persistence.sqlalchemy_piece_jointe_repository import SQLAlchemyPieceJointeDevisRepository
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -726,3 +734,34 @@ def get_convertir_devis_en_chantier_use_case(
         chantier_creation_port=chantier_creation_port,
         signature_repo=signature_repo,
     )
+
+# -------------------------------------------------------------------------
+# Pieces jointes (DEV-07)
+# -------------------------------------------------------------------------
+
+def get_piece_jointe_repository(db: Session = Depends(get_db)) -> PieceJointeDevisRepository:
+    return SQLAlchemyPieceJointeDevisRepository(db)
+
+
+def get_lister_pieces_jointes_use_case(
+    piece_repo: PieceJointeDevisRepository = Depends(get_piece_jointe_repository),
+) -> ListerPiecesJointesUseCase:
+    return ListerPiecesJointesUseCase(piece_repo)
+
+
+def get_ajouter_piece_jointe_use_case(
+    piece_repo: PieceJointeDevisRepository = Depends(get_piece_jointe_repository),
+) -> AjouterPieceJointeUseCase:
+    return AjouterPieceJointeUseCase(piece_repo)
+
+
+def get_supprimer_piece_jointe_use_case(
+    piece_repo: PieceJointeDevisRepository = Depends(get_piece_jointe_repository),
+) -> SupprimerPieceJointeUseCase:
+    return SupprimerPieceJointeUseCase(piece_repo)
+
+
+def get_toggle_visibilite_use_case(
+    piece_repo: PieceJointeDevisRepository = Depends(get_piece_jointe_repository),
+) -> ToggleVisibiliteUseCase:
+    return ToggleVisibiliteUseCase(piece_repo)

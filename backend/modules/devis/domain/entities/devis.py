@@ -12,7 +12,7 @@ DEV-22: Retenue de garantie
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ..value_objects import StatutDevis
 from ..value_objects.type_version import TypeVersion
@@ -83,6 +83,16 @@ class Devis:
     notes: Optional[str] = None
     conditions_generales: Optional[str] = None
 
+    # Generateur de devis - champs complementaires
+    acompte_pct: Decimal = Decimal("30")
+    echeance: str = "30_jours_fin_mois"
+    moyens_paiement: Optional[List[str]] = None
+    date_visite: Optional[date] = None
+    date_debut_travaux: Optional[date] = None
+    duree_estimee_jours: Optional[int] = None
+    notes_bas_page: Optional[str] = None
+    nom_interne: Optional[str] = None
+
     # References utilisateurs
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
@@ -138,6 +148,8 @@ class Devis:
             raise DevisValidationError(
                 "La retenue de garantie doit etre 0%, 5% ou 10%"
             )
+        if self.acompte_pct < Decimal("0") or self.acompte_pct > Decimal("100"):
+            raise DevisValidationError("L'acompte doit etre entre 0 et 100%")
         if self.date_creation and self.date_validite:
             if self.date_validite < self.date_creation:
                 raise DevisValidationError(
@@ -471,6 +483,14 @@ class Devis:
             "taux_marge_deplacement": str(self.taux_marge_deplacement) if self.taux_marge_deplacement is not None else None,
             "notes": self.notes,
             "conditions_generales": self.conditions_generales,
+            "acompte_pct": str(self.acompte_pct),
+            "echeance": self.echeance,
+            "moyens_paiement": self.moyens_paiement or ["virement"],
+            "date_visite": self.date_visite.isoformat() if self.date_visite else None,
+            "date_debut_travaux": self.date_debut_travaux.isoformat() if self.date_debut_travaux else None,
+            "duree_estimee_jours": self.duree_estimee_jours,
+            "notes_bas_page": self.notes_bas_page,
+            "nom_interne": self.nom_interne,
             "commercial_id": self.commercial_id,
             "conducteur_id": self.conducteur_id,
             "created_by": self.created_by,

@@ -35,6 +35,7 @@ import type {
   RelancesHistorique,
   ConfigRelances,
   ConvertirDevisResult,
+  PieceJointeDevis,
 } from '../types'
 
 /**
@@ -434,6 +435,36 @@ export const devisService = {
 
   async updateConfigRelances(devisId: number, config: Partial<ConfigRelances>): Promise<ConfigRelances> {
     const response = await api.put<ConfigRelances>(`${BASE}/${devisId}/config-relances`, config)
+    return response.data
+  },
+
+  // ===== Pieces jointes (DEV-07) =====
+  async listPiecesJointes(devisId: number): Promise<PieceJointeDevis[]> {
+    const response = await api.get(`${BASE}/${devisId}/pieces-jointes`)
+    return extractArray<PieceJointeDevis>(response.data)
+  },
+
+  async uploadPieceJointe(devisId: number, data: {
+    nom_fichier: string
+    type_fichier: string
+    taille_octets: number
+    mime_type: string
+    visible_client?: boolean
+    document_id?: number
+  }): Promise<PieceJointeDevis> {
+    const response = await api.post<PieceJointeDevis>(`${BASE}/${devisId}/pieces-jointes`, data)
+    return response.data
+  },
+
+  async deletePieceJointe(pieceId: number): Promise<void> {
+    await api.delete(`${BASE}/pieces-jointes/${pieceId}`)
+  },
+
+  async toggleVisibilitePieceJointe(pieceId: number, visible: boolean): Promise<PieceJointeDevis> {
+    const response = await api.patch<PieceJointeDevis>(
+      `${BASE}/pieces-jointes/${pieceId}/visibilite`,
+      { visible_client: visible }
+    )
     return response.data
   },
 }

@@ -72,6 +72,14 @@ class DevisCreateDTO:
     coefficient_frais_generaux: Decimal = Decimal("12")
     retenue_garantie_pct: Decimal = Decimal("0")
     notes: Optional[str] = None
+    acompte_pct: Decimal = Decimal("30")
+    echeance: str = "30_jours_fin_mois"
+    moyens_paiement: Optional[List[str]] = None
+    date_visite: Optional[date] = None
+    date_debut_travaux: Optional[date] = None
+    duree_estimee_jours: Optional[int] = None
+    notes_bas_page: Optional[str] = None
+    nom_interne: Optional[str] = None
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -105,6 +113,14 @@ class DevisUpdateDTO:
     coefficient_frais_generaux: Optional[Decimal] = None
     retenue_garantie_pct: Optional[Decimal] = None
     notes: Optional[str] = None
+    acompte_pct: Optional[Decimal] = None
+    echeance: Optional[str] = None
+    moyens_paiement: Optional[List[str]] = None
+    date_visite: Optional[date] = None
+    date_debut_travaux: Optional[date] = None
+    duree_estimee_jours: Optional[int] = None
+    notes_bas_page: Optional[str] = None
+    nom_interne: Optional[str] = None
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -229,6 +245,14 @@ class DevisDetailDTO:
     notes: Optional[str]
     conditions_generales: Optional[str]
     lots: List[LotDevisDTO]
+    acompte_pct: str = "30"
+    echeance: str = "30_jours_fin_mois"
+    moyens_paiement: List[str] = field(default_factory=lambda: ["virement"])
+    date_visite: Optional[str] = None
+    date_debut_travaux: Optional[str] = None
+    duree_estimee_jours: Optional[int] = None
+    notes_bas_page: Optional[str] = None
+    nom_interne: Optional[str] = None
     # DEV-08: Versioning
     type_version: str = "originale"
     numero_version: int = 1
@@ -280,6 +304,14 @@ class DevisDetailDTO:
             created_by=devis.created_by,
             notes=devis.notes,
             conditions_generales=devis.conditions_generales,
+            acompte_pct=str(devis.acompte_pct),
+            echeance=devis.echeance,
+            moyens_paiement=devis.moyens_paiement or ["virement"],
+            date_visite=devis.date_visite.isoformat() if devis.date_visite else None,
+            date_debut_travaux=devis.date_debut_travaux.isoformat() if devis.date_debut_travaux else None,
+            duree_estimee_jours=devis.duree_estimee_jours,
+            notes_bas_page=devis.notes_bas_page,
+            nom_interne=devis.nom_interne,
             lots=lots or [],
             # DEV-08: Versioning
             type_version=devis.type_version.value,
@@ -324,6 +356,14 @@ class DevisDetailDTO:
             "created_by": self.created_by,
             "notes": self.notes,
             "conditions_generales": self.conditions_generales,
+            "acompte_pct": self.acompte_pct,
+            "echeance": self.echeance,
+            "moyens_paiement": self.moyens_paiement,
+            "date_visite": self.date_visite,
+            "date_debut_travaux": self.date_debut_travaux,
+            "duree_estimee_jours": self.duree_estimee_jours,
+            "notes_bas_page": self.notes_bas_page,
+            "nom_interne": self.nom_interne,
             "lots": [l.to_dict() for l in self.lots],
             "type_version": self.type_version,
             "numero_version": self.numero_version,

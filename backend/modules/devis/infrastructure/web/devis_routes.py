@@ -1,6 +1,7 @@
 """Routes FastAPI pour le module Devis.
 
 DEV-03: CRUD devis
+DEV-07: Pieces jointes (integration GED)
 DEV-08: Variantes et revisions
 DEV-11: Personnalisation presentation
 DEV-14: Signature electronique client
@@ -16,7 +17,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -148,6 +149,13 @@ from ...application.use_cases.signature_use_cases import (
 )
 from ...domain.entities.signature_devis import SignatureDevisValidationError
 from ...application.dtos.signature_dtos import SignatureCreateDTO
+from ...application.use_cases.piece_jointe_use_cases import (
+    ListerPiecesJointesUseCase,
+    AjouterPieceJointeUseCase,
+    SupprimerPieceJointeUseCase,
+    ToggleVisibiliteUseCase,
+)
+from ...application.dtos.piece_jointe_dtos import PieceJointeCreateDTO
 from ...application.use_cases.convertir_devis_en_chantier_use_case import (
     ConvertirDevisEnChantierUseCase,
     DevisNonConvertibleError,
@@ -213,6 +221,11 @@ from .dependencies import (
     get_get_conversion_info_use_case,
     # DEV-16: Conversion devis -> chantier (use case enrichi)
     get_convertir_devis_en_chantier_use_case,
+    # DEV-07: Pieces jointes
+    get_lister_pieces_jointes_use_case,
+    get_ajouter_piece_jointe_use_case,
+    get_supprimer_piece_jointe_use_case,
+    get_toggle_visibilite_use_case,
     # DEV-24: Relances automatiques
     get_planifier_relances_use_case,
     get_executer_relances_use_case,
@@ -244,6 +257,14 @@ class DevisCreateRequest(BaseModel):
     coefficient_frais_generaux: Decimal = Field(Decimal("12"), ge=0, le=100)
     retenue_garantie_pct: Decimal = Field(Decimal("0"), description="Retenue de garantie: 0, 5 ou 10%")
     notes: Optional[str] = Field(None, max_length=2000)
+    acompte_pct: Decimal = Field(Decimal("30"), ge=0, le=100)
+    echeance: str = Field("30_jours_fin_mois", max_length=50)
+    moyens_paiement: Optional[List[str]] = None
+    date_visite: Optional[date] = None
+    date_debut_travaux: Optional[date] = None
+    duree_estimee_jours: Optional[int] = Field(None, ge=1)
+    notes_bas_page: Optional[str] = Field(None, max_length=5000)
+    nom_interne: Optional[str] = Field(None, max_length=255)
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -274,6 +295,14 @@ class DevisUpdateRequest(BaseModel):
     coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100)
     retenue_garantie_pct: Optional[Decimal] = Field(None, description="Retenue de garantie: 0, 5 ou 10%")
     notes: Optional[str] = Field(None, max_length=2000)
+    acompte_pct: Optional[Decimal] = Field(None, ge=0, le=100)
+    echeance: Optional[str] = Field(None, max_length=50)
+    moyens_paiement: Optional[List[str]] = None
+    date_visite: Optional[date] = None
+    date_debut_travaux: Optional[date] = None
+    duree_estimee_jours: Optional[int] = Field(None, ge=1)
+    notes_bas_page: Optional[str] = Field(None, max_length=5000)
+    nom_interne: Optional[str] = Field(None, max_length=255)
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -698,6 +727,14 @@ async def create_devis(
         coefficient_frais_generaux=request.coefficient_frais_generaux,
         retenue_garantie_pct=request.retenue_garantie_pct,
         notes=request.notes,
+        acompte_pct=request.acompte_pct,
+        echeance=request.echeance,
+        moyens_paiement=request.moyens_paiement,
+        date_visite=request.date_visite,
+        date_debut_travaux=request.date_debut_travaux,
+        duree_estimee_jours=request.duree_estimee_jours,
+        notes_bas_page=request.notes_bas_page,
+        nom_interne=request.nom_interne,
         commercial_id=request.commercial_id,
         conducteur_id=request.conducteur_id,
     )
@@ -1850,3 +1887,80 @@ async def delete_ligne(
         db.commit()
     except LigneDevisNotFoundError:
         raise HTTPException(status_code=404, detail=f"Ligne {ligne_id} non trouvee")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pieces jointes (DEV-07)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get("/{devis_id}/pieces-jointes")
+async def list_pieces_jointes(
+    devis_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case: ListerPiecesJointesUseCase = Depends(get_lister_pieces_jointes_use_case),
+):
+    """Liste les pieces jointes d'un devis (DEV-07)."""
+    pieces = use_case.execute(devis_id)
+    return {"items": [p.to_dict() for p in pieces]}
+
+
+@router.post("/{devis_id}/pieces-jointes", status_code=status.HTTP_201_CREATED)
+async def add_piece_jointe(
+    devis_id: int,
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case: AjouterPieceJointeUseCase = Depends(get_ajouter_piece_jointe_use_case),
+):
+    """Ajoute une piece jointe a un devis (DEV-07).
+
+    Le document doit deja exister dans le module GED.
+    Les metadonnees du fichier sont denormalisees pour lecture rapide.
+    """
+    dto = PieceJointeCreateDTO(
+        devis_id=devis_id,
+        document_id=body.get("document_id"),
+        visible_client=body.get("visible_client", True),
+        lot_devis_id=body.get("lot_devis_id"),
+        ligne_devis_id=body.get("ligne_devis_id"),
+    )
+    result = use_case.execute(
+        dto=dto,
+        nom_fichier=body.get("nom_fichier", ""),
+        type_fichier=body.get("type_fichier", ""),
+        taille_octets=body.get("taille_octets", 0),
+        mime_type=body.get("mime_type", ""),
+        created_by=current_user_id,
+    )
+    db.commit()
+    return result.to_dict()
+
+
+@router.delete("/pieces-jointes/{piece_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_piece_jointe(
+    piece_id: int,
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case: SupprimerPieceJointeUseCase = Depends(get_supprimer_piece_jointe_use_case),
+):
+    """Supprime une piece jointe (ne supprime PAS le document GED) (DEV-07)."""
+    success = use_case.execute(piece_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Piece jointe non trouvee")
+    db.commit()
+
+
+@router.patch("/pieces-jointes/{piece_id}/visibilite")
+async def toggle_visibilite_piece(
+    piece_id: int,
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case: ToggleVisibiliteUseCase = Depends(get_toggle_visibilite_use_case),
+):
+    """Bascule la visibilite client d'une piece jointe (DEV-07)."""
+    result = use_case.execute(piece_id, body.get("visible_client", True))
+    if not result:
+        raise HTTPException(status_code=404, detail="Piece jointe non trouvee")
+    db.commit()
+    return result.to_dict()
