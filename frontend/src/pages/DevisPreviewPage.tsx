@@ -28,8 +28,8 @@ export default function DevisPreviewPage() {
       try {
         const data = await devisService.getDevis(Number(id))
         setDevis(data)
-      } catch {
-        /* error */
+      } catch (error) {
+        console.error('Erreur lors du chargement du devis pour aperçu PDF:', error)
       } finally {
         setLoading(false)
       }

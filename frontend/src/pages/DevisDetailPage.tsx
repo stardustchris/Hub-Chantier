@@ -80,7 +80,8 @@ export default function DevisDetailPage() {
       setError(null)
       const data = await devisService.getDevis(devisId)
       setDevis(data)
-    } catch {
+    } catch (error) {
+      console.error('Erreur lors du chargement du devis:', error)
       setError('Erreur lors du chargement du devis')
     } finally {
       setLoading(false)
@@ -148,7 +149,8 @@ export default function DevisDetailPage() {
   const recalculerEtRecharger = async () => {
     try {
       await devisService.calculerTotaux(devisId)
-    } catch {
+    } catch (error) {
+      console.error('Erreur lors du recalcul des totaux du devis:', error)
       // Le recalcul peut echouer si le devis n'a pas de lignes, on continue
     }
     await loadDevis()

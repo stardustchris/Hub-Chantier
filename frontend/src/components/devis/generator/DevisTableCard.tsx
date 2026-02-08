@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
-import { Plus, ChevronDown, ChevronRight, Type, Minus, FileText, Trash2 } from 'lucide-react'
+import { Plus, ChevronDown, ChevronRight, Type, Minus, FileText, Trash2, BookOpen } from 'lucide-react'
 import { devisService } from '../../../services/devis'
 import ArticleAutocomplete from './ArticleAutocomplete'
+import ArticleLibraryPanel from '../ArticleLibraryPanel'
 import LineKebabMenu from './LineKebabMenu'
 import type { DevisDetail, LotDevis, LigneDevis, Article } from '../../../types'
 
@@ -19,6 +20,7 @@ export default function DevisTableCard({ devis, isEditable, onChanged }: Props) 
   const [collapsedLots, setCollapsedLots] = useState<Set<number>>(new Set())
   const [editingLine, setEditingLine] = useState<number | null>(null)
   const [editValues, setEditValues] = useState<Record<string, string | number>>({})
+  const [showLibrary, setShowLibrary] = useState(false)
 
   const toggleLot = (lotId: number) => {
     setCollapsedLots(prev => {
@@ -112,6 +114,21 @@ export default function DevisTableCard({ devis, isEditable, onChanged }: Props) 
     onChanged()
   }, [devis.taux_tva_defaut, onChanged])
 
+  const handleAddFromLibrary = useCallback(async (article: Article) => {
+    const lastLot = devis.lots[devis.lots.length - 1]
+    if (!lastLot) return
+    await devisService.createLigne({
+      lot_devis_id: lastLot.id,
+      designation: article.designation,
+      unite: article.unite,
+      prix_unitaire_ht: article.prix_unitaire_ht,
+      taux_tva: devis.taux_tva_defaut || 20,
+      quantite: 1,
+      article_id: article.id,
+    })
+    onChanged()
+  }, [devis.lots, devis.taux_tva_defaut, onChanged])
+
   const handleDeleteLot = async (lotId: number) => {
     await devisService.deleteLot(lotId)
     onChanged()
@@ -128,15 +145,26 @@ export default function DevisTableCard({ devis, isEditable, onChanged }: Props) 
       {/* Header bar */}
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
         <h2 className="font-semibold text-gray-900">Detail du devis</h2>
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={modeExpert}
-            onChange={e => setModeExpert(e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          Mode expert (debourses)
-        </label>
+        <div className="flex items-center gap-3">
+          {isEditable && (
+            <button
+              onClick={() => setShowLibrary(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+            >
+              <BookOpen className="w-4 h-4" />
+              Bibliotheque
+            </button>
+          )}
+          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={modeExpert}
+              onChange={e => setModeExpert(e.target.checked)}
+              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            Mode expert (debourses)
+          </label>
+        </div>
       </div>
 
       {/* Table */}
@@ -212,6 +240,14 @@ export default function DevisTableCard({ devis, isEditable, onChanged }: Props) 
             <FileText className="w-4 h-4" /> Saut de page
           </button>
         </div>
+      )}
+
+      {/* Panneau bibliotheque d'articles (DEV-01) */}
+      {showLibrary && (
+        <ArticleLibraryPanel
+          onAddArticle={handleAddFromLibrary}
+          onClose={() => setShowLibrary(false)}
+        />
       )}
     </div>
   )
