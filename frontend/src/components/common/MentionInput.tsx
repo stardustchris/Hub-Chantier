@@ -11,6 +11,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { AtSign, Loader2 } from 'lucide-react'
 import { usersService } from '../../services/users'
 import { logger } from '../../services/logger'
+import { useToast } from '../../contexts/ToastContext'
 import type { User } from '../../types'
 import { DURATIONS, COLORS } from '../../constants'
 
@@ -43,6 +44,7 @@ export default function MentionInput({
   rows = 3,
   disabled = false,
 }: MentionInputProps) {
+  const { addToast } = useToast()
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestions, setSuggestions] = useState<MentionSuggestion[]>(usersCache || [])
   const [loading, setLoading] = useState(false)
@@ -79,6 +81,7 @@ export default function MentionInput({
       setSuggestions(users)
     } catch (error) {
       logger.error('Erreur chargement utilisateurs', error, { context: 'MentionInput' })
+      addToast({ message: 'Impossible de charger la liste des utilisateurs', type: 'error' })
       setSuggestions([])
     } finally {
       setLoading(false)
