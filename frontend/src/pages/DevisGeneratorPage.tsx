@@ -40,7 +40,8 @@ export default function DevisGeneratorPage() {
       setError(null)
       const data = await devisService.getDevis(devisId)
       setDevis(data)
-    } catch {
+    } catch (error) {
+      console.error('Erreur lors du chargement du devis:', error)
       setError('Erreur lors du chargement du devis')
     } finally {
       setLoading(false)
@@ -57,7 +58,9 @@ export default function DevisGeneratorPage() {
     recalcTimer.current = setTimeout(async () => {
       try {
         await devisService.calculerTotaux(devisId)
-      } catch { /* silent */ }
+      } catch (error) {
+        console.error('Erreur lors du recalcul des totaux du devis:', error)
+      }
       loadDevis()
     }, 500)
   }, [devisId, loadDevis])

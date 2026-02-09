@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import Literal, Optional, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi.responses import Response
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -106,10 +107,13 @@ from ...application.use_cases.ligne_use_cases import (
 )
 from ...application.use_cases.article_use_cases import (
     CreateArticleUseCase,
+    UpdateArticleUseCase,
     ListArticlesUseCase,
     GetArticleUseCase,
     DeleteArticleUseCase,
+    ArticleCodeExistsError,
 )
+from ...application.dtos.article_dtos import ArticleUpdateDTO
 from ...application.use_cases.attestation_tva_use_cases import (
     GenererAttestationTVAUseCase,
     GetAttestationTVAUseCase,
@@ -187,6 +191,7 @@ from .dependencies import (
     get_update_ligne_use_case,
     get_delete_ligne_use_case,
     get_create_article_use_case,
+    get_update_article_use_case,
     get_list_articles_use_case,
     get_get_article_use_case,
     get_delete_article_use_case,
@@ -232,6 +237,12 @@ from .dependencies import (
     get_annuler_relances_use_case,
     get_get_relances_devis_use_case,
     get_update_config_relances_use_case,
+    # DEV-12: Generation PDF
+    get_generate_pdf_use_case,
+)
+from ...application.use_cases.generate_pdf_use_case import (
+    GenerateDevisPDFUseCase,
+    GenerateDevisPDFError,
 )
 
 
@@ -370,6 +381,19 @@ class ArticleCreateRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     taux_tva: Decimal = Field(Decimal("20"), ge=0, le=100)
     actif: bool = True
+
+
+class ArticleUpdateRequest(BaseModel):
+    """Requete de mise a jour d'un article (DEV-01)."""
+
+    designation: Optional[str] = Field(None, min_length=1, max_length=300)
+    unite: Optional[str] = Field(None, max_length=20)
+    prix_unitaire_ht: Optional[Decimal] = Field(None, ge=0)
+    code: Optional[str] = Field(None, max_length=50)
+    categorie: Optional[str] = Field(None, max_length=100)
+    description: Optional[str] = Field(None, max_length=2000)
+    taux_tva: Optional[Decimal] = Field(None, ge=0, le=100)
+    actif: Optional[bool] = None
 
 
 class LigneUpdateRequest(BaseModel):
@@ -1426,6 +1450,7 @@ async def signer_devis(
     devis_id: int,
     request: SignatureCreateRequest,
     http_request: Request,
+    _role: str = Depends(require_conducteur_or_admin),
     use_case: SignerDevisUseCase = Depends(get_signer_devis_use_case),
 ):
     """Signe un devis electroniquement (DEV-14).
@@ -1716,6 +1741,27 @@ async def create_article(
     return result.to_dict()
 
 
+@articles_router.put("/{article_id}")
+async def update_article(
+    article_id: int,
+    request: ArticleUpdateRequest,
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case: UpdateArticleUseCase = Depends(get_update_article_use_case),
+):
+    """Met a jour un article (DEV-01)."""
+    try:
+        dto = ArticleUpdateDTO(**request.model_dump(exclude_unset=True))
+        result = use_case.execute(article_id, dto, current_user_id)
+        db.commit()
+        return result.to_dict()
+    except ArticleNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Article {article_id} non trouve")
+    except ArticleCodeExistsError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
 @articles_router.delete("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_article(
     article_id: int,
@@ -1964,3 +2010,66 @@ async def toggle_visibilite_piece(
         raise HTTPException(status_code=404, detail="Piece jointe non trouvee")
     db.commit()
     return result.to_dict()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEV-12: Generation PDF devis client
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/{devis_id}/pdf")
+async def generate_devis_pdf(
+    devis_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case: GenerateDevisPDFUseCase = Depends(get_generate_pdf_use_case),
+):
+    """Genere et retourne le PDF du devis au format client (DEV-12).
+
+    Le PDF contient les informations visibles par le client :
+    lots, lignes, montants HT/TTC, ventilation TVA, conditions.
+    Les debourses et marges internes ne sont PAS inclus.
+
+    Args:
+        devis_id: L'ID du devis a generer en PDF.
+
+    Returns:
+        Le fichier PDF en reponse binaire (application/pdf).
+
+    Raises:
+        HTTPException 404: Si le devis n'existe pas.
+        HTTPException 500: Si la generation du PDF echoue.
+    """
+    import asyncio
+    import re
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Generation PDF synchrone → run_in_executor pour ne pas bloquer l'event loop
+        loop = asyncio.get_event_loop()
+        pdf_bytes, filename = await loop.run_in_executor(
+            None, use_case.execute, devis_id
+        )
+    except DevisNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Devis {devis_id} non trouve",
+        )
+    except GenerateDevisPDFError as e:
+        logger.error("Erreur generation PDF devis %s: %s", devis_id, e.message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la generation du PDF. Veuillez reessayer.",
+        )
+
+    # Sanitiser le filename (protection Content-Disposition header injection)
+    safe_filename = re.sub(r'[^A-Za-z0-9_\-.]', '_', filename)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
+        },
+    )

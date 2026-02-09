@@ -12,8 +12,10 @@
 import { useState, useEffect } from 'react'
 import { consentService, ConsentPreferences } from '../../services/consent'
 import { logger } from '../../services/logger'
+import { useToast } from '../../contexts/ToastContext'
 
 export function GDPRBanner() {
+  const { addToast } = useToast()
   const [showBanner, setShowBanner] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [preferences, setPreferences] = useState<ConsentPreferences>({
@@ -59,6 +61,7 @@ export function GDPRBanner() {
       logger.info('User accepted all consents')
     } catch (error) {
       logger.error('Error accepting all consents', error)
+      addToast({ message: 'Erreur lors de l\'enregistrement de vos preferences', type: 'error' })
     }
   }
 
@@ -73,6 +76,7 @@ export function GDPRBanner() {
       logger.info('User rejected all consents')
     } catch (error) {
       logger.error('Error rejecting all consents', error)
+      addToast({ message: 'Erreur lors de l\'enregistrement de vos preferences', type: 'error' })
     }
   }
 
@@ -83,6 +87,7 @@ export function GDPRBanner() {
       logger.info('User saved custom consents', preferences)
     } catch (error) {
       logger.error('Error saving custom consents', error)
+      addToast({ message: 'Erreur lors de l\'enregistrement de vos preferences', type: 'error' })
     }
   }
 

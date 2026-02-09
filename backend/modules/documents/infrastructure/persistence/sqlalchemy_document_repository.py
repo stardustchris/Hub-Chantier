@@ -157,6 +157,20 @@ class SQLAlchemyDocumentRepository(DocumentRepository):
         )
         return result or 0
 
+    def find_by_uploaded_by(
+        self, user_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Document]:
+        """Récupère les documents uploadés par un utilisateur."""
+        models = (
+            self._session.query(DocumentModel)
+            .filter_by(uploaded_by=user_id)
+            .order_by(DocumentModel.uploaded_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return [self._to_entity(m) for m in models]
+
     def _to_entity(self, model: DocumentModel) -> Document:
         """Convertit un modèle en entité."""
         return Document(

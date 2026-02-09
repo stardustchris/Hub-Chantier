@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date, time
 from typing import Optional, Dict, Any
 
-from shared.infrastructure.event_bus.domain_event import DomainEvent
+from shared.domain.events.domain_event import DomainEvent
 
 
 @dataclass(frozen=True)
