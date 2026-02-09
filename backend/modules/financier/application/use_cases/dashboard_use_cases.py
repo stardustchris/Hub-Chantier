@@ -157,6 +157,16 @@ class GetDashboardFinancierUseCase:
                 quote_part_frais_generaux=quote_part,
             )
             marge_statut = "calculee"
+        else:
+            # Fallback: marge budgetaire quand pas de CA reel (pas de situation)
+            # Formule simplifiee: (Budget - Engage) / Budget
+            if montant_revise_ht > Decimal("0"):
+                marge_estimee = arrondir_pct(
+                    (montant_revise_ht - total_engage) / montant_revise_ht * Decimal("100")
+                )
+            else:
+                marge_estimee = arrondir_pct(Decimal("0"))
+            marge_statut = "estimee"
 
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),

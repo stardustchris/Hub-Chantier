@@ -41,8 +41,8 @@ class Budget:
             raise ValueError("Le montant initial HT ne peut pas être négatif")
         if self.retenue_garantie_pct < Decimal("0") or self.retenue_garantie_pct > Decimal("100"):
             raise ValueError("La retenue de garantie doit être entre 0 et 100%")
-        if self.seuil_alerte_pct < Decimal("0") or self.seuil_alerte_pct > Decimal("200"):
-            raise ValueError("Le seuil d'alerte doit être entre 0 et 200%")
+        if self.seuil_alerte_pct < Decimal("0") or self.seuil_alerte_pct > Decimal("100"):
+            raise ValueError("Le seuil d'alerte doit être entre 0 et 100%")
         if self.seuil_validation_achat < Decimal("0"):
             raise ValueError("Le seuil de validation achat ne peut pas être négatif")
 

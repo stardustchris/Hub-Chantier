@@ -8,6 +8,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List
 
+from shared.domain.calcul_financier import arrondir_montant
+
 from ...domain.repositories import BudgetRepository, AchatRepository
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.evolution_dtos import EvolutionMensuelleDTO, EvolutionFinanciereDTO
@@ -134,9 +136,9 @@ class GetEvolutionFinanciereUseCase:
             points.append(
                 EvolutionMensuelleDTO(
                     mois=mois_label,
-                    prevu_cumule=str(prevu_cumule.quantize(Decimal("0.01"))),
-                    engage_cumule=str(engage_cumule.quantize(Decimal("0.01"))),
-                    realise_cumule=str(realise_cumule.quantize(Decimal("0.01"))),
+                    prevu_cumule=str(arrondir_montant(prevu_cumule)),
+                    engage_cumule=str(arrondir_montant(engage_cumule)),
+                    realise_cumule=str(arrondir_montant(realise_cumule)),
                 )
             )
 

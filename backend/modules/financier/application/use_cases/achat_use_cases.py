@@ -10,6 +10,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from shared.domain.calcul_financier import arrondir_pct
+
 logger = logging.getLogger(__name__)
 
 from ..ports.event_bus import EventBus
@@ -88,7 +90,7 @@ def _verifier_depassement_budget(
     total_engage = achat_repository.somme_by_chantier(
         chantier_id, statuts=STATUTS_ENGAGES
     )
-    pourcentage = (total_engage / budget.montant_revise_ht) * Decimal("100")
+    pourcentage = arrondir_pct((total_engage / budget.montant_revise_ht) * Decimal("100"))
 
     if pourcentage >= budget.seuil_alerte_pct:
         event_bus.publish(
