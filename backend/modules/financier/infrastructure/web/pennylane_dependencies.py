@@ -34,6 +34,7 @@ from ..persistence.repositories import (
     SqlAlchemyFournisseurRepository,
     SqlAlchemyFactureClientRepository,
 )
+from modules.chantiers.infrastructure.persistence import SQLAlchemyChantierRepository
 
 
 def get_pennylane_api_key() -> str:
@@ -94,6 +95,13 @@ def get_facture_repository(
 ) -> SqlAlchemyFactureClientRepository:
     """Cree le repository des factures client."""
     return SqlAlchemyFactureClientRepository(db)
+
+
+def get_chantier_repository(
+    db: Session = Depends(get_db),
+) -> SQLAlchemyChantierRepository:
+    """Cree le repository des chantiers."""
+    return SQLAlchemyChantierRepository(db)
 
 
 def get_pennylane_sync_service(
@@ -178,21 +186,23 @@ def get_resolve_reconciliation_use_case(
 
 def get_mappings_use_case(
     mapping_repo: SqlAlchemyPennylaneMappingRepository = Depends(get_mapping_repository),
+    chantier_repo: SQLAlchemyChantierRepository = Depends(get_chantier_repository),
 ) -> GetMappingsUseCase:
     """Cree le use case de liste des mappings."""
     return GetMappingsUseCase(
         mapping_repository=mapping_repo,
-        chantier_repository=None,  # TODO: Injecter si disponible
+        chantier_repository=chantier_repo,
     )
 
 
 def get_create_mapping_use_case(
     mapping_repo: SqlAlchemyPennylaneMappingRepository = Depends(get_mapping_repository),
+    chantier_repo: SQLAlchemyChantierRepository = Depends(get_chantier_repository),
 ) -> CreateMappingUseCase:
     """Cree le use case de creation de mapping."""
     return CreateMappingUseCase(
         mapping_repository=mapping_repo,
-        chantier_repository=None,  # TODO: Injecter si disponible
+        chantier_repository=chantier_repo,
     )
 
 
