@@ -7,6 +7,8 @@ import logging
 from decimal import Decimal
 from typing import List, Optional
 
+from shared.domain.calcul_financier import calculer_marge_chantier
+
 from ...domain.repositories.facture_repository import FactureRepository
 from ...domain.repositories.achat_repository import AchatRepository
 from ...domain.repositories.budget_repository import BudgetRepository
@@ -109,13 +111,15 @@ class GetPnLChantierUseCase:
 
         total_couts = cout_achats + cout_mo + cout_materiel
 
-        # 4. Calculer les marges
+        # 4. Calculer les marges (formule BTP unifiee via calcul_financier.py)
         marge_brute_ht = chiffre_affaires_ht - total_couts
-        if chiffre_affaires_ht > Decimal("0"):
-            marge_brute_pct = (
-                marge_brute_ht / chiffre_affaires_ht * Decimal("100")
-            ).quantize(Decimal("0.01"))
-        else:
+        marge_brute_pct = calculer_marge_chantier(
+            ca_ht=chiffre_affaires_ht,
+            cout_achats=cout_achats,
+            cout_mo=cout_mo,
+            cout_materiel=cout_materiel,
+        )
+        if marge_brute_pct is None:
             marge_brute_pct = Decimal("0")
 
         # 5. Determiner si le chantier est ferme

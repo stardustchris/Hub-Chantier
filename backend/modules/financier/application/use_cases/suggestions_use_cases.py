@@ -106,11 +106,13 @@ class GetSuggestionsFinancieresUseCase:
         if montant_revise > Decimal("0"):
             pct_engage = (total_engage / montant_revise) * Decimal("100")
             pct_realise = (total_realise / montant_revise) * Decimal("100")
-            marge_pct = ((montant_revise - total_engage) / montant_revise) * Decimal("100")
+            # NOTE: Ceci est un indicateur budgetaire, PAS une marge reelle.
+            # Marge reelle = (CA - Couts) / CA (cf. calcul_financier.py)
+            marge_budgetaire_pct = ((montant_revise - total_engage) / montant_revise) * Decimal("100")
         else:
             pct_engage = Decimal("0")
             pct_realise = Decimal("0")
-            marge_pct = Decimal("0")
+            marge_budgetaire_pct = Decimal("0")
 
         # Calcul du burn rate pour les KPI
         burn_rate, _budget_moyen = self._calculer_burn_rate(
@@ -128,7 +130,7 @@ class GetSuggestionsFinancieresUseCase:
             reste_a_depenser=reste_a_depenser,
             pct_engage=pct_engage,
             pct_realise=pct_realise,
-            marge_pct=marge_pct,
+            marge_pct=marge_budgetaire_pct,
             budget=budget,
         )
 
@@ -145,7 +147,7 @@ class GetSuggestionsFinancieresUseCase:
                     "total_realise": str(total_realise.quantize(Decimal("0.01"))),
                     "pct_engage": str(pct_engage.quantize(Decimal("0.01"))),
                     "pct_realise": str(pct_realise.quantize(Decimal("0.01"))),
-                    "marge_pct": str(marge_pct.quantize(Decimal("0.01"))),
+                    "marge_budgetaire_pct": str(marge_budgetaire_pct.quantize(Decimal("0.01"))),
                     "reste_a_depenser": str(reste_a_depenser.quantize(Decimal("0.01"))),
                     "burn_rate": str(burn_rate.quantize(Decimal("0.01"))),
                 }
@@ -377,38 +379,46 @@ class GetSuggestionsFinancieresUseCase:
         total_realise: Decimal,
         montant_revise: Decimal,
         budget_created_at: datetime | None,
+        duree_prevue_mois: int | None = None,
     ) -> tuple[Decimal, Decimal]:
         """Calcule le burn rate mensuel et le budget moyen mensuel.
+
+        CORRECTION: Le budget moyen est calcule sur la duree PREVUE du chantier,
+        pas sur la duree ecoulee. Sinon, les 6 premiers mois d'un chantier
+        de 12 mois generent systematiquement des faux positifs d'alertes
+        car budget_moyen = montant_revise / 2 au lieu de / 12.
 
         Args:
             total_realise: Total des depenses realisees.
             montant_revise: Montant revise du budget.
             budget_created_at: Date de creation du budget.
+            duree_prevue_mois: Duree previsionnelle du chantier en mois.
+                Si None, utilise 12 mois par defaut (chantier BTP typique).
 
         Returns:
             Tuple (burn_rate_mensuel, budget_moyen_mensuel).
         """
         today = date.today()
 
-        # Nombre de mois depuis le debut
+        # Nombre de mois depuis le debut (pour le burn rate reel)
         if budget_created_at:
             if isinstance(budget_created_at, datetime):
                 debut = budget_created_at.date()
             else:
                 debut = budget_created_at
-            nb_mois = max(
+            nb_mois_ecoules = max(
                 1,
                 (today.year - debut.year) * 12 + (today.month - debut.month) + 1,
             )
         else:
-            nb_mois = 1
+            nb_mois_ecoules = 1
 
-        burn_rate = total_realise / Decimal(str(nb_mois))
+        burn_rate = total_realise / Decimal(str(nb_mois_ecoules))
 
-        # Budget moyen mensuel : estimation sur la meme duree
-        # (ou 12 mois si pas de duree definie)
-        duree_prevue = max(nb_mois, 1)
-        budget_moyen = montant_revise / Decimal(str(duree_prevue))
+        # Budget moyen mensuel : sur la duree PREVUE, pas ecoulee
+        # Defaut 12 mois (chantier BTP gros oeuvre typique)
+        duree = duree_prevue_mois if duree_prevue_mois and duree_prevue_mois > 0 else 12
+        budget_moyen = montant_revise / Decimal(str(duree))
 
         return burn_rate, budget_moyen
 
@@ -430,27 +440,12 @@ class GetSuggestionsFinancieresUseCase:
         Returns:
             IndicateursPredictifDTO avec les indicateurs calcules.
         """
-        today = date.today()
-
-        # Nombre de mois depuis le debut
-        if budget_created_at:
-            if isinstance(budget_created_at, datetime):
-                debut = budget_created_at.date()
-            else:
-                debut = budget_created_at
-            nb_mois = max(
-                1,
-                (today.year - debut.year) * 12 + (today.month - debut.month) + 1,
-            )
-        else:
-            nb_mois = 1
-
-        # burn_rate_mensuel = total_realise / nb_mois_depuis_debut
-        burn_rate = total_realise / Decimal(str(nb_mois))
-
-        # budget_moyen_mensuel = montant_revise / duree_prevue_mois
-        duree_prevue = max(nb_mois, 1)
-        budget_moyen = montant_revise / Decimal(str(duree_prevue))
+        # Reutilise _calculer_burn_rate pour coherence
+        burn_rate, budget_moyen = self._calculer_burn_rate(
+            total_realise=total_realise,
+            montant_revise=montant_revise,
+            budget_created_at=budget_created_at,
+        )
 
         # ecart_burn_rate = ((burn_rate - budget_moyen) / budget_moyen) * 100
         if budget_moyen > Decimal("0"):
@@ -466,10 +461,10 @@ class GetSuggestionsFinancieresUseCase:
         else:
             mois_restants = Decimal("0")
 
-        # date_epuisement = today + mois_restants * 30 jours
+        # date_epuisement = aujourd'hui + mois_restants * 30 jours
         if mois_restants > Decimal("0"):
             jours_restants = int(mois_restants * Decimal("30"))
-            date_epuisement = today + timedelta(days=jours_restants)
+            date_epuisement = date.today() + timedelta(days=jours_restants)
             date_epuisement_str = date_epuisement.isoformat()
         else:
             date_epuisement_str = "N/A"

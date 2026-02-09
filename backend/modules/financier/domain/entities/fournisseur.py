@@ -114,6 +114,16 @@ class Fournisseur:
         self.updated_at = datetime.utcnow()
 
     @property
+    def est_sous_traitant(self) -> bool:
+        """Indique si le fournisseur est un sous-traitant.
+
+        CGI art. 283-2 nonies : les sous-traitants facturent HT,
+        le donneur d'ordre (Greg Construction) autoliquide la TVA.
+        Impact : la TVA des achats sous-traitance doit etre a 0%.
+        """
+        return self.type == TypeFournisseur.SOUS_TRAITANT
+
+    @property
     def est_supprime(self) -> bool:
         """Vérifie si le fournisseur a été supprimé (soft delete)."""
         return self.deleted_at is not None
@@ -166,4 +176,5 @@ class Fournisseur:
             "derniere_sync_pennylane": self.derniere_sync_pennylane.isoformat()
             if self.derniere_sync_pennylane
             else None,
+            "est_sous_traitant": self.est_sous_traitant,
         }

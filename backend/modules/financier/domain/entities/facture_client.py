@@ -10,6 +10,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
+from shared.domain.calcul_financier import calculer_tva as _calculer_tva, arrondir_montant
+
 
 @dataclass
 class FactureClient:
@@ -164,9 +166,11 @@ class FactureClient:
         Returns:
             Tuple (montant_tva, montant_ttc, retenue_montant, montant_net).
         """
-        montant_tva = montant_ht * taux_tva / Decimal("100")
+        montant_tva = _calculer_tva(montant_ht, taux_tva)
         montant_ttc = montant_ht + montant_tva
-        retenue_montant = montant_ttc * retenue_garantie_pct / Decimal("100")
+        retenue_montant = arrondir_montant(
+            montant_ttc * retenue_garantie_pct / Decimal("100")
+        )
         montant_net = montant_ttc - retenue_montant
         return montant_tva, montant_ttc, retenue_montant, montant_net
 

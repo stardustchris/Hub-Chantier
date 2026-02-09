@@ -22,6 +22,7 @@ from ...domain.repositories import (
     AchatRepository,
     SituationRepository,
     CoutMainOeuvreRepository,
+    CoutMaterielRepository,
 )
 from ...domain.value_objects import StatutAchat
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
@@ -32,11 +33,15 @@ from ..dtos.dashboard_dtos import (
     DashboardFinancierDTO,
 )
 from .budget_use_cases import BudgetNotFoundError
+from shared.domain.calcul_financier import (
+    calculer_marge_chantier,
+    calculer_quote_part_frais_generaux,
+    arrondir_pct,
+    arrondir_montant,
+)
 
-# Coûts fixes annuels de la société (frais généraux, administratifs, etc.)
-# Note: Les 2 896 065 € initiaux incluent les salaires, déjà comptés dans le coût MO.
-# Pour le calcul de marge BTP, on utilise uniquement les frais généraux hors salaires.
-# Frais généraux BTP typiques : 10-15% du CA → ~600k€ pour CA de 4.3M€
+# Coûts fixes annuels de la société (frais généraux hors salaires).
+# Frais généraux BTP typiques : 10-15% du CA -> ~600k EUR pour CA de 4.3M EUR
 COUTS_FIXES_ANNUELS = Decimal("600000")
 
 
@@ -54,12 +59,14 @@ class GetDashboardFinancierUseCase:
         achat_repository: AchatRepository,
         situation_repository: SituationRepository = None,
         cout_mo_repository: CoutMainOeuvreRepository = None,
+        cout_materiel_repository: CoutMaterielRepository = None,
     ):
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
         self._achat_repository = achat_repository
         self._situation_repository = situation_repository
         self._cout_mo_repository = cout_mo_repository
+        self._cout_materiel_repository = cout_materiel_repository
 
     def execute(
         self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
@@ -93,21 +100,36 @@ class GetDashboardFinancierUseCase:
         )
         reste_a_depenser = montant_revise_ht - total_engage
 
+        # Couts MO et materiel (pour total realise COMPLET)
+        cout_mo = Decimal("0")
+        cout_materiel = Decimal("0")
+        if self._cout_mo_repository:
+            try:
+                cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+            except Exception:
+                pass
+        if self._cout_materiel_repository:
+            try:
+                cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
+            except Exception:
+                pass
+
+        # Total realise COMPLET = achats factures + MO + materiel
+        total_realise_complet = total_realise + cout_mo + cout_materiel
+
         # Pourcentages basés sur le budget
         if montant_revise_ht > Decimal("0"):
             pct_engage = (total_engage / montant_revise_ht) * Decimal("100")
-            pct_realise = (total_realise / montant_revise_ht) * Decimal("100")
+            pct_realise = (total_realise_complet / montant_revise_ht) * Decimal("100")
             pct_reste = (reste_a_depenser / montant_revise_ht) * Decimal("100")
         else:
             pct_engage = Decimal("0")
             pct_realise = Decimal("0")
             pct_reste = Decimal("0")
 
-        # Calcul de la marge BTP : (Prix Vente - Coût Revient) / Prix Vente
-        # Prix Vente = situations de travaux facturées au client
-        # Coût Revient = achats réalisés + coût MO + coûts fixes répartis
+        # Calcul de la marge BTP unifiee via formule partagee
+        # Prix Vente = situations de travaux facturees au client
         prix_vente_ht = Decimal("0")
-        cout_mo = Decimal("0")
         marge_estimee: Optional[Decimal] = None
         marge_statut = "en_attente"
 
@@ -118,41 +140,38 @@ class GetDashboardFinancierUseCase:
             if derniere_situation:
                 prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
-        if self._cout_mo_repository:
-            cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
-
-        # Calcul du coût de revient avec coûts fixes répartis au prorata du CA
-        cout_revient = total_realise + cout_mo
-
         if prix_vente_ht > Decimal("0"):
-            # Répartition des coûts fixes au prorata du CA
-            if ca_total_annee and ca_total_annee > Decimal("0"):
-                quote_part_couts_fixes = (
-                    prix_vente_ht / ca_total_annee
-                ) * COUTS_FIXES_ANNUELS
-                cout_revient += quote_part_couts_fixes
+            # Quote-part frais generaux via fonction unifiee
+            quote_part = calculer_quote_part_frais_generaux(
+                ca_chantier_ht=prix_vente_ht,
+                ca_total_annee=ca_total_annee or Decimal("0"),
+                couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+            )
 
-            # Formule BTP correcte : marge sur prix de vente
-            marge_estimee = (
-                (prix_vente_ht - cout_revient) / prix_vente_ht
-            ) * Decimal("100")
+            # Marge BTP unifiee (formule partagee avec P&L et bilan)
+            marge_estimee = calculer_marge_chantier(
+                ca_ht=prix_vente_ht,
+                cout_achats=total_realise,
+                cout_mo=cout_mo,
+                cout_materiel=cout_materiel,
+                quote_part_frais_generaux=quote_part,
+            )
             marge_statut = "calculee"
-        # Pas de fallback : si pas de situation, marge reste None et statut "en_attente"
 
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),
             total_engage=str(total_engage),
-            total_realise=str(total_realise),
+            total_realise=str(total_realise_complet),
             marge_estimee=(
-                str(marge_estimee.quantize(Decimal("0.01")))
+                str(marge_estimee)
                 if marge_estimee is not None
                 else None
             ),
             marge_statut=marge_statut,
-            pct_engage=str(pct_engage.quantize(Decimal("0.01"))),
-            pct_realise=str(pct_realise.quantize(Decimal("0.01"))),
+            pct_engage=str(arrondir_pct(pct_engage)),
+            pct_realise=str(arrondir_pct(pct_realise)),
             reste_a_depenser=str(reste_a_depenser),
-            pct_reste=str(pct_reste.quantize(Decimal("0.01"))),
+            pct_reste=str(arrondir_pct(pct_reste)),
         )
 
         # Derniers achats (5)

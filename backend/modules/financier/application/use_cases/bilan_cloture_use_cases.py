@@ -6,16 +6,21 @@ pour produire un rapport recapitulatif de cloture.
 
 import logging
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 from ...domain.repositories.budget_repository import BudgetRepository
 from ...domain.repositories.lot_budgetaire_repository import LotBudgetaireRepository
 from ...domain.repositories.achat_repository import AchatRepository
 from ...domain.repositories.avenant_repository import AvenantRepository
 from ...domain.repositories.situation_repository import SituationRepository
+from ...domain.repositories.facture_repository import FactureRepository
+from ...domain.repositories.cout_main_oeuvre_repository import CoutMainOeuvreRepository
+from ...domain.repositories.cout_materiel_repository import CoutMaterielRepository
 from ...domain.value_objects import StatutAchat
+from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.bilan_cloture_dtos import BilanClotureDTO, EcartLotDTO
 from shared.application.ports.chantier_info_port import ChantierInfoPort
+from shared.domain.calcul_financier import calculer_marge_chantier, arrondir_pct
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +77,9 @@ class GetBilanClotureUseCase:
         avenant_repository: AvenantRepository,
         situation_repository: SituationRepository,
         chantier_info_port: ChantierInfoPort,
+        facture_repository: Optional[FactureRepository] = None,
+        cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
+        cout_materiel_repository: Optional[CoutMaterielRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -82,6 +90,9 @@ class GetBilanClotureUseCase:
             avenant_repository: Repository Avenant (interface).
             situation_repository: Repository Situation (interface).
             chantier_info_port: Port pour infos chantier (nom, statut).
+            facture_repository: Repository Facture pour calcul CA reel.
+            cout_mo_repository: Repository Cout MO pour marge reelle.
+            cout_materiel_repository: Repository Cout materiel pour marge reelle.
         """
         self.budget_repository = budget_repository
         self.lot_repository = lot_repository
@@ -89,6 +100,9 @@ class GetBilanClotureUseCase:
         self.avenant_repository = avenant_repository
         self.situation_repository = situation_repository
         self.chantier_info_port = chantier_info_port
+        self.facture_repository = facture_repository
+        self.cout_mo_repository = cout_mo_repository
+        self.cout_materiel_repository = cout_materiel_repository
 
     def execute(self, chantier_id: int) -> BilanClotureDTO:
         """Genere le bilan de cloture pour un chantier.
@@ -126,36 +140,47 @@ class GetBilanClotureUseCase:
         nb_avenants = self.avenant_repository.count_by_budget_id(budget.id)
 
         # 4. Calculer les engages et realises globaux
-        # Engage = tous les achats non refuses (demande + valide + commande + livre + facture)
-        statuts_engages = [
-            StatutAchat.DEMANDE,
-            StatutAchat.VALIDE,
-            StatutAchat.COMMANDE,
-            StatutAchat.LIVRE,
-            StatutAchat.FACTURE,
-        ]
+        # Engage = achats valides/commandes/livres/factures (PAS les demandes)
+        # Utilise les constantes partagees STATUTS_ENGAGES pour coherence systeme
         total_engage_ht = self.achat_repository.somme_by_chantier(
-            chantier_id, statuts=statuts_engages
+            chantier_id, statuts=STATUTS_ENGAGES
         )
 
-        # Realise = achats livres ou factures
-        statuts_realises = [
-            StatutAchat.LIVRE,
-            StatutAchat.FACTURE,
-        ]
+        # Realise = achats factures uniquement (coherent avec dashboard et P&L)
+        # Utilise les constantes partagees STATUTS_REALISES
         total_realise_ht = self.achat_repository.somme_by_chantier(
-            chantier_id, statuts=statuts_realises
+            chantier_id, statuts=STATUTS_REALISES
         )
 
-        # 5. Calculer le reste non depense et la marge
-        reste_non_depense_ht = budget_revise_ht - total_engage_ht
-        marge_finale_ht = budget_revise_ht - total_realise_ht
+        # 4bis. Couts MO et materiel pour marge reelle
+        cout_mo = Decimal("0")
+        cout_materiel = Decimal("0")
+        if self.cout_mo_repository:
+            try:
+                cout_mo = self.cout_mo_repository.calculer_cout_chantier(chantier_id)
+            except Exception:
+                logger.warning("Erreur calcul cout MO bilan chantier %d", chantier_id)
+        if self.cout_materiel_repository:
+            try:
+                cout_materiel = self.cout_materiel_repository.calculer_cout_chantier(chantier_id)
+            except Exception:
+                logger.warning("Erreur calcul cout materiel bilan chantier %d", chantier_id)
 
-        if budget_revise_ht > Decimal("0"):
-            marge_finale_pct = (marge_finale_ht / budget_revise_ht * Decimal("100")).quantize(
-                Decimal("0.01")
-            )
-        else:
+        # 5. Calculer le reste non depense et la marge REELLE
+        reste_non_depense_ht = budget_revise_ht - total_engage_ht
+
+        # Marge reelle = basee sur CA reel (factures client), pas sur le budget
+        # Formule BTP unifiee : (CA - Cout revient) / CA x 100
+        ca_ht = self._calculer_ca_reel(chantier_id)
+        marge_finale_pct = calculer_marge_chantier(
+            ca_ht=ca_ht,
+            cout_achats=total_realise_ht,
+            cout_mo=cout_mo,
+            cout_materiel=cout_materiel,
+        )
+        marge_finale_ht = ca_ht - (total_realise_ht + cout_mo + cout_materiel)
+
+        if marge_finale_pct is None:
             marge_finale_pct = Decimal("0")
 
         # 6. Compter les achats et situations
@@ -200,28 +225,21 @@ class GetBilanClotureUseCase:
         lots = self.lot_repository.find_by_budget_id(budget_id)
         ecarts: List[EcartLotDTO] = []
 
-        statuts_realises = [
-            StatutAchat.LIVRE,
-            StatutAchat.FACTURE,
-        ]
-
         for lot in lots:
             if lot.id is None:
                 continue
 
             prevu_ht = lot.total_prevu_ht
 
-            # Realise par lot = somme des achats livres/factures rattaches au lot
+            # Realise par lot = achats factures (coherent STATUTS_REALISES)
             realise_ht = self.achat_repository.somme_by_lot(
-                lot.id, statuts=statuts_realises
+                lot.id, statuts=STATUTS_REALISES
             )
 
             ecart_ht = prevu_ht - realise_ht
 
             if prevu_ht > Decimal("0"):
-                ecart_pct = (ecart_ht / prevu_ht * Decimal("100")).quantize(
-                    Decimal("0.01")
-                )
+                ecart_pct = arrondir_pct(ecart_ht / prevu_ht * Decimal("100"))
             else:
                 ecart_pct = Decimal("0")
 
@@ -237,3 +255,30 @@ class GetBilanClotureUseCase:
             )
 
         return ecarts
+
+    def _calculer_ca_reel(self, chantier_id: int) -> Decimal:
+        """Calcule le CA reel HT depuis les factures client emises.
+
+        Le CA reel est la somme des factures emises/envoyees/payees.
+        Utilise le meme calcul que le P&L pour coherence.
+
+        Args:
+            chantier_id: ID du chantier.
+
+        Returns:
+            Le CA HT reel. Decimal("0") si pas de factures ou repo indisponible.
+        """
+        if not self.facture_repository:
+            # Fallback : utiliser la derniere situation de travaux
+            derniere = self.situation_repository.find_derniere_situation(chantier_id)
+            if derniere:
+                return Decimal(str(derniere.montant_cumule_ht))
+            return Decimal("0")
+
+        statuts_ca = {"emise", "envoyee", "payee"}
+        factures = self.facture_repository.find_by_chantier_id(chantier_id)
+        ca = Decimal("0")
+        for facture in factures:
+            if facture.statut in statuts_ca:
+                ca += facture.montant_ht
+        return ca

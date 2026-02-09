@@ -274,15 +274,15 @@ class TestGetSuggestionsFinancieresUseCase:
         # Assert
         indicateurs = result.indicateurs
 
-        # nb_mois = max(1, (2026-2026)*12 + (2-1) + 1) = 2
+        # nb_mois_ecoules = max(1, (2026-2026)*12 + (2-1) + 1) = 2
         # burn_rate = 40000 / 2 = 20000
         assert indicateurs.burn_rate_mensuel == "20000.00"
 
-        # budget_moyen = 120000 / 2 = 60000
-        assert indicateurs.budget_moyen_mensuel == "60000.00"
+        # budget_moyen = 120000 / duree_prevue (defaut 12) = 10000
+        assert indicateurs.budget_moyen_mensuel == "10000.00"
 
-        # ecart = ((20000 - 60000) / 60000) * 100 = -66.67%
-        assert indicateurs.ecart_burn_rate_pct == "-66.67"
+        # ecart = ((20000 - 10000) / 10000) * 100 = 100.00%
+        assert indicateurs.ecart_burn_rate_pct == "100.00"
 
         # reste = 120000 - 60000 = 60000
         # mois_restants = 60000 / 20000 = 3
@@ -636,7 +636,7 @@ class TestGetSuggestionsWithAIProvider:
         assert call_args["total_realise"] == "50000.00"
         assert call_args["pct_engage"] == "50.00"
         assert call_args["pct_realise"] == "25.00"
-        assert call_args["marge_pct"] == "50.00"
+        assert call_args["marge_budgetaire_pct"] == "50.00"
         assert call_args["reste_a_depenser"] == "100000.00"
 
     def test_no_ai_provider_uses_algo_only(self):
