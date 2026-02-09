@@ -333,11 +333,14 @@ def get_create_achat_use_case(
 
 def get_update_achat_use_case(
     achat_repository: AchatRepository = Depends(get_achat_repository),
+    fournisseur_repository: FournisseurRepository = Depends(get_fournisseur_repository),
     journal_repository: JournalFinancierRepository = Depends(get_journal_financier_repository),
     event_bus: EventBus = Depends(get_event_bus),
 ) -> UpdateAchatUseCase:
     """Retourne le use case UpdateAchat."""
-    return UpdateAchatUseCase(achat_repository, journal_repository, event_bus)
+    return UpdateAchatUseCase(
+        achat_repository, fournisseur_repository, journal_repository, event_bus,
+    )
 
 
 def get_valider_achat_use_case(
@@ -850,13 +853,14 @@ def get_vue_consolidee_use_case(
     alerte_repository: AlerteRepository = Depends(get_alerte_repository),
     situation_repository: SituationRepository = Depends(get_situation_repository),
     cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
     db: Session = Depends(get_db),
 ) -> GetVueConsolideeFinancesUseCase:
     """Retourne le use case GetVueConsolideeFinances.
 
     Utilise la formule BTP correcte pour le calcul de marge:
-    Marge = (Prix Vente - Cout Revient) / Prix Vente
-    ou Prix Vente = situations facturees, Cout Revient = achats + MO.
+    Marge = (CA HT - Cout Revient) / CA HT
+    ou CA HT = situations facturees, Cout Revient = achats + MO + materiel + FG.
     La marge moyenne est ponderee par le prix de vente.
     """
     from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
@@ -872,6 +876,7 @@ def get_vue_consolidee_use_case(
         chantier_info_port=chantier_info_port,
         situation_repository=situation_repository,
         cout_mo_repository=cout_mo_repository,
+        cout_materiel_repository=cout_materiel_repository,
     )
 
 
@@ -1052,6 +1057,9 @@ def get_bilan_cloture_use_case(
     achat_repository: AchatRepository = Depends(get_achat_repository),
     avenant_repository: AvenantRepository = Depends(get_avenant_repository),
     situation_repository: SituationRepository = Depends(get_situation_repository),
+    facture_repository: FactureRepository = Depends(get_facture_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
     db: Session = Depends(get_db),
 ) -> GetBilanClotureUseCase:
     """Retourne le use case GetBilanCloture."""
@@ -1067,4 +1075,7 @@ def get_bilan_cloture_use_case(
         budget_repository, lot_repository, achat_repository,
         avenant_repository, situation_repository,
         chantier_info_port=chantier_info_port,
+        facture_repository=facture_repository,
+        cout_mo_repository=cout_mo_repository,
+        cout_materiel_repository=cout_materiel_repository,
     )

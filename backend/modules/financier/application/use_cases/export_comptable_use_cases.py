@@ -17,6 +17,7 @@ from ...domain.repositories.facture_repository import FactureRepository
 from ...domain.repositories.fournisseur_repository import FournisseurRepository
 from ...domain.repositories.lot_budgetaire_repository import LotBudgetaireRepository
 from ..dtos.export_dtos import ExportComptableDTO, LigneExportComptableDTO
+from shared.domain.calcul_financier import calculer_tva, arrondir_montant
 
 logger = logging.getLogger(__name__)
 
@@ -151,8 +152,8 @@ class ExportComptableUseCase:
             offset=0,
         )
         for achat in achats:
-            montant_ht = achat.quantite * achat.prix_unitaire_ht
-            montant_tva = montant_ht * achat.taux_tva / Decimal("100")
+            montant_ht = arrondir_montant(achat.quantite * achat.prix_unitaire_ht)
+            montant_tva = calculer_tva(montant_ht, achat.taux_tva)
             montant_ttc = montant_ht + montant_tva
 
             # Cache fournisseur
@@ -202,7 +203,7 @@ class ExportComptableUseCase:
                 continue
 
             montant_ht = situation.montant_periode_ht
-            montant_tva = montant_ht * situation.taux_tva / Decimal("100")
+            montant_tva = calculer_tva(montant_ht, situation.taux_tva)
             montant_ttc = montant_ht + montant_tva
 
             lignes.append(
@@ -266,9 +267,9 @@ class ExportComptableUseCase:
             date_export=datetime.utcnow().isoformat(),
             lignes=lignes,
             totaux={
-                "total_ht": str(total_ht),
-                "total_tva": str(total_tva),
-                "total_ttc": str(total_ttc),
+                "total_ht": str(arrondir_montant(total_ht)),
+                "total_tva": str(arrondir_montant(total_tva)),
+                "total_ttc": str(arrondir_montant(total_ttc)),
             },
         )
 

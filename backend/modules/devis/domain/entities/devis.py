@@ -192,17 +192,17 @@ class Devis:
     def montant_retenue_garantie(self) -> Decimal:
         """Calcule le montant de la retenue de garantie.
 
-        DEV-22: montant_ttc * retenue_garantie_pct / 100.
+        Loi 71-584: la retenue s'applique sur le montant HT (pas TTC).
         """
-        return self.retenue_garantie.calculer_montant(self.montant_total_ttc)
+        return self.retenue_garantie.calculer_montant(self.montant_total_ht)
 
     @property
     def montant_net_a_payer(self) -> Decimal:
         """Calcule le montant net a payer apres retenue de garantie.
 
-        DEV-22: montant_ttc - montant_retenue_garantie.
+        Net = TTC - retenue(HT). Loi 71-584.
         """
-        return self.retenue_garantie.montant_net_a_payer(self.montant_total_ttc)
+        return self.montant_total_ttc - self.montant_retenue_garantie
 
     # ─────────────────────────────────────────────────────────────────
     # DEV-11: Options de presentation

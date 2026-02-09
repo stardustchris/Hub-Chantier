@@ -5,9 +5,12 @@ FIN-06: Suivi achat - Workflow de validation et suivi.
 FIN-07: Validation N+1 - Validation hiérarchique des achats.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from ..ports.event_bus import EventBus
 
@@ -136,6 +139,7 @@ class CreateAchatUseCase:
             FournisseurInactifError: Si le fournisseur est inactif.
         """
         fournisseur_nom = None
+        taux_tva = dto.taux_tva
 
         # Vérifier le fournisseur si renseigné
         if dto.fournisseur_id:
@@ -145,6 +149,16 @@ class CreateAchatUseCase:
             if not fournisseur.actif:
                 raise FournisseurInactifError(dto.fournisseur_id)
             fournisseur_nom = fournisseur.raison_sociale
+
+            # CGI art. 283-2 nonies : autoliquidation TVA sous-traitance BTP
+            # Le sous-traitant facture HT, le donneur d'ordre autoliquide la TVA
+            if fournisseur.est_sous_traitant and taux_tva > Decimal("0"):
+                logger.warning(
+                    "Autoliquidation TVA (CGI art. 283-2 nonies) : taux forcé "
+                    "à 0%% pour le sous-traitant '%s' (id=%d) - taux original: %s%%",
+                    fournisseur.raison_sociale, fournisseur.id, taux_tva,
+                )
+                taux_tva = Decimal("0")
 
         # Créer l'entité
         achat = Achat(
@@ -156,7 +170,7 @@ class CreateAchatUseCase:
             quantite=dto.quantite,
             unite=dto.unite,
             prix_unitaire_ht=dto.prix_unitaire_ht,
-            taux_tva=dto.taux_tva,
+            taux_tva=taux_tva,
             date_commande=dto.date_commande,
             date_livraison_prevue=dto.date_livraison_prevue,
             commentaire=dto.commentaire,
@@ -223,10 +237,12 @@ class UpdateAchatUseCase:
     def __init__(
         self,
         achat_repository: AchatRepository,
+        fournisseur_repository: FournisseurRepository,
         journal_repository: JournalFinancierRepository,
         event_bus: EventBus,
     ):
         self._achat_repository = achat_repository
+        self._fournisseur_repository = fournisseur_repository
         self._journal_repository = journal_repository
         self._event_bus = event_bus
 
@@ -297,6 +313,27 @@ class UpdateAchatUseCase:
         if dto.commentaire is not None:
             achat.commentaire = dto.commentaire
             modifications.append("commentaire")
+
+        # CGI art. 283-2 nonies : autoliquidation TVA sous-traitance BTP
+        # Vérifier après toutes les modifications (fournisseur et/ou taux_tva
+        # ont pu changer) si le fournisseur est un sous-traitant
+        if achat.fournisseur_id:
+            fournisseur = self._fournisseur_repository.find_by_id(
+                achat.fournisseur_id
+            )
+            if (
+                fournisseur
+                and fournisseur.est_sous_traitant
+                and achat.taux_tva > Decimal("0")
+            ):
+                logger.warning(
+                    "Autoliquidation TVA (CGI art. 283-2 nonies) : taux forcé "
+                    "à 0%% pour le sous-traitant '%s' (id=%d) - taux original: %s%%",
+                    fournisseur.raison_sociale, fournisseur.id, achat.taux_tva,
+                )
+                achat.taux_tva = Decimal("0")
+                if "taux_tva" not in modifications:
+                    modifications.append("taux_tva")
 
         achat.updated_at = datetime.utcnow()
 

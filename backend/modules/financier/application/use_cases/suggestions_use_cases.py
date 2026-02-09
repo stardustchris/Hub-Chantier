@@ -9,6 +9,8 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import List, Optional
 
+from shared.domain.calcul_financier import arrondir_montant, arrondir_pct
+
 from ...domain.repositories import (
     BudgetRepository,
     AchatRepository,
@@ -142,14 +144,14 @@ class GetSuggestionsFinancieresUseCase:
         if self._ai_provider is not None:
             try:
                 kpi_data = {
-                    "montant_revise": str(montant_revise.quantize(Decimal("0.01"))),
-                    "total_engage": str(total_engage.quantize(Decimal("0.01"))),
-                    "total_realise": str(total_realise.quantize(Decimal("0.01"))),
-                    "pct_engage": str(pct_engage.quantize(Decimal("0.01"))),
-                    "pct_realise": str(pct_realise.quantize(Decimal("0.01"))),
-                    "marge_budgetaire_pct": str(marge_budgetaire_pct.quantize(Decimal("0.01"))),
-                    "reste_a_depenser": str(reste_a_depenser.quantize(Decimal("0.01"))),
-                    "burn_rate": str(burn_rate.quantize(Decimal("0.01"))),
+                    "montant_revise": str(arrondir_montant(montant_revise)),
+                    "total_engage": str(arrondir_montant(total_engage)),
+                    "total_realise": str(arrondir_montant(total_realise)),
+                    "pct_engage": str(arrondir_pct(pct_engage)),
+                    "pct_realise": str(arrondir_pct(pct_realise)),
+                    "marge_budgetaire_pct": str(arrondir_pct(marge_budgetaire_pct)),
+                    "reste_a_depenser": str(arrondir_montant(reste_a_depenser)),
+                    "burn_rate": str(arrondir_montant(burn_rate)),
                 }
                 suggestions_ia = self._ai_provider.generate_suggestions(kpi_data)
 
@@ -241,7 +243,7 @@ class GetSuggestionsFinancieresUseCase:
                         f"avec une marge de seulement {marge_pct.quantize(Decimal('0.1'))}%. "
                         "Un avenant est recommande pour securiser le chantier."
                     ),
-                    impact_estime_eur=str(abs(impact).quantize(Decimal("0.01"))),
+                    impact_estime_eur=str(arrondir_montant(abs(impact))),
                 )
             )
 
@@ -258,7 +260,7 @@ class GetSuggestionsFinancieresUseCase:
                         f"l'engage ({pct_engage.quantize(Decimal('0.1'))}%) de plus de 10 points. "
                         "Verifier les facturations non prevues."
                     ),
-                    impact_estime_eur=str(abs(ecart).quantize(Decimal("0.01"))),
+                    impact_estime_eur=str(arrondir_montant(abs(ecart))),
                 )
             )
 
@@ -286,7 +288,7 @@ class GetSuggestionsFinancieresUseCase:
                                     f"Engage: {lot_engage}, Prevu: {lot.total_prevu_ht}."
                                 ),
                                 impact_estime_eur=str(
-                                    depassement.quantize(Decimal("0.01"))
+                                    arrondir_montant(depassement)
                                 ),
                             )
                         )
@@ -305,11 +307,11 @@ class GetSuggestionsFinancieresUseCase:
                     severity="WARNING",
                     titre="Rythme de depense trop eleve",
                     description=(
-                        f"Le burn rate mensuel ({burn_rate.quantize(Decimal('0.01'))} EUR/mois) "
+                        f"Le burn rate mensuel ({arrondir_montant(burn_rate)} EUR/mois) "
                         f"depasse de 20% le budget moyen mensuel "
-                        f"({budget_moyen.quantize(Decimal('0.01'))} EUR/mois)."
+                        f"({arrondir_montant(budget_moyen)} EUR/mois)."
                     ),
-                    impact_estime_eur=str(ecart_burn.quantize(Decimal("0.01"))),
+                    impact_estime_eur=str(arrondir_montant(ecart_burn)),
                 )
             )
 
@@ -476,10 +478,10 @@ class GetSuggestionsFinancieresUseCase:
             avancement = Decimal("0")
 
         return IndicateursPredictifDTO(
-            burn_rate_mensuel=str(burn_rate.quantize(Decimal("0.01"))),
-            budget_moyen_mensuel=str(budget_moyen.quantize(Decimal("0.01"))),
-            ecart_burn_rate_pct=str(ecart_burn_rate.quantize(Decimal("0.01"))),
-            mois_restants_budget=str(mois_restants.quantize(Decimal("0.01"))),
+            burn_rate_mensuel=str(arrondir_montant(burn_rate)),
+            budget_moyen_mensuel=str(arrondir_montant(budget_moyen)),
+            ecart_burn_rate_pct=str(arrondir_pct(ecart_burn_rate)),
+            mois_restants_budget=str(arrondir_montant(mois_restants)),
             date_epuisement_estimee=date_epuisement_str,
-            avancement_financier_pct=str(avancement.quantize(Decimal("0.01"))),
+            avancement_financier_pct=str(arrondir_pct(avancement)),
         )

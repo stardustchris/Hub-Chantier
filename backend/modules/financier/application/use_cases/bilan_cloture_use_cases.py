@@ -20,7 +20,14 @@ from ...domain.value_objects import StatutAchat
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.bilan_cloture_dtos import BilanClotureDTO, EcartLotDTO
 from shared.application.ports.chantier_info_port import ChantierInfoPort
-from shared.domain.calcul_financier import calculer_marge_chantier, arrondir_pct
+from shared.domain.calcul_financier import (
+    calculer_marge_chantier,
+    calculer_quote_part_frais_generaux,
+    arrondir_pct,
+)
+
+# Frais generaux hors salaires (typique BTP : 10-15% du CA)
+COUTS_FIXES_ANNUELS = Decimal("600000")
 
 logger = logging.getLogger(__name__)
 
@@ -104,11 +111,15 @@ class GetBilanClotureUseCase:
         self.cout_mo_repository = cout_mo_repository
         self.cout_materiel_repository = cout_materiel_repository
 
-    def execute(self, chantier_id: int) -> BilanClotureDTO:
+    def execute(
+        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
+    ) -> BilanClotureDTO:
         """Genere le bilan de cloture pour un chantier.
 
         Args:
             chantier_id: ID du chantier.
+            ca_total_annee: CA total annuel de l'entreprise pour repartition
+                des couts fixes. Si None, les frais generaux ne sont pas repartis.
 
         Returns:
             BilanClotureDTO contenant le bilan complet.
@@ -172,13 +183,19 @@ class GetBilanClotureUseCase:
         # Marge reelle = basee sur CA reel (factures client), pas sur le budget
         # Formule BTP unifiee : (CA - Cout revient) / CA x 100
         ca_ht = self._calculer_ca_reel(chantier_id)
+        quote_part = calculer_quote_part_frais_generaux(
+            ca_chantier_ht=ca_ht,
+            ca_total_annee=ca_total_annee or Decimal("0"),
+            couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+        )
         marge_finale_pct = calculer_marge_chantier(
             ca_ht=ca_ht,
             cout_achats=total_realise_ht,
             cout_mo=cout_mo,
             cout_materiel=cout_materiel,
+            quote_part_frais_generaux=quote_part,
         )
-        marge_finale_ht = ca_ht - (total_realise_ht + cout_mo + cout_materiel)
+        marge_finale_ht = ca_ht - (total_realise_ht + cout_mo + cout_materiel + quote_part)
 
         if marge_finale_pct is None:
             marge_finale_pct = Decimal("0")

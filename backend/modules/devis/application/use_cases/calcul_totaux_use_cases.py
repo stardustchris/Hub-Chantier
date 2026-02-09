@@ -9,6 +9,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, TYPE_CHECKING
 
+from shared.domain.calcul_financier import arrondir_montant, calculer_tva
+
 if TYPE_CHECKING:
     from ...domain.entities.devis import Devis
     from ...domain.entities.debourse_detail import DebourseDetail
@@ -189,9 +191,9 @@ class CalculerTotauxDevisUseCase:
             [
                 {
                     "taux": taux,
-                    "base_ht": str(base_ht.quantize(Decimal("0.01"))),
+                    "base_ht": str(arrondir_montant(base_ht)),
                     "montant_tva": str(
-                        (base_ht * Decimal(taux) / Decimal("100")).quantize(Decimal("0.01"))
+                        calculer_tva(base_ht, Decimal(taux))
                     ),
                 }
                 for taux, base_ht in ventilation_tva.items()

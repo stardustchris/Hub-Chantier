@@ -10,7 +10,7 @@ Où :
     - Prix Vente = situations de travaux facturées au client
     - Coût Revient = achats réalisés + coût MO + coûts fixes répartis
 
-Coûts fixes société : 2 896 065 € / an (2024, 2025, 2026)
+Coûts fixes société : 600 000 € / an (frais généraux hors salaires)
 Répartition : au prorata du CA facturé (prix de vente)
 """
 
@@ -36,6 +36,7 @@ from ...domain.repositories import (
     AlerteRepository,
     SituationRepository,
     CoutMainOeuvreRepository,
+    CoutMaterielRepository,
 )
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.consolidation_dtos import (
@@ -69,6 +70,7 @@ class GetVueConsolideeFinancesUseCase:
         chantier_info_port: Optional[ChantierInfoPort] = None,
         situation_repository: Optional[SituationRepository] = None,
         cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
+        cout_materiel_repository: Optional[CoutMaterielRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -80,6 +82,7 @@ class GetVueConsolideeFinancesUseCase:
             chantier_info_port: Port pour les infos chantiers (optionnel).
             situation_repository: Repository Situation pour prix de vente (optionnel).
             cout_mo_repository: Repository Cout MO pour calcul marge BTP (optionnel).
+            cout_materiel_repository: Repository Cout materiel pour calcul marge BTP (optionnel).
         """
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
@@ -88,6 +91,7 @@ class GetVueConsolideeFinancesUseCase:
         self._chantier_info_port = chantier_info_port
         self._situation_repository = situation_repository
         self._cout_mo_repository = cout_mo_repository
+        self._cout_materiel_repository = cout_materiel_repository
 
     def execute(
         self,
@@ -187,6 +191,7 @@ class GetVueConsolideeFinancesUseCase:
             # Fallback : (Budget - Engagé) / Budget si pas de situation
             prix_vente_ht = Decimal("0")
             cout_mo = Decimal("0")
+            cout_materiel = Decimal("0")
             marge_pct: Optional[Decimal] = None
             marge_statut_chantier = "estimee"
             poids_marge = Decimal("0")
@@ -199,6 +204,9 @@ class GetVueConsolideeFinancesUseCase:
             if self._cout_mo_repository:
                 cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
 
+            if self._cout_materiel_repository:
+                cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
+
             if prix_vente_ht > Decimal("0"):
                 # Marge BTP réelle (situations disponibles)
                 quote_part = calculer_quote_part_frais_generaux(
@@ -210,7 +218,7 @@ class GetVueConsolideeFinancesUseCase:
                     ca_ht=prix_vente_ht,
                     cout_achats=realise,
                     cout_mo=cout_mo,
-                    cout_materiel=Decimal("0"),
+                    cout_materiel=cout_materiel,
                     quote_part_frais_generaux=quote_part,
                 )
                 marge_statut_chantier = "calculee"

@@ -7,7 +7,10 @@ import logging
 from decimal import Decimal
 from typing import List, Optional
 
-from shared.domain.calcul_financier import calculer_marge_chantier
+from shared.domain.calcul_financier import (
+    calculer_marge_chantier,
+    calculer_quote_part_frais_generaux,
+)
 
 from ...domain.repositories.facture_repository import FactureRepository
 from ...domain.repositories.achat_repository import AchatRepository
@@ -23,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 # Statuts de facture consideres comme CA (facture emise au client)
 STATUTS_FACTURE_CA = {"emise", "envoyee", "payee"}
+
+# Frais generaux hors salaires (typique BTP : 10-15% du CA)
+COUTS_FIXES_ANNUELS = Decimal("600000")
 
 
 class PnLChantierNotFoundError(Exception):
@@ -81,11 +87,15 @@ class GetPnLChantierUseCase:
         self._cout_materiel_repository = cout_materiel_repository
         self._chantier_info_port = chantier_info_port
 
-    def execute(self, chantier_id: int) -> PnLChantierDTO:
+    def execute(
+        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
+    ) -> PnLChantierDTO:
         """Calcule le P&L d'un chantier.
 
         Args:
             chantier_id: L'ID du chantier.
+            ca_total_annee: CA total annuel de l'entreprise pour repartition
+                des couts fixes. Si None, les frais generaux ne sont pas repartis.
 
         Returns:
             Le P&L complet du chantier.
@@ -112,12 +122,19 @@ class GetPnLChantierUseCase:
         total_couts = cout_achats + cout_mo + cout_materiel
 
         # 4. Calculer les marges (formule BTP unifiee via calcul_financier.py)
-        marge_brute_ht = chiffre_affaires_ht - total_couts
+        # Quote-part frais generaux via fonction unifiee
+        quote_part = calculer_quote_part_frais_generaux(
+            ca_chantier_ht=chiffre_affaires_ht,
+            ca_total_annee=ca_total_annee or Decimal("0"),
+            couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+        )
+        marge_brute_ht = chiffre_affaires_ht - (total_couts + quote_part)
         marge_brute_pct = calculer_marge_chantier(
             ca_ht=chiffre_affaires_ht,
             cout_achats=cout_achats,
             cout_mo=cout_mo,
             cout_materiel=cout_materiel,
+            quote_part_frais_generaux=quote_part,
         )
         if marge_brute_pct is None:
             marge_brute_pct = Decimal("0")

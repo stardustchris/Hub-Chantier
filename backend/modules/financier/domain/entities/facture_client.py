@@ -168,8 +168,9 @@ class FactureClient:
         """
         montant_tva = _calculer_tva(montant_ht, taux_tva)
         montant_ttc = montant_ht + montant_tva
+        # Loi 71-584: retenue de garantie sur HT (pas TTC)
         retenue_montant = arrondir_montant(
-            montant_ttc * retenue_garantie_pct / Decimal("100")
+            montant_ht * retenue_garantie_pct / Decimal("100")
         )
         montant_net = montant_ttc - retenue_montant
         return montant_tva, montant_ttc, retenue_montant, montant_net

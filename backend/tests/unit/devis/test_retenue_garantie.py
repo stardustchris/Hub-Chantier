@@ -79,31 +79,31 @@ class TestRetenueGarantie:
     def test_calculer_montant_taux_zero(self):
         """Test: montant retenu = 0 pour taux 0%."""
         rg = RetenueGarantie(Decimal("0"))
-        montant = rg.calculer_montant(Decimal("12000"))
+        montant = rg.calculer_montant(Decimal("10000"))
         assert montant == Decimal("0.00")
 
     def test_calculer_montant_taux_cinq(self):
-        """Test: montant retenu = 600 pour 12000 TTC a 5%."""
+        """Test: montant retenu = 500 pour 10000 HT a 5% (loi 71-584: sur HT)."""
         rg = RetenueGarantie(Decimal("5"))
-        montant = rg.calculer_montant(Decimal("12000"))
-        assert montant == Decimal("600.00")
+        montant = rg.calculer_montant(Decimal("10000"))
+        assert montant == Decimal("500.00")
 
     def test_calculer_montant_taux_dix(self):
-        """Test: montant retenu = 1200 pour 12000 TTC a 10%."""
+        """Test: montant retenu = 1000 pour 10000 HT a 10% (loi 71-584: sur HT)."""
         rg = RetenueGarantie(Decimal("10"))
-        montant = rg.calculer_montant(Decimal("12000"))
-        assert montant == Decimal("1200.00")
+        montant = rg.calculer_montant(Decimal("10000"))
+        assert montant == Decimal("1000.00")
 
     def test_montant_net_a_payer_taux_cinq(self):
-        """Test: net = 11400 pour 12000 TTC a 5%."""
+        """Test: net = TTC - retenue(HT) = 12000 - 500 = 11500 (loi 71-584)."""
         rg = RetenueGarantie(Decimal("5"))
-        net = rg.montant_net_a_payer(Decimal("12000"))
-        assert net == Decimal("11400.00")
+        net = rg.montant_net_a_payer(Decimal("10000"), Decimal("12000"))
+        assert net == Decimal("11500.00")
 
     def test_montant_net_a_payer_taux_zero(self):
         """Test: net = montant TTC pour taux 0%."""
         rg = RetenueGarantie(Decimal("0"))
-        net = rg.montant_net_a_payer(Decimal("12000"))
+        net = rg.montant_net_a_payer(Decimal("10000"), Decimal("12000"))
         assert net == Decimal("12000.00")
 
     def test_egalite(self):
@@ -158,20 +158,23 @@ class TestDevisRetenueGarantie:
         assert devis.montant_retenue_garantie == Decimal("0.00")
 
     def test_devis_montant_retenue_garantie_cinq(self):
-        """Test: montant retenu = 600 pour 12000 TTC a 5%."""
+        """Test: montant retenu = 500 pour 10000 HT a 5% (loi 71-584: sur HT)."""
         devis = _make_devis(
             retenue_garantie_pct=Decimal("5"),
+            montant_total_ht=Decimal("10000"),
             montant_total_ttc=Decimal("12000"),
         )
-        assert devis.montant_retenue_garantie == Decimal("600.00")
+        assert devis.montant_retenue_garantie == Decimal("500.00")
 
     def test_devis_montant_net_a_payer(self):
-        """Test: montant net = TTC - retenue."""
+        """Test: montant net = TTC - retenue(HT) (loi 71-584)."""
         devis = _make_devis(
             retenue_garantie_pct=Decimal("10"),
+            montant_total_ht=Decimal("10000"),
             montant_total_ttc=Decimal("12000"),
         )
-        assert devis.montant_net_a_payer == Decimal("10800.00")
+        # retenue = 10% × 10000 HT = 1000, net = 12000 - 1000 = 11000
+        assert devis.montant_net_a_payer == Decimal("11000.00")
 
     def test_devis_creation_retenue_invalide(self):
         """Test: erreur si retenue de garantie invalide dans Devis."""

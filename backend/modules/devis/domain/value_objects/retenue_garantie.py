@@ -6,6 +6,8 @@ DEV-22: Parametrage retenue de garantie par devis (0%, 5%, 10%).
 from decimal import Decimal
 from typing import Tuple
 
+from shared.domain.calcul_financier import arrondir_montant
+
 
 class RetenueGarantieInvalideError(ValueError):
     """Erreur levee quand le taux de retenue de garantie n'est pas autorise."""
@@ -24,8 +26,8 @@ class RetenueGarantieInvalideError(ValueError):
 class RetenueGarantie:
     """Value Object representant une retenue de garantie.
 
-    La retenue de garantie est un pourcentage retenu sur le montant TTC
-    du devis, restitue au prestataire apres la levee des reserves.
+    La retenue de garantie est un pourcentage retenu sur le montant HT
+    du devis (loi 71-584), restitue au prestataire apres la levee des reserves.
 
     Valeurs autorisees: 0%, 5%, 10%.
 
@@ -61,27 +63,33 @@ class RetenueGarantie:
         """Retourne le taux de retenue en pourcentage."""
         return self._taux
 
-    def calculer_montant(self, montant_ttc: Decimal) -> Decimal:
+    def calculer_montant(self, montant_ht: Decimal) -> Decimal:
         """Calcule le montant de la retenue de garantie.
 
+        Loi 71-584: la retenue s'applique sur le montant HT.
+
         Args:
-            montant_ttc: Le montant TTC du devis.
+            montant_ht: Le montant HT du devis.
 
         Returns:
-            Le montant retenu (montant_ttc * taux / 100).
+            Le montant retenu (montant_ht * taux / 100), arrondi ROUND_HALF_UP.
         """
-        return (montant_ttc * self._taux / Decimal("100")).quantize(Decimal("0.01"))
+        return arrondir_montant(montant_ht * self._taux / Decimal("100"))
 
-    def montant_net_a_payer(self, montant_ttc: Decimal) -> Decimal:
+    def montant_net_a_payer(self, montant_ht: Decimal, montant_ttc: Decimal) -> Decimal:
         """Calcule le montant net a payer apres retenue.
 
+        Loi 71-584: la retenue s'applique sur le montant HT,
+        le net a payer = TTC - retenue(HT).
+
         Args:
+            montant_ht: Le montant HT (base de la retenue).
             montant_ttc: Le montant TTC du devis.
 
         Returns:
-            Le montant net (TTC - retenue de garantie).
+            Le montant net (TTC - retenue sur HT).
         """
-        return montant_ttc - self.calculer_montant(montant_ttc)
+        return montant_ttc - self.calculer_montant(montant_ht)
 
     def __eq__(self, other: object) -> bool:
         """Egalite basee sur le taux."""

@@ -9,7 +9,7 @@ Où :
     - Prix Vente = situations de travaux facturées au client
     - Coût Revient = achats réalisés + coût MO + coûts fixes répartis
 
-Coûts fixes société : 2 896 065 € / an (2024, 2025, 2026)
+Coûts fixes société : 600 000 € / an (frais généraux hors salaires)
 Répartition : au prorata du CA facturé (prix de vente)
 """
 
