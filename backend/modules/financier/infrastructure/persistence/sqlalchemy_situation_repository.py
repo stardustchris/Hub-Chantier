@@ -206,21 +206,29 @@ class SQLAlchemySituationRepository(SituationRepository):
             model.deleted_by = deleted_by
             self._session.flush()
 
+    # Statuts representant des situations reelles (pas des brouillons)
+    STATUTS_EXPLOITABLES = ("emise", "validee", "facturee")
+
     def find_derniere_situation(
         self, chantier_id: int
     ) -> Optional[SituationTravaux]:
-        """Recherche la derniere situation d'un chantier (non supprimee).
+        """Recherche la derniere situation exploitable d'un chantier.
+
+        Filtre : non supprimee ET statut in (emise, validee, facturee).
+        Les brouillons et situations en_validation sont exclus pour
+        eviter de fausser les calculs du dashboard (montant a 0 EUR).
 
         Args:
             chantier_id: L'ID du chantier.
 
         Returns:
-            La derniere situation ou None si aucune.
+            La derniere situation exploitable ou None si aucune.
         """
         model = (
             self._session.query(SituationTravauxModel)
             .filter(SituationTravauxModel.chantier_id == chantier_id)
             .filter(SituationTravauxModel.deleted_at.is_(None))
+            .filter(SituationTravauxModel.statut.in_(self.STATUTS_EXPLOITABLES))
             .order_by(SituationTravauxModel.created_at.desc())
             .first()
         )

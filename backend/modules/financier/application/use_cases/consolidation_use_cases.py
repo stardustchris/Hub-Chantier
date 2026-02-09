@@ -10,18 +10,21 @@ Où :
     - Prix Vente = situations de travaux facturées au client
     - Coût Revient = achats réalisés + coût MO + coûts fixes répartis
 
-Coûts fixes société : 2 896 065 € / an (2024, 2025, 2026)
+Coûts fixes société : 600 000 € / an (frais généraux hors salaires)
 Répartition : au prorata du CA facturé (prix de vente)
 """
 
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-# Coûts fixes annuels de la société (frais généraux, administratifs, etc.)
-# Note: 2 896 065 € = charges totales incluant salaires
-# Pour le calcul de marge, on utilise uniquement les frais généraux hors salaires
-# qui sont déjà comptés dans le coût MO des pointages.
-# Frais généraux BTP typiques : 10-15% du CA → ~600k€ pour CA de 4.3M€
+from shared.domain.calcul_financier import (
+    calculer_marge_chantier,
+    calculer_quote_part_frais_generaux,
+    arrondir_pct,
+    arrondir_montant,
+)
+
+# Frais generaux hors salaires (typique BTP : 10-15% du CA)
 COUTS_FIXES_ANNUELS = Decimal("600000")
 
 from shared.application.ports.chantier_info_port import ChantierInfoPort, ChantierInfoDTO
@@ -33,6 +36,7 @@ from ...domain.repositories import (
     AlerteRepository,
     SituationRepository,
     CoutMainOeuvreRepository,
+    CoutMaterielRepository,
 )
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.consolidation_dtos import (
@@ -66,6 +70,7 @@ class GetVueConsolideeFinancesUseCase:
         chantier_info_port: Optional[ChantierInfoPort] = None,
         situation_repository: Optional[SituationRepository] = None,
         cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
+        cout_materiel_repository: Optional[CoutMaterielRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -77,6 +82,7 @@ class GetVueConsolideeFinancesUseCase:
             chantier_info_port: Port pour les infos chantiers (optionnel).
             situation_repository: Repository Situation pour prix de vente (optionnel).
             cout_mo_repository: Repository Cout MO pour calcul marge BTP (optionnel).
+            cout_materiel_repository: Repository Cout materiel pour calcul marge BTP (optionnel).
         """
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
@@ -85,6 +91,7 @@ class GetVueConsolideeFinancesUseCase:
         self._chantier_info_port = chantier_info_port
         self._situation_repository = situation_repository
         self._cout_mo_repository = cout_mo_repository
+        self._cout_materiel_repository = cout_materiel_repository
 
     def execute(
         self,
@@ -137,27 +144,20 @@ class GetVueConsolideeFinancesUseCase:
         total_engage = Decimal("0")
         total_realise = Decimal("0")
         total_reste = Decimal("0")
-        # Marge moyenne ponderee par prix de vente
-        total_prix_vente = Decimal("0")
+        # Marge moyenne ponderee (par prix de vente ou montant revise en fallback)
+        total_poids_marge = Decimal("0")
         somme_marges_ponderees = Decimal("0")
 
         nb_ok = 0
         nb_attention = 0
         nb_depassement = 0
-        nb_marge_en_attente = 0
 
-        # Phase 1 : calculer le CA total pour répartition des coûts fixes
+        # CA total pour répartition des coûts fixes
         # Si ca_total_entreprise est fourni, on l'utilise (recommandé)
-        # Sinon on calcule à partir des chantiers visibles (peut être incomplet)
-        if ca_total_entreprise is not None and ca_total_entreprise > Decimal("0"):
-            ca_total_annee = ca_total_entreprise
-        else:
-            ca_total_annee = Decimal("0")
-            for chantier_id in filtered_ids:
-                if self._situation_repository:
-                    derniere_sit = self._situation_repository.find_derniere_situation(chantier_id)
-                    if derniere_sit:
-                        ca_total_annee += Decimal(str(derniere_sit.montant_cumule_ht))
+        # Sinon 0 = pas de répartition (même pattern que dashboard)
+        ca_total_annee = ca_total_entreprise if (
+            ca_total_entreprise is not None and ca_total_entreprise > Decimal("0")
+        ) else Decimal("0")
 
         for chantier_id in filtered_ids:
             budget = self._budget_repository.find_by_chantier_id(chantier_id)
@@ -188,12 +188,13 @@ class GetVueConsolideeFinancesUseCase:
                 pct_realise = Decimal("0")
 
             # Calcul de la marge BTP : (Prix Vente - Coût Revient) / Prix Vente
-            # Prix Vente = situations de travaux facturées au client
-            # Coût Revient = achats réalisés + coût MO + coûts fixes répartis
+            # Fallback : (Budget - Engagé) / Budget si pas de situation
             prix_vente_ht = Decimal("0")
             cout_mo = Decimal("0")
+            cout_materiel = Decimal("0")
             marge_pct: Optional[Decimal] = None
-            marge_statut_chantier = "en_attente"
+            marge_statut_chantier = "estimee"
+            poids_marge = Decimal("0")
 
             if self._situation_repository:
                 derniere_situation = self._situation_repository.find_derniere_situation(chantier_id)
@@ -203,21 +204,36 @@ class GetVueConsolideeFinancesUseCase:
             if self._cout_mo_repository:
                 cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
 
-            # Coût de revient = achats réalisés + MO + coûts fixes répartis
-            cout_revient = realise + cout_mo
+            if self._cout_materiel_repository:
+                cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
 
             if prix_vente_ht > Decimal("0"):
-                # Répartition des coûts fixes au prorata du CA
-                if ca_total_annee > Decimal("0"):
-                    quote_part_couts_fixes = (prix_vente_ht / ca_total_annee) * COUTS_FIXES_ANNUELS
-                    cout_revient += quote_part_couts_fixes
-
-                # Formule BTP correcte : marge sur prix de vente
-                marge_pct = ((prix_vente_ht - cout_revient) / prix_vente_ht) * Decimal("100")
+                # Marge BTP réelle (situations disponibles)
+                quote_part = calculer_quote_part_frais_generaux(
+                    ca_chantier_ht=prix_vente_ht,
+                    ca_total_annee=ca_total_annee,
+                    couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+                )
+                marge_pct = calculer_marge_chantier(
+                    ca_ht=prix_vente_ht,
+                    cout_achats=realise,
+                    cout_mo=cout_mo,
+                    cout_materiel=cout_materiel,
+                    quote_part_frais_generaux=quote_part,
+                )
                 marge_statut_chantier = "calculee"
+                poids_marge = prix_vente_ht
+            elif montant_revise > Decimal("0"):
+                # Fallback budget : marge estimée = écart budgétaire
+                # Chantier fermé → basé sur réalisé, sinon sur engagé
+                cout_ref = realise if is_ferme else engage
+                marge_pct = arrondir_pct(
+                    ((montant_revise - cout_ref) / montant_revise) * Decimal("100")
+                )
+                poids_marge = montant_revise
             else:
-                # Pas de situation = pas de marge calculable, on reste "en_attente"
-                nb_marge_en_attente += 1
+                # Budget = 0
+                marge_pct = Decimal("0")
 
             # Classification
             if pct_engage > Decimal("100"):
@@ -241,18 +257,18 @@ class GetVueConsolideeFinancesUseCase:
             summary = ChantierFinancierSummaryDTO(
                 chantier_id=chantier_id,
                 nom_chantier=nom_chantier,
-                montant_revise_ht=str(montant_revise.quantize(Decimal("0.01"))),
-                total_engage=str(engage.quantize(Decimal("0.01"))),
-                total_realise=str(realise.quantize(Decimal("0.01"))),
-                reste_a_depenser=str(reste.quantize(Decimal("0.01"))),
+                montant_revise_ht=str(arrondir_montant(montant_revise)),
+                total_engage=str(arrondir_montant(engage)),
+                total_realise=str(arrondir_montant(realise)),
+                reste_a_depenser=str(arrondir_montant(reste)),
                 marge_estimee_pct=(
-                    str(marge_pct.quantize(Decimal("0.01")))
+                    str(arrondir_pct(marge_pct))
                     if marge_pct is not None
                     else None
                 ),
                 marge_statut=marge_statut_chantier,
-                pct_engage=str(pct_engage.quantize(Decimal("0.01"))),
-                pct_realise=str(pct_realise.quantize(Decimal("0.01"))),
+                pct_engage=str(arrondir_pct(pct_engage)),
+                pct_realise=str(arrondir_pct(pct_realise)),
                 statut=statut,
                 nb_alertes=nb_alertes,
                 statut_chantier=statut_ch,
@@ -265,42 +281,29 @@ class GetVueConsolideeFinancesUseCase:
             total_realise += realise
             total_reste += reste
 
-            # Pour marge moyenne pondérée par prix de vente
-            # Seulement si marge calculée (pas "en_attente")
-            if marge_pct is not None and prix_vente_ht > Decimal("0"):
-                total_prix_vente += prix_vente_ht
-                somme_marges_ponderees += marge_pct * prix_vente_ht
+            # Pour marge moyenne pondérée
+            if marge_pct is not None and poids_marge > Decimal("0"):
+                total_poids_marge += poids_marge
+                somme_marges_ponderees += marge_pct * poids_marge
 
-        # Marge moyenne pondérée par prix de vente
+        # Marge moyenne pondérée
         nb_chantiers = len(chantiers_summaries)
+        marge_statut_global = "calculee"
 
-        # Déterminer le statut de la marge moyenne
-        nb_avec_marge = nb_chantiers - nb_marge_en_attente
-        if nb_avec_marge == 0:
-            marge_statut_global = "en_attente"
-            marge_moyenne: Optional[Decimal] = None
-        elif nb_marge_en_attente > 0:
-            marge_statut_global = "partielle"
-            marge_moyenne = (
-                somme_marges_ponderees / total_prix_vente
-                if total_prix_vente > Decimal("0")
-                else None
+        if total_poids_marge > Decimal("0"):
+            marge_moyenne: Optional[Decimal] = (
+                somme_marges_ponderees / total_poids_marge
             )
         else:
-            marge_statut_global = "calculee"
-            marge_moyenne = (
-                somme_marges_ponderees / total_prix_vente
-                if total_prix_vente > Decimal("0")
-                else None
-            )
+            marge_moyenne = Decimal("0")
 
         kpi_globaux = KPIGlobauxDTO(
-            total_budget_revise=str(total_budget_revise.quantize(Decimal("0.01"))),
-            total_engage=str(total_engage.quantize(Decimal("0.01"))),
-            total_realise=str(total_realise.quantize(Decimal("0.01"))),
-            total_reste_a_depenser=str(total_reste.quantize(Decimal("0.01"))),
+            total_budget_revise=str(arrondir_montant(total_budget_revise)),
+            total_engage=str(arrondir_montant(total_engage)),
+            total_realise=str(arrondir_montant(total_realise)),
+            total_reste_a_depenser=str(arrondir_montant(total_reste)),
             marge_moyenne_pct=(
-                str(marge_moyenne.quantize(Decimal("0.01")))
+                str(arrondir_pct(marge_moyenne))
                 if marge_moyenne is not None
                 else None
             ),
@@ -309,7 +312,7 @@ class GetVueConsolideeFinancesUseCase:
             nb_chantiers_ok=nb_ok,
             nb_chantiers_attention=nb_attention,
             nb_chantiers_depassement=nb_depassement,
-            nb_chantiers_marge_en_attente=nb_marge_en_attente,
+            nb_chantiers_marge_en_attente=0,
         )
 
         # Top 3 rentables (marge_estimee_pct desc, seulement ceux avec marge > 5%)

@@ -674,8 +674,8 @@ class TestAchat:
         assert d["id"] == 1
         assert d["chantier_id"] == 100
         assert d["total_ht"] == "1000"
-        assert d["montant_tva"] == "200"
-        assert d["total_ttc"] == "1200"
+        assert d["montant_tva"] == "200.00"
+        assert d["total_ttc"] == "1200.00"
         assert d["statut"] == "demande"
 
     def test_to_dict_statut_label(self):

@@ -197,7 +197,7 @@ class TestFactureClient:
     # -- calculer_montants (static) -------------------------------------------------------
 
     def test_calculer_montants_static(self):
-        """Test: calcul statique des montants."""
+        """Test: calcul statique des montants (loi 71-584: retenue sur HT)."""
         montant_tva, montant_ttc, retenue, montant_net = FactureClient.calculer_montants(
             montant_ht=Decimal("100000"),
             taux_tva=Decimal("20.00"),
@@ -205,10 +205,10 @@ class TestFactureClient:
         )
         assert montant_tva == Decimal("20000.00")
         assert montant_ttc == Decimal("120000.00")
-        # retenue = 120000 * 5 / 100 = 6000
-        assert retenue == Decimal("6000.0000")
-        # net = 120000 - 6000 = 114000
-        assert montant_net == Decimal("114000.0000")
+        # Loi 71-584: retenue sur HT = 100000 * 5 / 100 = 5000
+        assert retenue == Decimal("5000.00")
+        # net = 120000 - 5000 = 115000
+        assert montant_net == Decimal("115000.00")
 
     def test_calculer_montants_static_sans_retenue(self):
         """Test: calcul statique sans retenue de garantie."""

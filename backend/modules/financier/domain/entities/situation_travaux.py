@@ -9,6 +9,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
+from shared.domain.calcul_financier import calculer_tva as _calculer_tva, arrondir_montant
+
 
 @dataclass
 class SituationTravaux:
@@ -170,13 +172,15 @@ class SituationTravaux:
 
     @property
     def montant_retenue_garantie(self) -> Decimal:
-        """Montant de la retenue de garantie HT."""
-        return self.montant_cumule_ht * self.retenue_garantie_pct / Decimal("100")
+        """Montant de la retenue de garantie HT (arrondi ROUND_HALF_UP)."""
+        return arrondir_montant(
+            self.montant_cumule_ht * self.retenue_garantie_pct / Decimal("100")
+        )
 
     @property
     def montant_tva(self) -> Decimal:
-        """Montant de la TVA."""
-        return self.montant_cumule_ht * self.taux_tva / Decimal("100")
+        """Montant de la TVA (arrondi ROUND_HALF_UP, PCG art. 120-2)."""
+        return _calculer_tva(self.montant_cumule_ht, self.taux_tva)
 
     @property
     def montant_ttc(self) -> Decimal:

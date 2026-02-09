@@ -109,7 +109,8 @@ class TestGetVueConsolideeFinancesUseCase:
         # Assert
         assert result.kpi_globaux.nb_chantiers == 3
         assert len(result.chantiers) == 3
-        assert len(result.top_rentables) == 3
+        # top_rentables: seuls chantiers avec marge > 5% (chantier 3 = -9.09% exclu)
+        assert len(result.top_rentables) == 2
         assert len(result.top_derives) == 3
 
         # Totaux globaux

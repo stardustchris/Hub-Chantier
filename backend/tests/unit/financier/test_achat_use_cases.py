@@ -202,10 +202,14 @@ class TestUpdateAchatUseCase:
     def setup_method(self):
         """Configuration avant chaque test."""
         self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_fournisseur_repo = Mock(spec=FournisseurRepository)
         self.mock_journal = Mock(spec=JournalFinancierRepository)
         self.mock_event_bus = Mock(spec=EventBus)
+        # Par défaut, pas de fournisseur (pas de lookup)
+        self.mock_fournisseur_repo.find_by_id.return_value = None
         self.use_case = UpdateAchatUseCase(
             achat_repository=self.mock_achat_repo,
+            fournisseur_repository=self.mock_fournisseur_repo,
             journal_repository=self.mock_journal,
             event_bus=self.mock_event_bus,
         )

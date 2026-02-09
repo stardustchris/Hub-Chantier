@@ -143,9 +143,9 @@ class TestExportComptableUseCase:
         assert isinstance(result, ExportComptableDTO)
         assert result.chantier_id == 1
         assert len(result.lignes) == 0
-        assert result.totaux["total_ht"] == "0"
-        assert result.totaux["total_tva"] == "0"
-        assert result.totaux["total_ttc"] == "0"
+        assert result.totaux["total_ht"] == "0.00"
+        assert result.totaux["total_tva"] == "0.00"
+        assert result.totaux["total_ttc"] == "0.00"
 
     def test_execute_with_achats(self):
         """Test: export avec des achats factures."""
@@ -166,8 +166,8 @@ class TestExportComptableUseCase:
         assert ligne.type_document == "achat"
         assert ligne.tiers == "Fournisseur Test"
         assert ligne.numero == "FAC-001"
-        # montant_ht = 10 * 100 = 1000
-        assert ligne.montant_ht == str(Decimal("1000"))
+        # montant_ht = 10 * 100 = 1000, arrondi à 2 décimales
+        assert ligne.montant_ht == str(Decimal("1000.00"))
 
     def test_execute_with_situations_validees(self):
         """Test: export avec des situations validees."""
@@ -268,8 +268,8 @@ class TestExportComptableUseCase:
 
         result = self.use_case.execute(chantier_id=1)
 
-        # Total HT = 1000 + 15000 + 20000 = 36000
-        assert result.totaux["total_ht"] == str(Decimal("1000") + Decimal("15000") + Decimal("20000"))
+        # Total HT = 1000 + 15000 + 20000 = 36000, arrondi à 2 décimales
+        assert result.totaux["total_ht"] == "36000.00"
 
     def test_execute_sorted_by_date(self):
         """Test: les lignes sont triees par date."""

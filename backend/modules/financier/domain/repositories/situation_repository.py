@@ -78,13 +78,17 @@ class SituationRepository(ABC):
     def find_derniere_situation(
         self, chantier_id: int
     ) -> Optional[SituationTravaux]:
-        """Recherche la derniere situation d'un chantier (non supprimee).
+        """Recherche la derniere situation exploitable d'un chantier.
+
+        Retourne uniquement les situations non supprimees dont le statut
+        est emise, validee ou facturee. Les brouillons et situations
+        en_validation sont exclus.
 
         Args:
             chantier_id: L'ID du chantier.
 
         Returns:
-            La derniere situation ou None si aucune.
+            La derniere situation exploitable ou None si aucune.
         """
         pass
 

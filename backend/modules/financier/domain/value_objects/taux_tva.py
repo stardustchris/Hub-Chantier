@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import List
 
+from shared.domain.calcul_financier import calculer_tva as _calculer_tva_arrondi
+
 
 TAUX_VALIDES: List[Decimal] = [
     Decimal("0"),
@@ -39,15 +41,15 @@ class TauxTVA:
             )
 
     def calculer_tva(self, montant_ht: Decimal) -> Decimal:
-        """Calcule le montant de TVA sur un montant HT.
+        """Calcule le montant de TVA sur un montant HT (arrondi ROUND_HALF_UP).
 
         Args:
             montant_ht: Le montant hors taxes.
 
         Returns:
-            Le montant de TVA.
+            Le montant de TVA arrondi a 2 decimales.
         """
-        return montant_ht * self.taux / Decimal("100")
+        return _calculer_tva_arrondi(montant_ht, self.taux)
 
     def calculer_ttc(self, montant_ht: Decimal) -> Decimal:
         """Calcule le montant TTC à partir d'un montant HT.
