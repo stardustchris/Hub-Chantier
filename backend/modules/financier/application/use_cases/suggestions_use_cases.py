@@ -125,7 +125,8 @@ class GetSuggestionsFinancieresUseCase:
             except Exception:
                 logger.warning("Erreur calcul cout materiel suggestions chantier %d", chantier_id)
 
-        reste_a_depenser = max(montant_revise - total_engage - cout_mo - cout_materiel, Decimal("0"))
+        # Negatif = depassement budget
+        reste_a_depenser = montant_revise - total_engage - cout_mo - cout_materiel
 
         # Pourcentages
         if montant_revise > Decimal("0"):

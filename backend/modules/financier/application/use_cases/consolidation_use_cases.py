@@ -223,8 +223,8 @@ class GetVueConsolideeFinancesUseCase:
                     logger.warning("Erreur calcul cout materiel consolidation chantier %d", chantier_id, exc_info=True)
                     cout_materiel_ok = False
 
-            # Reste a depenser inclut MO + materiel (ne peut pas etre negatif)
-            reste = max(montant_revise - engage - cout_mo - cout_materiel, Decimal("0"))
+            # Reste a depenser inclut MO + materiel (negatif = depassement budget)
+            reste = montant_revise - engage - cout_mo - cout_materiel
 
             # pct_realise harmonise : inclut MO + materiel
             total_realise_complet = realise + cout_mo + cout_materiel

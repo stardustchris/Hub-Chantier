@@ -21,6 +21,14 @@ from typing import Optional
 COUTS_FIXES_ANNUELS = Decimal("600000")
 
 
+# -- Main-d'oeuvre -----------------------------------------------------------
+
+# Coefficient de majoration heures supplementaires (Convention Collective BTP).
+# Art. L3121-36 Code du travail : +25% pour les 8 premieres heures sup/semaine.
+# Note : au-dela de 43h/semaine, le taux passe a 50% (non gere ici, V2).
+COEFF_HEURES_SUP = Decimal("1.25")
+
+
 # -- Arrondi comptable -------------------------------------------------------
 
 def arrondir_montant(montant: Decimal, decimales: str = "0.01") -> Decimal:

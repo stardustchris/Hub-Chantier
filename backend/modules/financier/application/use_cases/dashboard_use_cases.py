@@ -128,8 +128,8 @@ class GetDashboardFinancierUseCase:
         # via AchatRepository. Ne PAS confondre les deux pour eviter double comptage.
         total_realise_complet = total_realise + cout_mo + cout_materiel
 
-        # Reste a depenser inclut MO + materiel (ne peut pas etre negatif)
-        reste_a_depenser = max(montant_revise_ht - total_engage - cout_mo - cout_materiel, Decimal("0"))
+        # Reste a depenser inclut MO + materiel (negatif = depassement budget)
+        reste_a_depenser = montant_revise_ht - total_engage - cout_mo - cout_materiel
 
         # Pourcentages basés sur le budget
         if montant_revise_ht > Decimal("0"):
