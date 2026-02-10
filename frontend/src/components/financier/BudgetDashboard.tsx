@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { TrendingUp, TrendingDown, AlertTriangle, Loader2, Wallet } from 'lucide-react'
+import { TrendingUp, TrendingDown, AlertTriangle, Loader2, Wallet, Info } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
 import CircularGauge from './CircularGauge'
@@ -115,6 +115,31 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
         </div>
       )}
 
+      {/* Banniere completude des donnees */}
+      {(() => {
+        const manquants: string[] = []
+        if (kpi.marge_statut !== 'calculee') {
+          manquants.push('Aucune situation de travaux — la marge est estimée sur le budget')
+        }
+        if (Number(kpi.total_realise) === 0 && Number(kpi.total_engage) > 0) {
+          manquants.push('Aucun achat facturé — le déboursé réel est à 0')
+        }
+
+        return manquants.length > 0 ? (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-blue-900">Données incomplètes</p>
+                <ul className="text-sm text-blue-700 mt-1 space-y-0.5">
+                  {manquants.map((m, i) => <li key={i}>• {m}</li>)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ) : null
+      })()}
+
       {/* KPI Cards - 5 colonnes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Budget revise */}
@@ -192,8 +217,12 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           <p className={`text-2xl font-bold ${margeFaible ? 'text-red-600' : 'text-green-700'}`}>
             {formatPct(kpi.marge_estimee)}
           </p>
-          <p className="text-xs text-gray-500 mt-2">
-            {margeFaible ? 'Marge inférieure à 5%' : 'Marge correcte'}
+          <p className="text-xs mt-2">
+            {kpi.marge_statut === 'calculee' ? (
+              <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Calculée (CA réel)</span>
+            ) : (
+              <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Estimée (budget)</span>
+            )}
           </p>
         </div>
       </div>

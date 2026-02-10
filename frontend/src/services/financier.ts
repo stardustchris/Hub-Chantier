@@ -114,6 +114,11 @@ export const financierService = {
     await api.delete(`${BASE}/lots-budgetaires/${id}`)
   },
 
+  async appliquerTemplateGO(budgetId: number): Promise<LotBudgetaire[]> {
+    const response = await api.post<LotBudgetaire[]>(`${BASE}/budgets/${budgetId}/template-go`)
+    return response.data
+  },
+
   // ===== Achats (FIN-05, FIN-06) =====
   async listAchats(params?: {
     chantier_id?: number
