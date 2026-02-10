@@ -3,7 +3,7 @@
 DEV-17: Tableau de bord devis - KPI pipeline commercial.
 """
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from ...domain.value_objects import StatutDevis
 from ...domain.repositories.devis_repository import DevisRepository
@@ -66,7 +66,7 @@ class GetDashboardDevisUseCase:
             nb_expire=counts.get(StatutDevis.EXPIRE.value, 0),
             total_pipeline_ht=str(total_pipeline),
             total_accepte_ht=str(total_accepte),
-            taux_conversion=str(taux_conversion.quantize(Decimal("0.01"))),
+            taux_conversion=str(taux_conversion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
             nb_total=nb_total,
         )
 

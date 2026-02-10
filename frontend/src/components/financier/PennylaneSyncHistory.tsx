@@ -270,7 +270,7 @@ export default function PennylaneSyncHistory({ refreshTrigger }: PennylaneSyncHi
                 .map((sync, index) => (
                   <div
                     key={index}
-                    className="text-sm text-red-600 bg-red-50 p-2 rounded mb-2 last:mb-0"
+                    className="text-sm text-red-600 bg-red-50 p-2 rounded mb-2 last:mb-0 break-words overflow-hidden"
                   >
                     <span className="font-medium">{formatDateTime(sync.started_at)}:</span>{' '}
                     {sync.error_message}

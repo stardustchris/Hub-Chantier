@@ -10,7 +10,7 @@ import { Loader2, Plus, X, AlertTriangle } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { tachesService } from '../../services/taches'
 import { logger } from '../../services/logger'
-import { formatEUR } from './ChartTooltip'
+import { formatEUR } from '../../utils/format'
 import type {
   AffectationBudgetTache,
   LotBudgetaire,

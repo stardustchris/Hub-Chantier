@@ -805,7 +805,8 @@ class TestLesCedresBilanCloture:
         assert result.budget_initial_ht == str(F.BUDGET_PREVISIONNEL)
         assert result.budget_revise_ht == str(F.BUDGET_PREVISIONNEL)
         assert result.total_engage_ht == str(F.TOTAL_ENGAGE)
-        assert result.total_realise_ht == str(F.TOTAL_REALISE_ACHATS)
+        # BK-05: total_realise_ht inclut MO + materiel dans le DTO
+        assert result.total_realise_ht == str(F.TOTAL_REALISE_COMPLET)
         assert result.nb_achats == 7
         assert result.nb_situations == 3
         assert result.est_definitif is False  # pas ferme

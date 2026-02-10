@@ -136,7 +136,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
       })()}
 
       {/* KPI Cards - 5 colonnes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {/* Budget revise */}
         <div className="bg-white border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-gray-500 mb-1">Budget révisé HT</p>

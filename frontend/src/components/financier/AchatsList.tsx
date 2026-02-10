@@ -193,7 +193,7 @@ export default function AchatsList({ chantierId, budgetId }: AchatsListProps) {
                     <td className="px-4 py-3 font-medium text-gray-900">
                       {achat.fournisseur_nom || '-'}
                     </td>
-                    <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate">
+                    <td className="px-4 py-3 text-gray-700 max-w-[120px] sm:max-w-[160px] lg:max-w-[200px] truncate">
                       {achat.libelle}
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">

@@ -203,8 +203,8 @@ class GetVueConsolideeFinancesUseCase:
                 if derniere_situation:
                     prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
-            cout_mo_ok = True
-            cout_materiel_ok = True
+            cout_mo_ok = bool(self._cout_mo_repository)
+            cout_materiel_ok = bool(self._cout_materiel_repository)
 
             if self._cout_mo_repository:
                 try:

@@ -4,7 +4,7 @@ GAP #9: Vue P&L montrant CA, couts reels et marges par chantier.
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -56,7 +56,7 @@ class PnLChantierDTO:
     cout_main_oeuvre: str
     cout_materiel: str
     marge_brute_ht: str
-    marge_brute_pct: str
+    marge_brute_pct: Optional[str]
     budget_initial_ht: str
     budget_revise_ht: str
     detail_couts: List[LignePnLDTO]

@@ -215,7 +215,7 @@ class GetBilanClotureUseCase:
             montant_avenants_ht=str(montant_avenants_ht),
             nb_avenants=nb_avenants,
             total_engage_ht=str(total_engage_ht),
-            total_realise_ht=str(total_realise_ht),
+            total_realise_ht=str(total_realise_ht + cout_mo + cout_materiel),
             reste_non_depense_ht=str(reste_non_depense_ht),
             marge_finale_ht=str(marge_finale_ht),
             marge_finale_pct=str(marge_finale_pct) if marge_finale_pct is not None else None,

@@ -208,8 +208,8 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => setSelectedSituationId(situation.id)}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="Voir detail"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                          title="Voir detail" aria-label="Voir le detail de la situation"
                         >
                           <Eye size={16} />
                         </button>
@@ -217,15 +217,15 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
                           <>
                             <button
                               onClick={() => handleSoumettre(situation.id)}
-                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                              title="Soumettre"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                              title="Soumettre" aria-label="Soumettre la situation"
                             >
                               <Send size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(situation.id)}
-                              className="p-1 text-red-600 hover:bg-red-50 rounded"
-                              title="Supprimer"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded"
+                              title="Supprimer" aria-label="Supprimer la situation"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -234,8 +234,8 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
                         {canManage && situation.statut === 'en_validation' && (
                           <button
                             onClick={() => handleValider(situation.id)}
-                            className="p-1 text-green-600 hover:bg-green-50 rounded"
-                            title="Valider"
+                            className="p-2 text-green-600 hover:bg-green-50 rounded"
+                            title="Valider" aria-label="Valider la situation"
                           >
                             <Check size={16} />
                           </button>
@@ -243,8 +243,8 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
                         {canManage && situation.statut === 'emise' && (
                           <button
                             onClick={() => handleValiderClient(situation.id)}
-                            className="p-1 text-green-600 hover:bg-green-50 rounded"
-                            title="Valider client"
+                            className="p-2 text-green-600 hover:bg-green-50 rounded"
+                            title="Valider client" aria-label="Valider la situation pour le client"
                           >
                             <UserCheck size={16} />
                           </button>
