@@ -284,7 +284,7 @@ class Achat:
             "created_by": self.created_by,
             # CONN-10: Champs Pennylane
             "montant_ht_reel": str(self.montant_ht_reel)
-            if self.montant_ht_reel
+            if self.montant_ht_reel is not None
             else None,
             "date_facture_reelle": self.date_facture_reelle.isoformat()
             if self.date_facture_reelle

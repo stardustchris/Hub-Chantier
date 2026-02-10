@@ -10,7 +10,9 @@ STATUTS_ENGAGES = [
     StatutAchat.FACTURE,
 ]
 
-# Statuts considérés comme "réalisé" (somme des achats facturés uniquement)
+# Statuts considérés comme "réalisé" (achats livrés + facturés = coûts réels engagés)
+# DM-1: En pilotage chantier BTP, un achat livré est un coût réel même sans facture
 STATUTS_REALISES = [
+    StatutAchat.LIVRE,
     StatutAchat.FACTURE,
 ]

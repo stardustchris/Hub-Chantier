@@ -744,31 +744,6 @@ def get_cout_main_oeuvre_use_case(
 
 
 # =============================================================================
-# Use Cases - Dashboard (FIN-11)
-# Note: Placé après les repositories SituationRepository et CoutMainOeuvreRepository
-# =============================================================================
-
-
-def get_dashboard_financier_use_case(
-    budget_repository: BudgetRepository = Depends(get_budget_repository),
-    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
-    achat_repository: AchatRepository = Depends(get_achat_repository),
-    situation_repository: SituationRepository = Depends(get_situation_repository),
-    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
-) -> GetDashboardFinancierUseCase:
-    """Retourne le use case GetDashboardFinancier.
-
-    Utilise la formule BTP correcte pour le calcul de marge:
-    Marge = (Prix Vente - Coût Revient) / Prix Vente
-    où Prix Vente = situations facturées, Coût Revient = achats + MO.
-    """
-    return GetDashboardFinancierUseCase(
-        budget_repository, lot_repository, achat_repository,
-        situation_repository, cout_mo_repository,
-    )
-
-
-# =============================================================================
 # Repositories - Couts Materiel (FIN-10)
 # =============================================================================
 
@@ -790,6 +765,32 @@ def get_cout_materiel_use_case(
 ) -> GetCoutMaterielUseCase:
     """Retourne le use case GetCoutMateriel."""
     return GetCoutMaterielUseCase(cout_materiel_repository)
+
+
+# =============================================================================
+# Use Cases - Dashboard (FIN-11)
+# Note: Placé après les repositories CoutMainOeuvreRepository et CoutMaterielRepository
+# =============================================================================
+
+
+def get_dashboard_financier_use_case(
+    budget_repository: BudgetRepository = Depends(get_budget_repository),
+    lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
+    achat_repository: AchatRepository = Depends(get_achat_repository),
+    situation_repository: SituationRepository = Depends(get_situation_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
+) -> GetDashboardFinancierUseCase:
+    """Retourne le use case GetDashboardFinancier.
+
+    Utilise la formule BTP correcte pour le calcul de marge:
+    Marge = (Prix Vente - Coût Revient) / Prix Vente
+    où Prix Vente = situations facturées, Coût Revient = achats + MO + matériel.
+    """
+    return GetDashboardFinancierUseCase(
+        budget_repository, lot_repository, achat_repository,
+        situation_repository, cout_mo_repository, cout_materiel_repository,
+    )
 
 
 # =============================================================================

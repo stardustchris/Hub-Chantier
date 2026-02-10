@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from shared.domain.calcul_financier import calculer_ttc
+from shared.domain.calcul_financier import calculer_ttc, arrondir_montant
 
 from ..value_objects.type_frais_chantier import TypeFraisChantier
 from ..value_objects.mode_repartition import ModeRepartition
@@ -124,7 +124,7 @@ class FraisChantierDevis:
         if devis_total_ht <= Decimal("0"):
             return Decimal("0")
 
-        return self.montant_ht * (lot_total_ht / devis_total_ht)
+        return arrondir_montant(self.montant_ht * (lot_total_ht / devis_total_ht))
 
     def supprimer(self, deleted_by: int) -> None:
         """Marque le frais comme supprime (soft delete).

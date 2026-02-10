@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
 import ArticleModal from '../components/devis/ArticleModal'
 import { devisService } from '../services/devis'
+import { formatEUR } from '../utils/format'
 import type { Article, ArticleCreate, ArticleUpdate } from '../types'
 import { TYPE_DEBOURSE_LABELS } from '../types'
 import {
@@ -18,9 +19,6 @@ import {
   Trash2,
   Package,
 } from 'lucide-react'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([])

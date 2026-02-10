@@ -142,7 +142,7 @@ export default function DeboursePanel({
                   <td className="px-3 py-2">
                     <button
                       onClick={() => handleDelete(d.id)}
-                      className="p-1 text-red-500 hover:bg-red-50 rounded"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

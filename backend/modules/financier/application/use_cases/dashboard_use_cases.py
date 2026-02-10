@@ -107,8 +107,8 @@ class GetDashboardFinancierUseCase:
         # Couts MO et materiel (pour total realise COMPLET)
         cout_mo = Decimal("0")
         cout_materiel = Decimal("0")
-        cout_mo_ok = True
-        cout_materiel_ok = True
+        cout_mo_ok = bool(self._cout_mo_repository)
+        cout_materiel_ok = bool(self._cout_materiel_repository)
         if self._cout_mo_repository:
             try:
                 cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)

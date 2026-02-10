@@ -6,7 +6,7 @@ et indicateurs predictifs pour un chantier.
 
 import logging
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Optional
 
 from shared.domain.calcul_financier import arrondir_montant, arrondir_pct
@@ -131,7 +131,8 @@ class GetSuggestionsFinancieresUseCase:
         # Pourcentages
         if montant_revise > Decimal("0"):
             pct_engage = (total_engage / montant_revise) * Decimal("100")
-            pct_realise = (total_realise / montant_revise) * Decimal("100")
+            total_realise_complet = total_realise + cout_mo + cout_materiel
+            pct_realise = (total_realise_complet / montant_revise) * Decimal("100")
             # ATTENTION: marge budgetaire (budget - engage), PAS marge BTP reelle (CA - couts)
             # Marge reelle = (CA - Couts) / CA (cf. calcul_financier.py)
             marge_budgetaire_pct = ((montant_revise - total_engage) / montant_revise) * Decimal("100")
@@ -170,7 +171,7 @@ class GetSuggestionsFinancieresUseCase:
                 kpi_data = {
                     "montant_revise": str(arrondir_montant(montant_revise)),
                     "total_engage": str(arrondir_montant(total_engage)),
-                    "total_realise": str(arrondir_montant(total_realise)),
+                    "total_realise": str(arrondir_montant(total_realise + cout_mo + cout_materiel)),
                     "pct_engage": str(arrondir_pct(pct_engage)),
                     "pct_realise": str(arrondir_pct(pct_realise)),
                     "marge_budgetaire_pct": str(arrondir_pct(marge_budgetaire_pct)),
@@ -263,8 +264,8 @@ class GetSuggestionsFinancieresUseCase:
                     severity="CRITICAL",
                     titre="Creer un avenant budgetaire",
                     description=(
-                        f"Le budget est engage a {pct_engage.quantize(Decimal('0.1'))}% "
-                        f"avec une marge de seulement {marge_pct.quantize(Decimal('0.1'))}%. "
+                        f"Le budget est engage a {pct_engage.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}% "
+                        f"avec une marge de seulement {marge_pct.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}%. "
                         "Un avenant est recommande pour securiser le chantier."
                     ),
                     impact_estime_eur=str(arrondir_montant(abs(impact))),
@@ -280,8 +281,8 @@ class GetSuggestionsFinancieresUseCase:
                     severity="WARNING",
                     titre="Le realise depasse l'engage",
                     description=(
-                        f"Le realise ({pct_realise.quantize(Decimal('0.1'))}%) depasse "
-                        f"l'engage ({pct_engage.quantize(Decimal('0.1'))}%) de plus de 10 points. "
+                        f"Le realise ({pct_realise.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}%) depasse "
+                        f"l'engage ({pct_engage.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}%) de plus de 10 points. "
                         "Verifier les facturations non prevues."
                     ),
                     impact_estime_eur=str(arrondir_montant(abs(ecart))),
@@ -308,7 +309,7 @@ class GetSuggestionsFinancieresUseCase:
                                 titre=f"Lot {lot.code_lot} en depassement",
                                 description=(
                                     f"Le lot {lot.code_lot} ({lot.libelle}) depasse "
-                                    f"le prevu de {ecart_lot_pct.quantize(Decimal('0.1'))}%. "
+                                    f"le prevu de {ecart_lot_pct.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}%. "
                                     f"Engage: {lot_engage}, Prevu: {lot.total_prevu_ht}."
                                 ),
                                 impact_estime_eur=str(
@@ -442,8 +443,8 @@ class GetSuggestionsFinancieresUseCase:
         burn_rate = total_realise / Decimal(str(nb_mois_ecoules))
 
         # Budget moyen mensuel : sur la duree PREVUE, pas ecoulee
-        # Defaut 12 mois (chantier BTP gros oeuvre typique)
-        duree = duree_prevue_mois if duree_prevue_mois and duree_prevue_mois > 0 else 12
+        # Fallback: max(mois ecoules, 12) pour eviter faux negatifs sur chantiers longs
+        duree = duree_prevue_mois if duree_prevue_mois and duree_prevue_mois > 0 else max(nb_mois_ecoules, 12)
         budget_moyen = montant_revise / Decimal(str(duree))
 
         return burn_rate, budget_moyen

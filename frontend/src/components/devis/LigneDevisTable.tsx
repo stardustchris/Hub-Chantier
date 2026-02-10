@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, Edit2, Check, X, Loader2 } from 'lucide-react'
 import type { LigneDevis, LigneDevisCreate, LigneDevisUpdate } from '../../types'
 import { TAUX_TVA_OPTIONS } from '../../types'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 interface LigneDevisTableProps {
   lignes: LigneDevis[]
@@ -178,13 +176,13 @@ export default function LigneDevisTable({
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUpdate(ligne.id) }}
                         disabled={loading}
-                        className="p-1 text-green-600 hover:bg-green-50 rounded"
+                        className="p-2 text-green-600 hover:bg-green-50 rounded"
                       >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
-                        className="p-1 text-gray-400 hover:bg-gray-100 rounded"
+                        className="p-2 text-gray-400 hover:bg-gray-100 rounded"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -210,13 +208,13 @@ export default function LigneDevisTable({
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); startEdit(ligne) }}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(ligne.id) }}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

@@ -29,8 +29,8 @@ function getColor(value: number, thresholds: { warning: number; danger: number }
 export default function CircularGauge({
   value,
   max = 100,
-  size = 48,
-  strokeWidth = 4,
+  size = 56,
+  strokeWidth = 5,
   color,
   thresholds = { warning: 80, danger: 100 },
 }: CircularGaugeProps) {
@@ -73,7 +73,7 @@ export default function CircularGauge({
           className="transition-all duration-500 ease-out"
         />
       </svg>
-      <span className="text-xs font-medium" style={{ color: displayColor }}>
+      <span className="text-sm font-medium" style={{ color: displayColor }}>
         {value.toFixed(1)}%
       </span>
     </div>

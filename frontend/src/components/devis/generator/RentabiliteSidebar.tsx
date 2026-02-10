@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import type { DevisDetail } from '../../../types'
 import MargesAdjustModal from './MargesAdjustModal'
+import { formatEUR } from '../../../utils/format'
 
 interface Props {
   devis: DevisDetail
@@ -17,16 +18,13 @@ export default function RentabiliteSidebar({ devis, onSaved }: Props) {
   const totalVente = Number(devis.montant_total_ht || 0)
   const fraisGeneraux = totalDebourse * Number(devis.coefficient_frais_generaux || 0) / 100
   const benefice = totalVente - totalDebourse - fraisGeneraux
-  const margePct = totalVente > 0 ? Math.round((benefice / totalVente) * 100) : 0
+  const margePct = totalVente > 0 ? Math.round((benefice / totalVente) * 100) : null
 
   const data = [
     { name: 'Debourse sec', value: Math.max(totalDebourse, 0) },
     { name: 'Frais generaux', value: Math.max(fraisGeneraux, 0) },
     { name: 'Benefice', value: Math.max(benefice, 0) },
   ].filter(d => d.value > 0)
-
-  const formatEUR = (val: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val)
 
   const labels = [
     { name: 'Debourse sec', value: totalDebourse, color: '#3B82F6' },
@@ -66,7 +64,9 @@ export default function RentabiliteSidebar({ devis, onSaved }: Props) {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold text-gray-900">{margePct}%</span>
+            <span className={`text-2xl font-bold ${margePct === null ? 'text-gray-400' : 'text-gray-900'}`}>
+              {margePct === null ? 'N/D' : `${margePct}%`}
+            </span>
             <span className="text-xs text-gray-500">Marge</span>
           </div>
         </div>
