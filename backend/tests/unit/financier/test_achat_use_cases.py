@@ -750,3 +750,203 @@ class TestListAchatsEnAttenteUseCase:
         result = self.use_case.execute()
 
         assert len(result.items) == 0
+
+
+class TestAutoliquidationTVA:
+    """Tests pour l'autoliquidation TVA (CGI art. 283-2 nonies).
+
+    Quand un fournisseur est un sous-traitant, le taux de TVA doit etre
+    force a 0% lors de la creation d'un achat (autoliquidation).
+    """
+
+    def setup_method(self):
+        """Configuration avant chaque test."""
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_fournisseur_repo = Mock(spec=FournisseurRepository)
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_journal = Mock(spec=JournalFinancierRepository)
+        self.mock_event_bus = Mock(spec=EventBus)
+        self.use_case = CreateAchatUseCase(
+            achat_repository=self.mock_achat_repo,
+            fournisseur_repository=self.mock_fournisseur_repo,
+            budget_repository=self.mock_budget_repo,
+            journal_repository=self.mock_journal,
+            event_bus=self.mock_event_bus,
+        )
+
+        # Pas de budget -> pas d'auto-validation
+        self.mock_budget_repo.find_by_chantier_id.return_value = None
+
+        def save_side_effect(achat):
+            achat.id = 1
+            return achat
+
+        self.mock_achat_repo.save.side_effect = save_side_effect
+
+    def _make_dto(self, **kwargs):
+        """Cree un AchatCreateDTO avec des valeurs par defaut."""
+        defaults = {
+            "chantier_id": 100,
+            "libelle": "Prestation sous-traitance",
+            "quantite": Decimal("1"),
+            "prix_unitaire_ht": Decimal("5000"),
+            "taux_tva": Decimal("20"),
+        }
+        defaults.update(kwargs)
+        return AchatCreateDTO(**defaults)
+
+    def test_achat_sous_traitant_force_tva_zero(self):
+        """Test: achat avec fournisseur sous-traitant -> taux_tva force a 0%.
+
+        CGI art. 283-2 nonies : le sous-traitant facture HT,
+        le donneur d'ordre autoliquide la TVA.
+        """
+        dto = self._make_dto(fournisseur_id=10, taux_tva=Decimal("20"))
+
+        fournisseur = Fournisseur(
+            id=10,
+            raison_sociale="BTP Sous-Traitance SARL",
+            type=TypeFournisseur.SOUS_TRAITANT,
+            actif=True,
+        )
+        self.mock_fournisseur_repo.find_by_id.return_value = fournisseur
+
+        result = self.use_case.execute(dto, demandeur_id=1)
+
+        assert result.taux_tva == "0"
+
+    def test_achat_negoce_garde_tva_normale(self):
+        """Test: achat avec fournisseur negoce -> taux_tva reste a 20%."""
+        dto = self._make_dto(fournisseur_id=20, taux_tva=Decimal("20"))
+
+        fournisseur = Fournisseur(
+            id=20,
+            raison_sociale="Materiaux du Sud",
+            type=TypeFournisseur.NEGOCE_MATERIAUX,
+            actif=True,
+        )
+        self.mock_fournisseur_repo.find_by_id.return_value = fournisseur
+
+        result = self.use_case.execute(dto, demandeur_id=1)
+
+        assert result.taux_tva == "20"
+
+    def test_achat_sans_fournisseur_garde_tva(self):
+        """Test: achat sans fournisseur -> taux_tva reste celle passee."""
+        dto = self._make_dto(taux_tva=Decimal("10"))
+
+        result = self.use_case.execute(dto, demandeur_id=1)
+
+        assert result.taux_tva == "10"
+
+
+# ============================================================
+# Item 6 - Tests autoliquidation TVA au niveau use case
+# ============================================================
+
+
+class TestCreerAchatAutoliquidationTVA:
+    """Tests supplementaires pour l'autoliquidation TVA (CGI art. 283-2 nonies).
+
+    Verifie que lors de la creation d'un achat :
+    - Le taux TVA est force a 0% pour les sous-traitants
+    - Le type d'achat est automatiquement SOUS_TRAITANCE
+    - Les fournisseurs normaux gardent leur TVA
+    """
+
+    def setup_method(self):
+        """Configuration avant chaque test."""
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_fournisseur_repo = Mock(spec=FournisseurRepository)
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_journal = Mock(spec=JournalFinancierRepository)
+        self.mock_event_bus = Mock(spec=EventBus)
+        self.use_case = CreateAchatUseCase(
+            achat_repository=self.mock_achat_repo,
+            fournisseur_repository=self.mock_fournisseur_repo,
+            budget_repository=self.mock_budget_repo,
+            journal_repository=self.mock_journal,
+            event_bus=self.mock_event_bus,
+        )
+
+        # Pas de budget -> pas d'auto-validation
+        self.mock_budget_repo.find_by_chantier_id.return_value = None
+
+        def save_side_effect(achat):
+            achat.id = 1
+            return achat
+
+        self.mock_achat_repo.save.side_effect = save_side_effect
+
+    def _make_dto(self, **kwargs):
+        """Cree un AchatCreateDTO avec des valeurs par defaut."""
+        defaults = {
+            "chantier_id": 100,
+            "libelle": "Prestation sous-traitance gros oeuvre",
+            "quantite": Decimal("1"),
+            "prix_unitaire_ht": Decimal("5000"),
+            "taux_tva": Decimal("20"),
+        }
+        defaults.update(kwargs)
+        return AchatCreateDTO(**defaults)
+
+    def test_creer_achat_sous_traitant_force_tva_zero(self):
+        """Test: creer un achat avec fournisseur sous-traitant -> taux_tva == 0.
+
+        CGI art. 283-2 nonies : le sous-traitant facture HT,
+        le donneur d'ordre autoliquide la TVA.
+        """
+        dto = self._make_dto(fournisseur_id=10, taux_tva=Decimal("20"))
+
+        fournisseur = Fournisseur(
+            id=10,
+            raison_sociale="Maconnerie Dupont",
+            type=TypeFournisseur.SOUS_TRAITANT,
+            actif=True,
+        )
+        self.mock_fournisseur_repo.find_by_id.return_value = fournisseur
+
+        result = self.use_case.execute(dto, demandeur_id=1)
+
+        assert result.taux_tva == "0"
+
+    def test_creer_achat_sous_traitant_force_type_sous_traitance(self):
+        """Test: creer un achat avec fournisseur sous-traitant -> type_achat == SOUS_TRAITANCE.
+
+        Quand le fournisseur est un sous-traitant, le type d'achat
+        est automatiquement force a SOUS_TRAITANCE, meme si le DTO
+        contenait un autre type.
+        """
+        # Le DTO ne specifie pas de type_achat -> default MATERIAU
+        dto = self._make_dto(fournisseur_id=10)
+
+        fournisseur = Fournisseur(
+            id=10,
+            raison_sociale="Maconnerie Dupont",
+            type=TypeFournisseur.SOUS_TRAITANT,
+            actif=True,
+        )
+        self.mock_fournisseur_repo.find_by_id.return_value = fournisseur
+
+        result = self.use_case.execute(dto, demandeur_id=1)
+
+        assert result.type_achat == "sous_traitance"
+
+    def test_creer_achat_fournisseur_normal_garde_tva(self):
+        """Test: creer un achat avec fournisseur non sous-traitant -> taux_tva reste a 20%.
+
+        Un fournisseur de type negoce materiaux facture normalement avec TVA.
+        """
+        dto = self._make_dto(fournisseur_id=20, taux_tva=Decimal("20"))
+
+        fournisseur = Fournisseur(
+            id=20,
+            raison_sociale="Materiaux du Sud",
+            type=TypeFournisseur.NEGOCE_MATERIAUX,
+            actif=True,
+        )
+        self.mock_fournisseur_repo.find_by_id.return_value = fournisseur
+
+        result = self.use_case.execute(dto, demandeur_id=1)
+
+        assert result.taux_tva == "20"

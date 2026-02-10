@@ -8,7 +8,7 @@ import io
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 from ...domain.repositories.budget_repository import BudgetRepository
 from ...domain.repositories.achat_repository import AchatRepository
@@ -115,11 +115,12 @@ class ExportComptableUseCase:
         lot = self.lot_repo.find_by_id(lot_id)
         return lot.code_lot if lot else None
 
-    def execute(self, chantier_id: int) -> ExportComptableDTO:
+    def execute(self, chantier_id: int, user_id: Optional[int] = None) -> ExportComptableDTO:
         """Execute l'export comptable pour un chantier.
 
         Args:
             chantier_id: L'ID du chantier.
+            user_id: ID de l'utilisateur qui demande l'export (optionnel, pour audit).
 
         Returns:
             ExportComptableDTO contenant toutes les lignes de l'export.
@@ -274,8 +275,8 @@ class ExportComptableUseCase:
         )
 
         logger.info(
-            "Export comptable genere pour chantier %s: %d lignes",
-            chantier_id, len(lignes),
+            "Export comptable chantier %s par user %s: %d lignes",
+            chantier_id, user_id, len(lignes),
         )
         return dto
 

@@ -687,3 +687,48 @@ class TestAchat:
         d = achat.to_dict()
         assert d["type_achat"] == "materiau"
         assert d["unite"] == "kg"
+
+
+# ============================================================
+# Tests Fournisseur.est_sous_traitant
+# ============================================================
+
+class TestFournisseurEstSousTraitant:
+    """Tests pour la propriete est_sous_traitant du Fournisseur.
+
+    CGI art. 283-2 nonies : seuls les sous-traitants declenchent
+    l'autoliquidation TVA. La propriete doit retourner True uniquement
+    pour TypeFournisseur.SOUS_TRAITANT.
+    """
+
+    def test_sous_traitant_retourne_true(self):
+        """Test: type=SOUS_TRAITANT -> est_sous_traitant == True."""
+        fournisseur = Fournisseur(
+            raison_sociale="BTP Sous-Traitance SARL",
+            type=TypeFournisseur.SOUS_TRAITANT,
+        )
+        assert fournisseur.est_sous_traitant is True
+
+    def test_negoce_retourne_false(self):
+        """Test: type=NEGOCE_MATERIAUX -> est_sous_traitant == False."""
+        fournisseur = Fournisseur(
+            raison_sociale="Materiaux du Sud",
+            type=TypeFournisseur.NEGOCE_MATERIAUX,
+        )
+        assert fournisseur.est_sous_traitant is False
+
+    def test_loueur_retourne_false(self):
+        """Test: type=LOUEUR -> est_sous_traitant == False."""
+        fournisseur = Fournisseur(
+            raison_sociale="Location Engins Pro",
+            type=TypeFournisseur.LOUEUR,
+        )
+        assert fournisseur.est_sous_traitant is False
+
+    def test_service_retourne_false(self):
+        """Test: type=SERVICE -> est_sous_traitant == False."""
+        fournisseur = Fournisseur(
+            raison_sociale="Bureau Etudes ABC",
+            type=TypeFournisseur.SERVICE,
+        )
+        assert fournisseur.est_sous_traitant is False

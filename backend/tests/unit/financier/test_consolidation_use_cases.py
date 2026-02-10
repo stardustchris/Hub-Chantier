@@ -24,6 +24,7 @@ from modules.financier.domain.repositories import (
     AlerteRepository,
     SituationRepository,
     CoutMainOeuvreRepository,
+    CoutMaterielRepository,
 )
 from modules.financier.domain.value_objects.statuts_financiers import (
     STATUTS_ENGAGES,
@@ -1103,3 +1104,229 @@ class TestConsolidationMargeBTP:
         marges = {c.chantier_id: c.marge_estimee_pct for c in result.chantiers}
         assert marges[1] == "10.00"
         assert marges[2] == "40.00"
+
+
+# ============================================================
+# Item 8 - Tests cout_materiel dans consolidation
+# ============================================================
+
+
+class TestConsolidationAvecMateriel:
+    """Tests pour l'inclusion du cout materiel dans la consolidation.
+
+    Le cout materiel (equipement, location engins, etc.) est un composant
+    du cout de revient dans la formule BTP :
+        cout_revient = achats realises + cout MO + cout materiel
+    """
+
+    def setup_method(self):
+        """Configuration avec tous les repositories y compris materiel."""
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_lot_repo = Mock(spec=LotBudgetaireRepository)
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_alerte_repo = Mock(spec=AlerteRepository)
+        self.mock_situation_repo = Mock(spec=SituationRepository)
+        self.mock_cout_mo_repo = Mock(spec=CoutMainOeuvreRepository)
+        self.mock_cout_materiel_repo = Mock(spec=CoutMaterielRepository)
+
+        self.use_case = GetVueConsolideeFinancesUseCase(
+            budget_repository=self.mock_budget_repo,
+            lot_repository=self.mock_lot_repo,
+            achat_repository=self.mock_achat_repo,
+            alerte_repository=self.mock_alerte_repo,
+            situation_repository=self.mock_situation_repo,
+            cout_mo_repository=self.mock_cout_mo_repo,
+            cout_materiel_repository=self.mock_cout_materiel_repo,
+        )
+
+    def _make_budget(self, chantier_id, initial, avenants=Decimal("0")):
+        """Helper pour creer un budget mock."""
+        return Budget(
+            id=chantier_id * 10,
+            chantier_id=chantier_id,
+            montant_initial_ht=initial,
+            montant_avenants_ht=avenants,
+            created_at=datetime(2026, 1, 1),
+        )
+
+    def _make_situation(self, chantier_id, montant_cumule):
+        """Helper pour creer une situation mock."""
+        return SituationTravaux(
+            id=chantier_id * 100,
+            chantier_id=chantier_id,
+            budget_id=chantier_id * 10,
+            numero=f"SIT-2026-{chantier_id:02d}",
+            periode_debut=datetime(2026, 1, 1).date(),
+            periode_fin=datetime(2026, 1, 31).date(),
+            montant_cumule_ht=montant_cumule,
+            statut="facturee",
+        )
+
+    def test_consolidation_inclut_cout_materiel(self):
+        """Test: le cout materiel est inclus dans le cout de revient total.
+
+        Formule: marge = (prix_vente - cout_revient) / prix_vente
+        cout_revient = achats realises + cout MO + cout materiel
+        """
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Prix de vente (situation): 150000 EUR
+        situation = self._make_situation(1, Decimal("150000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Achats realises: 80000 EUR
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("70000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("80000")
+        )
+
+        # Cout MO: 20000 EUR
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("20000")
+
+        # Cout materiel: 15000 EUR
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("15000")
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # cout_revient = 80000 + 20000 + 15000 = 115000
+        # marge = (150000 - 115000) / 150000 = 23.33%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "23.33"
+        self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
+
+    def test_consolidation_materiel_none_reste_zero(self):
+        """Test: sans repo materiel, le cout materiel est 0 (pas d'impact).
+
+        Quand cout_materiel_repository est None, le cout materiel
+        ne doit pas contribuer au cout de revient.
+        """
+        # Arrange - use case SANS cout_materiel_repository
+        use_case_sans_materiel = GetVueConsolideeFinancesUseCase(
+            budget_repository=self.mock_budget_repo,
+            lot_repository=self.mock_lot_repo,
+            achat_repository=self.mock_achat_repo,
+            alerte_repository=self.mock_alerte_repo,
+            situation_repository=self.mock_situation_repo,
+            cout_mo_repository=self.mock_cout_mo_repo,
+            cout_materiel_repository=None,  # Pas de repo materiel
+        )
+
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Prix de vente (situation): 150000 EUR
+        situation = self._make_situation(1, Decimal("150000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Achats realises: 80000 EUR
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("70000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("80000")
+        )
+
+        # Cout MO: 20000 EUR
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("20000")
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # cout_revient = 80000 + 20000 + 0 = 100000 (pas de materiel)
+        # marge = (150000 - 100000) / 150000 = 33.33%
+
+        # Act
+        result = use_case_sans_materiel.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "33.33"
+        # Le repo materiel ne doit pas avoir ete appele
+        self.mock_cout_materiel_repo.calculer_cout_chantier.assert_not_called()
+
+    def test_consolidation_avec_cout_materiel(self):
+        """Test: le cout materiel (via mock retournant 15000) est inclus
+        dans le cout de revient et impacte la marge.
+
+        cout_revient = achats realises + cout MO + cout materiel
+        marge = (prix_vente - cout_revient) / prix_vente
+        """
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Prix de vente (situation): 100000 EUR
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Achats realises: 50000 EUR
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("45000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("50000")
+        )
+
+        # Cout MO: 10000 EUR
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
+
+        # Cout materiel: 15000 EUR
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("15000")
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # cout_revient = 50000 + 10000 + 15000 = 75000
+        # marge = (100000 - 75000) / 100000 = 25%
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_estimee_pct == "25.00"
+        self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
+
+    def test_consolidation_cout_materiel_erreur_continue(self):
+        """Test: quand calculer_cout_chantier leve une Exception,
+        la consolidation continue sans crasher (cout materiel = 0).
+
+        Le try/except dans le use case doit attraper l'erreur
+        et utiliser cout_materiel = 0 par defaut.
+        """
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        # Prix de vente (situation): 100000 EUR
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        # Achats realises: 60000 EUR
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("55000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("60000")
+        )
+
+        # Cout MO: 10000 EUR
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
+
+        # Cout materiel: ERREUR -> doit etre ignore (0)
+        self.mock_cout_materiel_repo.calculer_cout_chantier.side_effect = Exception(
+            "Erreur base de donnees"
+        )
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # cout_revient = 60000 + 10000 + 0 (erreur) = 70000
+        # marge = (100000 - 70000) / 100000 = 30%
+
+        # Act - ne doit PAS lever d'exception
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert - la consolidation a continue malgre l'erreur
+        assert len(result.chantiers) == 1
+        assert result.chantiers[0].marge_estimee_pct == "30.00"
+        self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
