@@ -8,6 +8,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from shared.domain.calcul_financier import arrondir_montant
+
 
 @dataclass
 class LigneSituation:
@@ -63,10 +65,10 @@ class LigneSituation:
         montant_cumule_ht = montant_marche_ht * pourcentage_avancement / 100
         montant_periode_ht = montant_cumule_ht - montant_cumule_precedent_ht
         """
-        self.montant_cumule_ht = (
+        self.montant_cumule_ht = arrondir_montant(
             self.montant_marche_ht * self.pourcentage_avancement / Decimal("100")
         )
-        self.montant_periode_ht = (
+        self.montant_periode_ht = arrondir_montant(
             self.montant_cumule_ht - self.montant_cumule_precedent_ht
         )
 

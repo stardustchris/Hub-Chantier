@@ -178,21 +178,31 @@ def get_resolve_reconciliation_use_case(
 
 def get_mappings_use_case(
     mapping_repo: SqlAlchemyPennylaneMappingRepository = Depends(get_mapping_repository),
+    db: Session = Depends(get_db),
 ) -> GetMappingsUseCase:
     """Cree le use case de liste des mappings."""
+    from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
+        SQLAlchemyChantierRepository,
+    )
+    chantier_repo = SQLAlchemyChantierRepository(db)
     return GetMappingsUseCase(
         mapping_repository=mapping_repo,
-        chantier_repository=None,  # TODO: Injecter si disponible
+        chantier_repository=chantier_repo,
     )
 
 
 def get_create_mapping_use_case(
     mapping_repo: SqlAlchemyPennylaneMappingRepository = Depends(get_mapping_repository),
+    db: Session = Depends(get_db),
 ) -> CreateMappingUseCase:
     """Cree le use case de creation de mapping."""
+    from modules.chantiers.infrastructure.persistence.sqlalchemy_chantier_repository import (
+        SQLAlchemyChantierRepository,
+    )
+    chantier_repo = SQLAlchemyChantierRepository(db)
     return CreateMappingUseCase(
         mapping_repository=mapping_repo,
-        chantier_repository=None,  # TODO: Injecter si disponible
+        chantier_repository=chantier_repo,
     )
 
 

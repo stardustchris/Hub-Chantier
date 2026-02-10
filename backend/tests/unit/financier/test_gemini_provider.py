@@ -413,8 +413,8 @@ class TestGeminiConstants:
     """Tests pour les constantes de configuration."""
 
     def test_model_name(self):
-        """Test: le modele utilise est gemini-1.5-flash."""
-        assert GEMINI_MODEL == "gemini-1.5-flash"
+        """Test: le modele utilise est gemini-3-flash-preview."""
+        assert GEMINI_MODEL == "gemini-3-flash-preview"
 
     def test_temperature(self):
         """Test: temperature basse pour des reponses coherentes."""

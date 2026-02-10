@@ -20,7 +20,7 @@ class UniteMesure(str, Enum):
     HEURE = "heure"
     ML = "ml"
     T = "T"
-    U = "U"
+    U = "u"
     ENS = "ENS"
     JOUR = "jour"
     H = "h"
