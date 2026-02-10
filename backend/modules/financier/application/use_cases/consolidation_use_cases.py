@@ -99,6 +99,7 @@ class GetVueConsolideeFinancesUseCase:
         user_accessible_chantier_ids: List[int],
         statut_chantier: Optional[str] = None,
         ca_total_entreprise: Optional[Decimal] = None,
+        couts_fixes_annuels: Optional[Decimal] = None,
     ) -> VueConsolideeDTO:
         """Construit la vue consolidee multi-chantiers.
 
@@ -114,14 +115,17 @@ class GetVueConsolideeFinancesUseCase:
                 tous les chantiers sont inclus. Ignore si chantier_info_port
                 n'est pas disponible.
             ca_total_entreprise: CA total annuel de l'entreprise pour la
-                répartition des coûts fixes. Si None, utilise le CA des
+                repartition des couts fixes. Si None, utilise le CA des
                 chantiers visibles (peut donner des marges incorrectes si
                 l'entreprise a d'autres chantiers non visibles).
+            couts_fixes_annuels: Couts fixes annuels de l'entreprise (optionnel).
+                Si None, utilise la constante COUTS_FIXES_ANNUELS par defaut.
 
         Returns:
             VueConsolideeDTO avec KPI globaux, liste chantiers,
             top 3 rentables et top 3 derives.
         """
+        effective_couts_fixes = couts_fixes_annuels or COUTS_FIXES_ANNUELS
         chantiers_summaries: List[ChantierFinancierSummaryDTO] = []
 
         # Recuperer les noms des chantiers via le port (si disponible)
@@ -152,6 +156,7 @@ class GetVueConsolideeFinancesUseCase:
         nb_ok = 0
         nb_attention = 0
         nb_depassement = 0
+        nb_marge_en_attente = 0
 
         # CA total pour répartition des coûts fixes
         # Si ca_total_entreprise est fourni, on l'utilise (recommandé)
@@ -202,11 +207,15 @@ class GetVueConsolideeFinancesUseCase:
                 if derniere_situation:
                     prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
+            cout_mo_ok = True
+            cout_materiel_ok = True
+
             if self._cout_mo_repository:
                 try:
                     cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
-                except Exception:
+                except (ValueError, TypeError, AttributeError, KeyError):
                     logger.warning("Erreur calcul cout MO consolidation chantier %d", chantier_id, exc_info=True)
+                    cout_mo_ok = False
 
             if self._cout_materiel_repository:
                 try:
@@ -214,15 +223,16 @@ class GetVueConsolideeFinancesUseCase:
                     # Les achats materiel fournisseurs sont deja dans `realise`
                     # via AchatRepository. Ne PAS confondre pour eviter double comptage.
                     cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
-                except Exception:
+                except (ValueError, TypeError, AttributeError, KeyError):
                     logger.warning("Erreur calcul cout materiel consolidation chantier %d", chantier_id, exc_info=True)
+                    cout_materiel_ok = False
 
             if prix_vente_ht > Decimal("0"):
                 # Marge BTP réelle (situations disponibles)
                 quote_part = calculer_quote_part_frais_generaux(
                     ca_chantier_ht=prix_vente_ht,
                     ca_total_annee=ca_total_annee,
-                    couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+                    couts_fixes_annuels=effective_couts_fixes,
                 )
                 marge_pct = calculer_marge_chantier(
                     ca_ht=prix_vente_ht,
@@ -247,6 +257,11 @@ class GetVueConsolideeFinancesUseCase:
                 # Budget = 0
                 marge_pct = Decimal("0")
 
+            # Marquer partielle si un calcul de cout a echoue (ne pas ecraser si fallback budgetaire)
+            if not cout_mo_ok or not cout_materiel_ok:
+                if prix_vente_ht > Decimal("0"):
+                    marge_statut_chantier = "partielle"
+
             # Classification
             if pct_engage > Decimal("100"):
                 statut = "depassement"
@@ -257,6 +272,21 @@ class GetVueConsolideeFinancesUseCase:
             else:
                 statut = "ok"
                 nb_ok += 1
+
+            # Compteur marge en attente / partielle
+            if marge_pct is None or marge_statut_chantier in ("en_attente", "partielle"):
+                nb_marge_en_attente += 1
+
+            # Indicateur fiabilite marge (score 0-100%)
+            fiabilite = 0
+            if prix_vente_ht > Decimal("0"):
+                fiabilite += 30  # situation disponible
+            if cout_mo_ok and cout_mo > Decimal("0"):
+                fiabilite += 25  # MO calculee
+            if cout_materiel_ok and cout_materiel >= Decimal("0"):
+                fiabilite += 25  # materiel OK (0 est valide si pas de parc)
+            if ca_total_annee > Decimal("0"):
+                fiabilite += 20  # frais generaux repartis
 
             # Alertes non acquittees
             alertes = self._alerte_repository.find_non_acquittees(chantier_id)
@@ -271,7 +301,7 @@ class GetVueConsolideeFinancesUseCase:
                 nom_chantier=nom_chantier,
                 montant_revise_ht=str(arrondir_montant(montant_revise)),
                 total_engage=str(arrondir_montant(engage)),
-                total_realise=str(arrondir_montant(realise)),
+                total_realise=str(arrondir_montant(realise + cout_mo + cout_materiel)),
                 reste_a_depenser=str(arrondir_montant(reste)),
                 marge_estimee_pct=(
                     str(arrondir_pct(marge_pct))
@@ -279,6 +309,7 @@ class GetVueConsolideeFinancesUseCase:
                     else None
                 ),
                 marge_statut=marge_statut_chantier,
+                fiabilite_marge=fiabilite,
                 pct_engage=str(arrondir_pct(pct_engage)),
                 pct_realise=str(arrondir_pct(pct_realise)),
                 statut=statut,
@@ -290,7 +321,7 @@ class GetVueConsolideeFinancesUseCase:
             # Cumuler pour globaux
             total_budget_revise += montant_revise
             total_engage += engage
-            total_realise += realise
+            total_realise += realise + cout_mo + cout_materiel
             total_reste += reste
 
             # Pour marge moyenne pondérée
@@ -300,7 +331,14 @@ class GetVueConsolideeFinancesUseCase:
 
         # Marge moyenne pondérée
         nb_chantiers = len(chantiers_summaries)
-        marge_statut_global = "calculee"
+
+        # Determiner marge_statut_global
+        if nb_chantiers > 0 and nb_marge_en_attente >= nb_chantiers:
+            marge_statut_global = "en_attente"
+        elif nb_marge_en_attente > 0:
+            marge_statut_global = "partielle"
+        else:
+            marge_statut_global = "calculee"
 
         if total_poids_marge > Decimal("0"):
             marge_moyenne: Optional[Decimal] = (
@@ -324,7 +362,7 @@ class GetVueConsolideeFinancesUseCase:
             nb_chantiers_ok=nb_ok,
             nb_chantiers_attention=nb_attention,
             nb_chantiers_depassement=nb_depassement,
-            nb_chantiers_marge_en_attente=0,
+            nb_chantiers_marge_en_attente=nb_marge_en_attente,
         )
 
         # Top 3 rentables (marge_estimee_pct desc, seulement ceux avec marge > 5%)

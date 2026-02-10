@@ -1314,7 +1314,7 @@ class TestConsolidationAvecMateriel:
         self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
 
         # Cout materiel: ERREUR -> doit etre ignore (0)
-        self.mock_cout_materiel_repo.calculer_cout_chantier.side_effect = Exception(
+        self.mock_cout_materiel_repo.calculer_cout_chantier.side_effect = ValueError(
             "Erreur base de donnees"
         )
 
@@ -1329,4 +1329,169 @@ class TestConsolidationAvecMateriel:
         # Assert - la consolidation a continue malgre l'erreur
         assert len(result.chantiers) == 1
         assert result.chantiers[0].marge_estimee_pct == "30.00"
+        # A2: marge_statut doit etre "partielle" quand un calcul echoue
+        assert result.chantiers[0].marge_statut == "partielle"
         self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
+
+    def test_consolidation_cout_mo_erreur_marge_partielle(self):
+        """Test: quand calculer_cout_chantier MO leve une erreur,
+        la consolidation continue et marge_statut = 'partielle'.
+        """
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("55000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("60000")
+        )
+
+        # Cout MO: ERREUR -> doit etre ignore (0)
+        self.mock_cout_mo_repo.calculer_cout_chantier.side_effect = ValueError(
+            "Erreur calcul MO"
+        )
+        # Cout materiel: 5000 EUR
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("5000")
+
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert len(result.chantiers) == 1
+        assert result.chantiers[0].marge_statut == "partielle"
+
+    def test_consolidation_fiabilite_marge_full(self):
+        """Test C1: fiabilite_marge = 100 quand tous les composants sont OK.
+
+        Score: 30 (situation) + 25 (MO) + 25 (materiel) + 20 (frais generaux) = 100
+        """
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("55000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("50000")
+        )
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("5000")
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Act - avec ca_total_entreprise pour activer le composant frais generaux
+        result = self.use_case.execute(
+            user_accessible_chantier_ids=[1],
+            ca_total_entreprise=Decimal("1000000"),
+        )
+
+        # Assert
+        assert result.chantiers[0].fiabilite_marge == 100
+
+    def test_consolidation_fiabilite_marge_partielle(self):
+        """Test C1: fiabilite_marge = 30 quand seule la situation est OK.
+
+        Score: 30 (situation) + 0 (MO=0) + 25 (materiel>=0) + 0 (pas de frais gen.) = 55
+        """
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("55000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("50000")
+        )
+        # MO = 0, materiel = 0 -> pas de points MO (25 absents)
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("0")
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("0")
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Act - sans ca_total_annee (pas de frais generaux)
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert - 30 (situation) + 0 (MO=0) + 25 (materiel ok, >=0) = 55
+        assert result.chantiers[0].fiabilite_marge == 55
+
+    def test_consolidation_nb_chantiers_marge_en_attente_with_error(self):
+        """Test A3: nb_chantiers_marge_en_attente compte les chantiers avec marge partielle.
+
+        Un chantier avec situation MAIS erreur sur cout MO aura
+        marge_statut = 'partielle' et comptera dans nb_marge_en_attente.
+        """
+        # Arrange - 2 chantiers: 1 OK, 1 avec erreur cout MO (partielle)
+        budget1 = self._make_budget(1, Decimal("200000"))
+        budget2 = self._make_budget(2, Decimal("200000"))
+
+        def find_budget(cid):
+            return {1: budget1, 2: budget2}.get(cid)
+
+        self.mock_budget_repo.find_by_chantier_id.side_effect = find_budget
+
+        # Les 2 chantiers ont des situations
+        situation1 = self._make_situation(1, Decimal("100000"))
+        situation2 = self._make_situation(2, Decimal("100000"))
+
+        def find_situation(cid):
+            return {1: situation1, 2: situation2}.get(cid)
+
+        self.mock_situation_repo.find_derniere_situation.side_effect = find_situation
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("30000")
+        )
+
+        # Chantier 1: cout MO OK, Chantier 2: erreur cout MO
+        def calc_cout_mo(cid):
+            if cid == 2:
+                raise ValueError("Erreur MO chantier 2")
+            return Decimal("10000")
+
+        self.mock_cout_mo_repo.calculer_cout_chantier.side_effect = calc_cout_mo
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("0")
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1, 2])
+
+        # Assert - chantier 2 a marge_statut "partielle" -> compte en attente
+        assert result.kpi_globaux.nb_chantiers == 2
+        assert result.kpi_globaux.nb_chantiers_marge_en_attente == 1
+        # Verifier que chantier 2 est bien partielle
+        chantier2 = [c for c in result.chantiers if c.chantier_id == 2][0]
+        assert chantier2.marge_statut == "partielle"
+
+    def test_consolidation_marge_statut_calculee(self):
+        """Test: marge_statut = 'calculee' quand une situation existe et tous calculs OK."""
+        # Arrange
+        budget = self._make_budget(1, Decimal("200000"))
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        situation = self._make_situation(1, Decimal("100000"))
+        self.mock_situation_repo.find_derniere_situation.return_value = situation
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = (
+            lambda cid, statuts: Decimal("55000")
+            if statuts == STATUTS_ENGAGES
+            else Decimal("50000")
+        )
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("5000")
+        self.mock_alerte_repo.find_non_acquittees.return_value = []
+
+        # Act
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
+
+        # Assert
+        assert result.chantiers[0].marge_statut == "calculee"

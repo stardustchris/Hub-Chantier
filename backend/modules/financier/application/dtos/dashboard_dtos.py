@@ -15,6 +15,7 @@ class KPIFinancierDTO:
     Attributes:
         marge_estimee: La marge en pourcentage, ou None si non calculable.
         marge_statut: "calculee" si marge disponible, "en_attente" si pas de situation.
+        fiabilite_marge: Score de fiabilite de la marge (0-100%).
     """
 
     montant_revise_ht: str
@@ -22,10 +23,11 @@ class KPIFinancierDTO:
     total_realise: str
     marge_estimee: Optional[str]  # None si pas de situation de travaux
     marge_statut: str  # "calculee" ou "en_attente"
-    pct_engage: str
-    pct_realise: str
-    reste_a_depenser: str
-    pct_reste: str
+    fiabilite_marge: int = 0  # Score 0-100%
+    pct_engage: str = ""
+    pct_realise: str = ""
+    reste_a_depenser: str = ""
+    pct_reste: str = ""
 
     def to_dict(self) -> dict:
         """Convertit le DTO en dictionnaire."""
@@ -35,6 +37,7 @@ class KPIFinancierDTO:
             "total_realise": self.total_realise,
             "marge_estimee": self.marge_estimee,
             "marge_statut": self.marge_statut,
+            "fiabilite_marge": self.fiabilite_marge,
             "pct_engage": self.pct_engage,
             "pct_realise": self.pct_realise,
             "reste_a_depenser": self.reste_a_depenser,

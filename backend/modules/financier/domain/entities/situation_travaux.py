@@ -68,6 +68,8 @@ class SituationTravaux:
     # H10: Soft delete fields
     deleted_at: Optional[datetime] = None
     deleted_by: Optional[int] = None
+    # A5: Lock optimiste
+    version: int = 1
 
     def __post_init__(self) -> None:
         """Validation a la creation.

@@ -69,14 +69,19 @@ class GetDashboardFinancierUseCase:
         self._cout_materiel_repository = cout_materiel_repository
 
     def execute(
-        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
+        self,
+        chantier_id: int,
+        ca_total_annee: Optional[Decimal] = None,
+        couts_fixes_annuels: Optional[Decimal] = None,
     ) -> DashboardFinancierDTO:
         """Construit le tableau de bord financier d'un chantier.
 
         Args:
             chantier_id: L'ID du chantier.
-            ca_total_annee: CA total facturé sur l'année pour répartition des coûts fixes.
-                Si None, les coûts fixes ne sont pas répartis.
+            ca_total_annee: CA total facture sur l'annee pour repartition des couts fixes.
+                Si None, les couts fixes ne sont pas repartis.
+            couts_fixes_annuels: Couts fixes annuels de l'entreprise (optionnel).
+                Si None, utilise la constante COUTS_FIXES_ANNUELS par defaut.
 
         Returns:
             Le DTO du dashboard complet.
@@ -84,6 +89,7 @@ class GetDashboardFinancierUseCase:
         Raises:
             BudgetNotFoundError: Si aucun budget pour ce chantier.
         """
+        effective_couts_fixes = couts_fixes_annuels or COUTS_FIXES_ANNUELS
         # Récupérer le budget
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -103,16 +109,20 @@ class GetDashboardFinancierUseCase:
         # Couts MO et materiel (pour total realise COMPLET)
         cout_mo = Decimal("0")
         cout_materiel = Decimal("0")
+        cout_mo_ok = True
+        cout_materiel_ok = True
         if self._cout_mo_repository:
             try:
                 cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
-            except Exception:
+            except (ValueError, TypeError, AttributeError, KeyError):
                 logger.warning("Erreur calcul cout MO dashboard chantier %d", chantier_id, exc_info=True)
+                cout_mo_ok = False
         if self._cout_materiel_repository:
             try:
                 cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
-            except Exception:
+            except (ValueError, TypeError, AttributeError, KeyError):
                 logger.warning("Erreur calcul cout materiel dashboard chantier %d", chantier_id, exc_info=True)
+                cout_materiel_ok = False
 
         # Total realise COMPLET = achats fournisseurs + MO + materiel interne
         # IMPORTANT: cout_materiel = parc materiel INTERNE (amortissement/location).
@@ -157,7 +167,7 @@ class GetDashboardFinancierUseCase:
             quote_part = calculer_quote_part_frais_generaux(
                 ca_chantier_ht=prix_vente_ht,
                 ca_total_annee=effective_ca_total,
-                couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+                couts_fixes_annuels=effective_couts_fixes,
             )
 
             # Marge BTP unifiee (formule partagee avec P&L et bilan)
@@ -182,6 +192,23 @@ class GetDashboardFinancierUseCase:
                 marge_estimee = arrondir_pct(Decimal("0"))
             marge_statut = "estimee_budgetaire"
 
+        # Si un calcul de cout a echoue et qu'on a une situation, marge partielle
+        if not cout_mo_ok or not cout_materiel_ok:
+            if prix_vente_ht > Decimal("0"):
+                marge_statut = "partielle"
+
+        # Indicateur fiabilite marge (score 0-100%)
+        fiabilite = 0
+        if prix_vente_ht > Decimal("0"):
+            fiabilite += 30  # situation disponible
+        if cout_mo_ok and cout_mo > Decimal("0"):
+            fiabilite += 25  # MO calculee
+        if cout_materiel_ok and cout_materiel >= Decimal("0"):
+            fiabilite += 25  # materiel OK (0 est valide si pas de parc)
+        effective_ca_for_fiab = ca_total_annee or Decimal("0")
+        if effective_ca_for_fiab > Decimal("0"):
+            fiabilite += 20  # frais generaux repartis
+
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),
             total_engage=str(total_engage),
@@ -192,6 +219,7 @@ class GetDashboardFinancierUseCase:
                 else None
             ),
             marge_statut=marge_statut,
+            fiabilite_marge=fiabilite,
             pct_engage=str(arrondir_pct(pct_engage)),
             pct_realise=str(arrondir_pct(pct_realise)),
             reste_a_depenser=str(reste_a_depenser),

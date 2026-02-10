@@ -20,6 +20,7 @@ class ChantierFinancierSummaryDTO:
         reste_a_depenser: Reste a depenser (Decimal->str).
         marge_estimee_pct: Marge estimee en pourcentage (None si en attente).
         marge_statut: 'calculee' ou 'en_attente' selon disponibilite situation.
+        fiabilite_marge: Score de fiabilite de la marge (0-100%).
         pct_engage: Pourcentage engage (Decimal->str).
         pct_realise: Pourcentage realise (Decimal->str).
         statut: Statut financier du chantier ('ok' | 'attention' | 'depassement').
@@ -36,10 +37,11 @@ class ChantierFinancierSummaryDTO:
     reste_a_depenser: str
     marge_estimee_pct: Optional[str]  # None si pas de situation
     marge_statut: str  # "calculee" ou "en_attente"
-    pct_engage: str
-    pct_realise: str
-    statut: str
-    nb_alertes: int
+    fiabilite_marge: int = 0  # Score 0-100%
+    pct_engage: str = ""
+    pct_realise: str = ""
+    statut: str = ""
+    nb_alertes: int = 0
     statut_chantier: str = ""
 
     def to_dict(self) -> dict:
@@ -53,6 +55,7 @@ class ChantierFinancierSummaryDTO:
             "reste_a_depenser": self.reste_a_depenser,
             "marge_estimee_pct": self.marge_estimee_pct,
             "marge_statut": self.marge_statut,
+            "fiabilite_marge": self.fiabilite_marge,
             "pct_engage": self.pct_engage,
             "pct_realise": self.pct_realise,
             "statut": self.statut,

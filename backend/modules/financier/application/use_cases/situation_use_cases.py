@@ -102,10 +102,12 @@ class CreateSituationUseCase:
         if derniere_situation:
             montant_cumule_precedent_ht = derniere_situation.montant_cumule_ht
 
-        # Generer le numero automatiquement: SIT-YYYY-NN
-        count = self._situation_repository.count_by_chantier_id(dto.chantier_id)
+        # Generer le numero automatiquement: SIT-YYYY-NNNN (atomique)
         year = datetime.utcnow().year
-        numero = f"SIT-{year}-{count + 1:02d}"
+        next_num = self._situation_repository.next_numero_situation(
+            dto.chantier_id, year
+        )
+        numero = f"SIT-{year}-{next_num:04d}"
 
         # Creer l'entite situation
         situation = SituationTravaux(

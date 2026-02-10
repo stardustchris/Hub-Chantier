@@ -65,6 +65,22 @@ class SituationRepository(ABC):
         pass
 
     @abstractmethod
+    def next_numero_situation(self, chantier_id: int, year: int) -> int:
+        """Retourne le prochain numero de situation pour un chantier (atomique).
+
+        Cette methode DOIT etre atomique (SELECT FOR UPDATE ou equivalent)
+        pour eviter les doublons en cas d'acces concurrent.
+
+        Args:
+            chantier_id: L'ID du chantier.
+            year: L'annee pour laquelle generer le numero.
+
+        Returns:
+            Le prochain numero sequentiel.
+        """
+        ...
+
+    @abstractmethod
     def delete(self, situation_id: int, deleted_by: int) -> None:
         """Supprime une situation (soft delete - H10).
 
