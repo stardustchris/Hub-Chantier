@@ -5,7 +5,7 @@ DEV-TVA: Ventilation TVA multi-taux et mention TVA reduite.
 """
 
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Callable, Optional, Protocol, Tuple
 
 from ...domain.entities.devis import Devis
@@ -333,9 +333,9 @@ class GetDevisUseCase:
             [
                 VentilationTVADTO(
                     taux=taux,
-                    base_ht=str(base_ht.quantize(Decimal("0.01"))),
+                    base_ht=str(base_ht.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
                     montant_tva=str(
-                        (base_ht * Decimal(taux) / Decimal("100")).quantize(Decimal("0.01"))
+                        (base_ht * Decimal(taux) / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                     ),
                 )
                 for taux, base_ht in ventilation.items()

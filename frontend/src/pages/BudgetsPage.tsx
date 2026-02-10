@@ -10,6 +10,7 @@ import Layout from '../components/Layout'
 import { financierService } from '../services/financier'
 import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
+import { formatEUR } from '../utils/format'
 import type { Chantier, Budget } from '../types'
 import {
   TrendingUp,
@@ -138,13 +139,6 @@ export default function BudgetsPage() {
     }
   }
 
-  const formatMontant = (montant: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(montant)
-  }
-
   const filteredBudgets = budgetChantiers.filter((bc) =>
     bc.chantier.nom.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -164,7 +158,7 @@ export default function BudgetsPage() {
               <div>
                 <p className="text-sm text-gray-600">Budget Prévisionnel</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatMontant(totalPrevu)}
+                  {formatEUR(totalPrevu)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -178,7 +172,7 @@ export default function BudgetsPage() {
               <div>
                 <p className="text-sm text-gray-600">Engagé</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatMontant(totalEngage)}
+                  {formatEUR(totalEngage)}
                 </p>
                 {totalPrevu > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
@@ -197,7 +191,7 @@ export default function BudgetsPage() {
               <div>
                 <p className="text-sm text-gray-600">Déboursé</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatMontant(totalRealise)}
+                  {formatEUR(totalRealise)}
                 </p>
                 {totalPrevu > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
@@ -294,19 +288,19 @@ export default function BudgetsPage() {
                     <div>
                       <p className="text-xs text-gray-500">Prévu</p>
                       <p className="text-lg font-semibold text-gray-900">
-                        {formatMontant(kpi.montant_prevu)}
+                        {formatEUR(kpi.montant_prevu)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Engagé</p>
                       <p className="text-lg font-semibold text-orange-600">
-                        {formatMontant(kpi.montant_engage)}
+                        {formatEUR(kpi.montant_engage)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Déboursé</p>
                       <p className="text-lg font-semibold text-green-600">
-                        {formatMontant(kpi.montant_realise)}
+                        {formatEUR(kpi.montant_realise)}
                       </p>
                     </div>
                   </div>
@@ -360,7 +354,7 @@ export default function BudgetsPage() {
                         <p className="text-sm font-medium text-red-800">Budget dépassé</p>
                         <p className="text-xs text-red-600 mt-1">
                           Dépassement de{' '}
-                          {formatMontant(kpi.montant_engage - kpi.montant_prevu)}
+                          {formatEUR(kpi.montant_engage - kpi.montant_prevu)}
                         </p>
                       </div>
                     </div>

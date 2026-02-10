@@ -285,6 +285,7 @@ export default function DashboardFinancierPage() {
   const margesBarData = useMemo(() => {
     if (!data) return []
     return [...data.chantiers]
+      .filter((c) => c.marge_estimee_pct !== null && c.marge_estimee_pct !== undefined)
       .sort((a, b) => Number(b.marge_estimee_pct) - Number(a.marge_estimee_pct))
       .slice(0, 8)
       .map((c) => ({
@@ -329,17 +330,17 @@ export default function DashboardFinancierPage() {
           </div>
           <div>
             <span className="text-gray-500">Marge</span>
-            <p className={`font-medium ${Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-              {Number(chantier.marge_estimee_pct).toFixed(1)}%
+            <p className={`font-medium ${chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+              {chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'N/D' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.marge_estimee_pct))}%`}
             </p>
           </div>
           <div>
             <span className="text-gray-500">Engagé</span>
-            <p className="font-medium">{Number(chantier.pct_engage).toFixed(1)}%</p>
+            <p className="font-medium">{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_engage))}%</p>
           </div>
           <div>
             <span className="text-gray-500">Déboursé</span>
-            <p className="font-medium">{Number(chantier.pct_realise).toFixed(1)}%</p>
+            <p className="font-medium">{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_realise))}%</p>
           </div>
         </div>
       </div>
@@ -487,7 +488,7 @@ export default function DashboardFinancierPage() {
             )}
 
             {/* KPI globaux */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" role="region" aria-label="Indicateurs cles">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" role="region" aria-label="Indicateurs cles">
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -518,7 +519,7 @@ export default function DashboardFinancierPage() {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {data.kpi_globaux.total_budget_revise > 0
-                        ? ((Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100).toFixed(1)
+                        ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100)
                         : '0'}% du budget
                     </p>
                   </div>
@@ -539,7 +540,7 @@ export default function DashboardFinancierPage() {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {data.kpi_globaux.total_budget_revise > 0
-                        ? ((Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100).toFixed(1)
+                        ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100)
                         : '0'}% du budget
                     </p>
                   </div>
@@ -561,7 +562,7 @@ export default function DashboardFinancierPage() {
                     </p>
                     <p className="text-xs text-green-600 mt-1">
                       {data.kpi_globaux.total_budget_revise > 0
-                        ? ((Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100).toFixed(1)
+                        ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100)
                         : '0'}% disponible
                     </p>
                   </div>
@@ -580,7 +581,7 @@ export default function DashboardFinancierPage() {
                     <p className={`text-2xl font-bold mt-1 ${
                       Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                     }`}>
-                      {Number(data.kpi_globaux.marge_moyenne_pct).toFixed(1)}%
+                      {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(data.kpi_globaux.marge_moyenne_pct))}%
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Sur {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
@@ -769,7 +770,7 @@ export default function DashboardFinancierPage() {
                                   style={{ width: `${Math.min(Number(chantier.pct_engage), 100)}%` }}
                                 />
                               </div>
-                              <span>{Number(chantier.pct_engage).toFixed(1)}%</span>
+                              <span>{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_engage))}%</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -780,14 +781,14 @@ export default function DashboardFinancierPage() {
                                   style={{ width: `${Math.min(Number(chantier.pct_realise), 100)}%` }}
                                 />
                               </div>
-                              <span>{Number(chantier.pct_realise).toFixed(1)}%</span>
+                              <span>{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_realise))}%</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right">{formatEUR(chantier.reste_a_depenser)}</td>
                           <td className={`px-4 py-3 text-right font-medium ${
-                            Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
+                            chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                           }`}>
-                            {Number(chantier.marge_estimee_pct).toFixed(1)}%
+                            {chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'N/D' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.marge_estimee_pct))}%`}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.colorClass}`}>

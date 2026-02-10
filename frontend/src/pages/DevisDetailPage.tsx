@@ -20,6 +20,7 @@ import SignaturePanel from '../components/devis/SignaturePanel'
 import ConversionChantierPanel from '../components/devis/ConversionChantierPanel'
 import RelancesPanel from '../components/devis/RelancesPanel'
 import { devisService } from '../services/devis'
+import { formatEUR } from '../utils/format'
 import type {
   DevisDetail,
   DevisCreate,
@@ -51,9 +52,6 @@ import {
   CheckCircle,
   X,
 } from 'lucide-react'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 export default function DevisDetailPage() {
   const { id } = useParams<{ id: string }>()

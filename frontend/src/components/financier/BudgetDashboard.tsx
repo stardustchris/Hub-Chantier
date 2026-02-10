@@ -20,18 +20,13 @@ import EvolutionChart from './EvolutionChart'
 import CamembertLots from './CamembertLots'
 import BarresComparativesLots from './BarresComparativesLots'
 import type { Budget, DashboardFinancier, AlerteDepassement } from '../../types'
+import { formatEUR, formatPct } from '../../utils/format'
 
 interface BudgetDashboardProps {
   chantierId: number
   budget: Budget
   onDashboardLoaded?: (dashboard: DashboardFinancier) => void
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
-
-const formatPct = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 1 }).format(value / 100)
 
 export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded }: BudgetDashboardProps) {
   const [dashboard, setDashboard] = useState<DashboardFinancier | null>(null)
@@ -141,7 +136,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
       })()}
 
       {/* KPI Cards - 5 colonnes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {/* Budget revise */}
         <div className="bg-white border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-gray-500 mb-1">Budget révisé HT</p>
@@ -215,7 +210,11 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
             {margeFaible && <AlertTriangle className="w-4 h-4 text-red-500" />}
           </div>
           <p className={`text-2xl font-bold ${margeFaible ? 'text-red-600' : 'text-green-700'}`}>
-            {formatPct(kpi.marge_estimee)}
+            {kpi.marge_estimee === null || kpi.marge_estimee === undefined ? (
+              <span className="text-gray-400">N/D</span>
+            ) : (
+              formatPct(Number(kpi.marge_estimee))
+            )}
           </p>
           <p className="text-xs mt-2">
             {kpi.marge_statut === 'calculee' ? (

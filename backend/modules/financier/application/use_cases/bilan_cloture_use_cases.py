@@ -177,7 +177,7 @@ class GetBilanClotureUseCase:
                 logger.warning("Erreur calcul cout materiel bilan chantier %d", chantier_id)
 
         # 5. Calculer le reste non depense et la marge REELLE
-        reste_non_depense_ht = budget_revise_ht - total_engage_ht
+        reste_non_depense_ht = budget_revise_ht - total_engage_ht - cout_mo - cout_materiel
 
         # Marge reelle = basee sur CA reel (factures client), pas sur le budget
         # Formule BTP unifiee : (CA - Cout revient) / CA x 100
@@ -196,8 +196,8 @@ class GetBilanClotureUseCase:
         )
         marge_finale_ht = ca_ht - (total_realise_ht + cout_mo + cout_materiel + quote_part)
 
-        if marge_finale_pct is None:
-            marge_finale_pct = Decimal("0")
+        # DM-3: Si CA=0, marge inconnue → None (pas 0% qui signifierait "équilibre")
+        # marge_finale_pct reste None si calculer_marge_chantier retourne None
 
         # 6. Compter les achats et situations
         nb_achats = self.achat_repository.count_by_chantier(chantier_id)
@@ -218,7 +218,7 @@ class GetBilanClotureUseCase:
             total_realise_ht=str(total_realise_ht),
             reste_non_depense_ht=str(reste_non_depense_ht),
             marge_finale_ht=str(marge_finale_ht),
-            marge_finale_pct=str(marge_finale_pct),
+            marge_finale_pct=str(marge_finale_pct) if marge_finale_pct is not None else None,
             nb_achats=nb_achats,
             nb_situations=nb_situations,
             ecarts_par_lot=ecarts_par_lot,

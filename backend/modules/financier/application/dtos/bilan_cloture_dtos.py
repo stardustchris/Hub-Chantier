@@ -78,7 +78,7 @@ class BilanClotureDTO:
     total_realise_ht: str
     reste_non_depense_ht: str
     marge_finale_ht: str
-    marge_finale_pct: str
+    marge_finale_pct: Optional[str]
     nb_achats: int
     nb_situations: int
     ecarts_par_lot: List[EcartLotDTO] = field(default_factory=list)

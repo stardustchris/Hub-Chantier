@@ -1,8 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import type { DevisDetail } from '../../../types'
-
-const formatEUR = (val: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val || 0)
+import { formatEUR } from '../../../utils/format'
 
 interface Props {
   devis: DevisDetail

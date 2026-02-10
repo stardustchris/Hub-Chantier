@@ -6,7 +6,7 @@ cross-module (Clean Architecture).
 """
 
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Optional
 
 from sqlalchemy import text
@@ -135,9 +135,9 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                     user_id=row.utilisateur_id,
                     nom=row.nom or "",
                     prenom=row.prenom or "",
-                    heures_validees=heures.quantize(Decimal("0.01")),
+                    heures_validees=heures.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
                     taux_horaire=taux,
-                    cout_total=cout.quantize(Decimal("0.01")),
+                    cout_total=cout.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
                 )
             )
 

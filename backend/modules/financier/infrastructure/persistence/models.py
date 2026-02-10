@@ -308,11 +308,11 @@ class BudgetModel(FinancierBase):
             name="check_budgets_montant_initial_positif",
         ),
         CheckConstraint(
-            "retenue_garantie_pct >= 0 AND retenue_garantie_pct <= 100",
+            "retenue_garantie_pct >= 0 AND retenue_garantie_pct <= 5",
             name="check_budgets_retenue_garantie_range",
         ),
         CheckConstraint(
-            "seuil_alerte_pct >= 0",
+            "seuil_alerte_pct >= 0 AND seuil_alerte_pct <= 200",
             name="check_budgets_seuil_alerte_positif",
         ),
         CheckConstraint(
@@ -833,7 +833,7 @@ class SituationTravauxModel(FinancierBase):
             name="check_situations_travaux_cumule_positif",
         ),
         CheckConstraint(
-            "retenue_garantie_pct >= 0 AND retenue_garantie_pct <= 100",
+            "retenue_garantie_pct >= 0 AND retenue_garantie_pct <= 5",
             name="check_situations_travaux_retenue_range",
         ),
         CheckConstraint(

@@ -11,6 +11,7 @@ import DevisForm from '../components/devis/DevisForm'
 import { devisService } from '../services/devis'
 import type { Devis, DevisCreate, DevisUpdate, StatutDevis } from '../types'
 import { STATUT_DEVIS_CONFIG } from '../types'
+import { formatEUR } from '../utils/format'
 import {
   Loader2,
   AlertCircle,
@@ -23,9 +24,6 @@ import {
   X,
   FileText,
 } from 'lucide-react'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 const PAGE_SIZE = 20
 

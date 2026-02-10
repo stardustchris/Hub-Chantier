@@ -9,6 +9,7 @@ import Layout from '../components/Layout'
 import DevisKanban from '../components/devis/DevisKanban'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import { devisService } from '../services/devis'
+import { formatEUR } from '../utils/format'
 import type { DashboardDevis, DevisRecent } from '../types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import {
@@ -23,9 +24,6 @@ import {
   Eye,
   MessageSquare,
 } from 'lucide-react'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 export default function DevisDashboardPage() {
   const navigate = useNavigate()

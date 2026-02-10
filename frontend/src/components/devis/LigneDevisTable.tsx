@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, Edit2, Check, X, Loader2 } from 'lucide-react'
 import type { LigneDevis, LigneDevisCreate, LigneDevisUpdate } from '../../types'
 import { TAUX_TVA_OPTIONS } from '../../types'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 interface LigneDevisTableProps {
   lignes: LigneDevis[]

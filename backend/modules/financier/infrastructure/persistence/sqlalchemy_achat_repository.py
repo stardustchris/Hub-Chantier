@@ -62,6 +62,11 @@ class SQLAlchemyAchatRepository(AchatRepository):
             created_by=model.created_by,
             deleted_at=model.deleted_at,
             deleted_by=model.deleted_by,
+            # CONN-10: Champs Pennylane
+            montant_ht_reel=Decimal(str(model.montant_ht_reel)) if model.montant_ht_reel is not None else None,
+            date_facture_reelle=model.date_facture_reelle,
+            pennylane_invoice_id=model.pennylane_invoice_id,
+            source_donnee=model.source_donnee if model.source_donnee else "HUB",
         )
 
     def _to_model(self, entity: Achat) -> AchatModel:
@@ -96,6 +101,11 @@ class SQLAlchemyAchatRepository(AchatRepository):
             created_at=entity.created_at or datetime.utcnow(),
             updated_at=entity.updated_at,
             created_by=entity.created_by,
+            # CONN-10: Champs Pennylane
+            montant_ht_reel=entity.montant_ht_reel,
+            date_facture_reelle=entity.date_facture_reelle,
+            pennylane_invoice_id=entity.pennylane_invoice_id,
+            source_donnee=entity.source_donnee,
         )
 
     def save(self, achat: Achat) -> Achat:
@@ -132,6 +142,11 @@ class SQLAlchemyAchatRepository(AchatRepository):
                 model.valideur_id = achat.valideur_id
                 model.validated_at = achat.validated_at
                 model.updated_at = datetime.utcnow()
+                # CONN-10: Champs Pennylane
+                model.montant_ht_reel = achat.montant_ht_reel
+                model.date_facture_reelle = achat.date_facture_reelle
+                model.pennylane_invoice_id = achat.pennylane_invoice_id
+                model.source_donnee = achat.source_donnee
         else:
             # Creation
             model = self._to_model(achat)
