@@ -56,7 +56,7 @@ class TestCreateFactureFromSituationUseCase:
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation
-        self.mock_facture_repo.count_factures_year.return_value = 0
+        self.mock_facture_repo.next_numero_facture.return_value = 1
 
         def save_side_effect(facture):
             facture.id = 1
@@ -135,7 +135,7 @@ class TestCreateFactureAcompteUseCase:
 
     def test_create_acompte_success(self):
         """Test: creation reussie d'une facture d'acompte."""
-        self.mock_facture_repo.count_factures_year.return_value = 3
+        self.mock_facture_repo.next_numero_facture.return_value = 4
 
         def save_side_effect(facture):
             facture.id = 1

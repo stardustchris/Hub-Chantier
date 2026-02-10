@@ -122,6 +122,7 @@ ALERTE_TYPES = (
     "seuil_engage",
     "seuil_realise",
     "depassement_lot",
+    "perte_terminaison",
 )
 
 # CONN-10 to CONN-15: Pennylane Inbound enums
@@ -297,6 +298,9 @@ class BudgetModel(FinancierBase):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    # A5: Lock optimiste
+    version = Column(Integer, nullable=False, default=1, server_default=text("1"))
 
     __table_args__ = (
         CheckConstraint(
@@ -807,6 +811,9 @@ class SituationTravauxModel(FinancierBase):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    # A5: Lock optimiste
+    version = Column(Integer, nullable=False, default=1, server_default=text("1"))
 
     __table_args__ = (
         UniqueConstraint("chantier_id", "numero", name="uq_situations_travaux_chantier_numero"),

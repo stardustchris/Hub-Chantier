@@ -49,6 +49,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
             created_by=model.created_by,
             deleted_at=model.deleted_at,
             deleted_by=model.deleted_by,
+            version=model.version,
         )
 
     def _to_model(self, entity: Budget) -> BudgetModel:
@@ -73,6 +74,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
             created_at=entity.created_at or datetime.utcnow(),
             updated_at=entity.updated_at,
             created_by=entity.created_by,
+            version=entity.version,
         )
 
     def save(self, budget: Budget) -> Budget:
@@ -100,6 +102,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
                 model.notes = budget.notes
                 model.devis_id = budget.devis_id
                 model.updated_at = datetime.utcnow()
+                model.version = budget.version
         else:
             # Creation
             model = self._to_model(budget)

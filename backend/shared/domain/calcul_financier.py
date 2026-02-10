@@ -15,8 +15,9 @@ from typing import Optional
 
 # -- Constantes entreprise ---------------------------------------------------
 
-# Coûts fixes annuels de la société (frais généraux hors salaires).
-# Frais généraux BTP typiques : 10-15% du CA → ~600k EUR pour CA de 4.3M EUR
+# Valeur par defaut. En production, utiliser ConfigurationEntreprise
+# pour configurer ce montant via l'interface admin.
+# Frais generaux BTP typiques : 10-15% du CA -> ~600k EUR pour CA de 4.3M EUR
 COUTS_FIXES_ANNUELS = Decimal("600000")
 
 

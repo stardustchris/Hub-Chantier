@@ -294,3 +294,103 @@ class TestListAlertesUseCase:
         result = self.use_case.execute(chantier_id=100)
 
         assert len(result) == 0
+
+
+class TestAlertePerteTerminaison:
+    """Tests C2: alerte perte a terminaison (marge negative projetee)."""
+
+    def setup_method(self):
+        """Configuration avant chaque test."""
+        self.mock_alerte_repo = Mock(spec=AlerteRepository)
+        self.mock_budget_repo = Mock(spec=BudgetRepository)
+        self.mock_achat_repo = Mock(spec=AchatRepository)
+        self.mock_cout_mo_repo = Mock(spec=CoutMainOeuvreRepository)
+        self.mock_cout_materiel_repo = Mock(spec=CoutMaterielRepository)
+        self.mock_journal = Mock(spec=JournalFinancierRepository)
+        self.mock_event_bus = Mock(spec=EventBus)
+        self.use_case = VerifierDepassementUseCase(
+            alerte_repository=self.mock_alerte_repo,
+            budget_repository=self.mock_budget_repo,
+            achat_repository=self.mock_achat_repo,
+            cout_mo_repository=self.mock_cout_mo_repo,
+            cout_materiel_repository=self.mock_cout_materiel_repo,
+            journal_repository=self.mock_journal,
+            event_bus=self.mock_event_bus,
+        )
+
+    def _setup_budget(self, montant_initial=Decimal("500000"), seuil=Decimal("80")):
+        """Configure un budget pour les tests."""
+        budget = Budget(
+            id=10,
+            chantier_id=100,
+            montant_initial_ht=montant_initial,
+            seuil_alerte_pct=seuil,
+        )
+        self.mock_budget_repo.find_by_chantier_id.return_value = budget
+
+        def save_alerte(alerte):
+            alerte.id = 1
+            return alerte
+
+        self.mock_alerte_repo.save.side_effect = save_alerte
+        return budget
+
+    def test_perte_terminaison_quand_realise_depasse_budget(self):
+        """Test C2: alerte perte_terminaison quand montant_realise > budget."""
+        self._setup_budget(montant_initial=Decimal("500000"), seuil=Decimal("80"))
+
+        # Engage et realise depassent le budget
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("450000"),   # engage (90% > 80% -> seuil_engage)
+            Decimal("300000"),   # realise (achats livres+factures)
+        ]
+        # MO + materiel = 250000 -> total realise = 550000 > 500000 -> perte_terminaison
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("200000")
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("50000")
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Doit contenir une alerte perte_terminaison parmi les alertes creees
+        types_alertes = [
+            call.args[0].type_alerte
+            for call in self.mock_alerte_repo.save.call_args_list
+        ]
+        assert "perte_terminaison" in types_alertes
+
+    def test_pas_de_perte_terminaison_quand_realise_sous_budget(self):
+        """Test C2: pas d'alerte perte_terminaison quand realise < budget."""
+        self._setup_budget(montant_initial=Decimal("500000"), seuil=Decimal("90"))
+
+        # Engage et realise bien en dessous du budget et du seuil
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("200000"),  # engage (40% < 90%)
+            Decimal("150000"),  # realise (achats)
+        ]
+        self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("100000")
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("50000")
+        # total_realise = 300000 < 500000 -> pas de perte_terminaison
+        # engage = 200000 = 40% < 90% -> pas de seuil_engage
+        # realise = 300000 = 60% < 90% -> pas de seuil_realise
+
+        result = self.use_case.execute(chantier_id=100)
+
+        # Aucune alerte
+        assert len(result) == 0
+
+    def test_alerte_resilience_cout_mo_erreur(self):
+        """Test FIX-4: si cout_mo leve une erreur, les alertes continuent."""
+        self._setup_budget(montant_initial=Decimal("500000"), seuil=Decimal("80"))
+
+        self.mock_achat_repo.somme_by_chantier.side_effect = [
+            Decimal("420000"),  # engage = 84% > 80%
+            Decimal("300000"),  # realise (achats)
+        ]
+        # Erreur MO -> doit continuer avec 0
+        self.mock_cout_mo_repo.calculer_cout_chantier.side_effect = ValueError("Erreur MO")
+        self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("5000")
+
+        # Act - ne doit PAS lever d'exception
+        result = self.use_case.execute(chantier_id=100)
+
+        # Assert - au moins l'alerte seuil_engage doit exister
+        assert len(result) >= 1

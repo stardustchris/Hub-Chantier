@@ -86,7 +86,10 @@ class GetPnLChantierUseCase:
         self._chantier_info_port = chantier_info_port
 
     def execute(
-        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
+        self,
+        chantier_id: int,
+        ca_total_annee: Optional[Decimal] = None,
+        couts_fixes_annuels: Optional[Decimal] = None,
     ) -> PnLChantierDTO:
         """Calcule le P&L d'un chantier.
 
@@ -94,6 +97,8 @@ class GetPnLChantierUseCase:
             chantier_id: L'ID du chantier.
             ca_total_annee: CA total annuel de l'entreprise pour repartition
                 des couts fixes. Si None, les frais generaux ne sont pas repartis.
+            couts_fixes_annuels: Couts fixes annuels de l'entreprise (optionnel).
+                Si None, utilise la constante COUTS_FIXES_ANNUELS par defaut.
 
         Returns:
             Le P&L complet du chantier.
@@ -101,6 +106,7 @@ class GetPnLChantierUseCase:
         Raises:
             PnLChantierNotFoundError: Si le chantier n'a pas de budget.
         """
+        effective_couts_fixes = couts_fixes_annuels or COUTS_FIXES_ANNUELS
         # 1. Recuperer le budget pour reference
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -132,7 +138,7 @@ class GetPnLChantierUseCase:
         quote_part = calculer_quote_part_frais_generaux(
             ca_chantier_ht=chiffre_affaires_ht,
             ca_total_annee=effective_ca_total,
-            couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+            couts_fixes_annuels=effective_couts_fixes,
         )
         marge_brute_ht = chiffre_affaires_ht - (total_couts + quote_part)
         marge_brute_pct = calculer_marge_chantier(
@@ -213,7 +219,7 @@ class GetPnLChantierUseCase:
         """
         try:
             return self._cout_mo_repository.calculer_cout_chantier(chantier_id)
-        except Exception:
+        except (ValueError, TypeError, AttributeError, KeyError):
             logger.warning(
                 "Erreur calcul cout MO pour chantier %d, retour 0",
                 chantier_id,
@@ -241,7 +247,7 @@ class GetPnLChantierUseCase:
             return self._cout_materiel_repository.calculer_cout_chantier(
                 chantier_id
             )
-        except Exception:
+        except (ValueError, TypeError, AttributeError, KeyError):
             logger.warning(
                 "Erreur calcul cout materiel pour chantier %d, retour 0",
                 chantier_id,
@@ -263,7 +269,7 @@ class GetPnLChantierUseCase:
             info = self._chantier_info_port.get_chantier_info(chantier_id)
             if info is not None:
                 return info.statut == "ferme"
-        except Exception:
+        except (ValueError, TypeError, AttributeError, KeyError, ConnectionError):
             logger.warning(
                 "Erreur acces info chantier %d, est_definitif=False",
                 chantier_id,
