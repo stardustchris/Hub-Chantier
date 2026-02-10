@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { X, Loader2, Search, FileText, ChevronRight } from 'lucide-react'
 import { tachesService } from '../../services/taches'
 import { logger } from '../../services/logger'
+import { useToast } from '../../contexts/ToastContext'
 import type { TemplateModele } from '../../types'
 import { UNITES_MESURE, UniteMesure } from '../../types'
 
@@ -19,6 +20,7 @@ export default function TemplateImportModal({
   onClose,
   onImport,
 }: TemplateImportModalProps) {
+  const { addToast } = useToast()
   const [templates, setTemplates] = useState<TemplateModele[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -44,6 +46,7 @@ export default function TemplateImportModal({
       }
     } catch (error) {
       logger.error('Erreur chargement templates', error, { context: 'TemplateImportModal' })
+      addToast({ message: 'Erreur lors du chargement des modeles', type: 'error' })
     } finally {
       setIsLoading(false)
     }

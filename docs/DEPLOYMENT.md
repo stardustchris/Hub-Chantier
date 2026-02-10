@@ -121,16 +121,150 @@ docker compose -f docker-compose.prod.yml exec db psql -U hubchantier hub_chanti
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 
-## Sauvegarde de la base de donnees
+## Sauvegarde et restauration de la base de donnees
+
+Hub Chantier inclut un systeme complet de backup automatise avec rotation et support S3.
+
+### Option A : Backups automatiques avec Docker (recommande)
+
+Active le service de backup automatise via Docker Compose profile:
 
 ```bash
-# Backup
-docker compose -f docker-compose.prod.yml exec db \
-  pg_dump -U hubchantier hub_chantier > backup_$(date +%Y%m%d).sql
+# Activer le service backup-cron (backup quotidien a 3h00)
+docker compose -f docker-compose.prod.yml --profile backup up -d backup-cron
 
-# Restore
-cat backup.sql | docker compose -f docker-compose.prod.yml exec -T db \
-  psql -U hubchantier hub_chantier
+# Verifier les logs
+docker logs hub-chantier-backup
+
+# Voir tous les backups
+ls -lh /var/backups/hub-chantier/
+```
+
+Le service backup-cron execute automatiquement:
+- Backup quotidien a 3h00 du matin
+- Compression gzip
+- Rotation automatique (conservation 7 jours par defaut)
+- Upload S3 optionnel
+
+### Option B : Crontab sur l'hote
+
+Alternative si vous preferez un cron sur l'hote plutot qu'un conteneur:
+
+```bash
+# Installer le crontab
+crontab -e
+
+# Ajouter cette ligne (backup quotidien a 3h00)
+0 3 * * * cd /home/deploy/hub-chantier && /home/deploy/hub-chantier/scripts/backup.sh >> /var/log/hub-chantier-backup.log 2>&1
+```
+
+### Backup manuel
+
+```bash
+# Backup local uniquement
+./scripts/backup.sh
+
+# Backup avec upload S3
+./scripts/backup.sh --upload-s3
+```
+
+Le script cree un fichier compresse:
+- Chemin: `/var/backups/hub-chantier/hub_chantier_backup_YYYYMMDD_HHMMSS.sql.gz`
+- Rotation automatique: garde les 7 derniers jours
+- Compression: gzip (facteur ~10x)
+- Logs: timestamps et tailles
+
+### Restauration depuis backup
+
+**ATTENTION**: Cette operation ecrase toutes les donnees existantes.
+
+```bash
+# Restaurer depuis le dernier backup local
+./scripts/restore.sh --latest
+
+# Restaurer depuis un fichier specifique
+./scripts/restore.sh /var/backups/hub-chantier/hub_chantier_backup_20260208_030000.sql.gz
+
+# Restaurer depuis S3
+./scripts/restore.sh --from-s3 hub_chantier_backup_20260208_030000.sql.gz
+```
+
+Le script de restauration:
+1. Demande confirmation (tapez `OUI` en majuscules)
+2. Cree un backup de securite automatique
+3. Restore la base de donnees
+4. Verifie l'integrite post-restauration
+5. Affiche un resume avec le chemin du backup de securite
+
+### Configuration S3 (optionnelle)
+
+Pour activer l'upload automatique vers S3 (AWS, Scaleway Object Storage, etc.):
+
+1. Installer AWS CLI dans le conteneur backup (deja inclus) ou sur l'hote:
+   ```bash
+   pip3 install awscli
+   ```
+
+2. Ajouter les variables dans `.env.production`:
+   ```bash
+   # Scaleway Object Storage (ou AWS S3)
+   S3_BACKUP_BUCKET=hub-chantier-backups
+   AWS_ACCESS_KEY_ID=votre_access_key
+   AWS_SECRET_ACCESS_KEY=votre_secret_key
+   AWS_DEFAULT_REGION=fr-par
+   S3_ENDPOINT_URL=https://s3.fr-par.scw.cloud
+
+   # Retention (optionnel, defaut: 7 jours)
+   BACKUP_RETENTION_DAYS=7
+   ```
+
+3. Creer le bucket S3:
+   ```bash
+   # Avec Scaleway CLI
+   scw object bucket create name=hub-chantier-backups region=fr-par
+
+   # Ou via AWS CLI
+   aws s3 mb s3://hub-chantier-backups --endpoint-url https://s3.fr-par.scw.cloud
+   ```
+
+4. Tester l'upload:
+   ```bash
+   ./scripts/backup.sh --upload-s3
+   ```
+
+La rotation S3 est automatique (meme duree que locale).
+
+### Monitoring des backups
+
+```bash
+# Voir les derniers backups locaux
+ls -lth /var/backups/hub-chantier/ | head -10
+
+# Voir le dernier log de backup
+tail -n 50 /var/log/hub-chantier-backup.log
+
+# Logs du service backup-cron (si Docker)
+docker logs hub-chantier-backup --tail 100
+
+# Lister backups S3
+aws s3 ls s3://hub-chantier-backups/backups/ --endpoint-url https://s3.fr-par.scw.cloud
+```
+
+### Tester la procedure de restauration
+
+Il est recommande de tester regulierement la restauration:
+
+```bash
+# 1. Backup actuel
+./scripts/backup.sh
+
+# 2. Identifier le dernier backup
+LATEST_BACKUP=$(ls -t /var/backups/hub-chantier/hub_chantier_backup_*.sql.gz | head -1)
+echo "Dernier backup: $LATEST_BACKUP"
+
+# 3. Tester restore (sur environnement de dev uniquement!)
+# NE PAS FAIRE EN PRODUCTION sans raison valable
+./scripts/restore.sh "$LATEST_BACKUP"
 ```
 
 ## Renouvellement SSL

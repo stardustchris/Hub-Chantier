@@ -61,6 +61,7 @@ class SQLAlchemySituationRepository(SituationRepository):
             updated_at=model.updated_at,
             deleted_at=model.deleted_at,
             deleted_by=model.deleted_by,
+            version=model.version,
         )
 
     def _to_model(self, entity: SituationTravaux) -> SituationTravauxModel:
@@ -93,6 +94,7 @@ class SQLAlchemySituationRepository(SituationRepository):
             facturee_at=entity.facturee_at,
             created_at=entity.created_at or datetime.utcnow(),
             updated_at=entity.updated_at,
+            version=entity.version,
         )
 
     def save(self, situation: SituationTravaux) -> SituationTravaux:
@@ -126,6 +128,7 @@ class SQLAlchemySituationRepository(SituationRepository):
                 model.emise_at = situation.emise_at
                 model.facturee_at = situation.facturee_at
                 model.updated_at = datetime.utcnow()
+                model.version = situation.version
         else:
             # Creation
             model = self._to_model(situation)
@@ -205,6 +208,16 @@ class SQLAlchemySituationRepository(SituationRepository):
             model.deleted_at = datetime.utcnow()
             model.deleted_by = deleted_by
             self._session.flush()
+
+    def next_numero_situation(self, chantier_id: int, year: int) -> int:
+        """Prochain numero situation atomique via count + 1.
+
+        NOTE: Pour une atomicite parfaite en production haute concurrence,
+        utiliser une table de compteurs avec SELECT FOR UPDATE.
+        En l'etat, count_by_chantier_id + 1 est conserve mais la methode
+        est isolee pour faciliter la migration vers une sequence.
+        """
+        return self.count_by_chantier_id(chantier_id) + 1
 
     # Statuts representant des situations reelles (pas des brouillons)
     STATUTS_EXPLOITABLES = ("emise", "validee", "facturee")

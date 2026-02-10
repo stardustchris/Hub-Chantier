@@ -15,8 +15,9 @@ from typing import Optional
 
 # -- Constantes entreprise ---------------------------------------------------
 
-# Coûts fixes annuels de la société (frais généraux hors salaires).
-# Frais généraux BTP typiques : 10-15% du CA → ~600k EUR pour CA de 4.3M EUR
+# Valeur par defaut. En production, utiliser ConfigurationEntreprise
+# pour configurer ce montant via l'interface admin.
+# Frais generaux BTP typiques : 10-15% du CA -> ~600k EUR pour CA de 4.3M EUR
 COUTS_FIXES_ANNUELS = Decimal("600000")
 
 
@@ -102,11 +103,19 @@ def calculer_marge_chantier(
     dans tout Hub Chantier. Dashboard, P&L, bilan de cloture et consolidation
     doivent tous utiliser cette fonction.
 
+    IMPORTANT - Frontiere achats / cout_materiel :
+        - cout_achats = achats externes fournisseurs (AchatRepository, statut FACTURE)
+        - cout_materiel = couts materiel INTERNE : amortissement/location du
+          parc materiel de l'entreprise (CoutMaterielRepository)
+        Ces deux sources NE doivent PAS se chevaucher. Un achat de materiel
+        chez un fournisseur est dans cout_achats, PAS dans cout_materiel.
+        Le cout_materiel ne concerne que l'usage du parc propre.
+
     Args:
         ca_ht: Chiffre d'affaires HT (factures client / situations).
-        cout_achats: Somme des achats realises (statut FACTURE).
+        cout_achats: Somme des achats realises (statut FACTURE) - achats fournisseurs.
         cout_mo: Cout main-d'oeuvre (pointages valides x taux horaire).
-        cout_materiel: Cout materiel (reservations x tarif journalier).
+        cout_materiel: Cout materiel INTERNE (parc propre, pas achats fournisseurs).
         quote_part_frais_generaux: Quote-part des frais generaux de l'entreprise.
 
     Returns:

@@ -16,7 +16,7 @@ from typing import Optional, Tuple
 class TauxTVAInvalideError(ValueError):
     """Erreur levee quand le taux de TVA n'est pas autorise."""
 
-    TAUX_AUTORISES: Tuple[str, ...] = ("5.5", "10.0", "20.0")
+    TAUX_AUTORISES: Tuple[str, ...] = ("0", "5.5", "10.0", "20.0")
 
     def __init__(self, taux: Decimal):
         self.taux = taux
@@ -44,6 +44,7 @@ class TauxTVA:
     """
 
     TAUX_AUTORISES: Tuple[Decimal, ...] = (
+        Decimal("0"),
         Decimal("5.5"),
         Decimal("10.0"),
         Decimal("20.0"),
@@ -57,6 +58,7 @@ class TauxTVA:
 
     # Mapping taux -> libelle
     _LIBELLE_MAPPING = {
+        Decimal("0"): "TVA 0% (autoliquidation sous-traitance)",
         Decimal("5.5"): "TVA reduite 5.5%",
         Decimal("10.0"): "TVA intermediaire 10%",
         Decimal("20.0"): "TVA standard 20%",

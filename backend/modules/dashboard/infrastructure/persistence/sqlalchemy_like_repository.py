@@ -102,6 +102,16 @@ class SQLAlchemyLikeRepository(LikeRepository):
             return True
         return False
 
+    def find_by_user(self, user_id: int) -> List[Like]:
+        """Récupère tous les likes d'un utilisateur."""
+        models = (
+            self.session.query(LikeModel)
+            .filter(LikeModel.user_id == user_id)
+            .order_by(LikeModel.created_at.desc())
+            .all()
+        )
+        return [self._to_entity(m) for m in models]
+
     def _to_entity(self, model: LikeModel) -> Like:
         """Convertit un modèle en entité."""
         return Like(

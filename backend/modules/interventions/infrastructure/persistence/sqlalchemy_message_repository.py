@@ -90,6 +90,41 @@ class SQLAlchemyInterventionMessageRepository(InterventionMessageRepository):
 
         return [self._model_to_entity(m) for m in models]
 
+    def list_by_interventions(
+        self,
+        intervention_ids: List[int],
+        auteur_id: Optional[int] = None,
+        limit: int = 500,
+    ) -> List[InterventionMessage]:
+        """Liste les messages de plusieurs interventions (batch).
+
+        Utilisé par l'export RGPD pour éviter le N+1.
+
+        Args:
+            intervention_ids: Liste d'IDs d'interventions.
+            auteur_id: Filtrer par auteur (optionnel).
+            limit: Nombre maximum de résultats.
+
+        Returns:
+            Liste des messages.
+        """
+        if not intervention_ids:
+            return []
+
+        query = self._session.query(InterventionMessageModel).filter(
+            InterventionMessageModel.intervention_id.in_(intervention_ids),
+            InterventionMessageModel.deleted_at.is_(None),
+        )
+
+        if auteur_id is not None:
+            query = query.filter(InterventionMessageModel.auteur_id == auteur_id)
+
+        query = query.order_by(InterventionMessageModel.created_at.asc())
+        query = query.limit(limit)
+
+        models = query.all()
+        return [self._model_to_entity(m) for m in models]
+
     def list_for_rapport(
         self,
         intervention_id: int,

@@ -1120,8 +1120,60 @@ def export_user_data_rgpd(
     from ...application.use_cases import ExportUserDataUseCase
     from ...infrastructure.persistence import SQLAlchemyUserRepository
 
+    # Repositories du module auth
     user_repo = SQLAlchemyUserRepository(db)
-    use_case = ExportUserDataUseCase(user_repo)
+
+    # Repositories externes pour l'export RGPD complet
+    from modules.pointages.infrastructure.persistence import (
+        SQLAlchemyPointageRepository,
+        SQLAlchemyFeuilleHeuresRepository,
+    )
+    from modules.planning.infrastructure.persistence import (
+        SQLAlchemyAffectationRepository,
+    )
+    from modules.dashboard.infrastructure.persistence import (
+        SQLAlchemyPostRepository,
+        SQLAlchemyCommentRepository,
+        SQLAlchemyLikeRepository,
+    )
+    from modules.documents.infrastructure.persistence import (
+        SQLAlchemyDocumentRepository,
+        SQLAlchemyAutorisationRepository,
+    )
+    from modules.formulaires.infrastructure.persistence import (
+        SQLAlchemyFormulaireRempliRepository,
+    )
+    from modules.signalements.infrastructure.persistence import (
+        SQLAlchemySignalementRepository,
+        SQLAlchemyReponseRepository,
+    )
+    from modules.interventions.infrastructure.persistence import (
+        SQLAlchemyInterventionRepository,
+        SQLAlchemyAffectationInterventionRepository,
+        SQLAlchemyInterventionMessageRepository,
+    )
+    from modules.shared.infrastructure.persistence import (
+        SQLAlchemyAuditRepository,
+    )
+
+    use_case = ExportUserDataUseCase(
+        user_repo=user_repo,
+        pointage_repo=SQLAlchemyPointageRepository(db),
+        feuille_heures_repo=SQLAlchemyFeuilleHeuresRepository(db),
+        affectation_repo=SQLAlchemyAffectationRepository(db),
+        post_repo=SQLAlchemyPostRepository(db),
+        comment_repo=SQLAlchemyCommentRepository(db),
+        like_repo=SQLAlchemyLikeRepository(db),
+        document_repo=SQLAlchemyDocumentRepository(db),
+        autorisation_repo=SQLAlchemyAutorisationRepository(db),
+        formulaire_repo=SQLAlchemyFormulaireRempliRepository(db),
+        signalement_repo=SQLAlchemySignalementRepository(db),
+        reponse_repo=SQLAlchemyReponseRepository(db),
+        intervention_repo=SQLAlchemyInterventionRepository(db),
+        affectation_intervention_repo=SQLAlchemyAffectationInterventionRepository(db),
+        message_intervention_repo=SQLAlchemyInterventionMessageRepository(db),
+        audit_repo=SQLAlchemyAuditRepository(db),
+    )
 
     export_data = use_case.execute(current_user_id)
 

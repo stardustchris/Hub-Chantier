@@ -199,6 +199,16 @@ class SQLAlchemyFactureRepository(FactureRepository):
             .count()
         )
 
+    def next_numero_facture(self, year: int) -> int:
+        """Prochain numero facture atomique via count + 1.
+
+        NOTE: Pour une atomicite parfaite en production haute concurrence,
+        utiliser une table de compteurs avec SELECT FOR UPDATE.
+        En l'etat, count_factures_year + 1 est conserve mais la methode
+        est isolee pour faciliter la migration vers une sequence.
+        """
+        return self.count_factures_year(year) + 1
+
     def delete(self, facture_id: int, deleted_by: int) -> None:
         """Supprime une facture (soft delete - H10).
 

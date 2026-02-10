@@ -63,7 +63,7 @@ class TestCreateSituationUseCase:
         budget = Budget(id=10, chantier_id=100, montant_initial_ht=Decimal("500000"))
         self.mock_budget_repo.find_by_id.return_value = budget
         self.mock_situation_repo.find_derniere_situation.return_value = None
-        self.mock_situation_repo.count_by_chantier_id.return_value = 0
+        self.mock_situation_repo.next_numero_situation.return_value = 1
 
         lot1 = LotBudgetaire(
             id=1,
@@ -118,9 +118,9 @@ class TestCreateSituationUseCase:
         assert result.id == 1
         assert result.chantier_id == 100
         assert result.statut == "brouillon"
-        # Numero auto: SIT-YYYY-01
+        # Numero auto: SIT-YYYY-0001 (format 4 digits atomique)
         assert "SIT-" in result.numero
-        assert "-01" in result.numero
+        assert "-0001" in result.numero
         assert len(result.lignes) == 2
         self.mock_situation_repo.save.assert_called()
         self.mock_ligne_repo.save_all.assert_called_once()

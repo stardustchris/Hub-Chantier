@@ -120,3 +120,18 @@ class LikeRepository(ABC):
             True si supprimé, False sinon.
         """
         pass
+
+    @abstractmethod
+    def find_by_user(self, user_id: int) -> List[Like]:
+        """
+        Récupère tous les likes d'un utilisateur.
+
+        Utilisé pour l'export RGPD (Article 20 - Portabilité des données).
+
+        Args:
+            user_id: ID de l'utilisateur.
+
+        Returns:
+            Liste des likes de l'utilisateur.
+        """
+        pass

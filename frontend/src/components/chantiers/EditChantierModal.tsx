@@ -5,6 +5,7 @@ import type { Chantier, ChantierUpdate, ContactChantier, PhaseChantierCreate, Ty
 import { CHANTIER_STATUTS, USER_COLORS, TYPE_TRAVAUX_OPTIONS } from '../../types'
 import { chantiersService } from '../../services/chantiers'
 import { geocodeAddress } from '../../services/geocoding'
+import { useToast } from '../../contexts/ToastContext'
 
 // Phase locale avec ID optionnel (pour nouvelles phases)
 interface LocalPhase extends PhaseChantierCreate {
@@ -19,6 +20,7 @@ interface EditChantierModalProps {
 }
 
 export default function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalProps) {
+  const { addToast } = useToast()
   const [formData, setFormData] = useState<ChantierUpdate>({
     nom: chantier.nom,
     adresse: chantier.adresse,
@@ -74,6 +76,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         })))
       } catch (error) {
         logger.error('Erreur chargement données', error, { context: 'EditChantierModal' })
+        addToast({ message: 'Erreur lors du chargement des donnees du chantier', type: 'error' })
       } finally {
         setLoadingPhases(false)
       }
@@ -104,8 +107,10 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         } else {
           setGeocodingStatus('error')
         }
-      } catch {
+      } catch (error) {
+        logger.error('Erreur geocoding', error, { context: 'EditChantierModal' })
         setGeocodingStatus('error')
+        addToast({ message: 'Impossible de localiser cette adresse', type: 'error' })
       } finally {
         setIsGeocoding(false)
       }
@@ -167,6 +172,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         await chantiersService.removeContact(chantierId, contactId)
       } catch (error) {
         logger.error(`Erreur suppression contact ${contactId}`, error, { context: 'EditChantierModal' })
+        addToast({ message: 'Erreur lors de la suppression d\'un contact', type: 'error' })
       }
     }
 
@@ -197,6 +203,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         }
       } catch (error) {
         logger.error(`Erreur sync contact ${contact.nom}`, error, { context: 'EditChantierModal' })
+        addToast({ message: `Erreur lors de l'enregistrement du contact ${contact.nom}`, type: 'error' })
       }
     }
   }
@@ -211,6 +218,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         await chantiersService.removePhase(chantierId, phaseId)
       } catch (error) {
         logger.error(`Erreur suppression phase ${phaseId}`, error, { context: 'EditChantierModal' })
+        addToast({ message: 'Erreur lors de la suppression d\'une periode', type: 'error' })
       }
     }
 
@@ -238,6 +246,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         }
       } catch (error) {
         logger.error(`Erreur sync phase ${phase.nom}`, error, { context: 'EditChantierModal' })
+        addToast({ message: `Erreur lors de l'enregistrement de la periode ${phase.nom}`, type: 'error' })
       }
     }
   }

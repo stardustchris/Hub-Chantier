@@ -334,7 +334,7 @@ class DevisModel(DevisBase):
     marge_moe_pct = Column(Numeric(5, 2), nullable=True)
     marge_materiaux_pct = Column(Numeric(5, 2), nullable=True)
     marge_sous_traitance_pct = Column(Numeric(5, 2), nullable=True)
-    coeff_frais_generaux = Column(Numeric(5, 4), nullable=False, default=0.12)
+    coeff_frais_generaux = Column(Numeric(5, 2), nullable=False, default=12.00)
     taux_tva_defaut = Column(Numeric(5, 2), nullable=False, default=20.0)
 
     # Retenue de garantie (DEV-22)

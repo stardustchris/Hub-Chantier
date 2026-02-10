@@ -765,3 +765,22 @@ def get_toggle_visibilite_use_case(
     piece_repo: PieceJointeDevisRepository = Depends(get_piece_jointe_repository),
 ) -> ToggleVisibiliteUseCase:
     return ToggleVisibiliteUseCase(piece_repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Generation PDF (DEV-12)
+# ─────────────────────────────────────────────────────────────────────────────
+
+from ...application.use_cases.generate_pdf_use_case import GenerateDevisPDFUseCase
+from ..pdf.devis_pdf_generator import DevisPDFGenerator
+
+
+def get_generate_pdf_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    ligne_repo: LigneDevisRepository = Depends(get_ligne_devis_repository),
+    debourse_repo: DebourseDetailRepository = Depends(get_debourse_detail_repository),
+) -> GenerateDevisPDFUseCase:
+    get_devis_uc = GetDevisUseCase(devis_repo, lot_repo, ligne_repo, debourse_repo)
+    pdf_generator = DevisPDFGenerator()
+    return GenerateDevisPDFUseCase(get_devis_uc, pdf_generator)
