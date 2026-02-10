@@ -81,7 +81,7 @@ function DefinitionTooltip({ term, children }: { term: keyof typeof DEFINITIONS;
       const rect = iconRef.current.getBoundingClientRect()
       setPosition({
         top: rect.top - 8,
-        left: rect.left + rect.width / 2,
+        left: Math.max(140, Math.min(rect.left + rect.width / 2, window.innerWidth - 140)),
       })
     }
     setShow(true)

@@ -6,11 +6,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { devisService } from '../services/devis'
+import { formatEUR } from '../utils/format'
 import type { DevisDetail, LotDevis, LigneDevis } from '../types'
 import { Loader2, Printer } from 'lucide-react'
-
-const formatEUR = (val: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(val) || 0)
 
 const formatDate = (d: string | null | undefined) => {
   if (!d) return '-'

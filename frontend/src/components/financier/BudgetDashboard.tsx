@@ -233,7 +233,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           <EvolutionChart chantierId={chantierId} />
         </div>
         <div className="bg-white border rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-4">Repartition par lot</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">Poids financier par lot</h3>
           <CamembertLots lots={dashboard?.repartition_par_lot || []} />
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
       {/* Repartition par lot */}
       {dashboard?.repartition_par_lot && dashboard.repartition_par_lot.length > 0 && (
         <div className="bg-white border rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-4">Repartition par lot</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">Suivi par lot</h3>
           <div className="space-y-3">
             {dashboard.repartition_par_lot.map((lot) => {
               const pctEngage = lot.total_prevu_ht > 0 ? (lot.engage / lot.total_prevu_ht) * 100 : 0
