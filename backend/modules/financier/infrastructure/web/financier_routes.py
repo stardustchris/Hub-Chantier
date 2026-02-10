@@ -2054,16 +2054,11 @@ async def get_couts_materiel(
 
     FIN-10: Accessible aux chefs de chantier et superieurs.
     Filtres optionnels par periode (date_debut, date_fin).
-
-    TEMPORAIRE: Désactivé car table ressources non créée (module logistique).
+    Calcule les couts a partir des reservations validees (module logistique).
     """
     _check_chantier_access(chantier_id, _role, user_chantier_ids)
-    # TEMPORAIRE: Retourner des données vides en attendant le module logistique
-    return {
-        "chantier_id": chantier_id,
-        "cout_total": "0",
-        "details": [],
-    }
+    result = use_case.execute(chantier_id, date_debut, date_fin)
+    return result
 
 
 # =============================================================================

@@ -8,11 +8,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { Loader2, Eye, Trash2, Send, Check, UserCheck } from 'lucide-react'
+import { Loader2, Eye, Trash2, Send, Check, UserCheck, Plus } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { useAuth } from '../../contexts/AuthContext'
 import { logger } from '../../services/logger'
 import SituationDetail from './SituationDetail'
+import SituationCreateModal from './SituationCreateModal'
 import type { SituationTravaux } from '../../types'
 import { STATUT_SITUATION_CONFIG } from '../../types'
 
@@ -35,6 +36,7 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedSituationId, setSelectedSituationId] = useState<number | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const canManage = user?.role === 'admin' || user?.role === 'conducteur'
 
@@ -128,10 +130,32 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
   }
 
   return (
-    <div className="bg-white border rounded-xl">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold text-gray-900">Situations de travaux</h3>
-      </div>
+    <>
+      {showCreateModal && (
+        <SituationCreateModal
+          chantierId={chantierId}
+          budgetId={budgetId}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false)
+            loadSituations()
+          }}
+        />
+      )}
+
+      <div className="bg-white border rounded-xl">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-semibold text-gray-900">Situations de travaux</h3>
+          {canManage && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus size={16} />
+              <span>Nouvelle situation</span>
+            </button>
+          )}
+        </div>
 
       {situations.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
@@ -234,6 +258,7 @@ export default function SituationsList({ chantierId, budgetId }: SituationsListP
           </table>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
