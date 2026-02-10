@@ -112,12 +112,13 @@ class CalculerTotauxDevisUseCase:
                     debourses=debourses,
                 )
 
-                # Prix de vente HT
+                # Prix de vente HT (arrondi PCG art. 120-2 ROUND_HALF_UP)
                 if ligne_debourse_sec > 0:
-                    ligne.prix_unitaire_ht = (
-                        ligne.prix_revient * (Decimal("1") + marge / Decimal("100"))
-                    ) / ligne.quantite if ligne.quantite > 0 else Decimal("0")
-                    ligne_montant_ht = ligne.prix_unitaire_ht * ligne.quantite
+                    ligne.prix_unitaire_ht = arrondir_montant(
+                        (ligne.prix_revient * (Decimal("1") + marge / Decimal("100"))
+                        ) / ligne.quantite if ligne.quantite > 0 else Decimal("0")
+                    )
+                    ligne_montant_ht = arrondir_montant(ligne.prix_unitaire_ht * ligne.quantite)
                 else:
                     ligne_montant_ht = ligne.prix_unitaire_ht * ligne.quantite
 

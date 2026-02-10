@@ -121,9 +121,17 @@ class GetPnLChantierUseCase:
 
         # 4. Calculer les marges (formule BTP unifiee via calcul_financier.py)
         # Quote-part frais generaux via fonction unifiee
+        # ATTENTION: si ca_total_annee non fourni, marge surestimee (~14%)
+        effective_ca_total = ca_total_annee or Decimal("0")
+        if effective_ca_total <= Decimal("0"):
+            logger.warning(
+                "P&L chantier %d: ca_total_annee non fourni, "
+                "frais generaux non repartis (marge potentiellement surestimee)",
+                chantier_id,
+            )
         quote_part = calculer_quote_part_frais_generaux(
             ca_chantier_ht=chiffre_affaires_ht,
-            ca_total_annee=ca_total_annee or Decimal("0"),
+            ca_total_annee=effective_ca_total,
             couts_fixes_annuels=COUTS_FIXES_ANNUELS,
         )
         marge_brute_ht = chiffre_affaires_ht - (total_couts + quote_part)
@@ -213,7 +221,12 @@ class GetPnLChantierUseCase:
             return Decimal("0")
 
     def _calculer_cout_materiel(self, chantier_id: int) -> Decimal:
-        """Calcule le cout total materiel.
+        """Calcule le cout total materiel INTERNE (parc propre).
+
+        Ce cout concerne uniquement le materiel du parc propre de l'entreprise
+        (amortissement, location interne). Les achats de materiel chez
+        des fournisseurs sont comptabilises dans _calculer_cout_achats
+        via AchatRepository. Ne PAS confondre pour eviter double comptage.
 
         Note: le module logistique (table ressources) n'est pas encore
         implemente. Cette methode retourne 0 en cas d'erreur.
@@ -222,7 +235,7 @@ class GetPnLChantierUseCase:
             chantier_id: L'ID du chantier.
 
         Returns:
-            Le cout total materiel.
+            Le cout total materiel interne.
         """
         try:
             return self._cout_materiel_repository.calculer_cout_chantier(

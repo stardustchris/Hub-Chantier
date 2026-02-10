@@ -45,10 +45,13 @@ class TestTauxTVA:
         with pytest.raises(TauxTVAInvalideError):
             TauxTVA(Decimal("7"))
 
-    def test_creation_taux_zero_invalide(self):
-        """Test: erreur si taux 0%."""
-        with pytest.raises(TauxTVAInvalideError):
-            TauxTVA(Decimal("0"))
+    def test_creation_taux_zero_valide(self):
+        """Test: taux 0% valide (autoliquidation sous-traitance BTP)."""
+        tva = TauxTVA(Decimal("0"))
+        assert tva.taux == Decimal("0")
+        assert tva.libelle == "TVA 0% (autoliquidation sous-traitance)"
+        assert tva.necessite_attestation is True
+        assert tva.type_cerfa is None
 
     def test_creation_taux_negatif_invalide(self):
         """Test: erreur si taux negatif."""

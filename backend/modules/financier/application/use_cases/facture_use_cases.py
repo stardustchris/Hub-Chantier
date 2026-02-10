@@ -51,7 +51,11 @@ class SituationNonValideeError(Exception):
 
 
 def _generer_numero_facture(facture_repository: FactureRepository) -> str:
-    """Genere un numero de facture automatique FAC-YYYY-NN.
+    """Genere un numero de facture automatique FAC-YYYY-NNNN.
+
+    Format 4 digits pour supporter jusqu'a 9999 factures/an.
+    NOTE: En production, utiliser une sequence PostgreSQL (SERIAL/SEQUENCE)
+    pour garantir l'unicite en cas d'acces concurrent (race condition).
 
     Args:
         facture_repository: Le repository des factures.
@@ -61,7 +65,7 @@ def _generer_numero_facture(facture_repository: FactureRepository) -> str:
     """
     year = datetime.utcnow().year
     count = facture_repository.count_factures_year(year)
-    return f"FAC-{year}-{count + 1:02d}"
+    return f"FAC-{year}-{count + 1:04d}"
 
 
 class CreateFactureFromSituationUseCase:

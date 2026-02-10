@@ -64,10 +64,16 @@ class Budget:
             motif: Justification de l'avenant.
 
         Raises:
-            ValueError: Si le motif est vide.
+            ValueError: Si le motif est vide ou si le budget révisé deviendrait négatif.
         """
         if not motif or not motif.strip():
             raise ValueError("Le motif de l'avenant est obligatoire")
+        nouveau_revise = self.montant_initial_ht + self.montant_avenants_ht + montant
+        if nouveau_revise < Decimal("0"):
+            raise ValueError(
+                f"Avenant de {montant} EUR refuse : le budget revise deviendrait "
+                f"negatif ({nouveau_revise} EUR). Un budget ne peut pas etre negatif."
+            )
         self.montant_avenants_ht += montant
         self.updated_at = datetime.utcnow()
 

@@ -90,7 +90,9 @@ class VerifierDepassementUseCase:
             statuts=["valide", "commande", "livre", "facture"],
         )
 
-        # Calculer le montant realise (achats livres/factures + MO + materiel)
+        # Calculer le montant realise (achats livres/factures + MO + materiel interne)
+        # IMPORTANT: cout_materiel = parc materiel INTERNE (amortissement/location).
+        # Les achats materiel fournisseurs sont deja dans montant_achats_realises.
         montant_achats_realises = self._achat_repository.somme_by_chantier(
             chantier_id,
             statuts=["livre", "facture"],

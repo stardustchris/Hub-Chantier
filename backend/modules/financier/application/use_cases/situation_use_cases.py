@@ -92,7 +92,9 @@ class CreateSituationUseCase:
         if not budget:
             raise ValueError(f"Budget {dto.budget_id} non trouve")
 
-        # Recuperer la derniere situation pour le montant cumule precedent
+        # Recuperer la derniere situation VALIDEE pour le montant cumule precedent.
+        # find_derniere_situation() filtre deja sur statuts emise/validee/facturee
+        # (exclut brouillons et en_validation) conformement au contrat du repository.
         derniere_situation = self._situation_repository.find_derniere_situation(
             dto.chantier_id
         )
