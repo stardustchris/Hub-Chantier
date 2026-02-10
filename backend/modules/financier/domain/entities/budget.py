@@ -22,8 +22,8 @@ class Budget:
     montant_initial_ht: Decimal = Decimal("0")
     montant_avenants_ht: Decimal = Decimal("0")
     retenue_garantie_pct: Decimal = Decimal("5")
-    seuil_alerte_pct: Decimal = Decimal("80")
-    seuil_validation_achat: Decimal = Decimal("1000")
+    seuil_alerte_pct: Decimal = Decimal("90")
+    seuil_validation_achat: Decimal = Decimal("5000")
     notes: Optional[str] = None
     devis_id: Optional[int] = None
     created_at: Optional[datetime] = None
@@ -41,10 +41,10 @@ class Budget:
             raise ValueError("L'ID du chantier est obligatoire")
         if self.montant_initial_ht < Decimal("0"):
             raise ValueError("Le montant initial HT ne peut pas être négatif")
-        if self.retenue_garantie_pct < Decimal("0") or self.retenue_garantie_pct > Decimal("100"):
-            raise ValueError("La retenue de garantie doit être entre 0 et 100%")
-        if self.seuil_alerte_pct < Decimal("0") or self.seuil_alerte_pct > Decimal("100"):
-            raise ValueError("Le seuil d'alerte doit être entre 0 et 100%")
+        if self.retenue_garantie_pct < Decimal("0") or self.retenue_garantie_pct > Decimal("5"):
+            raise ValueError("La retenue de garantie doit être entre 0 et 5% (loi 71-584)")
+        if self.seuil_alerte_pct < Decimal("0") or self.seuil_alerte_pct > Decimal("200"):
+            raise ValueError("Le seuil d'alerte doit être entre 0 et 200%")
         if self.seuil_validation_achat < Decimal("0"):
             raise ValueError("Le seuil de validation achat ne peut pas être négatif")
 
@@ -83,13 +83,13 @@ class Budget:
         """Modifie le pourcentage de retenue de garantie.
 
         Args:
-            pct: Nouveau pourcentage (entre 0 et 100).
+            pct: Nouveau pourcentage (entre 0 et 5, loi 71-584).
 
         Raises:
             ValueError: Si le pourcentage est hors limites.
         """
-        if pct < Decimal("0") or pct > Decimal("100"):
-            raise ValueError("La retenue de garantie doit être entre 0 et 100%")
+        if pct < Decimal("0") or pct > Decimal("5"):
+            raise ValueError("La retenue de garantie doit être entre 0 et 5% (loi 71-584)")
         self.retenue_garantie_pct = pct
         self.updated_at = datetime.utcnow()
 

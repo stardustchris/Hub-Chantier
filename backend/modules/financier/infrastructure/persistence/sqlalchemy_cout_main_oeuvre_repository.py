@@ -12,6 +12,8 @@ from typing import List, Optional
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from shared.domain.calcul_financier import COEFF_HEURES_SUP
+
 from ...domain.repositories.cout_main_oeuvre_repository import (
     CoutMainOeuvreRepository,
 )
@@ -52,8 +54,8 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
         query = text("""
             SELECT COALESCE(
                 SUM(
-                    (p.heures_normales_minutes + p.heures_supplementaires_minutes)
-                    / 60.0 * COALESCE(u.taux_horaire, 0)
+                    (p.heures_normales_minutes / 60.0 * COALESCE(u.taux_horaire, 0))
+                    + (p.heures_supplementaires_minutes / 60.0 * COALESCE(u.taux_horaire, 0) * :coeff_hs)
                 ), 0
             ) as cout_total
             FROM pointages p
@@ -70,6 +72,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                 "chantier_id": chantier_id,
                 "date_debut": date_debut,
                 "date_fin": date_fin,
+                "coeff_hs": float(COEFF_HEURES_SUP),
             },
         ).scalar()
 
@@ -95,8 +98,8 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
             SELECT p.utilisateur_id,
                    u.nom,
                    u.prenom,
-                   SUM(p.heures_normales_minutes + p.heures_supplementaires_minutes)
-                       as total_minutes,
+                   SUM(p.heures_normales_minutes) as total_normales_minutes,
+                   SUM(p.heures_supplementaires_minutes) as total_sup_minutes,
                    COALESCE(u.taux_horaire, 0) as taux_horaire
             FROM pointages p
             JOIN users u ON p.utilisateur_id = u.id
@@ -119,10 +122,13 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
 
         result = []
         for row in rows:
-            total_minutes = Decimal(str(row.total_minutes or 0))
-            heures = total_minutes / Decimal("60")
+            normales_minutes = Decimal(str(row.total_normales_minutes or 0))
+            sup_minutes = Decimal(str(row.total_sup_minutes or 0))
+            heures_normales = normales_minutes / Decimal("60")
+            heures_sup = sup_minutes / Decimal("60")
+            heures = heures_normales + heures_sup
             taux = Decimal(str(row.taux_horaire or 0))
-            cout = heures * taux
+            cout = (heures_normales * taux) + (heures_sup * taux * COEFF_HEURES_SUP)
 
             result.append(
                 CoutEmploye(

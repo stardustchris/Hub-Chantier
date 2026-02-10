@@ -106,7 +106,7 @@ class GetPnLChantierUseCase:
         Raises:
             PnLChantierNotFoundError: Si le chantier n'a pas de budget.
         """
-        effective_couts_fixes = couts_fixes_annuels or COUTS_FIXES_ANNUELS
+        effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
         # 1. Recuperer le budget pour reference
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -123,8 +123,6 @@ class GetPnLChantierUseCase:
         cout_mo = self._calculer_cout_main_oeuvre(chantier_id)
         cout_materiel = self._calculer_cout_materiel(chantier_id)
 
-        total_couts = cout_achats + cout_mo + cout_materiel
-
         # 4. Calculer les marges (formule BTP unifiee via calcul_financier.py)
         # Quote-part frais generaux via fonction unifiee
         # ATTENTION: si ca_total_annee non fourni, marge surestimee (~14%)
@@ -140,7 +138,9 @@ class GetPnLChantierUseCase:
             ca_total_annee=effective_ca_total,
             couts_fixes_annuels=effective_couts_fixes,
         )
-        marge_brute_ht = chiffre_affaires_ht - (total_couts + quote_part)
+
+        total_couts = cout_achats + cout_mo + cout_materiel + quote_part
+        marge_brute_ht = chiffre_affaires_ht - total_couts
         marge_brute_pct = calculer_marge_chantier(
             ca_ht=chiffre_affaires_ht,
             cout_achats=cout_achats,

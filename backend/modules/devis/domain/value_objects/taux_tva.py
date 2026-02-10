@@ -9,7 +9,7 @@ peuvent beneficier d'un taux de TVA reduit :
 - 20.0% : Taux standard (pas d'attestation requise)
 """
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional, Tuple
 
 
@@ -140,7 +140,7 @@ class TauxTVA:
         Returns:
             Le montant de TVA (montant_ht * taux / 100).
         """
-        return (montant_ht * self._taux / Decimal("100")).quantize(Decimal("0.01"))
+        return (montant_ht * self._taux / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def taux_defaut_pour_chantier(

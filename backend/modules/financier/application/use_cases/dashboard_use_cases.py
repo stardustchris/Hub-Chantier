@@ -89,7 +89,7 @@ class GetDashboardFinancierUseCase:
         Raises:
             BudgetNotFoundError: Si aucun budget pour ce chantier.
         """
-        effective_couts_fixes = couts_fixes_annuels or COUTS_FIXES_ANNUELS
+        effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
         # Récupérer le budget
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -104,8 +104,6 @@ class GetDashboardFinancierUseCase:
         total_realise = self._achat_repository.somme_by_chantier(
             chantier_id, statuts=STATUTS_REALISES
         )
-        reste_a_depenser = montant_revise_ht - total_engage
-
         # Couts MO et materiel (pour total realise COMPLET)
         cout_mo = Decimal("0")
         cout_materiel = Decimal("0")
@@ -129,6 +127,9 @@ class GetDashboardFinancierUseCase:
         # Les achats de materiel chez fournisseurs sont deja dans total_realise
         # via AchatRepository. Ne PAS confondre les deux pour eviter double comptage.
         total_realise_complet = total_realise + cout_mo + cout_materiel
+
+        # Reste a depenser inclut MO + materiel (negatif = depassement budget)
+        reste_a_depenser = montant_revise_ht - total_engage - cout_mo - cout_materiel
 
         # Pourcentages basés sur le budget
         if montant_revise_ht > Decimal("0"):

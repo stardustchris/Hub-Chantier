@@ -197,9 +197,9 @@ class TestBudget:
             Budget(chantier_id=1, retenue_garantie_pct=Decimal("-1"))
 
     def test_create_budget_seuil_alerte_hors_limites(self):
-        """Test: erreur si seuil d'alerte hors limites."""
+        """Test: erreur si seuil d'alerte hors limites (max 200%)."""
         with pytest.raises(ValueError):
-            Budget(chantier_id=1, seuil_alerte_pct=Decimal("150"))
+            Budget(chantier_id=1, seuil_alerte_pct=Decimal("250"))
         with pytest.raises(ValueError):
             Budget(chantier_id=1, seuil_alerte_pct=Decimal("-5"))
 
@@ -253,8 +253,8 @@ class TestBudget:
     def test_modifier_retenue_garantie(self):
         """Test: modification de la retenue de garantie."""
         budget = Budget(chantier_id=1)
-        budget.modifier_retenue_garantie(Decimal("10"))
-        assert budget.retenue_garantie_pct == Decimal("10")
+        budget.modifier_retenue_garantie(Decimal("5"))
+        assert budget.retenue_garantie_pct == Decimal("5")
         assert budget.updated_at is not None
 
     def test_modifier_retenue_garantie_invalide(self):

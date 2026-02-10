@@ -146,7 +146,7 @@ class Devis:
             RetenueGarantie(self.retenue_garantie_pct)
         except RetenueGarantieInvalideError:
             raise DevisValidationError(
-                "La retenue de garantie doit etre 0%, 5% ou 10%"
+                "La retenue de garantie doit etre 0% ou 5% (plafond loi 71-584)"
             )
         if self.acompte_pct < Decimal("0") or self.acompte_pct > Decimal("100"):
             raise DevisValidationError("L'acompte doit etre entre 0 et 100%")

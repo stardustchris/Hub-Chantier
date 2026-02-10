@@ -9,6 +9,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from shared.domain.calcul_financier import calculer_ttc
+
 from ..value_objects.type_frais_chantier import TypeFraisChantier
 from ..value_objects.mode_repartition import ModeRepartition
 
@@ -88,12 +90,12 @@ class FraisChantierDevis:
     def montant_ttc(self) -> Decimal:
         """Calcule le montant TTC du frais de chantier.
 
-        Formule: montant_ht * (1 + taux_tva / 100).
+        Formule: HT + TVA arrondie (via calculer_ttc).
 
         Returns:
             Le montant TTC.
         """
-        return self.montant_ht * (Decimal("1") + self.taux_tva / Decimal("100"))
+        return calculer_ttc(self.montant_ht, self.taux_tva)
 
     @property
     def est_supprime(self) -> bool:

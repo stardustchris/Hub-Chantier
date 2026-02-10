@@ -1,6 +1,7 @@
 """Value Object pour la retenue de garantie.
 
-DEV-22: Parametrage retenue de garantie par devis (0%, 5%, 10%).
+DEV-22: Parametrage retenue de garantie par devis (0%, 5%).
+Loi 71-584 du 16 juillet 1971 : plafond legal 5%.
 """
 
 from decimal import Decimal
@@ -12,7 +13,7 @@ from shared.domain.calcul_financier import arrondir_montant
 class RetenueGarantieInvalideError(ValueError):
     """Erreur levee quand le taux de retenue de garantie n'est pas autorise."""
 
-    TAUX_AUTORISES: Tuple[int, ...] = (0, 5, 10)
+    TAUX_AUTORISES: Tuple[int, ...] = (0, 5)
 
     def __init__(self, taux: Decimal):
         self.taux = taux
@@ -29,16 +30,15 @@ class RetenueGarantie:
     La retenue de garantie est un pourcentage retenu sur le montant HT
     du devis (loi 71-584), restitue au prestataire apres la levee des reserves.
 
-    Valeurs autorisees: 0%, 5%, 10%.
+    Valeurs autorisees: 0%, 5% (plafond loi 71-584).
 
     Attributes:
-        taux: Le taux de retenue en pourcentage (0, 5 ou 10).
+        taux: Le taux de retenue en pourcentage (0 ou 5).
     """
 
     TAUX_AUTORISES: Tuple[Decimal, ...] = (
         Decimal("0"),
         Decimal("5"),
-        Decimal("10"),
     )
 
     def __init__(self, taux: Decimal) -> None:
@@ -48,7 +48,7 @@ class RetenueGarantie:
             taux: Le taux de retenue en pourcentage.
 
         Raises:
-            RetenueGarantieInvalideError: Si le taux n'est pas dans {0, 5, 10}.
+            RetenueGarantieInvalideError: Si le taux n'est pas dans {0, 5}.
         """
         # Normaliser le taux en Decimal
         taux_decimal = Decimal(str(taux))

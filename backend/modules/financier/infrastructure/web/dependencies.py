@@ -940,12 +940,16 @@ def get_suggestions_financieres_use_case(
     achat_repository: AchatRepository = Depends(get_achat_repository),
     lot_repository: LotBudgetaireRepository = Depends(get_lot_budgetaire_repository),
     alerte_repository: AlerteRepository = Depends(get_alerte_repository),
+    cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
+    cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
 ) -> GetSuggestionsFinancieresUseCase:
     """Retourne le use case GetSuggestionsFinancieres avec provider IA optionnel."""
     ai_provider = get_ai_suggestion_provider()
     return GetSuggestionsFinancieresUseCase(
         budget_repository, achat_repository, lot_repository, alerte_repository,
         ai_provider=ai_provider,
+        cout_mo_repository=cout_mo_repository,
+        cout_materiel_repository=cout_materiel_repository,
     )
 
 

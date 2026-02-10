@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, TYPE_CHECKING
 
-from shared.domain.calcul_financier import arrondir_montant, calculer_tva
+from shared.domain.calcul_financier import arrondir_montant, calculer_ttc, calculer_tva
 
 if TYPE_CHECKING:
     from ...domain.entities.devis import Devis
@@ -120,12 +120,10 @@ class CalculerTotauxDevisUseCase:
                     )
                     ligne_montant_ht = arrondir_montant(ligne.prix_unitaire_ht * ligne.quantite)
                 else:
-                    ligne_montant_ht = ligne.prix_unitaire_ht * ligne.quantite
+                    ligne_montant_ht = arrondir_montant(ligne.prix_unitaire_ht * ligne.quantite)
 
                 ligne.total_ht = ligne_montant_ht
-                ligne.montant_ttc = ligne_montant_ht * (
-                    Decimal("1") + ligne.taux_tva / Decimal("100")
-                )
+                ligne.montant_ttc = calculer_ttc(ligne_montant_ht, ligne.taux_tva)
 
                 self._ligne_repository.save(ligne)
 

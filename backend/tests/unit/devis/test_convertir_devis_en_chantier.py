@@ -462,7 +462,7 @@ class TestConvertirDevisEnChantierUseCase:
         """Test: le budget est cree avec les montants du devis."""
         devis = _make_devis(
             montant_total_ht=Decimal("75000"),
-            retenue_garantie_pct=Decimal("10"),
+            retenue_garantie_pct=Decimal("5"),
         )
         lot = _make_lot_devis(id=10)
         conversion_result = _make_conversion_result()
@@ -476,7 +476,7 @@ class TestConvertirDevisEnChantierUseCase:
         call_args = self.mock_chantier_creation_port.create_chantier_from_devis.call_args
         budget_data = call_args.kwargs["budget_data"]
         assert budget_data.montant_initial_ht == Decimal("75000")
-        assert budget_data.retenue_garantie_pct == Decimal("10")
+        assert budget_data.retenue_garantie_pct == Decimal("5")
         assert budget_data.seuil_alerte_pct == Decimal("80")
         assert budget_data.seuil_validation_achat == Decimal("5000")
 

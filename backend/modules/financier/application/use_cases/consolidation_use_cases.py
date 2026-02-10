@@ -125,7 +125,7 @@ class GetVueConsolideeFinancesUseCase:
             VueConsolideeDTO avec KPI globaux, liste chantiers,
             top 3 rentables et top 3 derives.
         """
-        effective_couts_fixes = couts_fixes_annuels or COUTS_FIXES_ANNUELS
+        effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
         chantiers_summaries: List[ChantierFinancierSummaryDTO] = []
 
         # Recuperer les noms des chantiers via le port (si disponible)
@@ -179,19 +179,15 @@ class GetVueConsolideeFinancesUseCase:
             realise = self._achat_repository.somme_by_chantier(
                 chantier_id, statuts=STATUTS_REALISES
             )
-            reste = montant_revise - engage
-
             # Infos chantier pour determiner si ferme
             chantier_info = chantiers_info.get(chantier_id)
             is_ferme = chantier_info is not None and chantier_info.statut == "ferme"
 
-            # Pourcentages bases sur le budget
+            # Pourcentage engage base sur le budget
             if montant_revise > Decimal("0"):
                 pct_engage = (engage / montant_revise) * Decimal("100")
-                pct_realise = (realise / montant_revise) * Decimal("100")
             else:
                 pct_engage = Decimal("0")
-                pct_realise = Decimal("0")
 
             # Calcul de la marge BTP : (Prix Vente - Coût Revient) / Prix Vente
             # Fallback : (Budget - Engagé) / Budget si pas de situation
@@ -226,6 +222,16 @@ class GetVueConsolideeFinancesUseCase:
                 except (ValueError, TypeError, AttributeError, KeyError):
                     logger.warning("Erreur calcul cout materiel consolidation chantier %d", chantier_id, exc_info=True)
                     cout_materiel_ok = False
+
+            # Reste a depenser inclut MO + materiel (negatif = depassement budget)
+            reste = montant_revise - engage - cout_mo - cout_materiel
+
+            # pct_realise harmonise : inclut MO + materiel
+            total_realise_complet = realise + cout_mo + cout_materiel
+            if montant_revise > Decimal("0"):
+                pct_realise = (total_realise_complet / montant_revise) * Decimal("100")
+            else:
+                pct_realise = Decimal("0")
 
             if prix_vente_ht > Decimal("0"):
                 # Marge BTP réelle (situations disponibles)
@@ -325,7 +331,9 @@ class GetVueConsolideeFinancesUseCase:
             total_reste += reste
 
             # Pour marge moyenne pondérée
-            if marge_pct is not None and poids_marge > Decimal("0"):
+            # Exclure les chantiers sans engagement reel (pct_engage == 0)
+            # pour eviter qu'un chantier neuf a 100% de "marge" gonfle la moyenne
+            if marge_pct is not None and poids_marge > Decimal("0") and pct_engage > Decimal("0"):
                 total_poids_marge += poids_marge
                 somme_marges_ponderees += marge_pct * poids_marge
 

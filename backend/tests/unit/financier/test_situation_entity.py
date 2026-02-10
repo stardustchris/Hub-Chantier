@@ -104,8 +104,8 @@ class TestSituationTravaux:
         assert situation.periode_debut == situation.periode_fin
 
     def test_retenue_garantie_pct_valide(self):
-        """Test: retenue de garantie a 0%, 5% et 100% sont acceptees."""
-        for pct in [Decimal("0"), Decimal("5"), Decimal("100")]:
+        """Test: retenue de garantie a 0% et 5% sont acceptees (loi 71-584)."""
+        for pct in [Decimal("0"), Decimal("5")]:
             situation = self._make_situation(retenue_garantie_pct=pct)
             assert situation.retenue_garantie_pct == pct
 

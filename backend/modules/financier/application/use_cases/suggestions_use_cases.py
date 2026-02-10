@@ -17,6 +17,8 @@ from ...domain.repositories import (
     LotBudgetaireRepository,
     AlerteRepository,
 )
+from ...domain.repositories.cout_main_oeuvre_repository import CoutMainOeuvreRepository
+from ...domain.repositories.cout_materiel_repository import CoutMaterielRepository
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.suggestions_dtos import (
     SuggestionDTO,
@@ -56,6 +58,8 @@ class GetSuggestionsFinancieresUseCase:
         lot_repository: LotBudgetaireRepository,
         alerte_repository: AlerteRepository,
         ai_provider: Optional[AISuggestionPort] = None,
+        cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
+        cout_materiel_repository: Optional[CoutMaterielRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -66,12 +70,16 @@ class GetSuggestionsFinancieresUseCase:
             alerte_repository: Repository Alerte (interface).
             ai_provider: Provider IA optionnel (AISuggestionPort).
                 Si None, seules les regles algorithmiques sont utilisees.
+            cout_mo_repository: Repository Cout MO (optionnel).
+            cout_materiel_repository: Repository Cout materiel (optionnel).
         """
         self._budget_repository = budget_repository
         self._achat_repository = achat_repository
         self._lot_repository = lot_repository
         self._alerte_repository = alerte_repository
         self._ai_provider = ai_provider
+        self._cout_mo_repository = cout_mo_repository
+        self._cout_materiel_repository = cout_materiel_repository
 
     def execute(self, chantier_id: int) -> SuggestionsFinancieresDTO:
         """Genere les suggestions financieres et indicateurs predictifs.
@@ -102,13 +110,29 @@ class GetSuggestionsFinancieresUseCase:
         total_realise = self._achat_repository.somme_by_chantier(
             chantier_id, statuts=STATUTS_REALISES
         )
-        reste_a_depenser = montant_revise - total_engage
+
+        # Couts MO et materiel pour calcul reste a depenser complet
+        cout_mo = Decimal("0")
+        cout_materiel = Decimal("0")
+        if self._cout_mo_repository:
+            try:
+                cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+            except Exception:
+                logger.warning("Erreur calcul cout MO suggestions chantier %d", chantier_id)
+        if self._cout_materiel_repository:
+            try:
+                cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
+            except Exception:
+                logger.warning("Erreur calcul cout materiel suggestions chantier %d", chantier_id)
+
+        # Negatif = depassement budget
+        reste_a_depenser = montant_revise - total_engage - cout_mo - cout_materiel
 
         # Pourcentages
         if montant_revise > Decimal("0"):
             pct_engage = (total_engage / montant_revise) * Decimal("100")
             pct_realise = (total_realise / montant_revise) * Decimal("100")
-            # NOTE: Ceci est un indicateur budgetaire, PAS une marge reelle.
+            # ATTENTION: marge budgetaire (budget - engage), PAS marge BTP reelle (CA - couts)
             # Marge reelle = (CA - Couts) / CA (cf. calcul_financier.py)
             marge_budgetaire_pct = ((montant_revise - total_engage) / montant_revise) * Decimal("100")
         else:

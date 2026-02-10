@@ -322,7 +322,12 @@ class SQLAlchemyAchatRepository(AchatRepository):
             La somme HT des achats.
         """
         query = self._session.query(
-            func.sum(AchatModel.quantite * AchatModel.prix_unitaire_ht)
+            func.sum(
+                func.coalesce(
+                    AchatModel.montant_ht_reel,
+                    AchatModel.quantite * AchatModel.prix_unitaire_ht,
+                )
+            )
         ).filter(
             AchatModel.lot_budgetaire_id == lot_budgetaire_id,
             AchatModel.deleted_at.is_(None),
@@ -351,7 +356,12 @@ class SQLAlchemyAchatRepository(AchatRepository):
             La somme HT des achats.
         """
         query = self._session.query(
-            func.sum(AchatModel.quantite * AchatModel.prix_unitaire_ht)
+            func.sum(
+                func.coalesce(
+                    AchatModel.montant_ht_reel,
+                    AchatModel.quantite * AchatModel.prix_unitaire_ht,
+                )
+            )
         ).filter(
             AchatModel.chantier_id == chantier_id,
             AchatModel.deleted_at.is_(None),

@@ -94,8 +94,8 @@ class SituationTravaux:
                 "La date de fin de periode doit etre posterieure ou egale "
                 "a la date de debut"
             )
-        if self.retenue_garantie_pct < Decimal("0") or self.retenue_garantie_pct > Decimal("100"):
-            raise ValueError("Le taux de retenue de garantie doit etre entre 0% et 100%")
+        if self.retenue_garantie_pct < Decimal("0") or self.retenue_garantie_pct > Decimal("5"):
+            raise ValueError("Le taux de retenue de garantie doit etre entre 0% et 5% (loi 71-584)")
         if self.taux_tva < Decimal("0") or self.taux_tva > Decimal("100"):
             raise ValueError("Le taux de TVA doit etre entre 0% et 100%")
 

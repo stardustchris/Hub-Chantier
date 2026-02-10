@@ -134,16 +134,16 @@ class TestUpdateBudgetUseCase:
             id=1,
             chantier_id=100,
             montant_initial_ht=Decimal("500000"),
-            retenue_garantie_pct=Decimal("5"),
+            retenue_garantie_pct=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_repo.find_by_id.return_value = existing
         self.mock_repo.save.return_value = existing
 
-        dto = BudgetUpdateDTO(retenue_garantie_pct=Decimal("10"))
+        dto = BudgetUpdateDTO(retenue_garantie_pct=Decimal("5"))
         result = self.use_case.execute(1, dto, updated_by=10)
 
-        assert result.retenue_garantie_pct == "10"
+        assert result.retenue_garantie_pct == "5"
 
     def test_update_budget_multiple_fields(self):
         """Test: mise a jour de plusieurs champs a la fois."""
