@@ -18,7 +18,7 @@ from ...domain.repositories.achat_repository import AchatRepository
 from ...domain.repositories.budget_repository import BudgetRepository
 from ...domain.repositories.cout_main_oeuvre_repository import CoutMainOeuvreRepository
 from ...domain.repositories.cout_materiel_repository import CoutMaterielRepository
-from ...domain.value_objects.statut_achat import StatutAchat
+from ...domain.value_objects.statuts_financiers import STATUTS_REALISES
 from ..dtos.pnl_dtos import LignePnLDTO, PnLChantierDTO
 from shared.application.ports.chantier_info_port import ChantierInfoPort
 
@@ -44,7 +44,7 @@ class GetPnLChantierUseCase:
 
     Agrege :
     - CA : somme des factures client emises (statut emise/envoyee/payee)
-    - Couts achats : somme des achats factures (statut FACTURE)
+    - Couts achats : somme des achats realises (LIVRE + FACTURE)
     - Couts MO : pointages valides x taux horaire
     - Couts materiel : reservations x tarif journalier
     - Marge brute = CA - Total couts
@@ -148,8 +148,7 @@ class GetPnLChantierUseCase:
             cout_materiel=cout_materiel,
             quote_part_frais_generaux=quote_part,
         )
-        if marge_brute_pct is None:
-            marge_brute_pct = Decimal("0")
+        # DM-3: Si CA=0, marge inconnue → None (pas 0% qui signifierait "equilibre")
 
         # 5. Determiner si le chantier est ferme
         est_definitif = self._est_chantier_ferme(chantier_id)
@@ -167,7 +166,7 @@ class GetPnLChantierUseCase:
             cout_main_oeuvre=str(cout_mo),
             cout_materiel=str(cout_materiel),
             marge_brute_ht=str(marge_brute_ht),
-            marge_brute_pct=str(marge_brute_pct),
+            marge_brute_pct=str(marge_brute_pct) if marge_brute_pct is not None else None,
             budget_initial_ht=str(budget_initial_ht),
             budget_revise_ht=str(budget_revise_ht),
             detail_couts=detail_couts,
@@ -194,18 +193,19 @@ class GetPnLChantierUseCase:
         return ca
 
     def _calculer_cout_achats(self, chantier_id: int) -> Decimal:
-        """Calcule le cout total des achats factures.
+        """Calcule le cout total des achats realises.
 
-        Utilise somme_by_chantier avec le statut FACTURE (achats reellement payes).
+        Utilise somme_by_chantier avec STATUTS_REALISES (LIVRE + FACTURE).
+        DM-1: Un achat livre est un cout reel meme sans facture.
 
         Args:
             chantier_id: L'ID du chantier.
 
         Returns:
-            Le total des achats factures HT.
+            Le total des achats realises HT.
         """
         return self._achat_repository.somme_by_chantier(
-            chantier_id, statuts=[StatutAchat.FACTURE]
+            chantier_id, statuts=STATUTS_REALISES
         )
 
     def _calculer_cout_main_oeuvre(self, chantier_id: int) -> Decimal:

@@ -127,11 +127,11 @@ class GetSuggestionsFinancieresUseCase:
 
         # Negatif = depassement budget
         reste_a_depenser = montant_revise - total_engage - cout_mo - cout_materiel
+        total_realise_complet = total_realise + cout_mo + cout_materiel
 
         # Pourcentages
         if montant_revise > Decimal("0"):
             pct_engage = (total_engage / montant_revise) * Decimal("100")
-            total_realise_complet = total_realise + cout_mo + cout_materiel
             pct_realise = (total_realise_complet / montant_revise) * Decimal("100")
             # ATTENTION: marge budgetaire (budget - engage), PAS marge BTP reelle (CA - couts)
             # Marge reelle = (CA - Couts) / CA (cf. calcul_financier.py)
@@ -141,9 +141,9 @@ class GetSuggestionsFinancieresUseCase:
             pct_realise = Decimal("0")
             marge_budgetaire_pct = Decimal("0")
 
-        # Calcul du burn rate pour les KPI
+        # Calcul du burn rate pour les KPI (inclut MO + materiel)
         burn_rate, _budget_moyen = self._calculer_burn_rate(
-            total_realise=total_realise,
+            total_realise=total_realise_complet,
             montant_revise=montant_revise,
             budget_created_at=budget.created_at,
         )
@@ -153,7 +153,7 @@ class GetSuggestionsFinancieresUseCase:
             chantier_id=chantier_id,
             montant_revise=montant_revise,
             total_engage=total_engage,
-            total_realise=total_realise,
+            total_realise=total_realise_complet,
             reste_a_depenser=reste_a_depenser,
             pct_engage=pct_engage,
             pct_realise=pct_realise,
@@ -209,10 +209,10 @@ class GetSuggestionsFinancieresUseCase:
                 )
                 # Fallback silencieux aux regles algo
 
-        # 4. Calculer les indicateurs predictifs
+        # 4. Calculer les indicateurs predictifs (inclut MO + materiel)
         indicateurs = self._calculer_indicateurs_predictifs(
             montant_revise=montant_revise,
-            total_realise=total_realise,
+            total_realise=total_realise_complet,
             reste_a_depenser=reste_a_depenser,
             budget_created_at=budget.created_at,
         )

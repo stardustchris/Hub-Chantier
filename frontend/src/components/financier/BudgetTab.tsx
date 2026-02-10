@@ -45,7 +45,7 @@ import CoutsMaterielPanel from './CoutsMaterielPanel'
 import AlertesPanel from './AlertesPanel'
 import AffectationsBudgetPanel from './AffectationsBudgetPanel'
 import ExportComptableButton from './ExportComptableButton'
-import { formatEUR } from './ChartTooltip'
+import { formatEUR } from '../../utils/format'
 import type { Budget, BudgetCreate, DashboardFinancier, SituationTravaux } from '../../types'
 import { STATUT_SITUATION_CONFIG, STATUT_ACHAT_CONFIG } from '../../types'
 

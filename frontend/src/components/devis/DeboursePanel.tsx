@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 import type { DebourseDetail, DebourseDetailCreate, TypeDebourse } from '../../types'
 import { TYPE_DEBOURSE_LABELS } from '../../types'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 const TYPE_DEBOURSE_COLORS: Record<TypeDebourse, string> = {
   moe: '#3B82F6',

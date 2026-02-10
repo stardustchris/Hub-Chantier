@@ -72,7 +72,7 @@ export default function AchatWorkflowActions({ achat, onUpdate }: AchatWorkflowA
           onClick={() => executeAction(() => financierService.validerAchat(achat.id), 'Achat valide')}
           disabled={loading}
           className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded transition-colors disabled:opacity-50"
-          title="Valider"
+          title="Valider" aria-label="Valider l'achat"
         >
           {loading ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
           Valider
@@ -81,7 +81,7 @@ export default function AchatWorkflowActions({ achat, onUpdate }: AchatWorkflowA
           onClick={() => setShowRefusModal(true)}
           disabled={loading}
           className="flex items-center gap-1 px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded transition-colors disabled:opacity-50"
-          title="Refuser"
+          title="Refuser" aria-label="Refuser l'achat"
         >
           <X size={12} />
           Refuser
@@ -93,7 +93,7 @@ export default function AchatWorkflowActions({ achat, onUpdate }: AchatWorkflowA
         onClick={() => executeAction(() => financierService.commanderAchat(achat.id), 'Achat commande')}
         disabled={loading}
         className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded transition-colors disabled:opacity-50"
-        title="Commander"
+        title="Commander" aria-label="Commander l'achat"
       >
         {loading ? <Loader2 size={12} className="animate-spin" /> : <ShoppingCart size={12} />}
         Commander
@@ -104,7 +104,7 @@ export default function AchatWorkflowActions({ achat, onUpdate }: AchatWorkflowA
         onClick={() => executeAction(() => financierService.livrerAchat(achat.id), 'Achat livre')}
         disabled={loading}
         className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 rounded transition-colors disabled:opacity-50"
-        title="Livrer"
+        title="Livrer" aria-label="Marquer l'achat comme livre"
       >
         {loading ? <Loader2 size={12} className="animate-spin" /> : <Truck size={12} />}
         Livrer
@@ -115,7 +115,7 @@ export default function AchatWorkflowActions({ achat, onUpdate }: AchatWorkflowA
         onClick={() => setShowFactureModal(true)}
         disabled={loading}
         className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
-        title="Facturer"
+        title="Facturer" aria-label="Facturer l'achat"
       >
         <FileText size={12} />
         Facturer

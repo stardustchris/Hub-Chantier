@@ -11,7 +11,7 @@ import Layout from '../components/Layout'
 import { chantiersService } from '../services/chantiers'
 import { financierService } from '../services/financier'
 import { logger } from '../services/logger'
-import { formatEUR } from '../components/financier/ChartTooltip'
+import { formatEUR, formatPct } from '../utils/format'
 import ChartTooltip from '../components/financier/ChartTooltip'
 import type { VueConsolidee, ChantierFinancierSummary, AnalyseIAConsolidee } from '../types'
 import {
@@ -331,16 +331,16 @@ export default function DashboardFinancierPage() {
           <div>
             <span className="text-gray-500">Marge</span>
             <p className={`font-medium ${chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-              {chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'N/D' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.marge_estimee_pct))}%`}
+              {formatPct(chantier.marge_estimee_pct)}
             </p>
           </div>
           <div>
             <span className="text-gray-500">Engagé</span>
-            <p className="font-medium">{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_engage))}%</p>
+            <p className="font-medium">{formatPct(chantier.pct_engage)}</p>
           </div>
           <div>
             <span className="text-gray-500">Déboursé</span>
-            <p className="font-medium">{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_realise))}%</p>
+            <p className="font-medium">{formatPct(chantier.pct_realise)}</p>
           </div>
         </div>
       </div>
@@ -518,9 +518,9 @@ export default function DashboardFinancierPage() {
                       {formatEUR(data.kpi_globaux.total_engage)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {data.kpi_globaux.total_budget_revise > 0
-                        ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100)
-                        : '0'}% du budget
+                      {formatPct(data.kpi_globaux.total_budget_revise > 0
+                        ? (Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100
+                        : 0)} du budget
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -539,9 +539,9 @@ export default function DashboardFinancierPage() {
                       {formatEUR(data.kpi_globaux.total_realise)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {data.kpi_globaux.total_budget_revise > 0
-                        ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100)
-                        : '0'}% du budget
+                      {formatPct(data.kpi_globaux.total_budget_revise > 0
+                        ? (Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100
+                        : 0)} du budget
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
@@ -561,9 +561,9 @@ export default function DashboardFinancierPage() {
                       {formatEUR(data.kpi_globaux.total_reste_a_depenser)}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                      {data.kpi_globaux.total_budget_revise > 0
-                        ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100)
-                        : '0'}% disponible
+                      {formatPct(data.kpi_globaux.total_budget_revise > 0
+                        ? (Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100
+                        : 0)} disponible
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -579,9 +579,9 @@ export default function DashboardFinancierPage() {
                       <p className="text-sm text-gray-600">Marge Moyenne</p>
                     </DefinitionTooltip>
                     <p className={`text-2xl font-bold mt-1 ${
-                      Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
+                      data.kpi_globaux.marge_moyenne_pct === null || data.kpi_globaux.marge_moyenne_pct === undefined ? 'text-gray-400' : Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                     }`}>
-                      {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(data.kpi_globaux.marge_moyenne_pct))}%
+                      {formatPct(data.kpi_globaux.marge_moyenne_pct)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Sur {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
@@ -770,7 +770,7 @@ export default function DashboardFinancierPage() {
                                   style={{ width: `${Math.min(Number(chantier.pct_engage), 100)}%` }}
                                 />
                               </div>
-                              <span>{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_engage))}%</span>
+                              <span>{formatPct(chantier.pct_engage)}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -781,14 +781,14 @@ export default function DashboardFinancierPage() {
                                   style={{ width: `${Math.min(Number(chantier.pct_realise), 100)}%` }}
                                 />
                               </div>
-                              <span>{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.pct_realise))}%</span>
+                              <span>{formatPct(chantier.pct_realise)}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right">{formatEUR(chantier.reste_a_depenser)}</td>
                           <td className={`px-4 py-3 text-right font-medium ${
                             chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                           }`}>
-                            {chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'N/D' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(chantier.marge_estimee_pct))}%`}
+                            {formatPct(chantier.marge_estimee_pct)}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.colorClass}`}>
@@ -812,7 +812,7 @@ export default function DashboardFinancierPage() {
 
             {/* Top Rentables / Top Derives */}
             {(data.top_rentables.length > 0 || data.top_derives.length > 0) && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" role="region" aria-label="Top chantiers">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" role="region" aria-label="Top chantiers">
                 {/* Top Rentables */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                   <h3 className="text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">

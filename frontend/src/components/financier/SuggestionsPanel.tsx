@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { AlertTriangle, AlertCircle, Info, Loader2, TrendingDown, Clock, Flame, Sparkles, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
-import { formatEUR } from './ChartTooltip'
+import { formatEUR } from '../../utils/format'
 import type { SuggestionsFinancieres, Suggestion } from '../../types'
 
 interface SuggestionsPanelProps {

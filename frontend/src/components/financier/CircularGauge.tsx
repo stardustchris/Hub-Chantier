@@ -34,12 +34,13 @@ export default function CircularGauge({
   color,
   thresholds = { warning: 80, danger: 100 },
 }: CircularGaugeProps) {
+  const safeValue = isNaN(value) ? 0 : value
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
-  const clampedValue = Math.min(Math.max(value, 0), max)
+  const clampedValue = Math.min(Math.max(safeValue, 0), max)
   const progress = (clampedValue / max) * circumference
   const offset = circumference - progress
-  const displayColor = color || getColor(value, thresholds)
+  const displayColor = color || getColor(safeValue, thresholds)
 
   return (
     <div className="inline-flex items-center gap-2">
@@ -48,7 +49,7 @@ export default function CircularGauge({
         height={size}
         className="transform -rotate-90"
         role="img"
-        aria-label={`Jauge ${value.toFixed(1)}% sur ${max}%`}
+        aria-label={`Jauge ${safeValue.toFixed(1)}% sur ${max}%`}
       >
         {/* Background circle */}
         <circle
@@ -74,7 +75,7 @@ export default function CircularGauge({
         />
       </svg>
       <span className="text-sm font-medium" style={{ color: displayColor }}>
-        {value.toFixed(1)}%
+        {safeValue.toFixed(1)}%
       </span>
     </div>
   )

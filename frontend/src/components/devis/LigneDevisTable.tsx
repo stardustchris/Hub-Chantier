@@ -284,13 +284,13 @@ export default function LigneDevisTable({
                   <button
                     onClick={handleCreate}
                     disabled={loading || !newForm.designation}
-                    className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
+                    className="p-2 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </button>
                   <button
                     onClick={() => setShowAdd(false)}
-                    className="p-1 text-gray-400 hover:bg-gray-100 rounded"
+                    className="p-2 text-gray-400 hover:bg-gray-100 rounded"
                   >
                     <X className="w-4 h-4" />
                   </button>

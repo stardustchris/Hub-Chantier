@@ -215,8 +215,8 @@ export default function FacturesList({ chantierId }: FacturesListProps) {
                           {facture.statut === 'brouillon' && (
                             <button
                               onClick={() => handleEmettre(facture.id)}
-                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                              title="Emettre"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                              title="Emettre" aria-label="Emettre la facture"
                             >
                               <Send size={16} />
                             </button>
@@ -224,8 +224,8 @@ export default function FacturesList({ chantierId }: FacturesListProps) {
                           {facture.statut === 'emise' && (
                             <button
                               onClick={() => handleEnvoyer(facture.id)}
-                              className="p-1 text-indigo-600 hover:bg-indigo-50 rounded"
-                              title="Envoyer"
+                              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded"
+                              title="Envoyer" aria-label="Envoyer la facture"
                             >
                               <Mail size={16} />
                             </button>
@@ -233,8 +233,8 @@ export default function FacturesList({ chantierId }: FacturesListProps) {
                           {facture.statut === 'envoyee' && (
                             <button
                               onClick={() => handlePayer(facture.id)}
-                              className="p-1 text-green-600 hover:bg-green-50 rounded"
-                              title="Marquer comme payee"
+                              className="p-2 text-green-600 hover:bg-green-50 rounded"
+                              title="Marquer comme payee" aria-label="Marquer la facture comme payee"
                             >
                               <CreditCard size={16} />
                             </button>
@@ -242,8 +242,8 @@ export default function FacturesList({ chantierId }: FacturesListProps) {
                           {facture.statut !== 'annulee' && facture.statut !== 'payee' && (
                             <button
                               onClick={() => handleAnnuler(facture.id)}
-                              className="p-1 text-red-600 hover:bg-red-50 rounded"
-                              title="Annuler"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded"
+                              title="Annuler" aria-label="Annuler la facture"
                             >
                               <XCircle size={16} />
                             </button>
