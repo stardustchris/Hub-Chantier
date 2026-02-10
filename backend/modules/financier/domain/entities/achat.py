@@ -93,6 +93,11 @@ class Achat:
                 f"Taux de TVA invalide : {self.taux_tva}%. "
                 f"Taux autorisés : {taux_str}"
             )
+        if self.type_achat == TypeAchat.SOUS_TRAITANCE and self.taux_tva != Decimal("0"):
+            raise AchatValidationError(
+                "Autoliquidation TVA obligatoire pour les achats de sous-traitance "
+                "(CGI art. 283-2 nonies). Le taux TVA doit être 0%."
+            )
 
     @property
     def total_ht(self) -> Decimal:

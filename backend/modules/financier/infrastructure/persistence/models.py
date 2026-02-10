@@ -275,7 +275,7 @@ class BudgetModel(FinancierBase):
     montant_initial_ht = Column(Numeric(12, 2), nullable=False, default=0)
     montant_avenants_ht = Column(Numeric(12, 2), nullable=False, default=0)
     retenue_garantie_pct = Column(Numeric(5, 2), nullable=False, default=5.0)
-    seuil_alerte_pct = Column(Numeric(5, 2), nullable=False, default=110.0)
+    seuil_alerte_pct = Column(Numeric(5, 2), nullable=False, default=90.0)
     seuil_validation_achat = Column(Numeric(10, 2), nullable=False, default=5000.0)
     notes = Column(Text, nullable=True)
 

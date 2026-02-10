@@ -83,7 +83,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
 
   const engageAlerte = Number(kpi.pct_engage) > Number(budget.seuil_alerte_pct)
   const debourseDepasse = Number(kpi.pct_realise) > 100
-  const margeFaible = Number(kpi.marge_estimee) < 5
+  const margeFaible = kpi.marge_estimee !== null && kpi.marge_estimee !== undefined && Number(kpi.marge_estimee) < 5
   const resteNegatif = Number(kpi.reste_a_depenser) < 0
 
   return (

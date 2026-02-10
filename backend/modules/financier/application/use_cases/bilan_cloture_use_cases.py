@@ -110,7 +110,8 @@ class GetBilanClotureUseCase:
         self.cout_materiel_repository = cout_materiel_repository
 
     def execute(
-        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None
+        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None,
+        couts_fixes_annuels: Optional[Decimal] = None
     ) -> BilanClotureDTO:
         """Genere le bilan de cloture pour un chantier.
 
@@ -184,7 +185,7 @@ class GetBilanClotureUseCase:
         quote_part = calculer_quote_part_frais_generaux(
             ca_chantier_ht=ca_ht,
             ca_total_annee=ca_total_annee or Decimal("0"),
-            couts_fixes_annuels=COUTS_FIXES_ANNUELS,
+            couts_fixes_annuels=couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS,
         )
         marge_finale_pct = calculer_marge_chantier(
             ca_ht=ca_ht,
