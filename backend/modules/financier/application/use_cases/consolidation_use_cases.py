@@ -210,6 +210,9 @@ class GetVueConsolideeFinancesUseCase:
 
             if self._cout_materiel_repository:
                 try:
+                    # cout_materiel = parc materiel INTERNE (amortissement/location).
+                    # Les achats materiel fournisseurs sont deja dans `realise`
+                    # via AchatRepository. Ne PAS confondre pour eviter double comptage.
                     cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
                 except Exception:
                     logger.warning("Erreur calcul cout materiel consolidation chantier %d", chantier_id, exc_info=True)
@@ -231,8 +234,10 @@ class GetVueConsolideeFinancesUseCase:
                 marge_statut_chantier = "calculee"
                 poids_marge = prix_vente_ht
             elif montant_revise > Decimal("0"):
-                # Fallback budget : marge estimée = écart budgétaire
-                # Chantier fermé → basé sur réalisé, sinon sur engagé
+                # Fallback budget : ecart budgetaire (PAS une marge commerciale)
+                # ATTENTION: ceci est un indicateur de consommation budgetaire,
+                # pas une marge BTP. Chantier ferme → base sur realise, sinon engage.
+                marge_statut_chantier = "estimee_budgetaire"
                 cout_ref = realise if is_ferme else engage
                 marge_pct = arrondir_pct(
                     ((montant_revise - cout_ref) / montant_revise) * Decimal("100")

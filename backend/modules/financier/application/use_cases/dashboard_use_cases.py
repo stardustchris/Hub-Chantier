@@ -114,7 +114,10 @@ class GetDashboardFinancierUseCase:
             except Exception:
                 logger.warning("Erreur calcul cout materiel dashboard chantier %d", chantier_id, exc_info=True)
 
-        # Total realise COMPLET = achats factures + MO + materiel
+        # Total realise COMPLET = achats fournisseurs + MO + materiel interne
+        # IMPORTANT: cout_materiel = parc materiel INTERNE (amortissement/location).
+        # Les achats de materiel chez fournisseurs sont deja dans total_realise
+        # via AchatRepository. Ne PAS confondre les deux pour eviter double comptage.
         total_realise_complet = total_realise + cout_mo + cout_materiel
 
         # Pourcentages basés sur le budget
@@ -142,9 +145,18 @@ class GetDashboardFinancierUseCase:
 
         if prix_vente_ht > Decimal("0"):
             # Quote-part frais generaux via fonction unifiee
+            # ATTENTION: si ca_total_annee non fourni, frais generaux = 0
+            # et la marge sera surestimee (~14% sur 600k de frais fixes).
+            effective_ca_total = ca_total_annee or Decimal("0")
+            if effective_ca_total <= Decimal("0"):
+                logger.warning(
+                    "Dashboard chantier %d: ca_total_annee non fourni, "
+                    "frais generaux non repartis (marge potentiellement surestimee)",
+                    chantier_id,
+                )
             quote_part = calculer_quote_part_frais_generaux(
                 ca_chantier_ht=prix_vente_ht,
-                ca_total_annee=ca_total_annee or Decimal("0"),
+                ca_total_annee=effective_ca_total,
                 couts_fixes_annuels=COUTS_FIXES_ANNUELS,
             )
 
@@ -158,15 +170,17 @@ class GetDashboardFinancierUseCase:
             )
             marge_statut = "calculee"
         else:
-            # Fallback: marge budgetaire quand pas de CA reel (pas de situation)
-            # Formule simplifiee: (Budget - Engage) / Budget
+            # Fallback: ecart budgetaire quand pas de CA reel (pas de situation)
+            # ATTENTION: ceci n'est PAS une marge commerciale BTP.
+            # C'est un indicateur de consommation budgetaire :
+            # (Budget - Engage) / Budget. A ne pas confondre avec la marge.
             if montant_revise_ht > Decimal("0"):
                 marge_estimee = arrondir_pct(
                     (montant_revise_ht - total_engage) / montant_revise_ht * Decimal("100")
                 )
             else:
                 marge_estimee = arrondir_pct(Decimal("0"))
-            marge_statut = "estimee"
+            marge_statut = "estimee_budgetaire"
 
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),
