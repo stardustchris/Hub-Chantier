@@ -752,6 +752,73 @@ async def delete_lot_budgetaire(
 
 
 # =============================================================================
+# Template Gros Oeuvre (pre-remplissage lots GO)
+# =============================================================================
+
+
+TEMPLATE_GO = [
+    {"code": "GO-FOND", "libelle": "Fondations", "pct": 12},
+    {"code": "GO-INF", "libelle": "Infrastructure (sous-sol)", "pct": 8},
+    {"code": "GO-RDC", "libelle": "Gros oeuvre RDC", "pct": 18},
+    {"code": "GO-R1", "libelle": "Gros oeuvre R+1", "pct": 16},
+    {"code": "GO-R2", "libelle": "Gros oeuvre R+2", "pct": 14},
+    {"code": "GO-TOIT", "libelle": "Toiture-terrasse", "pct": 10},
+    {"code": "GO-ESC", "libelle": "Escaliers et paliers", "pct": 5},
+    {"code": "GO-FAC", "libelle": "Facades et enduits", "pct": 8},
+    {"code": "GO-VRD", "libelle": "VRD et assainissement", "pct": 5},
+    {"code": "GO-DIV", "libelle": "Divers et aleas", "pct": 4},
+]
+
+
+@router.post("/budgets/{budget_id}/template-go", status_code=status.HTTP_201_CREATED)
+async def appliquer_template_go(
+    budget_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    lot_use_case=Depends(get_create_lot_budgetaire_use_case),
+    budget_use_case=Depends(get_get_budget_use_case),
+):
+    """Applique le template Gros Oeuvre sur un budget.
+
+    Cree 10 lots pre-remplis avec des proportions typiques GO.
+    Le montant de chaque lot est calcule en pourcentage du montant_initial_ht du budget.
+    """
+    # 1. Verifier que le budget existe et recuperer montant_initial_ht
+    try:
+        budget_dto = budget_use_case.execute(budget_id)
+    except BudgetNotFoundError:
+        raise HTTPException(status_code=404, detail="Budget non trouve")
+
+    montant_initial_ht = Decimal(budget_dto.montant_initial_ht)
+
+    # 2. Creer les lots GO
+    lots_crees = []
+    for idx, tpl in enumerate(TEMPLATE_GO):
+        prix_unitaire_ht = montant_initial_ht * Decimal(tpl["pct"]) / Decimal("100")
+        dto = LotBudgetaireCreateDTO(
+            budget_id=budget_id,
+            code_lot=tpl["code"],
+            libelle=tpl["libelle"],
+            unite=UniteMesure.U,
+            quantite_prevue=Decimal("1"),
+            prix_unitaire_ht=prix_unitaire_ht,
+            ordre=idx,
+        )
+        try:
+            result = lot_use_case.execute(dto, current_user_id)
+            lots_crees.append(result.to_dict())
+        except LotCodeExistsError:
+            # Lot avec ce code existe deja, on passe au suivant
+            logger.warning(
+                "Template GO: lot %s existe deja dans le budget %d, ignore",
+                tpl["code"],
+                budget_id,
+            )
+
+    return lots_crees
+
+
+# =============================================================================
 # Routes Achats (FIN-05, FIN-06, FIN-07)
 # =============================================================================
 

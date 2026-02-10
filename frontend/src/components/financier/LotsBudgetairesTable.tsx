@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, HardHat } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
@@ -33,6 +33,7 @@ export default function LotsBudgetairesTable({ budgetId, onRefresh }: LotsBudget
   const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [editingLot, setEditingLot] = useState<LotBudgetaire | undefined>(undefined)
+  const [applyingTemplate, setApplyingTemplate] = useState(false)
 
   const canEdit = user?.role === 'admin' || user?.role === 'conducteur'
 
@@ -79,6 +80,21 @@ export default function LotsBudgetairesTable({ budgetId, onRefresh }: LotsBudget
     )
   }
 
+  const handleApplyTemplateGO = async () => {
+    try {
+      setApplyingTemplate(true)
+      await financierService.appliquerTemplateGO(budgetId)
+      addToast({ message: 'Template Gros Oeuvre applique avec succes', type: 'success', duration: 4000 })
+      loadLots()
+      onRefresh()
+    } catch (err) {
+      logger.error('Erreur application template GO', err, { context: 'LotsBudgetairesTable' })
+      addToast({ message: 'Erreur lors de l\'application du template', type: 'error' })
+    } finally {
+      setApplyingTemplate(false)
+    }
+  }
+
   const handleModalSuccess = () => {
     setShowModal(false)
     setEditingLot(undefined)
@@ -112,13 +128,23 @@ export default function LotsBudgetairesTable({ budgetId, onRefresh }: LotsBudget
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-semibold text-gray-900">Lots budgetaires</h3>
         {canEdit && (
-          <button
-            onClick={() => { setEditingLot(undefined); setShowModal(true) }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors"
-          >
-            <Plus size={16} />
-            Ajouter un lot
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleApplyTemplateGO}
+              disabled={applyingTemplate}
+              className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm transition-colors disabled:opacity-50"
+            >
+              {applyingTemplate ? <Loader2 size={16} className="animate-spin" /> : <HardHat size={16} />}
+              Template Gros Oeuvre
+            </button>
+            <button
+              onClick={() => { setEditingLot(undefined); setShowModal(true) }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors"
+            >
+              <Plus size={16} />
+              Ajouter un lot
+            </button>
+          </div>
         )}
       </div>
 

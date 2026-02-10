@@ -1117,6 +1117,7 @@ export interface KPIFinancier {
   total_realise: number
   reste_a_depenser: number
   marge_estimee: number
+  marge_statut: string  // "calculee" | "estimee"
   pct_engage: number
   pct_realise: number
   pct_reste: number
