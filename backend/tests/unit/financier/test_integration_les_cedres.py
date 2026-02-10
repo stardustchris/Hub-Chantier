@@ -1351,7 +1351,7 @@ class TestLesCedresCoherenceCalculs:
         )
 
         assert total_engage == Decimal("455000")
-        assert total_realise == Decimal("370000")
+        assert total_realise == Decimal("395000")
 
     def test_statut_demande_exclu_des_engages(self):
         """Les achats en statut DEMANDE ne sont PAS engages.

@@ -284,15 +284,15 @@ class TestGetEvolutionFinanciereUseCase:
         # = 2000 + 3000 + 4000 + 5000 = 14000
         assert point_jan.engage_cumule == "14000.00"
 
-        # Réalisés: FACTURE uniquement = 5000
-        assert point_jan.realise_cumule == "5000.00"
+        # Réalisés: LIVRE + FACTURE = 4000 + 5000 = 9000
+        assert point_jan.realise_cumule == "9000.00"
 
         # Février: cumul des mois précédents (pas d'achats en février)
         point_fev = result.points[1]
         assert point_fev.mois == "02/2026"
         assert point_fev.prevu_cumule == "20000.00"  # cumulé
         assert point_fev.engage_cumule == "14000.00"  # cumul, pas de nouveaux achats
-        assert point_fev.realise_cumule == "5000.00"  # cumul, pas de nouveaux achats
+        assert point_fev.realise_cumule == "9000.00"  # cumul, pas de nouveaux achats
 
     def test_evolution_achats_without_created_at(self):
         """Test: achats sans created_at sont ignorés."""
