@@ -103,6 +103,24 @@ class TestSituationTravaux:
         )
         assert situation.periode_debut == situation.periode_fin
 
+    def test_retenue_garantie_pct_valide(self):
+        """Test: retenue de garantie a 0%, 5% et 100% sont acceptees."""
+        for pct in [Decimal("0"), Decimal("5"), Decimal("100")]:
+            situation = self._make_situation(retenue_garantie_pct=pct)
+            assert situation.retenue_garantie_pct == pct
+
+    def test_retenue_garantie_pct_negative(self):
+        """Test: erreur si retenue de garantie negative."""
+        with pytest.raises(ValueError) as exc_info:
+            self._make_situation(retenue_garantie_pct=Decimal("-1"))
+        assert "retenue" in str(exc_info.value).lower()
+
+    def test_retenue_garantie_pct_superieure_100(self):
+        """Test: erreur si retenue de garantie superieure a 100%."""
+        with pytest.raises(ValueError) as exc_info:
+            self._make_situation(retenue_garantie_pct=Decimal("101"))
+        assert "retenue" in str(exc_info.value).lower()
+
     # -- Workflow: soumettre_validation -----------------------------------------------
 
     def test_soumettre_validation_success(self):

@@ -24,10 +24,8 @@ from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
     arrondir_pct,
+    COUTS_FIXES_ANNUELS,
 )
-
-# Frais generaux hors salaires (typique BTP : 10-15% du CA)
-COUTS_FIXES_ANNUELS = Decimal("600000")
 
 logger = logging.getLogger(__name__)
 

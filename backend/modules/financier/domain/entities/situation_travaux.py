@@ -73,8 +73,9 @@ class SituationTravaux:
         """Validation a la creation.
 
         Raises:
-            ValueError: Si chantier_id <= 0, budget_id <= 0, numero vide
-                        ou periode_fin < periode_debut.
+            ValueError: Si chantier_id <= 0, budget_id <= 0, numero vide,
+                        periode_fin < periode_debut, retenue_garantie_pct
+                        hors [0, 100] ou taux_tva hors [0, 100].
         """
         if self.chantier_id <= 0:
             raise ValueError("L'ID du chantier est obligatoire")
@@ -91,6 +92,10 @@ class SituationTravaux:
                 "La date de fin de periode doit etre posterieure ou egale "
                 "a la date de debut"
             )
+        if self.retenue_garantie_pct < Decimal("0") or self.retenue_garantie_pct > Decimal("100"):
+            raise ValueError("Le taux de retenue de garantie doit etre entre 0% et 100%")
+        if self.taux_tva < Decimal("0") or self.taux_tva > Decimal("100"):
+            raise ValueError("Le taux de TVA doit etre entre 0% et 100%")
 
     # ── Workflow methods ──────────────────────────────────────────────────
 

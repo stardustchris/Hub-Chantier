@@ -13,6 +13,7 @@ Coûts fixes société : 600 000 € / an (frais généraux hors salaires)
 Répartition : au prorata du CA facturé (prix de vente)
 """
 
+import logging
 from decimal import Decimal
 from typing import Optional
 
@@ -38,11 +39,10 @@ from shared.domain.calcul_financier import (
     calculer_quote_part_frais_generaux,
     arrondir_pct,
     arrondir_montant,
+    COUTS_FIXES_ANNUELS,
 )
 
-# Coûts fixes annuels de la société (frais généraux hors salaires).
-# Frais généraux BTP typiques : 10-15% du CA -> ~600k EUR pour CA de 4.3M EUR
-COUTS_FIXES_ANNUELS = Decimal("600000")
+logger = logging.getLogger(__name__)
 
 
 class GetDashboardFinancierUseCase:
@@ -107,12 +107,12 @@ class GetDashboardFinancierUseCase:
             try:
                 cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
             except Exception:
-                pass
+                logger.warning("Erreur calcul cout MO dashboard chantier %d", chantier_id, exc_info=True)
         if self._cout_materiel_repository:
             try:
                 cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
             except Exception:
-                pass
+                logger.warning("Erreur calcul cout materiel dashboard chantier %d", chantier_id, exc_info=True)
 
         # Total realise COMPLET = achats factures + MO + materiel
         total_realise_complet = total_realise + cout_mo + cout_materiel

@@ -13,6 +13,13 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
 
+# -- Constantes entreprise ---------------------------------------------------
+
+# Coûts fixes annuels de la société (frais généraux hors salaires).
+# Frais généraux BTP typiques : 10-15% du CA → ~600k EUR pour CA de 4.3M EUR
+COUTS_FIXES_ANNUELS = Decimal("600000")
+
+
 # -- Arrondi comptable -------------------------------------------------------
 
 def arrondir_montant(montant: Decimal, decimales: str = "0.01") -> Decimal:

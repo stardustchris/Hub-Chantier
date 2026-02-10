@@ -10,6 +10,7 @@ from typing import List, Optional
 from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
+    COUTS_FIXES_ANNUELS,
 )
 
 from ...domain.repositories.facture_repository import FactureRepository
@@ -26,9 +27,6 @@ logger = logging.getLogger(__name__)
 
 # Statuts de facture consideres comme CA (facture emise au client)
 STATUTS_FACTURE_CA = {"emise", "envoyee", "payee"}
-
-# Frais generaux hors salaires (typique BTP : 10-15% du CA)
-COUTS_FIXES_ANNUELS = Decimal("600000")
 
 
 class PnLChantierNotFoundError(Exception):

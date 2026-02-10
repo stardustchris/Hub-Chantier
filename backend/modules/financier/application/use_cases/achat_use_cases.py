@@ -28,7 +28,7 @@ from ...domain.repositories import (
     JournalFinancierRepository,
     JournalEntry,
 )
-from ...domain.value_objects import StatutAchat, TAUX_VALIDES
+from ...domain.value_objects import StatutAchat, TypeAchat, TAUX_VALIDES
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES
 from ...domain.events import (
     AchatCreatedEvent,
@@ -142,6 +142,7 @@ class CreateAchatUseCase:
         """
         fournisseur_nom = None
         taux_tva = dto.taux_tva
+        type_achat = dto.type_achat
 
         # Vérifier le fournisseur si renseigné
         if dto.fournisseur_id:
@@ -154,20 +155,22 @@ class CreateAchatUseCase:
 
             # CGI art. 283-2 nonies : autoliquidation TVA sous-traitance BTP
             # Le sous-traitant facture HT, le donneur d'ordre autoliquide la TVA
-            if fournisseur.est_sous_traitant and taux_tva > Decimal("0"):
-                logger.warning(
-                    "Autoliquidation TVA (CGI art. 283-2 nonies) : taux forcé "
-                    "à 0%% pour le sous-traitant '%s' (id=%d) - taux original: %s%%",
-                    fournisseur.raison_sociale, fournisseur.id, taux_tva,
-                )
-                taux_tva = Decimal("0")
+            if fournisseur.est_sous_traitant:
+                type_achat = TypeAchat.SOUS_TRAITANCE
+                if taux_tva > Decimal("0"):
+                    logger.warning(
+                        "Autoliquidation TVA (CGI art. 283-2 nonies) : taux forcé "
+                        "à 0%% pour le sous-traitant '%s' (id=%d) - taux original: %s%%",
+                        fournisseur.raison_sociale, fournisseur.id, taux_tva,
+                    )
+                    taux_tva = Decimal("0")
 
         # Créer l'entité
         achat = Achat(
             chantier_id=dto.chantier_id,
             fournisseur_id=dto.fournisseur_id,
             lot_budgetaire_id=dto.lot_budgetaire_id,
-            type_achat=dto.type_achat,
+            type_achat=type_achat,
             libelle=dto.libelle,
             quantite=dto.quantite,
             unite=dto.unite,

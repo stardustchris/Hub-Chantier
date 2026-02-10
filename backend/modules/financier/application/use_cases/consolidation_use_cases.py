@@ -14,6 +14,7 @@ Coûts fixes société : 600 000 € / an (frais généraux hors salaires)
 Répartition : au prorata du CA facturé (prix de vente)
 """
 
+import logging
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -22,10 +23,10 @@ from shared.domain.calcul_financier import (
     calculer_quote_part_frais_generaux,
     arrondir_pct,
     arrondir_montant,
+    COUTS_FIXES_ANNUELS,
 )
 
-# Frais generaux hors salaires (typique BTP : 10-15% du CA)
-COUTS_FIXES_ANNUELS = Decimal("600000")
+logger = logging.getLogger(__name__)
 
 from shared.application.ports.chantier_info_port import ChantierInfoPort, ChantierInfoDTO
 
@@ -202,10 +203,16 @@ class GetVueConsolideeFinancesUseCase:
                     prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
             if self._cout_mo_repository:
-                cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+                try:
+                    cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+                except Exception:
+                    logger.warning("Erreur calcul cout MO consolidation chantier %d", chantier_id, exc_info=True)
 
             if self._cout_materiel_repository:
-                cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
+                try:
+                    cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(chantier_id)
+                except Exception:
+                    logger.warning("Erreur calcul cout materiel consolidation chantier %d", chantier_id, exc_info=True)
 
             if prix_vente_ht > Decimal("0"):
                 # Marge BTP réelle (situations disponibles)
