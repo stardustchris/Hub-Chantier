@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import MentionInput from '../common/MentionInput'
 import { useAuth } from '../../contexts/AuthContext'
+import { useToast } from '../../contexts/ToastContext'
 import { dashboardService } from '../../services/dashboard'
 import { logger } from '../../services/logger'
 import { formatRelative } from '../../utils/dates'
@@ -42,6 +43,7 @@ export const DashboardPostCard = memo(function DashboardPostCard({
 }: DashboardPostCardProps) {
   // P1-6: Consommer le context directement au lieu de recevoir en props
   const { user } = useAuth()
+  const { addToast } = useToast()
   const currentUserId = user?.id || ''
   const isAdmin = user?.role === 'admin'
   const [showComments, setShowComments] = useState(false)
@@ -66,7 +68,8 @@ export const DashboardPostCard = memo(function DashboardPostCard({
       setComments(updatedPost.commentaires || [])
       setNewComment('')
     } catch (error) {
-      logger.error('Erreur lors de l\'ajout du commentaire', error, { context: 'DashboardPostCard', showToast: true })
+      logger.error('Erreur lors de l\'ajout du commentaire', error, { context: 'DashboardPostCard' })
+      addToast({ message: 'Erreur lors de l\'ajout du commentaire', type: 'error' })
     } finally {
       setIsCommenting(false)
     }

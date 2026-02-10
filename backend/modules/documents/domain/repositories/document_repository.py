@@ -166,3 +166,22 @@ class DocumentRepository(ABC):
             Taille totale en bytes.
         """
         pass
+
+    @abstractmethod
+    def find_by_uploaded_by(
+        self, user_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Document]:
+        """
+        Récupère les documents uploadés par un utilisateur.
+
+        Utilisé pour l'export RGPD (Article 20 - Portabilité des données).
+
+        Args:
+            user_id: ID de l'utilisateur.
+            skip: Nombre d'éléments à sauter.
+            limit: Nombre maximum d'éléments.
+
+        Returns:
+            Liste des documents uploadés par l'utilisateur.
+        """
+        pass

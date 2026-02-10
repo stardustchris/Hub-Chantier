@@ -56,7 +56,7 @@ class TestCreateFactureFromSituationUseCase:
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation
-        self.mock_facture_repo.count_factures_year.return_value = 0
+        self.mock_facture_repo.next_numero_facture.return_value = 1
 
         def save_side_effect(facture):
             facture.id = 1
@@ -72,9 +72,9 @@ class TestCreateFactureFromSituationUseCase:
         assert result.type_facture == "situation"
         assert result.statut == "brouillon"
         assert result.montant_ht == "100000"
-        # Numero auto FAC-YYYY-01
+        # Numero auto FAC-YYYY-0001 (format 4 digits)
         assert "FAC-" in result.numero_facture
-        assert "-01" in result.numero_facture
+        assert "-0001" in result.numero_facture
         self.mock_facture_repo.save.assert_called_once()
         self.mock_journal.save.assert_called_once()
         self.mock_event_bus.publish.assert_called_once()
@@ -135,7 +135,7 @@ class TestCreateFactureAcompteUseCase:
 
     def test_create_acompte_success(self):
         """Test: creation reussie d'une facture d'acompte."""
-        self.mock_facture_repo.count_factures_year.return_value = 3
+        self.mock_facture_repo.next_numero_facture.return_value = 4
 
         def save_side_effect(facture):
             facture.id = 1
@@ -161,9 +161,9 @@ class TestCreateFactureAcompteUseCase:
         assert result.statut == "brouillon"
         assert result.montant_ht == "50000"
         assert result.notes == "Acompte initial"
-        # Numero auto FAC-YYYY-04
+        # Numero auto FAC-YYYY-0004 (format 4 digits)
         assert "FAC-" in result.numero_facture
-        assert "-04" in result.numero_facture
+        assert "-0004" in result.numero_facture
         self.mock_facture_repo.save.assert_called_once()
         self.mock_journal.save.assert_called_once()
         self.mock_event_bus.publish.assert_called_once()

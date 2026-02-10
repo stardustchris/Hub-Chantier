@@ -1,0 +1,11 @@
+# Hub Chantier - Exemple crontab pour backup automatique sur l'hote
+# Installation: crontab -e (puis copier la ligne ci-dessous)
+
+# Backup quotidien a 3h00 du matin (UTC)
+0 3 * * * cd /home/deploy/hub-chantier && /home/deploy/hub-chantier/scripts/backup.sh --upload-s3 >> /var/log/hub-chantier-backup.log 2>&1
+
+# Backup hebdomadaire le dimanche a 4h00 avec upload S3 force
+0 4 * * 0 cd /home/deploy/hub-chantier && /home/deploy/hub-chantier/scripts/backup.sh --upload-s3 >> /var/log/hub-chantier-backup.log 2>&1
+
+# Note: Ajustez le chemin selon votre installation
+# Note: Pour heure locale Paris (CET/CEST), utilisez 2 1 * * * (2h du matin local = 3h UTC en hiver)

@@ -59,6 +59,27 @@ class InterventionMessageRepository(ABC):
         pass
 
     @abstractmethod
+    async def list_by_interventions(
+        self,
+        intervention_ids: List[int],
+        auteur_id: Optional[int] = None,
+        limit: int = 500,
+    ) -> List[InterventionMessage]:
+        """Liste les messages de plusieurs interventions (batch).
+
+        Utilisé par l'export RGPD pour éviter le N+1.
+
+        Args:
+            intervention_ids: Liste d'IDs d'interventions.
+            auteur_id: Filtrer par auteur (optionnel).
+            limit: Nombre maximum de résultats.
+
+        Returns:
+            Liste des messages.
+        """
+        pass
+
+    @abstractmethod
     async def list_for_rapport(
         self,
         intervention_id: int,

@@ -95,6 +95,38 @@ services:
     # Renouvellement automatique toutes les 12h
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done;'"
 
+  # ===========================================
+  # Backup Automatise (OPTIONNEL)
+  # ===========================================
+  # Active avec: docker compose -f docker-compose.prod.yml --profile backup up -d
+  backup-cron:
+    profiles: ["backup"]
+    build:
+      context: .
+      dockerfile: docker/backup-cron/Dockerfile
+    container_name: hub-chantier-backup
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-hub_chantier}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
+      - S3_BACKUP_BUCKET=${S3_BACKUP_BUCKET:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-fr-par}
+      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}
+      - COMPOSE_FILE=docker-compose.prod.yml
+      - ENV_FILE=.env.production
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./scripts:/scripts:ro
+      - backup_data:/var/backups/hub-chantier
+      - ./.env.production:/app/.env.production:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:
     driver: local
@@ -103,4 +135,6 @@ volumes:
   certbot_conf:
     driver: local
   certbot_www:
+    driver: local
+  backup_data:
     driver: local

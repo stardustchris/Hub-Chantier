@@ -78,6 +78,21 @@ class FactureRepository(ABC):
         pass
 
     @abstractmethod
+    def next_numero_facture(self, year: int) -> int:
+        """Retourne le prochain numero de facture pour l'annee donnee (atomique).
+
+        Cette methode DOIT etre atomique (SELECT FOR UPDATE ou equivalent)
+        pour eviter les doublons en cas d'acces concurrent.
+
+        Args:
+            year: L'annee pour laquelle generer le numero.
+
+        Returns:
+            Le prochain numero sequentiel.
+        """
+        ...
+
+    @abstractmethod
     def delete(self, facture_id: int, deleted_by: int) -> None:
         """Supprime une facture (soft delete - H10).
 

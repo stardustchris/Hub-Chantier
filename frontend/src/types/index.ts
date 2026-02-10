@@ -1116,8 +1116,9 @@ export interface KPIFinancier {
   total_engage: number
   total_realise: number
   reste_a_depenser: number
-  marge_estimee: number
-  marge_statut: string  // "calculee" | "estimee"
+  marge_estimee: number | null
+  marge_statut?: 'calculee' | 'estimee_budgetaire' | 'partielle' | 'en_attente'
+  fiabilite_marge?: number
   pct_engage: number
   pct_realise: number
   pct_reste: number
@@ -1433,11 +1434,14 @@ export interface ChantierFinancierSummary {
   total_engage: number
   total_realise: number
   reste_a_depenser: number
-  marge_estimee_pct: number
+  marge_estimee_pct: number | null
   pct_engage: number
   pct_realise: number
   statut: 'ok' | 'attention' | 'depassement'
   nb_alertes: number
+  marge_statut?: 'calculee' | 'estimee_budgetaire' | 'partielle' | 'en_attente'
+  fiabilite_marge?: number
+  statut_chantier?: string
 }
 
 export interface KPIGlobaux {
@@ -1446,10 +1450,12 @@ export interface KPIGlobaux {
   total_realise: number
   total_reste_a_depenser: number
   marge_moyenne_pct: number
+  marge_statut?: string
   nb_chantiers: number
   nb_chantiers_ok: number
   nb_chantiers_attention: number
   nb_chantiers_depassement: number
+  nb_chantiers_marge_en_attente?: number
 }
 
 export interface VueConsolidee {

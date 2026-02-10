@@ -4,6 +4,7 @@ FIN-17 Phase 2: Endpoint d'evolution mensuelle pour graphique Recharts.
 Calcule les courbes prevu/engage/realise cumules par mois.
 """
 
+import logging
 from datetime import date, datetime
 from decimal import Decimal
 from typing import List
@@ -11,6 +12,8 @@ from typing import List
 from shared.domain.calcul_financier import arrondir_montant
 
 from ...domain.repositories import BudgetRepository, AchatRepository
+
+logger = logging.getLogger(__name__)
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.evolution_dtos import EvolutionMensuelleDTO, EvolutionFinanciereDTO
 from .budget_use_cases import BudgetNotFoundError
@@ -100,9 +103,12 @@ class GetEvolutionFinanciereUseCase:
         engage_par_mois: dict[tuple[int, int], Decimal] = {}
         realise_par_mois: dict[tuple[int, int], Decimal] = {}
 
+        nb_sans_date_commande = 0
         for achat in achats:
             # Utiliser date_commande (date métier) avec fallback sur created_at
             raw_date = achat.date_commande or achat.created_at
+            if achat.date_commande is None and achat.created_at is not None:
+                nb_sans_date_commande += 1
             if raw_date is None:
                 continue
 
@@ -117,6 +123,14 @@ class GetEvolutionFinanciereUseCase:
                 engage_par_mois[cle_mois] = engage_par_mois.get(cle_mois, Decimal("0")) + achat.total_ht
             if achat.statut in STATUTS_REALISES:
                 realise_par_mois[cle_mois] = realise_par_mois.get(cle_mois, Decimal("0")) + achat.total_ht
+
+        if nb_sans_date_commande > 0:
+            logger.warning(
+                "Evolution chantier %d: %d achats sans date_commande, "
+                "utilisation de created_at comme fallback (dates potentiellement imprecises)",
+                chantier_id,
+                nb_sans_date_commande,
+            )
 
         # 6. Construire les points mensuels
         points: List[EvolutionMensuelleDTO] = []

@@ -24,7 +24,13 @@ from ...domain.repositories.cout_materiel_repository import (
     CoutMaterielRepository,
 )
 from ...domain.events import DepassementBudgetEvent
+from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES
+from ...domain.value_objects.statut_achat import StatutAchat
 from ..dtos.alerte_dtos import AlerteDTO
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AlerteNotFoundError(Exception):
@@ -87,18 +93,34 @@ class VerifierDepassementUseCase:
         # Calculer le montant engage (achats valides + commandes)
         montant_engage = self._achat_repository.somme_by_chantier(
             chantier_id,
-            statuts=["valide", "commande", "livre", "facture"],
+            statuts=STATUTS_ENGAGES,
         )
 
-        # Calculer le montant realise (achats livres/factures + MO + materiel)
+        # Calculer le montant realise (achats livres/factures + MO + materiel interne)
+        # IMPORTANT: cout_materiel = parc materiel INTERNE (amortissement/location).
+        # Les achats materiel fournisseurs sont deja dans montant_achats_realises.
         montant_achats_realises = self._achat_repository.somme_by_chantier(
             chantier_id,
-            statuts=["livre", "facture"],
+            statuts=[StatutAchat.LIVRE, StatutAchat.FACTURE],
         )
-        cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
-        cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(
-            chantier_id
-        )
+        cout_mo = Decimal("0")
+        cout_materiel = Decimal("0")
+        try:
+            cout_mo = self._cout_mo_repository.calculer_cout_chantier(chantier_id)
+        except (ValueError, TypeError, AttributeError, KeyError):
+            logger.warning(
+                "Erreur calcul cout MO alertes chantier %d, utilisation 0",
+                chantier_id,
+            )
+        try:
+            cout_materiel = self._cout_materiel_repository.calculer_cout_chantier(
+                chantier_id
+            )
+        except (ValueError, TypeError, AttributeError, KeyError):
+            logger.warning(
+                "Erreur calcul cout materiel alertes chantier %d, utilisation 0",
+                chantier_id,
+            )
         montant_realise = montant_achats_realises + cout_mo + cout_materiel
 
         alertes_creees = []
@@ -154,6 +176,27 @@ class VerifierDepassementUseCase:
                 ),
                 pourcentage_atteint=pourcentage_realise,
                 seuil_configure=seuil_alerte_pct,
+                montant_budget_ht=montant_budget_ht,
+                montant_atteint_ht=montant_realise,
+            )
+            alertes_creees.append(alerte)
+
+        # Verifier marge negative projetee (provision perte a terminaison)
+        if montant_budget_ht > Decimal("0") and montant_realise > montant_budget_ht:
+            marge_projetee_pct = (
+                (montant_budget_ht - montant_realise) * Decimal("100") / montant_budget_ht
+            )
+            alerte = self._creer_alerte(
+                chantier_id=chantier_id,
+                budget_id=budget.id,
+                type_alerte="perte_terminaison",
+                message=(
+                    f"Marge negative projetee : le cout realise ({montant_realise} EUR HT) "
+                    f"depasse le budget ({montant_budget_ht} EUR HT). "
+                    f"Perte estimee : {abs(marge_projetee_pct):.1f}%."
+                ),
+                pourcentage_atteint=abs(marge_projetee_pct),
+                seuil_configure=Decimal("0"),
                 montant_budget_ht=montant_budget_ht,
                 montant_atteint_ht=montant_realise,
             )

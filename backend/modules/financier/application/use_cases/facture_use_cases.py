@@ -51,7 +51,11 @@ class SituationNonValideeError(Exception):
 
 
 def _generer_numero_facture(facture_repository: FactureRepository) -> str:
-    """Genere un numero de facture automatique FAC-YYYY-NN.
+    """Genere un numero de facture atomique FAC-YYYY-NNNN.
+
+    Utilise le repository pour obtenir le prochain numero de maniere atomique
+    (SELECT FOR UPDATE ou equivalent) afin d'eviter les doublons en cas
+    d'acces concurrent.
 
     Args:
         facture_repository: Le repository des factures.
@@ -60,8 +64,8 @@ def _generer_numero_facture(facture_repository: FactureRepository) -> str:
         Le numero de facture genere.
     """
     year = datetime.utcnow().year
-    count = facture_repository.count_factures_year(year)
-    return f"FAC-{year}-{count + 1:02d}"
+    next_num = facture_repository.next_numero_facture(year)
+    return f"FAC-{year}-{next_num:04d}"
 
 
 class CreateFactureFromSituationUseCase:
