@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -70,9 +70,6 @@ from ...application.use_cases.bilan_cloture_use_cases import (
     BilanClotureError,
     BudgetNonTrouveError as BilanBudgetNonTrouveError,
     ChantierNonTrouveError as BilanChantierNonTrouveError,
-)
-from ...application.use_cases.configuration_entreprise_use_cases import (
-    ConfigurationNotFoundError,
 )
 from ...application.dtos import (
     FournisseurCreateDTO,
@@ -2471,39 +2468,35 @@ class ConfigurationEntrepriseUpdateRequest(BaseModel):
 
 @router.get("/configuration/{annee}")
 async def get_configuration_entreprise(
-    annee: int,
+    annee: int = Path(ge=2020, le=2099),
     _role: str = Depends(require_admin),
     use_case=Depends(get_get_configuration_entreprise_use_case),
 ):
     """Lecture de la configuration entreprise pour une annee.
 
     Acces reserve aux administrateurs.
+    EDGE-003: retourne les valeurs par defaut si aucune config en BDD.
     """
-    try:
-        result = use_case.execute(annee)
-        return {
-            "id": result.id,
-            "couts_fixes_annuels": str(result.couts_fixes_annuels),
-            "annee": result.annee,
-            "coeff_frais_generaux": str(result.coeff_frais_generaux),
-            "coeff_charges_patronales": str(result.coeff_charges_patronales),
-            "coeff_heures_sup": str(result.coeff_heures_sup),
-            "coeff_heures_sup_2": str(result.coeff_heures_sup_2),
-            "notes": result.notes,
-            "updated_at": result.updated_at.isoformat() if result.updated_at else None,
-            "updated_by": result.updated_by,
-        }
-    except ConfigurationNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Aucune configuration pour l'annee {annee}",
-        )
+    result, is_default = use_case.execute(annee)
+    return {
+        "id": result.id,
+        "couts_fixes_annuels": str(result.couts_fixes_annuels),
+        "annee": result.annee,
+        "coeff_frais_generaux": str(result.coeff_frais_generaux),
+        "coeff_charges_patronales": str(result.coeff_charges_patronales),
+        "coeff_heures_sup": str(result.coeff_heures_sup),
+        "coeff_heures_sup_2": str(result.coeff_heures_sup_2),
+        "notes": result.notes,
+        "updated_at": result.updated_at.isoformat() if result.updated_at else None,
+        "updated_by": result.updated_by,
+        "is_default": is_default,
+    }
 
 
 @router.put("/configuration/{annee}")
 async def update_configuration_entreprise(
-    annee: int,
-    request: ConfigurationEntrepriseUpdateRequest,
+    annee: int = Path(ge=2020, le=2099),
+    request: ConfigurationEntrepriseUpdateRequest = ...,
     _role: str = Depends(require_admin),
     user_id: int = Depends(get_current_user_id),
     use_case=Depends(get_update_configuration_entreprise_use_case),
@@ -2511,7 +2504,8 @@ async def update_configuration_entreprise(
     """Mise a jour de la configuration entreprise pour une annee.
 
     Acces reserve aux administrateurs.
-    Si aucune configuration n'existe pour l'annee, en cree une.
+    EDGE-001: si aucune config n'existe, en cree une (created=true).
+    VAL-002/EDGE-002: renvoie des warnings pour valeurs suspectes.
     """
     try:
         dto = ConfigurationEntrepriseUpdateDTO(
@@ -2522,7 +2516,7 @@ async def update_configuration_entreprise(
             coeff_heures_sup_2=Decimal(str(request.coeff_heures_sup_2)) if request.coeff_heures_sup_2 is not None else None,
             notes=request.notes,
         )
-        result = use_case.execute(annee, dto, user_id)
+        result, created, warnings = use_case.execute(annee, dto, user_id)
         return {
             "id": result.id,
             "couts_fixes_annuels": str(result.couts_fixes_annuels),
@@ -2534,6 +2528,8 @@ async def update_configuration_entreprise(
             "notes": result.notes,
             "updated_at": result.updated_at.isoformat() if result.updated_at else None,
             "updated_by": result.updated_by,
+            "created": created,
+            "warnings": warnings,
         }
     except ValueError as e:
         raise HTTPException(

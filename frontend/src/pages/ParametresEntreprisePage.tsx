@@ -21,6 +21,12 @@ interface ConfigurationEntreprise {
   notes: string | null;
   updated_at: string | null;
   updated_by: number | null;
+  is_default?: boolean;
+}
+
+interface ConfigurationUpdateResponse extends ConfigurationEntreprise {
+  created?: boolean;
+  warnings?: string[];
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -56,18 +62,14 @@ export function ParametresEntreprisePage(): JSX.Element {
       setCoeffHeuresSup(data.coeff_heures_sup);
       setCoeffHeuresSup2(data.coeff_heures_sup_2);
       setNotes(data.notes || '');
-    } catch (err) {
-      const error = err as ApiError;
-      if (error.response?.status === 404) {
-        // Pas de config pour cette annee, on affiche les valeurs par defaut
-        setCoutsFixesAnnuels('600000');
-        setCoeffFraisGeneraux('19');
-        setCoeffChargesPatronales('1.45');
-        setCoeffHeuresSup('1.25');
-        setCoeffHeuresSup2('1.50');
-      } else {
-        showToast('Erreur lors du chargement de la configuration', 'error');
+      if (data.is_default) {
+        showToast(
+          `Aucune configuration enregistree pour ${CURRENT_YEAR}. Valeurs par defaut affichees.`,
+          'info'
+        );
       }
+    } catch {
+      showToast('Erreur lors du chargement de la configuration', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +88,7 @@ export function ParametresEntreprisePage(): JSX.Element {
 
     setIsSaving(true);
     try {
-      const response = await api.put<ConfigurationEntreprise>(
+      const response = await api.put<ConfigurationUpdateResponse>(
         `/api/financier/configuration/${CURRENT_YEAR}`,
         {
           couts_fixes_annuels: parseFloat(coutsFixesAnnuels),
@@ -98,7 +100,18 @@ export function ParametresEntreprisePage(): JSX.Element {
         }
       );
       setConfig(response.data);
-      showToast('Configuration sauvegardee avec succes', 'success');
+      // EDGE-001: notifier si creation d'une nouvelle config
+      if (response.data.created) {
+        showToast(`Configuration creee pour l'annee ${CURRENT_YEAR}`, 'success');
+      } else {
+        showToast('Configuration sauvegardee avec succes', 'success');
+      }
+      // VAL-002 + EDGE-002: afficher les warnings
+      if (response.data.warnings && response.data.warnings.length > 0) {
+        for (const w of response.data.warnings) {
+          showToast(w, 'warning');
+        }
+      }
     } catch (err) {
       const error = err as ApiError;
       if (error.response?.status === 422) {
