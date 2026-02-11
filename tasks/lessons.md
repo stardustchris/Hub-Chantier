@@ -18,3 +18,20 @@
 - TOUJOURS lancer les agents d'implémentation AVANT d'écrire du code non-trivial
 - TOUJOURS lancer les 4 agents de validation AVANT tout commit
 - Ne JAMAIS demander "veux-tu que je lance les agents?" — c'est obligatoire, les lancer d'office
+
+## 2026-02-11 - Session audit ConfigurationEntreprise
+
+### PROBLEME: Agents background instables
+
+**Contexte**: Les 3 agents de validation (architect-reviewer, code-reviewer, security-auditor) ont ete lances en `run_in_background=true` et ont plante 2 fois de suite (fichiers output non crees).
+
+**Impact**: Perte de temps, relance x2, frustration utilisateur.
+
+**Cause probable**: Les agents background avec des prompts longs ou beaucoup de lectures de fichiers peuvent planter silencieusement.
+
+**Solution appliquee**: Faire les reviews directement dans le contexte principal au lieu de les deleguer a des agents background. Plus fiable, plus rapide.
+
+**Regle pour le futur**:
+- Pour la VALIDATION (architect, code-reviewer, security): faire directement dans le contexte principal (lire les fichiers + rendre le verdict)
+- Pour l'IMPLEMENTATION (python-pro, react-specialist): les agents background restent utiles car ils produisent du code de maniere autonome
+- Ne pas relancer un agent background qui a plante — basculer sur execution directe
