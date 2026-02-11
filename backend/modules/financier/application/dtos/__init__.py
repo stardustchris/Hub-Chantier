@@ -101,6 +101,10 @@ from .pennylane_dtos import (
     TriggerSyncDTO,
     PennylaneDashboardDTO,
 )
+from .configuration_entreprise_dtos import (
+    ConfigurationEntrepriseDTO,
+    ConfigurationEntrepriseUpdateDTO,
+)
 
 __all__ = [
     "FournisseurCreateDTO",
@@ -174,4 +178,7 @@ __all__ = [
     "ResolveReconciliationDTO",
     "TriggerSyncDTO",
     "PennylaneDashboardDTO",
+    # Configuration entreprise
+    "ConfigurationEntrepriseDTO",
+    "ConfigurationEntrepriseUpdateDTO",
 ]

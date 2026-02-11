@@ -12,6 +12,7 @@ from .cout_main_oeuvre_repository import CoutMainOeuvreRepository
 from .cout_materiel_repository import CoutMaterielRepository
 from .alerte_repository import AlerteRepository
 from .affectation_repository import AffectationBudgetTacheRepository
+from .configuration_entreprise_repository import ConfigurationEntrepriseRepository
 
 __all__ = [
     "FournisseurRepository",
@@ -28,4 +29,5 @@ __all__ = [
     "CoutMaterielRepository",
     "AlerteRepository",
     "AffectationBudgetTacheRepository",
+    "ConfigurationEntrepriseRepository",
 ]

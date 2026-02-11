@@ -369,13 +369,23 @@ export default function Layout({ children }: LayoutProps) {
                           </p>
                           <p className="text-xs text-gray-500">{user?.email}</p>
                         </div>
+                        {user?.role === 'admin' && (
+                          <Link
+                            to="/parametres-entreprise"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <Settings className="w-4 h-4" />
+                            Parametres entreprise
+                          </Link>
+                        )}
                         <Link
                           to="/security"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4" />
-                          Sécurité
+                          Securite
                         </Link>
                         <button
                           onClick={() => {

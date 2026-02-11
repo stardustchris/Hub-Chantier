@@ -29,6 +29,7 @@ from ...domain.repositories import (
     CoutMaterielRepository,
     AlerteRepository,
     AffectationBudgetTacheRepository,
+    ConfigurationEntrepriseRepository,
 )
 from ...application.use_cases import (
     # Fournisseur
@@ -111,6 +112,9 @@ from ...application.use_cases import (
     GetPnLChantierUseCase,
     # Bilan de cloture (GAP #10)
     GetBilanClotureUseCase,
+    # Configuration entreprise
+    GetConfigurationEntrepriseUseCase,
+    UpdateConfigurationEntrepriseUseCase,
 )
 from ..persistence import (
     SQLAlchemyFournisseurRepository,
@@ -126,6 +130,7 @@ from ..persistence import (
     SQLAlchemyCoutMaterielRepository,
     SQLAlchemyAlerteRepository,
     SQLAlchemyAffectationBudgetTacheRepository,
+    SQLAlchemyConfigurationEntrepriseRepository,
 )
 
 
@@ -1087,3 +1092,38 @@ def get_bilan_cloture_use_case(
         cout_mo_repository=cout_mo_repository,
         cout_materiel_repository=cout_materiel_repository,
     )
+
+
+# =============================================================================
+# Repositories - Configuration Entreprise
+# =============================================================================
+
+
+def get_configuration_entreprise_repository(
+    db: Session = Depends(get_db),
+) -> ConfigurationEntrepriseRepository:
+    """Retourne le repository ConfigurationEntreprise."""
+    return SQLAlchemyConfigurationEntrepriseRepository(db)
+
+
+# =============================================================================
+# Use Cases - Configuration Entreprise
+# =============================================================================
+
+
+def get_get_configuration_entreprise_use_case(
+    config_repository: ConfigurationEntrepriseRepository = Depends(
+        get_configuration_entreprise_repository
+    ),
+) -> GetConfigurationEntrepriseUseCase:
+    """Retourne le use case GetConfigurationEntreprise."""
+    return GetConfigurationEntrepriseUseCase(config_repository)
+
+
+def get_update_configuration_entreprise_use_case(
+    config_repository: ConfigurationEntrepriseRepository = Depends(
+        get_configuration_entreprise_repository
+    ),
+) -> UpdateConfigurationEntrepriseUseCase:
+    """Retourne le use case UpdateConfigurationEntreprise."""
+    return UpdateConfigurationEntrepriseUseCase(config_repository)
