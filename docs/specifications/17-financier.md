@@ -42,6 +42,8 @@ Cette double approche permet aux conducteurs de piloter chaque chantier finement
 | FIN-03 | Affectation budgets aux taches | Liaison optionnelle taches <-> lignes budgetaires pour suivi avancement financier | 🔮 Phase 4 |
 | FIN-13 | Export comptable | Generation CSV/Excel avec codes analytiques chantier, compatible logiciels comptables | 🔮 Phase 4 |
 | FIN-23 | Integration ERP | Synchronisation bidirectionnelle avec logiciels comptables (Sage, Cegid, QuadraExpert) | 🔮 Phase 4 |
+| **Parametres Entreprise (COMPLET)** ||||
+| FIN-CFG | Page parametres entreprise | Configuration admin des coefficients financiers (frais generaux, charges patronales, heures sup) | ✅ Backend + Frontend |
 
 ### 17.3 Structure d'un budget
 
@@ -301,6 +303,45 @@ Etapes si validation requise :
 | Valider situation | ✅ | ❌ | ❌ | ❌ |
 | Exporter comptabilite | ✅ | ❌ | ❌ | ❌ |
 | Gerer fournisseurs | ✅ | ✅ (lecture) | ❌ | ❌ |
+| Parametres entreprise | ✅ | ❌ | ❌ | ❌ |
+
+### 17.8bis Parametres entreprise (FIN-CFG)
+
+**Objectif** : Permettre a l'administrateur de configurer les coefficients financiers de l'entreprise sans modification de code. Ces valeurs impactent tous les calculs de marge, frais generaux et couts de main-d'oeuvre.
+
+**Route frontend** : `/parametres-entreprise` (acces via dropdown utilisateur, visible admin uniquement)
+
+**Route API** : `GET/PUT /api/financier/configuration/{annee}` (require_admin)
+
+**Cible utilisateurs** : Admin uniquement (lecture + ecriture)
+
+#### Parametres configurables
+
+| Parametre | Type | Defaut | Contraintes | Description |
+|-----------|------|--------|-------------|-------------|
+| Couts fixes annuels | NUMERIC(12,2) | 600 000 EUR | >= 0 | Frais generaux hors salaires (loyer, assurances, vehicules, comptabilite) |
+| Coefficient frais generaux | NUMERIC(5,2) | 19% | 0-100 | Pourcentage applique sur le debourse sec (achats + MO + materiel) |
+| Coefficient charges patronales | NUMERIC(5,2) | 1.45 | >= 1 | Multiplicateur brut → cout employeur (URSSAF, PROBTP, prevoyance, CP caisse BTP) |
+| Coefficient heures sup 1er palier | NUMERIC(5,2) | 1.25 | >= 1 | Majoration 36e-43e heure (Code du travail art. L3121-36 : +25%) |
+| Coefficient heures sup 2e palier | NUMERIC(5,2) | 1.50 | >= 1 | Majoration au-dela de 43h/semaine (Code du travail : +50%) |
+| Notes | TEXT | null | max 1000 car. | Notes internes sur la configuration |
+
+#### Architecture
+
+- **Entite domaine** : `ConfigurationEntreprise` (module financier)
+- **Table SQL** : `configuration_entreprise` (UNIQUE par annee)
+- **Clean Architecture** : Entity → Repository interface → Use Cases (Get/Update) → Routes API → Page React
+- **Validation** : Contraintes CHECK en base + validation __post_init__ dans l'entite domaine
+- **Audit** : Champs `updated_at` et `updated_by` pour tracabilite des modifications
+
+#### Permissions
+
+| Role | Lecture | Modification |
+|------|---------|-------------|
+| Admin | ✅ | ✅ |
+| Conducteur | ❌ | ❌ |
+| Chef chantier | ❌ | ❌ |
+| Compagnon | ❌ | ❌ |
 
 ### 17.9 Regles metier
 
@@ -315,6 +356,7 @@ Etapes si validation requise :
 - L'export comptable genere un fichier CSV avec codes analytiques chantier pour lettrage comptable
 - Tout document financier (situation, facture) est automatiquement reference dans la GED du chantier
 - Journal d'audit : chaque modification budgetaire enregistre auteur + timestamp + motif
+- Les coefficients financiers (frais generaux, charges patronales, heures sup) sont configurables par l'admin via la page Parametres entreprise (FIN-CFG). Une seule configuration par annee.
 - Notifications push aux responsables lors de depassement ou validation requise
 
 ### 17.10 Integrations avec modules existants

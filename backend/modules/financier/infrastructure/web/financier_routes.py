@@ -71,6 +71,9 @@ from ...application.use_cases.bilan_cloture_use_cases import (
     BudgetNonTrouveError as BilanBudgetNonTrouveError,
     ChantierNonTrouveError as BilanChantierNonTrouveError,
 )
+from ...application.use_cases.configuration_entreprise_use_cases import (
+    ConfigurationNotFoundError,
+)
 from ...application.dtos import (
     FournisseurCreateDTO,
     FournisseurUpdateDTO,
@@ -87,6 +90,7 @@ from ...application.dtos import (
     LigneSituationCreateDTO,
     FactureCreateDTO,
     CreateAffectationDTO,
+    ConfigurationEntrepriseUpdateDTO,
 )
 from .dependencies import (
     # Fournisseur
@@ -173,6 +177,9 @@ from .dependencies import (
     get_bilan_cloture_use_case,
     # Journal
     get_journal_financier_repository,
+    # Configuration entreprise
+    get_get_configuration_entreprise_use_case,
+    get_update_configuration_entreprise_use_case,
 )
 
 
@@ -2443,4 +2450,93 @@ async def get_bilan_cloture(
         raise HTTPException(
             status_code=500,
             detail="Erreur serveur interne",
+        )
+
+
+# =============================================================================
+# Routes Configuration Entreprise (Admin Only)
+# =============================================================================
+
+
+class ConfigurationEntrepriseUpdateRequest(BaseModel):
+    """Requete de mise a jour de la configuration entreprise."""
+
+    couts_fixes_annuels: Optional[float] = Field(None, ge=0, description="Couts fixes annuels en EUR")
+    coeff_frais_generaux: Optional[float] = Field(None, ge=0, le=100, description="Coefficient frais generaux (%)")
+    coeff_charges_patronales: Optional[float] = Field(None, ge=1, description="Coefficient charges patronales (ex: 1.45)")
+    coeff_heures_sup: Optional[float] = Field(None, ge=1, description="Coefficient heures sup (ex: 1.25)")
+    coeff_heures_sup_2: Optional[float] = Field(None, ge=1, description="Coefficient heures sup 2e palier (ex: 1.50)")
+    notes: Optional[str] = Field(None, max_length=1000)
+
+
+@router.get("/configuration/{annee}")
+async def get_configuration_entreprise(
+    annee: int,
+    _role: str = Depends(require_admin),
+    use_case=Depends(get_get_configuration_entreprise_use_case),
+):
+    """Lecture de la configuration entreprise pour une annee.
+
+    Acces reserve aux administrateurs.
+    """
+    try:
+        result = use_case.execute(annee)
+        return {
+            "id": result.id,
+            "couts_fixes_annuels": str(result.couts_fixes_annuels),
+            "annee": result.annee,
+            "coeff_frais_generaux": str(result.coeff_frais_generaux),
+            "coeff_charges_patronales": str(result.coeff_charges_patronales),
+            "coeff_heures_sup": str(result.coeff_heures_sup),
+            "coeff_heures_sup_2": str(result.coeff_heures_sup_2),
+            "notes": result.notes,
+            "updated_at": result.updated_at.isoformat() if result.updated_at else None,
+            "updated_by": result.updated_by,
+        }
+    except ConfigurationNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Aucune configuration pour l'annee {annee}",
+        )
+
+
+@router.put("/configuration/{annee}")
+async def update_configuration_entreprise(
+    annee: int,
+    request: ConfigurationEntrepriseUpdateRequest,
+    _role: str = Depends(require_admin),
+    user_id: int = Depends(get_current_user_id),
+    use_case=Depends(get_update_configuration_entreprise_use_case),
+):
+    """Mise a jour de la configuration entreprise pour une annee.
+
+    Acces reserve aux administrateurs.
+    Si aucune configuration n'existe pour l'annee, en cree une.
+    """
+    try:
+        dto = ConfigurationEntrepriseUpdateDTO(
+            couts_fixes_annuels=Decimal(str(request.couts_fixes_annuels)) if request.couts_fixes_annuels is not None else None,
+            coeff_frais_generaux=Decimal(str(request.coeff_frais_generaux)) if request.coeff_frais_generaux is not None else None,
+            coeff_charges_patronales=Decimal(str(request.coeff_charges_patronales)) if request.coeff_charges_patronales is not None else None,
+            coeff_heures_sup=Decimal(str(request.coeff_heures_sup)) if request.coeff_heures_sup is not None else None,
+            coeff_heures_sup_2=Decimal(str(request.coeff_heures_sup_2)) if request.coeff_heures_sup_2 is not None else None,
+            notes=request.notes,
+        )
+        result = use_case.execute(annee, dto, user_id)
+        return {
+            "id": result.id,
+            "couts_fixes_annuels": str(result.couts_fixes_annuels),
+            "annee": result.annee,
+            "coeff_frais_generaux": str(result.coeff_frais_generaux),
+            "coeff_charges_patronales": str(result.coeff_charges_patronales),
+            "coeff_heures_sup": str(result.coeff_heures_sup),
+            "coeff_heures_sup_2": str(result.coeff_heures_sup_2),
+            "notes": result.notes,
+            "updated_at": result.updated_at.isoformat() if result.updated_at else None,
+            "updated_by": result.updated_by,
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=str(e),
         )

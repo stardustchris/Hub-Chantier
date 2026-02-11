@@ -32,3 +32,51 @@
 - [ ] FE-2: "N/D" ambigu → distinguer null vs 0%
 - [ ] FE-3: Retenue garantie validation frontend
 - [ ] FE-4: Labels Engage/Realise/Debourse coherents
+
+---
+
+# Page Parametres Entreprise (Admin Only)
+
+## Contexte
+- L'entite `ConfigurationEntreprise` existe (domain) mais ne contient que `couts_fixes_annuels` et `annee`
+- La table SQL `configuration_entreprise` existe avec les memes champs
+- Il n'y a PAS de modele SQLAlchemy, pas de repository, pas de use cases, pas de routes API, pas de page frontend
+- Les coefficients financiers sont hardcodes dans `calcul_financier.py`
+- Le guard `require_admin` existe deja (role == "admin")
+- Le user veut que seul l'admin puisse modifier
+
+## Plan d'implementation
+
+### Backend - Domain Layer
+- [x] 1. Enrichir `ConfigurationEntreprise` : 4 coefficients avec valeurs par defaut
+- [x] 2. Creer interface `ConfigurationEntrepriseRepository`
+
+### Backend - Application Layer
+- [x] 3. Creer DTOs (`ConfigurationEntrepriseDTO`, `ConfigurationEntrepriseUpdateDTO`)
+- [x] 4. Creer use cases (`GetConfigurationUseCase`, `UpdateConfigurationUseCase`)
+
+### Backend - Infrastructure Layer
+- [x] 5. Creer `ConfigurationEntrepriseModel` dans `models.py`
+- [x] 6. Creer `SQLAlchemyConfigurationEntrepriseRepository`
+- [x] 7. Migration SQL : ALTER TABLE + CHECK constraints
+- [x] 8. Routes API GET/PUT `require_admin`
+- [x] 9. Dependencies injection
+
+### Backend - Shared
+- [ ] 10. Etape suivante : faire lire la config DB dans les use cases qui calculent (dashboard, P&L, etc.)
+
+### Frontend
+- [x] 11. `ParametresEntreprisePage.tsx`
+- [x] 12. Route `/parametres-entreprise` dans `App.tsx`
+- [x] 13. Lien "Parametres entreprise" dans `Layout.tsx` (admin only)
+
+### Validation
+- [x] 14. Syntax check Python + TypeScript OK
+- [x] 15. Commit `52263d4` + push
+
+## Decisions architecturales
+
+1. **Pas de nouveau module** : ConfigurationEntreprise reste dans le module `financier` (c'est de la config financiere)
+2. **Pas de CRUD complet** : Seulement GET (lecture) + PUT (update). La config est creee par la migration SQL, pas par l'utilisateur
+3. **Coefficients en parametres** : Les fonctions de `calcul_financier.py` gardent les constantes comme valeurs par defaut, mais acceptent des parametres pour override
+4. **Acces admin uniquement** : `require_admin` (role == "admin") sur PUT. GET accessible admin + conducteur
