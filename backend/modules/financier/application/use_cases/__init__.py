@@ -111,6 +111,11 @@ from .bilan_cloture_use_cases import (
     BudgetNonTrouveError,
     ChantierNonTrouveError,
 )
+from .configuration_entreprise_use_cases import (
+    GetConfigurationEntrepriseUseCase,
+    UpdateConfigurationEntrepriseUseCase,
+    ConfigurationNotFoundError,
+)
 
 __all__ = [
     # Fournisseur
@@ -217,4 +222,8 @@ __all__ = [
     "BilanClotureError",
     "BudgetNonTrouveError",
     "ChantierNonTrouveError",
+    # Configuration entreprise
+    "GetConfigurationEntrepriseUseCase",
+    "UpdateConfigurationEntrepriseUseCase",
+    "ConfigurationNotFoundError",
 ]

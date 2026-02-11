@@ -1339,6 +1339,68 @@ class PennylaneSyncLogModel(FinancierBase):
 # CONN-15: Pennylane Pending Reconciliation
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Configuration Entreprise - Parametres financiers
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ConfigurationEntrepriseModel(FinancierBase):
+    """Modele SQLAlchemy pour la configuration entreprise.
+
+    Parametres financiers configurables par l'admin :
+    couts fixes, coefficients frais generaux, charges patronales, heures sup.
+    Une seule ligne par annee (UNIQUE).
+    """
+
+    __tablename__ = "configuration_entreprise"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    couts_fixes_annuels = Column(Numeric(12, 2), nullable=False, default=600000.00)
+    annee = Column(Integer, nullable=False, default=2026)
+    coeff_frais_generaux = Column(Numeric(5, 2), nullable=False, default=19.00)
+    coeff_charges_patronales = Column(Numeric(5, 2), nullable=False, default=1.45)
+    coeff_heures_sup = Column(Numeric(5, 2), nullable=False, default=1.25)
+    coeff_heures_sup_2 = Column(Numeric(5, 2), nullable=False, default=1.50)
+    notes = Column(Text, nullable=True)
+
+    # Audit
+    updated_at = Column(DateTime, nullable=True)
+    updated_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("annee", name="uq_configuration_entreprise_annee"),
+        CheckConstraint(
+            "couts_fixes_annuels >= 0",
+            name="check_config_couts_fixes_positifs",
+        ),
+        CheckConstraint(
+            "coeff_frais_generaux >= 0 AND coeff_frais_generaux <= 100",
+            name="check_config_coeff_fg_range",
+        ),
+        CheckConstraint(
+            "coeff_charges_patronales >= 1",
+            name="check_config_coeff_cp_min",
+        ),
+        CheckConstraint(
+            "coeff_heures_sup >= 1",
+            name="check_config_coeff_hs_min",
+        ),
+        CheckConstraint(
+            "coeff_heures_sup_2 >= 1",
+            name="check_config_coeff_hs2_min",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ConfigurationEntreprise(id={self.id}, annee={self.annee}, "
+            f"coeff_fg={self.coeff_frais_generaux}%)>"
+        )
+
+
 class PennylanePendingReconciliationModel(FinancierBase):
     """Modele SQLAlchemy pour la file d'attente de reconciliation Pennylane.
 

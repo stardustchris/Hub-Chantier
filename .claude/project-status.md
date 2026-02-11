@@ -19,16 +19,16 @@
 | logistique | 11 | LOG-01 a LOG-18 | 18/18 | 0 | **COMPLET** |
 | interventions | 12 | INT-01 a INT-17 | 14/17 | 3 | **COMPLET** (3 infra) |
 | taches | 13 | TAC-01 a TAC-20 | 20/20 | 0 | **COMPLET** |
-| financier | 17 | FIN-01 a FIN-23 | 20/23 | 0 | **PHASE 1+2+3 COMPLET, Phase 4 futur** |
+| financier | 17 | FIN-01 a FIN-23 + FIN-CFG | 21/24 | 0 | **PHASE 1+2+3 + CFG COMPLET, Phase 4 futur** |
 | devis | 20 | DEV-01 a DEV-25 + DEV-TVA | 9/26 | 0 | **PHASE 2 + TVA COMPLET** (Phase 1 merged PR#210) |
 
 ## Statistiques globales
 
 - **Modules complets** : 14/14 (dashboard cards + planning unifie + financier Phase 1+2+3 + devis Phase 2)
-- **Module financier** : 20/23 features (Phase 1+2+3: 20/20 ✅, Phase 4: 0/3 futur)
+- **Module financier** : 21/24 features (Phase 1+2+3: 20/20 ✅, FIN-CFG: 1/1 ✅, Phase 4: 0/3 futur)
 - **Module devis** : 9/26 features (Phase 2: 8/8 ✅, DEV-TVA ✅, Phase 1: PR#210, Phase 3+4: futur)
-- **Fonctionnalites totales** : 302 (+2 features TVA: DEV-TVA, CHT-TVA)
-- **Fonctionnalites done** : 263 (87%)
+- **Fonctionnalites totales** : 303 (+2 features TVA: DEV-TVA, CHT-TVA + FIN-CFG)
+- **Fonctionnalites done** : 264 (87%)
 - **Fonctionnalites specs ready** : 3 (FIN Phase 4)
 - **Fonctionnalites infra** : 16 (en attente infrastructure)
 - **Fonctionnalites future** : 20 (FIN-03, FIN-13, FIN-23 + DEV Phase 3+4)
@@ -38,7 +38,7 @@
 ### Code source
 
 - **Backend** : 16 modules, 35+ entites, 50+ value objects, 150+ use cases, 40+ repositories
-- **Frontend** : 11 pages, 28 hooks, 23 services, 80+ composants, 3 contextes
+- **Frontend** : 12 pages, 28 hooks, 23 services, 80+ composants, 3 contextes
 - **Architecture** : Clean Architecture 4 layers (Domain > Application > Adapters > Infrastructure)
 
 ### Tests
@@ -56,10 +56,14 @@
 - **SessionLocal() dans routes** : 0 (toutes migrees vers Depends(get_db))
 - **Module auth** : Status WARN → Production-ready avec droit a l'oubli RGPD
 
-## Features recentes (Sessions 26-30 janvier)
+## Features recentes
 
 | Feature | Description | Session |
 |---------|-------------|---------|
+| **FIN-CFG: Page Parametres Entreprise** | Configuration admin coefficients financiers (FG 19%, CP 1.45, HS1 1.25, HS2 1.50, couts fixes 600k). Clean Architecture complet + page frontend. | 11 fev |
+| **DEV-TVA: Ventilation TVA multi-taux** | Ventilation par taux (5.5/10/20%), selecteur par ligne, pre-remplissage intelligent, mention legale | 5 fev |
+| **Pennylane Inbound** | Import factures payees depuis Pennylane, polling 15 min, 8 features CONN-10 a CONN-17 | 3 fev |
+| **Module Devis Phase 2** | 8 features (DEV-08, 11, 14, 16, 22, 23, 24, 25), 542 tests | 1 fev |
 | **Routes API Auth (Phase 1)** | 5 routes HTTP exposees : /reset-password/request, /reset-password, /change-password, /invite, /accept-invitation + 5 modeles Pydantic + rate limiting (3-5 req/min) | 30 jan PM |
 | **Authentification complete** | Reset password, invitation utilisateur, change password (AUTH-01 a AUTH-10) | 30 jan AM |
 | **Codes chantiers etendus** | Support format AAAA-NN-NOM (ex: 2026-01-MONTMELIAN) en plus de A001 | 30 jan |
@@ -122,6 +126,12 @@
 | FIN-20 | Vue consolidee multi-chantiers (/finances page) | ✅ Done |
 | FIN-21 | Suggestions intelligentes (Gemini Flash + algorithmic fallback) | ✅ Done |
 | FIN-22 | Indicateurs predictifs (burn rate, date epuisement, projection) | ✅ Done |
+
+#### Parametres Entreprise (1/1 ✅ COMPLET)
+
+| ID | Description | Statut |
+|----|-------------|--------|
+| FIN-CFG | Page parametres entreprise (coefficients FG, CP, HS1, HS2, couts fixes) admin-only | ✅ Done |
 
 #### Phase 4 - Integration & Exports (0/3 🔮 FUTUR)
 
@@ -233,6 +243,14 @@ Fichiers icones dans `frontend/public/` :
 `index.html` mis a jour avec les balises link et meta theme-color (#3B82F6).
 
 ## Derniere mise a jour
+
+Session 2026-02-11 - FIN-CFG: Page Parametres Entreprise (Admin Only)
+- **Objectif**: Rendre les coefficients financiers configurables par l'admin
+- **Backend**: Entite enrichie, repository, use cases, model SQLAlchemy, migration SQL, routes API GET/PUT admin-only
+- **Frontend**: ParametresEntreprisePage.tsx, route /parametres-entreprise, lien menu admin-only
+- **Parametres**: Couts fixes (600k), FG (19%), CP (1.45), HS1 (1.25), HS2 (1.50)
+- **Fichiers**: 17 modifies/crees, commit 52263d4
+- Verdict : ✅ **PAGE PARAMETRES ENTREPRISE COMPLET**
 
 Session 2026-02-05 - DEV-TVA: Ventilation multi-taux + pre-remplissage intelligent
 - **Objectif**: Corriger le calcul TVA mono-taux + ajouter pre-remplissage selon contexte chantier
