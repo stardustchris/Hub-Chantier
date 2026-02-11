@@ -4,7 +4,7 @@ FIN-01 a FIN-15: API REST complete pour la gestion financiere des chantiers.
 """
 
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -2478,6 +2478,18 @@ async def get_configuration_entreprise(
     EDGE-003: retourne les valeurs par defaut si aucune config en BDD.
     """
     result, is_default = use_case.execute(annee)
+
+    # Alerte revalidation: warning si config non mise a jour depuis 180+ jours
+    stale_warning = None
+    if not is_default and result.updated_at:
+        age = datetime.utcnow() - result.updated_at
+        if age > timedelta(days=180):
+            jours = age.days
+            stale_warning = (
+                f"Cette configuration n'a pas ete mise a jour depuis {jours} jours. "
+                "Pensez a revalider les parametres financiers."
+            )
+
     return {
         "id": result.id,
         "couts_fixes_annuels": str(result.couts_fixes_annuels),
@@ -2490,6 +2502,7 @@ async def get_configuration_entreprise(
         "updated_at": result.updated_at.isoformat() if result.updated_at else None,
         "updated_by": result.updated_by,
         "is_default": is_default,
+        "stale_warning": stale_warning,
     }
 
 
