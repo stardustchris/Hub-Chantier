@@ -16,6 +16,7 @@ from typing import Optional, List, TYPE_CHECKING
 
 from .lot_dtos import LotDevisDTO
 from ...domain.value_objects.retenue_garantie import RetenueGarantie, RetenueGarantieInvalideError
+from shared.domain.calcul_financier import COEFF_FRAIS_GENERAUX
 
 if TYPE_CHECKING:
     from ...domain.entities.devis import Devis
@@ -69,7 +70,7 @@ class DevisCreateDTO:
     taux_marge_sous_traitance: Optional[Decimal] = None
     taux_marge_materiel: Optional[Decimal] = None
     taux_marge_deplacement: Optional[Decimal] = None
-    coefficient_frais_generaux: Decimal = Decimal("19")  # Defaut = config entreprise
+    coefficient_frais_generaux: Decimal = COEFF_FRAIS_GENERAUX  # Defaut = config entreprise (SSOT)
     retenue_garantie_pct: Decimal = Decimal("0")
     notes: Optional[str] = None
     acompte_pct: Decimal = Decimal("30")

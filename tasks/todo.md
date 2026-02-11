@@ -1,82 +1,66 @@
-# Audit Financier - Corrections
+# Plan d'action ConfigurationEntreprise — Phases 0 à 4
 
-## P1 - Bloquantes (chiffres faux)
-
-- [ ] P1-1: Frais generaux jamais repartis → auto-calcul ca_total_annee + config couts_fixes
-- [ ] P1-2: CA incoherent Dashboard vs P&L → unifier source
-- [ ] P1-3: "marge_estimee" trompeuse en fallback → renommer
-- [ ] P1-4: Montants non arrondis (3 properties) → arrondir_montant()
-- [ ] P1-5: CHECK SQL retenue 10% illegal → migration IN (0, 5)
-- [ ] P1-6: float() dans calcul SQL MO → precision Decimal
-
-## P2 - Graves (risques metier)
-
-- [ ] P2-1: montant_avenants_ht modifiable directement → verrouiller DTO
-- [ ] P2-2: Fiabilite marge trompeuse → condition cout_materiel > 0
-- [ ] P2-3: version jamais incrementee → increment mutations
-- [ ] P2-4: SituationTravaux cumule non valide → validation
-- [ ] P2-5: P&L pas de filtre soft-delete factures → filtre defensif
-- [ ] P2-6: CHECK SQL TVA trop permissif → valeurs discretes
-- [ ] P2-7: CHECK SQL autoliquidation manquant → constraint
-- [ ] P2-8: Validation retenue garantie sur FactureClient
-- [ ] P2-9: quantite=0 avec debourses > 0 → guard clause
-- [ ] P2-10: Arrondis manquants reste_a_depenser + marge_brute_ht
-
-## Conformite
-
-- [ ] C-3: Palier 50% heures sup >43h → +50% au lieu de +25%
-
-## Frontend
-
-- [ ] FE-1: Labels marge estimee vs calculee (back P1-3)
-- [ ] FE-2: "N/D" ambigu → distinguer null vs 0%
-- [ ] FE-3: Retenue garantie validation frontend
-- [ ] FE-4: Labels Engage/Realise/Debourse coherents
+> Source : synthese confrontation inter-agents (audit session 2026-02-11)
 
 ---
 
-# Page Parametres Entreprise (Admin Only)
+## Phase 0 — Immediat (0.5j)
 
-## Contexte
-- L'entite `ConfigurationEntreprise` existe (domain) mais ne contient que `couts_fixes_annuels` et `annee`
-- La table SQL `configuration_entreprise` existe avec les memes champs
-- Il n'y a PAS de modele SQLAlchemy, pas de repository, pas de use cases, pas de routes API, pas de page frontend
-- Les coefficients financiers sont hardcodes dans `calcul_financier.py`
-- Le guard `require_admin` existe deja (role == "admin")
-- Le user veut que seul l'admin puisse modifier
+- [x] 0.1 Bandeau avertissement admin → OBSOLETE (config connectee aux calculs)
+- [x] 0.2 Corriger 11 findings audit (TYPE-001, VAL-001/002, EDGE-001/002/003, FLUX-001/002/003, MIG-001/002)
+- [ ] 0.3 Tests non-regression module ConfigurationEntreprise (unit + API)
 
-## Plan d'implementation
+## Phase 1 — ConfigurationService (1.5j)
 
-### Backend - Domain Layer
-- [x] 1. Enrichir `ConfigurationEntreprise` : 4 coefficients avec valeurs par defaut
-- [x] 2. Creer interface `ConfigurationEntrepriseRepository`
+- [x] 1.1 Creer ConfigurationEntrepriseRepository + SQLAlchemy impl
+- [x] 1.2 Brancher dashboard_use_cases sur config DB (coeff_frais_generaux)
+- [x] 1.3 Brancher pnl_use_cases sur config DB (coeff_frais_generaux)
+- [x] 1.4 Brancher bilan_cloture_use_cases sur config DB (coeff_frais_generaux)
+- [x] 1.5 Brancher consolidation_use_cases sur config DB (coeff_frais_generaux)
+- [x] 1.6 Brancher sqlalchemy_cout_main_oeuvre_repository sur config DB (charges, HS1, HS2)
+- [x] 1.7 Fix default devis models.py 12% → 19% + migration
+- [x] 1.8 Supprimer constantes hardcodees → conservees comme fallbacks (correct)
 
-### Backend - Application Layer
-- [x] 3. Creer DTOs (`ConfigurationEntrepriseDTO`, `ConfigurationEntrepriseUpdateDTO`)
-- [x] 4. Creer use cases (`GetConfigurationUseCase`, `UpdateConfigurationUseCase`)
+## Phase 2 — Integration devis + tests (1j)
 
-### Backend - Infrastructure Layer
-- [x] 5. Creer `ConfigurationEntrepriseModel` dans `models.py`
-- [x] 6. Creer `SQLAlchemyConfigurationEntrepriseRepository`
-- [x] 7. Migration SQL : ALTER TABLE + CHECK constraints
-- [x] 8. Routes API GET/PUT `require_admin`
-- [x] 9. Dependencies injection
+- [x] 2.1 DevisForm frontend charge coeff depuis API config
+- [ ] 2.2 Tests integration : config DB → dashboard → verifier calcul FG
+- [ ] 2.3 Tests integration : config DB → MO → verifier calcul charges
+- [ ] 2.4 Tests integration : config DB → devis → verifier coeff par defaut
 
-### Backend - Shared
-- [ ] 10. Etape suivante : faire lire la config DB dans les use cases qui calculent (dashboard, P&L, etc.)
+## Phase 3 — Cache + nettoyage + alertes (1j)
 
-### Frontend
-- [x] 11. `ParametresEntreprisePage.tsx`
-- [x] 12. Route `/parametres-entreprise` dans `App.tsx`
-- [x] 13. Lien "Parametres entreprise" dans `Layout.tsx` (admin only)
+- [ ] 3.1 Cache config en memoire (eviter requete DB a chaque calcul)
+- [ ] 3.2 Alerte revalidation 180j : warning si config non mise a jour depuis 6 mois
+- [ ] 3.3 Nettoyage emplacements residuels → audit montre 95% clean, verifier restant
 
-### Validation
-- [x] 14. Syntax check Python + TypeScript OK
-- [x] 15. Commit `52263d4` + push
+## Phase 4 — Fonctionnalites avancees (3j, mois 2)
 
-## Decisions architecturales
+- [ ] 4.1 Coefficient productivite (champ devis, impact calcul)
+- [ ] 4.2 Granularite charges par categorie (ouvrier/ETAM/cadre)
+- [ ] 4.3 Alertes budget (seuils configurables)
+- [ ] 4.4 Champ commentaire libre devis (en attendant coeff productivite)
 
-1. **Pas de nouveau module** : ConfigurationEntreprise reste dans le module `financier` (c'est de la config financiere)
-2. **Pas de CRUD complet** : Seulement GET (lecture) + PUT (update). La config est creee par la migration SQL, pas par l'utilisateur
-3. **Coefficients en parametres** : Les fonctions de `calcul_financier.py` gardent les constantes comme valeurs par defaut, mais acceptent des parametres pour override
-4. **Acces admin uniquement** : `require_admin` (role == "admin") sur PUT. GET accessible admin + conducteur
+---
+
+## Decisions
+
+- Charges patronales : Greg a decide 1.45 (Finance proposait 1.57, Greg assume le risque)
+- Coefficient productivite : Phase 4 (Conducteur voulait Phase 2, groupe a tranche Phase 4)
+- Estimation : 4j senior dev Phases 0-3, +3j Phase 4
+
+## Garde-fous post-deploiement
+
+- [ ] Recalcul 5 derniers devis pour mesurer ecart reel (Finance)
+- [ ] Alerte Greg si ecart > 5% (Finance)
+- [ ] Revalidation semestrielle coefficients par expert-comptable (Greg)
+
+---
+
+## Historique commits
+
+| Commit | Description |
+|--------|-------------|
+| `52263d4` | feat: page Parametres Entreprise (CRUD config) |
+| `5c942bd` | fix: connecter ConfigurationEntreprise aux calculs financiers |
+| `0ad8673` | fix: corriger VAL-001/002, EDGE-001/002/003 |

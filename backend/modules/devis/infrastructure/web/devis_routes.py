@@ -13,7 +13,7 @@ DEV-24: Relances automatiques
 DEV-25: Frais de chantier
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, Optional, List
 
@@ -29,6 +29,9 @@ from shared.infrastructure.web import (
     get_current_user_role,
     require_conducteur_or_admin,
 )
+from shared.domain.calcul_financier import COEFF_FRAIS_GENERAUX
+from modules.financier.infrastructure.web.dependencies import get_configuration_entreprise_repository
+from modules.financier.domain.repositories import ConfigurationEntrepriseRepository
 
 from ...domain.entities.devis import TransitionStatutDevisInvalideError
 from ...domain.value_objects import StatutDevis
@@ -265,7 +268,7 @@ class DevisCreateRequest(BaseModel):
     taux_marge_sous_traitance: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_materiel: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_deplacement: Optional[Decimal] = Field(None, ge=0, le=100)
-    coefficient_frais_generaux: Decimal = Field(Decimal("19"), ge=0, le=100, description="Ignore - source unique COEFF_FRAIS_GENERAUX")
+    coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100, description="Si absent, lu depuis config entreprise (BDD)")
     retenue_garantie_pct: Decimal = Field(Decimal("0"), ge=0, le=5, description="Retenue de garantie: 0 ou 5% (Loi 71-584)")
     notes: Optional[str] = Field(None, max_length=2000)
     acompte_pct: Decimal = Field(Decimal("30"), ge=0, le=100)
@@ -731,8 +734,17 @@ async def create_devis(
     _role: str = Depends(require_conducteur_or_admin),
     current_user_id: int = Depends(get_current_user_id),
     use_case: CreateDevisUseCase = Depends(get_create_devis_use_case),
+    config_repository: ConfigurationEntrepriseRepository = Depends(get_configuration_entreprise_repository),
 ):
     """Cree un nouveau devis (DEV-03)."""
+    # Resoudre coefficient_frais_generaux depuis config entreprise (SSOT)
+    coeff_fg = request.coefficient_frais_generaux
+    if coeff_fg is None:
+        coeff_fg = COEFF_FRAIS_GENERAUX  # fallback
+        config = config_repository.find_by_annee(datetime.now().year)
+        if config:
+            coeff_fg = config.coeff_frais_generaux
+
     dto = DevisCreateDTO(
         client_nom=request.client_nom,
         objet=request.objet,
@@ -748,7 +760,7 @@ async def create_devis(
         taux_marge_sous_traitance=request.taux_marge_sous_traitance,
         taux_marge_materiel=request.taux_marge_materiel,
         taux_marge_deplacement=request.taux_marge_deplacement,
-        coefficient_frais_generaux=request.coefficient_frais_generaux,
+        coefficient_frais_generaux=coeff_fg,
         retenue_garantie_pct=request.retenue_garantie_pct,
         notes=request.notes,
         acompte_pct=request.acompte_pct,
