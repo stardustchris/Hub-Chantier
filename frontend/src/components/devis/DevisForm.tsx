@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Loader2, AlertTriangle } from 'lucide-react'
 import type { DevisCreate, DevisUpdate, DevisDetail } from '../../types'
 import { TAUX_TVA_OPTIONS, RETENUE_GARANTIE_OPTIONS } from '../../types'
+import api from '../../services/api'
 
 interface DevisFormProps {
   devis?: DevisDetail | null
   onSubmit: (data: DevisCreate | DevisUpdate) => Promise<void>
   onCancel: () => void
 }
+
+const FALLBACK_COEFF_FG = 19
 
 export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps) {
   const [loading, setLoading] = useState(false)
@@ -19,12 +22,28 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
     client_telephone: devis?.client_telephone || '',
     date_validite: devis?.date_validite?.split('T')[0] || '',
     taux_tva_defaut: devis?.taux_tva_defaut ?? 20,
-    coefficient_frais_generaux: devis?.coefficient_frais_generaux ?? 12,
+    coefficient_frais_generaux: devis?.coefficient_frais_generaux ?? FALLBACK_COEFF_FG,
     taux_marge_global: devis?.taux_marge_global ?? 15,
     retenue_garantie_pct: devis?.retenue_garantie_pct ?? 0,
     notes: devis?.notes || '',
     conditions_generales: devis?.conditions_generales || '',
   })
+
+  // Nouveau devis : charger le coefficient FG depuis la config entreprise
+  useEffect(() => {
+    if (devis) return // En edition, on garde la valeur du devis
+    const year = new Date().getFullYear()
+    api.get<{ coeff_frais_generaux: string }>(`/api/financier/configuration/${year}`)
+      .then((res) => {
+        const coeff = Number(res.data.coeff_frais_generaux)
+        if (coeff > 0) {
+          setForm((prev) => ({ ...prev, coefficient_frais_generaux: coeff }))
+        }
+      })
+      .catch(() => {
+        // Config non trouvee : on garde le fallback
+      })
+  }, [devis])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
