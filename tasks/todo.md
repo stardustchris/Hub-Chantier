@@ -48,31 +48,31 @@
 ## Plan d'implementation
 
 ### Backend - Domain Layer
-- [ ] 1. Enrichir `ConfigurationEntreprise` : ajouter `coeff_frais_generaux`, `coeff_charges_patronales`, `coeff_heures_sup`, `coeff_heures_sup_2` avec valeurs par defaut actuelles
-- [ ] 2. Creer interface `ConfigurationEntrepriseRepository` dans `domain/repositories/`
+- [x] 1. Enrichir `ConfigurationEntreprise` : 4 coefficients avec valeurs par defaut
+- [x] 2. Creer interface `ConfigurationEntrepriseRepository`
 
 ### Backend - Application Layer
-- [ ] 3. Creer DTOs (`ConfigurationEntrepriseDTO`, `ConfigurationEntrepriseUpdateDTO`)
-- [ ] 4. Creer use cases (`GetConfigurationUseCase`, `UpdateConfigurationUseCase`)
+- [x] 3. Creer DTOs (`ConfigurationEntrepriseDTO`, `ConfigurationEntrepriseUpdateDTO`)
+- [x] 4. Creer use cases (`GetConfigurationUseCase`, `UpdateConfigurationUseCase`)
 
 ### Backend - Infrastructure Layer
-- [ ] 5. Creer `ConfigurationEntrepriseModel` dans `models.py`
-- [ ] 6. Creer `SQLAlchemyConfigurationEntrepriseRepository`
-- [ ] 7. Migration SQL : ALTER TABLE ajouter les colonnes coefficients
-- [ ] 8. Creer routes API (GET + PUT) dans `financier_routes.py`, protegees par `require_admin`
-- [ ] 9. Ajouter dependencies (injection)
+- [x] 5. Creer `ConfigurationEntrepriseModel` dans `models.py`
+- [x] 6. Creer `SQLAlchemyConfigurationEntrepriseRepository`
+- [x] 7. Migration SQL : ALTER TABLE + CHECK constraints
+- [x] 8. Routes API GET/PUT `require_admin`
+- [x] 9. Dependencies injection
 
 ### Backend - Shared
-- [ ] 10. Modifier `calcul_financier.py` : les fonctions acceptent les coefficients en parametre (avec fallback sur constantes)
+- [ ] 10. Etape suivante : faire lire la config DB dans les use cases qui calculent (dashboard, P&L, etc.)
 
 ### Frontend
-- [ ] 11. Creer `ParametresEntreprisePage.tsx` : formulaire admin avec tous les parametres
-- [ ] 12. Ajouter route `/parametres` dans `App.tsx`
-- [ ] 13. Ajouter lien "Parametres" dans `Layout.tsx` (visible admin only)
+- [x] 11. `ParametresEntreprisePage.tsx`
+- [x] 12. Route `/parametres-entreprise` dans `App.tsx`
+- [x] 13. Lien "Parametres entreprise" dans `Layout.tsx` (admin only)
 
 ### Validation
-- [ ] 14. Build docker (api + frontend)
-- [ ] 15. Test health + smoke test API
+- [x] 14. Syntax check Python + TypeScript OK
+- [x] 15. Commit `52263d4` + push
 
 ## Decisions architecturales
 

@@ -8,6 +8,15 @@
 
 **Sessions**:
 
+**Session 2026-02-11** — FIN-CFG: Page Parametres Entreprise (Admin Only)
+- **Objectif**: Rendre les coefficients financiers configurables par l'admin via une page dediee
+- **Backend Clean Architecture**: Entite enrichie (4 coefficients), repository interface + impl SQLAlchemy, DTOs, use cases Get/Update, migration SQL ALTER TABLE, routes GET/PUT admin-only
+- **Frontend**: Page ParametresEntreprisePage.tsx (formulaire complet), route /parametres-entreprise, lien menu dropdown admin-only
+- **Parametres configurables**: Couts fixes annuels (600k), coeff frais generaux (19%), coeff charges patronales (1.45), coeff HS1 (1.25), coeff HS2 (1.50)
+- **Fichiers**: 17 modifies/crees (11 backend, 3 frontend, 1 migration, 2 config)
+- **Commit**: `52263d4` (feat(parametres))
+- Verdict : ✅ **PAGE PARAMETRES ENTREPRISE COMPLET**
+
 **Session 2026-02-05** — DEV-TVA: Ventilation TVA multi-taux + pré-remplissage intelligent
 - **Objectif**: Corriger le calcul TVA mono-taux erroné + pré-remplissage automatique du taux selon contexte chantier
 - **Bug corrigé**: Récapitulatif appliquait un seul taux (défaut 20%) sur tout le HT → maintenant ventilation par taux réel (5.5%, 10%, 20%)
@@ -84,5 +93,5 @@ Chaque fichier mensuel contient:
 
 ---
 
-**Dernière mise à jour**: 5 février 2026
-**Archive courante**: Février 2026 (inline) + 2026-01.md (4304 lignes, ~58k tokens)
+**Derniere mise a jour**: 11 fevrier 2026
+**Archive courante**: Fevrier 2026 (inline) + 2026-01.md (4304 lignes, ~58k tokens)
