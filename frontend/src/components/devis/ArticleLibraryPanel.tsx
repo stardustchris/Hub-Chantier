@@ -20,6 +20,7 @@ import {
 import { devisService } from '../../services/devis'
 import type { Article, ArticleCreate } from '../../types'
 import ArticleModal from './ArticleModal'
+import { formatEUR } from '../../utils/format'
 
 /** Categories BTP correspondant au backend CategorieArticle. */
 const CATEGORIES_ARTICLES: { value: string; label: string }[] = [
@@ -40,9 +41,6 @@ const CATEGORIES_ARTICLES: { value: string; label: string }[] = [
   { value: 'materiel', label: 'Materiel' },
   { value: 'divers', label: 'Divers' },
 ]
-
-const formatEUR = (val: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val || 0)
 
 interface ArticleLibraryPanelProps {
   /** Appelee quand l'utilisateur selectionne un article a ajouter au devis. */

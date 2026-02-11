@@ -6,9 +6,7 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import type { ComparatifDevis, ComparatifLigne, TypeEcart } from '../../types'
 import { TYPE_ECART_CONFIG } from '../../types'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 const formatPct = (value: number) =>
   new Intl.NumberFormat('fr-FR', {

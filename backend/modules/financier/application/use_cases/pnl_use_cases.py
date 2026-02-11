@@ -180,9 +180,9 @@ class GetPnLChantierUseCase:
         # 5. Determiner si le chantier est ferme
         est_definitif = self._est_chantier_ferme(chantier_id)
 
-        # 6. Construire les lignes de detail
+        # 6. Construire les lignes de detail (inclut frais generaux)
         detail_couts = self._construire_detail_couts(
-            chantier_id, cout_achats, cout_mo, cout_materiel
+            chantier_id, cout_achats, cout_mo, cout_materiel, quote_part
         )
 
         return PnLChantierDTO(
@@ -192,6 +192,7 @@ class GetPnLChantierUseCase:
             cout_achats=str(cout_achats),
             cout_main_oeuvre=str(cout_mo),
             cout_materiel=str(cout_materiel),
+            quote_part_frais_generaux=str(arrondir_montant(quote_part)),
             marge_brute_ht=str(marge_brute_ht),
             marge_brute_pct=str(marge_brute_pct) if marge_brute_pct is not None else None,
             budget_initial_ht=str(budget_initial_ht),
@@ -312,6 +313,7 @@ class GetPnLChantierUseCase:
         cout_achats: Decimal,
         cout_mo: Decimal,
         cout_materiel: Decimal,
+        quote_part_frais_generaux: Decimal = Decimal("0"),
     ) -> List[LignePnLDTO]:
         """Construit les lignes de detail du P&L.
 
@@ -320,6 +322,7 @@ class GetPnLChantierUseCase:
             cout_achats: Cout total achats.
             cout_mo: Cout total main-d'oeuvre.
             cout_materiel: Cout total materiel.
+            quote_part_frais_generaux: Quote-part frais generaux repartie.
 
         Returns:
             Liste des lignes de detail.
@@ -350,6 +353,15 @@ class GetPnLChantierUseCase:
                     categorie="materiel",
                     libelle="Materiel (reservations)",
                     montant=str(cout_materiel),
+                )
+            )
+
+        if quote_part_frais_generaux > Decimal("0"):
+            lignes.append(
+                LignePnLDTO(
+                    categorie="frais_generaux",
+                    libelle="Frais generaux (quote-part)",
+                    montant=str(arrondir_montant(quote_part_frais_generaux)),
                 )
             )
 

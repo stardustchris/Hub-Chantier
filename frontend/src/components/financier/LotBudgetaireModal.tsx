@@ -9,6 +9,7 @@ import { useToast } from '../../contexts/ToastContext'
 import { logger } from '../../services/logger'
 import type { LotBudgetaire, LotBudgetaireCreate, UniteMesureFinancier } from '../../types'
 import { UNITE_MESURE_FINANCIER_LABELS } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface LotBudgetaireModalProps {
   budgetId: number
@@ -83,9 +84,6 @@ export default function LotBudgetaireModal({ budgetId, lot, onClose, onSuccess }
       setLoading(false)
     }
   }
-
-  const formatEUR = (value: number): string =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

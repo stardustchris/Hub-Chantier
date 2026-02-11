@@ -4,8 +4,7 @@
  * Utilise par EvolutionChart, CamembertLots, BarresComparativesLots.
  */
 
-export const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 export interface ChartTooltipEntry {
   name: string

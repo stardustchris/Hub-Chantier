@@ -43,7 +43,7 @@ class DevisConvertEvent:
         objet: Objet / description du devis.
         montant_total_ht: Montant total HT du devis.
         montant_total_ttc: Montant total TTC du devis.
-        retenue_garantie_pct: Pourcentage de retenue de garantie (0, 5 ou 10).
+        retenue_garantie_pct: Pourcentage de retenue de garantie (0 ou 5, Loi 71-584).
         lots: Liste des lots avec leurs montants debourses et vente.
         commercial_id: ID du commercial assigne (optionnel).
         conducteur_id: ID du conducteur de travaux assigne (optionnel).

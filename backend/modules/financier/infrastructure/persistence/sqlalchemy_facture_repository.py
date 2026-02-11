@@ -200,14 +200,26 @@ class SQLAlchemyFactureRepository(FactureRepository):
         )
 
     def next_numero_facture(self, year: int) -> int:
-        """Prochain numero facture atomique via count + 1.
+        """Prochain numero facture via MAX(numero) + 1 avec row lock.
 
-        NOTE: Pour une atomicite parfaite en production haute concurrence,
-        utiliser une table de compteurs avec SELECT FOR UPDATE.
-        En l'etat, count_factures_year + 1 est conserve mais la methode
-        est isolee pour faciliter la migration vers une sequence.
+        Format: FAC-YYYY-NNNN → extrait NNNN (3eme segment).
+        Utilise MAX plutot que COUNT (ignore les trous apres suppression).
+        FOR UPDATE serialise les appels concurrents dans la transaction.
         """
-        return self.count_factures_year(year) + 1
+        from sqlalchemy import text
+        result = self._session.execute(
+            text(
+                "SELECT COALESCE(MAX("
+                "  CAST(SPLIT_PART(numero, '-', 3) AS INTEGER)"
+                "), 0) + 1 AS next_num "
+                "FROM factures_clients "
+                "WHERE EXTRACT(YEAR FROM created_at) = :year "
+                "AND deleted_at IS NULL "
+                "FOR UPDATE"
+            ),
+            {"year": year},
+        ).scalar()
+        return result or 1
 
     def find_all_active(self, statuts: set[str] = None) -> List[FactureClient]:
         """Liste toutes les factures actives (non supprimees), tous chantiers confondus.

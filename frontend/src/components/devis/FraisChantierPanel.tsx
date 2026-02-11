@@ -33,9 +33,7 @@ import {
   MODE_REPARTITION_LABELS,
   TAUX_TVA_OPTIONS,
 } from '../../types'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 const TYPE_FRAIS_ICONS: Record<TypeFraisChantier, typeof Building2> = {
   compte_prorata: Landmark,

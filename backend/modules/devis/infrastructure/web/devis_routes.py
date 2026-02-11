@@ -266,7 +266,7 @@ class DevisCreateRequest(BaseModel):
     taux_marge_materiel: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_deplacement: Optional[Decimal] = Field(None, ge=0, le=100)
     coefficient_frais_generaux: Decimal = Field(Decimal("12"), ge=0, le=100)
-    retenue_garantie_pct: Decimal = Field(Decimal("0"), description="Retenue de garantie: 0, 5 ou 10%")
+    retenue_garantie_pct: Decimal = Field(Decimal("0"), ge=0, le=5, description="Retenue de garantie: 0 ou 5% (Loi 71-584)")
     notes: Optional[str] = Field(None, max_length=2000)
     acompte_pct: Decimal = Field(Decimal("30"), ge=0, le=100)
     echeance: str = Field("30_jours_fin_mois", max_length=50)
@@ -282,9 +282,9 @@ class DevisCreateRequest(BaseModel):
     @field_validator("retenue_garantie_pct")
     @classmethod
     def valider_retenue_garantie(cls, v: Decimal) -> Decimal:
-        """DEV-22: Valeurs autorisees pour la retenue de garantie."""
-        if v not in (Decimal("0"), Decimal("5"), Decimal("10")):
-            raise ValueError("La retenue de garantie doit etre 0%, 5% ou 10%")
+        """DEV-22 / Loi 71-584: retenue de garantie 0% ou 5% max."""
+        if v not in (Decimal("0"), Decimal("5")):
+            raise ValueError("La retenue de garantie doit etre 0% ou 5% (Loi 71-584 art. 1)")
         return v
 
 
@@ -304,7 +304,7 @@ class DevisUpdateRequest(BaseModel):
     taux_marge_materiel: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_deplacement: Optional[Decimal] = Field(None, ge=0, le=100)
     coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100)
-    retenue_garantie_pct: Optional[Decimal] = Field(None, description="Retenue de garantie: 0, 5 ou 10%")
+    retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=5, description="Retenue de garantie: 0 ou 5% (Loi 71-584)")
     notes: Optional[str] = Field(None, max_length=2000)
     acompte_pct: Optional[Decimal] = Field(None, ge=0, le=100)
     echeance: Optional[str] = Field(None, max_length=50)
@@ -320,9 +320,9 @@ class DevisUpdateRequest(BaseModel):
     @field_validator("retenue_garantie_pct")
     @classmethod
     def valider_retenue_garantie(cls, v: Optional[Decimal]) -> Optional[Decimal]:
-        """DEV-22: Valeurs autorisees pour la retenue de garantie."""
-        if v is not None and v not in (Decimal("0"), Decimal("5"), Decimal("10")):
-            raise ValueError("La retenue de garantie doit etre 0%, 5% ou 10%")
+        """DEV-22 / Loi 71-584: retenue de garantie 0% ou 5% max."""
+        if v is not None and v not in (Decimal("0"), Decimal("5")):
+            raise ValueError("La retenue de garantie doit etre 0% ou 5% (Loi 71-584 art. 1)")
         return v
 
 

@@ -14,13 +14,11 @@ import { useAuth } from '../../contexts/AuthContext'
 import { logger } from '../../services/logger'
 import type { FactureClient, FactureAcompteCreate } from '../../types'
 import { STATUT_FACTURE_CONFIG, TYPE_FACTURE_LABELS } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface FacturesListProps {
   chantierId: number
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return '-'

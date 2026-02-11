@@ -2,9 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, Loader2, BookOpen } from 'lucide-react'
 import { devisService } from '../../../services/devis'
 import type { Article } from '../../../types'
-
-const formatEUR = (val: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val || 0)
+import { formatEUR } from '../../../utils/format'
 
 interface ArticleAutocompleteProps {
   value: string

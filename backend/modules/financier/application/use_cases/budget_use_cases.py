@@ -4,6 +4,7 @@ FIN-01: Budget prévisionnel - Enveloppe budgétaire par chantier.
 """
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
 from ..ports.event_bus import EventBus
@@ -155,6 +156,8 @@ class UpdateBudgetUseCase:
 
         # Appliquer les modifications
         if dto.montant_initial_ht is not None:
+            if dto.montant_initial_ht < Decimal("0"):
+                raise ValueError("Le montant initial HT ne peut pas etre negatif")
             budget.montant_initial_ht = dto.montant_initial_ht
             modifications.append("montant_initial_ht")
         if dto.retenue_garantie_pct is not None:

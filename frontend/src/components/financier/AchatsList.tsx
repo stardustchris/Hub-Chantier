@@ -17,14 +17,12 @@ import AchatModal from './AchatModal'
 import AchatWorkflowActions from './AchatWorkflowActions'
 import type { Achat, Fournisseur, LotBudgetaire, StatutAchat } from '../../types'
 import { STATUT_ACHAT_CONFIG, TYPE_ACHAT_LABELS } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface AchatsListProps {
   chantierId: number
   budgetId?: number
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr)

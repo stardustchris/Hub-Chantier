@@ -221,6 +221,8 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           }`}>
             {kpi.marge_estimee === null || kpi.marge_estimee === undefined ? (
               <span className="text-gray-400">{formatPct(null)}</span>
+            ) : Number(kpi.marge_estimee) < 0 ? (
+              <span className="text-red-700">{formatPct(Number(kpi.marge_estimee))} PERTE</span>
             ) : (
               formatPct(Number(kpi.marge_estimee))
             )}
@@ -272,8 +274,11 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
           <h3 className="font-semibold text-gray-900 mb-4">Suivi par lot</h3>
           <div className="space-y-3">
             {dashboard.repartition_par_lot.map((lot) => {
-              const pctEngage = lot.total_prevu_ht > 0 ? (lot.engage / lot.total_prevu_ht) * 100 : 0
-              const pctRealise = lot.total_prevu_ht > 0 ? (lot.realise / lot.total_prevu_ht) * 100 : 0
+              const prevuHT = Number(lot.total_prevu_ht)
+              const engageHT = Number(lot.engage)
+              const realiseHT = Number(lot.realise)
+              const pctEngage = prevuHT > 0 ? (engageHT / prevuHT) * 100 : 0
+              const pctRealise = prevuHT > 0 ? (realiseHT / prevuHT) * 100 : 0
               return (
                 <div key={lot.lot_id} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
                   <div className="flex items-center justify-between mb-1">

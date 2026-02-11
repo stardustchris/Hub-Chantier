@@ -29,9 +29,7 @@ import {
   STATUT_DEVIS_CONFIG,
 } from '../../types'
 import ComparatifView from './ComparatifView'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 interface VersionsPanelProps {
   devisId: number

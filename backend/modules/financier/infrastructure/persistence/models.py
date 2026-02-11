@@ -482,7 +482,7 @@ class AchatModel(FinancierBase):
     fournisseur_id = Column(
         Integer,
         ForeignKey("fournisseurs.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,  # Nullable: le fournisseur peut ne pas etre connu au stade demande
         index=True,
     )
     lot_budgetaire_id = Column(
@@ -501,7 +501,7 @@ class AchatModel(FinancierBase):
     unite = Column(String(20), nullable=True)
     prix_unitaire_ht = Column(Numeric(12, 2), nullable=False)
     taux_tva = Column(Numeric(5, 2), nullable=False, default=20.0)
-    date_commande = Column(Date, nullable=False, index=True)
+    date_commande = Column(Date, nullable=True, index=True)  # Nullable: defini au passage en statut commande
     date_livraison_prevue = Column(Date, nullable=True)
     statut = Column(
         SQLEnum(*ACHAT_STATUTS, name="achat_statut_enum", native_enum=False),
@@ -595,7 +595,7 @@ class AchatModel(FinancierBase):
             name="check_achats_prix_positif",
         ),
         CheckConstraint(
-            "taux_tva IN (0, 2.1, 5.5, 10, 20)",
+            "taux_tva IN (0, 5.5, 10, 20)",
             name="check_achats_tva_range",
         ),
         CheckConstraint(
@@ -841,7 +841,7 @@ class SituationTravauxModel(FinancierBase):
             name="check_situations_travaux_retenue_range",
         ),
         CheckConstraint(
-            "taux_tva IN (0, 2.1, 5.5, 10, 20)",
+            "taux_tva IN (0, 5.5, 10, 20)",
             name="check_situations_travaux_tva_range",
         ),
     )

@@ -1,9 +1,7 @@
 import type { DevisDetail, TypeDebourse, VentilationTVA } from '../../types'
 import { TYPE_DEBOURSE_LABELS } from '../../types'
 import { TrendingUp, TrendingDown, Shield, AlertTriangle } from 'lucide-react'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 interface MargesPanelProps {
   devis: DevisDetail

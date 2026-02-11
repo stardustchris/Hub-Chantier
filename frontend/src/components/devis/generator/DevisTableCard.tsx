@@ -5,9 +5,7 @@ import ArticleAutocomplete from './ArticleAutocomplete'
 import ArticleLibraryPanel from '../ArticleLibraryPanel'
 import LineKebabMenu from './LineKebabMenu'
 import type { DevisDetail, LotDevis, LigneDevis, Article } from '../../../types'
-
-const formatEUR = (val: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val || 0)
+import { formatEUR } from '../../../utils/format'
 
 interface Props {
   devis: DevisDetail
