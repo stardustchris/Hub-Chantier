@@ -916,6 +916,24 @@ async def list_achats_en_attente(
     }
 
 
+@router.get("/achats/suggestions")
+async def get_achat_suggestions(
+    search: str = Query(..., min_length=3),
+    limit: int = Query(10, ge=1, le=50),
+    _role: str = Depends(require_chef_or_above),
+    db: Session = Depends(get_db),
+):
+    """Autocomplete pour les libelles d'achats passes.
+
+    Retourne des suggestions uniques basees sur l'historique des achats.
+    Minimum 3 caracteres requis.
+    """
+    from ...infrastructure.persistence.sqlalchemy_achat_repository import SQLAlchemyAchatRepository
+
+    repo = SQLAlchemyAchatRepository(db)
+    return repo.search_suggestions(search, limit)
+
+
 @router.get("/achats/{achat_id}")
 async def get_achat(
     achat_id: int,
@@ -2096,6 +2114,7 @@ async def get_couts_main_oeuvre(
                 "prenom": d.prenom,
                 "heures_validees": d.heures_validees,
                 "taux_horaire": d.taux_horaire,
+                "taux_horaire_charge": d.taux_horaire_charge,
                 "cout_total": d.cout_total,
             }
             for d in result.details

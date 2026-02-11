@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from shared.domain.calcul_financier import COEFF_HEURES_SUP, COEFF_HEURES_SUP_2
+from shared.domain.calcul_financier import COEFF_HEURES_SUP, COEFF_HEURES_SUP_2, COEFF_CHARGES_PATRONALES
 
 from ...domain.repositories.cout_main_oeuvre_repository import (
     CoutMainOeuvreRepository,
@@ -48,6 +48,9 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
         - Palier 2 : au-dela de 43h/semaine a +50%.
         Le GROUP BY inclut date_trunc('week') pour un calcul conforme.
 
+        Le coefficient de charges patronales (x1.45) est applique au taux horaire
+        pour obtenir le cout employeur reel.
+
         Args:
             chantier_id: L'ID du chantier.
             date_debut: Date de debut de la periode (optionnel).
@@ -63,11 +66,11 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                     p.utilisateur_id,
                     date_trunc('week', p.date_pointage) as semaine,
                     (SUM(p.heures_normales_minutes) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0))
+                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric)
                     + (LEAST(SUM(p.heures_supplementaires_minutes), 480) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_hs_1::numeric)
+                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_1::numeric)
                     + (GREATEST(SUM(p.heures_supplementaires_minutes) - 480, 0) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_hs_2::numeric)
+                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_2::numeric)
                     as week_cost
                 FROM pointages p
                 JOIN users u ON p.utilisateur_id = u.id
@@ -86,6 +89,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                 "chantier_id": chantier_id,
                 "date_debut": date_debut,
                 "date_fin": date_fin,
+                "coeff_charges": str(COEFF_CHARGES_PATRONALES),
                 "coeff_hs_1": str(COEFF_HEURES_SUP),
                 "coeff_hs_2": str(COEFF_HEURES_SUP_2),
             },
@@ -105,6 +109,9 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
         par employe pour le total. Chaque semaine a son propre seuil de
         480 min (8h) pour le palier 1.
 
+        Le coefficient de charges patronales (x1.45) est applique au taux horaire
+        pour obtenir le cout employeur reel.
+
         Args:
             chantier_id: L'ID du chantier.
             date_debut: Date de debut de la periode (optionnel).
@@ -113,7 +120,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
         Returns:
             Liste des couts par employe.
         """
-        # Etape 1 : calculer le cout par employe par semaine
+        # Etape 1 : calculer le cout par employe par semaine (avec charges patronales)
         # Etape 2 : agreger par employe (SUM des couts hebdo)
         query = text("""
             SELECT
@@ -134,11 +141,11 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                     SUM(p.heures_normales_minutes) as week_normales_min,
                     SUM(p.heures_supplementaires_minutes) as week_sup_min,
                     (SUM(p.heures_normales_minutes) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0))
+                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric)
                     + (LEAST(SUM(p.heures_supplementaires_minutes), 480) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_hs_1::numeric)
+                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_1::numeric)
                     + (GREATEST(SUM(p.heures_supplementaires_minutes) - 480, 0) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_hs_2::numeric)
+                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_2::numeric)
                     as week_cost
                 FROM pointages p
                 JOIN users u ON p.utilisateur_id = u.id
@@ -159,6 +166,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                 "chantier_id": chantier_id,
                 "date_debut": date_debut,
                 "date_fin": date_fin,
+                "coeff_charges": str(COEFF_CHARGES_PATRONALES),
                 "coeff_hs_1": str(COEFF_HEURES_SUP),
                 "coeff_hs_2": str(COEFF_HEURES_SUP_2),
             },
@@ -170,6 +178,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
             sup_minutes = Decimal(str(row.total_sup_minutes or 0))
             heures = (normales_minutes + sup_minutes) / Decimal("60")
             taux = Decimal(str(row.taux_horaire or 0))
+            taux_charge = taux * COEFF_CHARGES_PATRONALES
             cout = Decimal(str(row.cout_total or 0))
 
             result.append(
@@ -179,6 +188,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                     prenom=row.prenom or "",
                     heures_validees=heures.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
                     taux_horaire=taux,
+                    taux_horaire_charge=taux_charge.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
                     cout_total=cout.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
                 )
             )

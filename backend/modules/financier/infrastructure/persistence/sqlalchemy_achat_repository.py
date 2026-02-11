@@ -413,3 +413,52 @@ class SQLAlchemyAchatRepository(AchatRepository):
         model.deleted_by = deleted_by
         self._session.flush()
         return True
+
+    def search_suggestions(
+        self,
+        search: str,
+        limit: int = 10,
+    ) -> List[dict]:
+        """Recherche les libelles d'achats passes pour autocomplete.
+
+        Retourne des suggestions uniques (libelle + dernier prix + fournisseur).
+
+        Args:
+            search: Terme de recherche (ILIKE).
+            limit: Nombre max de suggestions.
+
+        Returns:
+            Liste de dicts avec libelle, prix_unitaire_ht, unite, type_achat, fournisseur_id.
+        """
+        from sqlalchemy import text
+
+        query = text("""
+            SELECT DISTINCT ON (LOWER(a.libelle))
+                a.libelle,
+                a.prix_unitaire_ht,
+                a.unite,
+                a.type_achat,
+                a.fournisseur_id,
+                f.raison_sociale as fournisseur_nom
+            FROM achats a
+            LEFT JOIN fournisseurs f ON a.fournisseur_id = f.id
+            WHERE a.deleted_at IS NULL
+              AND a.libelle ILIKE :search
+            ORDER BY LOWER(a.libelle), a.created_at DESC
+            LIMIT :limit
+        """)
+        rows = self._session.execute(
+            query,
+            {"search": f"%{search}%", "limit": limit},
+        ).fetchall()
+        return [
+            {
+                "libelle": row.libelle,
+                "prix_unitaire_ht": str(row.prix_unitaire_ht),
+                "unite": row.unite,
+                "type_achat": row.type_achat,
+                "fournisseur_id": row.fournisseur_id,
+                "fournisseur_nom": row.fournisseur_nom,
+            }
+            for row in rows
+        ]

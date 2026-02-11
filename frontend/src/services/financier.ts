@@ -1,4 +1,14 @@
 import api from './api'
+
+export interface AchatSuggestion {
+  libelle: string
+  prix_unitaire_ht: string
+  unite: string
+  type_achat: string
+  fournisseur_id: number | null
+  fournisseur_nom: string | null
+}
+
 import type {
   Fournisseur,
   FournisseurCreate,
@@ -175,6 +185,13 @@ export const financierService = {
 
   async facturerAchat(id: number, numero_facture: string): Promise<Achat> {
     const response = await api.post<Achat>(`${BASE}/achats/${id}/facturer`, { numero_facture })
+    return response.data
+  },
+
+  async getAchatSuggestions(search: string, limit: number = 10): Promise<AchatSuggestion[]> {
+    const response = await api.get<AchatSuggestion[]>(`${BASE}/achats/suggestions`, {
+      params: { search, limit },
+    })
     return response.data
   },
 

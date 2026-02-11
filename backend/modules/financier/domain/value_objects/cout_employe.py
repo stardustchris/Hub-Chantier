@@ -25,4 +25,5 @@ class CoutEmploye:
     prenom: str
     heures_validees: Decimal
     taux_horaire: Decimal
+    taux_horaire_charge: Decimal
     cout_total: Decimal

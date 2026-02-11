@@ -7,8 +7,10 @@
 import { useState, useMemo } from 'react'
 import { X, Save, AlertCircle } from 'lucide-react'
 import { financierService } from '../../services/financier'
+import type { AchatSuggestion } from '../../services/financier'
 import { useToast } from '../../contexts/ToastContext'
 import { logger } from '../../services/logger'
+import AchatSuggestions from './AchatSuggestions'
 import type {
   Achat,
   AchatCreate,
@@ -67,6 +69,18 @@ export default function AchatModal({
 
   const handleChange = (field: string, value: string | number | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    setError(null)
+  }
+
+  const handleSuggestionSelect = (suggestion: AchatSuggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      libelle: suggestion.libelle,
+      prix_unitaire_ht: parseFloat(suggestion.prix_unitaire_ht) || 0,
+      unite: (suggestion.unite || prev.unite) as UniteMesureFinancier,
+      type_achat: (suggestion.type_achat || prev.type_achat) as TypeAchat,
+      fournisseur_id: suggestion.fournisseur_id ?? prev.fournisseur_id,
+    }))
     setError(null)
   }
 
@@ -201,19 +215,17 @@ export default function AchatModal({
             </div>
           )}
 
-          {/* Libelle */}
+          {/* Libelle avec autocomplete */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Libelle <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <AchatSuggestions
               value={formData.libelle}
-              onChange={(e) => handleChange('libelle', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Ex: Beton pret a l'emploi C25/30"
-              required
+              onChange={(val) => handleChange('libelle', val)}
+              onSelect={handleSuggestionSelect}
               disabled={loading}
+              placeholder="Ex: Beton pret a l'emploi C25/30"
             />
           </div>
 
