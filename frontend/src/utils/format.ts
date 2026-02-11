@@ -15,15 +15,15 @@ const pctFormatter = (decimals: number) =>
   })
 
 export const formatEUR = (value: number | string | null | undefined): string => {
-  if (value === null || value === undefined) return 'N/D'
+  if (value === null || value === undefined) return '\u2014'  // tiret cadratin (—) pour "non renseigné"
   const num = typeof value === 'string' ? parseFloat(value) : value
-  if (isNaN(num)) return 'N/D'
+  if (isNaN(num)) return '\u2014'
   return eurFormatter.format(num)
 }
 
 export const formatPct = (value: number | string | null | undefined, decimals = 1): string => {
-  if (value === null || value === undefined) return 'N/D'
+  if (value === null || value === undefined) return '\u2014'  // tiret cadratin (—) pour "non renseigné"
   const num = typeof value === 'string' ? parseFloat(value) : value
-  if (isNaN(num)) return 'N/D'
+  if (isNaN(num)) return '\u2014'
   return pctFormatter(decimals).format(num) + ' %'
 }

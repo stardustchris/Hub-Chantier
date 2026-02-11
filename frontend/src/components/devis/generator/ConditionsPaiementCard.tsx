@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { devisService } from '../../../services/devis'
 import type { DevisDetail } from '../../../types'
 
@@ -20,8 +21,8 @@ const ECHEANCES = [
 
 const RETENUE_OPTIONS = [
   { value: 0, label: 'Aucune' },
+  { value: 2.5, label: '2.5%' },
   { value: 5, label: '5%' },
-  { value: 10, label: '10%' },
 ]
 
 export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: Props) {
@@ -30,9 +31,11 @@ export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: P
   const [echeance, setEcheance] = useState(devis.echeance || '30_jours_fin_mois')
   const [saving, setSaving] = useState(false)
 
+  const totalHT = Number(devis.montant_total_ht || 0)
   const totalTTC = Number(devis.montant_total_ttc || 0)
   const acompteAmount = totalTTC * acomptePct / 100
-  const retenueAmount = totalTTC * retenuePct / 100
+  // Loi 71-584: retenue de garantie calculée sur HT (pas TTC)
+  const retenueAmount = totalHT * retenuePct / 100
 
   const handleChange = async (field: string, value: number | string) => {
     if (!isEditable) return
@@ -76,23 +79,43 @@ export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: P
         {/* Retenue de garantie */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Retenue de garantie</label>
-          <select
-            value={retenuePct}
-            onChange={e => {
-              const val = Number(e.target.value)
-              setRetenuePct(val)
-              handleChange('retenue_garantie_pct', val)
-            }}
-            disabled={!isEditable || saving}
-            className={inputClass}
-          >
-            {RETENUE_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-          {retenuePct > 0 && (
-            <p className="text-xs text-gray-500">Soit {formatEUR(retenueAmount)} retenus</p>
-          )}
+          <div className="space-y-2">
+            <select
+              value={retenuePct}
+              onChange={e => {
+                const val = Number(e.target.value)
+                setRetenuePct(val)
+                handleChange('retenue_garantie_pct', val)
+              }}
+              disabled={!isEditable || saving}
+              className={inputClass}
+            >
+              {RETENUE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min="0"
+              max="5"
+              step="0.5"
+              value={retenuePct}
+              onChange={e => setRetenuePct(Number(e.target.value))}
+              onBlur={() => handleChange('retenue_garantie_pct', retenuePct)}
+              disabled={!isEditable || saving}
+              className={inputClass}
+              placeholder="Personnalisé (%)"
+            />
+            {retenuePct > 0 && (
+              <p className="text-xs text-gray-500">Soit {formatEUR(retenueAmount)} retenus</p>
+            )}
+            {retenuePct > 5 && (
+              <p className="text-xs text-orange-600 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Retenue de garantie plafonnée à 5% (loi 71-584)
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Echeances */}

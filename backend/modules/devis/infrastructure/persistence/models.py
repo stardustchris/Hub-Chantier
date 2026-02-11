@@ -459,7 +459,7 @@ class DevisModel(DevisBase):
             name="check_devis_tva_range",
         ),
         CheckConstraint(
-            "retenue_garantie_pct IN (0, 5, 10)",
+            "retenue_garantie_pct IN (0, 5)",
             name="check_devis_retenue_garantie_valeurs",
         ),
         CheckConstraint(

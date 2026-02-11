@@ -56,7 +56,7 @@ const DEFINITIONS: Record<string, { titre: string; definition: string }> = {
     definition: 'Commandes passées et contrats signés. Dépenses futures certaines même si pas encore payées.',
   },
   realise: {
-    titre: 'Réalisé / Déboursé',
+    titre: 'Déboursé',
     definition: 'Montants réellement payés. Factures fournisseurs réglées.',
   },
   reste: {
@@ -270,14 +270,14 @@ export default function DashboardFinancierPage() {
     ].filter((d) => d.value > 0)
   }, [data])
 
-  // Donnees pour le graphique barres Budget vs Engagé vs Réalisé
+  // Donnees pour le graphique barres Budget vs Engagé vs Déboursé
   const budgetBarData = useMemo(() => {
     if (!data) return []
     return data.chantiers.slice(0, 8).map((c) => ({
       name: c.nom_chantier.length > 15 ? c.nom_chantier.substring(0, 15) + '...' : c.nom_chantier,
       Budget: Number(c.montant_revise_ht),
       Engagé: Number(c.total_engage),
-      Réalisé: Number(c.total_realise),
+      Déboursé: Number(c.total_realise),
     }))
   }, [data])
 
@@ -329,7 +329,13 @@ export default function DashboardFinancierPage() {
             <p className="font-medium">{formatEUR(chantier.montant_revise_ht)}</p>
           </div>
           <div>
-            <span className="text-gray-500">Marge</span>
+            <span className="text-gray-500">
+              {chantier.marge_statut === 'calculee' && 'Marge (calc.)'}
+              {chantier.marge_statut === 'estimee_budgetaire' && 'Budget'}
+              {chantier.marge_statut === 'partielle' && 'Marge (part.)'}
+              {chantier.marge_statut === 'en_attente' && 'Marge'}
+              {!chantier.marge_statut && 'Marge'}
+            </span>
             <p className={`font-medium ${chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
               {formatPct(chantier.marge_estimee_pct)}
             </p>
@@ -664,9 +670,9 @@ export default function DashboardFinancierPage() {
                   )}
                 </div>
 
-                {/* Barres Budget vs Engage vs Réalisé */}
+                {/* Barres Budget vs Engage vs Déboursé */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:col-span-2">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Budget / Engagé / Réalisé par chantier</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Budget / Engagé / Déboursé par chantier</h3>
                   {budgetBarData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={budgetBarData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -680,7 +686,7 @@ export default function DashboardFinancierPage() {
                         <Legend wrapperStyle={{ fontSize: '12px' }} />
                         <Bar dataKey="Budget" fill={CHART_COLORS.budget} radius={[4, 4, 0, 0]} />
                         <Bar dataKey="Engagé" fill={CHART_COLORS.engage} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Réalisé" fill={CHART_COLORS.realise} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Déboursé" fill={CHART_COLORS.realise} radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -785,10 +791,28 @@ export default function DashboardFinancierPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right">{formatEUR(chantier.reste_a_depenser)}</td>
-                          <td className={`px-4 py-3 text-right font-medium ${
-                            chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
-                          }`}>
-                            {formatPct(chantier.marge_estimee_pct)}
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col items-end gap-1">
+                              <span className={`font-medium ${
+                                chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
+                              }`}>
+                                {formatPct(chantier.marge_estimee_pct)}
+                              </span>
+                              {chantier.marge_statut === 'calculee' && (
+                                <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">Calculée</span>
+                              )}
+                              {chantier.marge_statut === 'estimee_budgetaire' && (
+                                <span className="text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full" title="Ceci n'est pas une marge commerciale. C'est le ratio (Budget - Engagé) / Budget.">
+                                  Budget
+                                </span>
+                              )}
+                              {chantier.marge_statut === 'partielle' && (
+                                <span className="text-xs text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded-full">Partielle</span>
+                              )}
+                              {chantier.marge_statut === 'en_attente' && (
+                                <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">En attente</span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.colorClass}`}>

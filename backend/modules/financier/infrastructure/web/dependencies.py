@@ -780,16 +780,19 @@ def get_dashboard_financier_use_case(
     situation_repository: SituationRepository = Depends(get_situation_repository),
     cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
     cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
+    facture_repository: FactureRepository = Depends(get_facture_repository),
 ) -> GetDashboardFinancierUseCase:
     """Retourne le use case GetDashboardFinancier.
 
     Utilise la formule BTP correcte pour le calcul de marge:
-    Marge = (Prix Vente - Coût Revient) / Prix Vente
-    où Prix Vente = situations facturées, Coût Revient = achats + MO + matériel.
+    Marge = (Prix Vente - Cout Revient) / Prix Vente
+    ou Prix Vente = situations facturees, Cout Revient = achats + MO + materiel.
+    Le facture_repository permet l'auto-calcul du CA total annuel (P1-1).
     """
     return GetDashboardFinancierUseCase(
         budget_repository, lot_repository, achat_repository,
         situation_repository, cout_mo_repository, cout_materiel_repository,
+        facture_repository=facture_repository,
     )
 
 

@@ -206,20 +206,42 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
         {/* Marge */}
         <div className={`bg-white border rounded-xl p-4 ${margeFaible ? 'border-red-300' : 'border-green-200'}`}>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 mb-1">Marge estimée</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {kpi.marge_statut === 'calculee' && 'Marge (calculée)'}
+              {kpi.marge_statut === 'estimee_budgetaire' && 'Consommation budget'}
+              {kpi.marge_statut === 'partielle' && 'Marge (partielle)'}
+              {kpi.marge_statut === 'en_attente' && 'Marge : en attente'}
+              {!kpi.marge_statut && 'Marge estimée'}
+            </p>
             {margeFaible && <AlertTriangle className="w-4 h-4 text-red-500" />}
           </div>
-          <p className={`text-2xl font-bold ${margeFaible ? 'text-red-600' : 'text-green-700'}`}>
+          <p className={`text-2xl font-bold ${
+            kpi.marge_statut === 'en_attente' ? 'text-gray-400' :
+            margeFaible ? 'text-red-600' : 'text-green-700'
+          }`}>
             {kpi.marge_estimee === null || kpi.marge_estimee === undefined ? (
-              <span className="text-gray-400">N/D</span>
+              <span className="text-gray-400">{formatPct(null)}</span>
             ) : (
               formatPct(Number(kpi.marge_estimee))
             )}
           </p>
-          <p className="text-xs mt-2">
-            {kpi.marge_statut === 'calculee' ? (
+          <p className="text-xs mt-2 flex items-center gap-1">
+            {kpi.marge_statut === 'calculee' && (
               <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Calculée (CA réel)</span>
-            ) : (
+            )}
+            {kpi.marge_statut === 'estimee_budgetaire' && (
+              <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1" title="Ceci n'est pas une marge commerciale. C'est le ratio (Budget - Engagé) / Budget.">
+                Estimation budgétaire
+                <AlertTriangle className="w-3 h-3" />
+              </span>
+            )}
+            {kpi.marge_statut === 'partielle' && (
+              <span className="text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">Partielle</span>
+            )}
+            {kpi.marge_statut === 'en_attente' && (
+              <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">En attente</span>
+            )}
+            {!kpi.marge_statut && (
               <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Estimée (budget)</span>
             )}
           </p>

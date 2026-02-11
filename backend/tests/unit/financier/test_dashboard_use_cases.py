@@ -118,7 +118,9 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.montant_revise_ht == "550000"
         assert result.kpi.total_engage == "200000"
         assert result.kpi.total_realise == "100000"
-        assert result.kpi.marge_estimee == "63.64"
+        # P1-3: Fallback mode -> marge_estimee=None, consommation_budgetaire_pct rempli
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "63.64"
         assert result.kpi.reste_a_depenser == "350000"
         assert result.kpi.pct_reste == "63.64"  # (350000/550000)*100
         assert len(result.derniers_achats) == 1
@@ -155,8 +157,9 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.pct_realise == "50.00"
         assert result.kpi.reste_a_depenser == "20000"  # 100000 - 80000
         assert result.kpi.pct_reste == "20.00"  # (20000/100000)*100
-        # marge_estimee en % : ((100000 - 80000) / 100000) * 100 = 20.00%
-        assert result.kpi.marge_estimee == "20.00"
+        # P1-3: Fallback mode -> consommation_budgetaire_pct en %
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "20.00"
 
     def test_dashboard_budget_zero_montant(self):
         """Test: pourcentages a 0 si budget revise a 0."""
@@ -182,7 +185,9 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.pct_realise == "0.00"
         assert result.kpi.reste_a_depenser == "0"  # 0 - 0
         assert result.kpi.pct_reste == "0.00"  # division par zero evitee
-        assert result.kpi.marge_estimee == "0.00"  # marge_estimee en % (0 sans division)
+        # P1-3: Fallback mode -> consommation_budgetaire_pct
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "0.00"
 
     def test_dashboard_repartition_par_lot(self):
         """Test: repartition correcte par lot budgetaire."""
@@ -268,8 +273,9 @@ class TestGetDashboardFinancierUseCase:
         assert result.kpi.reste_a_depenser == "-50000"
         # pct_reste = (-50000 / 100000) * 100 = -50.00
         assert result.kpi.pct_reste == "-50.00"
-        # marge_estimee aussi negative
-        assert result.kpi.marge_estimee == "-50.00"
+        # P1-3: Fallback mode -> consommation_budgetaire_pct (negative = depassement)
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "-50.00"
 
     def test_dashboard_reste_a_depenser_exact_budget(self):
         """Test: reste_a_depenser = 0 quand engage == montant_revise."""
@@ -292,8 +298,9 @@ class TestGetDashboardFinancierUseCase:
 
         assert result.kpi.reste_a_depenser == "0"
         assert result.kpi.pct_reste == "0.00"
-        # marge_estimee en % : ((200000 - 200000) / 200000) * 100 = 0.00%
-        assert result.kpi.marge_estimee == "0.00"
+        # P1-3: Fallback mode -> consommation_budgetaire_pct
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "0.00"
 
     def test_dashboard_derniers_achats(self):
         """Test: les derniers achats sont retournes correctement."""
@@ -365,10 +372,11 @@ class TestGetDashboardFinancierUseCase:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # marge_estimee = ((500000 - 300000) / 500000) * 100 = 40.00%
-        assert result.kpi.marge_estimee == "40.00"
+        # P1-3: Fallback mode (no situation) -> consommation_budgetaire_pct
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "40.00"
         # Verifie que ce n'est PAS en EUR (200000) mais bien en %
-        assert result.kpi.marge_estimee != "200000"
+        assert result.kpi.consommation_budgetaire_pct != "200000"
         assert result.kpi.montant_revise_ht == "500000"
         assert result.kpi.reste_a_depenser == "200000"
 
@@ -391,8 +399,9 @@ class TestGetDashboardFinancierUseCase:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # marge_estimee = ((333333 - 111111) / 333333) * 100 = 66.6667...%
-        assert result.kpi.marge_estimee == "66.67"
+        # P1-3: Fallback mode -> consommation_budgetaire_pct arrondie a 2 decimales
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "66.67"
 
     def test_dashboard_derniers_achats_sans_created_at(self):
         """Test: achat sans created_at ne provoque pas d'erreur."""
@@ -623,9 +632,10 @@ class TestGetDashboardFinancierUseCaseWithSituations:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # Fallback: marge = (budget - engage) / budget
+        # P1-3: Fallback -> consommation_budgetaire_pct = (budget - engage) / budget
         # = (100k - 80k) / 100k * 100 = 20%
-        assert result.kpi.marge_estimee == "20.00"
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "20.00"
 
     def test_fallback_situation_zero(self):
         """Test: fallback si situation a montant zero."""
@@ -659,6 +669,7 @@ class TestGetDashboardFinancierUseCaseWithSituations:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # Fallback: marge = (budget - engage) / budget
+        # P1-3: Fallback -> consommation_budgetaire_pct = (budget - engage) / budget
         # = (100k - 60k) / 100k * 100 = 40%
-        assert result.kpi.marge_estimee == "40.00"
+        assert result.kpi.marge_estimee is None
+        assert result.kpi.consommation_budgetaire_pct == "40.00"

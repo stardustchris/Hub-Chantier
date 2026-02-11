@@ -99,6 +99,16 @@ class SituationTravaux:
         if self.taux_tva < Decimal("0") or self.taux_tva > Decimal("100"):
             raise ValueError("Le taux de TVA doit etre entre 0% et 100%")
 
+        # Validation cohérence montants cumulés
+        if self.montant_cumule_ht != Decimal("0") or self.montant_cumule_precedent_ht != Decimal("0") or self.montant_periode_ht != Decimal("0"):
+            attendu = self.montant_cumule_precedent_ht + self.montant_periode_ht
+            if self.montant_cumule_ht != attendu:
+                raise ValueError(
+                    f"Incoherence montants: cumule ({self.montant_cumule_ht}) "
+                    f"!= precedent ({self.montant_cumule_precedent_ht}) + periode ({self.montant_periode_ht}). "
+                    f"Attendu: {attendu}"
+                )
+
     # ── Workflow methods ──────────────────────────────────────────────────
 
     def soumettre_validation(self) -> None:
@@ -116,6 +126,7 @@ class SituationTravaux:
             )
         self.statut = "en_validation"
         self.updated_at = datetime.utcnow()
+        self.version += 1
 
     def valider(self, validated_by: int) -> None:
         """Valide la situation et l'emet.
@@ -138,6 +149,7 @@ class SituationTravaux:
         self.validated_at = datetime.utcnow()
         self.emise_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
+        self.version += 1
 
     def marquer_validee_client(self) -> None:
         """Marque la situation comme validee par le client.
@@ -154,6 +166,7 @@ class SituationTravaux:
             )
         self.statut = "validee"
         self.updated_at = datetime.utcnow()
+        self.version += 1
 
     def marquer_facturee(self, facturee_at: Optional[datetime] = None) -> None:
         """Marque la situation comme facturee.
@@ -174,6 +187,7 @@ class SituationTravaux:
         self.statut = "facturee"
         self.facturee_at = facturee_at or datetime.utcnow()
         self.updated_at = datetime.utcnow()
+        self.version += 1
 
     # ── Properties calculees ─────────────────────────────────────────────
 

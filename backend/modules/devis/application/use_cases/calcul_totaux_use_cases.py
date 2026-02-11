@@ -113,6 +113,14 @@ class CalculerTotauxDevisUseCase:
                 )
 
                 # Prix de vente HT (arrondi PCG art. 120-2 ROUND_HALF_UP)
+                # Guard: quantite = 0 avec debourses = impossible de calculer un prix unitaire
+                if ligne_debourse_sec > 0 and ligne.quantite <= 0:
+                    raise ValueError(
+                        f"Ligne devis {ligne.id} (lot {lot.id}): quantite = {ligne.quantite} "
+                        f"avec debourse sec = {ligne_debourse_sec} EUR. "
+                        f"Impossible de calculer un prix unitaire. Corrigez la quantite."
+                    )
+
                 if ligne_debourse_sec > 0:
                     ligne.prix_unitaire_ht = arrondir_montant(
                         (ligne.prix_revient * (Decimal("1") + marge / Decimal("100"))

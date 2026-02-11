@@ -24,6 +24,7 @@ class KPIFinancierDTO:
     marge_estimee: Optional[str]  # None si pas de situation de travaux
     marge_statut: str  # "calculee" ou "en_attente"
     fiabilite_marge: int = 0  # Score 0-100%
+    consommation_budgetaire_pct: Optional[str] = None  # (Budget - Engage) / Budget, quand pas de situation
     pct_engage: str = ""
     pct_realise: str = ""
     reste_a_depenser: str = ""
@@ -38,6 +39,7 @@ class KPIFinancierDTO:
             "marge_estimee": self.marge_estimee,
             "marge_statut": self.marge_statut,
             "fiabilite_marge": self.fiabilite_marge,
+            "consommation_budgetaire_pct": self.consommation_budgetaire_pct,
             "pct_engage": self.pct_engage,
             "pct_realise": self.pct_realise,
             "reste_a_depenser": self.reste_a_depenser,

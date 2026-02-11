@@ -78,6 +78,7 @@ class Budget:
             )
         self.montant_avenants_ht += montant
         self.updated_at = datetime.utcnow()
+        self.version += 1
 
     def modifier_retenue_garantie(self, pct: Decimal) -> None:
         """Modifie le pourcentage de retenue de garantie.
@@ -92,6 +93,7 @@ class Budget:
             raise ValueError("La retenue de garantie doit être entre 0 et 5% (loi 71-584)")
         self.retenue_garantie_pct = pct
         self.updated_at = datetime.utcnow()
+        self.version += 1
 
     def necessite_validation_achat(self, montant: Decimal) -> bool:
         """Détermine si un achat nécessite une validation N+1.
