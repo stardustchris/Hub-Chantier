@@ -11,7 +11,6 @@ from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
     arrondir_montant,
-    COUTS_FIXES_ANNUELS,
 )
 
 from ...domain.repositories.facture_repository import FactureRepository
@@ -89,17 +88,15 @@ class GetPnLChantierUseCase:
     def execute(
         self,
         chantier_id: int,
-        ca_total_annee: Optional[Decimal] = None,
-        couts_fixes_annuels: Optional[Decimal] = None,
     ) -> PnLChantierDTO:
         """Calcule le P&L d'un chantier.
 
+        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
+        sur le debourse sec (achats + MO + materiel). Source unique, pas
+        de parametre externe.
+
         Args:
             chantier_id: L'ID du chantier.
-            ca_total_annee: CA total annuel de l'entreprise pour repartition
-                des couts fixes. Si None, les frais generaux ne sont pas repartis.
-            couts_fixes_annuels: Couts fixes annuels de l'entreprise (optionnel).
-                Si None, utilise la constante COUTS_FIXES_ANNUELS par defaut.
 
         Returns:
             Le P&L complet du chantier.
@@ -107,33 +104,6 @@ class GetPnLChantierUseCase:
         Raises:
             PnLChantierNotFoundError: Si le chantier n'a pas de budget.
         """
-        effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
-
-        # P1-1: Auto-calcul ca_total_annee si non fourni
-        # Somme des montant_ht de toutes les factures actives (emise/envoyee/payee)
-        # pour repartir correctement les frais generaux (600k/an).
-        if ca_total_annee is None:
-            try:
-                factures_actives = self._facture_repository.find_all_active(
-                    statuts=STATUTS_FACTURE_CA
-                )
-                ca_total_annee = sum(
-                    (f.montant_ht for f in factures_actives), Decimal("0")
-                )
-                if ca_total_annee > Decimal("0"):
-                    logger.info(
-                        "P&L: ca_total_annee auto-calcule = %s EUR "
-                        "(%d factures actives)",
-                        ca_total_annee,
-                        len(factures_actives),
-                    )
-            except Exception:
-                logger.warning(
-                    "P&L: impossible de calculer ca_total_annee "
-                    "automatiquement, frais generaux non repartis",
-                    exc_info=True,
-                )
-
         # 1. Recuperer le budget pour reference
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -151,20 +121,9 @@ class GetPnLChantierUseCase:
         cout_materiel = self._calculer_cout_materiel(chantier_id)
 
         # 4. Calculer les marges (formule BTP unifiee via calcul_financier.py)
-        # Quote-part frais generaux via fonction unifiee
-        # ATTENTION: si ca_total_annee non fourni, marge surestimee (~14%)
-        effective_ca_total = ca_total_annee or Decimal("0")
-        if effective_ca_total <= Decimal("0"):
-            logger.warning(
-                "P&L chantier %d: ca_total_annee non fourni, "
-                "frais generaux non repartis (marge potentiellement surestimee)",
-                chantier_id,
-            )
-        quote_part = calculer_quote_part_frais_generaux(
-            ca_chantier_ht=chiffre_affaires_ht,
-            ca_total_annee=effective_ca_total,
-            couts_fixes_annuels=effective_couts_fixes,
-        )
+        # Quote-part frais generaux = coefficient unique sur debourse sec
+        debourse_sec = cout_achats + cout_mo + cout_materiel
+        quote_part = calculer_quote_part_frais_generaux(debourse_sec)
 
         total_couts = arrondir_montant(cout_achats + cout_mo + cout_materiel + quote_part)
         marge_brute_ht = arrondir_montant(chiffre_affaires_ht - total_couts)

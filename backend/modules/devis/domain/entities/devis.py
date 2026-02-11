@@ -14,6 +14,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from shared.domain.calcul_financier import COEFF_FRAIS_GENERAUX
+
 from ..value_objects import StatutDevis
 from ..value_objects.type_version import TypeVersion
 from ..value_objects.retenue_garantie import RetenueGarantie, RetenueGarantieInvalideError
@@ -67,7 +69,7 @@ class Devis:
 
     # Parametres de marge (DEV-06)
     taux_marge_global: Decimal = Decimal("15")
-    coefficient_frais_generaux: Decimal = Decimal("12")
+    coefficient_frais_generaux: Decimal = COEFF_FRAIS_GENERAUX  # Source unique
     taux_tva_defaut: Decimal = Decimal("20")
 
     # Retenue de garantie (DEV-22)

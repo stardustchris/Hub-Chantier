@@ -78,6 +78,7 @@ from shared.domain.calcul_financier import (
     arrondir_pct,
     arrondir_montant,
     calculer_tva,
+    COEFF_FRAIS_GENERAUX,
 )
 
 
@@ -99,8 +100,6 @@ class LesCedresBaseFixture:
     # -- Donnees financieres ------------------------------------------------
     PRIX_VENTE_HT = Decimal("1200000")
     BUDGET_PREVISIONNEL = Decimal("1080000")
-    CA_TOTAL_ENTREPRISE = Decimal("4300000")
-    COUTS_FIXES_ANNUELS = Decimal("600000")
     DUREE_PREVUE_MOIS = 10
     RETENUE_GARANTIE_PCT = Decimal("5")
 
@@ -139,10 +138,11 @@ class LesCedresBaseFixture:
     ]
 
     # -- KPI attendus a M+6 ------------------------------------------------
-    # Quote-part FG = (840k / 4.3M) * 600k = 117 209.30 EUR
-    QUOTE_PART_FG = arrondir_montant(
-        (CA_HT_M6 / CA_TOTAL_ENTREPRISE) * COUTS_FIXES_ANNUELS
-    )
+    # Debourse sec = achats + MO + materiel = 550 000 EUR
+    DEBOURSE_SEC_M6 = TOTAL_REALISE_ACHATS + COUT_MO + COUT_MATERIEL  # 550 000
+    # Quote-part FG = debourse_sec * COEFF_FRAIS_GENERAUX / 100
+    # = 550 000 * 19 / 100 = 104 500.00 EUR
+    QUOTE_PART_FG = calculer_quote_part_frais_generaux(DEBOURSE_SEC_M6)
     # Marge sans FG = (840k - 550k) / 840k * 100 = 34.52%
     MARGE_SANS_FG = calculer_marge_chantier(
         ca_ht=CA_HT_M6,
@@ -150,7 +150,7 @@ class LesCedresBaseFixture:
         cout_mo=COUT_MO,
         cout_materiel=COUT_MATERIEL,
     )
-    # Marge avec FG = (840k - 667 209.30) / 840k * 100 = 20.57%
+    # Marge avec FG = (840k - 654 500) / 840k * 100 = 22.08%
     MARGE_AVEC_FG = calculer_marge_chantier(
         ca_ht=CA_HT_M6,
         cout_achats=TOTAL_REALISE_ACHATS,
@@ -482,7 +482,6 @@ class TestLesCedresCoherenceDashboardConsolidation:
         dashboard_uc, _ = _make_dashboard_mocks()
         dashboard_result = dashboard_uc.execute(
             chantier_id=F.CHANTIER_ID,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
         )
         marge_dashboard = dashboard_result.kpi.marge_estimee
 
@@ -490,7 +489,6 @@ class TestLesCedresCoherenceDashboardConsolidation:
         conso_uc, _ = _make_consolidation_mocks()
         conso_result = conso_uc.execute(
             user_accessible_chantier_ids=[F.CHANTIER_ID],
-            ca_total_entreprise=F.CA_TOTAL_ENTREPRISE,
         )
         assert len(conso_result.chantiers) == 1
         marge_consolidation = conso_result.chantiers[0].marge_estimee_pct
@@ -520,7 +518,6 @@ class TestLesCedresDashboard:
 
         result = uc.execute(
             chantier_id=F.CHANTIER_ID,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
         )
 
         assert result.kpi.montant_revise_ht == str(F.BUDGET_PREVISIONNEL)
@@ -569,34 +566,22 @@ class TestLesCedresDashboard:
         assert result.kpi.pct_realise == str(expected_pct_realise)
 
     def test_marge_btp_avec_frais_generaux(self):
-        """Marge BTP avec repartition des frais generaux.
+        """Marge BTP avec frais generaux (coefficient unique sur debourse sec).
 
-        Quote-part FG = (840k / 4.3M) * 600k = 117 209.30 EUR
-        Cout revient = 370k + 138k + 42k + 117 209.30 = 667 209.30 EUR
-        Marge = (840k - 667 209.30) / 840k * 100 = 20.57%
+        Debourse sec = 370k + 138k + 42k = 550 000 EUR
+        Quote-part FG = 550 000 * 19% = 104 500.00 EUR
+        Cout revient = 550 000 + 104 500 = 654 500 EUR
+        Marge = (840k - 654 500) / 840k * 100 = 22.08%
         """
         F = LesCedresBaseFixture
         uc, _ = _make_dashboard_mocks()
 
         result = uc.execute(
             chantier_id=F.CHANTIER_ID,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
         )
 
         assert result.kpi.marge_estimee == str(F.MARGE_AVEC_FG)
         assert result.kpi.marge_statut == "calculee"
-
-    def test_marge_btp_sans_frais_generaux(self):
-        """Marge BTP sans frais generaux (ca_total_annee non fourni).
-
-        Marge = (840k - 550k) / 840k * 100 = 34.52%
-        """
-        F = LesCedresBaseFixture
-        uc, _ = _make_dashboard_mocks()
-
-        result = uc.execute(chantier_id=F.CHANTIER_ID)
-
-        assert result.kpi.marge_estimee == str(F.MARGE_SANS_FG)
 
     def test_repartition_par_lot_7_lots(self):
         """Les 7 lots budgetaires sont retournes dans la repartition."""
@@ -627,7 +612,6 @@ class TestLesCedresConsolidation:
 
         result = uc.execute(
             user_accessible_chantier_ids=[F.CHANTIER_ID],
-            ca_total_entreprise=F.CA_TOTAL_ENTREPRISE,
         )
 
         assert result.kpi_globaux.nb_chantiers == 1
@@ -642,7 +626,6 @@ class TestLesCedresConsolidation:
 
         result = uc.execute(
             user_accessible_chantier_ids=[F.CHANTIER_ID],
-            ca_total_entreprise=F.CA_TOTAL_ENTREPRISE,
         )
 
         chantier_summary = result.chantiers[0]
@@ -656,7 +639,6 @@ class TestLesCedresConsolidation:
 
         result = uc.execute(
             user_accessible_chantier_ids=[F.CHANTIER_ID],
-            ca_total_entreprise=F.CA_TOTAL_ENTREPRISE,
         )
 
         chantier_summary = result.chantiers[0]
@@ -670,12 +652,14 @@ class TestLesCedresConsolidation:
 class TestLesCedresPnL:
     """Tests du P&L avec les donnees Les Cedres."""
 
-    def test_pnl_marge_brute_sans_frais_generaux(self):
-        """P&L: marge brute = (CA - couts) / CA (sans FG).
+    def test_pnl_marge_brute_avec_frais_generaux(self):
+        """P&L: marge brute avec FG (coefficient unique sur debourse sec).
 
         CA (factures) = 840 000 EUR
-        Couts = achats(370k) + MO(138k) + materiel(42k) = 550 000 EUR
-        Marge = (840k - 550k) / 840k * 100 = 34.52%
+        Debourse sec = achats(370k) + MO(138k) + materiel(42k) = 550 000 EUR
+        Quote-part FG = 550 000 * 19% = 104 500 EUR
+        Total couts = 654 500 EUR
+        Marge = (840k - 654 500) / 840k * 100 = 22.08%
         """
         F = LesCedresBaseFixture
 
@@ -686,7 +670,6 @@ class TestLesCedresPnL:
         cout_materiel_repo = Mock(spec=CoutMaterielRepository)
 
         budget_repo.find_by_chantier_id.return_value = F.make_budget()
-        # P&L appelle somme_by_chantier une seule fois avec [FACTURE]
         achat_repo.somme_by_chantier.return_value = F.TOTAL_REALISE_ACHATS
         facture_repo.find_by_chantier_id.return_value = [F.make_facture_m6()]
         cout_mo_repo.calculer_cout_chantier.return_value = F.COUT_MO
@@ -705,11 +688,15 @@ class TestLesCedresPnL:
         assert result.cout_achats == str(F.TOTAL_REALISE_ACHATS)
         assert result.cout_main_oeuvre == str(F.COUT_MO)
         assert result.cout_materiel == str(F.COUT_MATERIEL)
-        # Marge brute = P&L sans FG = dashboard sans FG
-        assert result.marge_brute_pct == str(F.MARGE_SANS_FG)
+        # Marge brute avec FG coefficient unique
+        assert result.marge_brute_pct == str(F.MARGE_AVEC_FG)
 
     def test_pnl_marge_brute_ht(self):
-        """P&L: marge brute HT = CA - total couts."""
+        """P&L: marge brute HT = CA - total couts (avec FG).
+
+        Total couts = 550 000 + 104 500 = 654 500 EUR
+        Marge brute HT = 840 000 - 654 500 = 185 500 EUR
+        """
         F = LesCedresBaseFixture
 
         budget_repo = Mock(spec=BudgetRepository)
@@ -733,9 +720,9 @@ class TestLesCedresPnL:
         )
         result = uc.execute(chantier_id=F.CHANTIER_ID)
 
-        expected_marge_ht = F.CA_HT_M6 - F.TOTAL_REALISE_COMPLET
+        expected_marge_ht = F.CA_HT_M6 - (F.TOTAL_REALISE_COMPLET + F.QUOTE_PART_FG)
         assert result.marge_brute_ht == str(expected_marge_ht)
-        assert Decimal(result.marge_brute_ht) == Decimal("290000")
+        assert Decimal(result.marge_brute_ht) == Decimal("185500.00")
 
 
 # ===========================================================================
@@ -799,7 +786,6 @@ class TestLesCedresBilanCloture:
         )
         result = uc.execute(
             chantier_id=F.CHANTIER_ID,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
         )
 
         assert result.budget_initial_ht == str(F.BUDGET_PREVISIONNEL)
@@ -812,7 +798,7 @@ class TestLesCedresBilanCloture:
         assert result.est_definitif is False  # pas ferme
 
     def test_bilan_cloture_marge_avec_fg(self):
-        """Bilan de cloture: marge avec frais generaux = 20.57%."""
+        """Bilan de cloture: marge avec frais generaux (coefficient unique)."""
         F = LesCedresBaseFixture
 
         budget_repo = Mock(spec=BudgetRepository)
@@ -860,7 +846,6 @@ class TestLesCedresBilanCloture:
         )
         result = uc.execute(
             chantier_id=F.CHANTIER_ID,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
         )
 
         assert result.marge_finale_pct == str(F.MARGE_AVEC_FG)
@@ -1197,13 +1182,14 @@ class TestLesCedresMargeCible:
         assert marge == Decimal("10.00")
 
     def test_marge_finale_si_execution_parfaite_avec_fg(self):
-        """Avec FG repartis, la marge est inferieure a 10%.
+        """Avec FG (coefficient unique 19%), la marge est inferieure a 10%.
 
-        Quote-part FG = (1.2M / 4.3M) * 600k = 167 441.86 EUR
-        Cout total = 1 080 000 + 167 441.86 = 1 247 441.86 EUR
-        Marge = (1.2M - 1 247 441.86) / 1.2M = -3.95% (deficitaire!)
+        Debourse sec final = 780k + 230k + 70k = 1 080 000 EUR
+        Quote-part FG = 1 080 000 * 19% = 205 200 EUR
+        Cout total = 1 080 000 + 205 200 = 1 285 200 EUR
+        Marge = (1.2M - 1 285 200) / 1.2M = -7.10% (deficitaire!)
 
-        C'est normal : les 70k de FG budgetes ne couvrent pas les 167k
+        C'est normal : les 70k de FG budgetes ne couvrent pas les 205k
         de frais generaux reels. Greg Construction doit ajuster son prix
         de vente ou reduire les couts fixes pour rester rentable.
         """
@@ -1214,11 +1200,8 @@ class TestLesCedresMargeCible:
         materiel_final = Decimal("70000")
         ca_final = F.PRIX_VENTE_HT
 
-        quote_part = calculer_quote_part_frais_generaux(
-            ca_chantier_ht=ca_final,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
-            couts_fixes_annuels=F.COUTS_FIXES_ANNUELS,
-        )
+        debourse_sec_final = achats_finaux + mo_final + materiel_final
+        quote_part = calculer_quote_part_frais_generaux(debourse_sec_final)
 
         marge = calculer_marge_chantier(
             ca_ht=ca_final,
@@ -1228,7 +1211,7 @@ class TestLesCedresMargeCible:
             quote_part_frais_generaux=quote_part,
         )
 
-        # La marge est negative car les FG reels (167k) > FG budgetes (70k)
+        # La marge est negative car les FG reels (205k) > FG budgetes (70k)
         assert marge is not None
         assert Decimal(str(marge)) < Decimal("10")
 
@@ -1248,16 +1231,16 @@ class TestLesCedresMargeCible:
         )
 
     def test_marge_m6_intermediaire_avec_fg(self):
-        """A M+6, la marge avec FG est de 20.57%.
+        """A M+6, la marge avec FG est de 22.08%.
 
         Toujours superieure a la cible de 10% grace au decalage
-        couts/CA, mais reduite par les frais generaux.
+        couts/CA, mais reduite par les frais generaux (coeff 19%).
         """
         F = LesCedresBaseFixture
 
         marge = F.MARGE_AVEC_FG
-        assert marge == Decimal("20.57")
-        assert F.QUOTE_PART_FG == Decimal("117209.30")
+        assert marge == Decimal("22.08")
+        assert F.QUOTE_PART_FG == Decimal("104500.00")
 
 
 # ===========================================================================
@@ -1272,37 +1255,26 @@ class TestLesCedresCoherenceCalculs:
     """
 
     def test_quote_part_fg_calcul(self):
-        """Quote-part FG = (CA_chantier / CA_total) * couts_fixes.
+        """Quote-part FG = debourse_sec * COEFF_FRAIS_GENERAUX / 100.
 
-        (840 000 / 4 300 000) * 600 000 = 117 209.30 EUR
+        550 000 * 19 / 100 = 104 500.00 EUR
         """
         F = LesCedresBaseFixture
 
-        qp = calculer_quote_part_frais_generaux(
-            ca_chantier_ht=F.CA_HT_M6,
-            ca_total_annee=F.CA_TOTAL_ENTREPRISE,
-            couts_fixes_annuels=F.COUTS_FIXES_ANNUELS,
-        )
+        qp = calculer_quote_part_frais_generaux(F.DEBOURSE_SEC_M6)
 
-        assert qp == Decimal("117209.30")
+        assert qp == Decimal("104500.00")
 
-    def test_quote_part_fg_zero_si_ca_total_zero(self):
-        """Quote-part = 0 si CA total = 0 (pas de repartition)."""
-        F = LesCedresBaseFixture
-
-        qp = calculer_quote_part_frais_generaux(
-            ca_chantier_ht=F.CA_HT_M6,
-            ca_total_annee=Decimal("0"),
-            couts_fixes_annuels=F.COUTS_FIXES_ANNUELS,
-        )
-
+    def test_quote_part_fg_zero_si_debourse_zero(self):
+        """Quote-part = 0 si debourse sec = 0."""
+        qp = calculer_quote_part_frais_generaux(Decimal("0"))
         assert qp == Decimal("0")
 
     def test_cout_revient_complet_m6(self):
         """Cout de revient complet a M+6 avec FG.
 
-        Achats factures (370k) + MO (138k) + materiel (42k) + FG (117 209.30)
-        = 667 209.30 EUR
+        Achats factures (370k) + MO (138k) + materiel (42k) + FG (104 500)
+        = 654 500.00 EUR
         """
         F = LesCedresBaseFixture
 
@@ -1310,7 +1282,7 @@ class TestLesCedresCoherenceCalculs:
             F.TOTAL_REALISE_ACHATS + F.COUT_MO + F.COUT_MATERIEL + F.QUOTE_PART_FG
         )
 
-        assert cout_revient == Decimal("667209.30")
+        assert cout_revient == Decimal("654500.00")
 
     def test_arrondi_round_half_up(self):
         """Verifie que l'arrondi ROUND_HALF_UP est bien utilise.

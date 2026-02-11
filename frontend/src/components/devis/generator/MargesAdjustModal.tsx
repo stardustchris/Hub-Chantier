@@ -18,7 +18,6 @@ interface MargeField {
 export default function MargesAdjustModal({ devis, onClose, onSaved }: Props) {
   const globalFields: MargeField[] = [
     { key: 'taux_marge_global', label: 'Marge globale', value: devis.taux_marge_global || 0 },
-    { key: 'coefficient_frais_generaux', label: 'Frais generaux', value: devis.coefficient_frais_generaux || 0 },
   ]
 
   const categorieFields: MargeField[] = [

@@ -890,36 +890,41 @@ class TestConsolidationMargeBTP:
         )
 
     def test_marge_btp_formule_correcte(self):
-        """Test: marge BTP = (prix_vente - cout_revient) / prix_vente."""
+        """Test: marge BTP = (prix_vente - cout_revient) / prix_vente.
+
+        Avec coefficient FG unique (19%) sur debourse sec.
+        """
         # Arrange
         budget = self._make_budget(1, Decimal("100000"))
         self.mock_budget_repo.find_by_chantier_id.return_value = budget
 
-        # Prix de vente (situation): 120000 €
+        # Prix de vente (situation): 120000 EUR
         situation = self._make_situation(1, Decimal("120000"))
         self.mock_situation_repo.find_derniere_situation.return_value = situation
 
-        # Cout achats realises: 90000 €
+        # Cout achats realises: 90000 EUR
         self.mock_achat_repo.somme_by_chantier.side_effect = (
             lambda cid, statuts: Decimal("80000")
             if statuts == STATUTS_ENGAGES
             else Decimal("90000")
         )
 
-        # Cout MO: 18000 €
+        # Cout MO: 18000 EUR
         self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("18000")
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # Cout revient = 90000 + 18000 = 108000
-        # Marge = (120000 - 108000) / 120000 = 10%
+        # Debourse sec = 90000 + 18000 = 108000
+        # Quote-part FG = 108000 x 19% = 20520
+        # Cout revient = 90000 + 18000 + 20520 = 128520
+        # Marge = (120000 - 128520) / 120000 = -7.10%
 
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
         # Assert
-        assert result.chantiers[0].marge_estimee_pct == "10.00"
-        assert result.kpi_globaux.marge_moyenne_pct == "10.00"
+        assert result.chantiers[0].marge_estimee_pct == "-7.10"
+        assert result.kpi_globaux.marge_moyenne_pct == "-7.10"
 
     def test_marge_btp_chantier_deficitaire(self):
         """Test: marge BTP negative quand cout_revient > prix_vente."""
@@ -927,30 +932,32 @@ class TestConsolidationMargeBTP:
         budget = self._make_budget(1, Decimal("100000"))
         self.mock_budget_repo.find_by_chantier_id.return_value = budget
 
-        # Prix de vente: 100000 €
+        # Prix de vente: 100000 EUR
         situation = self._make_situation(1, Decimal("100000"))
         self.mock_situation_repo.find_derniere_situation.return_value = situation
 
-        # Cout achats realises: 95000 €
+        # Cout achats realises: 95000 EUR
         self.mock_achat_repo.somme_by_chantier.side_effect = (
             lambda cid, statuts: Decimal("90000")
             if statuts == STATUTS_ENGAGES
             else Decimal("95000")
         )
 
-        # Cout MO: 10000 €
+        # Cout MO: 10000 EUR
         self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("10000")
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # Cout revient = 95000 + 10000 = 105000
-        # Marge = (100000 - 105000) / 100000 = -5%
+        # Debourse sec = 95000 + 10000 = 105000
+        # Quote-part FG = 105000 x 19% = 19950
+        # Cout revient = 95000 + 10000 + 19950 = 124950
+        # Marge = (100000 - 124950) / 100000 = -24.95%
 
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
         # Assert
-        assert result.chantiers[0].marge_estimee_pct == "-5.00"
+        assert result.chantiers[0].marge_estimee_pct == "-24.95"
 
     def test_marge_moyenne_ponderee_par_prix_vente(self):
         """Test: marge moyenne ponderee par prix de vente, pas arithmetique."""
@@ -961,12 +968,12 @@ class TestConsolidationMargeBTP:
         }
         self.mock_budget_repo.find_by_chantier_id.side_effect = lambda cid: budgets.get(cid)
 
-        # Chantier 1: petit, marge 20%
-        # Prix vente: 50000, cout revient: 40000
+        # Chantier 1: petit
+        # Prix vente: 50000, achats: 35000, MO: 5000
         situation1 = self._make_situation(1, Decimal("50000"))
 
-        # Chantier 2: gros, marge 8%
-        # Prix vente: 400000, cout revient: 368000
+        # Chantier 2: gros
+        # Prix vente: 400000, achats: 350000, MO: 18000
         situation2 = self._make_situation(2, Decimal("400000"))
 
         def find_situation(cid):
@@ -993,17 +1000,18 @@ class TestConsolidationMargeBTP:
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # Chantier 1: marge = (50000 - 40000) / 50000 = 20%
-        # Chantier 2: marge = (400000 - 368000) / 400000 = 8%
-        # Marge moyenne ponderee = (20*50000 + 8*400000) / (50000+400000)
-        #                        = (1000000 + 3200000) / 450000
-        #                        = 4200000 / 450000 = 9.33%
+        # Chantier 1: debourse_sec=40000, FG=7600, cout_revient=47600
+        #   marge = (50000-47600)/50000 = 4.80%
+        # Chantier 2: debourse_sec=368000, FG=69920, cout_revient=437920
+        #   marge = (400000-437920)/400000 = -9.48%
+        # Marge moyenne ponderee = (4.80*50000 + (-9.48)*400000) / (50000+400000)
+        #                        = (240000 - 3792000) / 450000 = -7.89%
 
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1, 2])
 
-        # Assert - marge ponderee, pas simple moyenne (14%)
-        assert result.kpi_globaux.marge_moyenne_pct == "9.33"
+        # Assert - marge ponderee
+        assert result.kpi_globaux.marge_moyenne_pct == "-7.89"
 
     def test_fallback_sans_situation(self):
         """Test: fallback vers ancienne formule quand pas de situation."""
@@ -1069,7 +1077,7 @@ class TestConsolidationMargeBTP:
         }
         self.mock_budget_repo.find_by_chantier_id.side_effect = lambda cid: budgets.get(cid)
 
-        # Chantier 1: situation 80000, cout 72000 -> marge 10%
+        # Chantier 1: situation 80000
         situation1 = self._make_situation(1, Decimal("80000"))
 
         def find_situation(cid):
@@ -1094,15 +1102,16 @@ class TestConsolidationMargeBTP:
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # Chantier 1: marge BTP = (80000 - 72000) / 80000 = 10%
-        # Chantier 2 (fallback): marge = (200000 - 120000) / 200000 = 40%
+        # Chantier 1: debourse_sec=72000, FG=13680, cout_revient=85680
+        #   marge = (80000 - 85680) / 80000 = -7.10%
+        # Chantier 2 (fallback, pas de FG): marge = (200000 - 120000) / 200000 = 40%
 
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1, 2])
 
         # Assert
         marges = {c.chantier_id: c.marge_estimee_pct for c in result.chantiers}
-        assert marges[1] == "10.00"
+        assert marges[1] == "-7.10"
         assert marges[2] == "40.00"
 
 
@@ -1166,7 +1175,7 @@ class TestConsolidationAvecMateriel:
         """Test: le cout materiel est inclus dans le cout de revient total.
 
         Formule: marge = (prix_vente - cout_revient) / prix_vente
-        cout_revient = achats realises + cout MO + cout materiel
+        cout_revient = achats + MO + materiel + FG(19% debourse_sec)
         """
         # Arrange
         budget = self._make_budget(1, Decimal("200000"))
@@ -1191,14 +1200,16 @@ class TestConsolidationAvecMateriel:
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # cout_revient = 80000 + 20000 + 15000 = 115000
-        # marge = (150000 - 115000) / 150000 = 23.33%
+        # debourse_sec = 80000 + 20000 + 15000 = 115000
+        # FG = 115000 x 19% = 21850
+        # cout_revient = 115000 + 21850 = 136850
+        # marge = (150000 - 136850) / 150000 = 8.77%
 
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
         # Assert
-        assert result.chantiers[0].marge_estimee_pct == "23.33"
+        assert result.chantiers[0].marge_estimee_pct == "8.77"
         self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
 
     def test_consolidation_materiel_none_reste_zero(self):
@@ -1237,22 +1248,23 @@ class TestConsolidationAvecMateriel:
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # cout_revient = 80000 + 20000 + 0 = 100000 (pas de materiel)
-        # marge = (150000 - 100000) / 150000 = 33.33%
+        # debourse_sec = 80000 + 20000 + 0 = 100000 (pas de materiel)
+        # FG = 100000 x 19% = 19000
+        # cout_revient = 100000 + 19000 = 119000
+        # marge = (150000 - 119000) / 150000 = 20.67%
 
         # Act
         result = use_case_sans_materiel.execute(user_accessible_chantier_ids=[1])
 
         # Assert
-        assert result.chantiers[0].marge_estimee_pct == "33.33"
+        assert result.chantiers[0].marge_estimee_pct == "20.67"
         # Le repo materiel ne doit pas avoir ete appele
         self.mock_cout_materiel_repo.calculer_cout_chantier.assert_not_called()
 
     def test_consolidation_avec_cout_materiel(self):
-        """Test: le cout materiel (via mock retournant 15000) est inclus
-        dans le cout de revient et impacte la marge.
+        """Test: le cout materiel est inclus dans le cout de revient et impacte la marge.
 
-        cout_revient = achats realises + cout MO + cout materiel
+        cout_revient = achats + MO + materiel + FG(19% debourse_sec)
         marge = (prix_vente - cout_revient) / prix_vente
         """
         # Arrange
@@ -1278,14 +1290,16 @@ class TestConsolidationAvecMateriel:
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # cout_revient = 50000 + 10000 + 15000 = 75000
-        # marge = (100000 - 75000) / 100000 = 25%
+        # debourse_sec = 50000 + 10000 + 15000 = 75000
+        # FG = 75000 x 19% = 14250
+        # cout_revient = 75000 + 14250 = 89250
+        # marge = (100000 - 89250) / 100000 = 10.75%
 
         # Act
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
         # Assert
-        assert result.chantiers[0].marge_estimee_pct == "25.00"
+        assert result.chantiers[0].marge_estimee_pct == "10.75"
         self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
 
     def test_consolidation_cout_materiel_erreur_continue(self):
@@ -1320,15 +1334,17 @@ class TestConsolidationAvecMateriel:
 
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # cout_revient = 60000 + 10000 + 0 (erreur) = 70000
-        # marge = (100000 - 70000) / 100000 = 30%
+        # debourse_sec = 60000 + 10000 + 0 (erreur) = 70000
+        # FG = 70000 x 19% = 13300
+        # cout_revient = 70000 + 13300 = 83300
+        # marge = (100000 - 83300) / 100000 = 16.70%
 
         # Act - ne doit PAS lever d'exception
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
         # Assert - la consolidation a continue malgre l'erreur
         assert len(result.chantiers) == 1
-        assert result.chantiers[0].marge_estimee_pct == "30.00"
+        assert result.chantiers[0].marge_estimee_pct == "16.70"
         # A2: marge_statut doit etre "partielle" quand un calcul echoue
         assert result.chantiers[0].marge_statut == "partielle"
         self.mock_cout_materiel_repo.calculer_cout_chantier.assert_called_once_with(1)
@@ -1369,7 +1385,7 @@ class TestConsolidationAvecMateriel:
     def test_consolidation_fiabilite_marge_full(self):
         """Test C1: fiabilite_marge = 100 quand tous les composants sont OK.
 
-        Score: 30 (situation) + 25 (MO) + 25 (materiel) + 20 (frais generaux) = 100
+        Score: 30 (situation) + 25 (MO) + 25 (materiel) + 20 (FG toujours) = 100
         """
         # Arrange
         budget = self._make_budget(1, Decimal("200000"))
@@ -1387,19 +1403,16 @@ class TestConsolidationAvecMateriel:
         self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("5000")
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # Act - avec ca_total_entreprise pour activer le composant frais generaux
-        result = self.use_case.execute(
-            user_accessible_chantier_ids=[1],
-            ca_total_entreprise=Decimal("1000000"),
-        )
+        # Act - FG toujours appliques (coefficient unique)
+        result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
         # Assert
         assert result.chantiers[0].fiabilite_marge == 100
 
     def test_consolidation_fiabilite_marge_partielle(self):
-        """Test C1: fiabilite_marge = 30 quand seule la situation est OK.
+        """Test C1: fiabilite sans MO.
 
-        Score: 30 (situation) + 0 (MO=0) + 25 (materiel>=0) + 0 (pas de frais gen.) = 55
+        Score: 30 (situation) + 0 (MO=0) + 25 (materiel>=0) + 20 (FG toujours) = 75
         """
         # Arrange
         budget = self._make_budget(1, Decimal("200000"))
@@ -1418,11 +1431,11 @@ class TestConsolidationAvecMateriel:
         self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("0")
         self.mock_alerte_repo.find_non_acquittees.return_value = []
 
-        # Act - sans ca_total_annee (pas de frais generaux)
+        # Act - FG toujours appliques (coefficient unique)
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
-        # Assert - 30 (situation) + 0 (MO=0) + 25 (materiel ok, >=0) = 55
-        assert result.chantiers[0].fiabilite_marge == 55
+        # Assert - 30 (situation) + 0 (MO=0) + 25 (materiel ok, >=0) + 20 (FG) = 75
+        assert result.chantiers[0].fiabilite_marge == 75
 
     def test_consolidation_nb_chantiers_marge_en_attente_with_error(self):
         """Test A3: nb_chantiers_marge_en_attente compte les chantiers avec marge partielle.

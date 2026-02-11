@@ -40,7 +40,6 @@ from shared.domain.calcul_financier import (
     calculer_quote_part_frais_generaux,
     arrondir_pct,
     arrondir_montant,
-    COUTS_FIXES_ANNUELS,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,17 +76,15 @@ class GetDashboardFinancierUseCase:
     def execute(
         self,
         chantier_id: int,
-        ca_total_annee: Optional[Decimal] = None,
-        couts_fixes_annuels: Optional[Decimal] = None,
     ) -> DashboardFinancierDTO:
         """Construit le tableau de bord financier d'un chantier.
 
+        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
+        sur le debourse sec (achats + MO + materiel). Source unique, pas
+        de parametre externe.
+
         Args:
             chantier_id: L'ID du chantier.
-            ca_total_annee: CA total facture sur l'annee pour repartition des couts fixes.
-                Si None, les couts fixes ne sont pas repartis.
-            couts_fixes_annuels: Couts fixes annuels de l'entreprise (optionnel).
-                Si None, utilise la constante COUTS_FIXES_ANNUELS par defaut.
 
         Returns:
             Le DTO du dashboard complet.
@@ -95,33 +92,6 @@ class GetDashboardFinancierUseCase:
         Raises:
             BudgetNotFoundError: Si aucun budget pour ce chantier.
         """
-        effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
-
-        # P1-1: Auto-calcul ca_total_annee si non fourni
-        # Somme des montant_ht de toutes les factures actives (emise/envoyee/payee)
-        # pour repartir correctement les frais generaux (600k/an).
-        if ca_total_annee is None and self._facture_repository is not None:
-            try:
-                factures_actives = self._facture_repository.find_all_active(
-                    statuts=STATUTS_FACTURE_CA
-                )
-                ca_total_annee = sum(
-                    (f.montant_ht for f in factures_actives), Decimal("0")
-                )
-                if ca_total_annee > Decimal("0"):
-                    logger.info(
-                        "Dashboard: ca_total_annee auto-calcule = %s EUR "
-                        "(%d factures actives)",
-                        ca_total_annee,
-                        len(factures_actives),
-                    )
-            except Exception:
-                logger.warning(
-                    "Dashboard: impossible de calculer ca_total_annee "
-                    "automatiquement, frais generaux non repartis",
-                    exc_info=True,
-                )
-
         # Récupérer le budget
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -188,21 +158,9 @@ class GetDashboardFinancierUseCase:
                 prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
         if prix_vente_ht > Decimal("0"):
-            # Quote-part frais generaux via fonction unifiee
-            # ATTENTION: si ca_total_annee non fourni, frais generaux = 0
-            # et la marge sera surestimee (~14% sur 600k de frais fixes).
-            effective_ca_total = ca_total_annee or Decimal("0")
-            if effective_ca_total <= Decimal("0"):
-                logger.warning(
-                    "Dashboard chantier %d: ca_total_annee non fourni, "
-                    "frais generaux non repartis (marge potentiellement surestimee)",
-                    chantier_id,
-                )
-            quote_part = calculer_quote_part_frais_generaux(
-                ca_chantier_ht=prix_vente_ht,
-                ca_total_annee=effective_ca_total,
-                couts_fixes_annuels=effective_couts_fixes,
-            )
+            # Quote-part frais generaux = coefficient unique sur debourse sec
+            debourse_sec = total_realise + cout_mo + cout_materiel
+            quote_part = calculer_quote_part_frais_generaux(debourse_sec)
 
             # Marge BTP unifiee (formule partagee avec P&L et bilan)
             marge_estimee = calculer_marge_chantier(
@@ -242,9 +200,7 @@ class GetDashboardFinancierUseCase:
             fiabilite += 25  # MO calculee
         if cout_materiel_ok and cout_materiel > Decimal("0"):
             fiabilite += 25  # materiel avec donnees reelles
-        effective_ca_for_fiab = ca_total_annee or Decimal("0")
-        if effective_ca_for_fiab > Decimal("0"):
-            fiabilite += 20  # frais generaux repartis
+        fiabilite += 20  # frais generaux toujours appliques (coefficient unique)
 
         kpi = KPIFinancierDTO(
             montant_revise_ht=str(montant_revise_ht),

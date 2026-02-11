@@ -69,7 +69,7 @@ class DevisCreateDTO:
     taux_marge_sous_traitance: Optional[Decimal] = None
     taux_marge_materiel: Optional[Decimal] = None
     taux_marge_deplacement: Optional[Decimal] = None
-    coefficient_frais_generaux: Decimal = Decimal("12")
+    coefficient_frais_generaux: Decimal = Decimal("19")  # Ignore, source unique COEFF_FRAIS_GENERAUX
     retenue_garantie_pct: Decimal = Decimal("0")
     notes: Optional[str] = None
     acompte_pct: Decimal = Decimal("30")

@@ -1147,12 +1147,7 @@ async def get_dashboard_financier(
     """
     _check_chantier_access(chantier_id, _role, user_chantier_ids)
     try:
-        # Greg Construction : 4.3M€ de CA annuel (cf. specs projet)
-        # Permet repartition prorata des couts fixes dans le calcul de marge BTP
-        from decimal import Decimal
-        CA_TOTAL_ENTREPRISE = Decimal("4300000")
-
-        result = use_case.execute(chantier_id, ca_total_annee=CA_TOTAL_ENTREPRISE)
+        result = use_case.execute(chantier_id)
         return result.to_dict()
     except BudgetNotFoundError:
         raise HTTPException(
@@ -1245,15 +1240,9 @@ async def get_vue_consolidee_finances(
         # (le frontend doit fournir les IDs)
         accessible_ids = []
 
-    # CA total annuel de l'entreprise pour répartition des coûts fixes
-    # Greg Construction : 4.3M€ de CA annuel (cf. specs projet)
-    from decimal import Decimal
-    CA_TOTAL_ENTREPRISE = Decimal("4300000")
-
     result = use_case.execute(
         accessible_ids,
         statut_chantier=statut_chantier,
-        ca_total_entreprise=CA_TOTAL_ENTREPRISE,
     )
     return result.to_dict()
 
@@ -1298,15 +1287,9 @@ async def get_analyse_ia_consolidee(
         accessible_ids = []
 
     # Recuperer les donnees consolidees
-    # CA total annuel de l'entreprise pour répartition des coûts fixes
-    # Greg Constructions : 4.3M€ de CA annuel (cf. specs projet)
-    from decimal import Decimal
-    CA_TOTAL_ENTREPRISE = Decimal("4300000")
-
     consolidated = use_case.execute(
         accessible_ids,
         statut_chantier=statut_chantier,
-        ca_total_entreprise=CA_TOTAL_ENTREPRISE,
     )
     consolidated_dict = consolidated.to_dict()
 

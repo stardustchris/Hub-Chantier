@@ -4,14 +4,11 @@ FIN-20 Phase 3: Vue consolidee des finances pour la page /finances.
 Agrege les KPI financiers de plusieurs chantiers.
 
 Formule de marge BTP :
-    Marge = (Prix Vente - Coût Revient) / Prix Vente × 100
+    Marge = (Prix Vente - Cout Revient) / Prix Vente x 100
 
-Où :
-    - Prix Vente = situations de travaux facturées au client
-    - Coût Revient = achats réalisés + coût MO + coûts fixes répartis
-
-Coûts fixes société : 600 000 € / an (frais généraux hors salaires)
-Répartition : au prorata du CA facturé (prix de vente)
+Ou :
+    - Prix Vente = situations de travaux facturees au client
+    - Cout Revient = achats realises + cout MO + frais generaux (coeff sur debourse sec)
 """
 
 import logging
@@ -23,7 +20,6 @@ from shared.domain.calcul_financier import (
     calculer_quote_part_frais_generaux,
     arrondir_pct,
     arrondir_montant,
-    COUTS_FIXES_ANNUELS,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,14 +94,15 @@ class GetVueConsolideeFinancesUseCase:
         self,
         user_accessible_chantier_ids: List[int],
         statut_chantier: Optional[str] = None,
-        ca_total_entreprise: Optional[Decimal] = None,
-        couts_fixes_annuels: Optional[Decimal] = None,
     ) -> VueConsolideeDTO:
         """Construit la vue consolidee multi-chantiers.
 
         Pour chaque chantier accessible, recupere le budget et calcule
         les KPI (meme logique que GetDashboardFinancierUseCase).
         Agrege les totaux globaux et classe les chantiers.
+
+        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
+        sur le debourse sec. Source unique, pas de parametre externe.
 
         Args:
             user_accessible_chantier_ids: Liste des IDs de chantiers
@@ -114,18 +111,11 @@ class GetVueConsolideeFinancesUseCase:
                 chantier (ouvert, en_cours, receptionne, ferme). Si None,
                 tous les chantiers sont inclus. Ignore si chantier_info_port
                 n'est pas disponible.
-            ca_total_entreprise: CA total annuel de l'entreprise pour la
-                repartition des couts fixes. Si None, utilise le CA des
-                chantiers visibles (peut donner des marges incorrectes si
-                l'entreprise a d'autres chantiers non visibles).
-            couts_fixes_annuels: Couts fixes annuels de l'entreprise (optionnel).
-                Si None, utilise la constante COUTS_FIXES_ANNUELS par defaut.
 
         Returns:
             VueConsolideeDTO avec KPI globaux, liste chantiers,
             top 3 rentables et top 3 derives.
         """
-        effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
         chantiers_summaries: List[ChantierFinancierSummaryDTO] = []
 
         # Recuperer les noms des chantiers via le port (si disponible)
@@ -157,13 +147,6 @@ class GetVueConsolideeFinancesUseCase:
         nb_attention = 0
         nb_depassement = 0
         nb_marge_en_attente = 0
-
-        # CA total pour répartition des coûts fixes
-        # Si ca_total_entreprise est fourni, on l'utilise (recommandé)
-        # Sinon 0 = pas de répartition (même pattern que dashboard)
-        ca_total_annee = ca_total_entreprise if (
-            ca_total_entreprise is not None and ca_total_entreprise > Decimal("0")
-        ) else Decimal("0")
 
         for chantier_id in filtered_ids:
             budget = self._budget_repository.find_by_chantier_id(chantier_id)
@@ -235,11 +218,9 @@ class GetVueConsolideeFinancesUseCase:
 
             if prix_vente_ht > Decimal("0"):
                 # Marge BTP réelle (situations disponibles)
-                quote_part = calculer_quote_part_frais_generaux(
-                    ca_chantier_ht=prix_vente_ht,
-                    ca_total_annee=ca_total_annee,
-                    couts_fixes_annuels=effective_couts_fixes,
-                )
+                # Quote-part FG = coefficient unique sur debourse sec
+                debourse_sec = realise + cout_mo + cout_materiel
+                quote_part = calculer_quote_part_frais_generaux(debourse_sec)
                 marge_pct = calculer_marge_chantier(
                     ca_ht=prix_vente_ht,
                     cout_achats=realise,
@@ -291,8 +272,7 @@ class GetVueConsolideeFinancesUseCase:
                 fiabilite += 25  # MO calculee
             if cout_materiel_ok and cout_materiel >= Decimal("0"):
                 fiabilite += 25  # materiel OK (0 est valide si pas de parc)
-            if ca_total_annee > Decimal("0"):
-                fiabilite += 20  # frais generaux repartis
+            fiabilite += 20  # frais generaux toujours appliques (coefficient unique)
 
             # Alertes non acquittees
             alertes = self._alerte_repository.find_non_acquittees(chantier_id)
