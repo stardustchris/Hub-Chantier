@@ -284,7 +284,7 @@ class BudgetCreateRequest(BaseModel):
 
     chantier_id: int = Field(..., gt=0)
     montant_initial_ht: Decimal = Field(default=Decimal("0"), ge=0)
-    retenue_garantie_pct: Decimal = Field(default=Decimal("5"), ge=0, le=100)
+    retenue_garantie_pct: Decimal = Field(default=Decimal("5"), ge=0, le=5, description="Loi 71-584: max 5%")
     seuil_alerte_pct: Decimal = Field(default=Decimal("80"), ge=0, le=100)
     seuil_validation_achat: Decimal = Field(default=Decimal("1000"), ge=0)
     notes: Optional[str] = Field(None, max_length=2000)
@@ -295,7 +295,7 @@ class BudgetUpdateRequest(BaseModel):
 
     montant_initial_ht: Optional[Decimal] = Field(None, ge=0)
     montant_avenants_ht: Optional[Decimal] = None
-    retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=100)
+    retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=5, description="Loi 71-584: max 5%")
     seuil_alerte_pct: Optional[Decimal] = Field(None, ge=0, le=100)
     seuil_validation_achat: Optional[Decimal] = Field(None, ge=0)
     notes: Optional[str] = Field(None, max_length=2000)
@@ -1646,7 +1646,7 @@ class SituationCreateRequest(BaseModel):
     budget_id: int = Field(..., gt=0)
     periode_debut: date
     periode_fin: date
-    retenue_garantie_pct: Decimal = Field(default=Decimal("5.00"), ge=0, le=100)
+    retenue_garantie_pct: Decimal = Field(default=Decimal("5.00"), ge=0, le=5, description="Loi 71-584: max 5%")
     taux_tva: Decimal = Field(default=Decimal("20.00"), ge=0)
     notes: Optional[str] = Field(None, max_length=2000)
     lignes: list[LigneSituationCreateRequest] = Field(default_factory=list)
@@ -1657,7 +1657,7 @@ class SituationUpdateRequest(BaseModel):
 
     periode_debut: Optional[date] = None
     periode_fin: Optional[date] = None
-    retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=100)
+    retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=5, description="Loi 71-584: max 5%")
     taux_tva: Optional[Decimal] = Field(None, ge=0)
     notes: Optional[str] = Field(None, max_length=2000)
     lignes: Optional[list[LigneSituationCreateRequest]] = None
@@ -1889,7 +1889,7 @@ class FactureAcompteCreateRequest(BaseModel):
     chantier_id: int = Field(..., gt=0)
     montant_ht: Decimal = Field(..., ge=0)
     taux_tva: Decimal = Field(default=Decimal("20.00"), ge=0)
-    retenue_garantie_pct: Decimal = Field(default=Decimal("5.00"), ge=0, le=100)
+    retenue_garantie_pct: Decimal = Field(default=Decimal("5.00"), ge=0, le=5, description="Loi 71-584: max 5%")
     notes: Optional[str] = Field(None, max_length=2000)
 
 

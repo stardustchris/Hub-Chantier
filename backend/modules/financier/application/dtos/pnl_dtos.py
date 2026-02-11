@@ -41,6 +41,7 @@ class PnLChantierDTO:
         cout_achats: Achats factures HT.
         cout_main_oeuvre: Couts MO (pointages valides x taux horaire).
         cout_materiel: Couts materiel (reservations x tarif journalier).
+        quote_part_frais_generaux: Quote-part frais generaux repartie sur ce chantier.
         marge_brute_ht: CA - Couts.
         marge_brute_pct: Marge brute en %.
         budget_initial_ht: Budget initial pour reference.
@@ -55,6 +56,7 @@ class PnLChantierDTO:
     cout_achats: str
     cout_main_oeuvre: str
     cout_materiel: str
+    quote_part_frais_generaux: str
     marge_brute_ht: str
     marge_brute_pct: Optional[str]
     budget_initial_ht: str
@@ -71,6 +73,7 @@ class PnLChantierDTO:
             "cout_achats": self.cout_achats,
             "cout_main_oeuvre": self.cout_main_oeuvre,
             "cout_materiel": self.cout_materiel,
+            "quote_part_frais_generaux": self.quote_part_frais_generaux,
             "marge_brute_ht": self.marge_brute_ht,
             "marge_brute_pct": self.marge_brute_pct,
             "budget_initial_ht": self.budget_initial_ht,

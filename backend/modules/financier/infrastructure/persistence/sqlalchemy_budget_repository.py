@@ -14,6 +14,11 @@ from ...domain.repositories import BudgetRepository
 from .models import BudgetModel
 
 
+class OptimisticLockError(Exception):
+    """Erreur levee quand un conflit de version est detecte (lock optimiste)."""
+    pass
+
+
 class SQLAlchemyBudgetRepository(BudgetRepository):
     """Implementation SQLAlchemy du repository Budget."""
 
@@ -80,20 +85,34 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
     def save(self, budget: Budget) -> Budget:
         """Persiste un budget (creation ou mise a jour).
 
+        Lock optimiste: en mise a jour, verifie que la version en DB
+        correspond a celle de l'entite. Si un autre utilisateur a modifie
+        le budget entre temps, leve une exception.
+
         Args:
             budget: Le budget a persister.
 
         Returns:
             Le budget avec son ID attribue.
+
+        Raises:
+            OptimisticLockError: Si la version en DB ne correspond pas.
         """
         if budget.id:
-            # Mise a jour
+            # Mise a jour avec lock optimiste
             model = (
                 self._session.query(BudgetModel)
                 .filter(BudgetModel.id == budget.id)
                 .first()
             )
             if model:
+                # Verifier la version (lock optimiste)
+                if model.version != budget.version:
+                    raise OptimisticLockError(
+                        f"Budget {budget.id}: version conflit "
+                        f"(attendue={budget.version}, actuelle={model.version}). "
+                        f"Le budget a ete modifie par un autre utilisateur."
+                    )
                 model.montant_initial_ht = budget.montant_initial_ht
                 model.montant_avenants_ht = budget.montant_avenants_ht
                 model.retenue_garantie_pct = budget.retenue_garantie_pct
@@ -102,7 +121,7 @@ class SQLAlchemyBudgetRepository(BudgetRepository):
                 model.notes = budget.notes
                 model.devis_id = budget.devis_id
                 model.updated_at = datetime.utcnow()
-                model.version = budget.version
+                model.version = budget.version + 1
         else:
             # Creation
             model = self._to_model(budget)

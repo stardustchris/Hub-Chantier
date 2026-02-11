@@ -26,16 +26,13 @@ import {
   Users,
   ShieldCheck,
 } from 'lucide-react'
+import { formatEUR } from '../../utils/format'
 
 // ===== Props =====
 interface ConversionChantierPanelProps {
   devisId: number
   devisStatut: StatutDevis
 }
-
-// ===== Formateur EUR =====
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 // ===== Composant principal =====
 // Statuts qui permettent la conversion

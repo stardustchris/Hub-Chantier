@@ -13,6 +13,7 @@ import { financierService } from '../../services/financier'
 import { useToast } from '../../contexts/ToastContext'
 import { logger } from '../../services/logger'
 import type { SituationCreate, LotBudgetaire } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface SituationCreateModalProps {
   chantierId: number
@@ -47,9 +48,6 @@ export default function SituationCreateModal({
   const [loading, setLoading] = useState(false)
   const [loadingLots, setLoadingLots] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const formatEUR = (value: number): string =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
   // Charger les lots au montage
   useEffect(() => {
@@ -194,10 +192,11 @@ export default function SituationCreateModal({
                 onChange={(e) => handleChange('retenue_garantie_pct', parseFloat(e.target.value) || 0)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 min={0}
-                max={100}
+                max={5}
                 step="0.01"
                 disabled={loading}
               />
+              <p className="text-xs text-gray-500 mt-1">Max 5% (Loi 71-584)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Taux TVA %</label>

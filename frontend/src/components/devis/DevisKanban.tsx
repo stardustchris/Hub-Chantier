@@ -2,9 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { User, Euro } from 'lucide-react'
 import type { DevisRecent, StatutDevis } from '../../types'
 import { STATUT_DEVIS_CONFIG } from '../../types'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 const KANBAN_COLUMNS: StatutDevis[] = [
   'brouillon',

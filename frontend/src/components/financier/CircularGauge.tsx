@@ -49,7 +49,7 @@ export default function CircularGauge({
         height={size}
         className="transform -rotate-90"
         role="img"
-        aria-label={`Jauge ${safeValue.toFixed(1)}% sur ${max}%`}
+        aria-label={`Jauge ${safeValue.toFixed(1)}{'\u00a0'}% sur ${max}%`}
       >
         {/* Background circle */}
         <circle
@@ -75,7 +75,7 @@ export default function CircularGauge({
         />
       </svg>
       <span className="text-sm font-medium" style={{ color: displayColor }}>
-        {safeValue.toFixed(1)}%
+        {safeValue.toFixed(1)}{'\u00a0'}%
       </span>
     </div>
   )

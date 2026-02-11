@@ -12,13 +12,11 @@ import { Loader2, Search } from 'lucide-react'
 import { financierService } from '../../services/financier'
 import { logger } from '../../services/logger'
 import type { CoutMaterielSummary } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface CoutsMaterielPanelProps {
   chantierId: number
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 export default function CoutsMaterielPanel({ chantierId }: CoutsMaterielPanelProps) {
   const [data, setData] = useState<CoutMaterielSummary | null>(null)

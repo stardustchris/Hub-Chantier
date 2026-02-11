@@ -15,14 +15,12 @@ import { useAuth } from '../../contexts/AuthContext'
 import { logger } from '../../services/logger'
 import type { SituationTravaux, LigneSituationCreate } from '../../types'
 import { STATUT_SITUATION_CONFIG } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface SituationDetailProps {
   situationId: number
   budgetId: number
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr)

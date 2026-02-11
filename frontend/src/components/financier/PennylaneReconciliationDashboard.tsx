@@ -32,9 +32,7 @@ import type {
   ReconciliationAction,
 } from '../../types/pennylane'
 import { RECONCILIATION_STATUS_CONFIG } from '../../types/pennylane'
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr)

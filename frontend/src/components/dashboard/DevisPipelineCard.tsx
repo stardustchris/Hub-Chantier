@@ -12,15 +12,7 @@ import { FileText, Loader2, TrendingUp, Hash, Euro } from 'lucide-react'
 import { devisService } from '../../services/devis'
 import type { DashboardDevis, KPIDevis, DevisRecent, StatutDevis } from '../../types'
 import { STATUT_DEVIS_CONFIG } from '../../types'
-
-/** Formater un montant en EUR */
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
+import { formatEUR } from '../../utils/format'
 
 /** Statuts du pipeline actif (barre visuelle) */
 const PIPELINE_STATUTS: StatutDevis[] = [

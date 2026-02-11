@@ -1128,9 +1128,10 @@ export interface RepartitionLot {
   lot_id: number
   code_lot: string
   libelle: string
-  total_prevu_ht: number
-  engage: number
-  realise: number
+  total_prevu_ht: string  // Decimal serialise en string par le backend
+  engage: string
+  realise: string
+  ecart?: string
 }
 
 export interface DashboardFinancier {
@@ -1418,10 +1419,10 @@ export const TAUX_TVA_OPTIONS = [
 ]
 
 // Options retenue de garantie (DEV-22)
+// Loi 71-584 art. 1 : retenue de garantie max 5% du marche HT
 export const RETENUE_GARANTIE_OPTIONS = [
   { value: 0, label: '0% (Aucune)' },
-  { value: 5, label: '5%' },
-  { value: 10, label: '10%' },
+  { value: 5, label: '5% (Maximum legal)' },
 ]
 
 // ===== Phase 3 Types =====

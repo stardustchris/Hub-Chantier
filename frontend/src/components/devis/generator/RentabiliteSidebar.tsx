@@ -18,7 +18,7 @@ export default function RentabiliteSidebar({ devis, onSaved }: Props) {
   const totalVente = Number(devis.montant_total_ht || 0)
   const fraisGeneraux = totalDebourse * Number(devis.coefficient_frais_generaux || 0) / 100
   const benefice = totalVente - totalDebourse - fraisGeneraux
-  const margePct = totalVente > 0 ? Math.round((benefice / totalVente) * 100) : null
+  const margePct = totalVente > 0 ? Math.round(((benefice / totalVente) * 100) * 100) / 100 : null
 
   const data = [
     { name: 'Debourse sec', value: Math.max(totalDebourse, 0) },
@@ -65,9 +65,9 @@ export default function RentabiliteSidebar({ devis, onSaved }: Props) {
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className={`text-2xl font-bold ${margePct === null ? 'text-gray-400' : 'text-gray-900'}`}>
-              {margePct === null ? 'N/D' : `${margePct}%`}
+              {margePct === null ? 'N/D' : `${margePct.toFixed(2)}\u00a0%`}
             </span>
-            <span className="text-xs text-gray-500">Marge</span>
+            <span className="text-xs text-gray-500">Coeff. majoration</span>
           </div>
         </div>
 

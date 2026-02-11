@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { devisService } from '../../../services/devis'
 import type { DevisDetail } from '../../../types'
-
-const formatEUR = (val: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val || 0)
+import { formatEUR } from '../../../utils/format'
 
 interface Props {
   devis: DevisDetail
@@ -19,10 +17,10 @@ const ECHEANCES = [
   { value: '60_jours', label: '60 jours' },
 ]
 
+// Loi 71-584 art. 1 : retenue de garantie max 5% du marche HT
 const RETENUE_OPTIONS = [
   { value: 0, label: 'Aucune' },
-  { value: 2.5, label: '2.5%' },
-  { value: 5, label: '5%' },
+  { value: 5, label: '5% (Maximum legal)' },
 ]
 
 export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: Props) {

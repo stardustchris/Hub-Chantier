@@ -15,13 +15,11 @@ import { useAuth } from '../../contexts/AuthContext'
 import { logger } from '../../services/logger'
 import type { AlerteDepassement } from '../../types'
 import { TYPE_ALERTE_LABELS } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface AlertesPanelProps {
   chantierId: number
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr)

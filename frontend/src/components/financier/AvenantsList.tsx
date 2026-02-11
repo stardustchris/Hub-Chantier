@@ -14,13 +14,11 @@ import { useAuth } from '../../contexts/AuthContext'
 import { logger } from '../../services/logger'
 import type { AvenantBudgetaire, AvenantCreate } from '../../types'
 import { STATUT_AVENANT_CONFIG } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface AvenantsListProps {
   budgetId: number
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr)

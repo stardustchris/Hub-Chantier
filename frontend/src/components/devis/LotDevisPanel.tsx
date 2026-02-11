@@ -12,9 +12,7 @@ import {
 } from 'lucide-react'
 import type { LotDevis, LotDevisCreate, LotDevisUpdate, LigneDevisCreate, LigneDevisUpdate, LigneDevis } from '../../types'
 import LigneDevisTable from './LigneDevisTable'
-
-const formatEUR = (value: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+import { formatEUR } from '../../utils/format'
 
 interface LotDevisPanelProps {
   lots: LotDevis[]

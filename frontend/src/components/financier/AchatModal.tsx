@@ -22,6 +22,7 @@ import {
   UNITE_MESURE_FINANCIER_LABELS,
   TAUX_TVA_OPTIONS,
 } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface AchatModalProps {
   chantierId: number
@@ -63,9 +64,6 @@ export default function AchatModal({
   const totalHT = useMemo(() => formData.quantite * formData.prix_unitaire_ht, [formData.quantite, formData.prix_unitaire_ht])
   const montantTVA = useMemo(() => totalHT * (formData.taux_tva / 100), [totalHT, formData.taux_tva])
   const totalTTC = useMemo(() => totalHT + montantTVA, [totalHT, montantTVA])
-
-  const formatEUR = (value: number): string =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
   const handleChange = (field: string, value: string | number | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }))

@@ -16,14 +16,12 @@ import { logger } from '../../services/logger'
 import LotBudgetaireModal from './LotBudgetaireModal'
 import type { LotBudgetaire } from '../../types'
 import { UNITE_MESURE_FINANCIER_LABELS } from '../../types'
+import { formatEUR } from '../../utils/format'
 
 interface LotsBudgetairesTableProps {
   budgetId: number
   onRefresh: () => void
 }
-
-const formatEUR = (value: number): string =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 
 export default function LotsBudgetairesTable({ budgetId, onRefresh }: LotsBudgetairesTableProps) {
   const { user } = useAuth()
