@@ -17,6 +17,8 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
+from datetime import datetime
+
 from ...domain.repositories import (
     BudgetRepository,
     LotBudgetaireRepository,
@@ -25,6 +27,7 @@ from ...domain.repositories import (
     CoutMainOeuvreRepository,
     CoutMaterielRepository,
     FactureRepository,
+    ConfigurationEntrepriseRepository,
 )
 from ...domain.value_objects import StatutAchat
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
@@ -40,6 +43,7 @@ from shared.domain.calcul_financier import (
     calculer_quote_part_frais_generaux,
     arrondir_pct,
     arrondir_montant,
+    COEFF_FRAIS_GENERAUX,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,6 +68,7 @@ class GetDashboardFinancierUseCase:
         cout_mo_repository: CoutMainOeuvreRepository = None,
         cout_materiel_repository: CoutMaterielRepository = None,
         facture_repository: FactureRepository = None,
+        config_repository: ConfigurationEntrepriseRepository = None,
     ):
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
@@ -72,6 +77,7 @@ class GetDashboardFinancierUseCase:
         self._cout_mo_repository = cout_mo_repository
         self._cout_materiel_repository = cout_materiel_repository
         self._facture_repository = facture_repository
+        self._config_repository = config_repository
 
     def execute(
         self,
@@ -79,9 +85,8 @@ class GetDashboardFinancierUseCase:
     ) -> DashboardFinancierDTO:
         """Construit le tableau de bord financier d'un chantier.
 
-        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
-        sur le debourse sec (achats + MO + materiel). Source unique, pas
-        de parametre externe.
+        Frais generaux : coefficient lu depuis ConfigurationEntreprise (BDD).
+        Fallback sur COEFF_FRAIS_GENERAUX si aucune config en base.
 
         Args:
             chantier_id: L'ID du chantier.
@@ -92,6 +97,13 @@ class GetDashboardFinancierUseCase:
         Raises:
             BudgetNotFoundError: Si aucun budget pour ce chantier.
         """
+        # Lire le coefficient FG depuis la config entreprise (SSOT)
+        coeff_fg = COEFF_FRAIS_GENERAUX  # fallback
+        if self._config_repository:
+            config = self._config_repository.find_by_annee(datetime.now().year)
+            if config:
+                coeff_fg = config.coeff_frais_generaux
+
         # Récupérer le budget
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -158,9 +170,9 @@ class GetDashboardFinancierUseCase:
                 prix_vente_ht = Decimal(str(derniere_situation.montant_cumule_ht))
 
         if prix_vente_ht > Decimal("0"):
-            # Quote-part frais generaux = coefficient unique sur debourse sec
+            # Quote-part frais generaux depuis config entreprise (SSOT)
             debourse_sec = total_realise + cout_mo + cout_materiel
-            quote_part = calculer_quote_part_frais_generaux(debourse_sec)
+            quote_part = calculer_quote_part_frais_generaux(debourse_sec, coeff_fg)
 
             # Marge BTP unifiee (formule partagee avec P&L et bilan)
             marge_estimee = calculer_marge_chantier(

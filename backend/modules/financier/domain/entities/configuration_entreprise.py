@@ -27,6 +27,8 @@ class ConfigurationEntreprise:
     updated_by: Optional[int] = None
 
     def __post_init__(self) -> None:
+        if not (2020 <= self.annee <= 2099):
+            raise ValueError("L'annee doit etre comprise entre 2020 et 2099")
         if self.couts_fixes_annuels < Decimal("0"):
             raise ValueError("Les couts fixes annuels ne peuvent pas etre negatifs")
         if self.coeff_frais_generaux < Decimal("0") or self.coeff_frais_generaux > Decimal("100"):

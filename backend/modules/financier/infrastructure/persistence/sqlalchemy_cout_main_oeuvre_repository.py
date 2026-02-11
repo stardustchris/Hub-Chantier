@@ -17,6 +17,9 @@ from shared.domain.calcul_financier import COEFF_HEURES_SUP, COEFF_HEURES_SUP_2,
 from ...domain.repositories.cout_main_oeuvre_repository import (
     CoutMainOeuvreRepository,
 )
+from ...domain.repositories.configuration_entreprise_repository import (
+    ConfigurationEntrepriseRepository,
+)
 from ...domain.value_objects.cout_employe import CoutEmploye
 
 
@@ -25,15 +28,45 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
 
     Utilise des requetes SQL brutes (text()) pour interroger les tables
     pointages et users sans importer les modeles d'autres modules.
+
+    Les coefficients (charges patronales, heures sup) sont lus depuis
+    ConfigurationEntreprise (BDD) si disponible, sinon fallback sur
+    les constantes de calcul_financier.py.
     """
 
-    def __init__(self, session: Session):
+    def __init__(
+        self,
+        session: Session,
+        config_repository: Optional[ConfigurationEntrepriseRepository] = None,
+    ):
         """Initialise le repository avec une session SQLAlchemy.
 
         Args:
             session: La session SQLAlchemy.
+            config_repository: Repository config entreprise pour coefficients (SSOT).
         """
         self._session = session
+        self._config_repository = config_repository
+
+    def _get_coefficients(self) -> tuple:
+        """Recupere les coefficients MO depuis la config entreprise (SSOT).
+
+        Returns:
+            Tuple (coeff_charges, coeff_hs_1, coeff_hs_2).
+        """
+        coeff_charges = COEFF_CHARGES_PATRONALES
+        coeff_hs_1 = COEFF_HEURES_SUP
+        coeff_hs_2 = COEFF_HEURES_SUP_2
+
+        if self._config_repository:
+            from datetime import datetime
+            config = self._config_repository.find_by_annee(datetime.now().year)
+            if config:
+                coeff_charges = config.coeff_charges_patronales
+                coeff_hs_1 = config.coeff_heures_sup
+                coeff_hs_2 = config.coeff_heures_sup_2
+
+        return coeff_charges, coeff_hs_1, coeff_hs_2
 
     def calculer_cout_chantier(
         self,
@@ -83,15 +116,17 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
             ) weekly_costs
         """)
 
+        coeff_charges, coeff_hs_1, coeff_hs_2 = self._get_coefficients()
+
         result = self._session.execute(
             query,
             {
                 "chantier_id": chantier_id,
                 "date_debut": date_debut,
                 "date_fin": date_fin,
-                "coeff_charges": str(COEFF_CHARGES_PATRONALES),
-                "coeff_hs_1": str(COEFF_HEURES_SUP),
-                "coeff_hs_2": str(COEFF_HEURES_SUP_2),
+                "coeff_charges": str(coeff_charges),
+                "coeff_hs_1": str(coeff_hs_1),
+                "coeff_hs_2": str(coeff_hs_2),
             },
         ).scalar()
 
@@ -160,15 +195,17 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
             ORDER BY nom, prenom
         """)
 
+        coeff_charges, coeff_hs_1, coeff_hs_2 = self._get_coefficients()
+
         rows = self._session.execute(
             query,
             {
                 "chantier_id": chantier_id,
                 "date_debut": date_debut,
                 "date_fin": date_fin,
-                "coeff_charges": str(COEFF_CHARGES_PATRONALES),
-                "coeff_hs_1": str(COEFF_HEURES_SUP),
-                "coeff_hs_2": str(COEFF_HEURES_SUP_2),
+                "coeff_charges": str(coeff_charges),
+                "coeff_hs_1": str(coeff_hs_1),
+                "coeff_hs_2": str(coeff_hs_2),
             },
         ).fetchall()
 
@@ -178,7 +215,7 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
             sup_minutes = Decimal(str(row.total_sup_minutes or 0))
             heures = (normales_minutes + sup_minutes) / Decimal("60")
             taux = Decimal(str(row.taux_horaire or 0))
-            taux_charge = taux * COEFF_CHARGES_PATRONALES
+            taux_charge = taux * coeff_charges
             cout = Decimal(str(row.cout_total or 0))
 
             result.append(

@@ -731,9 +731,12 @@ def get_list_factures_use_case(
 
 def get_cout_main_oeuvre_repository(
     db: Session = Depends(get_db),
+    config_repository: ConfigurationEntrepriseRepository = Depends(
+        get_configuration_entreprise_repository
+    ),
 ) -> CoutMainOeuvreRepository:
-    """Retourne le repository CoutMainOeuvre."""
-    return SQLAlchemyCoutMainOeuvreRepository(db)
+    """Retourne le repository CoutMainOeuvre avec coefficients depuis config entreprise."""
+    return SQLAlchemyCoutMainOeuvreRepository(db, config_repository=config_repository)
 
 
 # =============================================================================
@@ -786,18 +789,17 @@ def get_dashboard_financier_use_case(
     cout_mo_repository: CoutMainOeuvreRepository = Depends(get_cout_main_oeuvre_repository),
     cout_materiel_repository: CoutMaterielRepository = Depends(get_cout_materiel_repository),
     facture_repository: FactureRepository = Depends(get_facture_repository),
+    config_repository: ConfigurationEntrepriseRepository = Depends(get_configuration_entreprise_repository),
 ) -> GetDashboardFinancierUseCase:
     """Retourne le use case GetDashboardFinancier.
 
-    Utilise la formule BTP correcte pour le calcul de marge:
-    Marge = (Prix Vente - Cout Revient) / Prix Vente
-    ou Prix Vente = situations facturees, Cout Revient = achats + MO + materiel.
-    Le facture_repository permet l'auto-calcul du CA total annuel (P1-1).
+    Les coefficients financiers sont lus depuis ConfigurationEntreprise (SSOT).
     """
     return GetDashboardFinancierUseCase(
         budget_repository, lot_repository, achat_repository,
         situation_repository, cout_mo_repository, cout_materiel_repository,
         facture_repository=facture_repository,
+        config_repository=config_repository,
     )
 
 
@@ -880,12 +882,17 @@ def get_vue_consolidee_use_case(
     chantier_repo = SQLAlchemyChantierRepository(db)
     chantier_info_port = ChantierInfoAdapter(chantier_repo)
 
+    from ...domain.repositories import ConfigurationEntrepriseRepository as _ConfigRepo
+    from ..persistence import SQLAlchemyConfigurationEntrepriseRepository as _SQLConfigRepo
+    config_repo = _SQLConfigRepo(db)
+
     return GetVueConsolideeFinancesUseCase(
         budget_repository, lot_repository, achat_repository, alerte_repository,
         chantier_info_port=chantier_info_port,
         situation_repository=situation_repository,
         cout_mo_repository=cout_mo_repository,
         cout_materiel_repository=cout_materiel_repository,
+        config_repository=config_repo,
     )
 
 
@@ -1052,10 +1059,14 @@ def get_pnl_chantier_use_case(
     chantier_repo = SQLAlchemyChantierRepository(db)
     chantier_info_port = ChantierInfoAdapter(chantier_repo)
 
+    from ..persistence import SQLAlchemyConfigurationEntrepriseRepository as _SQLConfigRepo
+    config_repo = _SQLConfigRepo(db)
+
     return GetPnLChantierUseCase(
         facture_repository, achat_repository, budget_repository,
         cout_mo_repository, cout_materiel_repository,
         chantier_info_port=chantier_info_port,
+        config_repository=config_repo,
     )
 
 
@@ -1084,6 +1095,9 @@ def get_bilan_cloture_use_case(
     chantier_repo = SQLAlchemyChantierRepository(db)
     chantier_info_port = ChantierInfoAdapter(chantier_repo)
 
+    from ..persistence import SQLAlchemyConfigurationEntrepriseRepository as _SQLConfigRepo
+    config_repo = _SQLConfigRepo(db)
+
     return GetBilanClotureUseCase(
         budget_repository, lot_repository, achat_repository,
         avenant_repository, situation_repository,
@@ -1091,6 +1105,7 @@ def get_bilan_cloture_use_case(
         facture_repository=facture_repository,
         cout_mo_repository=cout_mo_repository,
         cout_materiel_repository=cout_materiel_repository,
+        config_repository=config_repo,
     )
 
 

@@ -15,11 +15,14 @@ import logging
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from datetime import datetime
+
 from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
     arrondir_pct,
     arrondir_montant,
+    COEFF_FRAIS_GENERAUX,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,6 +37,7 @@ from ...domain.repositories import (
     SituationRepository,
     CoutMainOeuvreRepository,
     CoutMaterielRepository,
+    ConfigurationEntrepriseRepository,
 )
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
 from ..dtos.consolidation_dtos import (
@@ -68,6 +72,7 @@ class GetVueConsolideeFinancesUseCase:
         situation_repository: Optional[SituationRepository] = None,
         cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
         cout_materiel_repository: Optional[CoutMaterielRepository] = None,
+        config_repository: Optional[ConfigurationEntrepriseRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -89,6 +94,7 @@ class GetVueConsolideeFinancesUseCase:
         self._situation_repository = situation_repository
         self._cout_mo_repository = cout_mo_repository
         self._cout_materiel_repository = cout_materiel_repository
+        self._config_repository = config_repository
 
     def execute(
         self,
@@ -101,8 +107,8 @@ class GetVueConsolideeFinancesUseCase:
         les KPI (meme logique que GetDashboardFinancierUseCase).
         Agrege les totaux globaux et classe les chantiers.
 
-        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
-        sur le debourse sec. Source unique, pas de parametre externe.
+        Frais generaux : coefficient lu depuis ConfigurationEntreprise (BDD).
+        Fallback sur COEFF_FRAIS_GENERAUX si aucune config en base.
 
         Args:
             user_accessible_chantier_ids: Liste des IDs de chantiers
@@ -116,6 +122,13 @@ class GetVueConsolideeFinancesUseCase:
             VueConsolideeDTO avec KPI globaux, liste chantiers,
             top 3 rentables et top 3 derives.
         """
+        # Lire le coefficient FG depuis la config entreprise (SSOT)
+        coeff_fg = COEFF_FRAIS_GENERAUX  # fallback
+        if self._config_repository:
+            config = self._config_repository.find_by_annee(datetime.now().year)
+            if config:
+                coeff_fg = config.coeff_frais_generaux
+
         chantiers_summaries: List[ChantierFinancierSummaryDTO] = []
 
         # Recuperer les noms des chantiers via le port (si disponible)
@@ -218,9 +231,9 @@ class GetVueConsolideeFinancesUseCase:
 
             if prix_vente_ht > Decimal("0"):
                 # Marge BTP réelle (situations disponibles)
-                # Quote-part FG = coefficient unique sur debourse sec
+                # Quote-part FG depuis config entreprise (SSOT)
                 debourse_sec = realise + cout_mo + cout_materiel
-                quote_part = calculer_quote_part_frais_generaux(debourse_sec)
+                quote_part = calculer_quote_part_frais_generaux(debourse_sec, coeff_fg)
                 marge_pct = calculer_marge_chantier(
                     ca_ht=prix_vente_ht,
                     cout_achats=realise,
