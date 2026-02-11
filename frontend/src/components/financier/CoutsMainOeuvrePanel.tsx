@@ -131,7 +131,8 @@ export default function CoutsMainOeuvrePanel({ chantierId }: CoutsMainOeuvrePane
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-gray-500">Employe</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-500">Heures validees</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500">Taux horaire</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500">Taux brut</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500">Taux chargé</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-500">Cout total</th>
                 </tr>
               </thead>
@@ -146,6 +147,9 @@ export default function CoutsMainOeuvrePanel({ chantierId }: CoutsMainOeuvrePane
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500">
                       {formatEUR(employe.taux_horaire)}/h
+                    </td>
+                    <td className="px-4 py-3 text-right text-orange-600">
+                      {formatEUR(employe.taux_horaire_charge)}/h
                     </td>
                     <td className="px-4 py-3 text-right font-medium whitespace-nowrap">
                       {formatEUR(employe.cout_total)}

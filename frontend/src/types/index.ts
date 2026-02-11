@@ -1304,6 +1304,7 @@ export interface CoutEmploye {
   prenom: string
   heures_validees: number
   taux_horaire: number
+  taux_horaire_charge: number
   cout_total: number
 }
 

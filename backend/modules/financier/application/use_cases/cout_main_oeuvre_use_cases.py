@@ -60,6 +60,7 @@ class GetCoutMainOeuvreUseCase:
                     prenom=emp.prenom,
                     heures_validees=str(emp.heures_validees),
                     taux_horaire=str(emp.taux_horaire),
+                    taux_horaire_charge=str(emp.taux_horaire_charge),
                     cout_total=str(emp.cout_total),
                 )
             )

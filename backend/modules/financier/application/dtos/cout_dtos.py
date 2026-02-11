@@ -17,6 +17,7 @@ class CoutEmployeDTO:
     prenom: str
     heures_validees: str
     taux_horaire: str
+    taux_horaire_charge: str
     cout_total: str
 
 

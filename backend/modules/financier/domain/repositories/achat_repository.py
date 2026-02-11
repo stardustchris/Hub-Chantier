@@ -180,3 +180,22 @@ class AchatRepository(ABC):
             True si supprimé, False si non trouvé.
         """
         pass
+
+    @abstractmethod
+    def search_suggestions(
+        self,
+        search: str,
+        limit: int = 10,
+    ) -> List[dict]:
+        """Recherche les libellés d'achats passés pour autocomplete.
+
+        Retourne des suggestions uniques (libelle + dernier prix + fournisseur).
+
+        Args:
+            search: Terme de recherche (ILIKE).
+            limit: Nombre max de suggestions.
+
+        Returns:
+            Liste de dicts avec libelle, prix_unitaire_ht, unite, type_achat, fournisseur_id.
+        """
+        pass

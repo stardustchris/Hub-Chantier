@@ -30,6 +30,12 @@ COEFF_HEURES_SUP = Decimal("1.25")
 # Art. L3121-36 Code du travail : au-dela de 43h/semaine (+50%).
 COEFF_HEURES_SUP_2 = Decimal("1.50")
 
+# Coefficient de charges patronales BTP (salaire brut → coût employeur).
+# Charges sociales employeur BTP typiques : ~45% du brut.
+# Inclut : URSSAF, retraite PROBTP, prévoyance, congés payés caisse BTP.
+# Configurable par l'admin à terme via ConfigurationEntreprise.
+COEFF_CHARGES_PATRONALES = Decimal("1.45")
+
 
 # -- Arrondi comptable -------------------------------------------------------
 
