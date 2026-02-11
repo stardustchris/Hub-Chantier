@@ -270,8 +270,8 @@ class GetVueConsolideeFinancesUseCase:
                 fiabilite += 30  # situation disponible
             if cout_mo_ok and cout_mo > Decimal("0"):
                 fiabilite += 25  # MO calculee
-            if cout_materiel_ok and cout_materiel >= Decimal("0"):
-                fiabilite += 25  # materiel OK (0 est valide si pas de parc)
+            if cout_materiel_ok and cout_materiel > Decimal("0"):
+                fiabilite += 25  # materiel avec donnees reelles (coherent dashboard)
             fiabilite += 20  # frais generaux toujours appliques (coefficient unique)
 
             # Alertes non acquittees

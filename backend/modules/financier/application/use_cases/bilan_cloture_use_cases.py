@@ -292,6 +292,7 @@ class GetBilanClotureUseCase:
         factures = self.facture_repository.find_by_chantier_id(chantier_id)
         ca = Decimal("0")
         for facture in factures:
-            if facture.statut in statuts_ca:
+            # P2-5: Filtre defensif soft-delete (coherent avec P&L)
+            if facture.statut in statuts_ca and not facture.est_supprime:
                 ca += facture.montant_ht
         return ca
