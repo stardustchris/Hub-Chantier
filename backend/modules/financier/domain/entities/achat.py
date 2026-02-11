@@ -12,7 +12,7 @@ from typing import Optional, Literal
 
 from ..value_objects import TypeAchat, StatutAchat, UniteMesure
 from ..value_objects.taux_tva import TAUX_VALIDES
-from shared.domain.calcul_financier import calculer_tva as _calculer_tva
+from shared.domain.calcul_financier import calculer_tva as _calculer_tva, arrondir_montant
 
 
 # Type pour la source de donnée
@@ -102,7 +102,7 @@ class Achat:
     @property
     def total_ht(self) -> Decimal:
         """Montant total HT = quantité * prix unitaire."""
-        return self.quantite * self.prix_unitaire_ht
+        return arrondir_montant(self.quantite * self.prix_unitaire_ht)
 
     @property
     def montant_tva(self) -> Decimal:

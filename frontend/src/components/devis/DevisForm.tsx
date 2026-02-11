@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, AlertTriangle } from 'lucide-react'
 import type { DevisCreate, DevisUpdate, DevisDetail } from '../../types'
 import { TAUX_TVA_OPTIONS, RETENUE_GARANTIE_OPTIONS } from '../../types'
 
@@ -179,21 +179,39 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Retenue de garantie
               </label>
-              <div className="flex gap-2">
-                {RETENUE_GARANTIE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setForm({ ...form, retenue_garantie_pct: opt.value })}
-                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                      form.retenue_garantie_pct === opt.value
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
-                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  {RETENUE_GARANTIE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setForm({ ...form, retenue_garantie_pct: opt.value })}
+                      className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                        form.retenue_garantie_pct === opt.value
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.5"
+                  value={form.retenue_garantie_pct}
+                  onChange={(e) => setForm({ ...form, retenue_garantie_pct: Number(e.target.value) })}
+                  className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Personnalisé"
+                />
+                {form.retenue_garantie_pct > 5 && (
+                  <p className="text-xs text-orange-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Retenue de garantie plafonnée à 5% (loi 71-584)
+                  </p>
+                )}
               </div>
             </div>
           </div>

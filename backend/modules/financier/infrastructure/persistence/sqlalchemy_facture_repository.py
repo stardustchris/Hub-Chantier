@@ -209,6 +209,23 @@ class SQLAlchemyFactureRepository(FactureRepository):
         """
         return self.count_factures_year(year) + 1
 
+    def find_all_active(self, statuts: set[str] = None) -> List[FactureClient]:
+        """Liste toutes les factures actives (non supprimees), tous chantiers confondus.
+
+        Args:
+            statuts: Ensemble de statuts a filtrer.
+                Si None, retourne toutes les factures non supprimees.
+
+        Returns:
+            Liste des factures actives.
+        """
+        query = self._session.query(FactureClientModel).filter(
+            FactureClientModel.deleted_at.is_(None)
+        )
+        if statuts:
+            query = query.filter(FactureClientModel.statut.in_(statuts))
+        return [self._to_entity(model) for model in query.all()]
+
     def delete(self, facture_id: int, deleted_by: int) -> None:
         """Supprime une facture (soft delete - H10).
 

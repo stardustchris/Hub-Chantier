@@ -595,12 +595,16 @@ class AchatModel(FinancierBase):
             name="check_achats_prix_positif",
         ),
         CheckConstraint(
-            "taux_tva >= 0 AND taux_tva <= 100",
+            "taux_tva IN (0, 2.1, 5.5, 10, 20)",
             name="check_achats_tva_range",
         ),
         CheckConstraint(
             "date_livraison_prevue IS NULL OR date_livraison_prevue >= date_commande",
             name="check_achats_date_livraison_coherente",
+        ),
+        CheckConstraint(
+            "type_achat != 'sous_traitance' OR taux_tva = 0",
+            name="check_achats_autoliquidation_st",
         ),
     )
 
@@ -837,7 +841,7 @@ class SituationTravauxModel(FinancierBase):
             name="check_situations_travaux_retenue_range",
         ),
         CheckConstraint(
-            "taux_tva >= 0 AND taux_tva <= 100",
+            "taux_tva IN (0, 2.1, 5.5, 10, 20)",
             name="check_situations_travaux_tva_range",
         ),
     )

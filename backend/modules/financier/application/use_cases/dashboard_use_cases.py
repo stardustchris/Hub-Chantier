@@ -24,6 +24,7 @@ from ...domain.repositories import (
     SituationRepository,
     CoutMainOeuvreRepository,
     CoutMaterielRepository,
+    FactureRepository,
 )
 from ...domain.value_objects import StatutAchat
 from ...domain.value_objects.statuts_financiers import STATUTS_ENGAGES, STATUTS_REALISES
@@ -44,6 +45,9 @@ from shared.domain.calcul_financier import (
 
 logger = logging.getLogger(__name__)
 
+# Statuts de facture consideres comme CA (facture emise au client)
+STATUTS_FACTURE_CA = {"emise", "envoyee", "payee"}
+
 
 class GetDashboardFinancierUseCase:
     """Use case pour construire le tableau de bord financier d'un chantier.
@@ -60,6 +64,7 @@ class GetDashboardFinancierUseCase:
         situation_repository: SituationRepository = None,
         cout_mo_repository: CoutMainOeuvreRepository = None,
         cout_materiel_repository: CoutMaterielRepository = None,
+        facture_repository: FactureRepository = None,
     ):
         self._budget_repository = budget_repository
         self._lot_repository = lot_repository
@@ -67,6 +72,7 @@ class GetDashboardFinancierUseCase:
         self._situation_repository = situation_repository
         self._cout_mo_repository = cout_mo_repository
         self._cout_materiel_repository = cout_materiel_repository
+        self._facture_repository = facture_repository
 
     def execute(
         self,
@@ -90,6 +96,32 @@ class GetDashboardFinancierUseCase:
             BudgetNotFoundError: Si aucun budget pour ce chantier.
         """
         effective_couts_fixes = couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS
+
+        # P1-1: Auto-calcul ca_total_annee si non fourni
+        # Somme des montant_ht de toutes les factures actives (emise/envoyee/payee)
+        # pour repartir correctement les frais generaux (600k/an).
+        if ca_total_annee is None and self._facture_repository is not None:
+            try:
+                factures_actives = self._facture_repository.find_all_active(
+                    statuts=STATUTS_FACTURE_CA
+                )
+                ca_total_annee = sum(
+                    (f.montant_ht for f in factures_actives), Decimal("0")
+                )
+                if ca_total_annee > Decimal("0"):
+                    logger.info(
+                        "Dashboard: ca_total_annee auto-calcule = %s EUR "
+                        "(%d factures actives)",
+                        ca_total_annee,
+                        len(factures_actives),
+                    )
+            except Exception:
+                logger.warning(
+                    "Dashboard: impossible de calculer ca_total_annee "
+                    "automatiquement, frais generaux non repartis",
+                    exc_info=True,
+                )
+
         # Récupérer le budget
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -129,7 +161,7 @@ class GetDashboardFinancierUseCase:
         total_realise_complet = total_realise + cout_mo + cout_materiel
 
         # Reste a depenser inclut MO + materiel (negatif = depassement budget)
-        reste_a_depenser = montant_revise_ht - total_engage - cout_mo - cout_materiel
+        reste_a_depenser = arrondir_montant(montant_revise_ht - total_engage - cout_mo - cout_materiel)
 
         # Pourcentages basés sur le budget
         if montant_revise_ht > Decimal("0"):
@@ -146,6 +178,7 @@ class GetDashboardFinancierUseCase:
         prix_vente_ht = Decimal("0")
         marge_estimee: Optional[Decimal] = None
         marge_statut = "en_attente"
+        consommation_budgetaire_pct: Optional[Decimal] = None
 
         if self._situation_repository:
             derniere_situation = self._situation_repository.find_derniere_situation(
@@ -185,12 +218,15 @@ class GetDashboardFinancierUseCase:
             # ATTENTION: ceci n'est PAS une marge commerciale BTP.
             # C'est un indicateur de consommation budgetaire :
             # (Budget - Engage) / Budget. A ne pas confondre avec la marge.
+            # P1-3: On ne met plus ce calcul dans marge_estimee (trompeur).
+            # On utilise consommation_budgetaire_pct a la place.
+            marge_estimee = None
             if montant_revise_ht > Decimal("0"):
-                marge_estimee = arrondir_pct(
+                consommation_budgetaire_pct = arrondir_pct(
                     (montant_revise_ht - total_engage) / montant_revise_ht * Decimal("100")
                 )
             else:
-                marge_estimee = arrondir_pct(Decimal("0"))
+                consommation_budgetaire_pct = arrondir_pct(Decimal("0"))
             marge_statut = "estimee_budgetaire"
 
         # Si un calcul de cout a echoue et qu'on a une situation, marge partielle
@@ -204,8 +240,8 @@ class GetDashboardFinancierUseCase:
             fiabilite += 30  # situation disponible
         if cout_mo_ok and cout_mo > Decimal("0"):
             fiabilite += 25  # MO calculee
-        if cout_materiel_ok and cout_materiel >= Decimal("0"):
-            fiabilite += 25  # materiel OK (0 est valide si pas de parc)
+        if cout_materiel_ok and cout_materiel > Decimal("0"):
+            fiabilite += 25  # materiel avec donnees reelles
         effective_ca_for_fiab = ca_total_annee or Decimal("0")
         if effective_ca_for_fiab > Decimal("0"):
             fiabilite += 20  # frais generaux repartis
@@ -221,6 +257,11 @@ class GetDashboardFinancierUseCase:
             ),
             marge_statut=marge_statut,
             fiabilite_marge=fiabilite,
+            consommation_budgetaire_pct=(
+                str(consommation_budgetaire_pct)
+                if consommation_budgetaire_pct is not None
+                else None
+            ),
             pct_engage=str(arrondir_pct(pct_engage)),
             pct_realise=str(arrondir_pct(pct_realise)),
             reste_a_depenser=str(reste_a_depenser),

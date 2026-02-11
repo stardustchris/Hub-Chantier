@@ -9,6 +9,7 @@ from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
+from shared.domain.calcul_financier import arrondir_montant
 from ..value_objects import UniteMesure
 
 
@@ -108,7 +109,7 @@ class LotBudgetaire:
     @property
     def total_prevu_ht(self) -> Decimal:
         """Montant total prévu HT = quantité * prix unitaire."""
-        return self.quantite_prevue * self.prix_unitaire_ht
+        return arrondir_montant(self.quantite_prevue * self.prix_unitaire_ht)
 
     @property
     def debourse_sec_total(self) -> Decimal:
@@ -144,7 +145,7 @@ class LotBudgetaire:
         debourse = self.debourse_sec_total
         if debourse == Decimal("0"):
             return None
-        return debourse * (Decimal("1") + self.marge_pct / Decimal("100"))
+        return arrondir_montant(debourse * (Decimal("1") + self.marge_pct / Decimal("100")))
 
     @property
     def est_en_phase_devis(self) -> bool:

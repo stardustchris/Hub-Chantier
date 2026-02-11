@@ -93,6 +93,22 @@ class FactureRepository(ABC):
         ...
 
     @abstractmethod
+    def find_all_active(self, statuts: set[str] = None) -> List[FactureClient]:
+        """Liste toutes les factures actives (non supprimees), tous chantiers confondus.
+
+        Utilisee pour calculer le CA total annuel de l'entreprise
+        (repartition des frais generaux).
+
+        Args:
+            statuts: Ensemble de statuts a filtrer (ex: {"emise", "envoyee", "payee"}).
+                Si None, retourne toutes les factures non supprimees.
+
+        Returns:
+            Liste des factures actives.
+        """
+        pass
+
+    @abstractmethod
     def delete(self, facture_id: int, deleted_by: int) -> None:
         """Supprime une facture (soft delete - H10).
 

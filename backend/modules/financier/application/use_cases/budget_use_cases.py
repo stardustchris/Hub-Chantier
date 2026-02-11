@@ -157,9 +157,6 @@ class UpdateBudgetUseCase:
         if dto.montant_initial_ht is not None:
             budget.montant_initial_ht = dto.montant_initial_ht
             modifications.append("montant_initial_ht")
-        if dto.montant_avenants_ht is not None:
-            budget.montant_avenants_ht = dto.montant_avenants_ht
-            modifications.append("montant_avenants_ht")
         if dto.retenue_garantie_pct is not None:
             budget.modifier_retenue_garantie(dto.retenue_garantie_pct)
             modifications.append("retenue_garantie_pct")

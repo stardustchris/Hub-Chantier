@@ -166,6 +166,9 @@ class FactureClient:
         Returns:
             Tuple (montant_tva, montant_ttc, retenue_montant, montant_net).
         """
+        if retenue_garantie_pct < Decimal("0") or retenue_garantie_pct > Decimal("5"):
+            raise ValueError("La retenue de garantie doit etre entre 0 et 5% (loi 71-584)")
+
         montant_tva = _calculer_tva(montant_ht, taux_tva)
         montant_ttc = montant_ht + montant_tva
         # Loi 71-584: retenue de garantie sur HT (pas TTC)

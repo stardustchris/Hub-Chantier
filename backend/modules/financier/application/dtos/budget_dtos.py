@@ -31,7 +31,6 @@ class BudgetUpdateDTO:
     """DTO pour la mise à jour d'un budget."""
 
     montant_initial_ht: Optional[Decimal] = None
-    montant_avenants_ht: Optional[Decimal] = None
     retenue_garantie_pct: Optional[Decimal] = None
     seuil_alerte_pct: Optional[Decimal] = None
     seuil_validation_achat: Optional[Decimal] = None
