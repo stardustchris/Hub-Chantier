@@ -113,7 +113,7 @@ class CreateDevisUseCase:
             taux_marge_sous_traitance=dto.taux_marge_sous_traitance,
             taux_marge_materiel=dto.taux_marge_materiel,
             taux_marge_deplacement=dto.taux_marge_deplacement,
-            # coefficient_frais_generaux : source unique, utilise le default entity
+            coefficient_frais_generaux=dto.coefficient_frais_generaux,
             retenue_garantie_pct=dto.retenue_garantie_pct,
             notes=dto.notes,
             # Generateur de devis - champs complementaires
@@ -227,8 +227,9 @@ class UpdateDevisUseCase:
         if dto.taux_marge_deplacement is not None:
             devis.taux_marge_deplacement = dto.taux_marge_deplacement
             modifications.append("taux_marge_deplacement")
-        # coefficient_frais_generaux : source unique COEFF_FRAIS_GENERAUX,
-        # pas de modification par devis (ignore dto.coefficient_frais_generaux).
+        if dto.coefficient_frais_generaux is not None:
+            devis.coefficient_frais_generaux = dto.coefficient_frais_generaux
+            modifications.append("coefficient_frais_generaux")
         if dto.retenue_garantie_pct is not None:
             devis.retenue_garantie_pct = dto.retenue_garantie_pct
             modifications.append("retenue_garantie_pct")
