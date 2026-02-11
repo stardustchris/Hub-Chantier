@@ -376,10 +376,10 @@ class ConvertirDevisEnChantierUseCase:
                 prix_unitaire_ht=(
                     lot.montant_debourse_ht
                     if lot.montant_debourse_ht
-                    else lot.montant_vente_ht
+                    else lot.montant_vente_ht or Decimal("0")
                 ),
                 ordre=lot.ordre,
-                prix_vente_ht=lot.montant_vente_ht,
+                prix_vente_ht=lot.montant_vente_ht or Decimal("0"),
             )
             for lot in lots_devis
         ]

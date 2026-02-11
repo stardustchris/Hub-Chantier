@@ -127,6 +127,16 @@ def calculer_marge_chantier(
         chez un fournisseur est dans cout_achats, PAS dans cout_materiel.
         Le cout_materiel ne concerne que l'usage du parc propre.
 
+    IMPORTANT - Frontiere achats / cout_mo :
+        - cout_achats PEUT contenir des achats de type MAIN_OEUVRE
+          (interimaires, sous-traitants factures par un fournisseur)
+        - cout_mo = heures pointees en INTERNE (CoutMainOeuvreRepository,
+          pointages valides x taux horaire x charges patronales)
+        Ces deux sources NE doivent PAS se chevaucher. Un cout de
+        main-d'oeuvre externe (interimaire, fournisseur) est dans
+        cout_achats, PAS dans cout_mo. Le cout_mo ne concerne que
+        le personnel propre de l'entreprise (pointages RH).
+
     Args:
         ca_ht: Chiffre d'affaires HT (factures client / situations).
         cout_achats: Somme des achats realises (statut FACTURE) - achats fournisseurs.
