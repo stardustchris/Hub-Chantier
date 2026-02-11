@@ -24,7 +24,6 @@ from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
     arrondir_pct,
-    COUTS_FIXES_ANNUELS,
 )
 
 logger = logging.getLogger(__name__)
@@ -110,15 +109,15 @@ class GetBilanClotureUseCase:
         self.cout_materiel_repository = cout_materiel_repository
 
     def execute(
-        self, chantier_id: int, ca_total_annee: Optional[Decimal] = None,
-        couts_fixes_annuels: Optional[Decimal] = None
+        self, chantier_id: int,
     ) -> BilanClotureDTO:
         """Genere le bilan de cloture pour un chantier.
 
+        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
+        sur le debourse sec. Source unique, pas de parametre externe.
+
         Args:
             chantier_id: ID du chantier.
-            ca_total_annee: CA total annuel de l'entreprise pour repartition
-                des couts fixes. Si None, les frais generaux ne sont pas repartis.
 
         Returns:
             BilanClotureDTO contenant le bilan complet.
@@ -182,11 +181,9 @@ class GetBilanClotureUseCase:
         # Marge reelle = basee sur CA reel (factures client), pas sur le budget
         # Formule BTP unifiee : (CA - Cout revient) / CA x 100
         ca_ht = self._calculer_ca_reel(chantier_id)
-        quote_part = calculer_quote_part_frais_generaux(
-            ca_chantier_ht=ca_ht,
-            ca_total_annee=ca_total_annee or Decimal("0"),
-            couts_fixes_annuels=couts_fixes_annuels if couts_fixes_annuels is not None else COUTS_FIXES_ANNUELS,
-        )
+        # Quote-part FG = coefficient unique sur debourse sec
+        debourse_sec = total_realise_ht + cout_mo + cout_materiel
+        quote_part = calculer_quote_part_frais_generaux(debourse_sec)
         marge_finale_pct = calculer_marge_chantier(
             ca_ht=ca_ht,
             cout_achats=total_realise_ht,

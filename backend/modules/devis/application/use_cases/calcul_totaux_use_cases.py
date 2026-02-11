@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, TYPE_CHECKING
 
-from shared.domain.calcul_financier import arrondir_montant, calculer_ttc, calculer_tva
+from shared.domain.calcul_financier import arrondir_montant, calculer_ttc, calculer_tva, COEFF_FRAIS_GENERAUX
 
 if TYPE_CHECKING:
     from ...domain.entities.devis import Devis
@@ -100,8 +100,9 @@ class CalculerTotauxDevisUseCase:
                 ligne.debourse_sec = ligne_debourse_sec
 
                 # Prix de revient = Debourse sec * (1 + coeff frais generaux / 100)
+                # Source unique : COEFF_FRAIS_GENERAUX (pas devis.coefficient_frais_generaux)
                 ligne.prix_revient = ligne_debourse_sec * (
-                    Decimal("1") + devis.coefficient_frais_generaux / Decimal("100")
+                    Decimal("1") + COEFF_FRAIS_GENERAUX / Decimal("100")
                 )
 
                 # Determiner la marge applicable (priorite)

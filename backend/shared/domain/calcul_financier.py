@@ -15,10 +15,10 @@ from typing import Optional
 
 # -- Constantes entreprise ---------------------------------------------------
 
-# Valeur par defaut. En production, utiliser ConfigurationEntreprise
-# pour configurer ce montant via l'interface admin.
-# Frais generaux BTP typiques : 10-15% du CA -> ~600k EUR pour CA de 4.3M EUR
-COUTS_FIXES_ANNUELS = Decimal("600000")
+# Coefficient de frais generaux (% du debourse sec).
+# Source UNIQUE pour tout le systeme (devis, dashboard, P&L, bilan, consolidation).
+# Greg Construction : ~19% (600k EUR FG annuels / ~3.16M EUR debourses annuels).
+COEFF_FRAIS_GENERAUX = Decimal("19")
 
 
 # -- Main-d'oeuvre -----------------------------------------------------------
@@ -146,25 +146,24 @@ def calculer_marge_chantier(
 
 
 def calculer_quote_part_frais_generaux(
-    ca_chantier_ht: Decimal,
-    ca_total_annee: Decimal,
-    couts_fixes_annuels: Decimal,
+    debourse_sec: Decimal,
+    coeff_frais_generaux: Decimal = COEFF_FRAIS_GENERAUX,
 ) -> Decimal:
     """Calcule la quote-part des frais generaux pour un chantier.
 
-    Repartition au prorata du CA facture du chantier par rapport au CA total.
+    Formule : debourse_sec * coefficient / 100
+    Le coefficient est la constante entreprise COEFF_FRAIS_GENERAUX (source unique).
 
     Args:
-        ca_chantier_ht: CA HT du chantier.
-        ca_total_annee: CA total annuel de l'entreprise.
-        couts_fixes_annuels: Frais generaux annuels de l'entreprise.
+        debourse_sec: Total des couts directs (achats + MO + materiel).
+        coeff_frais_generaux: Coefficient en pourcentage (defaut: COEFF_FRAIS_GENERAUX).
 
     Returns:
-        La quote-part des frais generaux pour ce chantier.
+        La quote-part des frais generaux arrondie a 2 decimales.
     """
-    if ca_total_annee <= Decimal("0") or ca_chantier_ht <= Decimal("0"):
+    if debourse_sec <= Decimal("0"):
         return Decimal("0")
 
     return arrondir_montant(
-        (ca_chantier_ht / ca_total_annee) * couts_fixes_annuels
+        debourse_sec * coeff_frais_generaux / Decimal("100")
     )
