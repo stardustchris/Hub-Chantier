@@ -7,10 +7,13 @@ import logging
 from decimal import Decimal
 from typing import List, Optional
 
+from datetime import datetime
+
 from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
     arrondir_montant,
+    COEFF_FRAIS_GENERAUX,
 )
 
 from ...domain.repositories.facture_repository import FactureRepository
@@ -18,6 +21,7 @@ from ...domain.repositories.achat_repository import AchatRepository
 from ...domain.repositories.budget_repository import BudgetRepository
 from ...domain.repositories.cout_main_oeuvre_repository import CoutMainOeuvreRepository
 from ...domain.repositories.cout_materiel_repository import CoutMaterielRepository
+from ...domain.repositories.configuration_entreprise_repository import ConfigurationEntrepriseRepository
 from ...domain.value_objects.statuts_financiers import STATUTS_REALISES
 from ..dtos.pnl_dtos import LignePnLDTO, PnLChantierDTO
 from shared.application.ports.chantier_info_port import ChantierInfoPort
@@ -67,6 +71,7 @@ class GetPnLChantierUseCase:
         cout_mo_repository: CoutMainOeuvreRepository,
         cout_materiel_repository: CoutMaterielRepository,
         chantier_info_port: Optional[ChantierInfoPort] = None,
+        config_repository: Optional[ConfigurationEntrepriseRepository] = None,
     ):
         """Initialise le use case.
 
@@ -77,6 +82,7 @@ class GetPnLChantierUseCase:
             cout_mo_repository: Repository des couts main-d'oeuvre.
             cout_materiel_repository: Repository des couts materiel.
             chantier_info_port: Port pour obtenir le statut du chantier.
+            config_repository: Repository config entreprise (SSOT coefficients).
         """
         self._facture_repository = facture_repository
         self._achat_repository = achat_repository
@@ -84,6 +90,7 @@ class GetPnLChantierUseCase:
         self._cout_mo_repository = cout_mo_repository
         self._cout_materiel_repository = cout_materiel_repository
         self._chantier_info_port = chantier_info_port
+        self._config_repository = config_repository
 
     def execute(
         self,
@@ -91,9 +98,8 @@ class GetPnLChantierUseCase:
     ) -> PnLChantierDTO:
         """Calcule le P&L d'un chantier.
 
-        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
-        sur le debourse sec (achats + MO + materiel). Source unique, pas
-        de parametre externe.
+        Frais generaux : coefficient lu depuis ConfigurationEntreprise (BDD).
+        Fallback sur COEFF_FRAIS_GENERAUX si aucune config en base.
 
         Args:
             chantier_id: L'ID du chantier.
@@ -104,6 +110,13 @@ class GetPnLChantierUseCase:
         Raises:
             PnLChantierNotFoundError: Si le chantier n'a pas de budget.
         """
+        # Lire le coefficient FG depuis la config entreprise (SSOT)
+        coeff_fg = COEFF_FRAIS_GENERAUX  # fallback
+        if self._config_repository:
+            config = self._config_repository.find_by_annee(datetime.now().year)
+            if config:
+                coeff_fg = config.coeff_frais_generaux
+
         # 1. Recuperer le budget pour reference
         budget = self._budget_repository.find_by_chantier_id(chantier_id)
         if not budget:
@@ -121,9 +134,9 @@ class GetPnLChantierUseCase:
         cout_materiel = self._calculer_cout_materiel(chantier_id)
 
         # 4. Calculer les marges (formule BTP unifiee via calcul_financier.py)
-        # Quote-part frais generaux = coefficient unique sur debourse sec
+        # Quote-part frais generaux depuis config entreprise (SSOT)
         debourse_sec = cout_achats + cout_mo + cout_materiel
-        quote_part = calculer_quote_part_frais_generaux(debourse_sec)
+        quote_part = calculer_quote_part_frais_generaux(debourse_sec, coeff_fg)
 
         total_couts = arrondir_montant(cout_achats + cout_mo + cout_materiel + quote_part)
         marge_brute_ht = arrondir_montant(chiffre_affaires_ht - total_couts)

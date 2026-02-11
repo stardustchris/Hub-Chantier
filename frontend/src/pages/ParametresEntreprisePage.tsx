@@ -151,10 +151,11 @@ export function ParametresEntreprisePage(): JSX.Element {
               Ces valeurs impactent tous les calculs de marge, frais generaux
               et couts de main-d'oeuvre.
             </p>
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-md p-3">
-              <p className="text-xs text-amber-800">
-                Toute modification est appliquee immediatement a l'ensemble
-                des calculs financiers de l'annee {CURRENT_YEAR}.
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3">
+              <p className="text-xs text-blue-800">
+                Ces coefficients sont la source unique de verite pour tous les
+                calculs financiers (dashboard, P&amp;L, bilan, devis, cout MO)
+                de l'annee {CURRENT_YEAR}.
               </p>
             </div>
           </div>

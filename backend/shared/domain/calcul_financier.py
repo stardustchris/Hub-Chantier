@@ -13,13 +13,16 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
 
-# -- Constantes entreprise ---------------------------------------------------
+# -- Constantes entreprise (DEPRECATED - fallback uniquement) ----------------
+# Ces constantes ne sont plus la source de verite.
+# La source unique est desormais la table configuration_entreprise (BDD).
+# Elles servent uniquement de fallback si aucune config n'existe en BDD.
+# Les use cases DOIVENT lire ConfigurationEntrepriseRepository et passer
+# les coefficients explicitement aux fonctions de calcul.
 
 # Coefficient de frais generaux (% du debourse sec).
-# Source UNIQUE pour tout le systeme (devis, dashboard, P&L, bilan, consolidation).
 # Greg Construction : ~19% (600k EUR FG annuels / ~3.16M EUR debourses annuels).
 COEFF_FRAIS_GENERAUX = Decimal("19")
-
 
 # -- Main-d'oeuvre -----------------------------------------------------------
 
@@ -30,10 +33,9 @@ COEFF_HEURES_SUP = Decimal("1.25")
 # Art. L3121-36 Code du travail : au-dela de 43h/semaine (+50%).
 COEFF_HEURES_SUP_2 = Decimal("1.50")
 
-# Coefficient de charges patronales BTP (salaire brut → coût employeur).
+# Coefficient de charges patronales BTP (salaire brut -> cout employeur).
 # Charges sociales employeur BTP typiques : ~45% du brut.
-# Inclut : URSSAF, retraite PROBTP, prévoyance, congés payés caisse BTP.
-# Configurable par l'admin à terme via ConfigurationEntreprise.
+# Inclut : URSSAF, retraite PROBTP, prevoyance, conges payes caisse BTP.
 COEFF_CHARGES_PATRONALES = Decimal("1.45")
 
 

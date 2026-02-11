@@ -24,7 +24,9 @@ from shared.domain.calcul_financier import (
     calculer_marge_chantier,
     calculer_quote_part_frais_generaux,
     arrondir_pct,
+    COEFF_FRAIS_GENERAUX,
 )
+from ...domain.repositories.configuration_entreprise_repository import ConfigurationEntrepriseRepository
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +86,7 @@ class GetBilanClotureUseCase:
         facture_repository: Optional[FactureRepository] = None,
         cout_mo_repository: Optional[CoutMainOeuvreRepository] = None,
         cout_materiel_repository: Optional[CoutMaterielRepository] = None,
+        config_repository: Optional[ConfigurationEntrepriseRepository] = None,
     ) -> None:
         """Initialise le use case.
 
@@ -97,6 +100,7 @@ class GetBilanClotureUseCase:
             facture_repository: Repository Facture pour calcul CA reel.
             cout_mo_repository: Repository Cout MO pour marge reelle.
             cout_materiel_repository: Repository Cout materiel pour marge reelle.
+            config_repository: Repository config entreprise (SSOT coefficients).
         """
         self.budget_repository = budget_repository
         self.lot_repository = lot_repository
@@ -107,14 +111,15 @@ class GetBilanClotureUseCase:
         self.facture_repository = facture_repository
         self.cout_mo_repository = cout_mo_repository
         self.cout_materiel_repository = cout_materiel_repository
+        self.config_repository = config_repository
 
     def execute(
         self, chantier_id: int,
     ) -> BilanClotureDTO:
         """Genere le bilan de cloture pour un chantier.
 
-        Frais generaux : coefficient unique COEFF_FRAIS_GENERAUX applique
-        sur le debourse sec. Source unique, pas de parametre externe.
+        Frais generaux : coefficient lu depuis ConfigurationEntreprise (BDD).
+        Fallback sur COEFF_FRAIS_GENERAUX si aucune config en base.
 
         Args:
             chantier_id: ID du chantier.
@@ -126,6 +131,14 @@ class GetBilanClotureUseCase:
             BudgetNonTrouveError: Si aucun budget n'existe pour le chantier.
             ChantierNonTrouveError: Si le chantier n'existe pas.
         """
+        # Lire le coefficient FG depuis la config entreprise (SSOT)
+        from datetime import datetime
+        coeff_fg = COEFF_FRAIS_GENERAUX  # fallback
+        if self.config_repository:
+            config = self.config_repository.find_by_annee(datetime.now().year)
+            if config:
+                coeff_fg = config.coeff_frais_generaux
+
         # 1. Recuperer les infos du chantier via le port
         chantier_info = self.chantier_info_port.get_chantier_info(chantier_id)
         if chantier_info is None:
@@ -181,9 +194,9 @@ class GetBilanClotureUseCase:
         # Marge reelle = basee sur CA reel (factures client), pas sur le budget
         # Formule BTP unifiee : (CA - Cout revient) / CA x 100
         ca_ht = self._calculer_ca_reel(chantier_id)
-        # Quote-part FG = coefficient unique sur debourse sec
+        # Quote-part FG depuis config entreprise (SSOT)
         debourse_sec = total_realise_ht + cout_mo + cout_materiel
-        quote_part = calculer_quote_part_frais_generaux(debourse_sec)
+        quote_part = calculer_quote_part_frais_generaux(debourse_sec, coeff_fg)
         marge_finale_pct = calculer_marge_chantier(
             ca_ht=ca_ht,
             cout_achats=total_realise_ht,
