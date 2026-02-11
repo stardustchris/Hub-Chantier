@@ -333,6 +333,10 @@ Etapes si validation requise :
 - **Clean Architecture** : Entity → Repository interface → Use Cases (Get/Update) → Routes API → Page React
 - **Validation** : Contraintes CHECK en base + validation __post_init__ dans l'entite domaine
 - **Audit** : Champs `updated_at` et `updated_by` pour tracabilite des modifications
+- **Cache** : TTL 300s (5 min) en memoire dans le repository, invalidation automatique sur save()
+- **Alerte revalidation** : Bandeau jaune sur la page Parametres si config non mise a jour depuis 180+ jours (`stale_warning` dans la reponse GET)
+- **Integration devis** : Le module devis lit le coefficient frais generaux depuis la config DB lors de la creation d'un devis (fallback sur constante COEFF_FRAIS_GENERAUX si pas de config)
+- **Fallback** : Si aucune config en DB pour l'annee courante, les constantes partagees (`shared/domain/calcul_financier.py`) sont utilisees comme valeurs par defaut
 
 #### Permissions
 

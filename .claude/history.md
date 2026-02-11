@@ -8,7 +8,19 @@
 
 **Sessions**:
 
-**Session 2026-02-11** — FIN-CFG: Page Parametres Entreprise (Admin Only)
+**Session 2026-02-11 (2/2)** — Audit ConfigurationEntreprise: Cache + Alertes + Tests + Nettoyage
+- **Objectif**: Finaliser les phases 0.3, 2.2-2.4, 3.1-3.3 du plan ConfigurationEntreprise
+- **Phase 0.3**: 13 tests unitaires entity + use cases (validation, defaults, edge cases)
+- **Phase 2.2-2.4**: 22 tests integration config DB → dashboard/PnL/MO/fallback (4 classes scenarios)
+- **Phase 3.1**: Cache TTL 300s dans SQLAlchemyConfigurationEntrepriseRepository (time.monotonic, invalidation sur save)
+- **Phase 3.2**: Alerte revalidation 180j — stale_warning dans GET /configuration + bandeau jaune frontend
+- **Phase 3.3**: Fix hardcoded Decimal("19") dans module devis — injection config_repository dans create_devis route
+- **Validation**: architect-reviewer PASS (0 violation), code-reviewer APPROVED, security-auditor PASS (0 CRITICAL/HIGH)
+- **Fichiers**: 7 modifies/crees (4 backend, 1 frontend, 2 tests)
+- **Commits**: `18587b1`, `942824f`, `6e7bc18`
+- Verdict : ✅ **PHASES 0-3 CONFIGURATION ENTREPRISE COMPLET**
+
+**Session 2026-02-11 (1/2)** — FIN-CFG: Page Parametres Entreprise (Admin Only)
 - **Objectif**: Rendre les coefficients financiers configurables par l'admin via une page dediee
 - **Backend Clean Architecture**: Entite enrichie (4 coefficients), repository interface + impl SQLAlchemy, DTOs, use cases Get/Update, migration SQL ALTER TABLE, routes GET/PUT admin-only
 - **Frontend**: Page ParametresEntreprisePage.tsx (formulaire complet), route /parametres-entreprise, lien menu dropdown admin-only

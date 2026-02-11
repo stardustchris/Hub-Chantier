@@ -60,6 +60,7 @@
 
 | Feature | Description | Session |
 |---------|-------------|---------|
+| **FIN-CFG: Audit ConfigurationEntreprise** | Cache TTL 300s, alerte revalidation 180j (bandeau jaune), 35 tests (13 unit + 22 integration), fix devis hardcoded coefficients | 11 fev |
 | **FIN-CFG: Page Parametres Entreprise** | Configuration admin coefficients financiers (FG 19%, CP 1.45, HS1 1.25, HS2 1.50, couts fixes 600k). Clean Architecture complet + page frontend. | 11 fev |
 | **DEV-TVA: Ventilation TVA multi-taux** | Ventilation par taux (5.5/10/20%), selecteur par ligne, pre-remplissage intelligent, mention legale | 5 fev |
 | **Pennylane Inbound** | Import factures payees depuis Pennylane, polling 15 min, 8 features CONN-10 a CONN-17 | 3 fev |
@@ -131,7 +132,7 @@
 
 | ID | Description | Statut |
 |----|-------------|--------|
-| FIN-CFG | Page parametres entreprise (coefficients FG, CP, HS1, HS2, couts fixes) admin-only | ✅ Done |
+| FIN-CFG | Page parametres entreprise (coefficients FG, CP, HS1, HS2, couts fixes) admin-only + cache TTL 300s + alerte 180j + integration devis | ✅ Done |
 
 #### Phase 4 - Integration & Exports (0/3 🔮 FUTUR)
 
@@ -244,7 +245,16 @@ Fichiers icones dans `frontend/public/` :
 
 ## Derniere mise a jour
 
-Session 2026-02-11 - FIN-CFG: Page Parametres Entreprise (Admin Only)
+Session 2026-02-11 (2/2) - Audit ConfigurationEntreprise: Cache + Alertes + Tests + Nettoyage
+- **Cache**: TTL 300s dans repository (time.monotonic, invalidation sur save)
+- **Alerte 180j**: stale_warning backend + bandeau jaune frontend
+- **Tests**: 13 unit + 22 integration (config DB → dashboard/PnL/MO/fallback)
+- **Fix devis**: injection config_repository, coefficient lu depuis BDD au lieu de hardcode
+- **Validation**: architect PASS, code-reviewer APPROVED, security PASS (0 CRITICAL/HIGH)
+- **Commits**: 18587b1, 942824f, 6e7bc18
+- Verdict : ✅ **PHASES 0-3 CONFIGURATION ENTREPRISE COMPLET**
+
+Session 2026-02-11 (1/2) - FIN-CFG: Page Parametres Entreprise (Admin Only)
 - **Objectif**: Rendre les coefficients financiers configurables par l'admin
 - **Backend**: Entite enrichie, repository, use cases, model SQLAlchemy, migration SQL, routes API GET/PUT admin-only
 - **Frontend**: ParametresEntreprisePage.tsx, route /parametres-entreprise, lien menu admin-only

@@ -8,7 +8,7 @@
 
 - [x] 0.1 Bandeau avertissement admin → OBSOLETE (config connectee aux calculs)
 - [x] 0.2 Corriger 11 findings audit (TYPE-001, VAL-001/002, EDGE-001/002/003, FLUX-001/002/003, MIG-001/002)
-- [ ] 0.3 Tests non-regression module ConfigurationEntreprise (unit + API)
+- [x] 0.3 Tests non-regression module ConfigurationEntreprise (13 tests unit entity + use cases)
 
 ## Phase 1 — ConfigurationService (1.5j)
 
@@ -24,15 +24,15 @@
 ## Phase 2 — Integration devis + tests (1j)
 
 - [x] 2.1 DevisForm frontend charge coeff depuis API config
-- [ ] 2.2 Tests integration : config DB → dashboard → verifier calcul FG
-- [ ] 2.3 Tests integration : config DB → MO → verifier calcul charges
-- [ ] 2.4 Tests integration : config DB → devis → verifier coeff par defaut
+- [x] 2.2 Tests integration : config DB → dashboard → verifier calcul FG (22 tests)
+- [x] 2.3 Tests integration : config DB → MO → verifier calcul charges
+- [x] 2.4 Tests integration : config DB → devis → verifier coeff par defaut + fallback
 
 ## Phase 3 — Cache + nettoyage + alertes (1j)
 
-- [ ] 3.1 Cache config en memoire (eviter requete DB a chaque calcul)
-- [ ] 3.2 Alerte revalidation 180j : warning si config non mise a jour depuis 6 mois
-- [ ] 3.3 Nettoyage emplacements residuels → audit montre 95% clean, verifier restant
+- [x] 3.1 Cache config en memoire TTL 300s (time.monotonic, invalidation sur save)
+- [x] 3.2 Alerte revalidation 180j : stale_warning backend + bandeau jaune frontend
+- [x] 3.3 Nettoyage emplacements residuels : fix Decimal("19") hardcode dans devis_routes + devis_dtos
 
 ## Phase 4 — Fonctionnalites avancees (3j, mois 2)
 
@@ -64,3 +64,6 @@
 | `52263d4` | feat: page Parametres Entreprise (CRUD config) |
 | `5c942bd` | fix: connecter ConfigurationEntreprise aux calculs financiers |
 | `0ad8673` | fix: corriger VAL-001/002, EDGE-001/002/003 |
+| `18587b1` | feat: cache TTL 5min + alerte 180j + 13 tests unitaires |
+| `942824f` | test: 22 tests integration config DB → calculs financiers |
+| `6e7bc18` | fix: lire coefficient_frais_generaux depuis config DB dans module devis |
