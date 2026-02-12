@@ -99,11 +99,13 @@ class CalculerTotauxDevisUseCase:
 
                 ligne.debourse_sec = ligne_debourse_sec
 
-                # Prix de revient = Debourse sec * (1 + coeff frais generaux / 100)
-                # Utilise le coefficient du devis (modifiable par l'utilisateur)
-                ligne.prix_revient = ligne_debourse_sec * (
-                    Decimal("1") + devis.coefficient_frais_generaux / Decimal("100")
-                )
+                # Prix de revient = Debourse sec + quote-part frais generaux
+                # Meme formule que calculer_quote_part_frais_generaux() dans
+                # calcul_financier.py (SSOT), mais SANS arrondi intermediaire
+                # sur la quote-part pour eviter les erreurs cumulees sur 100+ lignes.
+                # L'arrondi final est fait sur prix_revient via arrondir_montant().
+                quote_part_ligne = ligne_debourse_sec * devis.coefficient_frais_generaux / Decimal("100")
+                ligne.prix_revient = arrondir_montant(ligne_debourse_sec + quote_part_ligne)
 
                 # Determiner la marge applicable (priorite)
                 marge = self._resolve_marge(

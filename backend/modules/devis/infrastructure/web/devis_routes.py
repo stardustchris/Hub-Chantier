@@ -306,7 +306,7 @@ class DevisUpdateRequest(BaseModel):
     taux_marge_sous_traitance: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_materiel: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_deplacement: Optional[Decimal] = Field(None, ge=0, le=100)
-    coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100, description="Ignore - source unique COEFF_FRAIS_GENERAUX")
+    coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100, description="Si fourni, remplace le coefficient existant du devis")
     retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=5, description="Retenue de garantie: 0 ou 5% (Loi 71-584)")
     notes: Optional[str] = Field(None, max_length=2000)
     acompte_pct: Optional[Decimal] = Field(None, ge=0, le=100)
