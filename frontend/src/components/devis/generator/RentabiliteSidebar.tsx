@@ -14,6 +14,9 @@ const COLORS = ['#3B82F6', '#8B5CF6', '#10B981']
 export default function RentabiliteSidebar({ devis, onSaved }: Props) {
   const [showMarges, setShowMarges] = useState(false)
 
+  // Calcul indicatif cote client pour affichage temps reel.
+  // SSOT = backend (calcul_financier.py + calcul_totaux_use_cases.py).
+  // Formule : Marge (%) = (Vente HT - Debourse Sec - Frais Generaux) / Vente HT x 100
   const totalDebourse = devis.lots.reduce((sum, lot) => sum + Number(lot.debourse_sec || 0), 0)
   const totalVente = Number(devis.montant_total_ht || 0)
   const fraisGeneraux = totalDebourse * Number(devis.coefficient_frais_generaux || 0) / 100
