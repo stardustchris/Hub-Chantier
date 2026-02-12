@@ -327,7 +327,11 @@ class TestCalculerTotauxDevisUseCase:
         assert Decimal(result["montant_total_ht"]) == Decimal("1100")
 
     def test_calcul_ligne_quantite_zero_avec_debourses(self):
-        """Test: ligne avec quantite zero et debourses."""
+        """Test: quantite=0 avec debourses > 0 doit lever ValueError.
+
+        Cas metier incoherent : on ne peut pas calculer un prix unitaire
+        de vente si la ligne a 0 unites mais des couts reels.
+        """
         devis = _make_devis()
         lot = LotDevis(id=10, devis_id=1, code_lot="LOT-001", libelle="Lot")
         ligne = LigneDevis(
@@ -349,10 +353,8 @@ class TestCalculerTotauxDevisUseCase:
         self.mock_ligne_repo.save.return_value = ligne
         self.mock_journal_repo.save.return_value = Mock()
 
-        result = self.use_case.execute(devis_id=1, updated_by=1)
-
-        # prix_unitaire = 0 car quantite = 0 (division evitee)
-        assert Decimal(result["montant_total_ht"]) == Decimal("0")
+        with pytest.raises(ValueError, match="quantite"):
+            self.use_case.execute(devis_id=1, updated_by=1)
 
 
 class TestResolveMarge:
