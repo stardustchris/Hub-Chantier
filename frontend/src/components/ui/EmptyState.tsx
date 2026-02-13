@@ -26,7 +26,7 @@ export default function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center text-center py-12 ${className}`}>
       {/* Icône */}
-      <Icon className="w-12 h-12 text-gray-300 mb-4" />
+      <Icon className="w-12 h-12 text-gray-300 mb-4" aria-hidden="true" />
 
       {/* Titre */}
       <h3 className="text-gray-600 font-medium text-lg mb-1">{title}</h3>

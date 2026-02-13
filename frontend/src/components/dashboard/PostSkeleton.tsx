@@ -7,7 +7,7 @@ import { Skeleton } from '../ui'
 
 export default function PostSkeleton() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
+    <div className="bg-white border border-gray-200 rounded-xl p-4" role="status" aria-label="Chargement du post">
       <div className="flex gap-3">
         {/* Avatar circulaire */}
         <Skeleton variant="circular" width={40} height={40} className="shrink-0" />
