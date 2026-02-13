@@ -30,6 +30,10 @@ body {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all;
   }
 
+  .input::placeholder {
+    @apply text-gray-500;
+  }
+
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
   }
@@ -75,4 +79,16 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
+}
+
+/* Respect des preferences utilisateur pour les animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

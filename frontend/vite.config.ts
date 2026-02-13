@@ -122,6 +122,15 @@ export default defineConfig({
             if (id.includes('lucide-react')) {
               return 'vendor-icons'
             }
+            if (id.includes('firebase')) {
+              return 'vendor-firebase'
+            }
+            if (id.includes('recharts')) {
+              return 'vendor-charts'
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query'
+            }
           }
         },
       },
