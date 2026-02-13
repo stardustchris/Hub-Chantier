@@ -4,6 +4,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createElement, type ReactNode } from 'react'
 import { useDashboardFeed } from './useDashboardFeed'
 
 // Mock des dépendances
@@ -68,6 +70,14 @@ const mockChantiers: any[] = [
   { id: '2', code: 'CH002', nom: 'Chantier B' },
 ]
 
+const createWrapper = () => {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+  return ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: qc }, children)
+}
+
 describe('useDashboardFeed', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -89,7 +99,7 @@ describe('useDashboardFeed', () => {
 
   describe('chargement initial', () => {
     it('charge le feed au montage', async () => {
-      renderHook(() => useDashboardFeed())
+      renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(dashboardService.getFeed).toHaveBeenCalledWith({ page: 1, size: 20 })
@@ -97,7 +107,7 @@ describe('useDashboardFeed', () => {
     })
 
     it('charge les chantiers au montage', async () => {
-      renderHook(() => useDashboardFeed())
+      renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(chantiersService.list).toHaveBeenCalledWith({ size: 100, statut: 'en_cours' })
@@ -105,7 +115,7 @@ describe('useDashboardFeed', () => {
     })
 
     it('met à jour les posts après chargement', async () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.posts).toEqual(mockPosts)
@@ -115,7 +125,7 @@ describe('useDashboardFeed', () => {
 
   describe('sortedPosts', () => {
     it('trie les posts épinglés en premier', async () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.sortedPosts[0].id).toBe('2') // pinned
@@ -126,7 +136,7 @@ describe('useDashboardFeed', () => {
 
   describe('état du composeur de post', () => {
     it('a les valeurs initiales correctes', () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       expect(result.current.newPostContent).toBe('')
       expect(result.current.targetType).toBe('tous')
@@ -136,7 +146,7 @@ describe('useDashboardFeed', () => {
     })
 
     it('permet de modifier le contenu du post', () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.setNewPostContent('Mon nouveau post')
@@ -146,7 +156,7 @@ describe('useDashboardFeed', () => {
     })
 
     it('permet de modifier le type de cible', () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.setTargetType('chantiers')
@@ -156,7 +166,7 @@ describe('useDashboardFeed', () => {
     })
 
     it('permet de modifier les chantiers sélectionnés', () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.setSelectedChantiers(['1', '2'])
@@ -166,7 +176,7 @@ describe('useDashboardFeed', () => {
     })
 
     it('permet de modifier le flag urgent', () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.setIsUrgent(true)
@@ -178,7 +188,7 @@ describe('useDashboardFeed', () => {
 
   describe('handleCreatePost', () => {
     it('ne fait rien si contenu vide', async () => {
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleCreatePost()
@@ -190,7 +200,7 @@ describe('useDashboardFeed', () => {
     it('crée un post avec les bonnes données', async () => {
       vi.mocked(dashboardService.createPost).mockResolvedValue({ id: '3' } as any)
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.setNewPostContent('Mon post')
@@ -212,7 +222,7 @@ describe('useDashboardFeed', () => {
     it('réinitialise le formulaire après création', async () => {
       vi.mocked(dashboardService.createPost).mockResolvedValue({ id: '3' } as any)
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.setNewPostContent('Mon post')
@@ -240,7 +250,7 @@ describe('useDashboardFeed', () => {
         likes_count: 1,
       } as any)
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.posts.length).toBeGreaterThan(0)
@@ -260,7 +270,7 @@ describe('useDashboardFeed', () => {
         likes_count: 0,
       } as any)
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.posts.length).toBeGreaterThan(0)
@@ -282,7 +292,7 @@ describe('useDashboardFeed', () => {
     it('supprime le post après confirmation', async () => {
       vi.mocked(dashboardService.deletePost).mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.posts.length).toBeGreaterThan(0)
@@ -298,7 +308,7 @@ describe('useDashboardFeed', () => {
     it('ne supprime pas si annulation', async () => {
       vi.spyOn(window, 'confirm').mockReturnValue(false)
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleDelete('1')
@@ -318,7 +328,7 @@ describe('useDashboardFeed', () => {
         pages: 2,
       })
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.hasMore).toBe(true)
@@ -342,7 +352,7 @@ describe('useDashboardFeed', () => {
           pages: 2,
         })
 
-      const { result } = renderHook(() => useDashboardFeed())
+      const { result } = renderHook(() => useDashboardFeed(), { wrapper: createWrapper() })
 
       await waitFor(() => {
         expect(result.current.hasMore).toBe(true)

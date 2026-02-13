@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import DashboardPage from './DashboardPage'
 import { ToastProvider } from '../contexts/ToastContext'
 import type { User } from '../types'
@@ -163,6 +164,7 @@ vi.mock('../components/dashboard', () => ({
   TodayPlanningCard: () => <div data-testid="today-planning">TodayPlanning</div>,
   TeamCard: () => <div data-testid="team-card">TeamCard</div>,
   DocumentsCard: () => <div data-testid="documents-card">DocumentsCard</div>,
+  DevisPipelineCard: () => <div data-testid="devis-pipeline-card">DevisPipelineCard</div>,
   DashboardPostCard: ({ post, onLike, onDelete }: any) => (
     <div data-testid={`post-${post.id}`}>
       <span>{post.contenu}</span>
@@ -213,11 +215,16 @@ const mockChantiers: any[] = [
 
 const renderWithProviders = (user: any = mockUser) => {
   currentMockUser = user
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
   return render(
     <MemoryRouter>
-      <ToastProvider>
-        <DashboardPage />
-      </ToastProvider>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <DashboardPage />
+        </ToastProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   )
 }
