@@ -29,7 +29,7 @@ export default function StatsCard({
   return (
     <div
       onClick={() => navigate('/feuilles-heures')}
-      className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+      className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover-lift"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && navigate('/feuilles-heures')}

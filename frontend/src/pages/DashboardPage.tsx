@@ -24,6 +24,7 @@ import {
   DashboardPostCard,
   WeatherBulletinPost,
   DevisPipelineCard,
+  PostSkeleton,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { weatherNotificationService } from '../services/weatherNotifications'
@@ -438,7 +439,14 @@ export default function DashboardPage() {
 
                 {/* Posts */}
                 <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-                  {feedItemsWithWeather.length === 0 && !feed.isLoading ? (
+                  {feed.isLoading && feedItemsWithWeather.length === 0 ? (
+                    /* Afficher 3 skeletons lors du chargement initial */
+                    <>
+                      <PostSkeleton />
+                      <PostSkeleton />
+                      <PostSkeleton />
+                    </>
+                  ) : feedItemsWithWeather.length === 0 ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-600">Aucune publication pour le moment</p>

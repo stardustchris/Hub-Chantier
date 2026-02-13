@@ -68,7 +68,7 @@ export default function QuickActions({
                 action.onClick?.()
                 onActionClick?.(action.id)
               }}
-              className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover:shadow-lg transition-shadow relative min-w-[56px] min-h-[56px]"
+              className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-md hover-lift relative min-w-[56px] min-h-[56px]"
             >
               <div className={`w-14 h-14 rounded-full ${colors.bg} flex items-center justify-center mb-2 relative`}>
                 <Icon className={`w-6 h-6 ${colors.text}`} />
