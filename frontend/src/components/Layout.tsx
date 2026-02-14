@@ -193,7 +193,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
             onClick={() => !item.disabled && onItemClick?.()}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               item.disabled
-                ? 'text-gray-400 cursor-not-allowed'
+                ? 'text-gray-600 cursor-not-allowed opacity-50'
                 : isActive
                 ? 'bg-primary-50 text-primary-600'
                 : 'text-gray-800 hover:bg-gray-100'

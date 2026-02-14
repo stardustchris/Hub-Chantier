@@ -114,7 +114,7 @@ export default function FournisseursList() {
       {/* Filtres */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
           <input
             type="text"
             placeholder="Rechercher un fournisseur..."
@@ -125,7 +125,7 @@ export default function FournisseursList() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-400 flex-shrink-0" />
+          <Filter size={18} className="text-gray-600 flex-shrink-0" />
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as TypeFournisseur | '')}
@@ -224,21 +224,21 @@ export default function FournisseursList() {
                     <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => { setEditingFournisseur(fournisseur); setShowModal(true) }}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
+                        className="p-1.5 text-gray-600 hover:text-blue-600 rounded"
                         title="Modifier"
                       >
                         <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => handleToggleActif(fournisseur)}
-                        className="p-1.5 text-gray-400 hover:text-orange-600 rounded"
+                        className="p-1.5 text-gray-600 hover:text-orange-600 rounded"
                         title={fournisseur.actif ? 'Archiver' : 'Reactiver'}
                       >
                         {fournisseur.actif ? <Archive size={14} /> : <RotateCcw size={14} />}
                       </button>
                       <button
                         onClick={() => handleDelete(fournisseur)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 rounded"
+                        className="p-1.5 text-gray-600 hover:text-red-600 rounded"
                         title="Supprimer"
                       >
                         <Trash2 size={14} />

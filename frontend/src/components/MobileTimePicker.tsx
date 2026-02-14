@@ -248,8 +248,8 @@ function MobileTimePicker({
         `}
         aria-label={label ? `${label}: ${displayValue}` : `Heure: ${displayValue}`}
       >
-        <Clock className="w-4 h-4 text-gray-400" />
-        <span className={value ? 'text-gray-900' : 'text-gray-400'}>
+        <Clock className="w-4 h-4 text-gray-600" />
+        <span className={value ? 'text-gray-900' : 'text-gray-600'}>
           {displayValue}
         </span>
       </button>

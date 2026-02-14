@@ -116,7 +116,7 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
               <span className="text-sm text-gray-600">
                 TVA {Number(v.taux)}%
                 {ventilationTVA.length > 1 && (
-                  <span className="text-xs text-gray-400 ml-1">(base {formatEUR(Number(v.base_ht))})</span>
+                  <span className="text-xs text-gray-600 ml-1">(base {formatEUR(Number(v.base_ht))})</span>
                 )}
               </span>
               <span className="text-sm font-medium text-gray-900">{formatEUR(Number(v.montant_tva))}</span>
@@ -163,12 +163,12 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
             {margesLots.map((lot) => (
               <div key={lot.numero} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs font-mono text-gray-400">{lot.numero}</span>
+                  <span className="text-xs font-mono text-gray-600">{lot.numero}</span>
                   <p className="text-sm font-medium text-gray-900 truncate">{lot.libelle}</p>
                 </div>
                 <div className="text-right text-sm">
                   <span className="text-gray-500">{formatEUR(lot.debourse)}</span>
-                  <span className="mx-1 text-gray-300">/</span>
+                  <span className="mx-1 text-gray-500">/</span>
                   <span className="font-medium">{formatEUR(lot.vente)}</span>
                 </div>
                 <div className="w-16 text-right">

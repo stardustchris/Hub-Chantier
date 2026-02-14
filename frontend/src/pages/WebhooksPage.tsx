@@ -70,7 +70,7 @@ export default function WebhooksPage() {
         </div>
       ) : webhooks.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <WebhookIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <WebhookIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-600">Aucun webhook configuré</p>
           <p className="text-sm text-gray-500 mt-1">
             Créez votre premier webhook pour recevoir des notifications
@@ -93,7 +93,7 @@ export default function WebhooksPage() {
                 <div className="flex-1">
                   {/* URL + Statut */}
                   <div className="flex items-center gap-2 mb-2">
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
+                    <ExternalLink className="w-4 h-4 text-gray-600" />
                     <a
                       href={webhook.url}
                       target="_blank"

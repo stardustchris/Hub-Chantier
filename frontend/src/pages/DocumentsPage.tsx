@@ -35,7 +35,7 @@ export default function DocumentsPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
             </div>
 
             {docs.selectedChantier && (
@@ -53,7 +53,7 @@ export default function DocumentsPage() {
           </div>
         ) : !docs.selectedChantier ? (
           <div className="card text-center py-12">
-            <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <FolderOpen className="w-16 h-16 text-gray-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Selectionnez un chantier</h3>
             <p className="text-gray-500">Choisissez un chantier pour acceder a ses documents</p>
           </div>
@@ -63,7 +63,7 @@ export default function DocumentsPage() {
           </div>
         ) : docs.arborescence?.dossiers.length === 0 ? (
           <div className="card text-center py-12">
-            <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <FolderOpen className="w-16 h-16 text-gray-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun dossier</h3>
             <p className="text-gray-500 mb-4">Ce chantier n'a pas encore d'arborescence de documents</p>
             {docs.canManage && (
@@ -108,7 +108,7 @@ export default function DocumentsPage() {
               <div className="card mb-4">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                     <input
                       type="text"
                       placeholder="Rechercher un document..."
@@ -134,7 +134,7 @@ export default function DocumentsPage() {
               {/* Documents list */}
               {!docs.selectedDossier && docs.documents.length === 0 ? (
                 <div className="card text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <FileText className="w-12 h-12 text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-500">Selectionnez un dossier pour voir ses documents</p>
                 </div>
               ) : docs.isLoadingDocuments ? (

@@ -92,7 +92,7 @@ export default function LotBudgetaireModal({ budgetId, lot, onClose, onSuccess }
           <h2 className="text-xl font-semibold text-gray-900">
             {isEdit ? 'Modifier le lot' : 'Nouveau lot budgetaire'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" disabled={loading}>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800" disabled={loading}>
             <X size={24} />
           </button>
         </div>

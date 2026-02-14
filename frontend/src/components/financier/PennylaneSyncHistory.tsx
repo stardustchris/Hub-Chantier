@@ -100,7 +100,7 @@ export default function PennylaneSyncHistory({ refreshTrigger }: PennylaneSyncHi
       case 'running':
         return <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
       default:
-        return <Clock className="w-5 h-5 text-gray-400" />
+        return <Clock className="w-5 h-5 text-gray-600" />
     }
   }
 
@@ -189,7 +189,7 @@ export default function PennylaneSyncHistory({ refreshTrigger }: PennylaneSyncHi
       {/* History list */}
       {history.length === 0 ? (
         <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
-          <Clock className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <Clock className="w-12 h-12 mx-auto text-gray-500 mb-3" />
           <p className="font-medium">Aucune synchronisation enregistree</p>
           <p className="text-sm">Lancez une synchronisation pour commencer</p>
         </div>
@@ -248,7 +248,7 @@ export default function PennylaneSyncHistory({ refreshTrigger }: PennylaneSyncHi
                       {sync.records_pending > 0 ? (
                         <span className="text-orange-600 font-medium">{sync.records_pending}</span>
                       ) : (
-                        <span className="text-gray-400">0</span>
+                        <span className="text-gray-600">0</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500 whitespace-nowrap">

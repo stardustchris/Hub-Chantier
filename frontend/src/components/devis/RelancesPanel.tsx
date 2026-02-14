@@ -288,7 +288,7 @@ export default function RelancesPanel({ devisId, devisStatut }: RelancesPanelPro
                 {editDelais.map((delai, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <span className="text-xs text-gray-500 w-16">Relance {index + 1}</span>
-                    <span className="text-xs text-gray-400">J+</span>
+                    <span className="text-xs text-gray-600">J+</span>
                     <input
                       type="number"
                       min={1}
@@ -297,7 +297,7 @@ export default function RelancesPanel({ devisId, devisStatut }: RelancesPanelPro
                       onChange={(e) => handleDelaiChange(index, Number(e.target.value))}
                       className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    <span className="text-xs text-gray-400">jours</span>
+                    <span className="text-xs text-gray-600">jours</span>
                     {editDelais.length > 1 && (
                       <button
                         onClick={() => handleRemoveDelai(index)}
@@ -429,7 +429,7 @@ export default function RelancesPanel({ devisId, devisStatut }: RelancesPanelPro
                             {enRetard ? 'En retard' : statutConfig.label}
                           </span>
                           {/* Type de relance */}
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-600">
                             {TYPE_RELANCE_LABELS[relance.type_relance]}
                           </span>
                         </div>
@@ -462,7 +462,7 @@ export default function RelancesPanel({ devisId, devisStatut }: RelancesPanelPro
       {/* Message si aucune relance */}
       {relances.length === 0 && !loading && (
         <div className="text-center py-6 text-sm text-gray-500">
-          <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+          <Bell className="w-8 h-8 mx-auto mb-2 text-gray-500" />
           <p>Aucune relance planifiee pour ce devis.</p>
           <p className="text-xs mt-1">Configurez et planifiez les relances ci-dessus.</p>
         </div>

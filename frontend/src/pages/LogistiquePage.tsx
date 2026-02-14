@@ -227,7 +227,7 @@ const LogistiquePage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                    <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+                    <Calendar size={48} className="mx-auto text-gray-600 mb-4" />
                     <p className="text-gray-500">
                       Aucune ressource disponible. {isAdmin && 'Créez-en une depuis l\'onglet Ressources.'}
                     </p>
@@ -255,7 +255,7 @@ const LogistiquePage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+                <Calendar size={48} className="mx-auto text-gray-600 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   Sélectionnez une ressource
                 </h3>
@@ -277,7 +277,7 @@ const LogistiquePage: React.FC = () => {
 
             {reservationsEnAttente.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                <Clock size={48} className="mx-auto text-gray-400 mb-4" />
+                <Clock size={48} className="mx-auto text-gray-600 mb-4" />
                 <p className="text-gray-500">
                   Aucune reservation en attente
                 </p>

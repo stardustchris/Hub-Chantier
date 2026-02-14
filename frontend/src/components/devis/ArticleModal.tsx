@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import type { Article, ArticleCreate, ArticleUpdate, TypeDebourse } from '../../types'
 import { TYPE_DEBOURSE_LABELS } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface ArticleModalProps {
   article?: Article | null
@@ -10,6 +11,7 @@ interface ArticleModalProps {
 }
 
 export default function ArticleModal({ article, onSubmit, onClose }: ArticleModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     code: article?.code || '',
@@ -41,9 +43,15 @@ export default function ArticleModal({ article, onSubmit, onClose }: ArticleModa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4"
+      >
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
             {article ? 'Modifier l\'article' : 'Nouvel article'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">

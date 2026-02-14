@@ -101,7 +101,7 @@ export default function JournalFinancier({ entiteType, entiteId }: JournalFinanc
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-600">
                       {formatDateTime(entry.created_at)}
                     </span>
                     {entry.auteur_nom && (
@@ -139,7 +139,7 @@ export default function JournalFinancier({ entiteType, entiteId }: JournalFinanc
                   )}
 
                   {entry.motif && (
-                    <p className="mt-1 text-xs text-gray-400 italic">
+                    <p className="mt-1 text-xs text-gray-600 italic">
                       Motif: {entry.motif}
                     </p>
                   )}

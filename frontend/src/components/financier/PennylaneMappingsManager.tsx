@@ -170,7 +170,7 @@ export default function PennylaneMappingsManager() {
                     className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
-                  <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Code tel qu'il apparait dans Pennylane
@@ -195,7 +195,7 @@ export default function PennylaneMappingsManager() {
                       </option>
                     ))}
                   </select>
-                  <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
                 </div>
                 {unmappedChantiers.length === 0 && (
                   <p className="text-xs text-orange-600 mt-1">
@@ -229,7 +229,7 @@ export default function PennylaneMappingsManager() {
       {/* Mappings list */}
       {mappings.length === 0 ? (
         <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
-          <Tag className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <Tag className="w-12 h-12 mx-auto text-gray-500 mb-3" />
           <p className="font-medium">Aucun mapping configure</p>
           <p className="text-sm">Creez des mappings pour associer automatiquement les factures aux chantiers</p>
         </div>
@@ -255,7 +255,7 @@ export default function PennylaneMappingsManager() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Building2 size={16} className="text-gray-400" />
+                      <Building2 size={16} className="text-gray-600" />
                       <span className="font-medium text-gray-900">{mapping.chantier_nom}</span>
                     </div>
                   </td>

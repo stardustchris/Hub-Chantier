@@ -276,7 +276,7 @@ export default function UserDetailPage() {
             <div className="space-y-4">
               {user.code_utilisateur && (
                 <div className="flex items-center gap-3">
-                  <Hash className="w-5 h-5 text-gray-400" />
+                  <Hash className="w-5 h-5 text-gray-600" />
                   <div>
                     <p className="text-sm text-gray-500">Code utilisateur</p>
                     <p className="font-medium">{user.code_utilisateur}</p>
@@ -284,7 +284,7 @@ export default function UserDetailPage() {
                 </div>
               )}
               <div className="flex items-center gap-3">
-                <Briefcase className="w-5 h-5 text-gray-400" />
+                <Briefcase className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="text-sm text-gray-500">Type</p>
                   <p className="font-medium">
@@ -296,7 +296,7 @@ export default function UserDetailPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-gray-400" />
+                <Calendar className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="text-sm text-gray-500">Membre depuis</p>
                   <p className="font-medium">

@@ -329,7 +329,7 @@ function SignatureDisplay({ signature, devisId, onRevoked }: SignatureDisplayPro
               <h3 className="text-lg font-semibold text-gray-900">Revoquer la signature</h3>
               <button
                 onClick={() => setShowRevokeModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-600 hover:text-gray-800"
                 aria-label="Fermer"
               >
                 <X className="w-5 h-5" />
@@ -551,7 +551,7 @@ function SignatureForm({ devisId, onSigned }: SignatureFormProps) {
               <h3 className="text-lg font-semibold text-gray-900">Confirmer la signature</h3>
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-600 hover:text-gray-800"
                 aria-label="Fermer"
               >
                 <X className="w-5 h-5" />
@@ -816,9 +816,9 @@ function UploadSignature({ onDataChange }: UploadSignatureProps) {
           htmlFor="sig-upload"
           className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
         >
-          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+          <Upload className="w-8 h-8 text-gray-600 mb-2" />
           <span className="text-sm text-gray-500">Cliquez ou glissez une image</span>
-          <span className="text-xs text-gray-400 mt-1">JPG, PNG - 5 Mo max</span>
+          <span className="text-xs text-gray-600 mt-1">JPG, PNG - 5 Mo max</span>
           <input
             ref={inputRef}
             id="sig-upload"
@@ -884,7 +884,7 @@ function TextSignature({ onDataChange }: TextSignatureProps) {
       />
       {text.trim() && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <p className="text-xs text-gray-400 mb-2">Apercu :</p>
+          <p className="text-xs text-gray-600 mb-2">Apercu :</p>
           <p
             className="text-3xl text-gray-800"
             style={{ fontFamily: "'Caveat', 'Dancing Script', cursive" }}

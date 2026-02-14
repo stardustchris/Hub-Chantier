@@ -189,7 +189,7 @@ const SignalementDetail: React.FC<SignalementDetailProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 text-xl"
+                className="text-gray-600 hover:text-gray-600 text-xl"
                 aria-label="Fermer"
               >
                 ✕

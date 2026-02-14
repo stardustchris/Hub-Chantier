@@ -41,7 +41,7 @@ export default function NavigationPrevNext({
           aria-label={`Pas de ${entityLabel} précédent`}
           aria-disabled="true"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-400" />
+          <ChevronLeft className="w-5 h-5 text-gray-600" />
         </button>
       )}
 
@@ -62,7 +62,7 @@ export default function NavigationPrevNext({
           aria-label={`Pas de ${entityLabel} suivant`}
           aria-disabled="true"
         >
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="w-5 h-5 text-gray-600" />
         </button>
       )}
     </div>

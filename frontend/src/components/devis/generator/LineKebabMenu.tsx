@@ -35,7 +35,7 @@ export default function LineKebabMenu({ onEdit, onDelete, onDuplicate, onMoveUp,
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="text-gray-400 hover:text-gray-600 p-1"
+        className="text-gray-600 hover:text-gray-800 p-1"
       >
         <MoreVertical className="w-4 h-4" />
       </button>

@@ -100,7 +100,7 @@ function DefinitionTooltip({ term, children }: { term: keyof typeof DEFINITIONS;
           setShow(!show)
         }}
       >
-        <HelpCircle size={14} className="text-gray-400 hover:text-blue-500 transition-colors" />
+        <HelpCircle size={14} className="text-gray-600 hover:text-blue-500 transition-colors" />
       </span>
       {show && (
         <div
@@ -114,7 +114,7 @@ function DefinitionTooltip({ term, children }: { term: keyof typeof DEFINITIONS;
           }}
         >
           <p className="font-semibold mb-1 text-blue-300">{def.titre}</p>
-          <p className="text-gray-300 leading-relaxed">{def.definition}</p>
+          <p className="text-gray-500 leading-relaxed">{def.definition}</p>
           <div className="absolute left-1/2 -translate-x-1/2" style={{ top: '100%', marginTop: '-1px' }}>
             <div className="border-4 border-transparent border-t-gray-900" />
           </div>
@@ -313,7 +313,7 @@ export default function DashboardFinancierPage() {
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
             {rank !== undefined && (
-              <span className="text-xs font-bold text-gray-400">#{rank}</span>
+              <span className="text-xs font-bold text-gray-600">#{rank}</span>
             )}
             <Building2 size={16} className="text-purple-600" />
             <span className="font-medium text-sm text-gray-900">{chantier.nom_chantier}</span>
@@ -664,7 +664,7 @@ export default function DashboardFinancierPage() {
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm">
+                    <div className="flex items-center justify-center h-[250px] text-gray-600 text-sm">
                       Aucune donnee
                     </div>
                   )}
@@ -690,7 +690,7 @@ export default function DashboardFinancierPage() {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm">
+                    <div className="flex items-center justify-center h-[250px] text-gray-600 text-sm">
                       Aucune donnee
                     </div>
                   )}
@@ -827,7 +827,7 @@ export default function DashboardFinancierPage() {
                 </table>
                 {data.chantiers.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <Building2 className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                    <Building2 className="w-12 h-12 mx-auto text-gray-500 mb-2" />
                     <p>Aucun chantier avec budget</p>
                   </div>
                 )}
@@ -848,7 +848,7 @@ export default function DashboardFinancierPage() {
                       renderChantierCard(chantier, index + 1)
                     )}
                     {data.top_rentables.length === 0 && (
-                      <p className="text-sm text-gray-400 text-center py-4">Aucune donnee</p>
+                      <p className="text-sm text-gray-600 text-center py-4">Aucune donnee</p>
                     )}
                   </div>
                 </div>
@@ -864,7 +864,7 @@ export default function DashboardFinancierPage() {
                       renderChantierCard(chantier, index + 1)
                     )}
                     {data.top_derives.length === 0 && (
-                      <p className="text-sm text-gray-400 text-center py-4">Aucune donnee</p>
+                      <p className="text-sm text-gray-600 text-center py-4">Aucune donnee</p>
                     )}
                   </div>
                 </div>

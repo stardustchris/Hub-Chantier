@@ -415,7 +415,7 @@ export default function VersionsPanel({
                   setModalType(null)
                   setCommentaire('')
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-600 hover:text-gray-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -475,7 +475,7 @@ export default function VersionsPanel({
                   setCommentaire('')
                   setSelectedLabel('STD')
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-600 hover:text-gray-800"
               >
                 <X className="w-5 h-5" />
               </button>

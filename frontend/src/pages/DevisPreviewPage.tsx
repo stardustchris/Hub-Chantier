@@ -203,7 +203,7 @@ export default function DevisPreviewPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-4 border-t border-gray-100 text-center text-[10px] text-gray-400">
+        <div className="mt-8 pt-4 border-t border-gray-100 text-center text-[10px] text-gray-600">
           Greg Constructions — SAS au capital de 50 000 EUR — SIRET 123 456 789 00012 — TVA FR12 345678901
         </div>
       </div>
@@ -226,7 +226,7 @@ function LotPreview({ lot }: { lot: LotDevis }) {
       {/* Lines */}
       {lot.lignes.map((ligne: LigneDevis) => (
         <tr key={ligne.id} className="border-b border-gray-100">
-          <td className="px-3 py-1.5 text-gray-400 text-xs">{lot.numero}.{ligne.ordre}</td>
+          <td className="px-3 py-1.5 text-gray-600 text-xs">{lot.numero}.{ligne.ordre}</td>
           <td className="px-3 py-1.5 text-xs">{ligne.designation}</td>
           <td className="px-3 py-1.5 text-right text-xs">{Number(ligne.quantite)}</td>
           <td className="px-3 py-1.5 text-center text-gray-500 text-xs">{ligne.unite}</td>

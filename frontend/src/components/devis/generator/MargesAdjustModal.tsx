@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Save } from 'lucide-react'
 import type { DevisDetail, DevisUpdate } from '../../../types'
 import { devisService } from '../../../services/devis'
+import { useFocusTrap } from '../../../hooks/useFocusTrap'
 
 interface Props {
   devis: DevisDetail
@@ -16,6 +17,7 @@ interface MargeField {
 }
 
 export default function MargesAdjustModal({ devis, onClose, onSaved }: Props) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const globalFields: MargeField[] = [
     { key: 'taux_marge_global', label: 'Marge globale', value: devis.taux_marge_global || 0 },
   ]
@@ -88,10 +90,16 @@ export default function MargesAdjustModal({ devis, onClose, onSaved }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Ajustement des marges</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 id="modal-title" className="text-lg font-semibold text-gray-900">Ajustement des marges</h2>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
             <X className="w-5 h-5" />
           </button>
         </div>

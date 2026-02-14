@@ -175,7 +175,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
             <p className="text-sm text-gray-500">
               Max {maxFiles} fichiers, {formatFileSize(MAX_FILE_SIZE)} par fichier
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-600">
               Formats: PDF, Images, Excel, Word, Vidéos
             </p>
           </div>

@@ -203,7 +203,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
             </div>
           ) : notifications.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500">
-              <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <Bell className="w-8 h-8 mx-auto mb-2 text-gray-500" />
               Aucune notification
             </div>
           ) : (
@@ -225,7 +225,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
                   <p className="text-sm text-gray-600 line-clamp-2">
                     {notif.message}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     {formatRelativeTime(notif.created_at)}
                   </p>
                 </div>
@@ -352,7 +352,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
                   </div>
                 )}
 
-                <p className="text-xs text-gray-400 mb-4">
+                <p className="text-xs text-gray-600 mb-4">
                   {formatRelativeTime(selectedNotification.created_at)}
                 </p>
 

@@ -112,7 +112,7 @@ export default function MesInterventions({ chantierId }: MesInterventionsProps) 
             : 'bg-white border border-gray-100'
       }`}
     >
-      <Calendar className={`w-4 h-4 flex-shrink-0 ${isPast ? 'text-gray-400' : 'text-primary-500'}`} />
+      <Calendar className={`w-4 h-4 flex-shrink-0 ${isPast ? 'text-gray-600' : 'text-primary-500'}`} />
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${isToday(affectation.date) ? 'text-primary-700' : ''}`}>
           {isToday(affectation.date) ? "Aujourd'hui" : formatDateFull(affectation.date)}
@@ -122,7 +122,7 @@ export default function MesInterventions({ chantierId }: MesInterventionsProps) 
           <span>{formatInterventionTime(affectation)}</span>
         </div>
         {affectation.note && (
-          <p className="text-xs text-gray-400 mt-1 truncate">{affectation.note}</p>
+          <p className="text-xs text-gray-600 mt-1 truncate">{affectation.note}</p>
         )}
       </div>
     </div>
@@ -181,7 +181,7 @@ export default function MesInterventions({ chantierId }: MesInterventionsProps) 
                   <InterventionItem key={a.id} affectation={a} isPast={true} />
                 ))}
                 {pastInterventions.length > 3 && (
-                  <p className="text-xs text-gray-400 text-center py-1">
+                  <p className="text-xs text-gray-600 text-center py-1">
                     + {pastInterventions.length - 3} autres interventions passees
                   </p>
                 )}

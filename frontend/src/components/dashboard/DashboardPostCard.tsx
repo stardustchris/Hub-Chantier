@@ -115,7 +115,7 @@ export const DashboardPostCard = memo(function DashboardPostCard({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-600">
                 {formatRelative(post.created_at)}
               </p>
             </div>
@@ -126,7 +126,7 @@ export const DashboardPostCard = memo(function DashboardPostCard({
                   onClick={() => setShowMenu(!showMenu)}
                   className="p-1 rounded hover:bg-gray-100"
                 >
-                  <MoreHorizontal className="w-5 h-5 text-gray-400" />
+                  <MoreHorizontal className="w-5 h-5 text-gray-600" />
                 </button>
                 {showMenu && (
                   <>

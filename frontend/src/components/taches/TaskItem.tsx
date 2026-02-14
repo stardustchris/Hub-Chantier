@@ -73,7 +73,7 @@ const TaskItem = memo(function TaskItem({
         {dragHandleProps && (
           <div
             {...dragHandleProps}
-            className="cursor-grab text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="cursor-grab text-gray-600 hover:text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <GripVertical className="w-4 h-4" />
           </div>
@@ -83,7 +83,7 @@ const TaskItem = memo(function TaskItem({
         {hasSousTaches ? (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded"
+            className="p-1 text-gray-600 hover:text-gray-800 rounded"
             title={isExpanded ? 'Replier' : 'Derouler'}
           >
             {isExpanded ? (
@@ -102,7 +102,7 @@ const TaskItem = memo(function TaskItem({
           className={`p-1 rounded transition-colors ${
             tache.est_terminee
               ? 'text-green-500 hover:text-green-600'
-              : 'text-gray-400 hover:text-gray-600'
+              : 'text-gray-600 hover:text-gray-700'
           }`}
           title={tache.est_terminee ? 'Marquer a faire' : 'Marquer termine'}
         >
@@ -187,7 +187,7 @@ const TaskItem = memo(function TaskItem({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            className="p-1 text-gray-600 hover:text-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <MoreVertical className="w-4 h-4" />
           </button>

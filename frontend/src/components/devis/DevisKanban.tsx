@@ -67,7 +67,7 @@ export default function DevisKanban({ devis, devisParStatut }: DevisKanbanProps)
                     className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <span className="text-xs font-mono text-gray-400">{d.numero}</span>
+                      <span className="text-xs font-mono text-gray-600">{d.numero}</span>
                     </div>
                     <p className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
                       {d.objet}
@@ -86,7 +86,7 @@ export default function DevisKanban({ devis, devisParStatut }: DevisKanbanProps)
                 ))}
 
                 {items.length === 0 && (
-                  <div className="text-center py-4 text-gray-400 text-xs">
+                  <div className="text-center py-4 text-gray-600 text-xs">
                     Aucun devis
                   </div>
                 )}

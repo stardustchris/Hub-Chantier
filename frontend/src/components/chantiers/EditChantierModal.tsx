@@ -6,6 +6,7 @@ import { CHANTIER_STATUTS, USER_COLORS, TYPE_TRAVAUX_OPTIONS } from '../../types
 import { chantiersService } from '../../services/chantiers'
 import { geocodeAddress } from '../../services/geocoding'
 import { useToast } from '../../contexts/ToastContext'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 // Phase locale avec ID optionnel (pour nouvelles phases)
 interface LocalPhase extends PhaseChantierCreate {
@@ -20,6 +21,7 @@ interface EditChantierModalProps {
 }
 
 export default function EditChantierModal({ chantier, onClose, onSubmit }: EditChantierModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const { addToast } = useToast()
   const [formData, setFormData] = useState<ChantierUpdate>({
     nom: chantier.nom,
@@ -285,7 +287,10 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div
+        ref={focusTrapRef}
+        className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+      >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <h2 id="modal-title" className="text-lg font-semibold">Modifier le chantier</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg" aria-label="Fermer">
@@ -448,7 +453,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
                     <button
                       type="button"
                       onClick={() => removeContact(index)}
-                      className="p-2 text-gray-400 hover:text-red-500"
+                      className="p-2 text-gray-600 hover:text-red-500"
                       aria-label={`Supprimer le contact ${index + 1}`}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -520,7 +525,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
                       <button
                         type="button"
                         onClick={() => removePhase(index)}
-                        className="p-2 text-gray-400 hover:text-red-500"
+                        className="p-2 text-gray-600 hover:text-red-500"
                         aria-label={`Supprimer la periode ${index + 1}`}
                       >
                         <Trash2 className="w-4 h-4" />

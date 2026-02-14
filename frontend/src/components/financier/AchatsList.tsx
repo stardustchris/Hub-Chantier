@@ -118,7 +118,7 @@ export default function AchatsList({ chantierId, budgetId }: AchatsListProps) {
         <div className="flex flex-wrap items-center gap-2">
           {/* Filtre statut */}
           <div className="flex items-center gap-1">
-            <Filter size={14} className="text-gray-400" />
+            <Filter size={14} className="text-gray-600" />
             <select
               value={statutFilter}
               onChange={(e) => setStatutFilter(e.target.value as StatutAchat | '')}

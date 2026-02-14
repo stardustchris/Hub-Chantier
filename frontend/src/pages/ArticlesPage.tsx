@@ -127,7 +127,7 @@ export default function ArticlesPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
               <input
                 type="text"
                 value={search}
@@ -225,7 +225,7 @@ export default function ArticlesPage() {
 
               {articles.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                  <Package className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <Package className="w-12 h-12 mx-auto text-gray-500 mb-3" />
                   <p className="font-medium">Aucun article trouve</p>
                   <p className="text-sm mt-1">
                     {search || categorie

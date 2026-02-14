@@ -9,6 +9,7 @@ import { X, Send, Loader2 } from 'lucide-react'
 import MentionInput from '../common/MentionInput'
 import { dashboardService } from '../../services/dashboard'
 import { logger } from '../../services/logger'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface CommentModalProps {
   isOpen: boolean
@@ -25,6 +26,7 @@ export default function CommentModal({
   postAuthor,
   onCommentAdded,
 }: CommentModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,12 +68,16 @@ export default function CommentModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
+          ref={focusTrapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
           className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="px-4 py-3 border-b flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">
+            <h3 id="modal-title" className="font-semibold text-gray-900">
               Repondre a {postAuthor}
             </h3>
             <button

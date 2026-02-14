@@ -543,7 +543,7 @@ export default function ChantierDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {chantier.heures_estimees && (
                     <div className="flex items-center gap-3 text-sm">
-                      <Clock className="w-5 h-5 text-gray-400" />
+                      <Clock className="w-5 h-5 text-gray-600" />
                       <div>
                         <p className="text-gray-500">Heures estimees</p>
                         <p className="font-medium">{chantier.heures_estimees}h</p>
@@ -552,7 +552,7 @@ export default function ChantierDetailPage() {
                   )}
                   {chantier.date_debut_prevue && (
                     <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-5 h-5 text-gray-400" />
+                      <Calendar className="w-5 h-5 text-gray-600" />
                       <div>
                         <p className="text-gray-500">Date de debut</p>
                         <p className="font-medium">
@@ -563,7 +563,7 @@ export default function ChantierDetailPage() {
                   )}
                   {chantier.date_fin_prevue && (
                     <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-5 h-5 text-gray-400" />
+                      <Calendar className="w-5 h-5 text-gray-600" />
                       <div>
                         <p className="text-gray-500">Date de fin prevue</p>
                         <p className="font-medium">

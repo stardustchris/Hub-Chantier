@@ -48,7 +48,7 @@ export default function JournalDevis({ devisId }: JournalDevisProps) {
 
   if (entries.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-400">
+      <div className="text-center py-8 text-gray-600">
         <Clock className="w-8 h-8 mx-auto mb-2" />
         <p className="text-sm">Aucune modification enregistree</p>
       </div>
@@ -73,7 +73,7 @@ export default function JournalDevis({ devisId }: JournalDevisProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-medium text-gray-900">{entry.action}</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-600">
                 {entry.created_at ? new Date(entry.created_at).toLocaleString('fr-FR', {
                   day: '2-digit',
                   month: '2-digit',

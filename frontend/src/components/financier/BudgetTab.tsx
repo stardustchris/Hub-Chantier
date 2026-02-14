@@ -215,7 +215,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
   if (!budget) {
     return (
       <div className="text-center py-12">
-        <DollarSign className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+        <DollarSign className="w-16 h-16 mx-auto text-gray-500 mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           Aucun budget defini
         </h3>
@@ -268,7 +268,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
         )}
 
         {!canEdit && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-600">
             Seul un administrateur ou conducteur peut creer le budget.
           </p>
         )}
@@ -355,7 +355,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 truncate">{achat.libelle}</p>
                       {achat.fournisseur_nom && (
-                        <p className="text-xs text-gray-400 truncate">{achat.fournisseur_nom}</p>
+                        <p className="text-xs text-gray-600 truncate">{achat.fournisseur_nom}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 ml-3 flex-shrink-0">
@@ -375,7 +375,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">Aucun achat pour le moment</p>
+            <p className="text-sm text-gray-600">Aucun achat pour le moment</p>
           )}
         </div>
 
@@ -390,7 +390,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
                   <div key={situation.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">Situation n&deg;{situation.numero}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-600">
                         {new Date(situation.created_at).toLocaleDateString('fr-FR')}
                       </p>
                     </div>
@@ -411,7 +411,7 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">Aucune situation pour le moment</p>
+            <p className="text-sm text-gray-600">Aucune situation pour le moment</p>
           )}
         </div>
       </div>
@@ -475,9 +475,9 @@ export default function BudgetTab({ chantierId }: BudgetTabProps) {
               aria-controls={`section-${section.key}`}
             >
               {isCollapsed ? (
-                <ChevronRight size={18} className="text-gray-400 flex-shrink-0" />
+                <ChevronRight size={18} className="text-gray-600 flex-shrink-0" />
               ) : (
-                <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
+                <ChevronDown size={18} className="text-gray-600 flex-shrink-0" />
               )}
               <SectionIcon size={18} className="text-blue-600 flex-shrink-0" />
               <h3 className="text-sm font-semibold text-gray-900">{section.label}</h3>

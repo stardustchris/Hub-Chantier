@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import PhotoCapture from '../formulaires/PhotoCapture'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface PhotoCaptureModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ export default function PhotoCaptureModal({
   onClose,
   onSubmit,
 }: PhotoCaptureModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
   const [photo, setPhoto] = useState<string>('')
   const [description, setDescription] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,10 +53,16 @@ export default function PhotoCaptureModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">
+          <h2 id="modal-title" className="text-xl font-semibold text-gray-800">
             Ajouter une photo
           </h2>
           <button

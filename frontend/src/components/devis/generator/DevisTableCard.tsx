@@ -377,17 +377,17 @@ function LotSection({
               </td>
               {modeExpert && (
                 <>
-                  <td className="px-4 py-3 text-right text-sm text-gray-400">-</td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-400">-</td>
+                  <td className="px-4 py-3 text-right text-sm text-gray-600">-</td>
+                  <td className="px-4 py-3 text-right text-sm text-gray-600">-</td>
                 </>
               )}
-              <td className="px-4 py-3 text-right text-sm text-gray-400">
+              <td className="px-4 py-3 text-right text-sm text-gray-600">
                 {formatEUR(Number(editValues.quantite || 0) * Number(editValues.prix_unitaire_ht || 0))}
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-1">
                   <button onClick={() => onSaveEdit(ligne.id)} className="text-green-600 hover:text-green-700 text-xs font-medium">OK</button>
-                  <button onClick={onCancelEdit} className="text-gray-400 hover:text-gray-600 text-xs">X</button>
+                  <button onClick={onCancelEdit} className="text-gray-600 hover:text-gray-800 text-xs">X</button>
                 </div>
               </td>
             </tr>

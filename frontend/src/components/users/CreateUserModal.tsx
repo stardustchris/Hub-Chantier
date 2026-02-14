@@ -219,7 +219,7 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
                   key={color.code}
                   type="button"
                   onClick={() => setFormData({ ...formData, couleur: color.code })}
-                  className={`w-12 h-12 rounded-full border-2 transition-all ${
+                  className={`w-11 h-11 rounded-full border-2 transition-all ${
                     formData.couleur === color.code
                       ? 'border-gray-900 scale-110'
                       : 'border-transparent'

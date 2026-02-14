@@ -71,19 +71,19 @@ export const UserCard = memo(function UserCard({ user, canEdit, onToggleActive }
         {/* Contact info */}
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-gray-600">
-            <Mail className="w-4 h-4 text-gray-400" />
+            <Mail className="w-4 h-4 text-gray-600" />
             <span className="truncate">{user.email}</span>
           </div>
           {user.telephone && (
             <div className="flex items-center gap-2 text-gray-600">
-              <Phone className="w-4 h-4 text-gray-400" />
+              <Phone className="w-4 h-4 text-gray-600" />
               <span>{user.telephone}</span>
             </div>
           )}
         </div>
 
         {/* Arrow */}
-        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
       </Link>
 
       {/* Toggle active button */}

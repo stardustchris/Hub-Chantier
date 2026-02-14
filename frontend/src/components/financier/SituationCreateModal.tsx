@@ -137,7 +137,7 @@ export default function SituationCreateModal({
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Nouvelle situation de travaux</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" disabled={loading}>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-600" disabled={loading}>
             <X size={24} />
           </button>
         </div>

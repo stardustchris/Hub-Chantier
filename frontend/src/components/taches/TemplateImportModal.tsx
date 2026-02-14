@@ -82,7 +82,7 @@ export default function TemplateImportModal({
         <div className="p-4 border-b space-y-3 shrink-0">
           {/* Barre de recherche */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
             <input
               type="text"
               placeholder="Rechercher un modele..."
@@ -130,7 +130,7 @@ export default function TemplateImportModal({
             </div>
           ) : templates.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <FileText className="w-12 h-12 text-gray-500 mx-auto mb-3" />
               <p className="text-gray-500">
                 {searchQuery
                   ? 'Aucun modele trouve'
@@ -180,7 +180,7 @@ export default function TemplateImportModal({
                       className={`w-5 h-5 ${
                         selectedTemplate?.id === template.id
                           ? 'text-primary-600'
-                          : 'text-gray-400'
+                          : 'text-gray-600'
                       }`}
                     />
                   </div>

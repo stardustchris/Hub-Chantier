@@ -54,7 +54,7 @@ export default function MoyensPaiementCard({ devis, isEditable, onSaved }: Props
               />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <moyen.icon className={`w-4 h-4 shrink-0 ${isChecked ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <moyen.icon className={`w-4 h-4 shrink-0 ${isChecked ? 'text-indigo-600' : 'text-gray-600'}`} />
                   <span className="font-medium text-sm text-gray-900 truncate">{moyen.label}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5 truncate">{moyen.desc}</p>

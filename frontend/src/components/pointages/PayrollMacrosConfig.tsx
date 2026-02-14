@@ -466,7 +466,7 @@ function PayrollMacrosConfig({
               <div className="space-y-3">
                 {localConfig.macros.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <Calculator className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <Calculator className="w-12 h-12 mx-auto mb-3 text-gray-500" />
                     <p>Aucune macro personnalisee</p>
                     <p className="text-sm">Cliquez sur le bouton ci-dessous pour en creer une</p>
                   </div>

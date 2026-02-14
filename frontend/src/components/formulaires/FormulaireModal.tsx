@@ -282,7 +282,7 @@ export default function FormulaireModal({
               <p className="text-sm text-gray-600">
                 Signe par {formulaire.signature_nom}
                 {formulaire.signature_timestamp && (
-                  <span className="text-gray-400">
+                  <span className="text-gray-600">
                     {' '}le {formatDateTimeShort(formulaire.signature_timestamp)}
                   </span>
                 )}
