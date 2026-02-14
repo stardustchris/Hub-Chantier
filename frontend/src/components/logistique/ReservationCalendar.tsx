@@ -21,7 +21,7 @@ import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react'
 import type { Ressource, Reservation, PlanningRessource } from '../../types/logistique'
 import { STATUTS_RESERVATION } from '../../types/logistique'
-import { getPlanningRessource, getLundiSemaine, formatDateISO } from '../../api/logistique'
+import { getPlanningRessource, getLundiSemaine, formatDateISO } from '../../services/logistique'
 import { logger } from '../../services/logger'
 
 /**

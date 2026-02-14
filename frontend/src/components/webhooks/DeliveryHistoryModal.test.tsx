@@ -15,9 +15,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import DeliveryHistoryModal from './DeliveryHistoryModal'
-import type { Webhook, WebhookDelivery } from '../../api/webhooks'
+import type { Webhook, WebhookDelivery } from '../../services/webhooks'
 
-vi.mock('../../api/webhooks', () => ({
+vi.mock('../../services/webhooks', () => ({
   webhooksApi: {
     deliveries: vi.fn(),
   },
@@ -27,7 +27,7 @@ vi.mock('../../services/logger', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }))
 
-import { webhooksApi } from '../../api/webhooks'
+import { webhooksApi } from '../../services/webhooks'
 
 const mockedDeliveries = vi.mocked(webhooksApi.deliveries)
 

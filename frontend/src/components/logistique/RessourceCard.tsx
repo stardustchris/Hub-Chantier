@@ -19,7 +19,7 @@ import React from 'react'
 import { Settings, Clock, CheckCircle, XCircle } from 'lucide-react'
 import type { Ressource } from '../../types/logistique'
 import { CATEGORIES_RESSOURCES } from '../../types/logistique'
-import { formatPlageHoraire } from '../../api/logistique'
+import { formatPlageHoraire } from '../../services/logistique'
 
 /**
  * Props du composant RessourceCard.

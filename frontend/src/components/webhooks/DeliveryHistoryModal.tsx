@@ -3,8 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { webhooksApi } from '../../api/webhooks'
-import type { Webhook, WebhookDelivery } from '../../api/webhooks'
+import { webhooksApi } from '../../services/webhooks'
+import type { Webhook, WebhookDelivery } from '../../services/webhooks'
 import {
   Loader2,
   CheckCircle2,

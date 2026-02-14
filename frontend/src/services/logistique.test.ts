@@ -28,7 +28,7 @@ import {
 import type { CategorieRessource } from '../types/logistique'
 
 // Mock de l'API
-vi.mock('../services/api', () => ({
+vi.mock('./api', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock('../services/api', () => ({
   },
 }))
 
-import api from '../services/api'
+import api from './api'
 
 const mockRessource = {
   id: 1,

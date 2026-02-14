@@ -2,7 +2,7 @@
  * API Webhooks - Gestion des webhooks pour les événements temps réel
  */
 
-import api from '../services/api'
+import api from './api'
 
 export interface Webhook {
   id: string

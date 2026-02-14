@@ -2,7 +2,7 @@
  * Modal d'affichage du secret webhook (UNE FOIS)
  */
 
-import type { Webhook } from '../../api/webhooks'
+import type { Webhook } from '../../services/webhooks'
 import { Copy, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 

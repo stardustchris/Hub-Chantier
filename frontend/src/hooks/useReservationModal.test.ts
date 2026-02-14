@@ -9,7 +9,7 @@ import { useReservationModal } from './useReservationModal'
 import type { Ressource, Reservation } from '../types/logistique'
 
 // Mocks
-vi.mock('../api/logistique', () => ({
+vi.mock('../services/logistique', () => ({
   createReservation: vi.fn(),
   validerReservation: vi.fn(),
   refuserReservation: vi.fn(),
@@ -21,7 +21,7 @@ import {
   validerReservation,
   refuserReservation,
   annulerReservation,
-} from '../api/logistique'
+} from '../services/logistique'
 
 const mockRessource: Ressource = {
   id: 1,

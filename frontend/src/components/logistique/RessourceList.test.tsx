@@ -19,7 +19,7 @@ import RessourceList from './RessourceList'
 import type { Ressource } from '../../types/logistique'
 
 // Mock API
-vi.mock('../../api/logistique', () => ({
+vi.mock('../../services/logistique', () => ({
   listRessources: vi.fn(),
 }))
 
@@ -61,7 +61,7 @@ vi.mock('../../services/logger', () => ({
   },
 }))
 
-import { listRessources } from '../../api/logistique'
+import { listRessources } from '../../services/logistique'
 const mockListRessources = listRessources as ReturnType<typeof vi.fn>
 
 

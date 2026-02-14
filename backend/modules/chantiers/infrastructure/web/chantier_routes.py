@@ -8,7 +8,6 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from ...adapters.controllers import ChantierController
-from ..persistence import ContactChantierModel, PhaseChantierModel, ChantierOuvrierModel
 from shared.infrastructure.database import get_db
 from ...application.use_cases import (
     CodeChantierAlreadyExistsError,
@@ -20,7 +19,7 @@ from ...application.use_cases import (
     PrerequisReceptionNonRemplisError,  # GAP-CHT-001
 )
 from ...domain.events.chantier_created import ChantierCreatedEvent
-from .dependencies import get_chantier_controller, get_user_repository
+from .dependencies import get_chantier_controller, get_chantier_repository, get_user_repository
 from shared.infrastructure.web import (
     get_current_user_id,
     require_conducteur_or_admin,
@@ -491,27 +490,12 @@ def list_chantiers(
     statut: Optional[str] = Query(None, description="Filtrer par statut"),
     search: Optional[str] = Query(None, max_length=100, description="Recherche par nom ou code"),
     exclude_special: bool = Query(True, description="Exclure les chantiers spéciaux (absences)"),
-    db: Session = Depends(get_db),
     controller: ChantierController = Depends(get_chantier_controller),
+    chantier_repo=Depends(get_chantier_repository),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> ChantierListResponse:
-    """
-    Liste les chantiers avec pagination et filtres.
-
-    Args:
-        page: Numéro de page (commence à 1).
-        size: Nombre d'éléments par page.
-        statut: Filtrer par statut (optionnel).
-        search: Recherche textuelle par nom ou code.
-        exclude_special: Exclure les chantiers spéciaux (CONGES, MALADIE, etc.).
-        controller: Controller des chantiers.
-        user_repo: Repository utilisateurs.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Liste paginée des chantiers.
-    """
+    """Liste les chantiers avec pagination et filtres."""
     # Convertir page/size en skip/limit
     skip = (page - 1) * size
 
@@ -532,7 +516,7 @@ def list_chantiers(
     chantiers_data = result.get("chantiers", [])
 
     return ChantierListResponse(
-        items=[_transform_chantier_response(c, controller, user_repo, db) for c in chantiers_data],
+        items=[_transform_chantier_response(c, controller, user_repo, chantier_repo) for c in chantiers_data],
         total=total,
         page=page,
         size=size,
@@ -543,30 +527,15 @@ def list_chantiers(
 @router.get("/{chantier_id}", response_model=ChantierResponse)
 def get_chantier(
     chantier_id: int,
-    db: Session = Depends(get_db),
     controller: ChantierController = Depends(get_chantier_controller),
+    chantier_repo=Depends(get_chantier_repository),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> ChantierResponse:
-    """
-    Récupère un chantier par son ID.
-
-    Args:
-        chantier_id: ID du chantier.
-        db: Session base de données.
-        controller: Controller des chantiers.
-        user_repo: Repository utilisateurs.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Le chantier.
-
-    Raises:
-        HTTPException 404: Chantier non trouvé.
-    """
+    """Récupère un chantier par son ID."""
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo, db)
+        return _transform_chantier_response(result, controller, user_repo, chantier_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1072,85 +1041,43 @@ def retirer_chef_chantier(
 def assigner_ouvrier(
     chantier_id: int,
     request: AssignResponsableRequest,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ) -> ChantierResponse:
-    """
-    Assigne un ouvrier/intérimaire/sous-traitant au chantier.
+    """Assigne un ouvrier/intérimaire/sous-traitant au chantier.
 
     RBAC: Requiert le rôle conducteur ou admin.
-
-    Args:
-        chantier_id: ID du chantier.
-        request: ID de l'ouvrier à assigner.
-        db: Session base de données.
-        controller: Controller des chantiers.
-        user_repo: Repository utilisateurs.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Le chantier mis à jour.
     """
-    from ..persistence import ChantierOuvrierModel
+    chantier_repo.assign_ouvrier(chantier_id, request.user_id)
 
-    # Vérifier si l'association existe déjà
-    existing = db.query(ChantierOuvrierModel).filter(
-        ChantierOuvrierModel.chantier_id == chantier_id,
-        ChantierOuvrierModel.user_id == request.user_id,
-    ).first()
-
-    if not existing:
-        # Créer l'association
-        association = ChantierOuvrierModel(
-            chantier_id=chantier_id,
-            user_id=request.user_id,
-        )
-        db.add(association)
-        db.commit()
-
-    # Récupérer le chantier mis à jour
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo, db)
+        return _transform_chantier_response(result, controller, user_repo, chantier_repo)
     except ChantierNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=e.message,
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
 
 @router.delete("/{chantier_id}/ouvriers/{user_id}", response_model=ChantierResponse)
 def retirer_ouvrier(
     chantier_id: int,
     user_id: int,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     controller: ChantierController = Depends(get_chantier_controller),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
 ) -> ChantierResponse:
     """Retire un ouvrier du chantier. RBAC: conducteur ou admin requis."""
-    from ..persistence import ChantierOuvrierModel
+    chantier_repo.remove_ouvrier(chantier_id, user_id)
 
-    # Supprimer l'association
-    db.query(ChantierOuvrierModel).filter(
-        ChantierOuvrierModel.chantier_id == chantier_id,
-        ChantierOuvrierModel.user_id == user_id,
-    ).delete()
-    db.commit()
-
-    # Récupérer le chantier mis à jour
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo, db)
+        return _transform_chantier_response(result, controller, user_repo, chantier_repo)
     except ChantierNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=e.message,
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
 
 # =============================================================================
@@ -1161,30 +1088,14 @@ def retirer_ouvrier(
 @router.get("/{chantier_id}/contacts", response_model=List[ContactChantierResponse])
 def list_contacts(
     chantier_id: int,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> List[ContactChantierResponse]:
-    """
-    Liste tous les contacts d'un chantier.
-
-    Args:
-        chantier_id: ID du chantier.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Liste des contacts du chantier.
-    """
-    contacts = db.query(ContactChantierModel).filter(
-        ContactChantierModel.chantier_id == chantier_id
-    ).all()
-
+    """Liste tous les contacts d'un chantier."""
+    contacts = chantier_repo.list_contacts(chantier_id)
     return [
         ContactChantierResponse(
-            id=c.id,
-            nom=c.nom,
-            telephone=c.telephone,
-            profession=c.profession,
+            id=c.id, nom=c.nom, telephone=c.telephone, profession=c.profession,
         )
         for c in contacts
     ]
@@ -1194,36 +1105,15 @@ def list_contacts(
 def create_contact(
     chantier_id: int,
     request: ContactChantierCreate,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> ContactChantierResponse:
-    """
-    Crée un nouveau contact pour un chantier.
-
-    Args:
-        chantier_id: ID du chantier.
-        request: Données du contact.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Le contact créé.
-    """
-    contact = ContactChantierModel(
-        chantier_id=chantier_id,
-        nom=request.nom,
-        telephone=request.telephone,
-        profession=request.profession,
+    """Crée un nouveau contact pour un chantier."""
+    contact = chantier_repo.create_contact(
+        chantier_id, request.nom, request.telephone, request.profession,
     )
-    db.add(contact)
-    db.commit()
-    db.refresh(contact)
-
     return ContactChantierResponse(
-        id=contact.id,
-        nom=contact.nom,
-        telephone=contact.telephone,
-        profession=contact.profession,
+        id=contact.id, nom=contact.nom, telephone=contact.telephone, profession=contact.profession,
     )
 
 
@@ -1232,48 +1122,21 @@ def update_contact(
     chantier_id: int,
     contact_id: int,
     request: ContactChantierUpdate,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> ContactChantierResponse:
-    """
-    Met à jour un contact.
-
-    Args:
-        chantier_id: ID du chantier.
-        contact_id: ID du contact.
-        request: Données de mise à jour.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Le contact mis à jour.
-    """
-    contact = db.query(ContactChantierModel).filter(
-        ContactChantierModel.id == contact_id,
-        ContactChantierModel.chantier_id == chantier_id,
-    ).first()
-
-    if not contact:
+    """Met à jour un contact."""
+    result = chantier_repo.update_contact(
+        chantier_id, contact_id,
+        nom=request.nom, telephone=request.telephone, profession=request.profession,
+    )
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Contact {contact_id} non trouvé pour le chantier {chantier_id}",
         )
-
-    if request.nom is not None:
-        contact.nom = request.nom
-    if request.telephone is not None:
-        contact.telephone = request.telephone
-    if request.profession is not None:
-        contact.profession = request.profession
-
-    db.commit()
-    db.refresh(contact)
-
     return ContactChantierResponse(
-        id=contact.id,
-        nom=contact.nom,
-        telephone=contact.telephone,
-        profession=contact.profession,
+        id=result.id, nom=result.nom, telephone=result.telephone, profession=result.profession,
     )
 
 
@@ -1281,35 +1144,15 @@ def update_contact(
 def delete_contact(
     chantier_id: int,
     contact_id: int,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> dict:
-    """
-    Supprime un contact.
-
-    Args:
-        chantier_id: ID du chantier.
-        contact_id: ID du contact.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Confirmation de suppression.
-    """
-    contact = db.query(ContactChantierModel).filter(
-        ContactChantierModel.id == contact_id,
-        ContactChantierModel.chantier_id == chantier_id,
-    ).first()
-
-    if not contact:
+    """Supprime un contact."""
+    if not chantier_repo.delete_contact(chantier_id, contact_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Contact {contact_id} non trouvé pour le chantier {chantier_id}",
         )
-
-    db.delete(contact)
-    db.commit()
-
     return {"deleted": True, "id": contact_id}
 
 
@@ -1321,30 +1164,14 @@ def delete_contact(
 @router.get("/{chantier_id}/phases", response_model=List[PhaseChantierResponse])
 def list_phases(
     chantier_id: int,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> List[PhaseChantierResponse]:
-    """
-    Liste toutes les phases d'un chantier.
-
-    Args:
-        chantier_id: ID du chantier.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Liste des phases du chantier ordonnées.
-    """
-    phases = db.query(PhaseChantierModel).filter(
-        PhaseChantierModel.chantier_id == chantier_id
-    ).order_by(PhaseChantierModel.ordre).all()
-
+    """Liste toutes les phases d'un chantier."""
+    phases = chantier_repo.list_phases(chantier_id)
     return [
         PhaseChantierResponse(
-            id=p.id,
-            nom=p.nom,
-            description=p.description,
-            ordre=p.ordre,
+            id=p.id, nom=p.nom, description=p.description, ordre=p.ordre,
             date_debut=p.date_debut.isoformat() if p.date_debut else None,
             date_fin=p.date_fin.isoformat() if p.date_fin else None,
         )
@@ -1356,57 +1183,17 @@ def list_phases(
 def create_phase(
     chantier_id: int,
     request: PhaseChantierCreate,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> PhaseChantierResponse:
-    """
-    Crée une nouvelle phase pour un chantier.
-
-    Args:
-        chantier_id: ID du chantier.
-        request: Données de la phase.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        La phase créée.
-    """
-    from datetime import date as date_type
-
-    # Calculer l'ordre si non fourni (dernier + 1)
-    if request.ordre is None or request.ordre == 1:
-        max_ordre = db.query(PhaseChantierModel).filter(
-            PhaseChantierModel.chantier_id == chantier_id
-        ).count()
-        ordre = max_ordre + 1
-    else:
-        ordre = request.ordre
-
-    # Parser les dates si fournies
-    date_debut = None
-    date_fin = None
-    if request.date_debut:
-        date_debut = date_type.fromisoformat(request.date_debut)
-    if request.date_fin:
-        date_fin = date_type.fromisoformat(request.date_fin)
-
-    phase = PhaseChantierModel(
-        chantier_id=chantier_id,
-        nom=request.nom,
-        description=request.description,
-        ordre=ordre,
-        date_debut=date_debut,
-        date_fin=date_fin,
+    """Crée une nouvelle phase pour un chantier."""
+    phase = chantier_repo.create_phase(
+        chantier_id, request.nom,
+        description=request.description, ordre=request.ordre,
+        date_debut=request.date_debut, date_fin=request.date_fin,
     )
-    db.add(phase)
-    db.commit()
-    db.refresh(phase)
-
     return PhaseChantierResponse(
-        id=phase.id,
-        nom=phase.nom,
-        description=phase.description,
-        ordre=phase.ordre,
+        id=phase.id, nom=phase.nom, description=phase.description, ordre=phase.ordre,
         date_debut=phase.date_debut.isoformat() if phase.date_debut else None,
         date_fin=phase.date_fin.isoformat() if phase.date_fin else None,
     )
@@ -1417,56 +1204,24 @@ def update_phase(
     chantier_id: int,
     phase_id: int,
     request: PhaseChantierUpdate,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> PhaseChantierResponse:
-    """
-    Met à jour une phase.
-
-    Args:
-        chantier_id: ID du chantier.
-        phase_id: ID de la phase.
-        request: Données de mise à jour.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        La phase mise à jour.
-    """
-    from datetime import date as date_type
-
-    phase = db.query(PhaseChantierModel).filter(
-        PhaseChantierModel.id == phase_id,
-        PhaseChantierModel.chantier_id == chantier_id,
-    ).first()
-
-    if not phase:
+    """Met à jour une phase."""
+    result = chantier_repo.update_phase(
+        chantier_id, phase_id,
+        nom=request.nom, description=request.description, ordre=request.ordre,
+        date_debut=request.date_debut, date_fin=request.date_fin,
+    )
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Phase {phase_id} non trouvée pour le chantier {chantier_id}",
         )
-
-    if request.nom is not None:
-        phase.nom = request.nom
-    if request.description is not None:
-        phase.description = request.description
-    if request.ordre is not None:
-        phase.ordre = request.ordre
-    if request.date_debut is not None:
-        phase.date_debut = date_type.fromisoformat(request.date_debut) if request.date_debut else None
-    if request.date_fin is not None:
-        phase.date_fin = date_type.fromisoformat(request.date_fin) if request.date_fin else None
-
-    db.commit()
-    db.refresh(phase)
-
     return PhaseChantierResponse(
-        id=phase.id,
-        nom=phase.nom,
-        description=phase.description,
-        ordre=phase.ordre,
-        date_debut=phase.date_debut.isoformat() if phase.date_debut else None,
-        date_fin=phase.date_fin.isoformat() if phase.date_fin else None,
+        id=result.id, nom=result.nom, description=result.description, ordre=result.ordre,
+        date_debut=result.date_debut.isoformat() if result.date_debut else None,
+        date_fin=result.date_fin.isoformat() if result.date_fin else None,
     )
 
 
@@ -1474,35 +1229,15 @@ def update_phase(
 def delete_phase(
     chantier_id: int,
     phase_id: int,
-    db: Session = Depends(get_db),
+    chantier_repo=Depends(get_chantier_repository),
     current_user_id: int = Depends(get_current_user_id),
 ) -> dict:
-    """
-    Supprime une phase.
-
-    Args:
-        chantier_id: ID du chantier.
-        phase_id: ID de la phase.
-        db: Session base de données.
-        current_user_id: ID de l'utilisateur connecté.
-
-    Returns:
-        Confirmation de suppression.
-    """
-    phase = db.query(PhaseChantierModel).filter(
-        PhaseChantierModel.id == phase_id,
-        PhaseChantierModel.chantier_id == chantier_id,
-    ).first()
-
-    if not phase:
+    """Supprime une phase."""
+    if not chantier_repo.delete_phase(chantier_id, phase_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Phase {phase_id} non trouvée pour le chantier {chantier_id}",
         )
-
-    db.delete(phase)
-    db.commit()
-
     return {"deleted": True, "id": phase_id}
 
 
@@ -1592,7 +1327,7 @@ def _transform_chantier_response(
     chantier_dict: dict,
     controller: ChantierController,
     user_repo: Optional["UserRepository"] = None,
-    db: Optional[Session] = None,
+    chantier_repo=None,
 ) -> ChantierResponse:
     """
     Transforme un dictionnaire chantier du controller en ChantierResponse.
@@ -1632,13 +1367,10 @@ def _transform_chantier_response(
     conducteur_ids = chantier_dict.get("conducteur_ids", [])
     chef_chantier_ids = chantier_dict.get("chef_chantier_ids", [])
 
-    # Récupérer les IDs des ouvriers depuis la base de données
+    # Récupérer les IDs des ouvriers via le repository
     ouvrier_ids = []
-    if db:
-        ouvrier_records = db.query(ChantierOuvrierModel).filter(
-            ChantierOuvrierModel.chantier_id == chantier_dict.get("id")
-        ).all()
-        ouvrier_ids = [r.user_id for r in ouvrier_records]
+    if chantier_repo:
+        ouvrier_ids = chantier_repo.list_ouvrier_ids(chantier_dict.get("id"))
 
     # Récupérer les objets User complets si le repo est disponible
     conducteurs = []

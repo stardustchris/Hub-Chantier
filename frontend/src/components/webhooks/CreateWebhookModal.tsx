@@ -3,8 +3,8 @@
  */
 
 import { useState } from 'react'
-import { webhooksApi } from '../../api/webhooks'
-import type { Webhook, CreateWebhookRequest } from '../../api/webhooks'
+import { webhooksApi } from '../../services/webhooks'
+import type { Webhook, CreateWebhookRequest } from '../../services/webhooks'
 import { Plus, Loader2, XCircle } from 'lucide-react'
 import { logger } from '../../services/logger'
 import { useFocusTrap } from '../../hooks/useFocusTrap'

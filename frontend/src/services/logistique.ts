@@ -4,7 +4,7 @@
  * LOG-01 à LOG-18: Gestion du matériel et réservations
  */
 
-import api from '../services/api'
+import api from './api'
 import type {
   Ressource,
   RessourceCreate,

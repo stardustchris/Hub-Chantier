@@ -10,7 +10,7 @@ import { useLogistique } from '../hooks'
 import { logger } from '../services/logger'
 import { RessourceList, RessourceModal, ReservationCalendar, ReservationModal } from '../components/logistique'
 import Layout from '../components/Layout'
-import { listRessources } from '../api/logistique'
+import { listRessources } from '../services/logistique'
 import type { Ressource } from '../types/logistique'
 
 const LogistiquePage: React.FC = () => {

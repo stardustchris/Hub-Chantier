@@ -18,7 +18,7 @@ import React, { useState, useEffect } from 'react'
 import { Plus, Search, Filter } from 'lucide-react'
 import type { Ressource, CategorieRessource } from '../../types/logistique'
 import { CATEGORIES_RESSOURCES } from '../../types/logistique'
-import { listRessources } from '../../api/logistique'
+import { listRessources } from '../../services/logistique'
 import RessourceCard from './RessourceCard'
 import { logger } from '../../services/logger'
 

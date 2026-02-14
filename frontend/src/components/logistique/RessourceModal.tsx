@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react'
 import { X, Save, AlertCircle } from 'lucide-react'
 import type { Ressource, RessourceCreate, RessourceUpdate, CategorieRessource } from '../../types/logistique'
 import { CATEGORIES_RESSOURCES } from '../../types/logistique'
-import { createRessource, updateRessource } from '../../api/logistique'
+import { createRessource, updateRessource } from '../../services/logistique'
 import { logger } from '../../services/logger'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 

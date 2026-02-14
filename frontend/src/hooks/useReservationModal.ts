@@ -13,7 +13,7 @@ import {
   validerReservation,
   refuserReservation,
   annulerReservation,
-} from '../api/logistique'
+} from '../services/logistique'
 
 /**
  * Options de configuration du hook useReservationModal.
