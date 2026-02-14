@@ -7,6 +7,7 @@ import { webhooksApi } from '../../api/webhooks'
 import type { Webhook, CreateWebhookRequest } from '../../api/webhooks'
 import { Plus, Loader2, XCircle } from 'lucide-react'
 import { logger } from '../../services/logger'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 // Evenements disponibles
 const AVAILABLE_EVENTS = [
@@ -24,6 +25,7 @@ interface CreateWebhookModalProps {
 }
 
 export default function CreateWebhookModal({ onClose, onCreated }: CreateWebhookModalProps) {
+  const focusTrapRef = useFocusTrap(true)
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [selectedEvents, setSelectedEvents] = useState<string[]>([])
@@ -91,7 +93,7 @@ export default function CreateWebhookModal({ onClose, onCreated }: CreateWebhook
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div ref={focusTrapRef} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Créer un Webhook</h2>
 

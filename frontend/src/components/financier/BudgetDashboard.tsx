@@ -216,7 +216,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
             {margeFaible && <AlertTriangle className="w-4 h-4 text-red-500" />}
           </div>
           <p className={`text-2xl font-bold ${
-            kpi.marge_statut === 'en_attente' ? 'text-gray-400' :
+            kpi.marge_statut === 'en_attente' ? 'text-gray-500' :
             margeFaible ? 'text-red-600' : 'text-green-700'
           }`}>
             {kpi.marge_estimee === null || kpi.marge_estimee === undefined ? (

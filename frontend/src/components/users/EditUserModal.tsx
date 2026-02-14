@@ -9,6 +9,7 @@ import type { User, UserUpdate, UserRole, Metier } from '../../types'
 import { ROLES, METIERS, USER_COLORS } from '../../types'
 import { useAuth } from '../../contexts/AuthContext'
 import { MetierMultiSelect } from './MetierMultiSelect'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface EditUserModalProps {
   user: User
@@ -17,6 +18,7 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
+  const focusTrapRef = useFocusTrap(true)
   const { user: currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'admin'
 
@@ -46,7 +48,7 @@ export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div ref={focusTrapRef} className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { X, Loader2, Mail } from 'lucide-react'
 import type { UserRole } from '../../types'
 import { ROLES } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface InviteUserData {
   email: string
@@ -16,6 +17,7 @@ interface InviteUserModalProps {
 }
 
 export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
+  const focusTrapRef = useFocusTrap(true)
   const [formData, setFormData] = useState<InviteUserData>({
     email: '',
     nom: '',
@@ -56,7 +58,7 @@ export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div ref={focusTrapRef} className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div
         ref={modalRef}

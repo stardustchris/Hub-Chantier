@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react'
 import type { UserRole, UserCreate } from '../../types'
 import { ROLES, METIERS, USER_COLORS } from '../../types'
 import type { Metier } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface CreateUserModalProps {
   onClose: () => void
@@ -10,6 +11,7 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
+  const focusTrapRef = useFocusTrap(true)
   const [formData, setFormData] = useState<UserCreate>({
     email: '',
     password: '',
@@ -53,7 +55,7 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div ref={focusTrapRef} className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div
         ref={modalRef}

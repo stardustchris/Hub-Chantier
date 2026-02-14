@@ -4,6 +4,7 @@
 
 import type { Webhook } from '../../api/webhooks'
 import { Copy, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface SecretModalProps {
   secret: string
@@ -14,8 +15,9 @@ interface SecretModalProps {
 }
 
 export default function SecretModal({ secret, webhook, copied, onCopy, onClose }: SecretModalProps) {
+  const focusTrapRef = useFocusTrap(true)
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div ref={focusTrapRef} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full p-6">
         {/* Succes */}
         <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
