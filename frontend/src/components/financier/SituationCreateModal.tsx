@@ -14,6 +14,7 @@ import { useToast } from '../../contexts/ToastContext'
 import { logger } from '../../services/logger'
 import type { SituationCreate, LotBudgetaire } from '../../types'
 import { formatEUR } from '../../utils/format'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface SituationCreateModalProps {
   chantierId: number
@@ -29,6 +30,7 @@ export default function SituationCreateModal({
   onSuccess,
 }: SituationCreateModalProps) {
   const { addToast } = useToast()
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
 
   // Dates par defaut : 1er et dernier jour du mois en cours
   const today = new Date()
@@ -134,10 +136,10 @@ export default function SituationCreateModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Nouvelle situation de travaux</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-600" disabled={loading}>
+          <h2 id="modal-title" className="text-xl font-semibold text-gray-900">Nouvelle situation de travaux</h2>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800" disabled={loading}>
             <X size={24} />
           </button>
         </div>

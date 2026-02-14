@@ -141,7 +141,7 @@ export default function TemplateList({
               </button>
               <button
                 onClick={() => onDuplicate(template)}
-                className="p-2 text-gray-600 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Dupliquer"
               >
                 <Copy className="w-4 h-4" />

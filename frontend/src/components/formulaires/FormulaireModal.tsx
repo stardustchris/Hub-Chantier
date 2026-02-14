@@ -24,6 +24,7 @@ import type {
 } from '../../types'
 import { CATEGORIES_FORMULAIRES, STATUTS_FORMULAIRE } from '../../types'
 import FieldRenderer from './FieldRenderer'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface FormulaireModalProps {
   isOpen: boolean
@@ -44,6 +45,7 @@ export default function FormulaireModal({
   template,
   readOnly = false,
 }: FormulaireModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [values, setValues] = useState<Record<string, string | number | boolean | string[]>>({})

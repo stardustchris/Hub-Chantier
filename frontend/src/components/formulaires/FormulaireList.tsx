@@ -143,7 +143,7 @@ export default function FormulaireList({
                     )}
                     <button
                       onClick={() => onExportPDF(formulaire)}
-                      className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Telecharger PDF"
                     >
                       <Download className="w-4 h-4 sm:w-5 sm:h-5" />

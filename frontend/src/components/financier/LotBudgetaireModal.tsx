@@ -10,6 +10,7 @@ import { logger } from '../../services/logger'
 import type { LotBudgetaire, LotBudgetaireCreate, UniteMesureFinancier } from '../../types'
 import { UNITE_MESURE_FINANCIER_LABELS } from '../../types'
 import { formatEUR } from '../../utils/format'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface LotBudgetaireModalProps {
   budgetId: number
@@ -21,6 +22,7 @@ interface LotBudgetaireModalProps {
 export default function LotBudgetaireModal({ budgetId, lot, onClose, onSuccess }: LotBudgetaireModalProps) {
   const { addToast } = useToast()
   const isEdit = !!lot
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
 
   const [formData, setFormData] = useState({
     code_lot: lot?.code_lot || '',
@@ -87,9 +89,9 @@ export default function LotBudgetaireModal({ budgetId, lot, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
             {isEdit ? 'Modifier le lot' : 'Nouveau lot budgetaire'}
           </h2>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-800" disabled={loading}>

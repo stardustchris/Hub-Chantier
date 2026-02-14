@@ -190,7 +190,7 @@ export default function DevisListPage() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="p-2 text-gray-600 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
                 aria-label="Effacer les filtres"
               >
                 <X className="w-4 h-4" />

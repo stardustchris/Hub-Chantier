@@ -117,7 +117,7 @@ const RessourceCard: React.FC<RessourceCardProps> = ({
                 e.stopPropagation()
                 onEdit(ressource)
               }}
-              className="p-1.5 text-gray-600 hover:text-gray-600 hover:bg-gray-100 rounded"
+              className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
             >
               <Settings size={18} />
             </button>
