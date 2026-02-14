@@ -21,7 +21,7 @@ interface DeliveryHistoryModalProps {
 }
 
 export default function DeliveryHistoryModal({ webhook, onClose }: DeliveryHistoryModalProps) {
-  const focusTrapRef = useFocusTrap(true)
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([])
   const [isLoading, setIsLoading] = useState(true)
 

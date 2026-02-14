@@ -21,7 +21,7 @@ export default function TemplateImportModal({
   onClose,
   onImport,
 }: TemplateImportModalProps) {
-  const focusTrapRef = useFocusTrap(true)
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const { addToast } = useToast()
   const [templates, setTemplates] = useState<TemplateModele[]>([])
   const [categories, setCategories] = useState<string[]>([])

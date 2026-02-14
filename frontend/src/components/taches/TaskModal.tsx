@@ -22,6 +22,7 @@ export default function TaskModal({
   onClose,
   onSave,
 }: TaskModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const isEditing = !!tache
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -63,7 +64,7 @@ export default function TaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div ref={focusTrapRef} className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { X, Loader2, Mail } from 'lucide-react'
 import type { UserRole } from '../../types'
 import { ROLES } from '../../types'
@@ -17,7 +17,7 @@ interface InviteUserModalProps {
 }
 
 export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
-  const focusTrapRef = useFocusTrap(true)
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [formData, setFormData] = useState<InviteUserData>({
     email: '',
     nom: '',
@@ -28,20 +28,6 @@ export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
   const [error, setError] = useState('')
   const modalRef = useRef<HTMLDivElement>(null)
   const firstInputRef = useRef<HTMLInputElement>(null)
-
-  // Focus le premier input a l'ouverture du modal
-  useEffect(() => {
-    firstInputRef.current?.focus()
-  }, [])
-
-  // Fermer avec Echap
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -25,7 +25,7 @@ interface CreateWebhookModalProps {
 }
 
 export default function CreateWebhookModal({ onClose, onCreated }: CreateWebhookModalProps) {
-  const focusTrapRef = useFocusTrap(true)
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [selectedEvents, setSelectedEvents] = useState<string[]>([])

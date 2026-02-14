@@ -18,7 +18,7 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
-  const focusTrapRef = useFocusTrap(true)
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const { user: currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'admin'
 

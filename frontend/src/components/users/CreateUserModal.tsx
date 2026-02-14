@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import type { UserRole, UserCreate } from '../../types'
 import { ROLES, METIERS, USER_COLORS } from '../../types'
@@ -11,7 +11,7 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
-  const focusTrapRef = useFocusTrap(true)
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [formData, setFormData] = useState<UserCreate>({
     email: '',
     password: '',
@@ -27,19 +27,6 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
   const firstInputRef = useRef<HTMLInputElement>(null)
 
   // Focus le premier input a l'ouverture du modal
-  useEffect(() => {
-    firstInputRef.current?.focus()
-  }, [])
-
-  // Fermer avec Echap
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [onClose])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
