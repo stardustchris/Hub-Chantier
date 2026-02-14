@@ -34,10 +34,15 @@ describe('weather service', () => {
   })
 
   describe('getCurrentPosition', () => {
-    it('rejette si pas de consentement geolocalisation', async () => {
+    it('retourne Chambery par defaut si pas de consentement geolocalisation', async () => {
       vi.mocked(consentService.hasConsent).mockResolvedValue(false)
 
-      await expect(getCurrentPosition()).rejects.toThrow('Consentement géolocalisation requis')
+      const result = await getCurrentPosition()
+
+      expect(result.latitude).toBe(45.5646)
+      expect(result.longitude).toBe(5.9178)
+      expect(result.city).toBe('Chambéry')
+      expect(result.postalCode).toBe('73000')
     })
 
     it('rejette si geolocalisation non supportee', async () => {

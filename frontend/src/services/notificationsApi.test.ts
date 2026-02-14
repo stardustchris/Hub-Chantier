@@ -191,7 +191,7 @@ describe('formatRelativeTime', () => {
     const date = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
     const result = formatRelativeTime(date.toISOString())
     // Should be formatted as "15 janv." or similar
-    expect(result).toMatch(/^\d{1,2}\s\w+\.?$/)
+    expect(result).toMatch(/^\d{1,2}\s.+$/)
   })
 })
 

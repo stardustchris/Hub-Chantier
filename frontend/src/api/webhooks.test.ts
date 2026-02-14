@@ -34,7 +34,7 @@ describe('webhooksApi', () => {
         { id: 'wh-1', url: 'https://example.com/hook', events: ['chantier.created'], is_active: true },
         { id: 'wh-2', url: 'https://example.com/hook2', events: ['tache.updated'], is_active: false },
       ]
-      mockedApi.get.mockResolvedValue({ data: mockWebhooks })
+      mockedApi.get.mockResolvedValue({ data: { total: 2, webhooks: mockWebhooks } })
 
       // Act
       const result = await webhooksApi.list()
@@ -53,19 +53,25 @@ describe('webhooksApi', () => {
         events: ['chantier.created', 'tache.updated'],
         description: 'Mon webhook',
       }
-      const mockResponse = {
-        webhook: { id: 'wh-new', ...createData, is_active: true, consecutive_failures: 0, created_at: '2024-01-15' },
+      const backendResponse = {
+        id: 'wh-new',
+        url: createData.url,
+        events: createData.events,
+        description: createData.description,
         secret: 'whsec_abc123secret',
+        created_at: '2024-01-15',
       }
-      mockedApi.post.mockResolvedValue({ data: mockResponse })
+      mockedApi.post.mockResolvedValue({ data: backendResponse })
 
       // Act
       const result = await webhooksApi.create(createData)
 
       // Assert
       expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/webhooks', createData)
-      expect(result).toEqual(mockResponse)
       expect(result.secret).toBe('whsec_abc123secret')
+      expect(result.webhook.id).toBe('wh-new')
+      expect(result.webhook.is_active).toBe(true)
+      expect(result.webhook.consecutive_failures).toBe(0)
     })
   })
 
@@ -104,7 +110,7 @@ describe('webhooksApi', () => {
       const mockDeliveries = [
         { id: 'del-1', webhook_id: webhookId, event_type: 'chantier.created', attempt: 1, success: true, delivered_at: '2024-01-15' },
       ]
-      mockedApi.get.mockResolvedValue({ data: mockDeliveries })
+      mockedApi.get.mockResolvedValue({ data: { total: 1, deliveries: mockDeliveries } })
 
       // Act
       const result = await webhooksApi.deliveries(webhookId)

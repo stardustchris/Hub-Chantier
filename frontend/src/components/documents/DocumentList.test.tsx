@@ -124,7 +124,8 @@ describe('DocumentList', () => {
       const user = userEvent.setup()
       render(<DocumentList documents={[createMockDocument()]} onDocumentClick={mockOnClick} />)
 
-      await user.click(screen.getByText('document.pdf'))
+      // Cliquer sur le type de document au lieu du nom (qui a stopPropagation)
+      await user.click(screen.getByText('PDF'))
 
       expect(mockOnClick).toHaveBeenCalled()
     })

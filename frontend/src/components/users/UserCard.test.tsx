@@ -101,11 +101,11 @@ describe('UserCard', () => {
     expect(screen.getByText('Macon')).toBeInTheDocument()
   })
 
-  it('affiche le metier electricien', () => {
-    const user = createMockUser({ metier: 'electricien' })
+  it('affiche le metier terrassier', () => {
+    const user = createMockUser({ metier: 'terrassier' })
     renderWithRouter(user)
 
-    expect(screen.getByText('Electricien')).toBeInTheDocument()
+    expect(screen.getByText('Terrassier')).toBeInTheDocument()
   })
 
   it('n\'affiche pas le badge metier si non defini', () => {
@@ -224,8 +224,8 @@ describe('UserCard', () => {
   })
 
   it('affiche tous les metiers correctement', () => {
-    const metiers = ['coffreur', 'ferrailleur', 'grutier', 'charpentier', 'couvreur', 'plombier', 'autre'] as const
-    const labels = ['Coffreur', 'Ferrailleur', 'Grutier', 'Charpentier', 'Couvreur', 'Plombier', 'Autre']
+    const metiers = ['coffreur', 'ferrailleur', 'grutier', 'charpentier', 'couvreur', 'administratif', 'autre'] as const
+    const labels = ['Coffreur', 'Ferrailleur', 'Grutier', 'Charpentier', 'Couvreur', 'Administratif', 'Autre']
 
     metiers.forEach((metier, index) => {
       const user = createMockUser({ metier })

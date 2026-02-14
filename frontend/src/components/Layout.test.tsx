@@ -205,7 +205,7 @@ describe('Layout', () => {
       fireEvent.click(userMenuButton)
 
       expect(screen.getByText('jean.dupont@test.com')).toBeInTheDocument()
-      expect(screen.getByText('Parametres')).toBeInTheDocument()
+      expect(screen.getByText('Parametres entreprise')).toBeInTheDocument()
       expect(screen.getByText('Deconnexion')).toBeInTheDocument()
     })
 
@@ -221,8 +221,8 @@ describe('Layout', () => {
       renderWithRouter()
       fireEvent.click(screen.getByLabelText('Menu utilisateur'))
 
-      const parametresLink = screen.getByText('Parametres')
-      expect(parametresLink.closest('a')).toHaveAttribute('href', '/parametres')
+      const parametresLink = screen.getByText('Parametres entreprise')
+      expect(parametresLink.closest('a')).toHaveAttribute('href', '/parametres-entreprise')
     })
   })
 

@@ -263,13 +263,15 @@ describe('documentsService', () => {
 
   describe('downloadDocument', () => {
     it('télécharge un document', async () => {
-      const mockDownload = { url: 'https://...', filename: 'plan.pdf', mime_type: 'application/pdf' }
-      vi.mocked(api.get).mockResolvedValue({ data: mockDownload })
+      const mockBlob = new Blob(['pdf content'], { type: 'application/pdf' })
+      vi.mocked(api.get).mockResolvedValue({ data: mockBlob })
 
       const result = await documentsService.downloadDocument(1)
 
-      expect(api.get).toHaveBeenCalledWith('/api/documents/documents/1/download')
-      expect(result).toEqual(mockDownload)
+      expect(api.get).toHaveBeenCalledWith('/api/documents/documents/1/download', {
+        responseType: 'blob',
+      })
+      expect(result).toBe(mockBlob)
     })
   })
 
@@ -281,7 +283,7 @@ describe('documentsService', () => {
       const result = await documentsService.downloadDocumentsZip([1, 2, 3])
 
       expect(api.post).toHaveBeenCalledWith(
-        '/api/documents/documents/download-zip',
+        '/api/documents/download-zip',
         { document_ids: [1, 2, 3] },
         { responseType: 'blob' }
       )

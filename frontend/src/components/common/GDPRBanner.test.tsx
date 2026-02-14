@@ -9,6 +9,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 import { GDPRBanner } from './GDPRBanner'
+import { ToastProvider } from '../../contexts/ToastContext'
 
 vi.mock('../../services/consent', () => ({
   consentService: {
@@ -32,7 +33,11 @@ describe('GDPRBanner', () => {
 
   it('ne rend rien par defaut (banner temporairement desactive)', () => {
     // Arrange & Act
-    const { container } = render(<GDPRBanner />)
+    const { container } = render(
+      <ToastProvider>
+        <GDPRBanner />
+      </ToastProvider>
+    )
 
     // Assert
     expect(container.innerHTML).toBe('')
@@ -40,7 +45,11 @@ describe('GDPRBanner', () => {
 
   it('ne rend aucun element visible quand le banner est cache', () => {
     // Arrange & Act
-    const { container } = render(<GDPRBanner />)
+    const { container } = render(
+      <ToastProvider>
+        <GDPRBanner />
+      </ToastProvider>
+    )
 
     // Assert
     expect(container.querySelector('.fixed')).toBeNull()
@@ -49,7 +58,11 @@ describe('GDPRBanner', () => {
 
   it('n appelle pas consentService.setConsents au rendu initial', () => {
     // Arrange & Act
-    render(<GDPRBanner />)
+    render(
+      <ToastProvider>
+        <GDPRBanner />
+      </ToastProvider>
+    )
 
     // Assert
     expect(consentService.setConsents).not.toHaveBeenCalled()
@@ -57,7 +70,11 @@ describe('GDPRBanner', () => {
 
   it('n appelle pas consentService.hasAnswered (code commente)', () => {
     // Arrange & Act
-    render(<GDPRBanner />)
+    render(
+      <ToastProvider>
+        <GDPRBanner />
+      </ToastProvider>
+    )
 
     // Assert
     // NOTE: hasAnswered est dans le code commente, donc pas appele
@@ -66,7 +83,11 @@ describe('GDPRBanner', () => {
 
   it('n appelle pas consentService.markBannerAsShown (code commente)', () => {
     // Arrange & Act
-    render(<GDPRBanner />)
+    render(
+      <ToastProvider>
+        <GDPRBanner />
+      </ToastProvider>
+    )
 
     // Assert
     expect(consentService.markBannerAsShown).not.toHaveBeenCalled()

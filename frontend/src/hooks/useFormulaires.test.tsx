@@ -2,6 +2,8 @@
  * Tests unitaires pour useFormulaires hook
  */
 
+// @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -421,8 +423,8 @@ describe('useFormulaires', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Utilise les mocks vides en cas d'erreur
-      expect(result.current.templates).toEqual([])
+      // Utilise les données mock en fallback en cas d'erreur
+      expect(result.current.templates.length).toBeGreaterThan(0)
     })
   })
 })

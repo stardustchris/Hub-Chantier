@@ -58,6 +58,18 @@ vi.mock('../services/chantiers', () => ({
   },
 }))
 
+vi.mock('../services/users', () => ({
+  usersService: {
+    list: vi.fn().mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      size: 100,
+      pages: 0,
+    }),
+  },
+}))
+
 vi.mock('../services/logger', () => ({
   logger: {
     error: vi.fn(),
@@ -133,6 +145,12 @@ vi.mock('../services/weatherNotifications', () => ({
   },
 }))
 
+vi.mock('../services/consent', () => ({
+  consentService: {
+    hasConsent: vi.fn().mockResolvedValue(false),
+  },
+}))
+
 vi.mock('../components/common/MentionInput', () => ({
   default: ({ value, onChange, placeholder }: any) => (
     <textarea
@@ -150,6 +168,9 @@ vi.mock('../hooks/useRecentDocuments', () => ({
     isLoading: false,
   }),
 }))
+
+// Mock useDashboardFeed - ne pas mocker, laisser le vrai hook s'exécuter
+// Il utilisera les services mockés (dashboardService, chantiersService)
 
 // Mock des composants enfants pour isoler les tests
 vi.mock('../components/Layout', () => ({
@@ -173,6 +194,7 @@ vi.mock('../components/dashboard', () => ({
     </div>
   ),
   WeatherBulletinPost: () => null,
+  PostSkeleton: () => <div data-testid="post-skeleton">Loading...</div>,
 }))
 
 import { dashboardService } from '../services/dashboard'
@@ -312,6 +334,10 @@ describe('DashboardPage', () => {
     it('affiche le champ de saisie', async () => {
       renderWithProviders()
 
+      // Le composeur est collapsed par défaut, il faut cliquer pour l'ouvrir
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
+
       await waitFor(() => {
         expect(screen.getByPlaceholderText(/Partager une photo/i)).toBeInTheDocument()
       })
@@ -320,6 +346,7 @@ describe('DashboardPage', () => {
     it('affiche les initiales de l\'utilisateur', async () => {
       renderWithProviders()
 
+      // Les initiales apparaissent sur le bouton collapsed
       await waitFor(() => {
         expect(screen.getByText('JD')).toBeInTheDocument()
       })
@@ -327,6 +354,10 @@ describe('DashboardPage', () => {
 
     it('permet de saisir du contenu', async () => {
       renderWithProviders()
+
+      // Ouvrir le composeur
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
 
       await waitFor(() => {
         const input = screen.getByPlaceholderText(/Partager une photo/i)
@@ -337,6 +368,10 @@ describe('DashboardPage', () => {
 
     it('affiche les options de ciblage pour admin', async () => {
       renderWithProviders(mockUser)
+
+      // Ouvrir le composeur
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
 
       await waitFor(() => {
         const input = screen.getByPlaceholderText(/Partager une photo/i)
@@ -351,6 +386,10 @@ describe('DashboardPage', () => {
     it('n\'affiche pas les options de ciblage pour compagnon', async () => {
       const compagnon = { ...mockUser, role: 'compagnon' as const }
       renderWithProviders(compagnon)
+
+      // Ouvrir le composeur
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
 
       await waitFor(() => {
         const input = screen.getByPlaceholderText(/Partager une photo/i)
@@ -378,6 +417,10 @@ describe('DashboardPage', () => {
 
       renderWithProviders()
 
+      // Ouvrir le composeur
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
+
       await waitFor(() => {
         const input = screen.getByPlaceholderText(/Partager une photo/i)
         fireEvent.change(input, { target: { value: 'Nouveau post' } })
@@ -398,6 +441,10 @@ describe('DashboardPage', () => {
 
     it('desactive le bouton Publier si contenu vide', async () => {
       renderWithProviders()
+
+      // Ouvrir le composeur
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
 
       await waitFor(() => {
         const publishButton = screen.getByText('Publier')
@@ -540,17 +587,16 @@ describe('DashboardPage', () => {
 
   describe('Gestion des erreurs', () => {
     it('gere l\'erreur de chargement du feed', async () => {
-      const { logger } = await import('../services/logger')
+      // TanStack Query gère maintenant les erreurs de chargement automatiquement
+      // Le composant n'appelle plus logger.error directement pour les erreurs de chargement
+      // Cette gestion est déléguée à TanStack Query qui a ses propres mécanismes
       vi.mocked(dashboardService.getFeed).mockRejectedValue(new Error('Network error'))
 
       renderWithProviders()
 
+      // Le composant doit toujours se rendre sans crash même si le feed échoue
       await waitFor(() => {
-        expect(logger.error).toHaveBeenCalledWith(
-          'Error loading feed',
-          expect.any(Error),
-          { context: 'DashboardFeed' }
-        )
+        expect(screen.getByTestId('layout')).toBeInTheDocument()
       })
     })
 
@@ -559,6 +605,10 @@ describe('DashboardPage', () => {
       vi.mocked(dashboardService.createPost).mockRejectedValue(new Error('Create error'))
 
       renderWithProviders()
+
+      // Ouvrir le composeur
+      const openButton = await screen.findByText(/Rediger un message/i)
+      fireEvent.click(openButton)
 
       await waitFor(() => {
         const input = screen.getByPlaceholderText(/Partager une photo/i)

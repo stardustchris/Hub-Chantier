@@ -111,12 +111,12 @@ describe('BudgetDashboard', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Budget revise HT')).toBeInTheDocument()
+      expect(screen.getByText('Budget révisé HT')).toBeInTheDocument()
     })
     expect(screen.getByText('Engagé')).toBeInTheDocument()
-    expect(screen.getByText('Réalisé')).toBeInTheDocument()
-    expect(screen.getByText('Reste a depenser')).toBeInTheDocument()
-    expect(screen.getByText('Marge estimee')).toBeInTheDocument()
+    expect(screen.getByText('Déboursé')).toBeInTheDocument()
+    expect(screen.getByText('Reste à dépenser')).toBeInTheDocument()
+    expect(screen.getByText('Marge estimée')).toBeInTheDocument()
   })
 
   it('appelle onDashboardLoaded avec les donnees du dashboard', async () => {
@@ -149,7 +149,7 @@ describe('BudgetDashboard', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Budget revise HT')).toBeInTheDocument()
+      expect(screen.getByText('Budget révisé HT')).toBeInTheDocument()
     })
   })
 
@@ -215,10 +215,10 @@ describe('BudgetDashboard', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Marge estimee')).toBeInTheDocument()
+      expect(screen.getByText('Marge estimée')).toBeInTheDocument()
     })
     // marge_estimee = 25.5 -> formatPct(25.5) => "25,5 %"
-    expect(screen.getByText('Marge correcte')).toBeInTheDocument()
+    expect(screen.getByText('25,5 %')).toBeInTheDocument()
   })
 
   it('alerte quand la marge est inferieure a 5%', async () => {
@@ -233,8 +233,12 @@ describe('BudgetDashboard', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Marge inferieure a 5%')).toBeInTheDocument()
+      // Vérifier que la marge est affichée avec le bon format et en rouge
+      expect(screen.getByText('3,0 %')).toBeInTheDocument()
     })
+    // Le composant affiche la marge en rouge et avec une icône d'alerte quand elle est < 5%
+    const margeValue = screen.getByText('3,0 %')
+    expect(margeValue.className).toContain('text-red-600')
   })
 
   it('affiche la repartition par lot avec barres de progression', async () => {

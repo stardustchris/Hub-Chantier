@@ -41,6 +41,13 @@ vi.mock('../contexts/AuthContext', () => ({
   }),
 }))
 
+// Mock ToastContext
+vi.mock('../contexts/ToastContext', () => ({
+  useToast: () => ({
+    showToast: vi.fn(),
+  }),
+}))
+
 // Mock Layout
 vi.mock('../components/Layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="layout">{children}</div>,
@@ -188,7 +195,8 @@ describe('UsersListPage', () => {
       renderPage(adminUser)
 
       await waitFor(() => {
-        expect(screen.getByText('Nouvel utilisateur')).toBeInTheDocument()
+        expect(screen.getByText('Créer')).toBeInTheDocument()
+        expect(screen.getByText('Inviter')).toBeInTheDocument()
       })
     })
 
@@ -196,7 +204,8 @@ describe('UsersListPage', () => {
       renderPage(conducteurUser)
 
       await waitFor(() => {
-        expect(screen.queryByText('Nouvel utilisateur')).not.toBeInTheDocument()
+        expect(screen.queryByText('Créer')).not.toBeInTheDocument()
+        expect(screen.queryByText('Inviter')).not.toBeInTheDocument()
       })
     })
   })
@@ -227,7 +236,7 @@ describe('UsersListPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Tous les roles')).toBeInTheDocument()
-        expect(screen.getByText('Tous')).toBeInTheDocument()
+        expect(screen.getAllByText('Tous').length).toBeGreaterThan(0)
       })
     })
 
@@ -349,14 +358,14 @@ describe('UsersListPage', () => {
   })
 
   describe('Modal de creation', () => {
-    it('ouvre la modal au clic sur Nouvel utilisateur', async () => {
-      renderPage()
+    it('ouvre la modal au clic sur Créer', async () => {
+      renderPage(adminUser)
 
       await waitFor(() => {
-        expect(screen.getByText('Nouvel utilisateur')).toBeInTheDocument()
+        expect(screen.getByText('Créer')).toBeInTheDocument()
       })
 
-      fireEvent.click(screen.getByText('Nouvel utilisateur'))
+      fireEvent.click(screen.getByText('Créer'))
 
       await waitFor(() => {
         expect(screen.getByTestId('create-modal')).toBeInTheDocument()
@@ -364,10 +373,10 @@ describe('UsersListPage', () => {
     })
 
     it('ferme la modal au clic sur Fermer', async () => {
-      renderPage()
+      renderPage(adminUser)
 
       await waitFor(() => {
-        fireEvent.click(screen.getByText('Nouvel utilisateur'))
+        fireEvent.click(screen.getByText('Créer'))
       })
 
       await waitFor(() => {

@@ -307,7 +307,10 @@ describe('BudgetTab', () => {
         expect(screen.getByText('Derniers achats')).toBeInTheDocument()
       })
 
-      expect(screen.getByText('Ciment Portland')).toBeInTheDocument()
+      // Attendre que les données du dashboard soient chargées et affichées
+      await waitFor(() => {
+        expect(screen.getByText('Ciment Portland')).toBeInTheDocument()
+      })
       expect(screen.getByText('Sable fin')).toBeInTheDocument()
     })
 

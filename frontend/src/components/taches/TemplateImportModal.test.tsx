@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import TemplateImportModal from './TemplateImportModal'
+import { ToastProvider } from '../../contexts/ToastContext'
 
 vi.mock('../../services/taches', () => ({
   tachesService: {
@@ -64,9 +65,17 @@ describe('TemplateImportModal', () => {
     })
   })
 
+  const renderWithToast = (props = defaultProps) => {
+    return render(
+      <ToastProvider>
+        <TemplateImportModal {...props} />
+      </ToastProvider>
+    )
+  }
+
   it('affiche le titre "Importer un modele"', async () => {
     // Act
-    render(<TemplateImportModal {...defaultProps} />)
+    renderWithToast()
 
     // Assert
     expect(screen.getByText('Importer un modele de taches')).toBeInTheDocument()
@@ -74,7 +83,7 @@ describe('TemplateImportModal', () => {
 
   it('affiche le champ de recherche', () => {
     // Act
-    render(<TemplateImportModal {...defaultProps} />)
+    renderWithToast()
 
     // Assert
     expect(screen.getByPlaceholderText('Rechercher un modele...')).toBeInTheDocument()
@@ -82,7 +91,7 @@ describe('TemplateImportModal', () => {
 
   it('affiche les templates charges', async () => {
     // Act
-    render(<TemplateImportModal {...defaultProps} />)
+    renderWithToast()
 
     // Assert
     await waitFor(() => {
@@ -93,7 +102,7 @@ describe('TemplateImportModal', () => {
 
   it('filtre les templates par recherche', async () => {
     // Arrange
-    render(<TemplateImportModal {...defaultProps} />)
+    renderWithToast()
 
     await waitFor(() => {
       expect(screen.getByText('Fondations')).toBeInTheDocument()
@@ -114,7 +123,7 @@ describe('TemplateImportModal', () => {
   it('appelle onImport au clic sur un template puis Importer', async () => {
     // Arrange
     const onImport = vi.fn().mockResolvedValue(undefined)
-    render(<TemplateImportModal {...defaultProps} onImport={onImport} />)
+    renderWithToast({ ...defaultProps, onImport })
 
     await waitFor(() => {
       expect(screen.getByText('Fondations')).toBeInTheDocument()
@@ -136,7 +145,7 @@ describe('TemplateImportModal', () => {
     const onClose = vi.fn()
 
     // Act
-    render(<TemplateImportModal {...defaultProps} onClose={onClose} />)
+    renderWithToast({ ...defaultProps, onClose })
     fireEvent.click(screen.getByText('Annuler'))
 
     // Assert
@@ -148,7 +157,7 @@ describe('TemplateImportModal', () => {
     mockedTachesService.listTemplates.mockReturnValue(new Promise(() => {}))
 
     // Act
-    const { container } = render(<TemplateImportModal {...defaultProps} />)
+    const { container } = renderWithToast()
 
     // Assert
     expect(container.querySelector('.animate-spin')).toBeInTheDocument()

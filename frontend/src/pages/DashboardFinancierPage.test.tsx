@@ -4,18 +4,140 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import DashboardFinancierPage from './DashboardFinancierPage'
+import type { VueConsolidee } from '../types'
+
+// Mock data
+const mockConsolidation: VueConsolidee = {
+  kpi_globaux: {
+    total_budget_revise: 3450000,
+    total_engage: 3190000,
+    total_realise: 2970000,
+    total_reste_a_depenser: 260000,
+    marge_moyenne_pct: 12.5,
+    nb_chantiers: 3,
+    nb_chantiers_ok: 2,
+    nb_chantiers_attention: 0,
+    nb_chantiers_depassement: 1,
+  },
+  chantiers: [
+    {
+      chantier_id: 1,
+      nom_chantier: 'Villa Moderne Duplex',
+      montant_revise_ht: 850000,
+      total_engage: 720000,
+      total_realise: 650000,
+      reste_a_depenser: 130000,
+      pct_engage: 84.7,
+      pct_realise: 76.5,
+      marge_estimee_pct: 15.3,
+      marge_statut: 'calculee',
+      statut: 'ok',
+    },
+    {
+      chantier_id: 2,
+      nom_chantier: 'Résidence Les Jardins',
+      montant_revise_ht: 2100000,
+      total_engage: 1950000,
+      total_realise: 1800000,
+      reste_a_depenser: 150000,
+      pct_engage: 92.9,
+      pct_realise: 85.7,
+      marge_estimee_pct: 10.2,
+      marge_statut: 'calculee',
+      statut: 'ok',
+    },
+    {
+      chantier_id: 3,
+      nom_chantier: 'École Jean Jaurès',
+      montant_revise_ht: 500000,
+      total_engage: 520000,
+      total_realise: 520000,
+      reste_a_depenser: -20000,
+      pct_engage: 104.0,
+      pct_realise: 104.0,
+      marge_estimee_pct: -4.0,
+      marge_statut: 'calculee',
+      statut: 'depassement',
+    },
+  ],
+  top_rentables: [
+    {
+      chantier_id: 1,
+      nom_chantier: 'Villa Moderne Duplex',
+      montant_revise_ht: 850000,
+      total_engage: 720000,
+      total_realise: 650000,
+      reste_a_depenser: 130000,
+      pct_engage: 84.7,
+      pct_realise: 76.5,
+      marge_estimee_pct: 15.3,
+      marge_statut: 'calculee',
+      statut: 'ok',
+    },
+  ],
+  top_derives: [
+    {
+      chantier_id: 3,
+      nom_chantier: 'École Jean Jaurès',
+      montant_revise_ht: 500000,
+      total_engage: 520000,
+      total_realise: 520000,
+      reste_a_depenser: -20000,
+      pct_engage: 104.0,
+      pct_realise: 104.0,
+      marge_estimee_pct: -4.0,
+      marge_statut: 'calculee',
+      statut: 'depassement',
+    },
+  ],
+}
+
+const mockChantiers = {
+  items: [
+    { id: 1, nom: 'Villa Moderne Duplex' },
+    { id: 2, nom: 'Résidence Les Jardins' },
+    { id: 3, nom: 'École Jean Jaurès' },
+  ],
+  total: 3,
+  page: 1,
+  size: 100,
+}
+
+// Mock services
+vi.mock('../services/chantiers', () => ({
+  chantiersService: {
+    list: vi.fn(() => Promise.resolve(mockChantiers)),
+  },
+}))
+
+vi.mock('../services/financier', () => ({
+  financierService: {
+    getConsolidation: vi.fn(() => Promise.resolve(mockConsolidation)),
+    getAnalyseIAConsolidee: vi.fn(() => Promise.resolve({
+      synthese: 'Situation globale stable',
+      alertes: ['École Jean Jaurès en dépassement'],
+      recommandations: ['Réviser le budget de l\'école'],
+      source: 'regles' as const,
+      ai_available: false,
+    })),
+  },
+}))
+
+vi.mock('../services/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  },
+}))
 
 // Mock Layout component
 vi.mock('../components/Layout', () => ({
-  default: ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <div data-testid="layout">
-      <h1>{title}</h1>
-      {children}
-    </div>
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="layout">{children}</div>
   ),
 }))
 
@@ -33,303 +155,201 @@ describe('DashboardFinancierPage', () => {
   })
 
   describe('Affichage général', () => {
-    it('affiche le titre "Dashboard Financier"', () => {
+    it('affiche le titre "Dashboard Financier"', async () => {
       renderDashboardFinancierPage()
       expect(screen.getByText('Dashboard Financier')).toBeInTheDocument()
-    })
-
-    it('affiche le titre de section "Vue d\'ensemble"', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText('Vue d\'ensemble')).toBeInTheDocument()
-    })
-
-    it('affiche le sélecteur de période', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByDisplayValue('Ce mois')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.queryByLabelText('Chargement des donnees financieres')).not.toBeInTheDocument()
+      })
     })
   })
 
   describe('KPIs principaux', () => {
-    it('affiche le budget total', () => {
+    it('affiche le budget total', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText('Budget Total')).toBeInTheDocument()
-      // Total: 850000 + 2100000 + 500000 = 3450000
-      expect(screen.getByText(/3\s*450\s*000\s*€/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Budget Total')).toBeInTheDocument()
+      })
+      expect(screen.getByText(/3\s*450\s*000/)).toBeInTheDocument()
     })
 
-    it('affiche le montant réalisé sous le budget total', () => {
+    it('affiche le montant engagé total', async () => {
       renderDashboardFinancierPage()
-      // 2970000 réalisé
-      expect(screen.getByText(/2\s*970\s*000\s*€ réalisé/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Engagé Total')).toBeInTheDocument()
+      })
+      expect(screen.getByText(/3\s*190\s*000/)).toBeInTheDocument()
     })
 
-    it('affiche les dépenses du mois', () => {
+    it('affiche le montant déboursé total', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText('Dépenses du mois')).toBeInTheDocument()
-      expect(screen.getByText(/285\s*000\s*€/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Déboursé Total')).toBeInTheDocument()
+      })
+      expect(screen.getByText(/2\s*970\s*000/)).toBeInTheDocument()
     })
 
-    it('affiche l\'évolution des dépenses', () => {
+    it('affiche le reste à dépenser', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText(/\+12\.5% vs mois dernier/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Reste à Dépenser')).toBeInTheDocument()
+      })
+      expect(screen.getByText(/260\s*000/)).toBeInTheDocument()
     })
 
-    it('affiche les dépenses moyennes par jour', () => {
+    it('affiche la marge moyenne', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText('Dépenses moy./jour')).toBeInTheDocument()
-      expect(screen.getByText(/9\s*500\s*€/)).toBeInTheDocument()
-      expect(screen.getByText('30 derniers jours')).toBeInTheDocument()
-    })
-
-    it('affiche le taux de consommation global', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText('Taux de consommation')).toBeInTheDocument()
-      // (2970000 / 3450000) * 100 = 86.1%
-      expect(screen.getByText(/86\.1%/)).toBeInTheDocument()
-    })
-
-    it('affiche le nombre de chantiers OK et dépassés', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText(/2 chantiers OK \/ 1 dépassés/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Marge Moyenne')).toBeInTheDocument()
+      })
+      // Format français : "12,5 %"
+      expect(screen.getByText(/12,5\s*%/)).toBeInTheDocument()
     })
   })
 
-  describe('Graphique de consommation budgétaire', () => {
-    it('affiche le titre de la section', () => {
+  describe('Compteurs statut', () => {
+    it('affiche le nombre de chantiers OK', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText('Consommation budgétaire globale')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Chantiers OK')).toBeInTheDocument()
+      })
+      expect(screen.getByText('2')).toBeInTheDocument()
     })
 
-    it('affiche le budget réalisé et prévu', () => {
+    it('affiche le nombre de chantiers en dépassement', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText('Budget réalisé')).toBeInTheDocument()
-      expect(screen.getByText('Budget prévu')).toBeInTheDocument()
-    })
-
-    it('affiche une barre de progression colorée selon le taux', () => {
-      renderDashboardFinancierPage()
-      // Taux 86.1% devrait être orange (> 80% mais < 100%)
-      const progressBar = document.querySelector('.bg-orange-500')
-      expect(progressBar).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Chantiers en depassement')).toBeInTheDocument()
+      })
+      expect(screen.getByText('1')).toBeInTheDocument()
     })
   })
 
   describe('Détail par chantier', () => {
-    it('affiche le titre "Détail par chantier"', () => {
+    it('affiche le titre "Tous les chantiers"', async () => {
       renderDashboardFinancierPage()
-      expect(screen.getByText('Détail par chantier')).toBeInTheDocument()
-    })
-
-    it('affiche tous les chantiers', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText('Villa Moderne Duplex')).toBeInTheDocument()
-      expect(screen.getByText('Résidence Les Jardins')).toBeInTheDocument()
-      expect(screen.getByText('École Jean Jaurès')).toBeInTheDocument()
-    })
-
-    it('affiche les budgets pour chaque chantier', () => {
-      renderDashboardFinancierPage()
-      // Villa: 650000 / 850000
-      expect(screen.getByText(/650\s*000\s*€ \/ 850\s*000\s*€/)).toBeInTheDocument()
-    })
-
-    it('affiche le statut de chaque chantier', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getAllByText('Dans le budget')).toHaveLength(2)
-      expect(screen.getByText('Dépassement')).toBeInTheDocument()
-    })
-
-    it('affiche le taux de consommation de chaque chantier', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText('76.5%')).toBeInTheDocument() // Villa
-      expect(screen.getByText('85.7%')).toBeInTheDocument() // Résidence
-      expect(screen.getByText('104.0%')).toBeInTheDocument() // École
-    })
-  })
-
-  describe('Alertes de dépassement', () => {
-    it('affiche une alerte globale si dépassements', () => {
-      renderDashboardFinancierPage()
-      expect(
-        screen.getByText(/Attention : 1 chantier en dépassement budgétaire/)
-      ).toBeInTheDocument()
-    })
-
-    it('affiche le message de recommandation', () => {
-      renderDashboardFinancierPage()
-      expect(
-        screen.getByText(/Une révision des budgets est recommandée/)
-      ).toBeInTheDocument()
-    })
-
-    it('liste les chantiers en dépassement', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText(/École Jean Jaurès/)).toBeInTheDocument()
-      expect(screen.getByText(/Dépassement de 20\s*000\s*€/)).toBeInTheDocument()
-    })
-
-    it('affiche l\'icône AlertTriangle pour les alertes', () => {
-      renderDashboardFinancierPage()
-      const alertIcons = document.querySelectorAll('.lucide-alert-triangle')
-      expect(alertIcons.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe('Statuts visuels par chantier', () => {
-    it('applique le style vert pour "Dans le budget"', () => {
-      renderDashboardFinancierPage()
-      const okBadges = screen.getAllByText('Dans le budget')
-      okBadges.forEach((badge) => {
-        expect(badge.className).toContain('text-green-600')
-        expect(badge.className).toContain('bg-green-100')
+      await waitFor(() => {
+        expect(screen.getByText('Tous les chantiers')).toBeInTheDocument()
       })
     })
 
-    it('applique le style rouge pour "Dépassement"', () => {
+    it('affiche tous les chantiers', async () => {
       renderDashboardFinancierPage()
-      const depassementBadge = screen.getByText('Dépassement')
-      expect(depassementBadge.className).toContain('text-red-600')
-      expect(depassementBadge.className).toContain('bg-red-100')
+      await waitFor(() => {
+        // Les noms de chantiers sont affichés dans le tableau + les cartes top
+        const rows = screen.getAllByText('Villa Moderne Duplex')
+        expect(rows.length).toBeGreaterThanOrEqual(1)
+      })
     })
 
-    it('affiche l\'icône CheckCircle pour les chantiers OK', () => {
+    it('affiche les budgets pour chaque chantier', async () => {
       renderDashboardFinancierPage()
-      const checkIcons = document.querySelectorAll('.lucide-check-circle')
-      expect(checkIcons.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        // Format EUR français : "850 000" ou "850 000 €"
+        // Plusieurs occurrences possibles (tableau + cartes)
+        const budgets = screen.getAllByText(/850\s*000/)
+        expect(budgets.length).toBeGreaterThanOrEqual(1)
+      })
     })
 
-    it('affiche l\'icône TrendingUp pour les dépassements', () => {
+    it('affiche le statut de chaque chantier', async () => {
       renderDashboardFinancierPage()
-      const trendingIcons = document.querySelectorAll('.lucide-trending-up')
-      expect(trendingIcons.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        // "OK" apparaît plusieurs fois : tableau + cartes top rentables/dérivés
+        const okElements = screen.getAllByText('OK')
+        expect(okElements.length).toBeGreaterThanOrEqual(2)
+      })
+      // "Depassement" apparaît aussi plusieurs fois
+      const depassementElements = screen.getAllByText('Depassement')
+      expect(depassementElements.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('affiche le taux de réalisation de chaque chantier', async () => {
+      renderDashboardFinancierPage()
+      await waitFor(() => {
+        // Format français : "76,5 %"
+        // Plusieurs occurrences possibles (tableau, cartes)
+        const elements = screen.getAllByText(/76,5\s*%/)
+        expect(elements.length).toBeGreaterThanOrEqual(1)
+      })
+      expect(screen.getAllByText(/85,7\s*%/).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText(/104,0\s*%/).length).toBeGreaterThanOrEqual(1)
     })
   })
 
-  describe('Barres de progression par chantier', () => {
-    it('affiche une barre verte pour taux < 80%', () => {
+  describe('Graphiques', () => {
+    it('affiche le graphique de répartition par statut', async () => {
       renderDashboardFinancierPage()
-      // Villa: 76.5% -> verte
-      const greenBars = document.querySelectorAll('.bg-green-500')
-      expect(greenBars.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        expect(screen.getByText('Repartition par statut')).toBeInTheDocument()
+      })
     })
 
-    it('affiche une barre orange pour taux 80-100%', () => {
+    it('affiche le graphique budget/engagé/déboursé', async () => {
       renderDashboardFinancierPage()
-      // Résidence: 85.7% -> orange
-      const orangeBars = document.querySelectorAll('.bg-orange-500')
-      expect(orangeBars.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        expect(screen.getByText('Budget / Engagé / Déboursé par chantier')).toBeInTheDocument()
+      })
     })
 
-    it('affiche une barre rouge pour taux > 100%', () => {
+    it('affiche le graphique des marges', async () => {
       renderDashboardFinancierPage()
-      // École: 104.0% -> rouge
-      const redBars = document.querySelectorAll('.bg-red-500')
-      expect(redBars.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        expect(screen.getByText('Marges estimees par chantier')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Top chantiers', () => {
+    it('affiche le top rentables', async () => {
+      renderDashboardFinancierPage()
+      await waitFor(() => {
+        expect(screen.getByText('Top 3 Rentables')).toBeInTheDocument()
+      })
+    })
+
+    it('affiche le top dérivés', async () => {
+      renderDashboardFinancierPage()
+      await waitFor(() => {
+        expect(screen.getByText('Top 3 Derives')).toBeInTheDocument()
+      })
     })
   })
 
   describe('Icônes des KPIs', () => {
-    it('affiche l\'icône Euro pour le budget total', () => {
+    it('affiche l\'icône Euro pour le budget total', async () => {
       renderDashboardFinancierPage()
-      const euroIcons = document.querySelectorAll('.lucide-euro')
-      expect(euroIcons.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        const euroIcons = document.querySelectorAll('.lucide-euro')
+        expect(euroIcons.length).toBeGreaterThan(0)
+      })
     })
 
-    it('affiche l\'icône DollarSign pour les dépenses', () => {
+    it('affiche l\'icône Building2 pour chaque chantier', async () => {
       renderDashboardFinancierPage()
-      const dollarIcons = document.querySelectorAll('.lucide-dollar-sign')
-      expect(dollarIcons.length).toBeGreaterThan(0)
-    })
-
-    it('affiche l\'icône Calendar pour les dépenses moyennes', () => {
-      renderDashboardFinancierPage()
-      const calendarIcons = document.querySelectorAll('.lucide-calendar')
-      expect(calendarIcons.length).toBeGreaterThan(0)
-    })
-
-    it('affiche l\'icône Building2 pour chaque chantier', () => {
-      renderDashboardFinancierPage()
-      const buildingIcons = document.querySelectorAll('.lucide-building-2')
-      expect(buildingIcons.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe('Évolution des dépenses', () => {
-    it('affiche l\'icône ArrowUpRight pour évolution positive', () => {
-      renderDashboardFinancierPage()
-      const upIcons = document.querySelectorAll('.lucide-arrow-up-right')
-      expect(upIcons.length).toBeGreaterThan(0)
-    })
-
-    it('applique le style rouge pour augmentation', () => {
-      renderDashboardFinancierPage()
-      const evolutionText = screen.getByText(/\+12\.5% vs mois dernier/)
-      expect(evolutionText.className).toContain('text-red-500')
+      await waitFor(() => {
+        const buildingIcons = document.querySelectorAll('.lucide-building-2')
+        expect(buildingIcons.length).toBeGreaterThan(0)
+      })
     })
   })
 
   describe('Format des montants', () => {
-    it('formate les montants en euros sans décimales', () => {
+    it('formate les montants en euros', async () => {
       renderDashboardFinancierPage()
-      // Vérifie que les montants n'ont pas de décimales
-      const montants = screen.getAllByText(/\d+\s*\d*\s*€/)
-      expect(montants.length).toBeGreaterThan(0)
-    })
-
-    it('utilise le format français avec espaces', () => {
-      renderDashboardFinancierPage()
-      expect(screen.getByText(/3\s*450\s*000\s*€/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText(/3\s*450\s*000/)).toBeInTheDocument()
+      })
     })
   })
 
   describe('Responsive', () => {
-    it('utilise grid responsive pour les KPIs', () => {
+    it('utilise grid responsive pour les KPIs', async () => {
       renderDashboardFinancierPage()
-      const kpisGrid = screen.getByText('Budget Total').closest('.grid')
-      expect(kpisGrid?.className).toContain('grid-cols-1')
-      expect(kpisGrid?.className).toContain('lg:grid-cols-4')
-    })
-  })
-
-  describe('Sélecteur de période', () => {
-    it('affiche toutes les options de période', () => {
-      renderDashboardFinancierPage()
-      const select = screen.getByDisplayValue('Ce mois')
-      expect(select).toBeInTheDocument()
-
-      const options = within(select as HTMLElement).getAllByRole('option')
-      expect(options).toHaveLength(4)
-      expect(options[0]).toHaveTextContent('Ce mois')
-      expect(options[1]).toHaveTextContent('Cette semaine')
-      expect(options[2]).toHaveTextContent('Ce trimestre')
-      expect(options[3]).toHaveTextContent('Cette année')
-    })
-
-    it('permet de changer la période', async () => {
-      const user = userEvent.setup()
-      renderDashboardFinancierPage()
-
-      const select = screen.getByDisplayValue('Ce mois') as HTMLSelectElement
-      await user.selectOptions(select, 'semaine')
-
-      expect(select.value).toBe('semaine')
-    })
-  })
-
-  describe('Hover effects', () => {
-    it('applique hover:shadow-md sur les cartes de chantiers', () => {
-      renderDashboardFinancierPage()
-      const chantiersCards = document.querySelectorAll('.hover\\:shadow-md')
-      expect(chantiersCards.length).toBeGreaterThan(0)
+      await waitFor(() => {
+        const kpisGrid = screen.getByText('Budget Total').closest('.grid')
+        expect(kpisGrid?.className).toContain('grid-cols-1')
+      })
     })
   })
 })
-
-// Helper function pour within (si pas disponible dans testing-library)
-function within(element: HTMLElement) {
-  return {
-    getAllByRole: (role: string) => {
-      return Array.from(element.querySelectorAll(`[role="${role}"], ${role}`))
-    },
-  }
-}

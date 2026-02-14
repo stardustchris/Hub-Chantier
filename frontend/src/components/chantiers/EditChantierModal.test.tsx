@@ -17,6 +17,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditChantierModal from './EditChantierModal'
 import type { Chantier } from '../../types'
+import { ToastProvider } from '../../contexts/ToastContext'
 
 // Mock geocoding service
 vi.mock('../../services/geocoding', () => ({
@@ -34,6 +35,10 @@ vi.mock('../../services/chantiers', () => ({
     addPhase: vi.fn().mockResolvedValue({}),
     updatePhase: vi.fn().mockResolvedValue({}),
     removePhase: vi.fn().mockResolvedValue(undefined),
+    listContacts: vi.fn().mockResolvedValue([]),
+    addContact: vi.fn().mockResolvedValue({}),
+    updateContact: vi.fn().mockResolvedValue({}),
+    removeContact: vi.fn().mockResolvedValue(undefined),
   },
 }))
 
@@ -60,6 +65,10 @@ describe('EditChantierModal', () => {
     onSubmit: mockOnSubmit,
   }
 
+  const renderWithToast = (ui: React.ReactElement) => {
+    return render(<ToastProvider>{ui}</ToastProvider>)
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     mockOnSubmit.mockResolvedValue(undefined)
@@ -67,26 +76,26 @@ describe('EditChantierModal', () => {
 
   describe('Affichage', () => {
     it('affiche le titre', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
       expect(screen.getByText('Modifier le chantier')).toBeInTheDocument()
     })
 
     it('affiche les valeurs initiales du chantier', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       expect(screen.getByDisplayValue('Chantier Test')).toBeInTheDocument()
       expect(screen.getByDisplayValue('12 Rue de la Republique, Lyon')).toBeInTheDocument()
     })
 
     it('affiche le statut initial', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const statutSelect = screen.getByDisplayValue('En cours')
       expect(statutSelect).toBeInTheDocument()
     })
 
     it('affiche les boutons Annuler et Enregistrer', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       expect(screen.getByText('Annuler')).toBeInTheDocument()
       expect(screen.getByText('Enregistrer')).toBeInTheDocument()
@@ -96,7 +105,7 @@ describe('EditChantierModal', () => {
   describe('Modification des champs', () => {
     it('permet de modifier le nom', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const nomInput = screen.getByDisplayValue('Chantier Test')
       await user.clear(nomInput)
@@ -107,7 +116,7 @@ describe('EditChantierModal', () => {
 
     it('permet de modifier l adresse', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const adresseInput = screen.getByDisplayValue('12 Rue de la Republique, Lyon')
       await user.clear(adresseInput)
@@ -118,7 +127,7 @@ describe('EditChantierModal', () => {
 
     it('permet de modifier le statut', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const statutSelect = screen.getByDisplayValue('En cours')
       await user.selectOptions(statutSelect, 'ferme')
@@ -128,7 +137,7 @@ describe('EditChantierModal', () => {
 
     it('permet de modifier les heures estimees', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} chantier={createMockChantier({ heures_estimees: 100 })} />)
+      renderWithToast(<EditChantierModal {...defaultProps} chantier={createMockChantier({ heures_estimees: 100 })} />)
 
       const heuresInput = screen.getByDisplayValue('100')
       await user.clear(heuresInput)
@@ -140,12 +149,12 @@ describe('EditChantierModal', () => {
 
   describe('Selection de couleur', () => {
     it('affiche les boutons de couleur', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
       expect(screen.getByText('Couleur')).toBeInTheDocument()
     })
 
     it('met en surbrillance la couleur actuelle', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const selectedButton = document.querySelector('[style*="background-color: rgb(52, 152, 219)"]')
       expect(selectedButton?.className).toContain('border-gray-900')
@@ -154,18 +163,18 @@ describe('EditChantierModal', () => {
 
   describe('Gestion des contacts', () => {
     it('affiche le label Contacts sur place', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
       expect(screen.getByText('Contacts sur place')).toBeInTheDocument()
     })
 
     it('affiche le bouton Ajouter pour les contacts', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
       expect(screen.getByText('Ajouter')).toBeInTheDocument()
     })
 
     it('permet d ajouter un contact', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const nomInputsBefore = screen.getAllByPlaceholderText('Nom')
 
@@ -175,19 +184,26 @@ describe('EditChantierModal', () => {
       expect(nomInputsAfter.length).toBe(nomInputsBefore.length + 1)
     })
 
-    it('affiche les contacts existants', () => {
-      render(
+    it('affiche les contacts existants', async () => {
+      const { chantiersService } = await import('../../services/chantiers')
+      vi.mocked(chantiersService.listContacts).mockResolvedValueOnce([
+        { id: 1, nom: 'Contact 1', telephone: '0612345678', profession: 'Architecte' },
+      ])
+
+      renderWithToast(
         <EditChantierModal
           {...defaultProps}
           chantier={createMockChantier({
             contacts: [
-              { nom: 'Contact 1', telephone: '0612345678', profession: 'Architecte' },
+              { id: 1, nom: 'Contact 1', telephone: '0612345678', profession: 'Architecte' },
             ],
           })}
         />
       )
 
-      expect(screen.getByDisplayValue('Contact 1')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('Contact 1')).toBeInTheDocument()
+      })
       expect(screen.getByDisplayValue('0612345678')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Architecte')).toBeInTheDocument()
     })
@@ -195,18 +211,18 @@ describe('EditChantierModal', () => {
 
   describe('Gestion des phases', () => {
     it('affiche le label Periodes fractionnees', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
       expect(screen.getByText('Periodes fractionnees')).toBeInTheDocument()
     })
 
     it('affiche le message si aucune periode', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
       expect(screen.getByText(/Aucune periode definie/)).toBeInTheDocument()
     })
 
     it('permet d ajouter une periode', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       await user.click(screen.getByText('Ajouter une periode'))
 
@@ -216,14 +232,14 @@ describe('EditChantierModal', () => {
 
   describe('Dates du chantier', () => {
     it('affiche les champs de date si pas de phases', () => {
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       expect(screen.getByText('Date debut prevue')).toBeInTheDocument()
       expect(screen.getByText('Date fin prevue')).toBeInTheDocument()
     })
 
     it('affiche les dates initiales', () => {
-      render(
+      renderWithToast(
         <EditChantierModal
           {...defaultProps}
           chantier={createMockChantier({
@@ -241,7 +257,7 @@ describe('EditChantierModal', () => {
   describe('Soumission', () => {
     it('appelle onSubmit avec les donnees modifiees', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const nomInput = screen.getByDisplayValue('Chantier Test')
       await user.clear(nomInput)
@@ -262,7 +278,7 @@ describe('EditChantierModal', () => {
       mockOnSubmit.mockImplementation(() => new Promise(() => {}))
 
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       await user.click(screen.getByText('Enregistrer'))
 
@@ -275,7 +291,7 @@ describe('EditChantierModal', () => {
       mockOnSubmit.mockImplementation(() => new Promise(() => {}))
 
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       await user.click(screen.getByText('Enregistrer'))
 
@@ -288,7 +304,7 @@ describe('EditChantierModal', () => {
   describe('Fermeture', () => {
     it('appelle onClose au clic sur Annuler', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       await user.click(screen.getByText('Annuler'))
       expect(mockOnClose).toHaveBeenCalled()
@@ -296,7 +312,7 @@ describe('EditChantierModal', () => {
 
     it('appelle onClose au clic sur le bouton X', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const closeButton = screen.getByLabelText('Fermer')
       await user.click(closeButton)
@@ -305,7 +321,7 @@ describe('EditChantierModal', () => {
 
     it('appelle onClose au clic sur l overlay', async () => {
       const user = userEvent.setup()
-      render(<EditChantierModal {...defaultProps} />)
+      renderWithToast(<EditChantierModal {...defaultProps} />)
 
       const overlay = document.querySelector('[aria-hidden="true"]')
       if (overlay) {
