@@ -1,6 +1,7 @@
 """Interface ChantierRepository - Abstraction pour la persistence des chantiers."""
 
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import Optional, List
 
 from ..entities import Chantier, ContactChantierEntity, PhaseChantierEntity
@@ -284,7 +285,7 @@ class ChantierRepository(ABC):
     def create_phase(
         self, chantier_id: int, nom: str,
         description: Optional[str] = None, ordre: Optional[int] = None,
-        date_debut: Optional[str] = None, date_fin: Optional[str] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
     ) -> PhaseChantierEntity:
         """Crée une phase pour un chantier."""
         pass
@@ -294,7 +295,7 @@ class ChantierRepository(ABC):
         self, chantier_id: int, phase_id: int,
         nom: Optional[str] = None, description: Optional[str] = None,
         ordre: Optional[int] = None,
-        date_debut: Optional[str] = None, date_fin: Optional[str] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
     ) -> Optional[PhaseChantierEntity]:
         """Met à jour une phase. Retourne None si non trouvée."""
         pass

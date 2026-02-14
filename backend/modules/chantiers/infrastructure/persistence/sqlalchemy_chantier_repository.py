@@ -1,6 +1,6 @@
 """Implémentation SQLAlchemy du ChantierRepository."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
 
 from sqlalchemy.orm import Session, selectinload
@@ -713,22 +713,17 @@ class SQLAlchemyChantierRepository(ChantierRepository):
     def create_phase(
         self, chantier_id: int, nom: str,
         description: Optional[str] = None, ordre: Optional[int] = None,
-        date_debut: Optional[str] = None, date_fin: Optional[str] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
     ) -> PhaseChantierEntity:
-        from datetime import date as date_type
-
-        if ordre is None or ordre <= 1:
+        if ordre is None:
             count = self.session.query(PhaseChantierModel).filter(
                 PhaseChantierModel.chantier_id == chantier_id
             ).count()
             ordre = count + 1
 
-        parsed_debut = date_type.fromisoformat(date_debut) if date_debut else None
-        parsed_fin = date_type.fromisoformat(date_fin) if date_fin else None
-
         model = PhaseChantierModel(
             chantier_id=chantier_id, nom=nom, description=description,
-            ordre=ordre, date_debut=parsed_debut, date_fin=parsed_fin,
+            ordre=ordre, date_debut=date_debut, date_fin=date_fin,
         )
         self.session.add(model)
         self.session.commit()
@@ -739,10 +734,8 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         self, chantier_id: int, phase_id: int,
         nom: Optional[str] = None, description: Optional[str] = None,
         ordre: Optional[int] = None,
-        date_debut: Optional[str] = None, date_fin: Optional[str] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
     ) -> Optional[PhaseChantierEntity]:
-        from datetime import date as date_type
-
         model = self.session.query(PhaseChantierModel).filter(
             PhaseChantierModel.id == phase_id,
             PhaseChantierModel.chantier_id == chantier_id,
@@ -756,9 +749,9 @@ class SQLAlchemyChantierRepository(ChantierRepository):
         if ordre is not None:
             model.ordre = ordre
         if date_debut is not None:
-            model.date_debut = date_type.fromisoformat(date_debut) if date_debut else None
+            model.date_debut = date_debut
         if date_fin is not None:
-            model.date_fin = date_type.fromisoformat(date_fin) if date_fin else None
+            model.date_fin = date_fin
         self.session.commit()
         self.session.refresh(model)
         return self._phase_to_entity(model)

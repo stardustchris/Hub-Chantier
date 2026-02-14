@@ -1187,10 +1187,13 @@ def create_phase(
     current_user_id: int = Depends(get_current_user_id),
 ) -> PhaseChantierResponse:
     """Crée une nouvelle phase pour un chantier."""
+    from datetime import date as date_type
+    parsed_debut = date_type.fromisoformat(request.date_debut) if request.date_debut else None
+    parsed_fin = date_type.fromisoformat(request.date_fin) if request.date_fin else None
     phase = chantier_repo.create_phase(
         chantier_id, request.nom,
         description=request.description, ordre=request.ordre,
-        date_debut=request.date_debut, date_fin=request.date_fin,
+        date_debut=parsed_debut, date_fin=parsed_fin,
     )
     return PhaseChantierResponse(
         id=phase.id, nom=phase.nom, description=phase.description, ordre=phase.ordre,
@@ -1208,10 +1211,13 @@ def update_phase(
     current_user_id: int = Depends(get_current_user_id),
 ) -> PhaseChantierResponse:
     """Met à jour une phase."""
+    from datetime import date as date_type
+    parsed_debut = date_type.fromisoformat(request.date_debut) if request.date_debut else None
+    parsed_fin = date_type.fromisoformat(request.date_fin) if request.date_fin else None
     result = chantier_repo.update_phase(
         chantier_id, phase_id,
         nom=request.nom, description=request.description, ordre=request.ordre,
-        date_debut=request.date_debut, date_fin=request.date_fin,
+        date_debut=parsed_debut, date_fin=parsed_fin,
     )
     if not result:
         raise HTTPException(
