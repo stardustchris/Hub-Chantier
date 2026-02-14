@@ -138,7 +138,7 @@ const DossierNode: React.FC<DossierNodeProps> = ({
           <div className="ml-2 flex gap-1 opacity-0 group-hover:opacity-100">
             {onCreateDossier && (
               <button
-                className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                className="p-1 text-gray-600 hover:text-blue-500 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onCreateDossier(dossier.id);
@@ -150,7 +150,7 @@ const DossierNode: React.FC<DossierNodeProps> = ({
             )}
             {onEditDossier && (
               <button
-                className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                className="p-1 text-gray-600 hover:text-blue-500 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEditDossier(dossier);
@@ -162,7 +162,7 @@ const DossierNode: React.FC<DossierNodeProps> = ({
             )}
             {onDeleteDossier && dossier.type_dossier === 'custom' && (
               <button
-                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                className="p-1 text-gray-600 hover:text-red-500 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteDossier(dossier);

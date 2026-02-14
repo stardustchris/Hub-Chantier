@@ -176,7 +176,7 @@ export default function ChantiersListPage() {
         <div className="card mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
               <input
                 type="text"
                 value={search}
@@ -219,7 +219,7 @@ export default function ChantiersListPage() {
           </div>
         ) : chantiers.length === 0 ? (
           <div className="card text-center py-12">
-            <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <Building2 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
             <p className="text-gray-500">Aucun chantier trouve</p>
             {(search || statutFilter) && (
               <button

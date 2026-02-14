@@ -256,7 +256,7 @@ export default function PhotoCapture({
           </div>
         ) : (
           <div className="aspect-video flex items-center justify-center bg-gray-50">
-            <div className="text-center text-gray-400">
+            <div className="text-center text-gray-600">
               <ImageIcon className="w-10 h-10 mx-auto mb-2" />
               <p className="text-sm">Aucune photo</p>
             </div>
@@ -360,7 +360,7 @@ export default function PhotoCapture({
               </div>
             ) : (
               <>
-                <Camera className="w-10 h-10 mx-auto text-gray-400 mb-3" />
+                <Camera className="w-10 h-10 mx-auto text-gray-600 mb-3" />
                 <p className="text-sm text-gray-600 mb-4">
                   Prenez une photo ou selectionnez une image
                 </p>

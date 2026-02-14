@@ -182,7 +182,7 @@ export default function LigneDevisTable({
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
-                        className="p-2 text-gray-400 hover:bg-gray-100 rounded"
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -290,7 +290,7 @@ export default function LigneDevisTable({
                   </button>
                   <button
                     onClick={() => setShowAdd(false)}
-                    className="p-2 text-gray-400 hover:bg-gray-100 rounded"
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -323,7 +323,7 @@ export default function LigneDevisTable({
       )}
 
       {lignes.length === 0 && !showAdd && (
-        <div className="text-center py-4 text-gray-400 text-sm">
+        <div className="text-center py-4 text-gray-600 text-sm">
           Aucune ligne dans ce lot
         </div>
       )}

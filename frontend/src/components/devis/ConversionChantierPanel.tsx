@@ -291,7 +291,7 @@ export default function ConversionChantierPanel({
               </h3>
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
                 disabled={converting}
               >
                 <X className="w-5 h-5" />

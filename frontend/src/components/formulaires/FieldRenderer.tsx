@@ -241,7 +241,7 @@ function FieldRenderer({
   return (
     <div className="space-y-1">
       <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-        <Icon className="w-4 h-4 text-gray-400" />
+        <Icon className="w-4 h-4 text-gray-600" />
         {champ.label}
         {champ.obligatoire && <span className="text-red-500">*</span>}
       </label>

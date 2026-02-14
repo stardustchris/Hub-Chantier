@@ -105,19 +105,19 @@ export default function SuggestionsPanel({ chantierId }: SuggestionsPanelProps) 
                 >
                   <Sparkles size={14} />
                   Regles algorithmiques
-                  <HelpCircle size={12} className="text-gray-400" />
+                  <HelpCircle size={12} className="text-gray-600" />
                 </span>
 
                 {/* Tooltip */}
                 {showTooltip && (
                   <div className="absolute z-10 bottom-full left-0 mb-2 w-72 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg">
                     <p className="font-medium mb-1">Suggestions basées sur des règles métier prédéfinies :</p>
-                    <ul className="space-y-1 text-gray-300">
+                    <ul className="space-y-1 text-gray-500">
                       <li>• Budget &gt; 100k€ → Créer situation</li>
                       <li>• Dépassement &gt; 10% → Alerte burn rate</li>
                       <li>• Marge &lt; 15% → Optimiser coûts</li>
                     </ul>
-                    <p className="mt-2 text-gray-400 italic">
+                    <p className="mt-2 text-gray-600 italic">
                       ℹ️ L'IA Gemini peut être activée pour des suggestions plus contextuelles.
                     </p>
                     {/* Triangle pointer */}
@@ -139,7 +139,7 @@ export default function SuggestionsPanel({ chantierId }: SuggestionsPanelProps) 
             </div>
           )}
           {source === 'gemini' && (
-            <span className="text-xs text-gray-400">Analyse enrichie par intelligence artificielle</span>
+            <span className="text-xs text-gray-600">Analyse enrichie par intelligence artificielle</span>
           )}
         </div>
 

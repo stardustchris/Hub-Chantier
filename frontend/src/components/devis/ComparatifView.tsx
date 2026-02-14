@@ -58,7 +58,7 @@ function VariationBar({ value, label }: { value: number; label: string }) {
 
 function EcartCell({ value, isAmount }: { value?: number; isAmount?: boolean }) {
   if (value === undefined || value === null) {
-    return <span className="text-gray-400">-</span>
+    return <span className="text-gray-600">-</span>
   }
   const isPositive = value > 0
   const isZero = Math.abs(value) < 0.01
@@ -124,7 +124,7 @@ export default function ComparatifView({ comparatif }: ComparatifViewProps) {
             <span className="font-medium text-gray-900">
               {comparatif.source_numero}
             </span>
-            <span className="mx-2 text-gray-400">→</span>
+            <span className="mx-2 text-gray-600">→</span>
             <span className="text-gray-500">Cible :</span>{' '}
             <span className="font-medium text-gray-900">
               {comparatif.cible_numero}
@@ -198,7 +198,7 @@ export default function ComparatifView({ comparatif }: ComparatifViewProps) {
           {comparatif.nb_lots_ajoutes === 0 &&
             comparatif.nb_lots_supprimes === 0 &&
             comparatif.nb_lots_modifies === 0 && (
-              <span className="text-gray-400">aucun changement</span>
+              <span className="text-gray-600">aucun changement</span>
             )}
         </div>
         <div className="text-xs text-gray-500">
@@ -215,7 +215,7 @@ export default function ComparatifView({ comparatif }: ComparatifViewProps) {
           {comparatif.nb_lignes_ajoutees === 0 &&
             comparatif.nb_lignes_supprimees === 0 &&
             comparatif.nb_lignes_modifiees === 0 && (
-              <span className="text-gray-400">aucun changement</span>
+              <span className="text-gray-600">aucun changement</span>
             )}
         </div>
         {Object.entries(lignesParType).map(([type, count]) => (

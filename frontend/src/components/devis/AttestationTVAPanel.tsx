@@ -136,7 +136,7 @@ export default function AttestationTVAPanel({ devisId, devis }: AttestationTVAPa
   if (!eligibilite.eligible) {
     return (
       <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <Info className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+        <Info className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-medium text-gray-700">TVA standard ({eligibilite.taux_tva}%)</p>
           <p className="text-sm text-gray-500 mt-1">{eligibilite.message}</p>

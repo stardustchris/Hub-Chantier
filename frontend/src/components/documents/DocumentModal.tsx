@@ -16,6 +16,7 @@ import {
   NIVEAU_ACCES_LABELS,
   TYPE_DOSSIER_LABELS,
 } from '../../types/documents';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface DossierModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export const DossierModal: React.FC<DossierModalProps> = ({
   parentId = null,
   loading = false,
 }) => {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose });
   const [nom, setNom] = useState('');
   const [typeDossier, setTypeDossier] = useState<TypeDossier>('custom');
   const [niveauAcces, setNiveauAcces] = useState<NiveauAcces>('compagnon');
@@ -79,8 +81,14 @@ export const DossierModal: React.FC<DossierModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-semibold mb-4">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+      >
+        <h2 id="modal-title" className="text-xl font-semibold mb-4">
           {isEditing ? 'Modifier le dossier' : 'Nouveau dossier'}
         </h2>
 
@@ -173,6 +181,7 @@ export const DocumentEditModal: React.FC<DocumentEditModalProps> = ({
   document,
   loading = false,
 }) => {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose });
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
   const [niveauAcces, setNiveauAcces] = useState<NiveauAcces | ''>('');
@@ -202,8 +211,14 @@ export const DocumentEditModal: React.FC<DocumentEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Modifier le document</h2>
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title-doc"
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+      >
+        <h2 id="modal-title-doc" className="text-xl font-semibold mb-4">Modifier le document</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -67,9 +67,9 @@ export default function ConditionsPaiementCard({ devis, isEditable, onSaved }: P
                 min={0}
                 max={100}
               />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-sm">%</span>
             </div>
-            <span className="text-gray-400">=</span>
+            <span className="text-gray-600">=</span>
             <span className="text-sm text-gray-600">{formatEUR(acompteAmount)}</span>
           </div>
         </div>

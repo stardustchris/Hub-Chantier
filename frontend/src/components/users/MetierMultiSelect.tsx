@@ -104,7 +104,7 @@ export function MetierMultiSelect({ value, onChange, disabled = false }: MetierM
                 : 'Ajouter un métier'}
             </span>
             <ChevronDown
-              className={`w-4 h-4 text-gray-400 transition-transform ${
+              className={`w-4 h-4 text-gray-600 transition-transform ${
                 isOpen ? 'rotate-180' : ''
               }`}
             />

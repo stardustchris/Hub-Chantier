@@ -161,7 +161,7 @@ export default function DevisListPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
               <input
                 type="text"
                 value={search}
@@ -190,7 +190,7 @@ export default function DevisListPage() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg"
                 aria-label="Effacer les filtres"
               >
                 <X className="w-4 h-4" />
@@ -335,7 +335,7 @@ export default function DevisListPage() {
 
               {devisList.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <FileText className="w-12 h-12 mx-auto text-gray-500 mb-3" />
                   <p className="font-medium">Aucun devis trouve</p>
                   <p className="text-sm mt-1">
                     {hasActiveFilters

@@ -60,7 +60,7 @@ export default function APIKeysPage() {
         </div>
       ) : apiKeys.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <Key className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <Key className="w-12 h-12 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-600">Aucune clé API</p>
           <p className="text-sm text-gray-500 mt-1">
             Créez votre première clé pour commencer

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import type { ChantierCreate, TypeTravaux } from '../../types'
 import { USER_COLORS, TYPE_TRAVAUX_OPTIONS } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 // Types pour les contacts et phases temporaires
 export interface TempContact {
@@ -33,6 +34,8 @@ interface CreateChantierModalProps {
 }
 
 export function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateChantierModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
+
   // Trouver la premiere couleur non utilisee
   const getAvailableColor = () => {
     const availableColor = USER_COLORS.find(c => !usedColors.includes(c.code))
@@ -115,9 +118,15 @@ export function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateCha
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+      >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Nouveau chantier</h2>
+          <h2 id="modal-title" className="text-lg font-semibold">Nouveau chantier</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5" />
           </button>

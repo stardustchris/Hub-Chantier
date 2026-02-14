@@ -44,7 +44,7 @@ export function ChampEditor({
         className="flex items-center gap-2 px-3 py-2 bg-gray-50 cursor-pointer"
         onClick={onToggleExpand}
       >
-        <GripVertical className="w-4 h-4 text-gray-400" />
+        <GripVertical className="w-4 h-4 text-gray-600" />
         <span className="flex-1 font-medium text-sm">
           {champ.label || `Champ ${index + 1}`}
         </span>

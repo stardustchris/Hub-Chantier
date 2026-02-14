@@ -43,11 +43,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
     }
 
-    // Classes selon la taille (touch target minimum 48px)
+    // Classes selon la taille (touch target minimum 44px Apple HIG)
     const sizeClasses = {
       sm: 'px-3 py-2 text-sm min-h-[40px]',
-      md: 'px-4 py-2.5 text-base min-h-[48px]',
-      lg: 'px-6 py-3 text-lg min-h-[52px]',
+      md: 'px-4 py-2.5 text-base min-h-[44px]',
+      lg: 'px-6 py-3 text-lg min-h-[48px]',
     }
 
     const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`

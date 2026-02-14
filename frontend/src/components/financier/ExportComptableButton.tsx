@@ -123,7 +123,7 @@ export default function ExportComptableButton({
               role="menuitem"
               aria-label={option.label}
             >
-              <Download size={14} className="text-gray-400" />
+              <Download size={14} className="text-gray-600" />
               {option.label}
             </button>
           ))}

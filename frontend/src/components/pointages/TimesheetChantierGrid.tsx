@@ -76,7 +76,7 @@ export default function TimesheetChantierGrid({
           onClick={() => canEdit && onCellClick(chantierId, jour.date)}
         >
           {canEdit && (
-            <Plus className="w-4 h-4 text-gray-400 mx-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Plus className="w-4 h-4 text-gray-600 mx-auto opacity-0 group-hover:opacity-100 transition-opacity" />
           )}
         </td>
       )
@@ -121,7 +121,7 @@ export default function TimesheetChantierGrid({
   if (vueChantiers.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
-        <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune donnee</h3>
         <p className="text-gray-600">
           Aucun pointage pour cette semaine sur les chantiers selectionnes.

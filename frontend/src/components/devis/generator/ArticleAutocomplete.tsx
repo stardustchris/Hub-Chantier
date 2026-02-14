@@ -51,7 +51,7 @@ export default function ArticleAutocomplete({
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
         <input
           type="text"
           value={query}
@@ -72,7 +72,7 @@ export default function ArticleAutocomplete({
         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
           <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
             <span className="text-xs text-gray-500">Resultats bibliotheque</span>
-            <span className="text-xs text-gray-400">{results.length} resultat{results.length > 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-600">{results.length} resultat{results.length > 1 ? 's' : ''}</span>
           </div>
           <div className="max-h-64 overflow-y-auto">
             {results.map(article => (
@@ -89,13 +89,13 @@ export default function ArticleAutocomplete({
                     </div>
                     {article.description && <p className="text-sm text-gray-500 mt-0.5 truncate">{article.description}</p>}
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-xs text-gray-400">Unite: {article.unite}</span>
-                      {article.categorie && <span className="text-xs text-gray-400">| Cat: {article.categorie}</span>}
+                      <span className="text-xs text-gray-600">Unite: {article.unite}</span>
+                      {article.categorie && <span className="text-xs text-gray-600">| Cat: {article.categorie}</span>}
                     </div>
                   </div>
                   <div className="text-right ml-4 flex-shrink-0">
                     <span className="font-semibold text-indigo-600">{formatEUR(Number(article.prix_unitaire_ht))}</span>
-                    <p className="text-xs text-gray-400">HT / {article.unite}</p>
+                    <p className="text-xs text-gray-600">HT / {article.unite}</p>
                   </div>
                 </div>
               </div>

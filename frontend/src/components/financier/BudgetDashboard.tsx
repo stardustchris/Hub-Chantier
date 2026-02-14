@@ -220,7 +220,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
             margeFaible ? 'text-red-600' : 'text-green-700'
           }`}>
             {kpi.marge_estimee === null || kpi.marge_estimee === undefined ? (
-              <span className="text-gray-400">{formatPct(null)}</span>
+              <span className="text-gray-600">{formatPct(null)}</span>
             ) : Number(kpi.marge_estimee) < 0 ? (
               <span className="text-red-700">{formatPct(Number(kpi.marge_estimee))} PERTE</span>
             ) : (

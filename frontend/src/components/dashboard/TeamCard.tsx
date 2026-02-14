@@ -35,7 +35,7 @@ export default function TeamCard({ members = [], chantierName, onCall }: TeamCar
       {/* Aucun membre dans l'équipe */}
       {members.length === 0 && (
         <div className="text-center py-8">
-          <UserX className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+          <UserX className="w-10 h-10 text-gray-500 mx-auto mb-2" />
           <p className="text-sm text-gray-500">Aucun collegue affecte aujourd'hui</p>
         </div>
       )}
@@ -62,7 +62,7 @@ export default function TeamCard({ members = [], chantierName, onCall }: TeamCar
               {member.phone && (
                 <button
                   onClick={() => onCall?.(member.id)}
-                  className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 >
                   <Phone className="w-5 h-5" />
                 </button>

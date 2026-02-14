@@ -48,7 +48,7 @@ export default function UserRow({ user, canRemove, onRemove, badge }: UserRowPro
       {canRemove && (
         <button
           onClick={onRemove}
-          className="p-1 text-gray-400 hover:text-red-500"
+          className="p-1 text-gray-600 hover:text-red-500"
           aria-label={`Retirer ${user.prenom} ${user.nom}`}
         >
           <X className="w-4 h-4" />

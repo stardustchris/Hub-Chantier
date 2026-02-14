@@ -165,7 +165,7 @@ export default function ArticleLibraryPanel({
         {/* Search bar */}
         <div className="px-5 py-3 border-b border-gray-100 space-y-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
             <input
               type="text"
               value={search}
@@ -195,7 +195,7 @@ export default function ArticleLibraryPanel({
             {categorie && (
               <button
                 onClick={() => setCategorie('')}
-                className="text-xs text-gray-400 hover:text-gray-600"
+                className="text-xs text-gray-600 hover:text-gray-800"
               >
                 Effacer
               </button>
@@ -259,9 +259,9 @@ export default function ArticleLibraryPanel({
 
           {!loading && !error && articles.length === 0 && (
             <div className="text-center py-16 px-6">
-              <Package className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+              <Package className="w-12 h-12 mx-auto text-gray-500 mb-3" />
               <p className="font-medium text-gray-600">Aucun article trouve</p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 {search || categorie
                   ? 'Modifiez vos filtres ou creez un nouvel article'
                   : 'Creez votre premier article pour commencer'}
@@ -297,9 +297,9 @@ export default function ArticleLibraryPanel({
                             {article.code}
                           </span>
                         )}
-                        <span className="text-xs text-gray-400">{article.unite}</span>
+                        <span className="text-xs text-gray-600">{article.unite}</span>
                         {article.categorie && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-600">
                             {CATEGORIES_ARTICLES.find(c => c.value === article.categorie)?.label || article.categorie}
                           </span>
                         )}
@@ -309,7 +309,7 @@ export default function ArticleLibraryPanel({
                       <span className="font-semibold text-indigo-600 text-sm">
                         {formatEUR(Number(article.prix_unitaire_ht))}
                       </span>
-                      <p className="text-xs text-gray-400">HT / {article.unite}</p>
+                      <p className="text-xs text-gray-600">HT / {article.unite}</p>
                     </div>
                   </div>
                   {/* Bouton ajouter visible au hover */}
@@ -332,7 +332,7 @@ export default function ArticleLibraryPanel({
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-gray-200 bg-gray-50">
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-gray-600 text-center">
             Cliquez sur un article pour l&apos;ajouter au dernier lot du devis
           </p>
         </div>

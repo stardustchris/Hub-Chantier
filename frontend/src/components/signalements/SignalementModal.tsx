@@ -147,7 +147,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
             </h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-600 hover:text-gray-800"
               aria-label="Fermer"
             >
               ✕

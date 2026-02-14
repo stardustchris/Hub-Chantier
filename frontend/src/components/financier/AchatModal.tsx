@@ -11,6 +11,7 @@ import type { AchatSuggestion } from '../../services/financier'
 import { useToast } from '../../contexts/ToastContext'
 import { logger } from '../../services/logger'
 import AchatSuggestions from './AchatSuggestions'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type {
   Achat,
   AchatCreate,
@@ -146,7 +147,7 @@ export default function AchatModal({
           <h2 className="text-xl font-semibold text-gray-900">
             {isEdit ? 'Modifier l\'achat' : 'Nouvel achat'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" disabled={loading}>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800" disabled={loading}>
             <X size={24} />
           </button>
         </div>

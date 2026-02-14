@@ -134,7 +134,7 @@ export default function ImageUpload({
             {placeholder}
           </div>
         ) : (
-          <Camera className="w-8 h-8 text-gray-400 group-hover:text-primary-500" />
+          <Camera className="w-8 h-8 text-gray-600 group-hover:text-primary-500" />
         )}
 
         {isUploading && (

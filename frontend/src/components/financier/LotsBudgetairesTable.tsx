@@ -215,14 +215,14 @@ export default function LotsBudgetairesTable({ budgetId, onRefresh }: LotsBudget
                         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => { setEditingLot(lot); setShowModal(true) }}
-                            className="p-2 text-gray-400 hover:text-blue-600 rounded"
+                            className="p-2 text-gray-600 hover:text-blue-600 rounded"
                             title="Modifier" aria-label="Modifier le lot budgetaire"
                           >
                             <Pencil size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(lot)}
-                            className="p-2 text-gray-400 hover:text-red-600 rounded"
+                            className="p-2 text-gray-600 hover:text-red-600 rounded"
                             title="Supprimer" aria-label="Supprimer le lot budgetaire"
                           >
                             <Trash2 size={14} />

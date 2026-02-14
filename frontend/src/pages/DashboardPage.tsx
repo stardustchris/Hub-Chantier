@@ -448,7 +448,7 @@ export default function DashboardPage() {
                     </>
                   ) : feedItemsWithWeather.length === 0 ? (
                     <div className="text-center py-12">
-                      <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <MessageCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
                       <p className="text-gray-600">Aucune publication pour le moment</p>
                       <p className="text-gray-500 text-sm mt-1">Partagez une info avec votre equipe ci-dessus</p>
                     </div>

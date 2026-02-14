@@ -210,7 +210,7 @@ export default function BudgetsPage() {
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative flex-1 w-full md:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
               <input
                 type="text"
                 placeholder="Rechercher un chantier..."
@@ -367,7 +367,7 @@ export default function BudgetsPage() {
 
         {!loading && !error && filteredBudgets.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <Building2 className="w-12 h-12 text-gray-500 mx-auto mb-3" />
             <p className="text-gray-500">Aucun budget trouvé</p>
           </div>
         )}

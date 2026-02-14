@@ -259,7 +259,7 @@ export default function DevisDetailPage() {
                   <p className="text-sm text-gray-500 mt-1">
                     {devis.date_creation && `Cree le ${new Date(devis.date_creation).toLocaleDateString('fr-FR')}`}
                     {devis.version_commentaire && (
-                      <span className="ml-2 italic text-gray-400">
+                      <span className="ml-2 italic text-gray-600">
                         - {devis.version_commentaire}
                       </span>
                     )}
@@ -344,7 +344,7 @@ export default function DevisDetailPage() {
               <h2 className="text-sm font-semibold text-gray-700 mb-4">Informations</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="flex items-start gap-3">
-                  <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <User className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-500">Client</p>
                     <p className="text-sm font-medium text-gray-900">{devis.client_nom}</p>
@@ -352,7 +352,7 @@ export default function DevisDetailPage() {
                 </div>
                 {devis.client_email && (
                   <div className="flex items-start gap-3">
-                    <Mail className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <Mail className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs text-gray-500">Email</p>
                       <p className="text-sm text-gray-900">{devis.client_email}</p>
@@ -361,7 +361,7 @@ export default function DevisDetailPage() {
                 )}
                 {devis.client_telephone && (
                   <div className="flex items-start gap-3">
-                    <Phone className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <Phone className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs text-gray-500">Telephone</p>
                       <p className="text-sm text-gray-900">{devis.client_telephone}</p>
@@ -370,7 +370,7 @@ export default function DevisDetailPage() {
                 )}
                 {devis.client_adresse && (
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs text-gray-500">Adresse</p>
                       <p className="text-sm text-gray-900">{devis.client_adresse}</p>
@@ -379,7 +379,7 @@ export default function DevisDetailPage() {
                 )}
                 {devis.date_validite && (
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs text-gray-500">Validite</p>
                       <p className="text-sm text-gray-900">
@@ -390,7 +390,7 @@ export default function DevisDetailPage() {
                 )}
                 {devis.conditions_generales && (
                   <div className="flex items-start gap-3">
-                    <FileText className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <FileText className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs text-gray-500">Conditions generales</p>
                       <p className="text-sm text-gray-900">{devis.conditions_generales}</p>
@@ -502,9 +502,9 @@ export default function DevisDetailPage() {
               >
                 <h2 className="text-sm font-semibold text-gray-700">Historique des modifications</h2>
                 {journalOpen ? (
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <ChevronDown className="w-4 h-4 text-gray-600" />
                 ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-gray-600" />
                 )}
               </button>
               {journalOpen && (

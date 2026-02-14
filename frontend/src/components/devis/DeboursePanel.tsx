@@ -240,7 +240,7 @@ export default function DeboursePanel({
       )}
 
       {debourses.length === 0 && !showAdd && (
-        <p className="text-center text-gray-400 text-sm py-3">Aucun debourse</p>
+        <p className="text-center text-gray-600 text-sm py-3">Aucun debourse</p>
       )}
     </div>
   )

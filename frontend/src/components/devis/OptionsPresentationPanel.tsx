@@ -90,13 +90,13 @@ function MiniPreview({ options }: { options: OptionsPresentation }) {
       {/* En-tete */}
       <div className="flex items-start justify-between gap-2">
         {options.afficher_logo && (
-          <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-[8px] text-gray-400 flex-shrink-0">
+          <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-[8px] text-gray-600 flex-shrink-0">
             Logo
           </div>
         )}
         <div className="text-right flex-1">
           {options.afficher_coordonnees_entreprise && (
-            <div className="text-gray-400">
+            <div className="text-gray-600">
               <div className="h-1.5 bg-gray-200 rounded w-16 ml-auto mb-0.5" />
               <div className="h-1.5 bg-gray-200 rounded w-20 ml-auto" />
             </div>
@@ -112,7 +112,7 @@ function MiniPreview({ options }: { options: OptionsPresentation }) {
 
       {/* Tableau */}
       <div className="space-y-0.5">
-        <div className="flex gap-1 text-[8px] font-medium text-gray-400 border-b border-gray-100 pb-0.5">
+        <div className="flex gap-1 text-[8px] font-medium text-gray-600 border-b border-gray-100 pb-0.5">
           <span className="flex-1">Designation</span>
           {options.afficher_quantites && <span className="w-6 text-center">Qte</span>}
           {options.afficher_prix_unitaires && <span className="w-10 text-right">P.U.</span>}
@@ -145,7 +145,7 @@ function MiniPreview({ options }: { options: OptionsPresentation }) {
           <div className="h-1.5 bg-gray-300 rounded w-12" />
         </div>
         {options.afficher_tva_detaillee && (
-          <div className="flex justify-between text-gray-400">
+          <div className="flex justify-between text-gray-600">
             <span>TVA 20%</span>
             <div className="h-1.5 bg-gray-100 rounded w-10" />
           </div>
@@ -155,13 +155,13 @@ function MiniPreview({ options }: { options: OptionsPresentation }) {
           <div className="h-1.5 bg-gray-400 rounded w-14" />
         </div>
         {options.afficher_retenue_garantie && (
-          <div className="flex justify-between text-gray-400">
+          <div className="flex justify-between text-gray-600">
             <span>Retenue garantie</span>
             <div className="h-1.5 bg-gray-100 rounded w-10" />
           </div>
         )}
         {options.afficher_frais_chantier_detail && (
-          <div className="flex justify-between text-gray-400">
+          <div className="flex justify-between text-gray-600">
             <span>Frais chantier</span>
             <div className="h-1.5 bg-gray-100 rounded w-8" />
           </div>
@@ -285,7 +285,7 @@ export default function OptionsPresentationPanel({ devisId }: OptionsPresentatio
                 `}
               >
                 <IconComponent
-                  className={`w-8 h-8 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`}
+                  className={`w-8 h-8 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}
                 />
                 <div>
                   <p className={`text-sm font-medium ${isSelected ? 'text-blue-700' : 'text-gray-900'}`}>
@@ -318,8 +318,8 @@ export default function OptionsPresentationPanel({ devisId }: OptionsPresentatio
 
         {/* Note debourses */}
         <div className="flex items-start gap-2 mt-3 px-1">
-          <Info className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-gray-400 italic">
+          <Info className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-gray-600 italic">
             Les debourses ne sont jamais affiches au client
           </p>
         </div>

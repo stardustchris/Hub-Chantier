@@ -75,7 +75,7 @@ export default function DeliveryHistoryModal({ webhook, onClose }: DeliveryHisto
             </div>
           ) : deliveries.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <Clock className="w-12 h-12 text-gray-600 mx-auto mb-3" />
               <p className="text-gray-600">Aucune delivery pour ce webhook</p>
             </div>
           ) : (
@@ -146,7 +146,7 @@ export default function DeliveryHistoryModal({ webhook, onClose }: DeliveryHisto
                       )}
                     </div>
 
-                    <ChevronRight className="w-4 h-4 text-gray-400 ml-2" />
+                    <ChevronRight className="w-4 h-4 text-gray-600 ml-2" />
                   </div>
                 </div>
               ))}

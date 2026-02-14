@@ -263,7 +263,7 @@ export default function FacturesList({ chantierId }: FacturesListProps) {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="font-semibold text-gray-900">Nouvelle facture d'acompte</h3>
-              <button onClick={() => setShowAcompteModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowAcompteModal(false)} className="text-gray-600 hover:text-gray-800">
                 <X size={20} />
               </button>
             </div>

@@ -187,7 +187,7 @@ export default function AchatsPage() {
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-col md:flex-row gap-3 flex-1 w-full">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                 <input
                   type="text"
                   placeholder="Rechercher un achat..."
@@ -307,7 +307,7 @@ export default function AchatsPage() {
                     <div>
                       <p className="text-xs text-gray-500">Date commande</p>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <Calendar className="w-4 h-4 text-gray-600" />
                         <p className="text-sm font-medium text-gray-900">
                           {new Date(achat.date_commande + 'T00:00:00').toLocaleDateString('fr-FR')}
                         </p>
@@ -317,7 +317,7 @@ export default function AchatsPage() {
                       <div>
                         <p className="text-xs text-gray-500">Livraison prévue</p>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <Package className="w-4 h-4 text-gray-400" />
+                          <Package className="w-4 h-4 text-gray-600" />
                           <p className="text-sm font-medium text-gray-900">
                             {new Date(achat.date_livraison_prevue + 'T00:00:00').toLocaleDateString(
                               'fr-FR'
@@ -345,7 +345,7 @@ export default function AchatsPage() {
 
             {filteredAchats.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-                <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <ShoppingCart className="w-12 h-12 text-gray-500 mx-auto mb-3" />
                 <p className="text-gray-500">Aucun achat trouvé</p>
               </div>
             )}

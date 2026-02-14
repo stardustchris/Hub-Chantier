@@ -244,7 +244,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Recherche */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
           <input
             type="text"
             placeholder="Rechercher une tache..."
@@ -347,7 +347,7 @@ export default function TaskList({ chantierId, chantierNom }: TaskListProps) {
           </div>
         ) : taches.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <FileText className="w-12 h-12 text-gray-500 mx-auto mb-3" />
             <p className="text-gray-500 mb-3">
               {searchQuery
                 ? 'Aucune tache trouvee'

@@ -164,7 +164,7 @@ export default function AffectationsBudgetPanel({
 
   if (lots.length === 0) {
     return (
-      <p className="text-sm text-gray-400 py-2">
+      <p className="text-sm text-gray-600 py-2">
         Aucun lot budgetaire. Creez des lots pour affecter des taches.
       </p>
     )
@@ -250,7 +250,7 @@ export default function AffectationsBudgetPanel({
                       <button
                         onClick={() => handleDeleteAffectation(affectation.id)}
                         disabled={deleteLoading === affectation.id}
-                        className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                        className="text-gray-600 hover:text-red-500 transition-colors disabled:opacity-50"
                         aria-label={`Supprimer l'affectation de ${getTacheLabel(affectation.tache_id)}`}
                       >
                         {deleteLoading === affectation.id ? (

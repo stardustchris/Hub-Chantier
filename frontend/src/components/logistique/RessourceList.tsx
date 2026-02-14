@@ -108,7 +108,7 @@ const RessourceList: React.FC<RessourceListProps> = ({
         <div className="relative flex-1">
           <Search
             size={18}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600"
           />
           <input
             type="text"
@@ -121,7 +121,7 @@ const RessourceList: React.FC<RessourceListProps> = ({
 
         {/* Filtre catégorie */}
         <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-400 flex-shrink-0" />
+          <Filter size={18} className="text-gray-600 flex-shrink-0" />
           <select
             value={categorieFilter}
             onChange={(e) => setCategorieFilter(e.target.value as CategorieRessource | '')}

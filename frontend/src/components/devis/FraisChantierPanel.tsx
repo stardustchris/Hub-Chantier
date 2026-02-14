@@ -190,7 +190,7 @@ export default function FraisChantierPanel({ devisId, isEditable, lots = [] }: F
                   <tr key={frais.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <Icon className="w-4 h-4 text-gray-600 flex-shrink-0" />
                         <span className="text-gray-700">{TYPE_FRAIS_LABELS[frais.type_frais]}</span>
                       </div>
                     </td>
@@ -248,8 +248,8 @@ export default function FraisChantierPanel({ devisId, isEditable, lots = [] }: F
       )}
 
       {fraisList.length === 0 && !showForm && (
-        <div className="text-center py-8 text-gray-400">
-          <Building2 className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+        <div className="text-center py-8 text-gray-600">
+          <Building2 className="w-8 h-8 mx-auto mb-2 text-gray-500" />
           <p>Aucun frais de chantier</p>
           {isEditable && <p className="text-sm mt-1">Ajoutez des frais (compte prorata, installations, etc.)</p>}
         </div>

@@ -169,7 +169,7 @@ export default function SignaturePad({
           </div>
         ) : (
           <div className="p-6 flex items-center justify-center bg-gray-50">
-            <div className="text-center text-gray-400">
+            <div className="text-center text-gray-600">
               <PenTool className="w-10 h-10 mx-auto mb-2" />
               <p className="text-sm">Aucune signature</p>
             </div>
@@ -206,7 +206,7 @@ export default function SignaturePad({
           </div>
         ) : (
           <div className="p-6 text-center">
-            <PenTool className="w-10 h-10 mx-auto text-gray-400 mb-3" />
+            <PenTool className="w-10 h-10 mx-auto text-gray-600 mb-3" />
             <p className="text-sm text-gray-600 mb-4">
               Signez ce formulaire
             </p>

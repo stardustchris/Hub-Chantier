@@ -100,7 +100,7 @@ export default function LotDevisPanel({
             {/* Lot header */}
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
               {editable && (
-                <GripVertical className="w-4 h-4 text-gray-400 cursor-grab flex-shrink-0" />
+                <GripVertical className="w-4 h-4 text-gray-600 cursor-grab flex-shrink-0" />
               )}
               <button
                 onClick={() => toggleLot(lot.id)}
@@ -132,7 +132,7 @@ export default function LotDevisPanel({
                   </button>
                   <button
                     onClick={() => setEditingLotId(null)}
-                    className="p-1 text-gray-400 hover:bg-gray-100 rounded"
+                    className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -140,7 +140,7 @@ export default function LotDevisPanel({
               ) : (
                 <>
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-mono text-gray-400 mr-2">{lot.numero}</span>
+                    <span className="text-xs font-mono text-gray-600 mr-2">{lot.numero}</span>
                     <span className="font-medium text-gray-900">{lot.titre}</span>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
@@ -240,7 +240,7 @@ export default function LotDevisPanel({
       )}
 
       {lots.length === 0 && !showAddLot && (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-600">
           <p>Aucun lot dans ce devis</p>
           {editable && <p className="text-sm mt-1">Ajoutez un premier lot pour commencer</p>}
         </div>

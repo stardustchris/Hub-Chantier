@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Document } from '../../types/documents';
 import { getDocumentPreviewUrl, getDocumentPreview, type DocumentPreview } from '../../services/documents';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface DocumentPreviewModalProps {
   document: Document | null;
@@ -20,6 +21,7 @@ const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   onClose,
   onDownload,
 }) => {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose });
   const [previewInfo, setPreviewInfo] = useState<DocumentPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +129,13 @@ const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         />
 
         {/* Modal */}
-        <div className="relative inline-block w-full max-w-5xl p-0 overflow-hidden text-left align-middle transition-all transform bg-white rounded-lg shadow-xl">
+        <div
+          ref={focusTrapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          className="relative inline-block w-full max-w-5xl p-0 overflow-hidden text-left align-middle transition-all transform bg-white rounded-lg shadow-xl"
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center gap-3">
@@ -137,7 +145,7 @@ const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                 {document.type_document === 'video' && '🎬'}
               </span>
               <div>
-                <h3 className="text-lg font-medium text-gray-900 truncate max-w-md">
+                <h3 id="modal-title" className="text-lg font-medium text-gray-900 truncate max-w-md">
                   {document.nom}
                 </h3>
                 <p className="text-sm text-gray-500">
@@ -156,7 +164,7 @@ const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               )}
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                className="p-2 text-gray-600 hover:text-gray-800 rounded-full hover:bg-gray-100"
               >
                 ✕
               </button>

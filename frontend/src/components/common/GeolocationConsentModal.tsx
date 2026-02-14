@@ -1,4 +1,5 @@
 import { X, MapPin, Shield, Info } from 'lucide-react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface GeolocationConsentModalProps {
   isOpen: boolean
@@ -17,6 +18,8 @@ export function GeolocationConsentModal({
   onDecline,
   onClose,
 }: GeolocationConsentModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
+
   if (!isOpen) return null
 
   return (
@@ -31,6 +34,7 @@ export function GeolocationConsentModal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
+          ref={focusTrapRef}
           className="relative w-full max-w-md transform rounded-xl bg-white shadow-2xl transition-all"
           role="dialog"
           aria-modal="true"
@@ -48,7 +52,7 @@ export function GeolocationConsentModal({
             </div>
             <button
               onClick={onClose}
-              className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-full p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-600"
               aria-label="Fermer"
             >
               <X className="h-5 w-5" />

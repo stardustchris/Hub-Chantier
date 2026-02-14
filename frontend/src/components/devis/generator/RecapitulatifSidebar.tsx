@@ -35,7 +35,7 @@ export default function RecapitulatifSidebar({ devis }: Props) {
           devis.ventilation_tva.map((v, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-gray-600">
-                TVA {v.taux}% <span className="text-xs text-gray-400">(base {formatEUR(v.base_ht)})</span>
+                TVA {v.taux}% <span className="text-xs text-gray-600">(base {formatEUR(v.base_ht)})</span>
               </span>
               <span className="font-medium">{formatEUR(v.montant_tva)}</span>
             </div>

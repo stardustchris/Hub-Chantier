@@ -63,7 +63,7 @@ export default function AchatSuggestions({
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
         <input
           type="text"
           value={query}
@@ -84,7 +84,7 @@ export default function AchatSuggestions({
         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
           <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
             <span className="text-xs text-gray-500">Achats precedents</span>
-            <span className="text-xs text-gray-400">{results.length} suggestion{results.length > 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-600">{results.length} suggestion{results.length > 1 ? 's' : ''}</span>
           </div>
           <div className="max-h-64 overflow-y-auto">
             {results.map((suggestion, idx) => (
@@ -108,13 +108,13 @@ export default function AchatSuggestions({
                         </span>
                       )}
                       {suggestion.unite && (
-                        <span className="text-xs text-gray-400">Unite: {suggestion.unite}</span>
+                        <span className="text-xs text-gray-600">Unite: {suggestion.unite}</span>
                       )}
                     </div>
                   </div>
                   <div className="text-right ml-4 flex-shrink-0">
                     <span className="font-semibold text-blue-600">{formatEUR(suggestion.prix_unitaire_ht)}</span>
-                    <p className="text-xs text-gray-400">HT / {suggestion.unite || 'u'}</p>
+                    <p className="text-xs text-gray-600">HT / {suggestion.unite || 'u'}</p>
                   </div>
                 </div>
               </div>

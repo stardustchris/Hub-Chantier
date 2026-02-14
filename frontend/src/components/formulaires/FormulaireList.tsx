@@ -60,7 +60,7 @@ export default function FormulaireList({
   if (formulaires.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-xl border">
-        <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+        <FileText className="w-12 h-12 mx-auto text-gray-500 mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-1">Aucun formulaire</h3>
         <p className="text-gray-500">Creez un formulaire depuis un template</p>
       </div>
@@ -143,7 +143,7 @@ export default function FormulaireList({
                     )}
                     <button
                       onClick={() => onExportPDF(formulaire)}
-                      className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Telecharger PDF"
                     >
                       <Download className="w-4 h-4 sm:w-5 sm:h-5" />

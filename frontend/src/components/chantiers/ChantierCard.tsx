@@ -84,7 +84,7 @@ export const ChantierCard = memo(function ChantierCard({ chantier }: ChantierCar
       {/* Team */}
       {(chantier.conducteurs?.length > 0 || chantier.chefs?.length > 0) && (
         <div className="flex items-center gap-2 pt-3 border-t">
-          <Users className="w-4 h-4 text-gray-400" />
+          <Users className="w-4 h-4 text-gray-600" />
           <div className="flex -space-x-2">
             {[...(chantier.conducteurs || []), ...(chantier.chefs || [])]
               .slice(0, 3)
@@ -109,7 +109,7 @@ export const ChantierCard = memo(function ChantierCard({ chantier }: ChantierCar
       )}
 
       {/* Arrow */}
-      <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-hover:text-primary-500 transition-colors" />
+      <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-hover:text-primary-500 transition-colors" />
     </Link>
   )
 })

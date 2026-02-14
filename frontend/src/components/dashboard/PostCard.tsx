@@ -129,7 +129,7 @@ const PostCard = memo(function PostCard({
         {canDelete && onDelete && (
           <button
             onClick={handleDeleteClick}
-            className="text-gray-400 hover:text-red-500 p-1"
+            className="text-gray-600 hover:text-red-500 p-1"
             title="Supprimer"
             aria-label="Supprimer le post"
           >

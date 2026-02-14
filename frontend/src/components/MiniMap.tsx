@@ -70,7 +70,7 @@ export function MiniMapStatic({
       />
       <noscript>
         <div className="w-full h-full flex items-center justify-center">
-          <MapPin className="w-8 h-8 text-gray-400" />
+          <MapPin className="w-8 h-8 text-gray-600" />
         </div>
       </noscript>
     </div>
@@ -83,7 +83,7 @@ export function MiniMapStatic({
 export function MapPlaceholder({ height = 'h-40' }: { height?: string }) {
   return (
     <div className={`${height} rounded-lg bg-gray-100 flex items-center justify-center`}>
-      <MapPin className="w-8 h-8 text-gray-400" />
+      <MapPin className="w-8 h-8 text-gray-600" />
     </div>
   )
 }

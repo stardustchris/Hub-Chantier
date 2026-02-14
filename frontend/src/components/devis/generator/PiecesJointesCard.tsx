@@ -115,7 +115,7 @@ export default function PiecesJointesCard({ devisId, isEditable }: Props) {
                   {isEditable && (
                     <button
                       onClick={() => handleDelete(piece.id)}
-                      className="text-gray-400 hover:text-red-500"
+                      className="text-gray-600 hover:text-red-500"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

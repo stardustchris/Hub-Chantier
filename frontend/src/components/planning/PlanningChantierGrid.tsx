@@ -238,7 +238,7 @@ export default function PlanningChantierGrid({
                     </div>
                   )}
                   {chantier.adresse && (
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 truncate">
+                    <div className="flex items-center gap-1 text-xs text-gray-600 mt-1 truncate">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       <span className="truncate">{chantier.adresse}</span>
                     </div>

@@ -97,7 +97,7 @@ export default function PennylaneIntegrationPage() {
                   `}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <Icon size={18} className={isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500'} />
+                  <Icon size={18} className={isActive ? 'text-blue-600' : 'text-gray-600 group-hover:text-gray-700'} />
                   {tab.label}
                 </button>
               )

@@ -190,7 +190,7 @@ export default function DevisDashboardPage() {
                         <td className="px-4 py-3 font-mono text-xs text-gray-500">{d.numero}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <User className="w-3.5 h-3.5 text-gray-400" />
+                            <User className="w-3.5 h-3.5 text-gray-600" />
                             <span className="font-medium text-gray-900">{d.client_nom}</span>
                           </div>
                         </td>
@@ -206,7 +206,7 @@ export default function DevisDashboardPage() {
 
                 {data.derniers_devis.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                    <FileText className="w-12 h-12 mx-auto text-gray-500 mb-2" />
                     <p>Aucun devis</p>
                   </div>
                 )}

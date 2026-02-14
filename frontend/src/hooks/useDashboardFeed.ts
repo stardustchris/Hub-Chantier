@@ -126,7 +126,7 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
     })
   }, [newPostContent, targetType, selectedChantiers, isUrgent, createPostMutation])
 
-  // TanStack Query Mutation: Like/Unlike post
+  // TanStack Query Mutation: Like/Unlike post (optimistic update)
   const likeMutation = useMutation({
     mutationFn: async ({ postId, isLiked }: { postId: string; isLiked: boolean }) => {
       if (isLiked) {
@@ -134,14 +134,37 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
       } else {
         await dashboardService.likePost(postId)
       }
-      return dashboardService.getPost(postId)
     },
-    onSuccess: () => {
-      // Invalidate to refetch with updated data
-      queryClient.invalidateQueries({ queryKey: ['dashboard-feed'] })
+    onMutate: async ({ postId, isLiked }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['dashboard-feed'] })
+
+      // Snapshot previous data
+      const previousData = queryClient.getQueriesData({ queryKey: ['dashboard-feed'] })
+
+      // Optimistically update all feed pages
+      queryClient.setQueriesData({ queryKey: ['dashboard-feed'] }, (old: any) => {
+        if (!old?.items) return old
+        return {
+          ...old,
+          items: old.items.map((post: Post) =>
+            String(post.id) === postId
+              ? { ...post, likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1 }
+              : post
+          )
+        }
+      })
+
+      return { previousData }
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      // Rollback on error
+      context?.previousData?.forEach(([key, data]) => queryClient.setQueryData(key, data))
       logger.error('Erreur lors du like', error, { context: 'DashboardFeed', showToast: true })
+    },
+    onSettled: () => {
+      // Invalidate to refetch with authoritative data
+      queryClient.invalidateQueries({ queryKey: ['dashboard-feed'] })
     },
   })
 
@@ -152,7 +175,7 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
     likeMutation.mutate({ postId: String(postId), isLiked })
   }, [likeMutation])
 
-  // TanStack Query Mutation: Pin/Unpin post
+  // TanStack Query Mutation: Pin/Unpin post (optimistic update)
   const pinMutation = useMutation({
     mutationFn: async ({ postId, isPinned }: { postId: string; isPinned: boolean }) => {
       if (isPinned) {
@@ -161,11 +184,36 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
         return dashboardService.pinPost(postId)
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-feed'] })
+    onMutate: async ({ postId, isPinned }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['dashboard-feed'] })
+
+      // Snapshot previous data
+      const previousData = queryClient.getQueriesData({ queryKey: ['dashboard-feed'] })
+
+      // Optimistically update all feed pages
+      queryClient.setQueriesData({ queryKey: ['dashboard-feed'] }, (old: any) => {
+        if (!old?.items) return old
+        return {
+          ...old,
+          items: old.items.map((post: Post) =>
+            String(post.id) === postId
+              ? { ...post, is_pinned: !isPinned }
+              : post
+          )
+        }
+      })
+
+      return { previousData }
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      // Rollback on error
+      context?.previousData?.forEach(([key, data]) => queryClient.setQueryData(key, data))
       logger.error('Erreur lors de l\'epinglage', error, { context: 'DashboardFeed', showToast: true })
+    },
+    onSettled: () => {
+      // Invalidate to refetch with authoritative data
+      queryClient.invalidateQueries({ queryKey: ['dashboard-feed'] })
     },
   })
 
@@ -176,16 +224,37 @@ export function useDashboardFeed(): UseDashboardFeedReturn {
     pinMutation.mutate({ postId: String(postId), isPinned })
   }, [pinMutation])
 
-  // TanStack Query Mutation: Delete post
+  // TanStack Query Mutation: Delete post (optimistic update)
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
       return dashboardService.deletePost(postId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-feed'] })
+    onMutate: async (postId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['dashboard-feed'] })
+
+      // Snapshot previous data
+      const previousData = queryClient.getQueriesData({ queryKey: ['dashboard-feed'] })
+
+      // Optimistically remove post from all feed pages
+      queryClient.setQueriesData({ queryKey: ['dashboard-feed'] }, (old: any) => {
+        if (!old?.items) return old
+        return {
+          ...old,
+          items: old.items.filter((post: Post) => String(post.id) !== postId)
+        }
+      })
+
+      return { previousData }
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      // Rollback on error
+      context?.previousData?.forEach(([key, data]) => queryClient.setQueryData(key, data))
       logger.error('Erreur lors de la suppression', error, { context: 'DashboardFeed', showToast: true })
+    },
+    onSettled: () => {
+      // Invalidate to refetch with authoritative data
+      queryClient.invalidateQueries({ queryKey: ['dashboard-feed'] })
     },
   })
 
