@@ -7,6 +7,7 @@ import { apiKeysService } from '../../services/apiKeys'
 import type { CreateAPIKeyRequest } from '../../services/apiKeys'
 import { Loader2, Plus } from 'lucide-react'
 import { logger } from '../../services/logger'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface CreateAPIKeyModalProps {
   onClose: () => void
@@ -17,6 +18,7 @@ interface CreateAPIKeyModalProps {
 }
 
 export default function CreateAPIKeyModal({ onClose, onCreated }: CreateAPIKeyModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [nom, setNom] = useState('')
   const [description, setDescription] = useState('')
   const [scopes, setScopes] = useState<string[]>(['read'])
@@ -78,8 +80,14 @@ export default function CreateAPIKeyModal({ onClose, onCreated }: CreateAPIKeyMo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-lg w-full p-6">
-        <h2 className="text-xl font-bold mb-4">Créer une clé API</h2>
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="bg-white rounded-lg max-w-lg w-full p-6"
+      >
+        <h2 id="modal-title" className="text-xl font-bold mb-4">Créer une clé API</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nom */}

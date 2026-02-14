@@ -52,7 +52,7 @@ export default function StatsCard({
               style={{ width: `${hoursProgress}%` }}
             />
           </div>
-          <div className="text-xs text-gray-400 text-right mt-0.5">/ 35h</div>
+          <div className="text-xs text-gray-600 text-right mt-0.5">/ 35h</div>
         </div>
 
         {/* Jours travaillés du mois */}

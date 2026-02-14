@@ -8,6 +8,7 @@ import {
   Copy,
   Info,
 } from 'lucide-react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface APIKeySecretModalProps {
   secret: string
@@ -24,9 +25,17 @@ export default function APIKeySecretModal({
   onCopy,
   onClose,
 }: APIKeySecretModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="bg-white rounded-lg max-w-2xl w-full p-6"
+      >
         {/* Alerte */}
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
           <div className="flex items-start">
@@ -45,7 +54,7 @@ export default function APIKeySecretModal({
 
         {/* Infos */}
         <div className="mb-4">
-          <h2 className="text-xl font-bold mb-1">Clé API créée</h2>
+          <h2 id="modal-title" className="text-xl font-bold mb-1">Clé API créée</h2>
           <p className="text-sm text-gray-600">
             Nom: <span className="font-medium">{keyInfo.nom}</span>
           </p>

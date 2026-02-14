@@ -110,7 +110,7 @@ export default function DevisPipelineCard() {
       {/* Empty state */}
       {!isLoading && !error && data && data.kpi.nb_total === 0 && (
         <div className="text-center py-8">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <FileText className="w-12 h-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">Aucun devis en cours</p>
           <button
             onClick={() => navigate('/devis')}
@@ -211,9 +211,9 @@ export default function DevisPipelineCard() {
                           className="w-2.5 h-2.5 rounded-full"
                           style={{ backgroundColor: config.couleur }}
                         />
-                        <span className="text-gray-400">{config.label}</span>
+                        <span className="text-gray-600">{config.label}</span>
                       </div>
-                      <span className="font-medium text-gray-400">{count}</span>
+                      <span className="font-medium text-gray-600">{count}</span>
                     </div>
                   )
                 })}

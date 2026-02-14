@@ -229,7 +229,7 @@ export default function MentionInput({
       />
 
       {/* Indicateur @ */}
-      <div className="absolute right-2 bottom-2 text-gray-400 text-xs flex items-center gap-1">
+      <div className="absolute right-2 bottom-2 text-gray-600 text-xs flex items-center gap-1">
         <AtSign className="w-3 h-3" />
         pour mentionner
       </div>

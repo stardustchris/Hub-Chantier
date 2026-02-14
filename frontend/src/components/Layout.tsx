@@ -149,7 +149,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
                 </Link>
                 <button
                   onClick={() => toggleGroup(item.name)}
-                  className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600"
                   aria-label={isOpen ? 'Replier le sous-menu' : 'Déplier le sous-menu'}
                 >
                   {isOpen ? (
@@ -256,7 +256,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100"
             aria-label="Fermer le menu"
           >
             <X className="w-5 h-5" />
@@ -317,7 +317,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100"
+              className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100"
               aria-label="Ouvrir le menu"
             >
               <Menu className="w-6 h-6" />
@@ -342,7 +342,7 @@ export default function Layout({ children }: LayoutProps) {
               <div className="relative">
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100 relative"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 relative"
                   aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
                   aria-expanded={notificationsOpen}
                 >
@@ -362,7 +362,7 @@ export default function Layout({ children }: LayoutProps) {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 min-h-[48px] px-2 rounded-lg hover:bg-gray-100"
+                  className="flex items-center gap-2 min-h-[44px] px-2 rounded-lg hover:bg-gray-100"
                   aria-label="Menu utilisateur"
                   aria-expanded={userMenuOpen}
                 >

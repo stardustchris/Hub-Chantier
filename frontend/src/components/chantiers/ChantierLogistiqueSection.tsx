@@ -132,7 +132,7 @@ export default function ChantierLogistiqueSection({ chantierId }: ChantierLogist
         </div>
       ) : (
         <div className="text-center py-6 text-gray-500">
-          <Truck className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+          <Truck className="w-10 h-10 mx-auto mb-2 text-gray-500" />
           <p className="text-sm">Aucune reservation prevue</p>
           <Link
             to="/logistique"
