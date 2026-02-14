@@ -10,6 +10,7 @@ import { logger } from '../../services/logger'
 import { useToast } from '../../contexts/ToastContext'
 import type { TemplateModele } from '../../types'
 import { UNITES_MESURE, UniteMesure } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface TemplateImportModalProps {
   onClose: () => void
@@ -20,6 +21,7 @@ export default function TemplateImportModal({
   onClose,
   onImport,
 }: TemplateImportModalProps) {
+  const focusTrapRef = useFocusTrap(true)
   const { addToast } = useToast()
   const [templates, setTemplates] = useState<TemplateModele[]>([])
   const [categories, setCategories] = useState<string[]>([])
@@ -64,7 +66,7 @@ export default function TemplateImportModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div ref={focusTrapRef} className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}

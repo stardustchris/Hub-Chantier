@@ -3,6 +3,7 @@ import { X, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import type { Affectation, AffectationCreate, AffectationUpdate, User, Chantier, JourSemaine } from '../../types'
 import { JOURS_SEMAINE } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 // Codes des chantiers spéciaux (absences)
 const CHANTIERS_SPECIAUX_CODES = ['CONGES', 'MALADIE', 'FORMATION', 'RTT']
@@ -34,6 +35,7 @@ export default function AffectationModal({
 }: AffectationModalProps) {
   const isEdit = !!affectation
   const [deleting, setDeleting] = useState(false)
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
 
   // Séparer les chantiers en deux groupes : absences et chantiers de travaux
   const { chantiersAbsences, chantiersTravaux } = useMemo(() => {
@@ -167,10 +169,10 @@ export default function AffectationModal({
         <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="relative bg-white rounded-xl shadow-xl w-full max-w-md">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold">
+            <h2 id="modal-title" className="text-lg font-semibold">
               {isEdit ? 'Modifier l\'affectation' : 'Nouvelle affectation'}
             </h2>
             <button

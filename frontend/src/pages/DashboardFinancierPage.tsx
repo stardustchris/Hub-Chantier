@@ -336,7 +336,7 @@ export default function DashboardFinancierPage() {
               {chantier.marge_statut === 'en_attente' && 'Marge'}
               {!chantier.marge_statut && 'Marge'}
             </span>
-            <p className={`font-medium ${chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            <p className={`font-medium ${chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-500' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
               {formatPct(chantier.marge_estimee_pct)}
             </p>
           </div>
@@ -585,7 +585,7 @@ export default function DashboardFinancierPage() {
                       <p className="text-sm text-gray-600">Marge Moyenne</p>
                     </DefinitionTooltip>
                     <p className={`text-2xl font-bold mt-1 ${
-                      data.kpi_globaux.marge_moyenne_pct === null || data.kpi_globaux.marge_moyenne_pct === undefined ? 'text-gray-400' : Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
+                      data.kpi_globaux.marge_moyenne_pct === null || data.kpi_globaux.marge_moyenne_pct === undefined ? 'text-gray-500' : Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                     }`}>
                       {formatPct(data.kpi_globaux.marge_moyenne_pct)}
                     </p>
@@ -794,7 +794,7 @@ export default function DashboardFinancierPage() {
                           <td className="px-4 py-3 text-right">
                             <div className="flex flex-col items-end gap-1">
                               <span className={`font-medium ${
-                                chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-400' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
+                                chantier.marge_estimee_pct === null || chantier.marge_estimee_pct === undefined ? 'text-gray-500' : Number(chantier.marge_estimee_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
                               }`}>
                                 {formatPct(chantier.marge_estimee_pct)}
                               </span>

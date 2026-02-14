@@ -6,6 +6,7 @@
 import { X, FileText } from 'lucide-react'
 import type { TemplateFormulaire, Chantier } from '../../types'
 import { CATEGORIES_FORMULAIRES } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface NewFormulaireModalProps {
   isOpen: boolean
@@ -26,12 +27,13 @@ export function NewFormulaireModal({
   selectedChantierId,
   onChantierChange,
 }: NewFormulaireModalProps) {
-  if (!isOpen) return null
-
   const handleClose = () => {
     onChantierChange(null)
     onClose()
   }
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose: handleClose })
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -39,9 +41,9 @@ export function NewFormulaireModal({
         className="fixed inset-0 bg-black/50"
         onClick={handleClose}
       />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-hidden">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">Nouveau formulaire</h2>
+          <h2 id="modal-title" className="text-lg font-semibold">Nouveau formulaire</h2>
           <button
             onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg"

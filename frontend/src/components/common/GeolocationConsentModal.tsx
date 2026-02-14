@@ -52,7 +52,7 @@ export function GeolocationConsentModal({
             </div>
             <button
               onClick={onClose}
-              className="rounded-full p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-full p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
               aria-label="Fermer"
             >
               <X className="h-5 w-5" />

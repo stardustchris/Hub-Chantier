@@ -11,6 +11,7 @@ import type {
 } from '../../types/signalements';
 import { PRIORITE_OPTIONS } from '../../types/signalements';
 import { createSignalement, updateSignalement } from '../../services/signalements';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface SignalementModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
   signalement,
   users = [],
 }) => {
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
@@ -140,9 +142,9 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
         />
 
         {/* Modal */}
-        <div className="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+        <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 id="modal-title" className="text-lg font-semibold text-gray-900">
               {isEdit ? 'Modifier le signalement' : 'Nouveau signalement'}
             </h3>
             <button

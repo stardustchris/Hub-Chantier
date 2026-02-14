@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import type { Tache, TacheCreate, TacheUpdate, UniteMesure } from '../../types'
 import { UNITES_MESURE } from '../../types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface TaskModalProps {
   tache?: Tache | null
