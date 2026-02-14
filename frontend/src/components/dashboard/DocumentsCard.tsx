@@ -28,7 +28,7 @@ export default function DocumentsCard() {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-lg">
+    <div className="bg-white rounded-2xl p-5 shadow-lg hover-lift">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-gray-800 flex items-center gap-2">
           <FileText className="w-5 h-5 text-purple-600" />

@@ -145,13 +145,13 @@ describe('FeuillesHeuresPage', () => {
   describe('admin features', () => {
     it('affiche bouton macros de paie pour admin', () => {
       renderPage()
-      expect(screen.getByLabelText('Configurer les macros de paie')).toBeInTheDocument()
+      expect(screen.getByLabelText('Configurer les variables de paie')).toBeInTheDocument()
     })
 
     it('ouvre le modal macros au clic', async () => {
       const user = userEvent.setup()
       renderPage()
-      await user.click(screen.getByLabelText('Configurer les macros de paie'))
+      await user.click(screen.getByLabelText('Configurer les variables de paie'))
       expect(screen.getByTestId('macros-modal')).toBeInTheDocument()
     })
   })

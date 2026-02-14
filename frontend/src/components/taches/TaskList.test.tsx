@@ -336,7 +336,10 @@ describe('TaskList', () => {
 
   describe('error handling', () => {
     it('affiche une erreur si chargement echoue', async () => {
-      vi.mocked(tachesService.listByChantier).mockRejectedValue(new Error('Network error'))
+      const networkError = new Error('Network error')
+      // Ajouter response.status pour que l'erreur soit affichée
+      ;(networkError as any).response = { status: 500 }
+      vi.mocked(tachesService.listByChantier).mockRejectedValue(networkError)
 
       render(<TaskList chantierId={1} chantierNom="Test Chantier" />)
 
@@ -346,7 +349,10 @@ describe('TaskList', () => {
     })
 
     it('permet de fermer le message d erreur', async () => {
-      vi.mocked(tachesService.listByChantier).mockRejectedValue(new Error('Network error'))
+      const networkError = new Error('Network error')
+      // Ajouter response.status pour que l'erreur soit affichée
+      ;(networkError as any).response = { status: 500 }
+      vi.mocked(tachesService.listByChantier).mockRejectedValue(networkError)
       const user = userEvent.setup()
 
       render(<TaskList chantierId={1} chantierNom="Test Chantier" />)

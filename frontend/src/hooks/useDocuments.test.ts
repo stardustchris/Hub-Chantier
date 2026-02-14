@@ -427,6 +427,13 @@ describe('useDocuments', () => {
       const mockBlob = new Blob(['test'], { type: 'application/pdf' })
       vi.mocked(documentsApi.downloadDocument).mockResolvedValue(mockBlob)
 
+      // Mock URL.createObjectURL
+      const mockUrl = 'blob:http://localhost/mock-url'
+      const mockCreateObjectURL = vi.fn().mockReturnValue(mockUrl)
+      const mockRevokeObjectURL = vi.fn()
+      global.URL.createObjectURL = mockCreateObjectURL
+      global.URL.revokeObjectURL = mockRevokeObjectURL
+
       const { result } = renderHook(() => useDocuments())
 
       // Mock createElement('a') after renderHook to avoid breaking DOM setup
@@ -434,7 +441,6 @@ describe('useDocuments', () => {
       const mockLink = {
         href: '',
         download: '',
-        target: '',
         click: mockClick,
       }
       const originalCreateElement = document.createElement.bind(document)
@@ -450,16 +456,18 @@ describe('useDocuments', () => {
       })
 
       expect(documentsApi.downloadDocument).toHaveBeenCalledWith(mockDocuments[0].id)
-      expect(mockLink.href).toBe('https://example.com/doc.pdf')
+      expect(mockCreateObjectURL).toHaveBeenCalledWith(mockBlob)
+      expect(mockLink.href).toBe(mockUrl)
       expect(mockLink.download).toBe('Plan RDC.pdf')
-      expect(mockLink.target).toBe('_blank')
       expect(mockClick).toHaveBeenCalled()
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith(mockUrl)
 
       vi.restoreAllMocks()
     })
 
     it('handleDeleteDocument supprime le document', async () => {
       vi.mocked(documentsApi.deleteDocument).mockResolvedValue(undefined)
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
 
       const { result } = renderHook(() => useDocuments())
 

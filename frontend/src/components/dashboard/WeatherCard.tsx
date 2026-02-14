@@ -114,7 +114,7 @@ export default function WeatherCard({ weatherOverride }: WeatherCardProps) {
   return (
     <div
       onClick={handleClick}
-      className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-white relative overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow active:scale-[0.98]`}
+      className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-white relative overflow-hidden shadow-lg cursor-pointer hover-lift active:scale-[0.98]`}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && handleClick()}

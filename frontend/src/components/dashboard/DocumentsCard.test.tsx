@@ -96,8 +96,8 @@ describe('DocumentsCard', () => {
 
     renderWithRouter(<DocumentsCard />)
 
-    expect(screen.getByText('Aucun document recent')).toBeInTheDocument()
-    expect(screen.getByText('Acceder a la GED')).toBeInTheDocument()
+    expect(screen.getByText('Aucun document récent')).toBeInTheDocument()
+    expect(screen.getByText('Accéder à la GED')).toBeInTheDocument()
   })
 
   it('affiche les documents charges', () => {
@@ -143,7 +143,7 @@ describe('DocumentsCard', () => {
 
     renderWithRouter(<DocumentsCard />)
 
-    fireEvent.click(screen.getByText('Acceder a la GED'))
+    fireEvent.click(screen.getByText('Accéder à la GED'))
 
     expect(mockNavigate).toHaveBeenCalledWith('/documents')
   })

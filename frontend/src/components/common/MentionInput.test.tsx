@@ -7,6 +7,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MentionInput from './MentionInput'
 import { createMockUser } from '../../fixtures'
+import { ToastProvider } from '../../contexts/ToastContext'
 
 // Mock usersService
 vi.mock('../../services/users', () => ({
@@ -43,11 +44,13 @@ describe('MentionInput', () => {
 
   const renderInput = (props = {}) => {
     return render(
-      <MentionInput
-        value=""
-        onChange={mockOnChange}
-        {...props}
-      />
+      <ToastProvider>
+        <MentionInput
+          value=""
+          onChange={mockOnChange}
+          {...props}
+        />
+      </ToastProvider>
     )
   }
 

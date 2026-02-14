@@ -403,7 +403,7 @@ describe('PointageModal', () => {
       })
 
       render(<PointageModal {...defaultProps} />)
-      expect(screen.getByText('Enregistrement...')).toBeInTheDocument()
+      expect(screen.getByText('En cours...')).toBeInTheDocument()
     })
   })
 

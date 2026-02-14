@@ -23,6 +23,12 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: mockUser }),
 }))
 
+// Mock ToastContext
+const mockAddToast = vi.fn()
+vi.mock('../../contexts/ToastContext', () => ({
+  useToast: () => ({ addToast: mockAddToast }),
+}))
+
 // Mock dashboardService
 vi.mock('../../services/dashboard', () => ({
   dashboardService: {

@@ -178,11 +178,11 @@ describe('Request interceptor - CSRF token injection', () => {
     expect(result.headers['X-CSRF-Token']).toBeUndefined()
   })
 
-  it('skip le CSRF pour /api/csrf-token', async () => {
+  it('skip le CSRF pour /api/auth/csrf-token', async () => {
     mockRequiresCsrf.mockReturnValue(true)
     mockGetCsrfToken.mockReturnValue('test-csrf-token')
 
-    const config = makeConfig({ method: 'post', url: '/api/csrf-token' })
+    const config = makeConfig({ method: 'post', url: '/api/auth/csrf-token' })
     const result = await requestInterceptor!(config)
 
     expect(result.headers['X-CSRF-Token']).toBeUndefined()
@@ -324,12 +324,12 @@ describe('Response interceptor - 401 handling', () => {
     expect(mockEmitSessionExpired).not.toHaveBeenCalled()
   })
 
-  it('ne declenche pas emitSessionExpired pour 401 sur /api/csrf-token', async () => {
+  it('ne declenche pas emitSessionExpired pour 401 sur /api/auth/csrf-token', async () => {
     responseSuccessInterceptor!({ data: {}, status: 200 })
 
     const error = {
       response: { status: 401 },
-      config: { url: '/api/csrf-token' },
+      config: { url: '/api/auth/csrf-token' },
     }
 
     await expect(responseErrorInterceptor!(error)).rejects.toBe(error)

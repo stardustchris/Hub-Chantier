@@ -98,7 +98,7 @@ describe('firebase service', () => {
 
       const { initFirebase } = await import('./firebase')
 
-      const result = initFirebase()
+      const result = await initFirebase()
 
       expect(result).toBeNull()
       expect(mockInitializeApp).not.toHaveBeenCalled()
@@ -117,7 +117,7 @@ describe('firebase service', () => {
 
       const { initFirebase } = await import('./firebase')
 
-      const result = initFirebase()
+      const result = await initFirebase()
 
       expect(result).toBe(mockFirebaseApp)
       expect(mockInitializeApp).toHaveBeenCalledWith({
@@ -128,7 +128,7 @@ describe('firebase service', () => {
         messagingSenderId: '123456',
         appId: 'test-app-id',
       })
-      expect(mockLogger.info).toHaveBeenCalledWith('Firebase initialisé')
+      expect(mockLogger.info).toHaveBeenCalledWith('Firebase initialisé (lazy loaded)')
     })
 
     it('retourne singleton si deja initialise', async () => {
@@ -138,8 +138,8 @@ describe('firebase service', () => {
 
       const { initFirebase } = await import('./firebase')
 
-      const result1 = initFirebase()
-      const result2 = initFirebase()
+      const result1 = await initFirebase()
+      const result2 = await initFirebase()
 
       expect(result1).toBe(result2)
       expect(mockInitializeApp).toHaveBeenCalledTimes(1)
@@ -156,7 +156,7 @@ describe('firebase service', () => {
 
       const { initFirebase } = await import('./firebase')
 
-      const result = initFirebase()
+      const result = await initFirebase()
 
       expect(result).toBeNull()
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -175,7 +175,7 @@ describe('firebase service', () => {
 
       const { getFirebaseMessaging } = await import('./firebase')
 
-      const result = getFirebaseMessaging()
+      const result = await getFirebaseMessaging()
 
       expect(result).toBeNull()
       expect(mockGetMessaging).not.toHaveBeenCalled()
@@ -188,7 +188,7 @@ describe('firebase service', () => {
 
       const { getFirebaseMessaging } = await import('./firebase')
 
-      const result = getFirebaseMessaging()
+      const result = await getFirebaseMessaging()
 
       expect(result).toBe(mockMessaging)
       expect(mockGetMessaging).toHaveBeenCalledWith(mockFirebaseApp)
@@ -201,8 +201,8 @@ describe('firebase service', () => {
 
       const { getFirebaseMessaging } = await import('./firebase')
 
-      const result1 = getFirebaseMessaging()
-      const result2 = getFirebaseMessaging()
+      const result1 = await getFirebaseMessaging()
+      const result2 = await getFirebaseMessaging()
 
       expect(result1).toBe(result2)
       expect(mockGetMessaging).toHaveBeenCalledTimes(1)
@@ -219,7 +219,7 @@ describe('firebase service', () => {
 
       const { getFirebaseMessaging } = await import('./firebase')
 
-      const result = getFirebaseMessaging()
+      const result = await getFirebaseMessaging()
 
       expect(result).toBeNull()
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -353,7 +353,7 @@ describe('firebase service', () => {
       const { onForegroundMessage } = await import('./firebase')
 
       const callback = vi.fn()
-      const result = onForegroundMessage(callback)
+      const result = await onForegroundMessage(callback)
 
       expect(result).toBeNull()
       expect(mockOnMessage).not.toHaveBeenCalled()
@@ -370,7 +370,7 @@ describe('firebase service', () => {
       const { onForegroundMessage } = await import('./firebase')
 
       const callback = vi.fn()
-      const cleanup = onForegroundMessage(callback)
+      const cleanup = await onForegroundMessage(callback)
 
       expect(cleanup).toBe(mockUnsubscribe)
       expect(mockOnMessage).toHaveBeenCalledWith(mockMessaging, expect.any(Function))
@@ -390,7 +390,7 @@ describe('firebase service', () => {
       const { onForegroundMessage } = await import('./firebase')
 
       const callback = vi.fn()
-      onForegroundMessage(callback)
+      await onForegroundMessage(callback)
 
       // Simuler un message entrant
       const payload = {

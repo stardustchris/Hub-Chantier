@@ -15,10 +15,10 @@ describe('InviteUserModal', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
     expect(screen.getByText('Inviter un utilisateur')).toBeInTheDocument()
-    expect(screen.getByLabelText(/prénom/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/nom/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/rôle/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Jean')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Dupont')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('jean.dupont@email.com')).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
 
   it('should display invitation info message', () => {
@@ -41,7 +41,7 @@ describe('InviteUserModal', () => {
   it('should call onClose when clicking X button', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
-    const closeButton = screen.getByRole('button', { name: /fermer/i })
+    const closeButton = screen.getByLabelText(/Fermer le formulaire/i)
     fireEvent.click(closeButton)
 
     expect(mockOnClose).toHaveBeenCalledTimes(1)
@@ -60,13 +60,13 @@ describe('InviteUserModal', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
     // Remplir le formulaire
-    fireEvent.change(screen.getByLabelText(/prénom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Jean'), {
       target: { value: 'Jean' },
     })
-    fireEvent.change(screen.getByLabelText(/nom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Dupont'), {
       target: { value: 'Dupont' },
     })
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByPlaceholderText('jean.dupont@email.com'), {
       target: { value: 'jean.dupont@test.com' },
     })
 
@@ -94,13 +94,13 @@ describe('InviteUserModal', () => {
   it('should enable submit button when all required fields are filled', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
-    fireEvent.change(screen.getByLabelText(/prénom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Jean'), {
       target: { value: 'Jean' },
     })
-    fireEvent.change(screen.getByLabelText(/nom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Dupont'), {
       target: { value: 'Dupont' },
     })
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByPlaceholderText('jean.dupont@email.com'), {
       target: { value: 'jean.dupont@test.com' },
     })
 
@@ -121,13 +121,13 @@ describe('InviteUserModal', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
     // Remplir le formulaire
-    fireEvent.change(screen.getByLabelText(/prénom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Jean'), {
       target: { value: 'Jean' },
     })
-    fireEvent.change(screen.getByLabelText(/nom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Dupont'), {
       target: { value: 'Dupont' },
     })
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByPlaceholderText('jean.dupont@email.com'), {
       target: { value: 'jean.dupont@test.com' },
     })
 
@@ -143,16 +143,16 @@ describe('InviteUserModal', () => {
   it('should allow changing role', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
-    const roleSelect = screen.getByLabelText(/rôle/i)
-    fireEvent.change(roleSelect, { target: { value: 'chef' } })
+    const roleSelect = screen.getByRole('combobox')
+    fireEvent.change(roleSelect, { target: { value: 'chef_chantier' } })
 
-    expect(roleSelect).toHaveValue('chef')
+    expect(roleSelect).toHaveValue('chef_chantier')
   })
 
   it('should focus first input on mount', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
-    const prenomInput = screen.getByLabelText(/prénom/i)
+    const prenomInput = screen.getByPlaceholderText('Jean')
     expect(prenomInput).toHaveFocus()
   })
 
@@ -164,13 +164,13 @@ describe('InviteUserModal', () => {
     render(<InviteUserModal onClose={mockOnClose} onSubmit={mockOnSubmit} />)
 
     // Remplir le formulaire
-    fireEvent.change(screen.getByLabelText(/prénom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Jean'), {
       target: { value: 'Jean' },
     })
-    fireEvent.change(screen.getByLabelText(/nom/i), {
+    fireEvent.change(screen.getByPlaceholderText('Dupont'), {
       target: { value: 'Dupont' },
     })
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    fireEvent.change(screen.getByPlaceholderText('jean.dupont@email.com'), {
       target: { value: 'jean.dupont@test.com' },
     })
 

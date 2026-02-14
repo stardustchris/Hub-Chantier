@@ -24,6 +24,7 @@ import {
   DashboardPostCard,
   WeatherBulletinPost,
   DevisPipelineCard,
+  PostSkeleton,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { weatherNotificationService } from '../services/weatherNotifications'
@@ -124,6 +125,7 @@ export default function DashboardPage() {
 
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
+  const canViewDevisPipeline = user?.role === 'admin' || user?.role === 'conducteur'
 
   // Fusionner les posts avec le bulletin météo pour un tri unifié
   const feedItemsWithWeather = useMemo(() => {
@@ -307,10 +309,10 @@ export default function DashboardPage() {
                       >
                         {user?.prenom?.[0]}{user?.nom?.[0]}
                       </div>
-                      <span className="text-gray-400 text-left flex-1">
+                      <span className="text-gray-500 text-left flex-1">
                         Rediger un message, partager une photo...
                       </span>
-                      <MessageCircle className="w-5 h-5 text-gray-400" />
+                      <MessageCircle className="w-5 h-5 text-gray-500" />
                     </button>
                   ) : (
                     /* Expanded: composeur complet */
@@ -407,7 +409,7 @@ export default function DashboardPage() {
                             feed.setNewPostContent('')
                             setShowComposer(false)
                           }}
-                          className="text-gray-400 hover:text-gray-600 py-2.5 px-3 rounded-xl"
+                          className="text-gray-600 hover:text-gray-800 py-2.5 px-3 rounded-xl"
                           title="Annuler"
                         >
                           <X className="w-5 h-5" />
@@ -437,15 +439,22 @@ export default function DashboardPage() {
 
                 {/* Posts */}
                 <div className="space-y-4 max-h-[500px] overflow-y-scroll pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-                  {feedItemsWithWeather.length === 0 && !feed.isLoading ? (
+                  {feed.isLoading && feedItemsWithWeather.length === 0 ? (
+                    /* Afficher 3 skeletons lors du chargement initial */
+                    <>
+                      <PostSkeleton />
+                      <PostSkeleton />
+                      <PostSkeleton />
+                    </>
+                  ) : feedItemsWithWeather.length === 0 ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">Aucune publication pour le moment</p>
-                      <p className="text-gray-400 text-sm mt-1">Partagez une info avec votre equipe ci-dessus</p>
+                      <p className="text-gray-600">Aucune publication pour le moment</p>
+                      <p className="text-gray-500 text-sm mt-1">Partagez une info avec votre equipe ci-dessus</p>
                     </div>
                   ) : (
                     <>
-                      {feedItemsWithWeather.map((item, index) => (
+                      {feedItemsWithWeather.map((item) => (
                         item.type === 'post' ? (
                           <DashboardPostCard
                             key={item.data.id}
@@ -484,7 +493,7 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-4">
-              {isDirectionOrConducteur && <DevisPipelineCard />}
+              {canViewDevisPipeline && <DevisPipelineCard />}
               <DocumentsCard />
               <TeamCard members={currentTeamMembers} chantierName={currentSlot?.siteName} />
             </div>

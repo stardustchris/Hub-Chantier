@@ -80,12 +80,20 @@ describe('csrf service', () => {
 
   describe('getCsrfToken', () => {
     it('retourne null si aucun token n\'a été récupéré', () => {
+      // Setup global document.cookie to avoid ReferenceError
+      if (typeof document === 'undefined') {
+        ;(global as any).document = { cookie: '' }
+      }
       expect(getCsrfToken()).toBeNull()
     })
   })
 
   describe('clearCsrfToken', () => {
     it('efface le token', () => {
+      // Setup global document.cookie to avoid ReferenceError
+      if (typeof document === 'undefined') {
+        ;(global as any).document = { cookie: '' }
+      }
       // Note: We can't easily test fetchCsrfToken without more complex mocking
       // This test just ensures clearCsrfToken doesn't throw
       clearCsrfToken()
@@ -106,7 +114,7 @@ describe('csrf service', () => {
       const token = await fetchCsrfToken()
 
       expect(token).toBe('test-csrf-token-123')
-      expect(api.default.get).toHaveBeenCalledWith('/api/csrf-token')
+      expect(api.default.get).toHaveBeenCalledWith('/api/auth/csrf-token')
     })
 
     it('retourne le token en cache si déjà récupéré', async () => {

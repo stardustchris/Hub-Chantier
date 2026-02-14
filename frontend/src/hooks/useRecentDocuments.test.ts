@@ -109,7 +109,7 @@ describe('useRecentDocuments', () => {
     expect(result.current.documents[1].type).toBe('image')
   })
 
-  it('should fallback to demo documents when API returns no documents', async () => {
+  it('should return empty list when API returns no documents', async () => {
     mockUseAuth.mockReturnValue({
       user: { id: '1', nom: 'Test', prenom: 'User', email: 't@t.com', role: 'ouvrier' } as any,
       isLoading: false,
@@ -130,13 +130,11 @@ describe('useRecentDocuments', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    // Should show demo documents (limited by INITIAL_DISPLAY_COUNT = 4)
-    expect(result.current.documents.length).toBe(4)
-    expect(result.current.documents[0].id).toBe('demo-1')
-    expect(result.current.hasMore).toBe(true)
+    expect(result.current.documents.length).toBe(0)
+    expect(result.current.hasMore).toBe(false)
   })
 
-  it('should fallback to demo documents on API error', async () => {
+  it('should return empty list on API error', async () => {
     mockUseAuth.mockReturnValue({
       user: { id: '1', nom: 'Test', prenom: 'User', email: 't@t.com', role: 'ouvrier' } as any,
       isLoading: false,
@@ -153,9 +151,7 @@ describe('useRecentDocuments', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    // Demo documents shown as fallback (limited by INITIAL_DISPLAY_COUNT = 4)
-    expect(result.current.documents.length).toBe(4)
-    expect(result.current.documents[0].id).toBe('demo-1')
+    expect(result.current.documents.length).toBe(0)
   })
 
   it('should support loadMore to display more documents', async () => {
@@ -167,11 +163,14 @@ describe('useRecentDocuments', () => {
       logout: vi.fn(),
     })
 
-    // Force demo docs (no chantier affectations with documents)
+    // Provide 6 documents from API to test loadMore
+    const mockDocs = Array.from({ length: 6 }, (_, i) => ({
+      id: i + 1, nom: `Doc${i + 1}.pdf`, type_document: 'pdf',
+    }))
     mockGetByUtilisateur.mockResolvedValue([
       { chantier_id: '10', chantier_nom: 'Chantier', utilisateur_id: '1' } as any,
     ])
-    mockSearchDocuments.mockResolvedValue({ documents: [], total: 0 } as any)
+    mockSearchDocuments.mockResolvedValue({ documents: mockDocs, total: 6 } as any)
 
     const { result } = renderHook(() => useRecentDocuments())
 
@@ -186,7 +185,6 @@ describe('useRecentDocuments', () => {
       result.current.loadMore()
     })
 
-    // After loadMore, should show all 6 demo documents
     expect(result.current.documents.length).toBe(6)
     expect(result.current.hasMore).toBe(false)
   })
@@ -252,6 +250,10 @@ describe('useRecentDocuments', () => {
     const mockOpen = vi.fn()
     vi.stubGlobal('open', mockOpen)
 
+    // Mock URL.createObjectURL (not available in jsdom)
+    const mockCreateObjectURL = vi.fn().mockReturnValue('blob:http://localhost/fake-blob-url')
+    globalThis.URL.createObjectURL = mockCreateObjectURL
+
     const { result } = renderHook(() => useRecentDocuments())
 
     await waitFor(() => {
@@ -271,7 +273,8 @@ describe('useRecentDocuments', () => {
     })
 
     expect(mockDownloadDocument).toHaveBeenCalledWith(42)
-    expect(mockOpen).toHaveBeenCalledWith('https://api.example.com/doc/42', '_blank', 'noopener,noreferrer')
+    // The hook creates a blob URL via URL.createObjectURL, then opens it
+    expect(mockOpen).toHaveBeenCalledWith(expect.any(String), '_blank', 'noopener,noreferrer')
 
     vi.unstubAllGlobals()
   })

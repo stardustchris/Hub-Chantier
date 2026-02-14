@@ -13,6 +13,7 @@ const mockAffectation: any = {
   chantier_id: 1,
   chantier_nom: 'Chantier Alpha',
   chantier_couleur: '#E74C3C',
+  utilisateur_couleur: '#E74C3C',
   heure_debut: '08:00',
   heure_fin: '17:00',
   utilisateur_id: 1,

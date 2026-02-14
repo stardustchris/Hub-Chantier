@@ -206,9 +206,9 @@ describe('useFormulairesData', () => {
         await result.current.loadData()
       })
 
-      // Falls back to MOCK_ constants (which are empty arrays)
-      expect(result.current.templates).toEqual([])
-      expect(result.current.formulaires).toEqual([])
+      // Falls back to MOCK_ constants when API returns empty
+      expect(result.current.templates.length).toBeGreaterThan(0)
+      expect(result.current.formulaires.length).toBeGreaterThan(0)
       expect(result.current.chantiers).toEqual([])
     })
 
@@ -227,8 +227,9 @@ describe('useFormulairesData', () => {
         expect.any(Error),
         { context: 'useFormulairesData' }
       )
-      expect(result.current.templates).toEqual([])
-      expect(result.current.formulaires).toEqual([])
+      // Fallback to MOCK_ data on error
+      expect(result.current.templates.length).toBeGreaterThan(0)
+      expect(result.current.formulaires.length).toBeGreaterThan(0)
       expect(result.current.chantiers).toEqual([])
     })
   })

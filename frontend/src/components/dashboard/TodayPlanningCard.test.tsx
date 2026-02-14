@@ -251,7 +251,7 @@ describe('TodayPlanningCard', () => {
     renderWithRouter({ slots })
 
     expect(screen.getByText('Itineraire')).toBeInTheDocument()
-    expect(screen.getByText('Appeler chef')).toBeInTheDocument()
+    expect(screen.getByText('Pas de chef')).toBeInTheDocument()
   })
 
   it('appelle onNavigate au clic sur Itineraire', () => {
@@ -273,8 +273,7 @@ describe('TodayPlanningCard', () => {
     expect(onNavigate).toHaveBeenCalledWith('slot-1')
   })
 
-  it('appelle onCall au clic sur Appeler', () => {
-    const onCall = vi.fn()
+  it('affiche un lien tel pour appeler le chef de chantier', () => {
     const slots = [
       {
         id: 'slot-2',
@@ -282,14 +281,19 @@ describe('TodayPlanningCard', () => {
         endTime: '12:00',
         period: 'morning' as const,
         siteName: 'Test',
+        chefChantier: {
+          id: 'chef-1',
+          prenom: 'Jean',
+          nom: 'Dupont',
+          telephone: '0123456789',
+        },
       },
     ]
 
-    renderWithRouter({ slots, onCall })
+    renderWithRouter({ slots })
 
-    fireEvent.click(screen.getByText('Appeler chef'))
-
-    expect(onCall).toHaveBeenCalledWith('slot-2')
+    const callLink = screen.getByText('Jean Dupont').closest('a')
+    expect(callLink).toHaveAttribute('href', 'tel:0123456789')
   })
 
   it('appelle onChantierClick au clic sur le nom du chantier', () => {

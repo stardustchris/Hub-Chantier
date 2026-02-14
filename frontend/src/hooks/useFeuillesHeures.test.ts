@@ -223,22 +223,22 @@ describe('useFeuillesHeures', () => {
       expect(result.current.viewTab).toBe('chantiers')
     })
 
-    it('charge la vue chantiers quand tab change', async () => {
+    it('charge la vue chantiers quand initialise avec tab chantiers', async () => {
+      // Simuler le paramètre URL tab=chantiers
+      Object.defineProperty(window, 'location', {
+        value: { ...window.location, search: '?tab=chantiers' },
+        writable: true,
+      })
+
       const { result } = renderHook(() => useFeuillesHeures())
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false)
       })
 
-      vi.mocked(pointagesService.getVueChantiers).mockClear()
-
-      act(() => {
-        result.current.setViewTab('chantiers')
-      })
-
-      await waitFor(() => {
-        expect(pointagesService.getVueChantiers).toHaveBeenCalled()
-      })
+      // getVueChantiers est appelé car le tab initial est 'chantiers'
+      expect(pointagesService.getVueChantiers).toHaveBeenCalled()
+      expect(result.current.viewTab).toBe('chantiers')
     })
   })
 

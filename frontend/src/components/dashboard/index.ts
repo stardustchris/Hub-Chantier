@@ -18,3 +18,7 @@ export { default as TeamCard } from './TeamCard'
 export { default as DocumentsCard } from './DocumentsCard'
 export { default as WeatherBulletinPost } from './WeatherBulletinPost'
 export { default as DevisPipelineCard } from './DevisPipelineCard'
+
+// Skeleton components
+export { default as PostSkeleton } from './PostSkeleton'
+export { default as DashboardSkeleton } from './DashboardSkeleton'

@@ -30,6 +30,7 @@ import { ROLES } from '../types'
 import type { UserRole } from '../types'
 import { useNotifications } from '../hooks/useNotifications'
 import NotificationDropdown from './notifications/NotificationDropdown'
+import FloatingActionButton from './common/FloatingActionButton'
 
 interface LayoutProps {
   children: ReactNode
@@ -40,19 +41,21 @@ interface NavItem {
   href: string
   icon: typeof Home
   disabled?: boolean
+  roles?: UserRole[]
   children?: NavItem[]
 }
 
 const navigation: NavItem[] = [
   { name: 'Tableau de bord', href: '/', icon: Home },
   { name: 'Chantiers', href: '/chantiers', icon: Building2 },
-  { name: 'Utilisateurs', href: '/utilisateurs', icon: Users },
+  { name: 'Utilisateurs', href: '/utilisateurs', icon: Users, roles: ['admin', 'conducteur'] },
   { name: 'Planning', href: '/planning', icon: Calendar },
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
   {
     name: 'Finances',
     href: '/finances',
     icon: BarChart3,
+    roles: ['admin', 'conducteur', 'chef_chantier'],
     children: [
       { name: 'Budgets', href: '/budgets', icon: Euro },
       { name: 'Achats', href: '/achats', icon: ShoppingCart },
@@ -64,25 +67,35 @@ const navigation: NavItem[] = [
     name: 'Devis',
     href: '/devis',
     icon: FileText,
+    roles: ['admin', 'conducteur', 'chef_chantier'],
     children: [
       { name: 'Pipeline', href: '/devis/dashboard', icon: PieChart },
       { name: 'Liste devis', href: '/devis', icon: FileText },
       { name: 'Articles', href: '/devis/articles', icon: Package },
     ],
   },
-  { name: 'Formulaires', href: '/formulaires', icon: FileText },
+  { name: 'Formulaires', href: '/formulaires', icon: FileText, roles: ['admin', 'conducteur', 'chef_chantier'] },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
-  { name: 'Logistique', href: '/logistique', icon: Truck },
-  { name: 'Webhooks', href: '/webhooks', icon: Webhook },
+  { name: 'Logistique', href: '/logistique', icon: Truck, roles: ['admin', 'conducteur', 'chef_chantier'] },
+  { name: 'Webhooks', href: '/webhooks', icon: Webhook, roles: ['admin'] },
 ]
 
 // Composant de navigation reutilisable (DRY)
 interface NavLinksProps {
   currentPath: string
   onItemClick?: () => void
+  userRole?: UserRole
 }
 
-function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
+function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
+  // Fonction pour filtrer les items selon le role utilisateur
+  const filterByRole = (item: NavItem): boolean => {
+    // Si pas de roles definis, visible par tous
+    if (!item.roles) return true
+    // Si un role est defini, verifier que l'utilisateur a ce role
+    if (!userRole) return false
+    return item.roles.includes(userRole)
+  }
   // Determine which groups are active based on current path
   const getGroupPaths = (item: NavItem): string[] => {
     const paths = [item.href]
@@ -112,7 +125,7 @@ function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
 
   return (
     <>
-      {navigation.map((item) => {
+      {navigation.filter(filterByRole).map((item) => {
         if (item.children) {
           const groupActive = isGroupActive(item)
           const isParentActive = currentPath === item.href
@@ -136,7 +149,7 @@ function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
                 </Link>
                 <button
                   onClick={() => toggleGroup(item.name)}
-                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+                  className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600"
                   aria-label={isOpen ? 'Replier le sous-menu' : 'Déplier le sous-menu'}
                 >
                   {isOpen ? (
@@ -183,7 +196,7 @@ function NavLinks({ currentPath, onItemClick }: NavLinksProps) {
                 ? 'text-gray-400 cursor-not-allowed'
                 : isActive
                 ? 'bg-primary-50 text-primary-600'
-                : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-800 hover:bg-gray-100'
             }`}
           >
             <item.icon className="w-5 h-5" />
@@ -214,6 +227,14 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Skip link pour accessibilite */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:rounded focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+      >
+        Aller au contenu principal
+      </a>
+
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -235,14 +256,14 @@ export default function Layout({ children }: LayoutProps) {
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100"
             aria-label="Fermer le menu"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <nav className="px-2 py-4 space-y-1 overflow-y-auto flex-1">
-          <NavLinks currentPath={location.pathname} onItemClick={() => setSidebarOpen(false)} />
+        <nav aria-label="Navigation principale" className="px-2 py-4 space-y-1 overflow-y-auto flex-1">
+          <NavLinks currentPath={location.pathname} onItemClick={() => setSidebarOpen(false)} userRole={user?.role} />
         </nav>
       </div>
 
@@ -256,8 +277,8 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            <NavLinks currentPath={location.pathname} />
+          <nav aria-label="Navigation principale" className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <NavLinks currentPath={location.pathname} userRole={user?.role} />
           </nav>
 
           {/* User info */}
@@ -296,7 +317,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="lg:hidden min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100"
               aria-label="Ouvrir le menu"
             >
               <Menu className="w-6 h-6" />
@@ -321,7 +342,7 @@ export default function Layout({ children }: LayoutProps) {
               <div className="relative">
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="p-2 rounded-lg hover:bg-gray-100 relative"
+                  className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100 relative"
                   aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
                   aria-expanded={notificationsOpen}
                 >
@@ -341,7 +362,7 @@ export default function Layout({ children }: LayoutProps) {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100"
+                  className="flex items-center gap-2 min-h-[48px] px-2 rounded-lg hover:bg-gray-100"
                   aria-label="Menu utilisateur"
                   aria-expanded={userMenuOpen}
                 >
@@ -352,7 +373,7 @@ export default function Layout({ children }: LayoutProps) {
                     {user?.prenom?.[0]}
                     {user?.nom?.[0]}
                   </div>
-                  <ChevronDown className="w-4 h-4 text-gray-500 hidden sm:block" />
+                  <ChevronDown className="w-4 h-4 text-gray-600 hidden sm:block" />
                 </button>
 
                 {userMenuOpen && (
@@ -367,7 +388,7 @@ export default function Layout({ children }: LayoutProps) {
                           <p className="text-sm font-medium">
                             {user?.prenom} {user?.nom}
                           </p>
-                          <p className="text-xs text-gray-500">{user?.email}</p>
+                          <p className="text-xs text-gray-600">{user?.email}</p>
                         </div>
                         {user?.role === 'admin' && (
                           <Link
@@ -407,8 +428,11 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        <main id="main-content" className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
+
+      {/* Floating Action Button (mobile uniquement) */}
+      {user && <FloatingActionButton />}
     </div>
   )
 }

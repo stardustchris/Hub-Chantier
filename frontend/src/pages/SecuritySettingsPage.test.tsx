@@ -2,45 +2,48 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { SecuritySettingsPage } from './SecuritySettingsPage'
-import { AuthContext } from '../contexts/AuthContext'
-import { ToastContext } from '../contexts/ToastContext'
-import { api } from '../services/api'
+
+// Mock user and toast
+const mockUser = {
+  id: 1,
+  email: 'test@example.com',
+  prenom: 'Test',
+  nom: 'User',
+  role: 'admin',
+  is_active: true,
+  created_at: '2026-01-01T00:00:00Z',
+}
+
+const mockShowToast = vi.fn()
+
+// Mock useAuth
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: mockUser,
+    login: vi.fn(),
+    logout: vi.fn(),
+    isLoading: false,
+  }),
+}))
+
+// Mock useToast
+vi.mock('../contexts/ToastContext', () => ({
+  useToast: () => ({
+    showToast: mockShowToast,
+  }),
+}))
 
 // Mock API
+const mockApiPost = vi.fn()
 vi.mock('../services/api', () => ({
-  api: {
-    post: vi.fn(),
+  default: {
+    post: (...args: unknown[]) => mockApiPost(...args),
   },
 }))
 
 describe('SecuritySettingsPage', () => {
-  const mockUser = {
-    id: 1,
-    email: 'test@example.com',
-    prenom: 'Test',
-    nom: 'User',
-    role: 'admin',
-    is_active: true,
-    created_at: '2026-01-01T00:00:00Z',
-  }
-
-  const mockShowToast = vi.fn()
-
   const renderWithContext = () => {
-    return render(
-      <AuthContext.Provider
-        value={{
-          user: mockUser,
-          login: vi.fn(),
-          logout: vi.fn(),
-          isLoading: false,
-        }}
-      >
-        <ToastContext.Provider value={{ showToast: mockShowToast }}>
-          <SecuritySettingsPage />
-        </ToastContext.Provider>
-      </AuthContext.Provider>
-    )
+    return render(<SecuritySettingsPage />)
   }
 
   beforeEach(() => {
@@ -74,9 +77,9 @@ describe('SecuritySettingsPage', () => {
   it('should validate password matching', async () => {
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText(/ancien mot de passe/i)
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirmer/i)
+    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
+    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -93,9 +96,9 @@ describe('SecuritySettingsPage', () => {
   it('should validate password strength', async () => {
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText(/ancien mot de passe/i)
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirmer/i)
+    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
+    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'weak' } })
@@ -112,28 +115,28 @@ describe('SecuritySettingsPage', () => {
   it('should display password strength indicator', () => {
     renderWithContext()
 
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i)
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
 
-    // Mot de passe faible
-    fireEvent.change(newPasswordInput, { target: { value: 'Weak1!' } })
+    // Mot de passe faible (8 caractères, seulement minuscules = strength 2)
+    fireEvent.change(newPasswordInput, { target: { value: 'weakpass' } })
     expect(screen.getByText('Faible')).toBeInTheDocument()
 
-    // Mot de passe moyen
-    fireEvent.change(newPasswordInput, { target: { value: 'Medium123!' } })
+    // Mot de passe moyen (8 caractères avec 4 critères: >=8, minuscules, majuscule, chiffre)
+    fireEvent.change(newPasswordInput, { target: { value: 'Medium123' } })
     expect(screen.getByText('Moyen')).toBeInTheDocument()
 
-    // Mot de passe fort
+    // Mot de passe fort (12+ caractères avec tous les critères)
     fireEvent.change(newPasswordInput, { target: { value: 'VerySecurePassword123!' } })
     expect(screen.getByText('Fort')).toBeInTheDocument()
   })
 
   it('should submit password change successfully', async () => {
-    vi.mocked(api.post).mockResolvedValue({ data: {} })
+    mockApiPost.mockResolvedValue({ data: {} })
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText(/ancien mot de passe/i)
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirmer/i)
+    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
+    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -143,7 +146,7 @@ describe('SecuritySettingsPage', () => {
     fireEvent.click(submitButton)
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/auth/change-password', {
+      expect(mockApiPost).toHaveBeenCalledWith('/auth/change-password', {
         old_password: 'OldPassword123!',
         new_password: 'NewPassword123!',
       })
@@ -155,7 +158,7 @@ describe('SecuritySettingsPage', () => {
   })
 
   it('should handle incorrect old password error', async () => {
-    vi.mocked(api.post).mockRejectedValue({
+    mockApiPost.mockRejectedValue({
       response: {
         status: 400,
       },
@@ -163,9 +166,9 @@ describe('SecuritySettingsPage', () => {
 
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText(/ancien mot de passe/i)
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirmer/i)
+    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
+    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
 
     fireEvent.change(oldPasswordInput, { target: { value: 'WrongPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -180,12 +183,12 @@ describe('SecuritySettingsPage', () => {
   })
 
   it('should clear form after successful password change', async () => {
-    vi.mocked(api.post).mockResolvedValue({ data: {} })
+    mockApiPost.mockResolvedValue({ data: {} })
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText(/ancien mot de passe/i) as HTMLInputElement
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i) as HTMLInputElement
-    const confirmPasswordInput = screen.getByLabelText(/confirmer/i) as HTMLInputElement
+    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe') as HTMLInputElement
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe') as HTMLInputElement
+    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe') as HTMLInputElement
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -213,9 +216,9 @@ describe('SecuritySettingsPage', () => {
   it('should prevent same old and new password', async () => {
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText(/ancien mot de passe/i)
-    const newPasswordInput = screen.getByLabelText(/nouveau mot de passe/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirmer/i)
+    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
+    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
+    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
 
     const samePassword = 'SamePassword123!'
     fireEvent.change(oldPasswordInput, { target: { value: samePassword } })

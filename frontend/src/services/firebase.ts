@@ -16,8 +16,11 @@
  * VITE_FIREBASE_VAPID_KEY=xxx (pour Web Push)
  */
 
-import { initializeApp, FirebaseApp } from 'firebase/app'
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging'
+/**
+ * Phase 2 Performance: Firebase lazy loaded (350KB+ chargé uniquement si utilisé)
+ */
+import type { FirebaseApp } from 'firebase/app'
+import type { Messaging } from 'firebase/messaging'
 import { logger } from './logger'
 
 // Configuration Firebase depuis les variables d'environnement
@@ -48,9 +51,10 @@ export const isFirebaseConfigured = (): boolean => {
 }
 
 /**
- * Initialise Firebase.
+ * Initialise Firebase avec lazy loading.
+ * Charge firebase/app uniquement quand appelé (économise ~350KB au chargement initial)
  */
-export const initFirebase = (): FirebaseApp | null => {
+export const initFirebase = async (): Promise<FirebaseApp | null> => {
   if (app) return app
 
   if (!isFirebaseConfigured()) {
@@ -64,9 +68,11 @@ export const initFirebase = (): FirebaseApp | null => {
   }
 
   try {
+    // Lazy load firebase/app
+    const { initializeApp } = await import('firebase/app')
     app = initializeApp(firebaseConfig)
     if (import.meta.env.DEV) {
-      logger.info('Firebase initialisé')
+      logger.info('Firebase initialisé (lazy loaded)')
     }
     return app
   } catch (error) {
@@ -78,15 +84,17 @@ export const initFirebase = (): FirebaseApp | null => {
 }
 
 /**
- * Récupère l'instance Messaging.
+ * Récupère l'instance Messaging avec lazy loading.
  */
-export const getFirebaseMessaging = (): Messaging | null => {
+export const getFirebaseMessaging = async (): Promise<Messaging | null> => {
   if (messaging) return messaging
 
-  const firebaseApp = initFirebase()
+  const firebaseApp = await initFirebase()
   if (!firebaseApp) return null
 
   try {
+    // Lazy load firebase/messaging
+    const { getMessaging } = await import('firebase/messaging')
     messaging = getMessaging(firebaseApp)
     return messaging
   } catch (error) {
@@ -98,7 +106,7 @@ export const getFirebaseMessaging = (): Messaging | null => {
 }
 
 /**
- * Demande la permission et récupère le token FCM.
+ * Demande la permission et récupère le token FCM avec lazy loading.
  *
  * @returns Token FCM ou null si refusé/erreur
  */
@@ -121,7 +129,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
   }
 
   // Récupérer le token
-  const msg = getFirebaseMessaging()
+  const msg = await getFirebaseMessaging()
   if (!msg) {
     if (import.meta.env.DEV) {
       logger.warn('Firebase Messaging non disponible')
@@ -130,6 +138,8 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
   }
 
   try {
+    // Lazy load getToken
+    const { getToken } = await import('firebase/messaging')
     const token = await getToken(msg, {
       vapidKey: VAPID_KEY,
     })
@@ -154,21 +164,23 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
 }
 
 /**
- * Écoute les messages en foreground.
+ * Écoute les messages en foreground avec lazy loading.
  *
  * @param callback Fonction appelée quand un message arrive
- * @returns Fonction de nettoyage
+ * @returns Fonction de nettoyage ou null
  */
-export const onForegroundMessage = (
+export const onForegroundMessage = async (
   callback: (payload: {
     title?: string
     body?: string
     data?: Record<string, string>
   }) => void
-): (() => void) | null => {
-  const msg = getFirebaseMessaging()
+): Promise<(() => void) | null> => {
+  const msg = await getFirebaseMessaging()
   if (!msg) return null
 
+  // Lazy load onMessage
+  const { onMessage } = await import('firebase/messaging')
   return onMessage(msg, (payload) => {
     if (import.meta.env.DEV) {
       logger.info('Message reçu (foreground):', payload)
