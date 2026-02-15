@@ -63,3 +63,5 @@ export type { UseKeyboardShortcutsOptions, UseKeyboardShortcutsReturn } from './
 
 export { usePointageStreak } from './usePointageStreak'
 export type { UsePointageStreakReturn } from './usePointageStreak'
+
+export { useProgressiveHint } from './useProgressiveHint'

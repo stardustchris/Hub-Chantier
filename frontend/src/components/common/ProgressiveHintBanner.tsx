@@ -21,11 +21,15 @@ export default function ProgressiveHintBanner({ pageId, message, className = '' 
   const { shouldShowHint, recordVisit } = useProgressiveHint()
   const [isVisible, setIsVisible] = useState(false)
 
-  // Enregistrer la visite et déterminer si le hint doit être affiché
+  // Enregistrer la visite au montage (une seule fois par pageId)
   useEffect(() => {
     recordVisit(pageId)
+  }, [pageId, recordVisit])
+
+  // Mettre à jour la visibilité quand shouldShowHint change
+  useEffect(() => {
     setIsVisible(shouldShowHint(pageId))
-  }, [pageId, recordVisit, shouldShowHint])
+  }, [pageId, shouldShowHint])
 
   // Ne rien afficher si le hint ne doit pas être visible
   if (!isVisible) {

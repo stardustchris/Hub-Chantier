@@ -4,7 +4,7 @@
  * Stockage dans localStorage pour persister entre les sessions
  */
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 const STORAGE_KEY = 'hub_page_visits'
 const MAX_HINT_VISITS = 3
@@ -26,7 +26,7 @@ export function useProgressiveHint() {
   /**
    * Enregistre une visite pour la page courante
    */
-  const recordVisit = (page: string) => {
+  const recordVisit = useCallback((page: string) => {
     setPageVisits((prev) => {
       const newVisits = {
         ...prev,
@@ -39,29 +39,29 @@ export function useProgressiveHint() {
       }
       return newVisits
     })
-  }
+  }, [])
 
   /**
    * Détermine si le hint doit être affiché pour une page
    * @param page - Nom de la page (généralement le pathname)
-   * @returns true si le hint doit être affiché (visites <= 3)
+   * @returns true si le hint doit être affiché (visites < 3)
    */
-  const shouldShowHint = (page: string): boolean => {
+  const shouldShowHint = useCallback((page: string): boolean => {
     const visits = pageVisits[page] || 0
-    return visits <= MAX_HINT_VISITS
-  }
+    return visits < MAX_HINT_VISITS
+  }, [pageVisits])
 
   /**
    * Obtient le nombre de visites pour une page
    */
-  const getVisitCount = (page: string): number => {
+  const getVisitCount = useCallback((page: string): number => {
     return pageVisits[page] || 0
-  }
+  }, [pageVisits])
 
   /**
    * Réinitialise les visites pour une page (utile pour debug/tests)
    */
-  const resetVisits = (page?: string) => {
+  const resetVisits = useCallback((page?: string) => {
     if (page) {
       setPageVisits((prev) => {
         const newVisits = { ...prev }
@@ -74,7 +74,6 @@ export function useProgressiveHint() {
         return newVisits
       })
     } else {
-      // Réinitialiser toutes les visites
       setPageVisits({})
       try {
         localStorage.removeItem(STORAGE_KEY)
@@ -82,7 +81,7 @@ export function useProgressiveHint() {
         console.warn('Failed to remove page visits from localStorage:', error)
       }
     }
-  }
+  }, [])
 
   return {
     recordVisit,
