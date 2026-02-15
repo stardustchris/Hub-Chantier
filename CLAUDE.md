@@ -240,4 +240,12 @@ Task(subagent_type="general-purpose",
 
 ## Blocages / Questions en suspens
 
-(Aucun pour l'instant)
+### Sous-agents background INTERDITS (bug confirme)
+
+Les agents lances avec `run_in_background: true` **plantent systematiquement** dans cet environnement.
+Les fichiers de sortie (`/tmp/claude-0/.../tasks/*.output`) restent vides (0 bytes).
+
+**Regle absolue :**
+- **JAMAIS** de `run_in_background: true` sur les Task agents
+- Les 4 validations (architect-reviewer, code-reviewer, security-auditor, test-automator) se font **directement** avec Grep/Read dans le contexte principal
+- Les agents foreground (synchrones) fonctionnent normalement si necessaire
