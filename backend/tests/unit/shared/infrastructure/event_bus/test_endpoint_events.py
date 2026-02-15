@@ -250,7 +250,7 @@ async def test_create_chantier_publishes_event():
     )
 
     # Need to mock get_current_user to provide user data
-    with patch('modules.chantiers.infrastructure.web.chantier_routes._transform_chantier_response') as mock_transform:
+    with patch('modules.chantiers.infrastructure.web.chantier_routes.transform_chantier_response') as mock_transform:
         mock_transform.return_value = {"id": "50", "nom": "Nouveau Chantier"}
 
         result = await create_chantier(

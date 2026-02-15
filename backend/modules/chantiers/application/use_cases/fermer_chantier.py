@@ -1,9 +1,9 @@
 """Use Case FermerChantier - Fermeture d'un chantier avec vérifications."""
 
 import logging
-from typing import Optional
+from typing import Optional, List
 
-from ...adapters.controllers import ChantierController
+from ..dtos import ChantierDTO
 from shared.application.ports.chantier_cloture_check_port import ChantierClotureCheckPort
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,14 @@ class FermetureForceeNonAutoriseeError(Exception):
         super().__init__(self.message)
 
 
+class FermerChantierResult:
+    """Résultat de la fermeture d'un chantier."""
+
+    def __init__(self, chantier: ChantierDTO, avertissements: Optional[List[str]] = None) -> None:
+        self.chantier = chantier
+        self.avertissements = avertissements or []
+
+
 class FermerChantierUseCase:
     """
     Cas d'utilisation : Fermeture d'un chantier.
@@ -37,25 +45,14 @@ class FermerChantierUseCase:
     - Avenants en brouillon (avertissement non bloquant)
 
     Le paramètre force=True (admin uniquement) permet de bypasser les vérifications.
-
-    Attributes:
-        controller: Controller pour les opérations chantier.
-        cloture_check: Port pour vérifier les pré-requis de clôture (optionnel).
     """
 
     def __init__(
         self,
-        controller: ChantierController,
+        change_statut_use_case: "ChangeStatutUseCase",
         cloture_check: Optional[ChantierClotureCheckPort] = None,
     ) -> None:
-        """
-        Initialise le use case.
-
-        Args:
-            controller: Controller des chantiers.
-            cloture_check: Port de vérification clôture (optionnel, graceful degradation).
-        """
-        self.controller = controller
+        self.change_statut_use_case = change_statut_use_case
         self.cloture_check = cloture_check
 
     def execute(
@@ -64,30 +61,20 @@ class FermerChantierUseCase:
         force: bool,
         role: str,
         user_id: int,
-    ) -> dict:
+    ) -> FermerChantierResult:
         """
         Exécute la fermeture du chantier.
 
-        Args:
-            chantier_id: ID du chantier à fermer.
-            force: Si True, ignore les vérifications de pré-requis (admin uniquement).
-            role: Rôle de l'utilisateur connecté.
-            user_id: ID de l'utilisateur connecté.
-
         Returns:
-            dict: Chantier fermé avec avertissements éventuels.
+            FermerChantierResult contenant le ChantierDTO et les avertissements.
 
         Raises:
             FermetureForceeNonAutoriseeError: Si force=True sans rôle admin.
             PrerequisClotureNonRemplisError: Si pré-requis non remplis et force=False.
-            ChantierNotFoundError: Si le chantier n'existe pas.
-            TransitionNonAutoriseeError: Si la transition n'est pas permise.
         """
-        # Finding #1: Restreindre force=True au rôle admin
         if force and role != "admin":
             raise FermetureForceeNonAutoriseeError()
 
-        # Finding #4: Log quand force est utilisé
         if force:
             logger.warning(
                 "Fermeture forcée du chantier",
@@ -98,8 +85,7 @@ class FermerChantierUseCase:
                 },
             )
 
-        # Vérification des pré-requis financiers (mode dégradé si indisponible)
-        avertissements = []
+        avertissements: List[str] = []
 
         if not force and self.cloture_check is not None:
             check_result = self.cloture_check.verifier_prerequis_cloture(chantier_id)
@@ -110,16 +96,13 @@ class FermerChantierUseCase:
                 )
             avertissements = check_result.avertissements
 
-        # Fermer le chantier
-        result = self.controller.fermer(chantier_id)
+        dto = self.change_statut_use_case.fermer(chantier_id)
 
-        # Inclure les avertissements si présents
         if avertissements:
             logger.info(
                 "Chantier %d fermé avec avertissements: %s",
                 chantier_id,
                 avertissements,
             )
-            result["avertissements"] = avertissements
 
-        return result
+        return FermerChantierResult(chantier=dto, avertissements=avertissements)

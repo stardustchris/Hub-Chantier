@@ -150,12 +150,12 @@ def get_cloture_check_port(
 
 
 def get_fermer_chantier_use_case(
-    controller: ChantierController = Depends(get_chantier_controller),
+    change_statut_use_case: ChangeStatutUseCase = Depends(get_change_statut_use_case),
     cloture_check: Optional[ChantierClotureCheckPort] = Depends(get_cloture_check_port),
 ) -> FermerChantierUseCase:
     """Retourne le use case de fermeture de chantier."""
     return FermerChantierUseCase(
-        controller=controller,
+        change_statut_use_case=change_statut_use_case,
         cloture_check=cloture_check,
     )
 

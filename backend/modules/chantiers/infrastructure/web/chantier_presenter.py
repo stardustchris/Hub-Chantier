@@ -1,8 +1,42 @@
 """Presenter pour transformer les entités Chantier en réponses API."""
 
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from .chantier_schemas import ChantierResponse, ContactResponse, UserPublicSummary
+
+
+def chantier_dto_to_dict(dto: "ChantierDTO") -> Dict[str, Any]:
+    """Convertit un ChantierDTO en dictionnaire pour le presenter."""
+    contacts = []
+    if hasattr(dto, "contacts") and dto.contacts:
+        contacts = [
+            {"nom": c.nom, "profession": c.profession, "telephone": c.telephone}
+            for c in dto.contacts
+        ]
+
+    return {
+        "id": dto.id,
+        "code": dto.code,
+        "nom": dto.nom,
+        "adresse": dto.adresse,
+        "statut": dto.statut,
+        "couleur": dto.couleur,
+        "coordonnees_gps": dto.coordonnees_gps,
+        "contact": dto.contact,
+        "contacts": contacts,
+        "maitre_ouvrage": dto.maitre_ouvrage,
+        "heures_estimees": dto.heures_estimees,
+        "date_debut": dto.date_debut,
+        "date_fin": dto.date_fin,
+        "description": dto.description,
+        "conducteur_ids": dto.conducteur_ids,
+        "chef_chantier_ids": dto.chef_chantier_ids,
+        "type_travaux": dto.type_travaux,
+        "batiment_plus_2ans": dto.batiment_plus_2ans,
+        "usage_habitation": dto.usage_habitation,
+        "created_at": dto.created_at.isoformat() if dto.created_at else None,
+        "updated_at": dto.updated_at.isoformat() if dto.updated_at else None,
+    }
 
 
 def get_user_summary(

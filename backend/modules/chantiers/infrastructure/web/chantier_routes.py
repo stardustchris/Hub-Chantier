@@ -22,14 +22,14 @@ from ...application.use_cases import (
 )
 from ...domain.events.chantier_created import ChantierCreatedEvent
 from .dependencies import get_chantier_controller, get_chantier_repository, get_user_repository, get_fermer_chantier_use_case
-from .chantier_presenter import transform_chantier_response, get_user_summary
+from .chantier_presenter import transform_chantier_response, chantier_dto_to_dict
 from .chantier_schemas import (
     CoordonneesGPSResponse, ContactResponse, ContactRequest,
     ContactChantierResponse, ContactChantierCreate, ContactChantierUpdate,
     PhaseChantierResponse, PhaseChantierCreate, PhaseChantierUpdate,
     CreateChantierRequest, UpdateChantierRequest,
     ChangeStatutRequest, AssignResponsableRequest,
-    UserPublicSummary, UserSummary,
+    UserPublicSummary,
     ChantierResponse, ChantierListResponse, DeleteResponse,
 )
 from shared.infrastructure.web import (
@@ -527,7 +527,8 @@ def fermer_chantier(
             role=_role,
             user_id=current_user_id,
         )
-        return transform_chantier_response(result, use_case.controller, user_repo)
+        chantier_dict = chantier_dto_to_dict(result.chantier)
+        return transform_chantier_response(chantier_dict, None, user_repo)
     except FermetureForceeNonAutoriseeError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

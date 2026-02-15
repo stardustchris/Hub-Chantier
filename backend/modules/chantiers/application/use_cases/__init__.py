@@ -17,6 +17,7 @@ from .change_statut import (
 from .assign_responsable import AssignResponsableUseCase, InvalidRoleTypeError
 from .fermer_chantier import (
     FermerChantierUseCase,
+    FermerChantierResult,
     PrerequisClotureNonRemplisError,
     FermetureForceeNonAutoriseeError,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "ChangeStatutUseCase",
     "AssignResponsableUseCase",
     "FermerChantierUseCase",
+    "FermerChantierResult",
     # Exceptions
     "CodeChantierAlreadyExistsError",
     "InvalidDatesError",
