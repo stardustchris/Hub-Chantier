@@ -13,6 +13,13 @@ interface TimesheetGridProps {
   onPointageClick: (pointage: Pointage) => void
   showWeekend?: boolean
   canEdit?: boolean
+  // Batch selection
+  enableBatchSelect?: boolean
+  selectedPointageIds?: Set<number>
+  onTogglePointage?: (id: number) => void
+  onSelectAll?: () => void
+  onDeselectAll?: () => void
+  selectablePointageIds?: number[]
 }
 
 export default function TimesheetGrid({
@@ -22,8 +29,20 @@ export default function TimesheetGrid({
   onPointageClick,
   showWeekend = false,
   canEdit = false,
+  enableBatchSelect = false,
+  selectedPointageIds = new Set(),
+  onTogglePointage,
+  onSelectAll,
+  onDeselectAll,
+  selectablePointageIds = [],
 }: TimesheetGridProps) {
   const navigate = useNavigate()
+
+  // Vérifier si tous les pointages sélectionnables sont sélectionnés
+  const allSelected = useMemo(() => {
+    return selectablePointageIds.length > 0 &&
+      selectablePointageIds.every((id) => selectedPointageIds.has(id))
+  }, [selectablePointageIds, selectedPointageIds])
 
   // Calculer les jours de la semaine
   const jours = useMemo(() => {
@@ -71,15 +90,32 @@ export default function TimesheetGrid({
 
     if (pointage) {
       const isEditable = pointage.is_editable !== false && canEdit
+      const isSelectable = enableBatchSelect && pointage.statut === 'soumis'
+      const isSelected = selectedPointageIds.has(pointage.id)
+
       return (
         <td
           key={jour.dateStr}
-          className={`border px-2 py-1 text-center ${
+          className={`border px-2 py-1 text-center relative ${
             jour.isToday ? 'bg-primary-50' : ''
-          } ${isEditable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+          } ${isSelected ? 'bg-primary-100' : ''} ${isEditable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
           onClick={() => isEditable && onPointageClick(pointage)}
         >
           <div className="flex flex-col items-center gap-1">
+            {/* Checkbox pour sélection */}
+            {isSelectable && onTogglePointage && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onTogglePointage(pointage.id)
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-1 left-1 w-5 h-5 min-w-[20px] min-h-[20px] rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                aria-label={`Sélectionner le pointage du ${jour.label}`}
+              />
+            )}
             <span className="font-medium text-gray-900">
               {pointage.total_heures || '00:00'}
             </span>
@@ -116,6 +152,9 @@ export default function TimesheetGrid({
 
     return (
       <tr className="bg-gray-50/50">
+        {enableBatchSelect && selectablePointageIds.length > 0 && (
+          <td className="border" />
+        )}
         <td className="border px-3 py-2 text-sm text-gray-500 italic">
           <button
             onClick={() => onCellClick(utilisateurId, null, jours[0].date)}
@@ -154,6 +193,24 @@ export default function TimesheetGrid({
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-100">
+              {enableBatchSelect && selectablePointageIds.length > 0 && (
+                <th className="border px-3 py-2 text-center w-12">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={() => {
+                      if (allSelected && onDeselectAll) {
+                        onDeselectAll()
+                      } else if (onSelectAll) {
+                        onSelectAll()
+                      }
+                    }}
+                    className="w-5 h-5 min-w-[20px] min-h-[20px] rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                    aria-label="Tout sélectionner"
+                    title={allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  />
+                </th>
+              )}
               <th className="border px-3 py-2 text-left text-sm font-medium text-gray-700 w-48">
                 Chantier
               </th>
@@ -177,6 +234,9 @@ export default function TimesheetGrid({
               <>
                 {/* Ligne d'en-tete utilisateur */}
                 <tr key={`user-${compagnon.utilisateur_id}`} className="bg-gray-50">
+                  {enableBatchSelect && selectablePointageIds.length > 0 && (
+                    <td className="border" />
+                  )}
                   <td
                     colSpan={jours.length + 2}
                     className="border px-3 py-2 font-medium text-gray-900"
@@ -198,6 +258,9 @@ export default function TimesheetGrid({
                 {/* Lignes par chantier */}
                 {compagnon.chantiers.map((chantier) => (
                   <tr key={`${compagnon.utilisateur_id}-${chantier.chantier_id}`}>
+                    {enableBatchSelect && selectablePointageIds.length > 0 && (
+                      <td className="border" />
+                    )}
                     <td
                       className="border px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => navigate(`/chantiers/${chantier.chantier_id}`)}
@@ -233,6 +296,9 @@ export default function TimesheetGrid({
 
                 {/* Ligne totaux par jour pour l'utilisateur */}
                 <tr className="bg-gray-100">
+                  {enableBatchSelect && selectablePointageIds.length > 0 && (
+                    <td className="border" />
+                  )}
                   <td className="border px-3 py-2 text-sm font-medium text-gray-700">
                     Total journalier
                   </td>

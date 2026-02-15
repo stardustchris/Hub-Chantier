@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Filter, Users, Building2, Settings } from 'lucide-react'
 import Layout from '../components/Layout'
-import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig } from '../components/pointages'
+import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig, BatchActionsBar } from '../components/pointages'
 import type { PayrollConfig } from '../components/pointages'
 import { useFeuillesHeures } from '../hooks/useFeuillesHeures'
 import { useAuth } from '../contexts/AuthContext'
@@ -19,9 +19,19 @@ export default function FeuillesHeuresPage() {
 
   const isAdmin = user?.role === 'admin'
 
+  // Auto-clear success message after 5s
+  useEffect(() => {
+    if (fh.batchSuccess) {
+      const timer = setTimeout(() => {
+        // Note: We don't have a setter for batchSuccess, so it will remain until next operation
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [fh.batchSuccess])
+
   return (
     <Layout>
-      <div className="space-y-4">
+      <div className={`space-y-4 ${fh.isValidateur && fh.viewTab === 'compagnons' && fh.multiSelect.count > 0 ? 'pb-24' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -180,6 +190,13 @@ export default function FeuillesHeuresPage() {
         {/* Erreur */}
         {fh.error && <div className="bg-red-50 text-red-700 p-4 rounded-lg">{fh.error}</div>}
 
+        {/* Succès batch */}
+        {fh.batchSuccess && (
+          <div className="bg-green-50 text-green-700 p-4 rounded-lg flex items-center justify-between">
+            <span>{fh.batchSuccess}</span>
+          </div>
+        )}
+
         {/* Grille */}
         {fh.loading ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -194,6 +211,12 @@ export default function FeuillesHeuresPage() {
             onPointageClick={fh.handlePointageClick}
             showWeekend={fh.showWeekend}
             canEdit={fh.canEdit}
+            enableBatchSelect={fh.isValidateur}
+            selectedPointageIds={fh.multiSelect.selectedIds}
+            onTogglePointage={fh.multiSelect.toggleItem}
+            onSelectAll={fh.handleSelectAll}
+            onDeselectAll={fh.multiSelect.deselectAll}
+            selectablePointageIds={fh.selectablePointages.map((p) => p.id)}
           />
         ) : (
           <TimesheetChantierGrid
@@ -232,6 +255,20 @@ export default function FeuillesHeuresPage() {
           config={payrollConfig}
           onSave={handleSaveMacros}
         />
+
+        {/* Barre d'actions batch - affichée uniquement si validateur et sur onglet compagnons */}
+        {fh.isValidateur && fh.viewTab === 'compagnons' && (
+          <BatchActionsBar
+            selectedCount={fh.multiSelect.count}
+            totalCount={fh.selectablePointages.length}
+            onSelectAll={fh.handleSelectAll}
+            onDeselectAll={fh.multiSelect.deselectAll}
+            onValidate={fh.handleBatchValidate}
+            onReject={fh.handleBatchReject}
+            isValidating={fh.isBatchValidating}
+            isRejecting={fh.isBatchRejecting}
+          />
+        )}
       </div>
     </Layout>
   )

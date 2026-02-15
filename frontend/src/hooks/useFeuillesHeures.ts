@@ -5,6 +5,7 @@ import { usersService } from '../services/users'
 import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
 import { useAuth } from '../contexts/AuthContext'
+import { useMultiSelect } from './useMultiSelect'
 import type { Pointage, PointageCreate, PointageUpdate, User, Chantier, VueCompagnon, VueChantier } from '../types'
 
 export type ViewTab = 'compagnons' | 'chantiers'
@@ -36,6 +37,12 @@ export function useFeuillesHeures() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isExporting, setIsExporting] = useState(false)
+  const [isBatchValidating, setIsBatchValidating] = useState(false)
+  const [isBatchRejecting, setIsBatchRejecting] = useState(false)
+  const [batchSuccess, setBatchSuccess] = useState<string>('')
+
+  // Multi-select pour validation batch
+  const multiSelect = useMultiSelect<number>()
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false)
@@ -283,6 +290,108 @@ export function useFeuillesHeures() {
     setModalOpen(false)
   }, [])
 
+  // Récupérer tous les pointages sélectionnables (statut 'soumis')
+  const selectablePointages = useMemo(() => {
+    const pointages: Pointage[] = []
+    if (viewTab === 'compagnons') {
+      vueCompagnons.forEach((vue) => {
+        vue.chantiers.forEach((chantier) => {
+          Object.values(chantier.pointages_par_jour).forEach((pointagesJour) => {
+            pointagesJour.forEach((p) => {
+              if (p.statut === 'soumis') {
+                pointages.push(p)
+              }
+            })
+          })
+        })
+      })
+    }
+    return pointages
+  }, [vueCompagnons, viewTab])
+
+  // Handler validation batch
+  const handleBatchValidate = useCallback(async () => {
+    if (!currentUser || multiSelect.count === 0) return
+
+    setIsBatchValidating(true)
+    setBatchSuccess('')
+    setError('')
+
+    try {
+      const result = await pointagesService.validateBatch(
+        multiSelect.selectedArray,
+        Number(currentUser.id)
+      )
+
+      if (result.failed.length === 0) {
+        setBatchSuccess(`${result.success.length} pointage${result.success.length > 1 ? 's validés' : ' validé'}`)
+      } else {
+        setBatchSuccess(
+          `${result.success.length} validé${result.success.length > 1 ? 's' : ''}, ${result.failed.length} échoué${result.failed.length > 1 ? 's' : ''}`
+        )
+        if (result.success.length === 0) {
+          setError('Aucun pointage n\'a pu être validé')
+        }
+      }
+
+      multiSelect.deselectAll()
+      await loadData()
+    } catch (err) {
+      logger.error('Erreur validation batch', err, { context: 'FeuillesHeuresPage' })
+      setError('Erreur lors de la validation en lot')
+    } finally {
+      setIsBatchValidating(false)
+    }
+  }, [currentUser, multiSelect, loadData])
+
+  // Handler rejet batch
+  const handleBatchReject = useCallback(async () => {
+    if (!currentUser || multiSelect.count === 0) return
+
+    // Demander le motif de rejet
+    const motif = prompt('Motif du rejet (requis):')
+    if (!motif || motif.trim() === '') {
+      return // Annulé ou motif vide
+    }
+
+    setIsBatchRejecting(true)
+    setBatchSuccess('')
+    setError('')
+
+    try {
+      const result = await pointagesService.rejectBatch(
+        multiSelect.selectedArray,
+        motif.trim(),
+        Number(currentUser.id)
+      )
+
+      if (result.failed.length === 0) {
+        setBatchSuccess(`${result.success.length} pointage${result.success.length > 1 ? 's rejetés' : ' rejeté'}`)
+      } else {
+        setBatchSuccess(
+          `${result.success.length} rejeté${result.success.length > 1 ? 's' : ''}, ${result.failed.length} échoué${result.failed.length > 1 ? 's' : ''}`
+        )
+        if (result.success.length === 0) {
+          setError('Aucun pointage n\'a pu être rejeté')
+        }
+      }
+
+      multiSelect.deselectAll()
+      await loadData()
+    } catch (err) {
+      logger.error('Erreur rejet batch', err, { context: 'FeuillesHeuresPage' })
+      setError('Erreur lors du rejet en lot')
+    } finally {
+      setIsBatchRejecting(false)
+    }
+  }, [currentUser, multiSelect, loadData])
+
+  // Sélectionner tous les pointages sélectionnables
+  const handleSelectAll = useCallback(() => {
+    const ids = selectablePointages.map((p) => p.id)
+    multiSelect.selectAll(ids)
+  }, [selectablePointages, multiSelect])
+
   return {
     // State
     canEdit,
@@ -301,6 +410,9 @@ export function useFeuillesHeures() {
     filterUtilisateurs,
     filterChantiers,
     showWeekend,
+    isBatchValidating,
+    isBatchRejecting,
+    batchSuccess,
 
     // Data
     vueCompagnons,
@@ -308,6 +420,10 @@ export function useFeuillesHeures() {
     utilisateurs,
     chantiers,
     heuresPrevuesParChantier,
+    selectablePointages,
+
+    // Multi-select
+    multiSelect,
 
     // Setters
     setCurrentDate,
@@ -331,5 +447,8 @@ export function useFeuillesHeures() {
     clearFilterUtilisateurs,
     clearFilterChantiers,
     closeModal,
+    handleBatchValidate,
+    handleBatchReject,
+    handleSelectAll,
   }
 }

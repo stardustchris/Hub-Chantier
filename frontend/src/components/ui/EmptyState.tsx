@@ -26,13 +26,13 @@ export default function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center text-center py-12 ${className}`}>
       {/* Icône */}
-      <Icon className="w-12 h-12 text-gray-500 mb-4" aria-hidden="true" />
+      <Icon className="w-12 h-12 text-neutral-text-muted mb-4" aria-hidden="true" />
 
       {/* Titre */}
-      <h3 className="text-gray-600 font-medium text-lg mb-1">{title}</h3>
+      <h3 className="text-neutral-text-secondary font-medium text-lg mb-1">{title}</h3>
 
       {/* Description optionnelle */}
-      {description && <p className="text-gray-500 text-sm mb-4 max-w-md">{description}</p>}
+      {description && <p className="text-neutral-text-muted text-sm mb-4 max-w-md">{description}</p>}
 
       {/* Bouton d'action optionnel */}
       {actionLabel && onAction && (

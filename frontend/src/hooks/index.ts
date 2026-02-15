@@ -42,3 +42,5 @@ export type { TeamMember, UseTodayTeamReturn } from './useTodayTeam'
 
 export { useWeather } from './useWeather'
 export type { UseWeatherReturn, WeatherData, WeatherAlert } from './useWeather'
+
+export { useMultiSelect } from './useMultiSelect'

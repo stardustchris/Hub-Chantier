@@ -1,3 +1,5 @@
+import { colors } from './src/theme/tokens.ts'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,8 +9,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Couleurs Greg Constructions
+        // Couleurs sémantiques (depuis tokens.ts)
+        ...colors,
+
+        // Palette Tailwind numérique + tokens sémantiques (fusionnés)
+        // Supporte bg-primary-600 (numérique) ET bg-primary / hover:bg-primary-hover (sémantique)
         primary: {
+          ...colors.primary,
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
@@ -21,6 +28,7 @@ export default {
           900: '#1e3a8a',
         },
         secondary: {
+          ...colors.secondary,
           50: '#fef3c7',
           100: '#fde68a',
           200: '#fcd34d',
@@ -31,29 +39,6 @@ export default {
           700: '#92400e',
           800: '#78350f',
           900: '#451a03',
-        },
-        // Statuts chantier
-        chantier: {
-          planifie: '#6366f1',    // indigo
-          en_cours: '#22c55e',    // green
-          pause: '#f59e0b',       // amber
-          termine: '#6b7280',     // gray
-          annule: '#ef4444',      // red
-        },
-        // Statuts devis
-        devis: {
-          brouillon: '#94a3b8',   // slate
-          envoye: '#3b82f6',      // blue
-          accepte: '#22c55e',     // green
-          refuse: '#ef4444',      // red
-          expire: '#f59e0b',      // amber
-        },
-        // Feedback
-        feedback: {
-          success: '#22c55e',
-          warning: '#f59e0b',
-          error: '#ef4444',
-          info: '#3b82f6',
         },
       },
       animation: {

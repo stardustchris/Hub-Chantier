@@ -4,12 +4,15 @@
  * Extrait la logique metier de ChantierDetailPage:
  * - Chargement du chantier et navigation
  * - Mise a jour et suppression
- * - Changement de statut
- * - Gestion de l'equipe (conducteurs/chefs)
+ * - Changement de statut (avec optimistic updates)
+ * - Gestion de l'equipe (conducteurs/chefs) (avec optimistic updates)
+ *
+ * Migration TanStack Query v5 avec optimistic updates pour UI instantanée
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
 import { useToast } from '../contexts/ToastContext'
@@ -48,10 +51,9 @@ export function useChantierDetail({
 }: UseChantierDetailOptions): UseChantierDetailReturn {
   const navigate = useNavigate()
   const { showUndoToast, addToast } = useToast()
+  const queryClient = useQueryClient()
 
-  // State
-  const [chantier, setChantier] = useState<Chantier | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Local state (non-query related)
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
 
@@ -59,22 +61,27 @@ export function useChantierDetail({
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | 'ouvrier' | null>(null)
 
-  // Load chantier data
-  const loadChantier = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      const data = await chantiersService.getById(chantierId)
-      setChantier(data)
-    } catch (error) {
-      logger.error('Error loading chantier', error, { context: 'useChantierDetail' })
-      addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
-      navigate('/chantiers')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [chantierId, addToast, navigate])
+  // TanStack Query: Chantier data
+  const {
+    data: chantier = null,
+    isLoading,
+    refetch: refetchChantier,
+  } = useQuery({
+    queryKey: ['chantier-detail', chantierId],
+    queryFn: async () => {
+      try {
+        return await chantiersService.getById(chantierId)
+      } catch (error) {
+        logger.error('Error loading chantier', error, { context: 'useChantierDetail' })
+        addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
+        navigate('/chantiers')
+        throw error
+      }
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
 
-  // Load navigation IDs
+  // Load navigation IDs (not using TanStack Query as it's lightweight)
   const loadNavigation = useCallback(async () => {
     try {
       const ids = await chantiersService.getNavigationIds(chantierId)
@@ -108,26 +115,56 @@ export function useChantierDetail({
     }
   }, [chantier, addToast])
 
-  // Initial load
+  // Initial load navigation
   useEffect(() => {
     if (chantierId) {
-      loadChantier()
       loadNavigation()
     }
-  }, [chantierId, loadChantier, loadNavigation])
+  }, [chantierId, loadNavigation])
 
-  // Update chantier
-  const handleUpdateChantier = useCallback(async (data: ChantierUpdate) => {
-    try {
-      const updated = await chantiersService.update(chantierId, data)
-      setChantier(updated)
-      setShowEditModal(false)
-      addToast({ message: 'Chantier mis a jour', type: 'success' })
-    } catch (error) {
+  // TanStack Query Mutation: Update chantier (optimistic update)
+  const updateChantierMutation = useMutation({
+    mutationFn: async (data: ChantierUpdate) => {
+      return chantiersService.update(chantierId, data)
+    },
+    onMutate: async (data) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['chantier-detail', chantierId] })
+
+      // Snapshot previous data
+      const previous = queryClient.getQueryData<Chantier>(['chantier-detail', chantierId])
+
+      // Optimistically update
+      if (previous) {
+        queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], {
+          ...previous,
+          ...data,
+        })
+      }
+
+      return { previous }
+    },
+    onError: (error, _vars, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(['chantier-detail', chantierId], context.previous)
+      }
       logger.error('Error updating chantier', error, { context: 'useChantierDetail' })
       addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
-    }
-  }, [chantierId, addToast])
+    },
+    onSuccess: () => {
+      setShowEditModal(false)
+      addToast({ message: 'Chantier mis a jour', type: 'success' })
+    },
+    onSettled: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+    },
+  })
+
+  const handleUpdateChantier = useCallback(async (data: ChantierUpdate) => {
+    updateChantierMutation.mutate(data)
+  }, [updateChantierMutation])
 
   // Delete chantier with undo
   const handleDeleteChantier = useCallback(() => {
@@ -154,52 +191,157 @@ export function useChantierDetail({
     )
   }, [chantier, chantierId, navigate, showUndoToast, addToast])
 
-  // Change status
-  const handleChangeStatut = useCallback(async (action: 'demarrer' | 'receptionner' | 'fermer') => {
-    try {
-      let updated: Chantier
+  // TanStack Query Mutation: Change status (optimistic update)
+  const changeStatutMutation = useMutation({
+    mutationFn: async (action: 'demarrer' | 'receptionner' | 'fermer') => {
       switch (action) {
         case 'demarrer':
-          updated = await chantiersService.demarrer(chantierId)
-          break
+          return chantiersService.demarrer(chantierId)
         case 'receptionner':
-          updated = await chantiersService.receptionner(chantierId)
-          break
+          return chantiersService.receptionner(chantierId)
         case 'fermer':
-          updated = await chantiersService.fermer(chantierId)
-          break
+          return chantiersService.fermer(chantierId)
       }
-      setChantier(updated)
-      addToast({ message: 'Statut mis a jour', type: 'success' })
-    } catch (error) {
+    },
+    onMutate: async (action) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['chantier-detail', chantierId] })
+
+      // Snapshot previous data
+      const previous = queryClient.getQueryData<Chantier>(['chantier-detail', chantierId])
+
+      // Optimistically update status
+      if (previous) {
+        let newStatut: Chantier['statut']
+        switch (action) {
+          case 'demarrer':
+            newStatut = 'en_cours'
+            break
+          case 'receptionner':
+            newStatut = 'receptionne'
+            break
+          case 'fermer':
+            newStatut = 'ferme'
+            break
+        }
+        queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], {
+          ...previous,
+          statut: newStatut,
+        })
+      }
+
+      return { previous }
+    },
+    onError: (error, _vars, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(['chantier-detail', chantierId], context.previous)
+      }
       logger.error('Error changing statut', error, { context: 'useChantierDetail' })
       addToast({ message: 'Erreur lors du changement de statut', type: 'error' })
-    }
-  }, [chantierId, addToast])
+    },
+    onSuccess: () => {
+      addToast({ message: 'Statut mis a jour', type: 'success' })
+    },
+    onSettled: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+    },
+  })
 
-  // Add user to team
-  const handleAddUser = useCallback(async (userId: string) => {
-    if (!showAddUserModal) return
+  const handleChangeStatut = useCallback(async (action: 'demarrer' | 'receptionner' | 'fermer') => {
+    changeStatutMutation.mutate(action)
+  }, [changeStatutMutation])
 
-    try {
-      let updated: Chantier
-      if (showAddUserModal === 'conducteur') {
-        updated = await chantiersService.addConducteur(chantierId, userId)
-      } else if (showAddUserModal === 'chef') {
-        updated = await chantiersService.addChef(chantierId, userId)
+  // TanStack Query Mutation: Add user to team (optimistic update)
+  const addUserMutation = useMutation({
+    mutationFn: async ({ userId, type }: { userId: string; type: 'conducteur' | 'chef' | 'ouvrier' }) => {
+      if (type === 'conducteur') {
+        return chantiersService.addConducteur(chantierId, userId)
+      } else if (type === 'chef') {
+        return chantiersService.addChef(chantierId, userId)
       } else {
-        updated = await chantiersService.addOuvrier(chantierId, userId)
+        return chantiersService.addOuvrier(chantierId, userId)
       }
-      setChantier(updated)
-      setShowAddUserModal(null)
-      addToast({ message: 'Utilisateur ajoute', type: 'success' })
-    } catch (error) {
+    },
+    onMutate: async ({ userId, type }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['chantier-detail', chantierId] })
+
+      // Snapshot previous data
+      const previous = queryClient.getQueryData<Chantier>(['chantier-detail', chantierId])
+
+      // Optimistically add user (simplified - real user data comes from server)
+      if (previous) {
+        const newUser: User = {
+          id: userId,
+          nom: '',
+          prenom: '',
+          email: '',
+          role: type === 'chef' ? 'chef_chantier' : type,
+          is_active: true,
+        } as User
+
+        const updated: Chantier = { ...previous }
+        if (type === 'conducteur') {
+          updated.conducteurs = [...previous.conducteurs, newUser]
+        } else if (type === 'chef') {
+          updated.chefs = [...previous.chefs, newUser]
+        } else {
+          updated.ouvriers = [...(previous.ouvriers || []), newUser]
+        }
+
+        queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], updated)
+      }
+
+      return { previous }
+    },
+    onError: (error, _vars, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(['chantier-detail', chantierId], context.previous)
+      }
       logger.error('Error adding user', error, { context: 'useChantierDetail' })
       addToast({ message: "Erreur lors de l'ajout", type: 'error' })
-    }
-  }, [chantierId, showAddUserModal, addToast])
+    },
+    onSuccess: () => {
+      setShowAddUserModal(null)
+      addToast({ message: 'Utilisateur ajoute', type: 'success' })
+    },
+    onSettled: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+    },
+  })
 
-  // Remove user from team with undo
+  const handleAddUser = useCallback(async (userId: string) => {
+    if (!showAddUserModal) return
+    addUserMutation.mutate({ userId, type: showAddUserModal })
+  }, [showAddUserModal, addUserMutation])
+
+  // TanStack Query Mutation: Remove user from team (optimistic update with undo)
+  const removeUserMutation = useMutation({
+    mutationFn: async ({ userId, type }: { userId: string; type: 'conducteur' | 'chef' | 'ouvrier' }) => {
+      if (type === 'conducteur') {
+        return chantiersService.removeConducteur(chantierId, userId)
+      } else if (type === 'chef') {
+        return chantiersService.removeChef(chantierId, userId)
+      } else {
+        return chantiersService.removeOuvrier(chantierId, userId)
+      }
+    },
+    onSuccess: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+    },
+    onError: (error) => {
+      logger.error('Error removing user', error, { context: 'useChantierDetail' })
+      addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
+      // Refetch to restore proper state
+      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+    },
+  })
+
   const handleRemoveUser = useCallback((userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => {
     if (!chantier) return
 
@@ -214,8 +356,11 @@ export function useChantierDetail({
     const removedUser = userList.find((u) => u.id === userId)
     if (!removedUser) return
 
+    // Snapshot previous data
     const previousChantier = chantier
-    const updatedChantier = {
+
+    // Optimistically remove user
+    const updatedChantier: Chantier = {
       ...chantier,
       conducteurs: type === 'conducteur'
         ? chantier.conducteurs.filter((u) => u.id !== userId)
@@ -227,32 +372,22 @@ export function useChantierDetail({
         ? (chantier.ouvriers || []).filter((u) => u.id !== userId)
         : chantier.ouvriers,
     }
-    setChantier(updatedChantier)
+    queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], updatedChantier)
 
     showUndoToast(
       `${removedUser.prenom} ${removedUser.nom} retire`,
       () => {
-        setChantier(previousChantier)
+        // Undo: restore previous data
+        queryClient.setQueryData(['chantier-detail', chantierId], previousChantier)
         addToast({ message: 'Retrait annule', type: 'success', duration: 3000 })
       },
       async () => {
-        try {
-          if (type === 'conducteur') {
-            await chantiersService.removeConducteur(chantierId, userId)
-          } else if (type === 'chef') {
-            await chantiersService.removeChef(chantierId, userId)
-          } else {
-            await chantiersService.removeOuvrier(chantierId, userId)
-          }
-        } catch (error) {
-          logger.error('Error removing user', error, { context: 'useChantierDetail' })
-          setChantier(previousChantier)
-          addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
-        }
+        // Commit: execute mutation
+        removeUserMutation.mutate({ userId, type })
       },
       5000
     )
-  }, [chantier, chantierId, showUndoToast, addToast])
+  }, [chantier, chantierId, queryClient, showUndoToast, addToast, removeUserMutation])
 
   // Open add user modal
   const openAddUserModal = useCallback((type: 'conducteur' | 'chef' | 'ouvrier') => {
@@ -267,9 +402,9 @@ export function useChantierDetail({
 
   // Reload function
   const reload = useCallback(async () => {
-    await loadChantier()
+    await refetchChantier()
     await loadNavigation()
-  }, [loadChantier, loadNavigation])
+  }, [refetchChantier, loadNavigation])
 
   return {
     // Data
