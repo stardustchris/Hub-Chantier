@@ -90,6 +90,7 @@ export default function CreateAPIKeyModal({ onClose, onCreated }: CreateAPIKeyMo
         <h2 id="modal-title" className="text-xl font-bold mb-4">Créer une clé API</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
           {/* Nom */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -103,6 +104,7 @@ export default function CreateAPIKeyModal({ onClose, onCreated }: CreateAPIKeyMo
               placeholder="Clé de production"
               maxLength={255}
               required
+              aria-required="true"
             />
           </div>
 

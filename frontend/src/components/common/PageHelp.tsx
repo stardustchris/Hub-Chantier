@@ -325,7 +325,7 @@ const PageHelp = () => {
       <Tooltip content="Aide sur cette page">
         <button
           onClick={() => setIsOpen(true)}
-          className="relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+          className="relative min-w-[48px] min-h-[48px] flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Ouvrir l'aide contextuelle"
           aria-expanded={isOpen}
         >

@@ -139,6 +139,8 @@ export function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateCha
             </div>
           )}
 
+          <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nom du chantier *
@@ -146,6 +148,7 @@ export function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateCha
             <input
               type="text"
               required
+              aria-required="true"
               value={formData.nom}
               onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
               className="input"
@@ -159,6 +162,7 @@ export function CreateChantierModal({ onClose, onSubmit, usedColors }: CreateCha
             </label>
             <textarea
               required
+              aria-required="true"
               value={formData.adresse}
               onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
               className="input"

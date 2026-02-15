@@ -313,7 +313,7 @@ export function ParametresEntreprisePage(): JSX.Element {
                       htmlFor="coeffHS1"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      1er palier (36e-43e heure)
+                      1er palier (36e-43e heure) <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <input
@@ -322,6 +322,7 @@ export function ParametresEntreprisePage(): JSX.Element {
                         min="1"
                         step="0.01"
                         required
+                        aria-required="true"
                         value={coeffHeuresSup}
                         onChange={(e) => setCoeffHeuresSup(e.target.value)}
                         className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
@@ -339,7 +340,7 @@ export function ParametresEntreprisePage(): JSX.Element {
                       htmlFor="coeffHS2"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      2e palier (au-dela de 43h)
+                      2e palier (au-dela de 43h) <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <input
@@ -348,6 +349,7 @@ export function ParametresEntreprisePage(): JSX.Element {
                         min="1"
                         step="0.01"
                         required
+                        aria-required="true"
                         value={coeffHeuresSup2}
                         onChange={(e) => setCoeffHeuresSup2(e.target.value)}
                         className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"

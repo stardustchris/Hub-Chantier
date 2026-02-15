@@ -172,6 +172,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
             {/* Titre */}
             <div>
               <label htmlFor="titre" className="block text-sm font-medium text-gray-700 mb-1">
@@ -184,6 +185,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
                 value={formData.titre}
                 onChange={handleChange}
                 required
+                aria-required="true"
                 maxLength={200}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Titre du signalement"
@@ -201,6 +203,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
                 value={formData.description}
                 onChange={handleChange}
                 required
+                aria-required="true"
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Décrivez le problème en détail..."

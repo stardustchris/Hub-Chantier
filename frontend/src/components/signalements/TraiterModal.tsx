@@ -42,12 +42,18 @@ export default function TraiterModal({
           <h3 id="modal-title" className="text-lg font-semibold text-gray-900 mb-4">
             Marquer comme traité
           </h3>
+          <p className="text-sm text-gray-500 mb-3">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
+          <label htmlFor="commentaire-traite" className="block text-sm font-medium text-gray-700 mb-1">
+            Commentaire de résolution <span className="text-red-500">*</span>
+          </label>
           <textarea
+            id="commentaire-traite"
             value={commentaire}
             onChange={(e) => setCommentaire(e.target.value)}
             placeholder="Décrivez comment le problème a été résolu..."
             rows={4}
             required
+            aria-required="true"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 mb-4"
           />
           <div className="flex justify-end gap-3">

@@ -86,6 +86,7 @@ export default function TaskModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
           {/* Titre (obligatoire) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -98,6 +99,7 @@ export default function TaskModal({
               className="input"
               placeholder="Ex: Coffrage voiles R+1"
               required
+              aria-required="true"
               autoFocus
             />
           </div>

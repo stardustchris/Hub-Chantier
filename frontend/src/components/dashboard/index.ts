@@ -23,6 +23,7 @@ export { default as AlertesFinancieresCard } from './AlertesFinancieresCard'
 // Gamification cards (CDC Section 5.4)
 export { default as StreakBadge } from './StreakBadge'
 export { default as WeeklyProgressCard } from './WeeklyProgressCard'
+export { default as TeamLeaderboardCard } from './TeamLeaderboardCard'
 
 // Skeleton components
 export { default as PostSkeleton } from './PostSkeleton'

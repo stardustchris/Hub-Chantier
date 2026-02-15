@@ -62,10 +62,12 @@ export default function LoginPage() {
             </div>
           )}
 
+          <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
+
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -74,6 +76,8 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className={`input mt-1 ${fieldErrors.email ? 'border-red-500' : ''}`}
                 placeholder="votre@email.com"
+                required
+                aria-required="true"
                 aria-invalid={!!fieldErrors.email}
                 aria-describedby={fieldErrors.email ? 'email-error' : undefined}
               />
@@ -87,7 +91,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Mot de passe
+                  Mot de passe <span className="text-red-500">*</span>
                 </label>
                 <Link
                   to="/forgot-password"
@@ -103,6 +107,8 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className={`input mt-1 ${fieldErrors.password ? 'border-red-500' : ''}`}
                 placeholder="********"
+                required
+                aria-required="true"
                 aria-invalid={!!fieldErrors.password}
                 aria-describedby={fieldErrors.password ? 'password-error' : undefined}
               />
