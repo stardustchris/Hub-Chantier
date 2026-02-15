@@ -242,6 +242,9 @@ export interface PostMedia {
   url: string
   type: 'image' | 'video'
   thumbnail_url?: string
+  webp_thumbnail_url?: string
+  webp_medium_url?: string
+  webp_large_url?: string
 }
 
 export interface PostComment {

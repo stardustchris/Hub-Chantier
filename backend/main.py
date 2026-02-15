@@ -45,6 +45,7 @@ from modules.devis.infrastructure.web import router as devis_router, articles_ro
 # from modules.planning_charge.infrastructure import router as planning_charge_router
 from modules.interventions.infrastructure.web import router as interventions_router
 from modules.notifications.infrastructure.web import router as notifications_router
+from modules.notifications.infrastructure.web import sse_router as notifications_sse_router
 from modules.notifications.infrastructure.event_handlers import register_notification_handlers
 from modules.pointages.infrastructure.event_handlers import setup_planning_integration
 from shared.infrastructure.web.upload_routes import router as upload_router
@@ -254,6 +255,7 @@ app.include_router(devis_articles_router, prefix="/api")
 # app.include_router(planning_charge_router, prefix="/api")
 app.include_router(interventions_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
+app.include_router(notifications_sse_router, prefix="/api")
 app.include_router(webhooks_router, prefix="/api/v1")
 
 # Futurs modules à ajouter:

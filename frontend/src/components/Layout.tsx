@@ -32,6 +32,7 @@ import {
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
 import { useNotifications } from '../hooks/useNotifications'
+import { useServerEvents } from '../hooks/useServerEvents'
 import NotificationDropdown from './notifications/NotificationDropdown'
 import FloatingActionButton from './common/FloatingActionButton'
 import OnboardingProvider, { useOnboarding } from './onboarding/OnboardingProvider'
@@ -250,6 +251,9 @@ function LayoutContent({ children }: LayoutProps) {
 
   // Notifications depuis l'API
   const { unreadCount } = useNotifications()
+
+  // SSE temps réel (invalide les caches TanStack Query à chaque événement)
+  useServerEvents()
 
   // Onboarding
   const { startTour } = useOnboarding()

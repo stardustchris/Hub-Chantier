@@ -172,7 +172,7 @@ export default function UserDetailPage() {
                 style={{ backgroundColor: user.couleur || '#3498DB' }}
               >
                 {user.photo_profil ? (
-                  <img src={user.photo_profil} alt={`${user.prenom} ${user.nom}`} className="w-full h-full object-cover" />
+                  <img src={user.photo_profil} alt={`${user.prenom} ${user.nom}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <>
                     {user.prenom?.[0]}
