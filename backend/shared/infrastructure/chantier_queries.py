@@ -5,7 +5,7 @@ to import modules.chantiers.infrastructure.persistence.ChantierModel.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from typing import Optional
 
 
@@ -95,12 +95,11 @@ def get_chantiers_basic_info_by_ids(db: Session, chantier_ids: list[int]) -> dic
     if not chantier_ids:
         return {}
 
-    params = {f"id_{i}": cid for i, cid in enumerate(set(chantier_ids))}
-    placeholders = ", ".join(f":{k}" for k in params)
-
     rows = db.execute(
-        text(f"SELECT id, nom FROM chantiers WHERE id IN ({placeholders})"),
-        params,
+        text("SELECT id, nom FROM chantiers WHERE id IN :ids").bindparams(
+            bindparam("ids", expanding=True)
+        ),
+        {"ids": list(set(chantier_ids))},
     ).fetchall()
 
     return {row[0]: {"id": row[0], "nom": row[1]} for row in rows}
@@ -121,16 +120,12 @@ def get_chantiers_by_ids_full(db: Session, chantier_ids: list[int]) -> list[dict
     if not chantier_ids:
         return []
 
-    unique_ids = list(set(chantier_ids))
-    params = {f"id_{i}": cid for i, cid in enumerate(unique_ids)}
-    placeholders = ", ".join(f":{k}" for k in params)
-
     rows = db.execute(
         text(
-            f"SELECT id, code, nom, couleur, heures_estimees FROM chantiers "
-            f"WHERE id IN ({placeholders}) AND deleted_at IS NULL"
-        ),
-        params,
+            "SELECT id, code, nom, couleur, heures_estimees FROM chantiers "
+            "WHERE id IN :ids AND deleted_at IS NULL"
+        ).bindparams(bindparam("ids", expanding=True)),
+        {"ids": list(set(chantier_ids))},
     ).fetchall()
 
     return [

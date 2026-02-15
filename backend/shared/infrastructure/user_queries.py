@@ -6,7 +6,7 @@ modules.auth.infrastructure.persistence.UserModel directly.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from typing import Optional
 
 
@@ -68,17 +68,13 @@ def get_users_basic_info_by_ids(db: Session, user_ids: list[int]) -> dict[int, d
     if not user_ids:
         return {}
 
-    # Build a parameterised IN clause
-    params = {f"id_{i}": uid for i, uid in enumerate(set(user_ids))}
-    placeholders = ", ".join(f":{k}" for k in params)
-
     rows = db.execute(
         text(
-            f"SELECT id, prenom, nom, email, role, couleur, metiers, photo_profil, "
-            f"type_utilisateur, is_active "
-            f"FROM users WHERE id IN ({placeholders})"
-        ),
-        params,
+            "SELECT id, prenom, nom, email, role, couleur, metiers, photo_profil, "
+            "type_utilisateur, is_active "
+            "FROM users WHERE id IN :ids"
+        ).bindparams(bindparam("ids", expanding=True)),
+        {"ids": list(set(user_ids))},
     ).fetchall()
 
     import json
@@ -152,15 +148,12 @@ def count_active_users_not_in_ids(db: Session, exclude_user_ids: list[int]) -> i
     if not exclude_user_ids:
         return count_active_users(db)
 
-    params = {f"id_{i}": uid for i, uid in enumerate(set(exclude_user_ids))}
-    placeholders = ", ".join(f":{k}" for k in params)
-
     result = db.execute(
         text(
-            f"SELECT COUNT(id) FROM users "
-            f"WHERE is_active = true AND id NOT IN ({placeholders})"
-        ),
-        params,
+            "SELECT COUNT(id) FROM users "
+            "WHERE is_active = true AND id NOT IN :ids"
+        ).bindparams(bindparam("ids", expanding=True)),
+        {"ids": list(set(exclude_user_ids))},
     ).scalar()
     return result or 0
 
@@ -176,12 +169,11 @@ def get_metier_for_user_ids(db: Session, user_ids: list[int]) -> dict[int, Optio
     if not user_ids:
         return {}
 
-    params = {f"id_{i}": uid for i, uid in enumerate(set(user_ids))}
-    placeholders = ", ".join(f":{k}" for k in params)
-
     rows = db.execute(
-        text(f"SELECT id, json_extract(metiers, '$[0]') FROM users WHERE id IN ({placeholders})"),
-        params,
+        text(
+            "SELECT id, json_extract(metiers, '$[0]') FROM users WHERE id IN :ids"
+        ).bindparams(bindparam("ids", expanding=True)),
+        {"ids": list(set(user_ids))},
     ).fetchall()
     return {row[0]: row[1] for row in rows}
 
