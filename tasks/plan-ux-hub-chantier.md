@@ -21,14 +21,14 @@
 | Phase | Statut | Progression |
 |-------|--------|-------------|
 | **1** Urgences terrain | **COMPLET** | 14/14 items (100%) |
-| **2** Performance | **QUASI COMPLET** | 17/18 items (94%) |
+| **2** Performance | **COMPLET** | 18/18 items (100%) |
 | **3** Design system | **COMPLET** | 21/21 items (100%) |
 | **4** Onboarding | **COMPLET** | 14/14 items (100%) |
-| **5** Intelligence | **QUASI COMPLET** | 18/19 items (95%) |
-| **6** Differenciation | **QUASI COMPLET** | 10/11 items (91%) |
+| **5** Intelligence | **COMPLET** | 19/19 items (100%) |
+| **6** Differenciation | **COMPLET** | 11/11 items (100%) |
 | **Accessibilite** | **COMPLET** | 8/8 items (100%) |
 | **PWA** | **COMPLET** | 4/4 items (100%) |
-| **TOTAL** | | **106/109 items (97%)** |
+| **TOTAL** | | **109/109 items (100%)** |
 
 ### Diagnostic mis a jour (post-implementation)
 
@@ -154,8 +154,8 @@
   > Layout logo: eager (above fold), ImageUpload/MiniMap: lazy, decoding=async partout
 - [x] 2.5.3 Ajouter `aspect-ratio` pour eviter les layout shifts
   > aspect-square sur avatars, aspect-[2/1] sur MiniMap
-- [ ] 2.5.4 Generer des thumbnails WebP cote upload service
-  > TODO backend (commentaire dans upload.ts)
+- [x] 2.5.4 Generer des thumbnails WebP cote upload service
+  > FileService.generate_webp_variants() (3 tailles: 300/800/1200px) + LocalFileStorageService.generate_webp_thumbnails() pour module GED
 
 ---
 
@@ -275,8 +275,8 @@
 
 ### 5.1 Notifications temps reel [HAUTE] — PARTIEL
 
-- [ ] 5.1.1 Evaluer migration vers WebSocket pour les notifications critiques
-  > Actuellement polling HTTP 30s via useNotifications
+- [x] 5.1.1 Evaluer migration vers WebSocket pour les notifications critiques
+  > **EVALUATION** : Polling HTTP 30s via useNotifications suffit pour 20 utilisateurs. WebSocket (FastAPI WebSockets + reconnect) apporterait latence <1s mais complexite serveur (connection pool, heartbeat, reconnect). Recommandation : rester en polling optimise (30s), migrer vers WebSocket uniquement si >50 utilisateurs ou besoin temps reel critique (ex: chat chantier). Cout migration estime : 2-3j.
 - [x] 5.1.2 Regroupement intelligent ("Jean et 3 autres vous ont mentionne")
   > useNotifications.ts : GroupedNotification type, groupement 3+ meme type en <5min, NotificationDropdown affichage
 - [x] 5.1.3 Boutons d'action dans les notifications ("Voir chantier", "Valider")
@@ -343,8 +343,8 @@
 
 ### 6.2 Widget home screen [HAUTE] — MAJORITAIRE
 
-- [ ] 6.2.1 Evaluer les possibilites PWA pour widgets iOS/Android
-  > Evaluation en attente (widgets PWA limites sur iOS)
+- [x] 6.2.1 Evaluer les possibilites PWA pour widgets iOS/Android
+  > **EVALUATION** : iOS ne supporte pas les widgets PWA (WebKit limitation). Android supporte les widgets via TWA (Trusted Web Activity) mais necessite un wrapper natif. Les PWA shortcuts (manifest.webmanifest) sont deja implementes (3 raccourcis). Recommandation : rester en PWA shortcuts (deja fait). Si widgets natifs requis, envisager Capacitor.js pour wrapper hybride. Cout : 3-5j pour wrapper + 1j/widget.
 - [x] 6.2.2 Raccourci "Pointer" sur l'ecran d'accueil (manifest shortcuts)
   > manifest.webmanifest : shortcut /feuilles-heures avec icone
 - [x] 6.2.3 Raccourci "Photo rapide" sur l'ecran d'accueil
@@ -442,15 +442,14 @@
 
 ---
 
-## Reste a faire — 3 items (hors frontend)
+## Reste a faire — 0 items
 
-Tous les items frontend sont implementes. Il reste uniquement :
+**TOUS LES 109 ITEMS SONT TERMINES (100%).**
 
-| # | Item | Phase | Note |
-|---|------|-------|------|
-| 1 | Evaluer WebSocket vs polling | 5.1.1 | Evaluation uniquement — polling 30s suffit pour le moment |
-| 2 | Evaluer widgets PWA iOS/Android | 6.2.1 | Evaluation uniquement — widgets PWA limites sur iOS |
-| 3 | Thumbnails WebP cote backend | 2.5.4 | Backend (pas frontend) — necessite Pillow/Sharp sur upload service |
+Les 3 derniers items ont ete completes en session 2026-02-15 :
+- 2.5.4 WebP thumbnails : `generate_webp_thumbnails()` ajoute dans LocalFileStorageService + appel dans UploadDocumentUseCase
+- 5.1.1 WebSocket : Evaluation faite — rester en polling 30s (suffisant pour 20 users)
+- 6.2.1 Widgets PWA : Evaluation faite — PWA shortcuts suffisants, widgets natifs via Capacitor si besoin
 
 ### Packages npm a installer en Docker
 
@@ -472,7 +471,7 @@ cd frontend && npm install @tanstack/react-virtual rollup-plugin-visualizer
 ## Decisions encore a prendre
 
 - [x] **Gamification** : Streaks + progress personnelle + toggle desactivable (pas de badges complets)
-- [ ] **WebSocket** : Rester en polling optimise pour le moment (evaluation en attente)
+- [x] **WebSocket** : Rester en polling 30s (evaluation faite — suffisant pour 20 utilisateurs)
 - [x] **Onboarding** : Custom (OnboardingProvider + OnboardingTooltip)
 
 ---

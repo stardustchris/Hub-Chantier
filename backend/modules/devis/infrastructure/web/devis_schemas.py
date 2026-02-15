@@ -30,6 +30,7 @@ class DevisCreateRequest(BaseModel):
     taux_marge_materiel: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_deplacement: Optional[Decimal] = Field(None, ge=0, le=100)
     coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100, description="Si absent, lu depuis config entreprise (BDD)")
+    coefficient_productivite: Optional[Decimal] = Field(None, ge=Decimal("0.5"), le=Decimal("2.0"), description="Coefficient productivite (0.5 a 2.0)")
     retenue_garantie_pct: Decimal = Field(Decimal("0"), ge=0, le=5, description="Retenue de garantie: 0 ou 5% (Loi 71-584)")
     notes: Optional[str] = Field(None, max_length=2000)
     acompte_pct: Decimal = Field(Decimal("30"), ge=0, le=100)
@@ -40,6 +41,7 @@ class DevisCreateRequest(BaseModel):
     duree_estimee_jours: Optional[int] = Field(None, ge=1)
     notes_bas_page: Optional[str] = Field(None, max_length=5000)
     nom_interne: Optional[str] = Field(None, max_length=255)
+    commentaire: Optional[str] = Field(None, max_length=5000)
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -68,6 +70,7 @@ class DevisUpdateRequest(BaseModel):
     taux_marge_materiel: Optional[Decimal] = Field(None, ge=0, le=100)
     taux_marge_deplacement: Optional[Decimal] = Field(None, ge=0, le=100)
     coefficient_frais_generaux: Optional[Decimal] = Field(None, ge=0, le=100, description="Si fourni, remplace le coefficient existant du devis")
+    coefficient_productivite: Optional[Decimal] = Field(None, ge=Decimal("0.5"), le=Decimal("2.0"), description="Coefficient productivite (0.5 a 2.0)")
     retenue_garantie_pct: Optional[Decimal] = Field(None, ge=0, le=5, description="Retenue de garantie: 0 ou 5% (Loi 71-584)")
     notes: Optional[str] = Field(None, max_length=2000)
     acompte_pct: Optional[Decimal] = Field(None, ge=0, le=100)
@@ -78,6 +81,7 @@ class DevisUpdateRequest(BaseModel):
     duree_estimee_jours: Optional[int] = Field(None, ge=1)
     notes_bas_page: Optional[str] = Field(None, max_length=5000)
     nom_interne: Optional[str] = Field(None, max_length=255)
+    commentaire: Optional[str] = Field(None, max_length=5000)
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 

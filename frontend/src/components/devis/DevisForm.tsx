@@ -23,10 +23,12 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
     date_validite: devis?.date_validite?.split('T')[0] || '',
     taux_tva_defaut: devis?.taux_tva_defaut ?? 20,
     coefficient_frais_generaux: devis?.coefficient_frais_generaux ?? FALLBACK_COEFF_FG,
+    coefficient_productivite: devis?.coefficient_productivite ?? '',
     taux_marge_global: devis?.taux_marge_global ?? 15,
     retenue_garantie_pct: devis?.retenue_garantie_pct ?? 0,
     notes: devis?.notes || '',
     conditions_generales: devis?.conditions_generales || '',
+    commentaire: devis?.commentaire || '',
   })
 
   // Nouveau devis : charger le coefficient FG depuis la config entreprise
@@ -58,9 +60,12 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
         date_validite: form.date_validite || undefined,
         taux_tva_defaut: form.taux_tva_defaut,
         coefficient_frais_generaux: form.coefficient_frais_generaux,
+        coefficient_productivite: form.coefficient_productivite ? Number(form.coefficient_productivite) : undefined,
         taux_marge_global: form.taux_marge_global,
         retenue_garantie_pct: form.retenue_garantie_pct,
         notes: form.notes || undefined,
+        conditions_generales: form.conditions_generales || undefined,
+        commentaire: form.commentaire || undefined,
       }
       await onSubmit(data)
     } finally {
@@ -150,7 +155,7 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
           {/* Parametres financiers */}
           <div className="bg-blue-50 rounded-lg p-4 space-y-4">
             <h3 className="text-sm font-semibold text-blue-700">Parametres financiers</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Taux TVA</label>
                 <select
@@ -188,6 +193,21 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
                   step="0.1"
                   value={form.taux_marge_global}
                   onChange={(e) => setForm({ ...form, taux_marge_global: Number(e.target.value) })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coeff. productivite
+                </label>
+                <input
+                  type="number"
+                  min="0.5"
+                  max="2.0"
+                  step="0.05"
+                  value={form.coefficient_productivite}
+                  onChange={(e) => setForm({ ...form, coefficient_productivite: e.target.value })}
+                  placeholder="1.0"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -271,6 +291,21 @@ export default function DevisForm({ devis, onSubmit, onCancel }: DevisFormProps)
               rows={2}
               maxLength={2000}
               placeholder="Ex: 30% a la commande, solde a la livraison"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Commentaire client */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Commentaire (visible client)
+            </label>
+            <textarea
+              value={form.commentaire}
+              onChange={(e) => setForm({ ...form, commentaire: e.target.value })}
+              rows={3}
+              maxLength={5000}
+              placeholder="Commentaire libre visible sur le devis client..."
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>

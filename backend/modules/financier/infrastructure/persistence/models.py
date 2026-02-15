@@ -1360,6 +1360,12 @@ class ConfigurationEntrepriseModel(FinancierBase):
     coeff_charges_patronales = Column(Numeric(5, 2), nullable=False, default=1.45)
     coeff_heures_sup = Column(Numeric(5, 2), nullable=False, default=1.25)
     coeff_heures_sup_2 = Column(Numeric(5, 2), nullable=False, default=1.50)
+    coeff_productivite = Column(Numeric(5, 3), nullable=False, default=1.000)
+    coeff_charges_ouvrier = Column(Numeric(5, 3), nullable=True)
+    coeff_charges_etam = Column(Numeric(5, 3), nullable=True)
+    coeff_charges_cadre = Column(Numeric(5, 3), nullable=True)
+    seuil_alerte_budget_pct = Column(Numeric(5, 2), nullable=False, default=80)
+    seuil_alerte_budget_critique_pct = Column(Numeric(5, 2), nullable=False, default=95)
     notes = Column(Text, nullable=True)
 
     # Audit

@@ -468,6 +468,7 @@ async def create_devis(
         taux_marge_materiel=request.taux_marge_materiel,
         taux_marge_deplacement=request.taux_marge_deplacement,
         coefficient_frais_generaux=coeff_fg,
+        coefficient_productivite=request.coefficient_productivite,
         retenue_garantie_pct=request.retenue_garantie_pct,
         notes=request.notes,
         acompte_pct=request.acompte_pct,
@@ -478,6 +479,7 @@ async def create_devis(
         duree_estimee_jours=request.duree_estimee_jours,
         notes_bas_page=request.notes_bas_page,
         nom_interne=request.nom_interne,
+        commentaire=request.commentaire,
         commercial_id=request.commercial_id,
         conducteur_id=request.conducteur_id,
     )

@@ -57,6 +57,11 @@ class SQLAlchemyDevisRepository(DevisRepository):
             montant_total_ttc=Decimal(str(model.total_ttc)),
             taux_marge_global=Decimal(str(model.marge_globale_pct)),
             coefficient_frais_generaux=Decimal(str(model.coeff_frais_generaux)),
+            coefficient_productivite=(
+                Decimal(str(model.coeff_productivite))
+                if model.coeff_productivite is not None
+                else None
+            ),
             taux_tva_defaut=Decimal(str(model.taux_tva_defaut)),
             retenue_garantie_pct=Decimal(str(model.retenue_garantie_pct)),
             taux_marge_moe=(
@@ -99,6 +104,7 @@ class SQLAlchemyDevisRepository(DevisRepository):
             duree_estimee_jours=model.duree_estimee_jours,
             notes_bas_page=model.notes_bas_page,
             nom_interne=model.nom_interne,
+            commentaire=model.commentaire,
             commercial_id=model.commercial_id,
             conducteur_id=model.conducteur_id,
             created_by=model.created_by,
@@ -152,6 +158,7 @@ class SQLAlchemyDevisRepository(DevisRepository):
         model.marge_materiel_pct = devis.taux_marge_materiel
         model.marge_deplacement_pct = devis.taux_marge_deplacement
         model.coeff_frais_generaux = devis.coefficient_frais_generaux
+        model.coeff_productivite = devis.coefficient_productivite
         model.taux_tva_defaut = devis.taux_tva_defaut
         model.retenue_garantie_pct = devis.retenue_garantie_pct
         model.notes = devis.notes
@@ -165,6 +172,7 @@ class SQLAlchemyDevisRepository(DevisRepository):
         model.duree_estimee_jours = devis.duree_estimee_jours
         model.notes_bas_page = devis.notes_bas_page
         model.nom_interne = devis.nom_interne
+        model.commentaire = devis.commentaire
         model.date_creation = devis.date_creation
         model.commercial_id = devis.commercial_id
         model.conducteur_id = devis.conducteur_id
@@ -244,6 +252,7 @@ class SQLAlchemyDevisRepository(DevisRepository):
                 marge_materiel_pct=devis.taux_marge_materiel,
                 marge_deplacement_pct=devis.taux_marge_deplacement,
                 coeff_frais_generaux=devis.coefficient_frais_generaux,
+                coeff_productivite=devis.coefficient_productivite,
                 taux_tva_defaut=devis.taux_tva_defaut,
                 retenue_garantie_pct=devis.retenue_garantie_pct,
                 notes=devis.notes,
@@ -257,6 +266,7 @@ class SQLAlchemyDevisRepository(DevisRepository):
                 duree_estimee_jours=devis.duree_estimee_jours,
                 notes_bas_page=devis.notes_bas_page,
                 nom_interne=devis.nom_interne,
+                commentaire=devis.commentaire,
                 date_creation=devis.date_creation,
                 commercial_id=devis.commercial_id,
                 conducteur_id=devis.conducteur_id,

@@ -70,6 +70,7 @@ class Devis:
     # Parametres de marge (DEV-06)
     taux_marge_global: Decimal = Decimal("15")
     coefficient_frais_generaux: Decimal = COEFF_FRAIS_GENERAUX  # Source unique
+    coefficient_productivite: Optional[Decimal] = None
     taux_tva_defaut: Decimal = Decimal("20")
 
     # Retenue de garantie (DEV-22)
@@ -94,6 +95,7 @@ class Devis:
     duree_estimee_jours: Optional[int] = None
     notes_bas_page: Optional[str] = None
     nom_interne: Optional[str] = None
+    commentaire: Optional[str] = None
 
     # References utilisateurs
     commercial_id: Optional[int] = None
@@ -152,6 +154,9 @@ class Devis:
             )
         if self.acompte_pct < Decimal("0") or self.acompte_pct > Decimal("100"):
             raise DevisValidationError("L'acompte doit etre entre 0 et 100%")
+        if self.coefficient_productivite is not None:
+            if self.coefficient_productivite < Decimal("0.5") or self.coefficient_productivite > Decimal("2.0"):
+                raise DevisValidationError("Le coefficient de productivite doit etre entre 0.5 et 2.0")
         if self.date_creation and self.date_validite:
             if self.date_validite < self.date_creation:
                 raise DevisValidationError(
@@ -474,6 +479,7 @@ class Devis:
             "montant_total_ttc": str(self.montant_total_ttc),
             "taux_marge_global": str(self.taux_marge_global),
             "coefficient_frais_generaux": str(self.coefficient_frais_generaux),
+            "coefficient_productivite": str(self.coefficient_productivite) if self.coefficient_productivite is not None else None,
             "taux_tva_defaut": str(self.taux_tva_defaut),
             "retenue_garantie_pct": str(self.retenue_garantie_pct),
             "montant_retenue_garantie": str(self.montant_retenue_garantie),
@@ -493,6 +499,7 @@ class Devis:
             "duree_estimee_jours": self.duree_estimee_jours,
             "notes_bas_page": self.notes_bas_page,
             "nom_interne": self.nom_interne,
+            "commentaire": self.commentaire,
             "commercial_id": self.commercial_id,
             "conducteur_id": self.conducteur_id,
             "created_by": self.created_by,

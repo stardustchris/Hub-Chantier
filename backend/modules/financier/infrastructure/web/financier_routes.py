@@ -2463,6 +2463,12 @@ class ConfigurationEntrepriseUpdateRequest(BaseModel):
     coeff_charges_patronales: Optional[float] = Field(None, ge=1, description="Coefficient charges patronales (ex: 1.45)")
     coeff_heures_sup: Optional[float] = Field(None, ge=1, description="Coefficient heures sup (ex: 1.25)")
     coeff_heures_sup_2: Optional[float] = Field(None, ge=1, description="Coefficient heures sup 2e palier (ex: 1.50)")
+    coeff_productivite: Optional[float] = Field(None, ge=0.5, le=2.0, description="Coefficient productivite (0.5 a 2.0)")
+    coeff_charges_ouvrier: Optional[float] = Field(None, ge=1, description="Coefficient charges ouvrier")
+    coeff_charges_etam: Optional[float] = Field(None, ge=1, description="Coefficient charges ETAM")
+    coeff_charges_cadre: Optional[float] = Field(None, ge=1, description="Coefficient charges cadre")
+    seuil_alerte_budget_pct: Optional[float] = Field(None, ge=0, le=100, description="Seuil alerte budget (%)")
+    seuil_alerte_budget_critique_pct: Optional[float] = Field(None, ge=0, le=100, description="Seuil alerte budget critique (%)")
     notes: Optional[str] = Field(None, max_length=1000)
 
 

@@ -19,6 +19,12 @@ interface ConfigurationEntreprise {
   coeff_charges_patronales: string;
   coeff_heures_sup: string;
   coeff_heures_sup_2: string;
+  coeff_productivite: string;
+  coeff_charges_ouvrier: string | null;
+  coeff_charges_etam: string | null;
+  coeff_charges_cadre: string | null;
+  seuil_alerte_budget_pct: string;
+  seuil_alerte_budget_critique_pct: string;
   notes: string | null;
   updated_at: string | null;
   updated_by: number | null;
@@ -49,6 +55,12 @@ export function ParametresEntreprisePage(): JSX.Element {
   const [coeffChargesPatronales, setCoeffChargesPatronales] = useState('');
   const [coeffHeuresSup, setCoeffHeuresSup] = useState('');
   const [coeffHeuresSup2, setCoeffHeuresSup2] = useState('');
+  const [coeffProductivite, setCoeffProductivite] = useState('');
+  const [coeffChargesOuvrier, setCoeffChargesOuvrier] = useState('');
+  const [coeffChargesEtam, setCoeffChargesEtam] = useState('');
+  const [coeffChargesCadre, setCoeffChargesCadre] = useState('');
+  const [seuilAlerteBudget, setSeuilAlerteBudget] = useState('');
+  const [seuilAlerteBudgetCritique, setSeuilAlerteBudgetCritique] = useState('');
   const [notes, setNotes] = useState('');
 
   const loadConfig = useCallback(async () => {
@@ -64,6 +76,12 @@ export function ParametresEntreprisePage(): JSX.Element {
       setCoeffChargesPatronales(data.coeff_charges_patronales);
       setCoeffHeuresSup(data.coeff_heures_sup);
       setCoeffHeuresSup2(data.coeff_heures_sup_2);
+      setCoeffProductivite(data.coeff_productivite);
+      setCoeffChargesOuvrier(data.coeff_charges_ouvrier || '');
+      setCoeffChargesEtam(data.coeff_charges_etam || '');
+      setCoeffChargesCadre(data.coeff_charges_cadre || '');
+      setSeuilAlerteBudget(data.seuil_alerte_budget_pct);
+      setSeuilAlerteBudgetCritique(data.seuil_alerte_budget_critique_pct);
       setNotes(data.notes || '');
       if (data.is_default) {
         showToast(
@@ -99,6 +117,12 @@ export function ParametresEntreprisePage(): JSX.Element {
           coeff_charges_patronales: parseFloat(coeffChargesPatronales),
           coeff_heures_sup: parseFloat(coeffHeuresSup),
           coeff_heures_sup_2: parseFloat(coeffHeuresSup2),
+          coeff_productivite: parseFloat(coeffProductivite),
+          coeff_charges_ouvrier: coeffChargesOuvrier ? parseFloat(coeffChargesOuvrier) : null,
+          coeff_charges_etam: coeffChargesEtam ? parseFloat(coeffChargesEtam) : null,
+          coeff_charges_cadre: coeffChargesCadre ? parseFloat(coeffChargesCadre) : null,
+          seuil_alerte_budget_pct: parseFloat(seuilAlerteBudget),
+          seuil_alerte_budget_critique_pct: parseFloat(seuilAlerteBudgetCritique),
           notes: notes || null,
         }
       );
@@ -360,6 +384,169 @@ export function ParametresEntreprisePage(): JSX.Element {
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
                       Code du travail art. L3121-36 : +50% soit x1.50
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Coefficient de productivite */}
+              <div className="bg-gray-50 px-4 py-5 sm:p-6 border-t border-gray-200">
+                <h4 className="text-base font-medium text-gray-900 mb-4">
+                  Coefficient de productivite
+                </h4>
+                <div>
+                  <label htmlFor="coeffProd" className="block text-sm font-medium text-gray-700">
+                    Multiplicateur sur le cout de main-d'oeuvre
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <input
+                      type="number"
+                      id="coeffProd"
+                      min="0.5"
+                      max="2.0"
+                      step="0.05"
+                      required
+                      aria-required="true"
+                      value={coeffProductivite}
+                      onChange={(e) => setCoeffProductivite(e.target.value)}
+                      className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">x</span>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    1.0 = productivite normale. &lt; 1.0 = intemperies/difficulte acces. &gt; 1.0 = conditions optimales.
+                  </p>
+                </div>
+              </div>
+
+              {/* Charges patronales par categorie */}
+              <div className="bg-white px-4 py-5 sm:p-6 border-t border-gray-200">
+                <h4 className="text-base font-medium text-gray-900 mb-4">
+                  Charges patronales par categorie
+                </h4>
+                <p className="text-xs text-gray-500 mb-4">
+                  Optionnel. Si non renseigne, le coefficient global ({coeffChargesPatronales}x) s'applique a toutes les categories.
+                </p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label htmlFor="coeffOuvrier" className="block text-sm font-medium text-gray-700">
+                      Ouvrier
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <input
+                        type="number"
+                        id="coeffOuvrier"
+                        min="1"
+                        step="0.01"
+                        value={coeffChargesOuvrier}
+                        onChange={(e) => setCoeffChargesOuvrier(e.target.value)}
+                        placeholder={coeffChargesPatronales}
+                        className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">x</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="coeffEtam" className="block text-sm font-medium text-gray-700">
+                      ETAM
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <input
+                        type="number"
+                        id="coeffEtam"
+                        min="1"
+                        step="0.01"
+                        value={coeffChargesEtam}
+                        onChange={(e) => setCoeffChargesEtam(e.target.value)}
+                        placeholder={coeffChargesPatronales}
+                        className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">x</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="coeffCadre" className="block text-sm font-medium text-gray-700">
+                      Cadre
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <input
+                        type="number"
+                        id="coeffCadre"
+                        min="1"
+                        step="0.01"
+                        value={coeffChargesCadre}
+                        onChange={(e) => setCoeffChargesCadre(e.target.value)}
+                        placeholder={coeffChargesPatronales}
+                        className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">x</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seuils alertes budget */}
+              <div className="bg-white px-4 py-5 sm:p-6 border-t border-gray-200">
+                <h4 className="text-base font-medium text-gray-900 mb-4">
+                  Seuils d'alertes budget
+                </h4>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="seuilAlerte" className="block text-sm font-medium text-gray-700">
+                      Seuil d'alerte (%) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <input
+                        type="number"
+                        id="seuilAlerte"
+                        min="0"
+                        max="100"
+                        step="1"
+                        required
+                        aria-required="true"
+                        value={seuilAlerteBudget}
+                        onChange={(e) => setSeuilAlerteBudget(e.target.value)}
+                        className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">%</span>
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Declenche un avertissement quand le budget consomme depasse ce seuil.
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="seuilCritique" className="block text-sm font-medium text-gray-700">
+                      Seuil critique (%) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <input
+                        type="number"
+                        id="seuilCritique"
+                        min="0"
+                        max="100"
+                        step="1"
+                        required
+                        aria-required="true"
+                        value={seuilAlerteBudgetCritique}
+                        onChange={(e) => setSeuilAlerteBudgetCritique(e.target.value)}
+                        className="block w-full pr-8 border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">%</span>
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Declenche une alerte critique. Doit etre superieur au seuil d'alerte.
                     </p>
                   </div>
                 </div>

@@ -335,6 +335,7 @@ class DevisModel(DevisBase):
     marge_materiaux_pct = Column(Numeric(5, 2), nullable=True)
     marge_sous_traitance_pct = Column(Numeric(5, 2), nullable=True)
     coeff_frais_generaux = Column(Numeric(5, 2), nullable=False, default=19.00)
+    coeff_productivite = Column(Numeric(5, 3), nullable=True)
     taux_tva_defaut = Column(Numeric(5, 2), nullable=False, default=20.0)
 
     # Retenue de garantie (DEV-22)
@@ -356,6 +357,7 @@ class DevisModel(DevisBase):
     duree_estimee_jours = Column(Integer, nullable=True)
     notes_bas_page = Column(Text, nullable=True)
     nom_interne = Column(String(255), nullable=True)
+    commentaire = Column(Text, nullable=True)
 
     # Date de creation metier (distincte de created_at technique)
     date_creation = Column(Date, nullable=True)
