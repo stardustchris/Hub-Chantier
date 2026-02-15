@@ -19,7 +19,7 @@ export default function Skeleton({
   lines = 1,
 }: SkeletonProps) {
   // Base classes pour tous les skeletons
-  const baseClasses = 'bg-gray-200 animate-pulse motion-reduce:animate-none'
+  const baseClasses = 'bg-neutral-skeleton animate-pulse motion-reduce:animate-none'
 
   // Classes selon la variante
   const variantClasses = {

@@ -147,7 +147,7 @@ const PostCard = memo(function PostCard({
 
       {/* Médias (FEED-02) */}
       {post.medias_count > 0 && (
-        <div className="mb-4 bg-gray-100 rounded-lg p-4 text-center text-gray-500">
+        <div className="mb-4 bg-gray-100 rounded-lg p-4 text-center text-gray-600">
           📷 {post.medias_count} photo{post.medias_count > 1 ? 's' : ''}
         </div>
       )}

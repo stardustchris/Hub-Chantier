@@ -188,7 +188,7 @@ export default function PennylaneSyncHistory({ refreshTrigger }: PennylaneSyncHi
 
       {/* History list */}
       {history.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
+        <div className="text-center py-12 text-gray-600 bg-gray-50 rounded-xl">
           <Clock className="w-12 h-12 mx-auto text-gray-500 mb-3" />
           <p className="font-medium">Aucune synchronisation enregistree</p>
           <p className="text-sm">Lancez une synchronisation pour commencer</p>

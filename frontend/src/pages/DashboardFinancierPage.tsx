@@ -810,7 +810,7 @@ export default function DashboardFinancierPage() {
                                 <span className="text-xs text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded-full">Partielle</span>
                               )}
                               {chantier.marge_statut === 'en_attente' && (
-                                <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">En attente</span>
+                                <span className="text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full">En attente</span>
                               )}
                             </div>
                           </td>

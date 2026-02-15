@@ -228,7 +228,7 @@ export default function PennylaneMappingsManager() {
 
       {/* Mappings list */}
       {mappings.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
+        <div className="text-center py-12 text-gray-600 bg-gray-50 rounded-xl">
           <Tag className="w-12 h-12 mx-auto text-gray-500 mb-3" />
           <p className="font-medium">Aucun mapping configure</p>
           <p className="text-sm">Creez des mappings pour associer automatiquement les factures aux chantiers</p>

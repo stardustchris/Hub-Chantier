@@ -260,4 +260,69 @@ export const pointagesService = {
     })
     return response.data
   },
+
+  // ===== VALIDATION BATCH =====
+
+  /**
+   * Valide plusieurs pointages en lot
+   * Utilise Promise.allSettled pour gérer les erreurs partielles
+   * @returns Résultat détaillé par pointage (succès/échec)
+   */
+  async validateBatch(
+    ids: number[],
+    validateurId: number
+  ): Promise<{ success: number[]; failed: Array<{ id: number; error: string }> }> {
+    const results = await Promise.allSettled(
+      ids.map((id) => this.validate(id, validateurId))
+    )
+
+    const success: number[] = []
+    const failed: Array<{ id: number; error: string }> = []
+
+    results.forEach((result, index) => {
+      const id = ids[index]
+      if (result.status === 'fulfilled') {
+        success.push(id)
+      } else {
+        failed.push({
+          id,
+          error: result.reason?.message || 'Erreur inconnue',
+        })
+      }
+    })
+
+    return { success, failed }
+  },
+
+  /**
+   * Rejette plusieurs pointages en lot
+   * Utilise Promise.allSettled pour gérer les erreurs partielles
+   * @returns Résultat détaillé par pointage (succès/échec)
+   */
+  async rejectBatch(
+    ids: number[],
+    motif: string,
+    validateurId: number
+  ): Promise<{ success: number[]; failed: Array<{ id: number; error: string }> }> {
+    const results = await Promise.allSettled(
+      ids.map((id) => this.reject(id, motif, validateurId))
+    )
+
+    const success: number[] = []
+    const failed: Array<{ id: number; error: string }> = []
+
+    results.forEach((result, index) => {
+      const id = ids[index]
+      if (result.status === 'fulfilled') {
+        success.push(id)
+      } else {
+        failed.push({
+          id,
+          error: result.reason?.message || 'Erreur inconnue',
+        })
+      }
+    })
+
+    return { success, failed }
+  },
 }

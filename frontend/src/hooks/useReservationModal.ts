@@ -2,11 +2,13 @@
  * Hook personnalisé pour gérer l'état et les actions de ReservationModal.
  *
  * M13: Extraction de la logique du composant ReservationModal.
+ * Migration TanStack Query v5 avec optimistic updates pour validation/refus instantanés
  *
  * @module hooks/useReservationModal
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Ressource, Reservation, ReservationCreate } from '../types/logistique'
 import {
   createReservation,
@@ -14,6 +16,22 @@ import {
   refuserReservation,
   annulerReservation,
 } from '../services/logistique'
+
+/** Extracteur safe de message d'erreur API (pas de cast unsafe) */
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const resp = (err as Record<string, unknown>).response
+    if (typeof resp === 'object' && resp !== null) {
+      const { status, data } = resp as Record<string, unknown>
+      if (status === 409) return 'Conflit: ce créneau est déjà réservé'
+      if (typeof data === 'object' && data !== null && 'detail' in data) {
+        const detail = (data as Record<string, unknown>).detail
+        if (typeof detail === 'string') return detail
+      }
+    }
+  }
+  return fallback
+}
 
 /**
  * Options de configuration du hook useReservationModal.
@@ -114,7 +132,8 @@ export function useReservationModal(
     onClose,
   } = options
 
-  const [loading, setLoading] = useState(false)
+  const queryClient = useQueryClient()
+
   const [error, setError] = useState<string | null>(null)
   const [motifRefus, setMotifRefus] = useState('')
   const [showMotifRefus, setShowMotifRefus] = useState(false)
@@ -129,6 +148,23 @@ export function useReservationModal(
   })
 
   const isViewMode = !!reservation
+
+  // TanStack Query Mutation: Create reservation
+  const createMutation = useMutation({
+    mutationFn: async (data: ReservationCreate) => {
+      return createReservation(data)
+    },
+    onSuccess: () => {
+      // Invalidate queries that might display reservations
+      queryClient.invalidateQueries({ queryKey: ['reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['reservations-en-attente'] })
+      onSuccess?.()
+      onClose()
+    },
+    onError: (err: unknown) => {
+      setError(getApiErrorMessage(err, 'Erreur lors de la création'))
+    },
+  })
 
   // Réinitialise le formulaire à l'ouverture (mode création uniquement)
   useEffect(() => {
@@ -158,79 +194,205 @@ export function useReservationModal(
         return
       }
 
-      try {
-        setLoading(true)
-        setError(null)
-        await createReservation(formData as ReservationCreate)
-        onSuccess?.()
-        onClose()
-      } catch (err: unknown) {
-        const error = err as { response?: { status?: number; data?: { detail?: string } } }
-        if (error.response?.status === 409) {
-          setError('Conflit: ce créneau est déjà réservé')
-        } else {
-          setError(error.response?.data?.detail || 'Erreur lors de la création')
-        }
-      } finally {
-        setLoading(false)
-      }
+      setError(null)
+      createMutation.mutate(formData as ReservationCreate)
     },
-    [formData, onSuccess, onClose]
+    [formData, createMutation.mutate]
   )
 
   /**
-   * Valide une réservation en attente.
+   * TanStack Query Mutation: Valider une réservation (optimistic update)
    */
+  const validerMutation = useMutation({
+    mutationFn: async (reservationId: number) => {
+      return validerReservation(reservationId)
+    },
+    onMutate: async (reservationId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['reservations'] })
+      await queryClient.cancelQueries({ queryKey: ['reservations-en-attente'] })
+
+      // Snapshot previous data
+      const previousEnAttente = queryClient.getQueryData(['reservations-en-attente'])
+      const previousReservations = queryClient.getQueriesData({ queryKey: ['reservations'] })
+
+      // Optimistically update: change status to 'validee'
+      queryClient.setQueriesData({ queryKey: ['reservations-en-attente'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('items' in old)) return old
+        const data = old as { items: Reservation[] }
+        if (!data.items) return old
+        return {
+          ...data,
+          items: data.items.filter((r: Reservation) => r.id !== reservationId),
+        }
+      })
+
+      queryClient.setQueriesData({ queryKey: ['reservations'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('items' in old)) return old
+        const data = old as { items: Reservation[] }
+        if (!data.items) return old
+        return {
+          ...data,
+          items: data.items.map((r: Reservation) =>
+            r.id === reservationId ? { ...r, statut: 'validee' as const } : r
+          ),
+        }
+      })
+
+      return { previousEnAttente, previousReservations }
+    },
+    onError: (err: unknown, _vars, context) => {
+      // Rollback on error
+      if (context?.previousEnAttente) {
+        queryClient.setQueryData(['reservations-en-attente'], context.previousEnAttente)
+      }
+      context?.previousReservations?.forEach(([key, data]) => {
+        queryClient.setQueryData(key, data)
+      })
+
+      setError(getApiErrorMessage(err, 'Erreur lors de la validation'))
+    },
+    onSuccess: () => {
+      onSuccess?.()
+      onClose()
+    },
+    onSettled: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['reservations-en-attente'] })
+    },
+  })
+
   const handleValider = useCallback(async () => {
     if (!reservation) return
-    try {
-      setLoading(true)
-      await validerReservation(reservation.id)
-      onSuccess?.()
-      onClose()
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } }
-      setError(error.response?.data?.detail || 'Erreur lors de la validation')
-    } finally {
-      setLoading(false)
-    }
-  }, [reservation, onSuccess, onClose])
+    setError(null)
+    validerMutation.mutate(reservation.id)
+  }, [reservation, validerMutation.mutate])
 
   /**
-   * Refuse une réservation avec un motif optionnel.
+   * TanStack Query Mutation: Refuser une réservation (optimistic update)
    */
+  const refuserMutation = useMutation({
+    mutationFn: async ({ reservationId, motif }: { reservationId: number; motif?: string }) => {
+      return refuserReservation(reservationId, motif)
+    },
+    onMutate: async ({ reservationId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['reservations'] })
+      await queryClient.cancelQueries({ queryKey: ['reservations-en-attente'] })
+
+      // Snapshot previous data
+      const previousEnAttente = queryClient.getQueryData(['reservations-en-attente'])
+      const previousReservations = queryClient.getQueriesData({ queryKey: ['reservations'] })
+
+      // Optimistically update: change status to 'refusee'
+      queryClient.setQueriesData({ queryKey: ['reservations-en-attente'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('items' in old)) return old
+        const data = old as { items: Reservation[] }
+        if (!data.items) return old
+        return {
+          ...data,
+          items: data.items.filter((r: Reservation) => r.id !== reservationId),
+        }
+      })
+
+      queryClient.setQueriesData({ queryKey: ['reservations'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('items' in old)) return old
+        const data = old as { items: Reservation[] }
+        if (!data.items) return old
+        return {
+          ...data,
+          items: data.items.map((r: Reservation) =>
+            r.id === reservationId ? { ...r, statut: 'refusee' as const } : r
+          ),
+        }
+      })
+
+      return { previousEnAttente, previousReservations }
+    },
+    onError: (err: unknown, _vars, context) => {
+      // Rollback on error
+      if (context?.previousEnAttente) {
+        queryClient.setQueryData(['reservations-en-attente'], context.previousEnAttente)
+      }
+      context?.previousReservations?.forEach(([key, data]) => {
+        queryClient.setQueryData(key, data)
+      })
+
+      setError(getApiErrorMessage(err, 'Erreur lors du refus'))
+    },
+    onSuccess: () => {
+      onSuccess?.()
+      onClose()
+    },
+    onSettled: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['reservations'] })
+      queryClient.invalidateQueries({ queryKey: ['reservations-en-attente'] })
+    },
+  })
+
   const handleRefuser = useCallback(async () => {
     if (!reservation) return
-    try {
-      setLoading(true)
-      await refuserReservation(reservation.id, motifRefus || undefined)
-      onSuccess?.()
-      onClose()
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } }
-      setError(error.response?.data?.detail || 'Erreur lors du refus')
-    } finally {
-      setLoading(false)
-    }
-  }, [reservation, motifRefus, onSuccess, onClose])
+    setError(null)
+    refuserMutation.mutate({ reservationId: reservation.id, motif: motifRefus || undefined })
+  }, [reservation, motifRefus, refuserMutation.mutate])
 
   /**
-   * Annule une réservation validée.
+   * TanStack Query Mutation: Annuler une réservation (optimistic update)
    */
-  const handleAnnuler = useCallback(async () => {
-    if (!reservation) return
-    try {
-      setLoading(true)
-      await annulerReservation(reservation.id)
+  const annulerMutation = useMutation({
+    mutationFn: async (reservationId: number) => {
+      return annulerReservation(reservationId)
+    },
+    onMutate: async (reservationId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['reservations'] })
+
+      // Snapshot previous data
+      const previousReservations = queryClient.getQueriesData({ queryKey: ['reservations'] })
+
+      // Optimistically update: change status to 'annulee'
+      queryClient.setQueriesData({ queryKey: ['reservations'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('items' in old)) return old
+        const data = old as { items: Reservation[] }
+        if (!data.items) return old
+        return {
+          ...data,
+          items: data.items.map((r: Reservation) =>
+            r.id === reservationId ? { ...r, statut: 'annulee' as const } : r
+          ),
+        }
+      })
+
+      return { previousReservations }
+    },
+    onError: (err: unknown, _vars, context) => {
+      // Rollback on error
+      context?.previousReservations?.forEach(([key, data]) => {
+        queryClient.setQueryData(key, data)
+      })
+
+      setError(getApiErrorMessage(err, "Erreur lors de l'annulation"))
+    },
+    onSuccess: () => {
       onSuccess?.()
       onClose()
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } }
-      setError(error.response?.data?.detail || "Erreur lors de l'annulation")
-    } finally {
-      setLoading(false)
-    }
-  }, [reservation, onSuccess, onClose])
+    },
+    onSettled: () => {
+      // Invalidate to refetch authoritative data
+      queryClient.invalidateQueries({ queryKey: ['reservations'] })
+    },
+  })
+
+  const handleAnnuler = useCallback(async () => {
+    if (!reservation) return
+    setError(null)
+    annulerMutation.mutate(reservation.id)
+  }, [reservation, annulerMutation.mutate])
+
+  // Aggregate loading state from all mutations
+  const loading = createMutation.isPending || validerMutation.isPending || refuserMutation.isPending || annulerMutation.isPending
 
   return {
     loading,

@@ -247,27 +247,31 @@ export default function DashboardPage() {
         <div className="p-4 space-y-4">
           {/* Top Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ClockCard
-              isClockedIn={clock.isClockedIn}
-              hasClockedOut={clock.hasClockedOut}
-              clockInTime={clock.clockState?.clockInTime}
-              clockOutTime={clock.clockState?.clockOutTime}
-              lastClockIn={clock.lastPointageLabel}
-              canEdit={canEditTime}
-              canReclockIn={isDirectionOrConducteur}
-              onClockIn={clock.handleClockIn}
-              onClockOut={clock.handleClockOut}
-              onEditTime={clock.handleEditTime}
-            />
+            <div data-tour="clock-card">
+              <ClockCard
+                isClockedIn={clock.isClockedIn}
+                hasClockedOut={clock.hasClockedOut}
+                clockInTime={clock.clockState?.clockInTime}
+                clockOutTime={clock.clockState?.clockOutTime}
+                lastClockIn={clock.lastPointageLabel}
+                canEdit={canEditTime}
+                canReclockIn={isDirectionOrConducteur}
+                onClockIn={clock.handleClockIn}
+                onClockOut={clock.handleClockOut}
+                onEditTime={clock.handleEditTime}
+              />
+            </div>
             <WeatherCard />
-            <StatsCard
-              hoursWorked={weeklyStats.hoursWorked}
-              hoursProgress={weeklyStats.hoursProgress}
-              joursTravailesMois={weeklyStats.joursTravailesMois}
-              joursTotalMois={weeklyStats.joursTotalMois}
-              congesPris={weeklyStats.congesPris}
-              congesTotal={weeklyStats.congesTotal}
-            />
+            <div data-tour="dashboard-stats">
+              <StatsCard
+                hoursWorked={weeklyStats.hoursWorked}
+                hoursProgress={weeklyStats.hoursProgress}
+                joursTravailesMois={weeklyStats.joursTravailesMois}
+                joursTotalMois={weeklyStats.joursTotalMois}
+                congesPris={weeklyStats.congesPris}
+                congesTotal={weeklyStats.congesTotal}
+              />
+            </div>
           </div>
 
           {/* Quick Actions */}
@@ -288,7 +292,7 @@ export default function DashboardPage() {
               />
 
               {/* Actualites Section */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200">
+              <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200" data-tour="dashboard-feed">
                 <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
                   <MessageCircle className="w-5 h-5 text-blue-600" />
                   Actualites

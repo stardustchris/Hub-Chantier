@@ -19,7 +19,7 @@ export default function Card({
   hover = false,
 }: CardProps) {
   // Base classes pour toutes les cartes
-  const baseClasses = 'bg-white rounded-2xl shadow-sm border border-gray-200'
+  const baseClasses = 'bg-neutral-surface-primary rounded-2xl shadow-sm border border-neutral-border'
 
   // Classes de padding
   const paddingClasses = {

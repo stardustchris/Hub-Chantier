@@ -25,12 +25,14 @@ import {
   Package,
   PieChart,
   RefreshCw,
+  HelpCircle,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
 import { useNotifications } from '../hooks/useNotifications'
 import NotificationDropdown from './notifications/NotificationDropdown'
 import FloatingActionButton from './common/FloatingActionButton'
+import OnboardingProvider, { useOnboarding } from './onboarding/OnboardingProvider'
 
 interface LayoutProps {
   children: ReactNode
@@ -43,19 +45,21 @@ interface NavItem {
   disabled?: boolean
   roles?: UserRole[]
   children?: NavItem[]
+  tourId?: string
 }
 
 const navigation: NavItem[] = [
-  { name: 'Tableau de bord', href: '/', icon: Home },
-  { name: 'Chantiers', href: '/chantiers', icon: Building2 },
-  { name: 'Utilisateurs', href: '/utilisateurs', icon: Users, roles: ['admin', 'conducteur'] },
-  { name: 'Planning', href: '/planning', icon: Calendar },
-  { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock },
+  { name: 'Tableau de bord', href: '/', icon: Home, tourId: 'nav-dashboard' },
+  { name: 'Chantiers', href: '/chantiers', icon: Building2, tourId: 'nav-chantiers' },
+  { name: 'Utilisateurs', href: '/utilisateurs', icon: Users, roles: ['admin', 'conducteur'], tourId: 'nav-utilisateurs' },
+  { name: 'Planning', href: '/planning', icon: Calendar, tourId: 'nav-planning' },
+  { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock, tourId: 'nav-feuilles-heures' },
   {
     name: 'Finances',
     href: '/finances',
     icon: BarChart3,
     roles: ['admin', 'conducteur', 'chef_chantier'],
+    tourId: 'nav-finances',
     children: [
       { name: 'Budgets', href: '/budgets', icon: Euro },
       { name: 'Achats', href: '/achats', icon: ShoppingCart },
@@ -68,6 +72,7 @@ const navigation: NavItem[] = [
     href: '/devis',
     icon: FileText,
     roles: ['admin', 'conducteur', 'chef_chantier'],
+    tourId: 'nav-devis',
     children: [
       { name: 'Pipeline', href: '/devis/dashboard', icon: PieChart },
       { name: 'Liste devis', href: '/devis', icon: FileText },
@@ -77,7 +82,7 @@ const navigation: NavItem[] = [
   { name: 'Formulaires', href: '/formulaires', icon: FileText, roles: ['admin', 'conducteur', 'chef_chantier'] },
   { name: 'Documents', href: '/documents', icon: FolderOpen },
   { name: 'Logistique', href: '/logistique', icon: Truck, roles: ['admin', 'conducteur', 'chef_chantier'] },
-  { name: 'Webhooks', href: '/webhooks', icon: Webhook, roles: ['admin'] },
+  { name: 'Webhooks', href: '/webhooks', icon: Webhook, roles: ['admin'], tourId: 'nav-webhooks' },
 ]
 
 // Composant de navigation reutilisable (DRY)
@@ -136,6 +141,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
                 <Link
                   to={item.href}
                   onClick={() => onItemClick?.()}
+                  data-tour={item.tourId}
                   className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isParentActive
                       ? 'bg-primary-50 text-primary-600'
@@ -191,6 +197,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
             key={item.name}
             to={item.disabled ? '#' : item.href}
             onClick={() => !item.disabled && onItemClick?.()}
+            data-tour={item.tourId}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               item.disabled
                 ? 'text-gray-600 cursor-not-allowed opacity-50'
@@ -213,7 +220,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
   )
 }
 
-export default function Layout({ children }: LayoutProps) {
+function LayoutContent({ children }: LayoutProps) {
   const { user, logout } = useAuth()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -222,6 +229,9 @@ export default function Layout({ children }: LayoutProps) {
 
   // Notifications depuis l'API
   const { unreadCount } = useNotifications()
+
+  // Onboarding
+  const { startTour } = useOnboarding()
 
   const roleInfo = user?.role ? ROLES[user.role as UserRole] : null
 
@@ -411,6 +421,16 @@ export default function Layout({ children }: LayoutProps) {
                         <button
                           onClick={() => {
                             setUserMenuOpen(false)
+                            startTour()
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary-600 hover:bg-primary-50"
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                          Guide de demarrage
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false)
                             logout()
                           }}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -434,5 +454,13 @@ export default function Layout({ children }: LayoutProps) {
       {/* Floating Action Button (mobile uniquement) */}
       {user && <FloatingActionButton />}
     </div>
+  )
+}
+
+export default function Layout({ children }: LayoutProps) {
+  return (
+    <OnboardingProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </OnboardingProvider>
   )
 }
