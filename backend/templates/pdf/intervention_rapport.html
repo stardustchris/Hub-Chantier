@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport d'intervention {{ intervention_code }}</title>
+    <style>
+        /* ─── Reset et base ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #212529;
+            line-height: 1.4;
+        }
+
+        /* ─── Page layout ─── */
+        @page {
+            size: A4 portrait;
+            margin: 20mm 15mm 25mm 15mm;
+            @bottom-center {
+                content: "Greg Constructions - SIRET 123 456 789 00012 - RCS Lyon 123 456 789";
+                font-size: 7pt;
+                color: #828282;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " / " counter(pages);
+                font-size: 7pt;
+                color: #828282;
+            }
+        }
+
+        /* ─── En-tete ─── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #29417A;
+        }
+        .header-left {
+            flex: 1;
+        }
+        .header-right {
+            text-align: right;
+        }
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #29417A;
+            margin-bottom: 4px;
+        }
+        .company-info {
+            font-size: 8pt;
+            color: #555;
+            line-height: 1.3;
+        }
+        .rapport-title {
+            background-color: #29417A;
+            color: white;
+            padding: 6px 20px;
+            font-size: 13pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .intervention-code {
+            background-color: #E6EBF5;
+            padding: 4px 20px;
+            font-size: 11pt;
+            font-weight: bold;
+            text-align: center;
+            color: #29417A;
+        }
+        .header-meta {
+            font-size: 8pt;
+            color: #555;
+            margin-top: 6px;
+        }
+
+        /* ─── Sections ─── */
+        .section {
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #29417A;
+            border-bottom: 1px solid #29417A;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+        }
+
+        /* ─── Tableau infos ─── */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        .info-table td {
+            padding: 4px 8px;
+            vertical-align: top;
+            border-bottom: 1px solid #E6EBF5;
+        }
+        .info-table .label {
+            font-weight: bold;
+            width: 160px;
+            color: #29417A;
+            font-size: 9pt;
+        }
+        .info-table .value {
+            font-size: 9pt;
+        }
+
+        /* ─── Client + Intervention cote a cote ─── */
+        .two-columns {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .two-columns .column {
+            flex: 1;
+        }
+
+        /* ─── Bloc client ─── */
+        .client-box {
+            border: 1px solid #B4BEC8;
+            padding: 10px 12px;
+            background-color: #FAFBFC;
+        }
+        .client-name {
+            font-weight: bold;
+            font-size: 10pt;
+            margin-bottom: 4px;
+        }
+        .client-detail {
+            font-size: 9pt;
+            line-height: 1.3;
+            color: #555;
+        }
+
+        /* ─── Priorite badges ─── */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-urgente { background-color: #F44336; }
+        .badge-haute { background-color: #FF9800; }
+        .badge-normale { background-color: #4CAF50; }
+        .badge-basse { background-color: #9E9E9E; }
+        .badge-terminee { background-color: #4CAF50; }
+        .badge-en-cours { background-color: #2196F3; }
+        .badge-planifiee { background-color: #FFC107; color: #333; }
+        .badge-annulee { background-color: #9E9E9E; }
+        .badge-a-planifier { background-color: #607D8B; }
+
+        /* ─── Techniciens ─── */
+        .technicien-list {
+            list-style: none;
+            padding: 0;
+        }
+        .technicien-list li {
+            padding: 4px 8px;
+            font-size: 9pt;
+            border-left: 3px solid #29417A;
+            margin-bottom: 4px;
+            background-color: #F5F7FA;
+        }
+        .technicien-principal {
+            font-weight: bold;
+        }
+
+        /* ─── Description / Travaux / Anomalies ─── */
+        .text-block {
+            padding: 8px 12px;
+            background-color: #FAFBFC;
+            border-left: 3px solid #29417A;
+            font-size: 9pt;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        .anomalies-block {
+            border-left-color: #F44336;
+            background-color: #FFF5F5;
+        }
+
+        /* ─── Messages / Fil d'activite ─── */
+        .message-item {
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-left: 3px solid #E0E0E0;
+            background-color: #FAFBFC;
+            page-break-inside: avoid;
+        }
+        .message-item.photo {
+            border-left-color: #2196F3;
+        }
+        .message-header {
+            font-size: 8pt;
+            color: #777;
+            margin-bottom: 4px;
+        }
+        .message-content {
+            font-size: 9pt;
+        }
+        .message-photos {
+            margin-top: 6px;
+        }
+        .message-photos img {
+            max-width: 200px;
+            max-height: 150px;
+            margin-right: 8px;
+            margin-bottom: 4px;
+            border: 1px solid #DDD;
+        }
+
+        /* ─── Signatures ─── */
+        .signatures-grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .signature-block {
+            flex: 1;
+            min-width: 200px;
+            border: 1px solid #B4BEC8;
+            padding: 10px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        .signature-type {
+            font-weight: bold;
+            font-size: 9pt;
+            color: #29417A;
+            margin-bottom: 6px;
+        }
+        .signature-name {
+            font-size: 9pt;
+            margin-bottom: 4px;
+        }
+        .signature-date {
+            font-size: 8pt;
+            color: #777;
+        }
+        .signature-image {
+            margin: 8px auto;
+            max-width: 180px;
+            max-height: 60px;
+        }
+
+        /* ─── Footer generation ─── */
+        .generation-info {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 7pt;
+            color: #AAA;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══ EN-TETE ═══ -->
+    <div class="header">
+        <div class="header-left">
+            <div class="company-name">Greg Constructions</div>
+            <div class="company-info">
+                12 rue des Batisseurs<br>
+                69001 Lyon<br>
+                Tel : 04 72 00 00 00<br>
+                SIRET : 123 456 789 00012
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="rapport-title">RAPPORT D'INTERVENTION</div>
+            <div class="intervention-code">{{ intervention_code }}</div>
+            <div class="header-meta">
+                Genere le {{ generated_at }}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ CLIENT + INTERVENTION ═══ -->
+    <div class="two-columns">
+        <div class="column">
+            <div class="section">
+                <div class="section-title">CLIENT</div>
+                <div class="client-box">
+                    <div class="client-name">{{ client_nom }}</div>
+                    <div class="client-detail">
+                        {{ client_adresse }}
+                        {% if client_telephone %}<br>Tel : {{ client_telephone }}{% endif %}
+                        {% if client_email %}<br>Email : {{ client_email }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="section">
+                <div class="section-title">INTERVENTION</div>
+                <table class="info-table">
+                    <tr>
+                        <td class="label">Type</td>
+                        <td class="value">{{ type_intervention }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Statut</td>
+                        <td class="value">
+                            <span class="badge badge-{{ statut_class }}">{{ statut_label }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Priorite</td>
+                        <td class="value">
+                            <span class="badge badge-{{ priorite_class }}">{{ priorite_label }}</span>
+                        </td>
+                    </tr>
+                    {% if date_planifiee %}
+                    <tr>
+                        <td class="label">Date planifiee</td>
+                        <td class="value">{{ date_planifiee }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ HORAIRES ═══ -->
+    {% if horaires_planifies or horaires_reels %}
+    <div class="section">
+        <div class="section-title">HORAIRES</div>
+        <table class="info-table">
+            {% if horaires_planifies %}
+            <tr>
+                <td class="label">Horaires planifies</td>
+                <td class="value">{{ horaires_planifies }}</td>
+            </tr>
+            {% endif %}
+            {% if horaires_reels %}
+            <tr>
+                <td class="label">Horaires reels</td>
+                <td class="value">{{ horaires_reels }}</td>
+            </tr>
+            {% endif %}
+            {% if duree_reelle %}
+            <tr>
+                <td class="label">Duree reelle</td>
+                <td class="value">{{ duree_reelle }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- ═══ INTERVENANTS ═══ -->
+    {% if techniciens %}
+    <div class="section">
+        <div class="section-title">INTERVENANT(S)</div>
+        <ul class="technicien-list">
+            {% for tech in techniciens %}
+            <li {% if tech.est_principal %}class="technicien-principal"{% endif %}>
+                Utilisateur #{{ tech.utilisateur_id }}
+                {% if tech.est_principal %} (Principal){% endif %}
+                {% if tech.commentaire %} - {{ tech.commentaire }}{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- ═══ DESCRIPTION ═══ -->
+    <div class="section">
+        <div class="section-title">DESCRIPTION / MOTIF</div>
+        <div class="text-block">{{ description }}</div>
+    </div>
+
+    <!-- ═══ TRAVAUX REALISES ═══ -->
+    {% if inclure_travaux and travaux_realises %}
+    <div class="section">
+        <div class="section-title">TRAVAUX REALISES</div>
+        <div class="text-block">{{ travaux_realises }}</div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ ANOMALIES ═══ -->
+    {% if inclure_anomalies and anomalies %}
+    <div class="section">
+        <div class="section-title">ANOMALIES CONSTATEES</div>
+        <div class="text-block anomalies-block">{{ anomalies }}</div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ FIL D'ACTIVITE / MESSAGES ═══ -->
+    {% if messages %}
+    <div class="section">
+        <div class="section-title">FIL D'ACTIVITE</div>
+        {% for msg in messages %}
+        <div class="message-item {% if msg.a_photos %}photo{% endif %}">
+            <div class="message-header">
+                {{ msg.type_message_label }} - {{ msg.created_at_str }}
+            </div>
+            <div class="message-content">{{ msg.contenu }}</div>
+            {% if msg.a_photos and inclure_photos %}
+            <div class="message-photos">
+                {% for url in msg.photos_urls %}
+                <img src="{{ url }}" alt="Photo intervention">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ═══ SIGNATURES ═══ -->
+    {% if inclure_signatures and signatures %}
+    <div class="section">
+        <div class="section-title">SIGNATURES</div>
+        <div class="signatures-grid">
+            {% for sig in signatures %}
+            <div class="signature-block">
+                <div class="signature-type">{{ sig.type_label }}</div>
+                <div class="signature-name">{{ sig.nom_signataire }}</div>
+                {% if sig.signature_data and sig.signature_data.startswith('data:') %}
+                <img class="signature-image" src="{{ sig.signature_data }}" alt="Signature {{ sig.nom_signataire }}">
+                {% endif %}
+                <div class="signature-date">{{ sig.horodatage_str }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ INFO GENERATION ═══ -->
+    <div class="generation-info">
+        Rapport genere automatiquement par Hub Chantier le {{ generated_at }}
+    </div>
+
+</body>
+</html>

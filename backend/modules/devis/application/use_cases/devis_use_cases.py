@@ -1,12 +1,13 @@
 """Use Cases pour la gestion des devis.
 
 DEV-03: Creation devis structure.
+DEV-18: Historique modifications (avant/apres).
 DEV-TVA: Ventilation TVA multi-taux et mention TVA reduite.
 """
 
 from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Callable, Optional, Protocol, Tuple
+from typing import Any, Callable, Optional, Protocol, Tuple
 
 from ...domain.entities.devis import Devis
 from ...domain.entities.journal_devis import JournalDevis
@@ -33,6 +34,28 @@ from ...domain.value_objects.taux_tva import TauxTVA
 # DEV-TVA: Type pour le resolveur de contexte TVA chantier (evite couplage inter-modules)
 # Signature: (chantier_ref) -> (type_travaux, batiment_plus_2ans, usage_habitation) ou None
 ChantierTVAResolver = Callable[[str], Optional[Tuple[Optional[str], Optional[bool], Optional[bool]]]]
+
+
+def _serialize_for_journal(value: Any) -> Optional[str]:
+    """Serialise une valeur pour stockage dans le journal (DEV-18).
+
+    Convertit les types Python en strings comparables et stockables en JSON.
+
+    Args:
+        value: La valeur a serialiser.
+
+    Returns:
+        La representation string de la valeur, ou None.
+    """
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return str(value)
+    return str(value)
 
 
 class DevisNotFoundError(Exception):
@@ -183,100 +206,49 @@ class UpdateDevisUseCase:
         if not devis.est_modifiable:
             raise DevisNotModifiableError(devis_id, devis.statut)
 
-        modifications = []
+        # DEV-18: Capturer les valeurs avant/apres pour chaque champ modifie
+        changements = {}  # champ -> {"avant": old, "apres": new}
 
-        if dto.client_nom is not None:
-            devis.client_nom = dto.client_nom
-            modifications.append("client_nom")
-        if dto.objet is not None:
-            devis.objet = dto.objet
-            modifications.append("objet")
-        if dto.chantier_ref is not None:
-            devis.chantier_ref = dto.chantier_ref
-            modifications.append("chantier_ref")
-        if dto.client_adresse is not None:
-            devis.client_adresse = dto.client_adresse
-            modifications.append("client_adresse")
-        if dto.client_email is not None:
-            devis.client_email = dto.client_email
-            modifications.append("client_email")
-        if dto.client_telephone is not None:
-            devis.client_telephone = dto.client_telephone
-            modifications.append("client_telephone")
-        if dto.date_validite is not None:
-            devis.date_validite = dto.date_validite
-            modifications.append("date_validite")
-        if dto.taux_tva_defaut is not None:
-            devis.taux_tva_defaut = dto.taux_tva_defaut
-            modifications.append("taux_tva_defaut")
-        if dto.taux_marge_global is not None:
-            devis.taux_marge_global = dto.taux_marge_global
-            modifications.append("taux_marge_global")
-        if dto.taux_marge_moe is not None:
-            devis.taux_marge_moe = dto.taux_marge_moe
-            modifications.append("taux_marge_moe")
-        if dto.taux_marge_materiaux is not None:
-            devis.taux_marge_materiaux = dto.taux_marge_materiaux
-            modifications.append("taux_marge_materiaux")
-        if dto.taux_marge_sous_traitance is not None:
-            devis.taux_marge_sous_traitance = dto.taux_marge_sous_traitance
-            modifications.append("taux_marge_sous_traitance")
-        if dto.taux_marge_materiel is not None:
-            devis.taux_marge_materiel = dto.taux_marge_materiel
-            modifications.append("taux_marge_materiel")
-        if dto.taux_marge_deplacement is not None:
-            devis.taux_marge_deplacement = dto.taux_marge_deplacement
-            modifications.append("taux_marge_deplacement")
-        if dto.coefficient_frais_generaux is not None:
-            devis.coefficient_frais_generaux = dto.coefficient_frais_generaux
-            modifications.append("coefficient_frais_generaux")
-        if dto.retenue_garantie_pct is not None:
-            devis.retenue_garantie_pct = dto.retenue_garantie_pct
-            modifications.append("retenue_garantie_pct")
-        if dto.notes is not None:
-            devis.notes = dto.notes
-            modifications.append("notes")
-        if dto.acompte_pct is not None:
-            devis.acompte_pct = dto.acompte_pct
-            modifications.append("acompte_pct")
-        if dto.echeance is not None:
-            devis.echeance = dto.echeance
-            modifications.append("echeance")
-        if dto.moyens_paiement is not None:
-            devis.moyens_paiement = dto.moyens_paiement
-            modifications.append("moyens_paiement")
-        if dto.date_visite is not None:
-            devis.date_visite = dto.date_visite
-            modifications.append("date_visite")
-        if dto.date_debut_travaux is not None:
-            devis.date_debut_travaux = dto.date_debut_travaux
-            modifications.append("date_debut_travaux")
-        if dto.duree_estimee_jours is not None:
-            devis.duree_estimee_jours = dto.duree_estimee_jours
-            modifications.append("duree_estimee_jours")
-        if dto.notes_bas_page is not None:
-            devis.notes_bas_page = dto.notes_bas_page
-            modifications.append("notes_bas_page")
-        if dto.nom_interne is not None:
-            devis.nom_interne = dto.nom_interne
-            modifications.append("nom_interne")
-        if dto.commercial_id is not None:
-            devis.commercial_id = dto.commercial_id
-            modifications.append("commercial_id")
-        if dto.conducteur_id is not None:
-            devis.conducteur_id = dto.conducteur_id
-            modifications.append("conducteur_id")
+        champs_a_verifier = [
+            "client_nom", "objet", "chantier_ref", "client_adresse",
+            "client_email", "client_telephone", "date_validite",
+            "taux_tva_defaut", "taux_marge_global", "taux_marge_moe",
+            "taux_marge_materiaux", "taux_marge_sous_traitance",
+            "taux_marge_materiel", "taux_marge_deplacement",
+            "coefficient_frais_generaux", "retenue_garantie_pct",
+            "notes", "acompte_pct", "echeance", "moyens_paiement",
+            "date_visite", "date_debut_travaux", "duree_estimee_jours",
+            "notes_bas_page", "nom_interne", "commercial_id", "conducteur_id",
+        ]
+
+        for champ in champs_a_verifier:
+            nouvelle_valeur = getattr(dto, champ, None)
+            if nouvelle_valeur is not None:
+                ancienne_valeur = getattr(devis, champ, None)
+                # Serialiser pour comparaison et stockage JSON
+                ancien_str = _serialize_for_journal(ancienne_valeur)
+                nouveau_str = _serialize_for_journal(nouvelle_valeur)
+                if ancien_str != nouveau_str:
+                    changements[champ] = {
+                        "avant": ancien_str,
+                        "apres": nouveau_str,
+                    }
+                setattr(devis, champ, nouvelle_valeur)
 
         devis.updated_at = datetime.utcnow()
         devis = self._devis_repository.save(devis)
 
-        # Journal
-        if modifications:
+        # DEV-18: Journal avec detail avant/apres pour chaque champ
+        if changements:
             self._journal_repository.save(
                 JournalDevis(
                     devis_id=devis.id,
                     action="modification",
-                    details_json={"message": f"Modification des champs: {', '.join(modifications)}"},
+                    details_json={
+                        "message": f"Modification des champs: {', '.join(changements.keys())}",
+                        "type_modification": "update_devis",
+                        "changements": changements,
+                    },
                     auteur_id=updated_by,
                     created_at=datetime.utcnow(),
                 )

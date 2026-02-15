@@ -45,6 +45,7 @@ from ...application.use_cases.workflow_use_cases import (
     RefuserDevisUseCase,
     PerduDevisUseCase,
     MarquerExpireUseCase,
+    GetWorkflowInfoUseCase,
 )
 from ...application.use_cases.search_use_cases import SearchDevisUseCase
 from ...application.use_cases.dashboard_use_cases import GetDashboardDevisUseCase
@@ -112,6 +113,7 @@ from ...application.use_cases.piece_jointe_use_cases import (
     SupprimerPieceJointeUseCase,
     ToggleVisibiliteUseCase,
 )
+from ...application.use_cases.import_dpgf_use_case import ImportDPGFUseCase
 from ...application.use_cases.conversion_use_cases import (
     ConvertirDevisUseCase,
     GetConversionInfoUseCase,
@@ -317,6 +319,12 @@ def get_marquer_expire_use_case(
     journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
 ) -> MarquerExpireUseCase:
     return MarquerExpireUseCase(devis_repo, journal_repo)
+
+
+def get_workflow_info_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+) -> GetWorkflowInfoUseCase:
+    return GetWorkflowInfoUseCase(devis_repo)
 
 
 def get_reorder_lots_use_case(
@@ -734,6 +742,19 @@ def get_convertir_devis_en_chantier_use_case(
         chantier_creation_port=chantier_creation_port,
         signature_repo=signature_repo,
     )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Cases - Import DPGF (DEV-21)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_import_dpgf_use_case(
+    devis_repo: DevisRepository = Depends(get_devis_repository),
+    lot_repo: LotDevisRepository = Depends(get_lot_devis_repository),
+    ligne_repo: LigneDevisRepository = Depends(get_ligne_devis_repository),
+    journal_repo: JournalDevisRepository = Depends(get_journal_devis_repository),
+) -> ImportDPGFUseCase:
+    return ImportDPGFUseCase(devis_repo, lot_repo, ligne_repo, journal_repo)
+
 
 # -------------------------------------------------------------------------
 # Pieces jointes (DEV-07)

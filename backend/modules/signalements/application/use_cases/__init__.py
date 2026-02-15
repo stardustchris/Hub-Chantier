@@ -24,6 +24,10 @@ from .reponse_use_cases import (
     DeleteReponseUseCase,
     ReponseNotFoundError,
 )
+from .check_retard_use_case import (
+    CheckSignalementsRetardUseCase,
+    RetardAlertResult,
+)
 
 __all__ = [
     # Signalement Use Cases
@@ -39,6 +43,9 @@ __all__ = [
     "ReouvrirsignalementUseCase",
     "GetStatistiquesUseCase",
     "GetSignalementsEnRetardUseCase",
+    # Alertes et escalade (SIG-16, SIG-17)
+    "CheckSignalementsRetardUseCase",
+    "RetardAlertResult",
     # Reponse Use Cases
     "CreateReponseUseCase",
     "ListReponsesUseCase",

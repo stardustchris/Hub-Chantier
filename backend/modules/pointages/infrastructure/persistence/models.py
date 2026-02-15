@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from sqlalchemy import (
+    Boolean,
     Column,
     Integer,
     String,
@@ -133,3 +134,20 @@ class VariablePaieModel(Base):
     __table_args__ = (
         Index("ix_variable_type_date", "type_variable", "date_application"),
     )
+
+
+class MacroPaieModel(Base):
+    """Modèle SQLAlchemy pour les macros de paie (FDH-18)."""
+
+    __tablename__ = "macros_paie"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nom = Column(String(255), nullable=False)
+    type_macro = Column(String(50), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    formule = Column(Text, nullable=False)
+    parametres = Column(Text, nullable=True)  # JSON sérialisé
+    active = Column(Boolean, nullable=False, default=True, index=True)
+    created_by = Column(Integer, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.now)
+    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)

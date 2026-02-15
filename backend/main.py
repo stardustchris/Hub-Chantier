@@ -24,7 +24,8 @@ from shared.infrastructure.web.security_middleware import SecurityHeadersMiddlew
 from shared.infrastructure.web.csrf_middleware import CSRFMiddleware
 from shared.infrastructure.web.rate_limit_middleware import RateLimitMiddleware
 from shared.infrastructure.scheduler import get_scheduler
-from shared.infrastructure.scheduler.jobs import RappelReservationJob
+from shared.infrastructure.scheduler.jobs import RappelReservationJob, CheckSignalementsRetardJob
+from shared.infrastructure.notifications.register_push_handlers import register_push_notification_handlers
 from modules.auth.infrastructure.web import router as auth_router, users_router
 from modules.auth.infrastructure.web.api_keys_routes import router as api_keys_router
 from modules.auth.infrastructure.web.password_routes import router as password_router
@@ -33,6 +34,7 @@ from modules.dashboard.infrastructure.web import dashboard_router
 from modules.taches.infrastructure.web import router as taches_router
 from modules.planning.infrastructure.web import router as planning_router
 from modules.pointages.infrastructure.web import router as pointages_router
+from modules.pointages.infrastructure.web import macro_paie_router
 from modules.formulaires.infrastructure.web import router as formulaires_router
 from modules.formulaires.infrastructure.web import templates_router as templates_formulaires_router
 from modules.signalements.infrastructure.web import router as signalements_router
@@ -147,6 +149,10 @@ async def startup_event():
     register_planning_event_handlers()
     logger.info("Planning integration configured")
 
+    # Enregistrer handlers push (SIG-13, SIG-17, FEED-17, PLN-23)
+    register_push_notification_handlers()
+    logger.info("Handlers push notifications enregistrés (SIG-13/17, FEED-17, PLN-23)")
+
     # Enregistrer le webhook event handler sur tous les événements
     # Cela permet aux webhooks de se déclencher automatiquement à chaque événement
     event_bus.subscribe_all(webhook_event_handler)
@@ -155,8 +161,9 @@ async def startup_event():
     # Démarrer le scheduler et enregistrer les jobs
     scheduler = get_scheduler()
     RappelReservationJob.register(scheduler, SessionLocal)
+    CheckSignalementsRetardJob.register(scheduler, SessionLocal)
     scheduler.start()
-    logger.info("Scheduler démarré avec jobs planifiés")
+    logger.info("Scheduler démarré avec jobs planifiés (rappels + retards signalements)")
 
     # Démarrer le nettoyage automatique des webhook deliveries (GDPR)
     start_cleanup_scheduler()
@@ -235,6 +242,7 @@ app.include_router(upload_router, prefix="/api")
 app.include_router(taches_router, prefix="/api")
 app.include_router(planning_router, prefix="/api")
 app.include_router(pointages_router, prefix="/api")
+app.include_router(macro_paie_router, prefix="/api")
 app.include_router(formulaires_router, prefix="/api")
 app.include_router(templates_formulaires_router, prefix="/api")
 app.include_router(signalements_router, prefix="/api")

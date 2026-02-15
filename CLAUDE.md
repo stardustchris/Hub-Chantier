@@ -2,6 +2,30 @@
 
 > Ce fichier est lu au debut de chaque session. Les regles ci-dessous sont OBLIGATOIRES.
 
+---
+
+## REGLES CRITIQUES (lire EN PREMIER)
+
+### Sous-agents background INTERDITS (bug confirme x3)
+
+Les agents lances avec `run_in_background: true` **plantent systematiquement** dans cet environnement.
+Les fichiers de sortie (`/tmp/claude-0/.../tasks/*.output`) restent vides (0 bytes). Confirme 3 sessions de suite.
+
+**Regles absolues :**
+- **JAMAIS** de `run_in_background: true` sur les Task agents
+- Les 4 validations (architect-reviewer, code-reviewer, security-auditor, test-automator) se font **directement** avec Grep/Read dans le contexte principal
+- Les agents foreground (synchrones) fonctionnent normalement si necessaire
+
+### Source des agents d'implementation
+
+Les agents d'implementation doivent etre choisis depuis le catalogue officiel :
+**https://github.com/VoltAgent/awesome-claude-code-subagents/tree/main**
+
+Ce repo contient 127+ agents specialises dans 10 categories (core-dev, lang, infra, qa-sec, data-ai, dev-exp, domains, biz, meta, research).
+Toujours privilegier un agent du catalogue plutot qu'un agent generique.
+
+---
+
 ## LECTURE OBLIGATOIRE
 
 1. Ce fichier (`CLAUDE.md`) - regles de session
@@ -240,4 +264,4 @@ Task(subagent_type="general-purpose",
 
 ## Blocages / Questions en suspens
 
-(Aucun pour l'instant)
+(Voir section REGLES CRITIQUES en haut du fichier)

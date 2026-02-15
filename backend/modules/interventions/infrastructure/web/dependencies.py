@@ -4,6 +4,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
+from shared.infrastructure.pdf import PdfGeneratorService
 from ...domain.repositories import (
     InterventionRepository,
     AffectationInterventionRepository,
@@ -34,6 +35,7 @@ from ...application.use_cases import (
     ToggleRapportInclusionUseCase,
     AddSignatureUseCase,
     ListSignaturesUseCase,
+    GenerateInterventionPDFUseCase,
 )
 
 
@@ -185,3 +187,27 @@ def get_list_signatures_use_case(
 ) -> ListSignaturesUseCase:
     """Factory pour ListSignaturesUseCase."""
     return ListSignaturesUseCase(repo)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Use Case - Generation PDF (INT-14, INT-15)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_generate_intervention_pdf_use_case(
+    intervention_repo: InterventionRepository = Depends(get_intervention_repository),
+    affectation_repo: AffectationInterventionRepository = Depends(get_affectation_repository),
+    message_repo: InterventionMessageRepository = Depends(get_message_repository),
+    signature_repo: SignatureInterventionRepository = Depends(get_signature_repository),
+) -> GenerateInterventionPDFUseCase:
+    """Factory pour GenerateInterventionPDFUseCase.
+
+    INT-14: Rapport PDF - Generation automatique.
+    """
+    pdf_generator = PdfGeneratorService()
+    return GenerateInterventionPDFUseCase(
+        intervention_repo=intervention_repo,
+        affectation_repo=affectation_repo,
+        message_repo=message_repo,
+        signature_repo=signature_repo,
+        pdf_generator=pdf_generator,
+    )

@@ -25,6 +25,11 @@ from .signature_use_cases import (
     AddSignatureUseCase,
     ListSignaturesUseCase,
 )
+from .pdf_use_cases import (
+    GenerateInterventionPDFUseCase,
+    GenerateInterventionPDFError,
+    InterventionPDFOptionsDTO,
+)
 
 __all__ = [
     # Intervention
@@ -48,4 +53,8 @@ __all__ = [
     # Signatures
     "AddSignatureUseCase",
     "ListSignaturesUseCase",
+    # PDF (INT-14, INT-15)
+    "GenerateInterventionPDFUseCase",
+    "GenerateInterventionPDFError",
+    "InterventionPDFOptionsDTO",
 ]

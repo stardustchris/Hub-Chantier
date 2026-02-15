@@ -35,3 +35,19 @@
 - Pour la VALIDATION (architect, code-reviewer, security): faire directement dans le contexte principal (lire les fichiers + rendre le verdict)
 - Pour l'IMPLEMENTATION (python-pro, react-specialist): les agents background restent utiles car ils produisent du code de maniere autonome
 - Ne pas relancer un agent background qui a plante — basculer sur execution directe
+
+## 2026-02-15 - Session plan-hub-ux-improvements
+
+### CONFIRMATION: Agents background TOUS cassés (3e occurrence)
+
+**Contexte**: Les 4 agents de validation lancés en `run_in_background=true` ont ENCORE planté. Fichiers output vides (0 bytes). 3e session consécutive avec le même problème.
+
+**Impact**: Perte de 15+ min à attendre et vérifier, frustration utilisateur ("je vais aller sur Codex").
+
+**Cause confirmée**: `run_in_background: true` ne fonctionne PAS dans cet environnement. Les processus agents meurent silencieusement sans écrire de sortie.
+
+**Solution définitive** (ajoutée dans CLAUDE.md):
+- **JAMAIS** de `run_in_background: true` — point final
+- Validations = Grep/Read directs dans le contexte principal (~30s, 100% fiable)
+- Agents foreground synchrones OK si vraiment nécessaire
+- **Règle persistée dans CLAUDE.md** pour survivre au compactage
