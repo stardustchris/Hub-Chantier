@@ -26,64 +26,77 @@ export default function OnboardingTooltip({
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
 
   useEffect(() => {
-    const targetElement = document.querySelector(`[data-tour="${step.target}"]`)
+    const updatePosition = () => {
+      const targetElement = document.querySelector(`[data-tour="${step.target}"]`)
 
-    if (!targetElement) {
-      console.warn(`Onboarding: Element with data-tour="${step.target}" not found`)
-      return
+      if (!targetElement) {
+        console.warn(`Onboarding: Element with data-tour="${step.target}" not found`)
+        return
+      }
+
+      const rect = targetElement.getBoundingClientRect()
+      setHighlightRect(rect)
+
+      // Calculer la position du tooltip selon placement
+      const tooltipWidth = 320
+      const tooltipHeight = 200
+      const gap = 16
+
+      let top = 0
+      let left = 0
+
+      switch (step.placement) {
+        case 'bottom':
+          top = rect.bottom + gap
+          left = rect.left + rect.width / 2 - tooltipWidth / 2
+          break
+        case 'top':
+          top = rect.top - tooltipHeight - gap
+          left = rect.left + rect.width / 2 - tooltipWidth / 2
+          break
+        case 'right':
+          top = rect.top + rect.height / 2 - tooltipHeight / 2
+          left = rect.right + gap
+          break
+        case 'left':
+          top = rect.top + rect.height / 2 - tooltipHeight / 2
+          left = rect.left - tooltipWidth - gap
+          break
+        default:
+          top = rect.bottom + gap
+          left = rect.left
+      }
+
+      // Ajuster si hors écran
+      if (left + tooltipWidth > window.innerWidth) {
+        left = window.innerWidth - tooltipWidth - 16
+      }
+      if (left < 16) {
+        left = 16
+      }
+      if (top + tooltipHeight > window.innerHeight) {
+        top = window.innerHeight - tooltipHeight - 16
+      }
+      if (top < 16) {
+        top = 16
+      }
+
+      setPosition({ top, left })
     }
 
-    const rect = targetElement.getBoundingClientRect()
-    setHighlightRect(rect)
-
-    // Calculer la position du tooltip selon placement
-    const tooltipWidth = 320
-    const tooltipHeight = 200
-    const gap = 16
-
-    let top = 0
-    let left = 0
-
-    switch (step.placement) {
-      case 'bottom':
-        top = rect.bottom + gap
-        left = rect.left + rect.width / 2 - tooltipWidth / 2
-        break
-      case 'top':
-        top = rect.top - tooltipHeight - gap
-        left = rect.left + rect.width / 2 - tooltipWidth / 2
-        break
-      case 'right':
-        top = rect.top + rect.height / 2 - tooltipHeight / 2
-        left = rect.right + gap
-        break
-      case 'left':
-        top = rect.top + rect.height / 2 - tooltipHeight / 2
-        left = rect.left - tooltipWidth - gap
-        break
-      default:
-        top = rect.bottom + gap
-        left = rect.left
-    }
-
-    // Ajuster si hors écran
-    if (left + tooltipWidth > window.innerWidth) {
-      left = window.innerWidth - tooltipWidth - 16
-    }
-    if (left < 16) {
-      left = 16
-    }
-    if (top + tooltipHeight > window.innerHeight) {
-      top = window.innerHeight - tooltipHeight - 16
-    }
-    if (top < 16) {
-      top = 16
-    }
-
-    setPosition({ top, left })
+    updatePosition()
 
     // Scroll pour rendre l'élément visible
-    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const targetElement = document.querySelector(`[data-tour="${step.target}"]`)
+    targetElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+    // Repositionner sur resize/scroll
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
   }, [step])
 
   const isLastStep = currentStep === totalSteps - 1
@@ -111,6 +124,9 @@ export default function OnboardingTooltip({
 
       {/* Tooltip */}
       <div
+        role="dialog"
+        aria-label={step.title}
+        aria-modal="true"
         className="fixed z-[10000] bg-white rounded-2xl shadow-2xl p-6 pointer-events-auto"
         style={{
           top: `${position.top}px`,
@@ -129,10 +145,10 @@ export default function OnboardingTooltip({
           </div>
           <button
             onClick={onSkip}
-            className="ml-2 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Fermer le guide"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-600" />
           </button>
         </div>
 

@@ -17,6 +17,22 @@ import {
   annulerReservation,
 } from '../services/logistique'
 
+/** Extracteur safe de message d'erreur API (pas de cast unsafe) */
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const resp = (err as Record<string, unknown>).response
+    if (typeof resp === 'object' && resp !== null) {
+      const { status, data } = resp as Record<string, unknown>
+      if (status === 409) return 'Conflit: ce créneau est déjà réservé'
+      if (typeof data === 'object' && data !== null && 'detail' in data) {
+        const detail = (data as Record<string, unknown>).detail
+        if (typeof detail === 'string') return detail
+      }
+    }
+  }
+  return fallback
+}
+
 /**
  * Options de configuration du hook useReservationModal.
  */
@@ -146,12 +162,7 @@ export function useReservationModal(
       onClose()
     },
     onError: (err: unknown) => {
-      const error = err as { response?: { status?: number; data?: { detail?: string } } }
-      if (error.response?.status === 409) {
-        setError('Conflit: ce créneau est déjà réservé')
-      } else {
-        setError(error.response?.data?.detail || 'Erreur lors de la création')
-      }
+      setError(getApiErrorMessage(err, 'Erreur lors de la création'))
     },
   })
 
@@ -186,7 +197,7 @@ export function useReservationModal(
       setError(null)
       createMutation.mutate(formData as ReservationCreate)
     },
-    [formData, createMutation]
+    [formData, createMutation.mutate]
   )
 
   /**
@@ -239,8 +250,7 @@ export function useReservationModal(
         queryClient.setQueryData(key, data)
       })
 
-      const error = err as { response?: { data?: { detail?: string } } }
-      setError(error.response?.data?.detail || 'Erreur lors de la validation')
+      setError(getApiErrorMessage(err, 'Erreur lors de la validation'))
     },
     onSuccess: () => {
       onSuccess?.()
@@ -257,7 +267,7 @@ export function useReservationModal(
     if (!reservation) return
     setError(null)
     validerMutation.mutate(reservation.id)
-  }, [reservation, validerMutation])
+  }, [reservation, validerMutation.mutate])
 
   /**
    * TanStack Query Mutation: Refuser une réservation (optimistic update)
@@ -309,8 +319,7 @@ export function useReservationModal(
         queryClient.setQueryData(key, data)
       })
 
-      const error = err as { response?: { data?: { detail?: string } } }
-      setError(error.response?.data?.detail || 'Erreur lors du refus')
+      setError(getApiErrorMessage(err, 'Erreur lors du refus'))
     },
     onSuccess: () => {
       onSuccess?.()
@@ -327,7 +336,7 @@ export function useReservationModal(
     if (!reservation) return
     setError(null)
     refuserMutation.mutate({ reservationId: reservation.id, motif: motifRefus || undefined })
-  }, [reservation, motifRefus, refuserMutation])
+  }, [reservation, motifRefus, refuserMutation.mutate])
 
   /**
    * TanStack Query Mutation: Annuler une réservation (optimistic update)
@@ -364,8 +373,7 @@ export function useReservationModal(
         queryClient.setQueryData(key, data)
       })
 
-      const error = err as { response?: { data?: { detail?: string } } }
-      setError(error.response?.data?.detail || "Erreur lors de l'annulation")
+      setError(getApiErrorMessage(err, "Erreur lors de l'annulation"))
     },
     onSuccess: () => {
       onSuccess?.()
@@ -381,7 +389,7 @@ export function useReservationModal(
     if (!reservation) return
     setError(null)
     annulerMutation.mutate(reservation.id)
-  }, [reservation, annulerMutation])
+  }, [reservation, annulerMutation.mutate])
 
   // Aggregate loading state from all mutations
   const loading = createMutation.isPending || validerMutation.isPending || refuserMutation.isPending || annulerMutation.isPending

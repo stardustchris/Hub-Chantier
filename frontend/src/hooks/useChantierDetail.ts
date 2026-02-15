@@ -164,7 +164,7 @@ export function useChantierDetail({
 
   const handleUpdateChantier = useCallback(async (data: ChantierUpdate) => {
     updateChantierMutation.mutate(data)
-  }, [updateChantierMutation])
+  }, [updateChantierMutation.mutate])
 
   // Delete chantier with undo
   const handleDeleteChantier = useCallback(() => {
@@ -251,7 +251,7 @@ export function useChantierDetail({
 
   const handleChangeStatut = useCallback(async (action: 'demarrer' | 'receptionner' | 'fermer') => {
     changeStatutMutation.mutate(action)
-  }, [changeStatutMutation])
+  }, [changeStatutMutation.mutate])
 
   // TanStack Query Mutation: Add user to team (optimistic update)
   const addUserMutation = useMutation({
@@ -317,7 +317,7 @@ export function useChantierDetail({
   const handleAddUser = useCallback(async (userId: string) => {
     if (!showAddUserModal) return
     addUserMutation.mutate({ userId, type: showAddUserModal })
-  }, [showAddUserModal, addUserMutation])
+  }, [showAddUserModal, addUserMutation.mutate])
 
   // TanStack Query Mutation: Remove user from team (optimistic update with undo)
   const removeUserMutation = useMutation({

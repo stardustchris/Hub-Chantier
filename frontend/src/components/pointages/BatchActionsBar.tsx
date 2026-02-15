@@ -96,6 +96,11 @@ export default function BatchActionsBar({
         .animate-slide-up {
           animation: slide-up 0.3s ease-out;
         }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-slide-up {
+            animation: none;
+          }
+        }
       `}</style>
     </div>
   )
