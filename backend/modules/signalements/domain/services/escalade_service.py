@@ -27,9 +27,12 @@ class EscaladeService:
     - À 200% du temps: escalade Admin
     """
 
-    # Seuils d'escalade et destinataires
+    # Seuils d'escalade et destinataires (CDC 10.5)
+    # 50% -> Créateur + Chef de chantier
+    # 100% -> + Conducteur de travaux
+    # 200% -> + Administrateur
     SEUILS_ESCALADE: List[Tuple[float, str, List[str]]] = [
-        (50.0, "chef_chantier", ["chef_chantier"]),
+        (50.0, "chef_chantier", ["createur", "chef_chantier"]),
         (100.0, "conducteur", ["conducteur"]),
         (200.0, "admin", ["admin"]),
     ]

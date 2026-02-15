@@ -11,6 +11,7 @@ from .signalement_events import (
 from .signalement_created import SignalementCreatedEvent
 from .signalement_updated import SignalementUpdatedEvent
 from .signalement_closed import SignalementClosedEvent
+from .escalade_signalement import EscaladeSignalementEvent
 
 __all__ = [
     "SignalementCreated",
@@ -22,4 +23,5 @@ __all__ = [
     "SignalementCreatedEvent",
     "SignalementUpdatedEvent",
     "SignalementClosedEvent",
+    "EscaladeSignalementEvent",
 ]

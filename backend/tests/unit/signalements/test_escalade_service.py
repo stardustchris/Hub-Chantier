@@ -73,7 +73,7 @@ class TestDeterminerEscalades:
         assert result == []
 
     def test_signalement_a_50_pct_escalade_chef_chantier(self, service):
-        """Signalement a 50% -> escalade chef chantier."""
+        """Signalement a 50% -> escalade createur + chef chantier (CDC 10.5)."""
         sig = Mock()
         sig.id = 1
         sig.statut = Mock(est_resolu=False)
@@ -84,7 +84,7 @@ class TestDeterminerEscalades:
 
         assert len(result) == 1
         assert result[0].niveau == "chef_chantier"
-        assert result[0].destinataires_roles == ["chef_chantier"]
+        assert result[0].destinataires_roles == ["createur", "chef_chantier"]
 
     def test_signalement_a_100_pct_escalade_conducteur(self, service):
         """Signalement a 100% -> escalade conducteur."""

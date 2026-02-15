@@ -53,3 +53,22 @@ class ReponseModel(Base):
 
     # Relations (interne au module uniquement)
     signalement = relationship("SignalementModel", back_populates="reponses")
+
+
+class EscaladeHistoriqueModel(Base):
+    """Modèle SQLAlchemy pour l'historique des escalades (SIG-17)."""
+
+    __tablename__ = "escalade_historique"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    signalement_id = Column(
+        Integer,
+        ForeignKey("signalements.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    niveau = Column(String(50), nullable=False)
+    pourcentage_temps = Column(Integer, nullable=False, default=0)
+    destinataires_roles = Column(String(500), nullable=True)
+    message = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.now)
