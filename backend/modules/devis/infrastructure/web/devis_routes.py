@@ -17,7 +17,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, Optional, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
@@ -77,10 +77,22 @@ from ...application.use_cases.workflow_use_cases import (
     SoumettreDevisUseCase,
     ValiderDevisUseCase,
     RetournerBrouillonUseCase,
+    MarquerVuUseCase,
+    PasserEnNegociationUseCase,
     AccepterDevisUseCase,
     RefuserDevisUseCase,
     PerduDevisUseCase,
+    MarquerExpireUseCase,
+    GetWorkflowInfoUseCase,
 )
+from ...domain.services.workflow_guards import TransitionNonAutoriseeError
+from ...application.use_cases.import_dpgf_use_case import (
+    ImportDPGFUseCase,
+    DPGFImportError,
+    DPGFFormatError,
+    DevisNonImportableError,
+)
+from ...application.dtos.dpgf_dtos import DPGFColumnMappingDTO
 from ...application.use_cases.relance_use_cases import (
     PlanifierRelancesUseCase,
     ExecuterRelancesUseCase,
@@ -183,6 +195,10 @@ from .dependencies import (
     get_accepter_devis_use_case,
     get_refuser_devis_use_case,
     get_perdu_devis_use_case,
+    get_marquer_vu_use_case,
+    get_passer_en_negociation_use_case,
+    get_marquer_expire_use_case,
+    get_workflow_info_use_case,
     get_search_devis_use_case,
     get_dashboard_devis_use_case,
     get_calculer_totaux_use_case,
@@ -240,6 +256,8 @@ from .dependencies import (
     get_annuler_relances_use_case,
     get_get_relances_devis_use_case,
     get_update_config_relances_use_case,
+    # DEV-21: Import DPGF
+    get_import_dpgf_use_case,
     # DEV-12: Generation PDF
     get_generate_pdf_use_case,
 )
@@ -936,6 +954,66 @@ async def marquer_perdu(
         raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
     except TransitionStatutDevisInvalideError as e:
         raise HTTPException(status_code=409, detail=str(e))
+
+
+@router.post("/{devis_id}/marquer-vu")
+async def marquer_vu(
+    devis_id: int,
+    db: Session = Depends(get_db),
+    use_case: MarquerVuUseCase = Depends(get_marquer_vu_use_case),
+):
+    """Marque un devis comme vu par le client (envoye -> vu).
+
+    DEV-15: Transition automatique/tracking quand le client consulte le devis.
+    Pas d'authentification requise (action systeme/tracking pixel).
+    """
+    try:
+        result = use_case.execute(devis_id)
+        db.commit()
+        return result.to_dict()
+    except DevisNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
+    except TransitionStatutDevisInvalideError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@router.post("/{devis_id}/negociation")
+async def passer_en_negociation(
+    devis_id: int,
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case: PasserEnNegociationUseCase = Depends(get_passer_en_negociation_use_case),
+):
+    """Passe un devis en negociation (envoye/vu/expire -> en_negociation).
+
+    DEV-15: Le client souhaite negocier les termes du devis.
+    """
+    try:
+        result = use_case.execute(devis_id, current_user_id)
+        db.commit()
+        return result.to_dict()
+    except DevisNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
+    except TransitionStatutDevisInvalideError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@router.get("/{devis_id}/workflow")
+async def get_workflow_info(
+    devis_id: int,
+    _role: str = Depends(require_conducteur_or_admin),
+    use_case: GetWorkflowInfoUseCase = Depends(get_workflow_info_use_case),
+):
+    """Retourne les informations du workflow d'un devis (DEV-15).
+
+    Inclut le statut actuel, les transitions possibles,
+    les roles autorises et si un motif est requis.
+    """
+    try:
+        return use_case.execute(devis_id)
+    except DevisNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Devis {devis_id} non trouve")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2085,3 +2163,93 @@ async def generate_devis_pdf(
             "Content-Disposition": f'attachment; filename="{safe_filename}"',
         },
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEV-21: Import DPGF (Decomposition Prix Global Forfaitaire)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class DPGFMappingRequest(BaseModel):
+    """Options de mapping des colonnes pour l'import DPGF (DEV-21).
+
+    Permet de specifier quelles colonnes du fichier correspondent
+    a quels champs DPGF. Par defaut: lot(0), description(1), unite(2),
+    quantite(3), prix_unitaire(4).
+    """
+
+    col_lot: int = Field(0, ge=0, description="Index colonne lot")
+    col_description: int = Field(1, ge=0, description="Index colonne description")
+    col_unite: int = Field(2, ge=0, description="Index colonne unite")
+    col_quantite: int = Field(3, ge=0, description="Index colonne quantite")
+    col_prix_unitaire: int = Field(4, ge=0, description="Index colonne prix unitaire")
+    ligne_debut: int = Field(1, ge=0, description="Premiere ligne de donnees (0=header)")
+    feuille: int = Field(0, ge=0, description="Index de la feuille Excel")
+
+
+@router.post("/{devis_id}/import-dpgf", status_code=status.HTTP_201_CREATED)
+async def import_dpgf(
+    devis_id: int,
+    file: UploadFile = File(..., description="Fichier DPGF (.xlsx, .xls, .csv)"),
+    col_lot: int = Query(0, ge=0, description="Index colonne lot"),
+    col_description: int = Query(1, ge=0, description="Index colonne description"),
+    col_unite: int = Query(2, ge=0, description="Index colonne unite"),
+    col_quantite: int = Query(3, ge=0, description="Index colonne quantite"),
+    col_prix_unitaire: int = Query(4, ge=0, description="Index colonne PU"),
+    ligne_debut: int = Query(1, ge=0, description="Premiere ligne de donnees"),
+    feuille: int = Query(0, ge=0, description="Index feuille Excel"),
+    db: Session = Depends(get_db),
+    _role: str = Depends(require_conducteur_or_admin),
+    current_user_id: int = Depends(get_current_user_id),
+    use_case: ImportDPGFUseCase = Depends(get_import_dpgf_use_case),
+):
+    """Importe un fichier DPGF dans un devis (DEV-21).
+
+    Le fichier DPGF (Decomposition Prix Global Forfaitaire) est un fichier
+    Excel ou CSV contenant les colonnes: lot, description, unite, quantite,
+    prix unitaire.
+
+    Les lots et lignes sont crees automatiquement dans le devis.
+    Le devis doit etre en statut brouillon ou en negociation.
+
+    Le mapping des colonnes peut etre personnalise via les query params.
+    Par defaut: lot=col0, description=col1, unite=col2, quantite=col3, PU=col4.
+    """
+    # Taille max 10 Mo
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Le fichier DPGF ne doit pas depasser 10 Mo",
+        )
+
+    mapping = DPGFColumnMappingDTO(
+        col_lot=col_lot,
+        col_description=col_description,
+        col_unite=col_unite,
+        col_quantite=col_quantite,
+        col_prix_unitaire=col_prix_unitaire,
+        ligne_debut=ligne_debut,
+        feuille=feuille,
+    )
+
+    try:
+        result = use_case.execute(
+            devis_id=devis_id,
+            file_content=content,
+            filename=file.filename or "dpgf.xlsx",
+            imported_by=current_user_id,
+            mapping=mapping,
+        )
+        db.commit()
+        return result.to_dict()
+    except DevisNotFoundError:
+        raise HTTPException(
+            status_code=404, detail=f"Devis {devis_id} non trouve"
+        )
+    except DevisNonImportableError as e:
+        raise HTTPException(status_code=409, detail=e.message)
+    except DPGFFormatError as e:
+        raise HTTPException(status_code=422, detail=e.message)
+    except DPGFImportError as e:
+        raise HTTPException(status_code=400, detail=e.message)

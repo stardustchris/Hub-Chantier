@@ -1,5 +1,6 @@
 """Domain Events pour le module Devis.
 
+DEV-15: Suivi statut devis - DevisStatutChangeEvent.
 DEV-16: Conversion en chantier - DevisConvertEvent.
 """
 
@@ -7,6 +8,50 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEV-15: Event de changement de statut
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class DevisStatutChangeEvent:
+    """Event emis lorsqu'un devis change de statut.
+
+    DEV-15: Chaque transition de statut genere cet event pour que
+    les modules abonnes (notifications, relances, dashboard) puissent reagir.
+
+    Attributes:
+        devis_id: ID du devis concerne.
+        numero: Numero du devis (ex: DEV-2026-042).
+        ancien_statut: Statut avant la transition.
+        nouveau_statut: Statut apres la transition.
+        auteur_id: ID de l'utilisateur ayant declenche la transition (None pour actions systeme).
+        motif: Motif optionnel (obligatoire pour refus/perdu).
+        timestamp: Date/heure de la transition.
+    """
+
+    devis_id: int
+    numero: str
+    ancien_statut: str
+    nouveau_statut: str
+    auteur_id: Optional[int]
+    motif: Optional[str]
+    timestamp: datetime
+
+    def to_dict(self) -> dict:
+        """Serialise l'event en dictionnaire pour stockage/transport."""
+        return {
+            "event_type": "DevisStatutChangeEvent",
+            "devis_id": self.devis_id,
+            "numero": self.numero,
+            "ancien_statut": self.ancien_statut,
+            "nouveau_statut": self.nouveau_statut,
+            "auteur_id": self.auteur_id,
+            "motif": self.motif,
+            "timestamp": self.timestamp.isoformat(),
+        }
 
 
 @dataclass(frozen=True)
