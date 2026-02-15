@@ -3,6 +3,10 @@ import api from './api'
 export interface UploadResponse {
   url: string
   thumbnail_url?: string
+  // WebP responsive variants (P2-5: srcset support)
+  webp_thumbnail_url?: string
+  webp_medium_url?: string
+  webp_large_url?: string
 }
 
 export interface MultiUploadResponse {
@@ -114,9 +118,8 @@ export const uploadService = {
    * Compresse une image côté client avant upload (FEED-19).
    * Réduit à max 1920px et qualité 85%.
    *
-   * TODO Performance: Le backend devrait également générer des thumbnails WebP
-   * à différentes tailles (thumbnail, medium, large) pour optimiser le chargement.
-   * Cela permettrait d'utiliser des srcset responsive et de réduire la bande passante.
+   * Note: Le backend génère désormais des variantes WebP responsive (P2-5)
+   * disponibles via webp_thumbnail_url, webp_medium_url, webp_large_url.
    */
   async compressImage(file: File, maxSizeMB: number = 2): Promise<File> {
     return new Promise((resolve, reject) => {

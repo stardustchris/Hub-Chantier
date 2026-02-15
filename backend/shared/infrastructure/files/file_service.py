@@ -35,6 +35,13 @@ class FileService:
     THUMBNAIL_SIZE = (300, 300)
     MAX_IMAGE_DIMENSION = 1920  # Max width or height after compression
 
+    # WebP responsive variants (P2-5: srcset support)
+    WEBP_SIZES = {
+        "thumbnail": 300,
+        "medium": 800,
+        "large": 1200,
+    }
+
     def __init__(self, upload_dir: str = "uploads"):
         """
         Initialise le service de fichiers.
@@ -47,7 +54,7 @@ class FileService:
 
     def _ensure_directories(self):
         """Crée les répertoires nécessaires."""
-        subdirs = ["profiles", "posts", "chantiers", "thumbnails"]
+        subdirs = ["profiles", "posts", "chantiers", "thumbnails", "webp"]
         for subdir in subdirs:
             (self.upload_dir / subdir).mkdir(parents=True, exist_ok=True)
 
@@ -104,14 +111,7 @@ class FileService:
             max_size_bytes = self.MAX_FILE_SIZE_BYTES
 
         img = Image.open(io.BytesIO(file_content))
-
-        # Convertir RGBA en RGB si nécessaire (pour JPEG)
-        if img.mode in ("RGBA", "P"):
-            background = Image.new("RGB", img.size, (255, 255, 255))
-            if img.mode == "P":
-                img = img.convert("RGBA")
-            background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
-            img = background
+        img = self._convert_to_rgb(img)
 
         # Redimensionner si trop grande
         if max(img.size) > self.MAX_IMAGE_DIMENSION:
@@ -145,14 +145,7 @@ class FileService:
             Miniature de l'image.
         """
         img = Image.open(io.BytesIO(file_content))
-
-        # Convertir si nécessaire
-        if img.mode in ("RGBA", "P"):
-            background = Image.new("RGB", img.size, (255, 255, 255))
-            if img.mode == "P":
-                img = img.convert("RGBA")
-            background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
-            img = background
+        img = self._convert_to_rgb(img)
 
         # Créer la miniature
         img.thumbnail(self.THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
@@ -160,6 +153,49 @@ class FileService:
         output = io.BytesIO()
         img.save(output, format="JPEG", quality=85, optimize=True)
         return output.getvalue()
+
+    def _convert_to_rgb(self, img: Image.Image) -> Image.Image:
+        """Convertit une image RGBA/P en RGB."""
+        if img.mode in ("RGBA", "P"):
+            background = Image.new("RGB", img.size, (255, 255, 255))
+            if img.mode == "P":
+                img = img.convert("RGBA")
+            background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
+            return background
+        return img
+
+    def generate_webp_variants(
+        self, file_content: bytes, prefix: str
+    ) -> dict:
+        """
+        Génère des variantes WebP à différentes tailles pour srcset responsive (P2-5).
+
+        Crée 3 variantes : thumbnail (300px), medium (800px), large (1200px).
+
+        Args:
+            file_content: Contenu de l'image source.
+            prefix: Préfixe pour les noms de fichiers (ex: "user_42_20260215_abc123").
+
+        Returns:
+            Dict avec clés webp_thumbnail_url, webp_medium_url, webp_large_url.
+        """
+        img = Image.open(io.BytesIO(file_content))
+        img = self._convert_to_rgb(img)
+
+        urls = {}
+        for size_name, max_dim in self.WEBP_SIZES.items():
+            resized = img.copy()
+            if max(resized.size) > max_dim:
+                resized.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
+            output = io.BytesIO()
+            resized.save(output, format="WEBP", quality=85, method=4)
+
+            webp_filename = f"{prefix}_{size_name}.webp"
+            (self.upload_dir / "webp" / webp_filename).write_bytes(output.getvalue())
+            urls[f"webp_{size_name}_url"] = f"/uploads/webp/{webp_filename}"
+
+        return urls
 
     def upload_profile_photo(self, file_content: bytes, filename: str, user_id: int) -> str:
         """

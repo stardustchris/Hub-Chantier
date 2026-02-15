@@ -1,26 +1,25 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-// Performance 2.2.4 - Bundle analyzer (requires: npm install -D rollup-plugin-visualizer)
-// import { visualizer } from 'rollup-plugin-visualizer'
+// Performance 2.2.4 - Bundle analyzer
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    // Performance 2.2.4 - Bundle visualization (uncomment when rollup-plugin-visualizer is installed)
-    // Uncomment after running: npm install -D rollup-plugin-visualizer
-    // Then run: ANALYZE=true npm run build
-    // ...(process.env.ANALYZE
-    //   ? [
-    //       visualizer({
-    //         open: true,
-    //         filename: 'dist/stats.html',
-    //         gzipSize: true,
-    //         brotliSize: true,
-    //       }),
-    //     ]
-    //   : []),
+    // Performance 2.2.4 - Bundle visualization
+    // Run: ANALYZE=true npm run build → opens dist/stats.html
+    ...(process.env.ANALYZE
+      ? [
+          visualizer({
+            open: true,
+            filename: 'dist/stats.html',
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
