@@ -3,14 +3,19 @@
 INT-01 a INT-17: Endpoints REST pour la gestion des interventions.
 """
 
+import asyncio
+import logging
 from datetime import date
 from typing import Optional, List, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
 from shared.infrastructure.web import get_current_user_id
+
+logger = logging.getLogger(__name__)
 
 from ...application.dtos import (
     CreateInterventionDTO,
@@ -51,6 +56,7 @@ from .dependencies import (
     get_toggle_rapport_use_case,
     get_add_signature_use_case,
     get_list_signatures_use_case,
+    get_generate_intervention_pdf_use_case,
 )
 from ...application.use_cases import (
     CreateInterventionUseCase,
@@ -70,6 +76,11 @@ from ...application.use_cases import (
     ToggleRapportInclusionUseCase,
     AddSignatureUseCase,
     ListSignaturesUseCase,
+    GenerateInterventionPDFUseCase,
+)
+from ...application.use_cases.pdf_use_cases import (
+    InterventionPDFOptionsDTO,
+    GenerateInterventionPDFError,
 )
 
 router = APIRouter(prefix="/interventions", tags=["interventions"])
@@ -594,6 +605,83 @@ def list_signatures(
         )
         for s in signatures
     ]
+
+
+# =============================================================================
+# RAPPORT PDF (INT-14, INT-15)
+# =============================================================================
+
+
+@router.get(
+    "/{intervention_id}/pdf",
+    summary="Generer le rapport PDF",
+    description="INT-14: Generation automatique du rapport PDF d'intervention. "
+                "INT-15: Selection des sections a inclure via query params.",
+)
+async def generate_intervention_pdf(
+    intervention_id: int,
+    inclure_photos: bool = Query(True, description="Inclure les photos dans le rapport"),
+    inclure_signatures: bool = Query(True, description="Inclure les signatures"),
+    inclure_travaux: bool = Query(True, description="Inclure la section travaux realises"),
+    inclure_anomalies: bool = Query(True, description="Inclure la section anomalies"),
+    inclure_messages: bool = Query(True, description="Inclure les messages du fil d'activite"),
+    use_case: GenerateInterventionPDFUseCase = Depends(get_generate_intervention_pdf_use_case),
+    current_user_id: int = Depends(get_current_user_id),
+) -> Response:
+    """Genere et retourne le rapport PDF de l'intervention (INT-14).
+
+    Les query params permettent de selectionner les sections (INT-15).
+
+    Args:
+        intervention_id: L'ID de l'intervention.
+        inclure_photos: Inclure les photos.
+        inclure_signatures: Inclure les signatures.
+        inclure_travaux: Inclure les travaux realises.
+        inclure_anomalies: Inclure les anomalies.
+        inclure_messages: Inclure les messages du fil d'activite.
+
+    Returns:
+        Le fichier PDF en reponse binaire (application/pdf).
+
+    Raises:
+        HTTPException 404: Si l'intervention n'existe pas.
+        HTTPException 500: Si la generation du PDF echoue.
+    """
+    options = InterventionPDFOptionsDTO(
+        inclure_photos=inclure_photos,
+        inclure_signatures=inclure_signatures,
+        inclure_travaux=inclure_travaux,
+        inclure_anomalies=inclure_anomalies,
+        inclure_messages=inclure_messages,
+    )
+
+    try:
+        loop = asyncio.get_event_loop()
+        pdf_bytes, filename = await loop.run_in_executor(
+            None, use_case.execute, intervention_id, options
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except GenerateInterventionPDFError as e:
+        logger.error(
+            "Erreur generation PDF intervention %s: %s",
+            intervention_id, e.message,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la generation du rapport PDF. Veuillez reessayer.",
+        )
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+        },
+    )
 
 
 # =============================================================================

@@ -7,7 +7,7 @@ la duplication de code HTML inline dans les use cases.
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -260,4 +260,151 @@ class PdfGeneratorService(PdfGeneratorPort):
         html_content = template.render(**context)
 
         # Convertir en PDF
+        return self._html_to_pdf(html_content)
+
+    def generate_intervention_pdf(
+        self,
+        intervention,
+        techniciens: list,
+        messages: list,
+        signatures: list,
+        options=None,
+    ) -> bytes:
+        """Genere un PDF de rapport d'intervention.
+
+        INT-14: Rapport PDF - Generation automatique.
+        INT-15: Selection posts pour rapport.
+
+        Args:
+            intervention: L'entite Intervention.
+            techniciens: Liste des AffectationIntervention.
+            messages: Messages filtres pour le rapport.
+            signatures: Signatures (client + technicien).
+            options: InterventionPDFOptionsDTO (sections a inclure).
+
+        Returns:
+            Contenu PDF en bytes.
+        """
+        # Importer ici pour eviter les imports circulaires
+        from modules.interventions.application.use_cases.pdf_use_cases import (
+            InterventionPDFOptionsDTO,
+        )
+
+        if options is None:
+            options = InterventionPDFOptionsDTO()
+
+        # Mapping statut -> classe CSS
+        statut_classes = {
+            "a_planifier": "a-planifier",
+            "planifiee": "planifiee",
+            "en_cours": "en-cours",
+            "terminee": "terminee",
+            "annulee": "annulee",
+        }
+
+        # Mapping priorite -> classe CSS
+        priorite_classes = {
+            "urgente": "urgente",
+            "haute": "haute",
+            "normale": "normale",
+            "basse": "basse",
+        }
+
+        # Formater les horaires
+        horaires_planifies = None
+        if intervention.heure_debut and intervention.heure_fin:
+            horaires_planifies = (
+                f"{intervention.heure_debut.strftime('%H:%M')} - "
+                f"{intervention.heure_fin.strftime('%H:%M')}"
+            )
+
+        horaires_reels = None
+        if intervention.heure_debut_reelle and intervention.heure_fin_reelle:
+            horaires_reels = (
+                f"{intervention.heure_debut_reelle.strftime('%H:%M')} - "
+                f"{intervention.heure_fin_reelle.strftime('%H:%M')}"
+            )
+
+        # Duree reelle
+        duree_reelle = None
+        if intervention.duree_reelle_minutes is not None:
+            heures = intervention.duree_reelle_minutes // 60
+            minutes = intervention.duree_reelle_minutes % 60
+            if heures > 0:
+                duree_reelle = f"{heures}h{minutes:02d}"
+            else:
+                duree_reelle = f"{minutes} min"
+
+        # Date planifiee formatee
+        date_planifiee = None
+        if intervention.date_planifiee:
+            date_planifiee = intervention.date_planifiee.strftime("%d/%m/%Y")
+
+        # Enrichir les messages avec infos affichables
+        messages_enriched = []
+        for msg in messages:
+            type_labels = {
+                "commentaire": "Commentaire",
+                "photo": "Photo",
+                "action": "Action",
+                "systeme": "Systeme",
+            }
+            messages_enriched.append({
+                "type_message_label": type_labels.get(msg.type_message.value, msg.type_message.value),
+                "created_at_str": msg.created_at.strftime("%d/%m/%Y %H:%M") if msg.created_at else "",
+                "contenu": msg.contenu,
+                "a_photos": msg.a_photos,
+                "photos_urls": msg.photos_urls if msg.a_photos else [],
+            })
+
+        # Enrichir les signatures
+        signatures_enriched = []
+        for sig in signatures:
+            signatures_enriched.append({
+                "type_label": sig.type_signataire.label,
+                "nom_signataire": sig.nom_signataire,
+                "signature_data": sig.signature_data,
+                "horodatage_str": sig.horodatage_str,
+            })
+
+        # Contexte du template
+        context = {
+            "intervention_code": intervention.code or f"INT-{intervention.id}",
+            "generated_at": datetime.now().strftime("%d/%m/%Y a %H:%M"),
+            # Client
+            "client_nom": intervention.client_nom,
+            "client_adresse": intervention.client_adresse,
+            "client_telephone": intervention.client_telephone,
+            "client_email": intervention.client_email,
+            # Intervention
+            "type_intervention": intervention.type_intervention.label,
+            "statut_label": intervention.statut.label,
+            "statut_class": statut_classes.get(intervention.statut.value, ""),
+            "priorite_label": intervention.priorite.label,
+            "priorite_class": priorite_classes.get(intervention.priorite.value, ""),
+            "date_planifiee": date_planifiee,
+            # Horaires
+            "horaires_planifies": horaires_planifies,
+            "horaires_reels": horaires_reels,
+            "duree_reelle": duree_reelle,
+            # Techniciens
+            "techniciens": techniciens,
+            # Description
+            "description": intervention.description,
+            # Travaux et anomalies
+            "travaux_realises": intervention.travaux_realises,
+            "anomalies": intervention.anomalies,
+            "inclure_travaux": options.inclure_travaux,
+            "inclure_anomalies": options.inclure_anomalies,
+            # Messages
+            "messages": messages_enriched,
+            "inclure_photos": options.inclure_photos,
+            # Signatures
+            "signatures": signatures_enriched,
+            "inclure_signatures": options.inclure_signatures,
+        }
+
+        template = self.env.get_template("intervention_rapport.html")
+        html_content = template.render(**context)
+
         return self._html_to_pdf(html_content)
