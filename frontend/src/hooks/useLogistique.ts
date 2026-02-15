@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { chantiersService } from '../services/chantiers'
-import { listReservationsEnAttente, listRessources } from '../api/logistique'
+import { listReservationsEnAttente, listRessources } from '../services/logistique'
 import { logger } from '../services/logger'
 import type { Ressource, Reservation } from '../types/logistique'
 import type { Chantier } from '../types'

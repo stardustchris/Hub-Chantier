@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useLogistique } from './useLogistique'
 import { chantiersService } from '../services/chantiers'
-import { listReservationsEnAttente, listRessources } from '../api/logistique'
+import { listReservationsEnAttente, listRessources } from '../services/logistique'
 import { createMockChantier, createMockReservation, createMockRessource } from '../fixtures'
 
 // Mocks
@@ -22,7 +22,7 @@ vi.mock('../services/chantiers', () => ({
   },
 }))
 
-vi.mock('../api/logistique', () => ({
+vi.mock('../services/logistique', () => ({
   listReservationsEnAttente: vi.fn(),
   listRessources: vi.fn(),
 }))

@@ -46,7 +46,7 @@ vi.mock('../hooks', () => ({
 }))
 
 // Mock API and logger
-vi.mock('../api/logistique', () => ({
+vi.mock('../services/logistique', () => ({
   listRessources: vi.fn().mockResolvedValue({ items: [] }),
 }))
 

@@ -19,7 +19,7 @@ import { createMockRessource, createMockReservation } from '../../fixtures'
 import type { PlanningRessource } from '../../types/logistique'
 
 // Mock API
-vi.mock('../../api/logistique', () => ({
+vi.mock('../../services/logistique', () => ({
   getPlanningRessource: vi.fn(),
   getLundiSemaine: vi.fn((date: Date) => {
     const d = new Date(date)
@@ -39,7 +39,7 @@ vi.mock('../../services/logger', () => ({
   },
 }))
 
-import { getPlanningRessource } from '../../api/logistique'
+import { getPlanningRessource } from '../../services/logistique'
 
 const mockGetPlanningRessource = getPlanningRessource as ReturnType<typeof vi.fn>
 

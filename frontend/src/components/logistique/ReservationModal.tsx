@@ -22,6 +22,7 @@ import type { Chantier } from '../../types'
 import { useReservationModal } from '../../hooks/useReservationModal'
 import ReservationFormFields from './ReservationFormFields'
 import ReservationActions from './ReservationActions'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 /**
  * Props du composant ReservationModal.
@@ -119,6 +120,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
     onSuccess,
     onClose,
   })
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
 
   if (!isOpen) return null
 
@@ -126,7 +128,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="bg-white rounded-xl shadow-xl w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -135,7 +137,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
               style={{ backgroundColor: ressource.couleur }}
             />
             <div>
-              <h2 className="font-semibold text-gray-900">
+              <h2 id="modal-title" className="font-semibold text-gray-900">
                 {isViewMode ? 'Détails réservation' : 'Nouvelle réservation'}
               </h2>
               <p className="text-sm text-gray-500">

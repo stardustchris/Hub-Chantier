@@ -9,8 +9,9 @@ import React, { useState, useEffect } from 'react'
 import { X, Save, AlertCircle } from 'lucide-react'
 import type { Ressource, RessourceCreate, RessourceUpdate, CategorieRessource } from '../../types/logistique'
 import { CATEGORIES_RESSOURCES } from '../../types/logistique'
-import { createRessource, updateRessource } from '../../api/logistique'
+import { createRessource, updateRessource } from '../../services/logistique'
 import { logger } from '../../services/logger'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface RessourceModalProps {
   ressource?: Ressource // Si défini, mode édition
@@ -38,6 +39,7 @@ export const RessourceModal: React.FC<RessourceModalProps> = ({
   onSuccess,
 }) => {
   const isEditMode = !!ressource
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
 
   // État du formulaire
   const [formData, setFormData] = useState<RessourceCreate>({
@@ -151,10 +153,10 @@ export const RessourceModal: React.FC<RessourceModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
             {isEditMode ? 'Modifier la ressource' : 'Nouvelle ressource'}
           </h2>
           <button

@@ -1,6 +1,6 @@
 """Implémentation SQLAlchemy du ChantierRepository."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
 
 from sqlalchemy.orm import Session, selectinload
@@ -9,7 +9,7 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from shared.domain.value_objects import Couleur
 
-from ...domain.entities import Chantier
+from ...domain.entities import Chantier, ContactChantierEntity, PhaseChantierEntity
 from ...domain.repositories import ChantierRepository
 from ...domain.value_objects import (
     CodeChantier,
@@ -19,7 +19,9 @@ from ...domain.value_objects import (
     StatutChantierEnum,
 )
 from .chantier_model import ChantierModel
-from .chantier_responsable_model import ChantierConducteurModel, ChantierChefModel
+from .chantier_responsable_model import ChantierConducteurModel, ChantierChefModel, ChantierOuvrierModel
+from .contact_chantier_model import ContactChantierModel
+from .phase_chantier_model import PhaseChantierModel
 
 
 class SQLAlchemyChantierRepository(ChantierRepository):
@@ -602,4 +604,173 @@ class SQLAlchemyChantierRepository(ChantierRepository):
             usage_habitation=chantier.usage_habitation,
             created_at=chantier.created_at,
             updated_at=chantier.updated_at,
+        )
+
+    # =========================================================================
+    # Ouvriers
+    # =========================================================================
+
+    def list_ouvrier_ids(self, chantier_id: int) -> List[int]:
+        records = self.session.query(ChantierOuvrierModel).filter(
+            ChantierOuvrierModel.chantier_id == chantier_id
+        ).all()
+        return [r.user_id for r in records]
+
+    def assign_ouvrier(self, chantier_id: int, user_id: int) -> bool:
+        existing = self.session.query(ChantierOuvrierModel).filter(
+            ChantierOuvrierModel.chantier_id == chantier_id,
+            ChantierOuvrierModel.user_id == user_id,
+        ).first()
+        if existing:
+            return False
+        self.session.add(ChantierOuvrierModel(chantier_id=chantier_id, user_id=user_id))
+        self.session.commit()
+        return True
+
+    def remove_ouvrier(self, chantier_id: int, user_id: int) -> bool:
+        deleted = self.session.query(ChantierOuvrierModel).filter(
+            ChantierOuvrierModel.chantier_id == chantier_id,
+            ChantierOuvrierModel.user_id == user_id,
+        ).delete()
+        self.session.commit()
+        return deleted > 0
+
+    # =========================================================================
+    # Contacts
+    # =========================================================================
+
+    def list_contacts(self, chantier_id: int) -> List[ContactChantierEntity]:
+        models = self.session.query(ContactChantierModel).filter(
+            ContactChantierModel.chantier_id == chantier_id
+        ).all()
+        return [
+            ContactChantierEntity(
+                id=m.id, chantier_id=m.chantier_id,
+                nom=m.nom, telephone=m.telephone, profession=m.profession,
+            )
+            for m in models
+        ]
+
+    def create_contact(
+        self, chantier_id: int, nom: str, telephone: str, profession: Optional[str] = None
+    ) -> ContactChantierEntity:
+        model = ContactChantierModel(
+            chantier_id=chantier_id, nom=nom, telephone=telephone, profession=profession,
+        )
+        self.session.add(model)
+        self.session.commit()
+        self.session.refresh(model)
+        return ContactChantierEntity(
+            id=model.id, chantier_id=model.chantier_id,
+            nom=model.nom, telephone=model.telephone, profession=model.profession,
+        )
+
+    def update_contact(
+        self, chantier_id: int, contact_id: int,
+        nom: Optional[str] = None, telephone: Optional[str] = None,
+        profession: Optional[str] = None,
+    ) -> Optional[ContactChantierEntity]:
+        model = self.session.query(ContactChantierModel).filter(
+            ContactChantierModel.id == contact_id,
+            ContactChantierModel.chantier_id == chantier_id,
+        ).first()
+        if not model:
+            return None
+        if nom is not None:
+            model.nom = nom
+        if telephone is not None:
+            model.telephone = telephone
+        if profession is not None:
+            model.profession = profession
+        self.session.commit()
+        self.session.refresh(model)
+        return ContactChantierEntity(
+            id=model.id, chantier_id=model.chantier_id,
+            nom=model.nom, telephone=model.telephone, profession=model.profession,
+        )
+
+    def delete_contact(self, chantier_id: int, contact_id: int) -> bool:
+        model = self.session.query(ContactChantierModel).filter(
+            ContactChantierModel.id == contact_id,
+            ContactChantierModel.chantier_id == chantier_id,
+        ).first()
+        if not model:
+            return False
+        self.session.delete(model)
+        self.session.commit()
+        return True
+
+    # =========================================================================
+    # Phases
+    # =========================================================================
+
+    def list_phases(self, chantier_id: int) -> List[PhaseChantierEntity]:
+        models = self.session.query(PhaseChantierModel).filter(
+            PhaseChantierModel.chantier_id == chantier_id
+        ).order_by(PhaseChantierModel.ordre).all()
+        return [self._phase_to_entity(m) for m in models]
+
+    def create_phase(
+        self, chantier_id: int, nom: str,
+        description: Optional[str] = None, ordre: Optional[int] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
+    ) -> PhaseChantierEntity:
+        if ordre is None:
+            count = self.session.query(PhaseChantierModel).filter(
+                PhaseChantierModel.chantier_id == chantier_id
+            ).count()
+            ordre = count + 1
+
+        model = PhaseChantierModel(
+            chantier_id=chantier_id, nom=nom, description=description,
+            ordre=ordre, date_debut=date_debut, date_fin=date_fin,
+        )
+        self.session.add(model)
+        self.session.commit()
+        self.session.refresh(model)
+        return self._phase_to_entity(model)
+
+    def update_phase(
+        self, chantier_id: int, phase_id: int,
+        nom: Optional[str] = None, description: Optional[str] = None,
+        ordre: Optional[int] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
+    ) -> Optional[PhaseChantierEntity]:
+        model = self.session.query(PhaseChantierModel).filter(
+            PhaseChantierModel.id == phase_id,
+            PhaseChantierModel.chantier_id == chantier_id,
+        ).first()
+        if not model:
+            return None
+        if nom is not None:
+            model.nom = nom
+        if description is not None:
+            model.description = description
+        if ordre is not None:
+            model.ordre = ordre
+        if date_debut is not None:
+            model.date_debut = date_debut
+        if date_fin is not None:
+            model.date_fin = date_fin
+        self.session.commit()
+        self.session.refresh(model)
+        return self._phase_to_entity(model)
+
+    def delete_phase(self, chantier_id: int, phase_id: int) -> bool:
+        model = self.session.query(PhaseChantierModel).filter(
+            PhaseChantierModel.id == phase_id,
+            PhaseChantierModel.chantier_id == chantier_id,
+        ).first()
+        if not model:
+            return False
+        self.session.delete(model)
+        self.session.commit()
+        return True
+
+    @staticmethod
+    def _phase_to_entity(model: "PhaseChantierModel") -> PhaseChantierEntity:
+        return PhaseChantierEntity(
+            id=model.id, chantier_id=model.chantier_id,
+            nom=model.nom, description=model.description, ordre=model.ordre,
+            date_debut=model.date_debut, date_fin=model.date_fin,
         )

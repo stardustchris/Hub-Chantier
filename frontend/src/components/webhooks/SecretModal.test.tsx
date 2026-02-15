@@ -14,7 +14,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import SecretModal from './SecretModal'
-import type { Webhook } from '../../api/webhooks'
+import type { Webhook } from '../../services/webhooks'
 
 describe('SecretModal', () => {
   const mockOnCopy = vi.fn()

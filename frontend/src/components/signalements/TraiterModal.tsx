@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface TraiterModalProps {
   isOpen: boolean
@@ -19,6 +20,7 @@ export default function TraiterModal({
   isLoading,
 }: TraiterModalProps) {
   const [commentaire, setCommentaire] = useState('')
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
 
   if (!isOpen) return null
 
@@ -36,8 +38,8 @@ export default function TraiterModal({
           onClick={onClose}
           aria-hidden="true"
         />
-        <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="relative bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 id="modal-title" className="text-lg font-semibold text-gray-900 mb-4">
             Marquer comme traité
           </h3>
           <textarea

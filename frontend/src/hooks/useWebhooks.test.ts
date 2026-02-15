@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock dependencies before importing hook
-vi.mock('../api/webhooks', () => ({
+vi.mock('../services/webhooks', () => ({
   webhooksApi: {
     list: vi.fn(),
     create: vi.fn(),
@@ -22,8 +22,8 @@ vi.mock('../services/logger', () => ({
 }))
 
 import { useWebhooks } from './useWebhooks'
-import { webhooksApi } from '../api/webhooks'
-import type { Webhook } from '../api/webhooks'
+import { webhooksApi } from '../services/webhooks'
+import type { Webhook } from '../services/webhooks'
 import { logger } from '../services/logger'
 
 const mockWebhooks: Webhook[] = [

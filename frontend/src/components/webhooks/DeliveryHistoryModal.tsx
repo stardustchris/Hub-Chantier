@@ -3,8 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { webhooksApi } from '../../api/webhooks'
-import type { Webhook, WebhookDelivery } from '../../api/webhooks'
+import { webhooksApi } from '../../services/webhooks'
+import type { Webhook, WebhookDelivery } from '../../services/webhooks'
 import {
   Loader2,
   CheckCircle2,
@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { logger } from '../../services/logger'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface DeliveryHistoryModalProps {
   webhook: Webhook
@@ -20,6 +21,7 @@ interface DeliveryHistoryModalProps {
 }
 
 export default function DeliveryHistoryModal({ webhook, onClose }: DeliveryHistoryModalProps) {
+  const focusTrapRef = useFocusTrap({ enabled: true, onClose })
   const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -53,7 +55,7 @@ export default function DeliveryHistoryModal({ webhook, onClose }: DeliveryHisto
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div ref={focusTrapRef} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div>

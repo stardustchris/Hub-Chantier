@@ -12,6 +12,7 @@ import { usePointageForm } from './usePointageForm'
 import { PointageFormFields } from './PointageFormFields'
 import { SignatureSection } from './SignatureSection'
 import { ValidatorActions } from './ValidatorActions'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface PointageModalProps {
   isOpen: boolean
@@ -72,6 +73,7 @@ export default function PointageModal({
     onReject,
     onClose,
   })
+  const focusTrapRef = useFocusTrap({ enabled: isOpen, onClose })
 
   if (!isOpen) return null
 
@@ -85,11 +87,11 @@ export default function PointageModal({
         />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg">
+        <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className="relative bg-white rounded-lg shadow-xl w-full max-w-lg">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
                 {form.isEditing ? 'Modifier le pointage' : 'Nouveau pointage'}
               </h2>
               {selectedDate && (

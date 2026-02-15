@@ -1,9 +1,10 @@
 """Interface ChantierRepository - Abstraction pour la persistence des chantiers."""
 
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import Optional, List
 
-from ..entities import Chantier
+from ..entities import Chantier, ContactChantierEntity, PhaseChantierEntity
 from ..value_objects import CodeChantier, StatutChantier
 
 
@@ -220,4 +221,86 @@ class ChantierRepository(ABC):
         Returns:
             Liste des chantiers correspondants.
         """
+        pass
+
+    # =========================================================================
+    # Ouvriers (sous-ressource de Chantier)
+    # =========================================================================
+
+    @abstractmethod
+    def list_ouvrier_ids(self, chantier_id: int) -> List[int]:
+        """Liste les IDs des ouvriers assignés à un chantier."""
+        pass
+
+    @abstractmethod
+    def assign_ouvrier(self, chantier_id: int, user_id: int) -> bool:
+        """Assigne un ouvrier au chantier. Retourne False si déjà assigné."""
+        pass
+
+    @abstractmethod
+    def remove_ouvrier(self, chantier_id: int, user_id: int) -> bool:
+        """Retire un ouvrier du chantier. Retourne True si supprimé."""
+        pass
+
+    # =========================================================================
+    # Contacts (sous-ressource de Chantier - CHT-07)
+    # =========================================================================
+
+    @abstractmethod
+    def list_contacts(self, chantier_id: int) -> List[ContactChantierEntity]:
+        """Liste tous les contacts d'un chantier."""
+        pass
+
+    @abstractmethod
+    def create_contact(
+        self, chantier_id: int, nom: str, telephone: str, profession: Optional[str] = None
+    ) -> ContactChantierEntity:
+        """Crée un contact pour un chantier."""
+        pass
+
+    @abstractmethod
+    def update_contact(
+        self, chantier_id: int, contact_id: int,
+        nom: Optional[str] = None, telephone: Optional[str] = None,
+        profession: Optional[str] = None,
+    ) -> Optional[ContactChantierEntity]:
+        """Met à jour un contact. Retourne None si non trouvé."""
+        pass
+
+    @abstractmethod
+    def delete_contact(self, chantier_id: int, contact_id: int) -> bool:
+        """Supprime un contact. Retourne False si non trouvé."""
+        pass
+
+    # =========================================================================
+    # Phases (sous-ressource de Chantier)
+    # =========================================================================
+
+    @abstractmethod
+    def list_phases(self, chantier_id: int) -> List[PhaseChantierEntity]:
+        """Liste toutes les phases d'un chantier, ordonnées."""
+        pass
+
+    @abstractmethod
+    def create_phase(
+        self, chantier_id: int, nom: str,
+        description: Optional[str] = None, ordre: Optional[int] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
+    ) -> PhaseChantierEntity:
+        """Crée une phase pour un chantier."""
+        pass
+
+    @abstractmethod
+    def update_phase(
+        self, chantier_id: int, phase_id: int,
+        nom: Optional[str] = None, description: Optional[str] = None,
+        ordre: Optional[int] = None,
+        date_debut: Optional[date] = None, date_fin: Optional[date] = None,
+    ) -> Optional[PhaseChantierEntity]:
+        """Met à jour une phase. Retourne None si non trouvée."""
+        pass
+
+    @abstractmethod
+    def delete_phase(self, chantier_id: int, phase_id: int) -> bool:
+        """Supprime une phase. Retourne False si non trouvée."""
         pass

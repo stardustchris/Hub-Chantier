@@ -8,7 +8,7 @@ import RessourceCard from './RessourceCard'
 import type { Ressource } from '../../types/logistique'
 
 // Mock de l'api logistique
-vi.mock('../../api/logistique', () => ({
+vi.mock('../../services/logistique', () => ({
   formatPlageHoraire: (debut: string, fin: string) => `${debut} - ${fin}`,
 }))
 

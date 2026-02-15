@@ -67,7 +67,7 @@ export default function RentabiliteSidebar({ devis, onSaved }: Props) {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-2xl font-bold ${margePct === null ? 'text-gray-400' : 'text-gray-900'}`}>
+            <span className={`text-2xl font-bold ${margePct === null ? 'text-gray-500' : 'text-gray-900'}`}>
               {margePct === null ? 'N/D' : `${margePct.toFixed(2)}\u00a0%`}
             </span>
             <span className="text-xs text-gray-500">Coeff. majoration</span>

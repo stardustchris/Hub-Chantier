@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { webhooksApi } from '../api/webhooks'
-import type { Webhook } from '../api/webhooks'
+import { webhooksApi } from '../services/webhooks'
+import type { Webhook } from '../services/webhooks'
 import { logger } from '../services/logger'
 
 export function useWebhooks() {

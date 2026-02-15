@@ -15,6 +15,12 @@ from .change_statut import (
     PrerequisReceptionNonRemplisError,  # GAP-CHT-001
 )
 from .assign_responsable import AssignResponsableUseCase, InvalidRoleTypeError
+from .fermer_chantier import (
+    FermerChantierUseCase,
+    FermerChantierResult,
+    PrerequisClotureNonRemplisError,
+    FermetureForceeNonAutoriseeError,
+)
 
 __all__ = [
     # Use Cases
@@ -25,6 +31,8 @@ __all__ = [
     "DeleteChantierUseCase",
     "ChangeStatutUseCase",
     "AssignResponsableUseCase",
+    "FermerChantierUseCase",
+    "FermerChantierResult",
     # Exceptions
     "CodeChantierAlreadyExistsError",
     "InvalidDatesError",
@@ -34,4 +42,6 @@ __all__ = [
     "TransitionNonAutoriseeError",
     "PrerequisReceptionNonRemplisError",  # GAP-CHT-001
     "InvalidRoleTypeError",
+    "PrerequisClotureNonRemplisError",
+    "FermetureForceeNonAutoriseeError",
 ]

@@ -10,7 +10,7 @@ import { RessourceModal } from './RessourceModal'
 const mockCreateRessource = vi.fn()
 const mockUpdateRessource = vi.fn()
 
-vi.mock('../../api/logistique', () => ({
+vi.mock('../../services/logistique', () => ({
   createRessource: (...args: any[]) => mockCreateRessource(...args),
   updateRessource: (...args: any[]) => mockUpdateRessource(...args),
 }))

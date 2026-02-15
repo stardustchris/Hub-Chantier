@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { webhooksApi } from './webhooks'
 
-vi.mock('../services/api', () => ({
+vi.mock('./api', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../services/api', () => ({
   },
 }))
 
-import api from '../services/api'
+import api from './api'
 
 const mockedApi = api as {
   get: ReturnType<typeof vi.fn>
