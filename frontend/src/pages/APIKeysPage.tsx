@@ -12,8 +12,10 @@ import {
   Loader2,
   AlertTriangle,
 } from 'lucide-react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function APIKeysPage() {
+  useDocumentTitle('Clés API')
   const {
     apiKeys,
     isLoading,

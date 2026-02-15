@@ -21,6 +21,8 @@ import ActionsRapidesSidebar from '../components/devis/generator/ActionsRapidesS
 import { devisService } from '../services/devis'
 import type { DevisDetail } from '../types'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { Breadcrumb } from '../components/ui/Breadcrumb'
 
 export default function DevisGeneratorPage() {
   const { id } = useParams<{ id: string }>()
@@ -32,6 +34,9 @@ export default function DevisGeneratorPage() {
 
   const devisId = Number(id)
   const isEditable = devis?.statut === 'brouillon'
+
+  // Document title
+  useDocumentTitle(devis ? `Devis ${devis.numero}` : 'Devis')
 
   const loadDevis = useCallback(async () => {
     if (!devisId || isNaN(devisId)) return
@@ -105,6 +110,19 @@ export default function DevisGeneratorPage() {
 
   return (
     <Layout>
+      {/* Breadcrumb */}
+      {devis && (
+        <div className="max-w-7xl mx-auto px-6 pt-4">
+          <Breadcrumb
+            items={[
+              { label: 'Accueil', href: '/' },
+              { label: 'Devis', href: '/devis' },
+              { label: devis.numero },
+            ]}
+          />
+        </div>
+      )}
+
       <GeneratorHeader
         devis={devis}
         onSoumettre={handleSoumettre}

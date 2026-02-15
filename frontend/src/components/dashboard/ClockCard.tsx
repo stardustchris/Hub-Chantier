@@ -11,6 +11,8 @@
 import { useState, useEffect } from 'react'
 import { Clock, Plus, LogOut, Pencil, CheckCircle } from 'lucide-react'
 import { formatDateWeekdayFull, formatTime } from '../../utils/dates'
+import { usePointageStreak } from '../../hooks'
+import StreakBadge from './StreakBadge'
 
 interface ClockCardProps {
   lastClockIn?: string
@@ -40,11 +42,27 @@ export default function ClockCard({
   onEditTime
 }: ClockCardProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
+  const { streak, recordToday } = usePointageStreak()
+
+  // Verifier si la gamification est activee
+  const [gamificationEnabled, setGamificationEnabled] = useState(true)
+  useEffect(() => {
+    const enabled = localStorage.getItem('hub_gamification_enabled')
+    setGamificationEnabled(enabled !== 'false')
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // Wrapper pour onClockIn qui enregistre aussi le streak
+  const handleClockIn = () => {
+    if (onClockIn) {
+      onClockIn()
+    }
+    recordToday()
+  }
 
   // 3 etats : journee terminee (bleu) > pointe (vert) > non pointe (orange)
   const bgGradient = hasClockedOut
@@ -64,12 +82,22 @@ export default function ClockCard({
       <div className="absolute top-4 right-4 opacity-30">
         <Clock className="w-16 h-16" />
       </div>
-      <p className="text-sm text-white/80">
-        {formatDateWeekdayFull(currentTime)}
-      </p>
-      <p className="text-4xl font-bold mt-1 mb-4">
-        {formatTime(currentTime)}
-      </p>
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1">
+          <p className="text-sm text-white/80">
+            {formatDateWeekdayFull(currentTime)}
+          </p>
+          <p className="text-4xl font-bold mt-1">
+            {formatTime(currentTime)}
+          </p>
+        </div>
+        {gamificationEnabled && streak > 0 && (
+          <div className="mt-1">
+            <StreakBadge streak={streak} />
+          </div>
+        )}
+      </div>
+      <div className="mb-3" />
 
       {hasClockedOut ? (
         <>
@@ -157,7 +185,7 @@ export default function ClockCard({
         <>
           {/* Etat 1 : Non pointe (en attente arrivee) */}
           <button
-            onClick={onClockIn}
+            onClick={handleClockIn}
             className={`w-full ${buttonBg} font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md`}
           >
             <Plus className="w-5 h-5" />

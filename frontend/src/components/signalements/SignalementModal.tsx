@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Pencil } from 'lucide-react';
 import type {
   Signalement,
   SignalementCreateDTO,
@@ -12,6 +13,8 @@ import type {
 import { PRIORITE_OPTIONS } from '../../types/signalements';
 import { createSignalement, updateSignalement } from '../../services/signalements';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import PhotoCapture from '../formulaires/PhotoCapture';
+import PhotoAnnotator from '../common/PhotoAnnotator';
 
 interface SignalementModalProps {
   isOpen: boolean;
@@ -51,6 +54,10 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
     photo_url: '',
   });
 
+  // Photo annotation state
+  const [photoCaptured, setPhotoCaptured] = useState<string>('');
+  const [showAnnotator, setShowAnnotator] = useState(false);
+
   const isEdit = !!signalement;
 
   useEffect(() => {
@@ -64,6 +71,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
         localisation: signalement.localisation || '',
         photo_url: signalement.photo_url || '',
       });
+      setPhotoCaptured(signalement.photo_url || '');
     } else {
       setFormData({
         titre: '',
@@ -74,6 +82,7 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
         localisation: '',
         photo_url: '',
       });
+      setPhotoCaptured('');
     }
     setError(null);
   }, [signalement, isOpen]);
@@ -274,20 +283,30 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
               />
             </div>
 
-            {/* URL Photo */}
+            {/* Photo avec annotation */}
             <div>
-              <label htmlFor="photo_url" className="block text-sm font-medium text-gray-700 mb-1">
-                URL de la photo
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Photo
               </label>
-              <input
-                type="url"
-                id="photo_url"
-                name="photo_url"
-                value={formData.photo_url}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://..."
+              <PhotoCapture
+                value={photoCaptured}
+                onChange={(photoBase64) => {
+                  setPhotoCaptured(photoBase64);
+                  setFormData((prev) => ({ ...prev, photo_url: photoBase64 }));
+                }}
               />
+
+              {/* Bouton Annoter */}
+              {photoCaptured && (
+                <button
+                  type="button"
+                  onClick={() => setShowAnnotator(true)}
+                  className="mt-2 flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 border border-primary-300 rounded-lg hover:bg-primary-100 transition-colors"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Annoter la photo
+                </button>
+              )}
             </div>
 
             {/* Actions */}
@@ -310,6 +329,21 @@ const SignalementModal: React.FC<SignalementModalProps> = ({
           </form>
         </div>
       </div>
+
+      {/* Photo Annotator Modal */}
+      {showAnnotator && photoCaptured && (
+        <div className="fixed inset-0 z-[60] bg-white">
+          <PhotoAnnotator
+            imageUrl={photoCaptured}
+            onSave={(annotatedImageDataUrl) => {
+              setPhotoCaptured(annotatedImageDataUrl);
+              setFormData((prev) => ({ ...prev, photo_url: annotatedImageDataUrl }));
+              setShowAnnotator(false);
+            }}
+            onCancel={() => setShowAnnotator(false)}
+          />
+        </div>
+      )}
     </div>
   );
 };

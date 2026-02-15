@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import api from '../services/api';
 import type { ApiError } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 interface ConfigurationEntreprise {
   id: number;
@@ -33,6 +34,7 @@ interface ConfigurationUpdateResponse extends ConfigurationEntreprise {
 const CURRENT_YEAR = new Date().getFullYear();
 
 export function ParametresEntreprisePage(): JSX.Element {
+  useDocumentTitle('Paramètres entreprise');
   const { user } = useAuth();
   const { showToast } = useToast();
   const isAdmin = user?.role === 'admin';

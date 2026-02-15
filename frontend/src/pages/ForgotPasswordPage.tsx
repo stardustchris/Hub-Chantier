@@ -8,8 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { authService } from '../services/auth';
 import type { ApiError } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function ForgotPasswordPage(): JSX.Element {
+  useDocumentTitle('Mot de passe oublié');
   const navigate = useNavigate();
   const { showToast } = useToast();
 

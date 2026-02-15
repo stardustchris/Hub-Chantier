@@ -23,11 +23,13 @@ import {
 } from '../components/formulaires'
 import { useFormulaires } from '../hooks'
 import { CATEGORIES_FORMULAIRES } from '../types'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import type { CategorieFormulaire } from '../types'
 
 type ViewMode = 'grid' | 'list'
 
 export default function FormulairesPage() {
+  useDocumentTitle('Formulaires')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
 
   const {

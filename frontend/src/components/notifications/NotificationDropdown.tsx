@@ -23,11 +23,16 @@ import {
   ExternalLink,
   Download,
   Eye,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Users,
 } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { formatRelativeTime, type Notification } from '../../services/notificationsApi'
 import { getDocument, downloadDocument, getDocumentPreviewUrl, formatFileSize } from '../../services/documents'
 import type { Document } from '../../types/documents'
+import NotificationPreferences from '../common/NotificationPreferences'
 
 interface NotificationDropdownProps {
   isOpen: boolean
@@ -65,17 +70,34 @@ function getNotificationIcon(type: string) {
   }
 }
 
+function getGroupedNotificationTitle(type: string, count: number): string {
+  switch (type) {
+    case 'mention':
+      return count === 2 ? '2 personnes vous ont mentionné' : `${count} personnes vous ont mentionné`
+    case 'signalement_created':
+      return count === 2 ? '2 nouveaux signalements' : `${count} nouveaux signalements`
+    case 'signalement_resolved':
+      return count === 2 ? '2 signalements résolus' : `${count} signalements résolus`
+    case 'tache_assigned':
+      return count === 2 ? '2 nouvelles tâches assignées' : `${count} nouvelles tâches assignées`
+    default:
+      return `${count} notifications`
+  }
+}
+
 export default function NotificationDropdown({ isOpen, onClose }: NotificationDropdownProps) {
   const navigate = useNavigate()
   const {
-    notifications,
+    groupedNotifications,
     unreadCount,
     loading,
     markAsRead,
     markAllAsRead,
+    toggleGroupExpanded,
   } = useNotifications()
 
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
+  const [showPreferences, setShowPreferences] = useState(false)
   const [documentInfo, setDocumentInfo] = useState<DocumentInfo>({
     loading: false,
     error: null,
@@ -185,14 +207,23 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
               </span>
             )}
           </h3>
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Tout marquer lu
+              </button>
+            )}
             <button
-              onClick={markAllAsRead}
-              className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+              onClick={() => setShowPreferences(true)}
+              className="p-1.5 hover:bg-gray-100 rounded"
+              title="Préférences de notifications"
             >
-              Tout marquer lu
+              <Settings className="w-4 h-4 text-gray-500" />
             </button>
-          )}
+          </div>
         </div>
 
         <div className="max-h-96 overflow-y-auto">
@@ -201,45 +232,130 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
               <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
               Chargement...
             </div>
-          ) : notifications.length === 0 ? (
+          ) : groupedNotifications.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500">
               <Bell className="w-8 h-8 mx-auto mb-2 text-gray-500" />
               Aucune notification
             </div>
           ) : (
-            notifications.map((notif) => (
-              <div
-                key={notif.id}
-                onClick={() => handleNotificationClick(notif)}
-                className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer flex gap-3 ${
-                  !notif.is_read ? 'bg-blue-50' : ''
-                }`}
-              >
-                <div className="flex-shrink-0 mt-0.5">
-                  {getNotificationIcon(notif.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {notif.title}
-                  </p>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {notif.message}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {formatRelativeTime(notif.created_at)}
-                  </p>
-                </div>
-                {!notif.is_read && (
-                  <div className="flex-shrink-0">
-                    <span className="w-2 h-2 bg-primary-500 rounded-full inline-block" />
+            groupedNotifications.map((item) => {
+              if (item.group) {
+                // Afficher un groupe de notifications
+                const group = item.group
+                const hasUnread = group.notifications.some((n) => !n.is_read)
+
+                return (
+                  <div key={group.id}>
+                    {/* En-tête du groupe */}
+                    <div
+                      onClick={() => toggleGroupExpanded(group.id)}
+                      className={`px-4 py-3 border-b hover:bg-gray-50 cursor-pointer flex gap-3 ${
+                        hasUnread ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className="relative">
+                          {getNotificationIcon(group.type)}
+                          <div className="absolute -bottom-1 -right-1 bg-white rounded-full">
+                            <Users className="w-3 h-3 text-gray-600" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {getGroupedNotificationTitle(group.type, group.count)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {group.latestNotification.message}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {formatRelativeTime(group.latestNotification.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        {hasUnread && (
+                          <span className="w-2 h-2 bg-primary-500 rounded-full" />
+                        )}
+                        {group.isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Notifications du groupe (si déplié) */}
+                    {group.isExpanded && (
+                      <div className="bg-gray-50">
+                        {group.notifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            onClick={() => handleNotificationClick(notif)}
+                            className={`px-4 py-3 pl-12 border-b last:border-b-0 hover:bg-gray-100 cursor-pointer flex gap-3 ${
+                              !notif.is_read ? 'bg-blue-100' : ''
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {notif.title}
+                              </p>
+                              <p className="text-sm text-gray-600 line-clamp-2">
+                                {notif.message}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {formatRelativeTime(notif.created_at)}
+                              </p>
+                            </div>
+                            {!notif.is_read && (
+                              <div className="flex-shrink-0">
+                                <span className="w-2 h-2 bg-primary-500 rounded-full inline-block" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))
+                )
+              } else if (item.notification) {
+                // Notification individuelle
+                const notif = item.notification
+                return (
+                  <div
+                    key={notif.id}
+                    onClick={() => handleNotificationClick(notif)}
+                    className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer flex gap-3 ${
+                      !notif.is_read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getNotificationIcon(notif.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {notif.title}
+                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {notif.message}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {formatRelativeTime(notif.created_at)}
+                      </p>
+                    </div>
+                    {!notif.is_read && (
+                      <div className="flex-shrink-0">
+                        <span className="w-2 h-2 bg-primary-500 rounded-full inline-block" />
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+              return null
+            })
           )}
         </div>
 
-        {notifications.length > 0 && (
+        {groupedNotifications.length > 0 && (
           <div className="px-4 py-2 border-t bg-gray-50">
             <button
               onClick={() => {
@@ -253,6 +369,12 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
           </div>
         )}
       </div>
+
+      {/* Modal préférences */}
+      <NotificationPreferences
+        isOpen={showPreferences}
+        onClose={() => setShowPreferences(false)}
+      />
 
       {/* Modal de detail notification */}
       {selectedNotification && (

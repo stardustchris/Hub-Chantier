@@ -2,8 +2,10 @@ import Layout from '../components/Layout'
 import { PlanningGrid, PlanningChantierGrid, WeekNavigation, AffectationModal } from '../components/planning'
 import { PlanningToolbar, PlanningFiltersPanel } from '../components/planning/PlanningToolbar'
 import { usePlanning } from '../hooks/usePlanning'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function PlanningPage() {
+  useDocumentTitle('Planning')
   const planning = usePlanning()
 
   return (

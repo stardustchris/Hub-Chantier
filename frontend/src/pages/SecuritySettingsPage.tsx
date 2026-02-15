@@ -8,8 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import api from '../services/api';
 import type { ApiError } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function SecuritySettingsPage(): JSX.Element {
+  useDocumentTitle('Sécurité');
   const { user } = useAuth();
   const { showToast } = useToast();
 

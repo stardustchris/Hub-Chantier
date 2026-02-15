@@ -18,6 +18,11 @@ export { default as TeamCard } from './TeamCard'
 export { default as DocumentsCard } from './DocumentsCard'
 export { default as WeatherBulletinPost } from './WeatherBulletinPost'
 export { default as DevisPipelineCard } from './DevisPipelineCard'
+export { default as AlertesFinancieresCard } from './AlertesFinancieresCard'
+
+// Gamification cards (CDC Section 5.4)
+export { default as StreakBadge } from './StreakBadge'
+export { default as WeeklyProgressCard } from './WeeklyProgressCard'
 
 // Skeleton components
 export { default as PostSkeleton } from './PostSkeleton'

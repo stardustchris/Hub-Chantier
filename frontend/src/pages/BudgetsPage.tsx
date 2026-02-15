@@ -12,6 +12,7 @@ import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
 import { formatEUR } from '../utils/format'
 import type { Chantier, Budget } from '../types'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   TrendingUp,
   TrendingDown,
@@ -37,6 +38,7 @@ interface BudgetChantier {
 }
 
 export default function BudgetsPage() {
+  useDocumentTitle('Budgets')
   const [budgetChantiers, setBudgetChantiers] = useState<BudgetChantier[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

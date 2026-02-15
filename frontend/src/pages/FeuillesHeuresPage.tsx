@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Filter, Users, Building2, Settings } from 'lucide-react'
 import Layout from '../components/Layout'
-import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig, BatchActionsBar } from '../components/pointages'
+import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig, BatchActionsBar, ValidationDashboard } from '../components/pointages'
 import type { PayrollConfig } from '../components/pointages'
 import { useFeuillesHeures } from '../hooks/useFeuillesHeures'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function FeuillesHeuresPage() {
+  useDocumentTitle('Feuilles d\'heures')
   const fh = useFeuillesHeures()
   const { user } = useAuth()
   const [showMacrosConfig, setShowMacrosConfig] = useState(false)
@@ -186,6 +188,14 @@ export default function FeuillesHeuresPage() {
           onExport={fh.handleExport}
           isExporting={fh.isExporting}
         />
+
+        {/* Tableau de bord de validation - visible uniquement pour les validateurs sur l'onglet compagnons */}
+        {fh.isValidateur && fh.viewTab === 'compagnons' && !fh.loading && (
+          <ValidationDashboard
+            vueCompagnons={fh.vueCompagnons}
+            selectablePointagesCount={fh.selectablePointages.length}
+          />
+        )}
 
         {/* Erreur */}
         {fh.error && <div className="bg-red-50 text-red-700 p-4 rounded-lg">{fh.error}</div>}

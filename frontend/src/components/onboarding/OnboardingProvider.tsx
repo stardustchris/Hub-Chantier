@@ -5,8 +5,10 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useDemo } from '../../contexts/DemoContext'
 import { TOURS } from './tours'
 import OnboardingTooltip from './OnboardingTooltip'
+import OnboardingWelcome from './OnboardingWelcome'
 import type { UserRole } from '../../types'
 
 interface OnboardingContextValue {
@@ -33,7 +35,9 @@ interface OnboardingProviderProps {
 
 export default function OnboardingProvider({ children }: OnboardingProviderProps) {
   const { user } = useAuth()
+  const { enableDemoMode } = useDemo()
   const [isActive, setIsActive] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
 
@@ -55,7 +59,7 @@ export default function OnboardingProvider({ children }: OnboardingProviderProps
         localStorage.setItem('hub-onboarding-welcome-shown', 'true')
         // Délai pour laisser le temps à la page de charger
         setTimeout(() => {
-          setIsActive(true)
+          setShowWelcome(true)
         }, 1000)
       }
     }
@@ -94,6 +98,28 @@ export default function OnboardingProvider({ children }: OnboardingProviderProps
     }
   }, [currentStep, tour.length, skipTour])
 
+  const handleStartTour = useCallback(() => {
+    setShowWelcome(false)
+    setCurrentStep(0)
+    setIsActive(true)
+  }, [])
+
+  const handleStartTourWithDemo = useCallback(() => {
+    enableDemoMode()
+    setShowWelcome(false)
+    setCurrentStep(0)
+    setIsActive(true)
+  }, [enableDemoMode])
+
+  const handleSkipWelcome = useCallback(() => {
+    setShowWelcome(false)
+    if (role) {
+      const storageKey = `hub-onboarding-${role}-completed`
+      localStorage.setItem(storageKey, 'true')
+      setIsComplete(true)
+    }
+  }, [role])
+
   const contextValue: OnboardingContextValue = {
     isActive,
     isComplete,
@@ -105,6 +131,16 @@ export default function OnboardingProvider({ children }: OnboardingProviderProps
   return (
     <OnboardingContext.Provider value={contextValue}>
       {children}
+
+      {/* Écran de bienvenue avec proposition mode démo */}
+      {showWelcome && role && (
+        <OnboardingWelcome
+          role={role}
+          onStartTour={handleStartTour}
+          onStartTourWithDemo={handleStartTourWithDemo}
+          onSkip={handleSkipWelcome}
+        />
+      )}
 
       {/* Afficher le tooltip si tour actif */}
       {isActive && tour.length > 0 && (

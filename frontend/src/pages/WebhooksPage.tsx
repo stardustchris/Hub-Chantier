@@ -15,8 +15,10 @@ import {
 } from 'lucide-react'
 import { useWebhooks } from '../hooks/useWebhooks'
 import { CreateWebhookModal, SecretModal, DeliveryHistoryModal } from '../components/webhooks'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function WebhooksPage() {
+  useDocumentTitle('Webhooks')
   const {
     webhooks,
     isLoading,

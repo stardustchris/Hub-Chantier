@@ -12,6 +12,7 @@ import { financierService } from '../services/financier'
 import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
 import type { Achat, Chantier, Fournisseur, LotBudgetaire, StatutAchat } from '../types'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   ShoppingCart,
   Plus,
@@ -42,6 +43,7 @@ function formatMontant(montant: number) {
 }
 
 export default function AchatsPage() {
+  useDocumentTitle('Achats')
   const [achats, setAchats] = useState<Achat[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

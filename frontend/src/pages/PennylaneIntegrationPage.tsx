@@ -12,6 +12,7 @@ import { useState, useCallback } from 'react'
 import Layout from '../components/Layout'
 import PennylaneReconciliationDashboard from '../components/financier/PennylaneReconciliationDashboard'
 import PennylaneMappingsManager from '../components/financier/PennylaneMappingsManager'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PennylaneSyncHistory from '../components/financier/PennylaneSyncHistory'
 import {
   FileText,
@@ -51,6 +52,7 @@ const TABS: Tab[] = [
 ]
 
 export default function PennylaneIntegrationPage() {
+  useDocumentTitle('Intégration Pennylane')
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
   const [syncTrigger, setSyncTrigger] = useState(0)
 

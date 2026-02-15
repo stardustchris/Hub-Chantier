@@ -11,7 +11,8 @@ import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import { devisService } from '../services/devis'
 import { formatEUR } from '../utils/format'
 import type { DashboardDevis, DevisRecent } from '../types'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { Suspense, lazy } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Loader2,
   AlertCircle,
@@ -25,7 +26,11 @@ import {
   MessageSquare,
 } from 'lucide-react'
 
+// Lazy-load Recharts components (Performance 2.2.5)
+const ConversionFunnelChart = lazy(() => import('../components/devis/ConversionFunnelChart'))
+
 export default function DevisDashboardPage() {
+  useDocumentTitle('Dashboard devis')
   const navigate = useNavigate()
   const [data, setData] = useState<DashboardDevis | null>(null)
   const [loading, setLoading] = useState(true)
@@ -299,21 +304,9 @@ function ConversionFunnel({ kpi }: { kpi: DashboardDevis['kpi'] }) {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" role="region" aria-label="Funnel de conversion">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Funnel de conversion</h2>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={funnelData} layout="vertical" margin={{ left: 80 }}>
-            <XAxis type="number" hide />
-            <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#6B7280' }} />
-            <Tooltip
-              formatter={(value) => [`${value} devis`]}
-              contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB' }}
-            />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={32}>
-              {funnelData.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <Suspense fallback={<div className="h-64 bg-gray-50 rounded-lg animate-pulse flex items-center justify-center"><span className="text-sm text-gray-500">Chargement...</span></div>}>
+          <ConversionFunnelChart funnelData={funnelData} />
+        </Suspense>
       </div>
     </div>
   )

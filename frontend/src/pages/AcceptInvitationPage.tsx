@@ -8,8 +8,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import api from '../services/api';
 import type { ApiError, InvitationInfo } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function AcceptInvitationPage(): JSX.Element {
+  useDocumentTitle('Accepter l\'invitation');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();

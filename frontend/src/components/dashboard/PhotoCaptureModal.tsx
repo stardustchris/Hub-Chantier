@@ -4,8 +4,9 @@
  */
 
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, Pencil } from 'lucide-react'
 import PhotoCapture from '../formulaires/PhotoCapture'
+import PhotoAnnotator from '../common/PhotoAnnotator'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface PhotoCaptureModalProps {
@@ -23,6 +24,7 @@ export default function PhotoCaptureModal({
   const [photo, setPhoto] = useState<string>('')
   const [description, setDescription] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showAnnotator, setShowAnnotator] = useState(false)
 
   if (!isOpen) return null
 
@@ -85,6 +87,19 @@ export default function PhotoCaptureModal({
               value={photo}
               onChange={setPhoto}
             />
+
+            {/* Bouton Annoter */}
+            {photo && (
+              <button
+                type="button"
+                onClick={() => setShowAnnotator(true)}
+                disabled={isSubmitting}
+                className="mt-2 flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-300 rounded-xl hover:bg-green-100 transition-colors disabled:opacity-50"
+              >
+                <Pencil className="w-4 h-4" />
+                Annoter la photo
+              </button>
+            )}
           </div>
 
           {/* Description */}
@@ -127,6 +142,20 @@ export default function PhotoCaptureModal({
           </button>
         </div>
       </div>
+
+      {/* Photo Annotator Modal */}
+      {showAnnotator && photo && (
+        <div className="fixed inset-0 z-[60] bg-white">
+          <PhotoAnnotator
+            imageUrl={photo}
+            onSave={(annotatedImageDataUrl) => {
+              setPhoto(annotatedImageDataUrl)
+              setShowAnnotator(false)
+            }}
+            onCancel={() => setShowAnnotator(false)}
+          />
+        </div>
+      )}
     </div>
   )
 }

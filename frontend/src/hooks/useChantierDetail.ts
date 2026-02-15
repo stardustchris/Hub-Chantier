@@ -67,7 +67,7 @@ export function useChantierDetail({
     isLoading,
     refetch: refetchChantier,
   } = useQuery({
-    queryKey: ['chantier-detail', chantierId],
+    queryKey: ['chantier', chantierId],
     queryFn: async () => {
       try {
         return await chantiersService.getById(chantierId)
@@ -78,7 +78,8 @@ export function useChantierDetail({
         throw error
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   })
 
   // Load navigation IDs (not using TanStack Query as it's lightweight)
@@ -129,14 +130,14 @@ export function useChantierDetail({
     },
     onMutate: async (data) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['chantier-detail', chantierId] })
+      await queryClient.cancelQueries({ queryKey: ['chantier', chantierId] })
 
       // Snapshot previous data
-      const previous = queryClient.getQueryData<Chantier>(['chantier-detail', chantierId])
+      const previous = queryClient.getQueryData<Chantier>(['chantier', chantierId])
 
       // Optimistically update
       if (previous) {
-        queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], {
+        queryClient.setQueryData<Chantier>(['chantier', chantierId], {
           ...previous,
           ...data,
         })
@@ -147,7 +148,7 @@ export function useChantierDetail({
     onError: (error, _vars, context) => {
       // Rollback on error
       if (context?.previous) {
-        queryClient.setQueryData(['chantier-detail', chantierId], context.previous)
+        queryClient.setQueryData(['chantier', chantierId], context.previous)
       }
       logger.error('Error updating chantier', error, { context: 'useChantierDetail' })
       addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
@@ -158,7 +159,9 @@ export function useChantierDetail({
     },
     onSettled: () => {
       // Invalidate to refetch authoritative data
-      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+      queryClient.invalidateQueries({ queryKey: ['chantier', chantierId] })
+      // Invalidate list to reflect changes
+      queryClient.invalidateQueries({ queryKey: ['chantiers'] })
     },
   })
 
@@ -182,6 +185,8 @@ export function useChantierDetail({
       async () => {
         try {
           await chantiersService.delete(chantierId)
+          // Invalidate list after successful deletion
+          queryClient.invalidateQueries({ queryKey: ['chantiers'] })
         } catch (error) {
           logger.error('Error deleting chantier', error, { context: 'useChantierDetail' })
           addToast({ message: 'Erreur lors de la suppression', type: 'error', duration: 5000 })
@@ -205,10 +210,10 @@ export function useChantierDetail({
     },
     onMutate: async (action) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['chantier-detail', chantierId] })
+      await queryClient.cancelQueries({ queryKey: ['chantier', chantierId] })
 
       // Snapshot previous data
-      const previous = queryClient.getQueryData<Chantier>(['chantier-detail', chantierId])
+      const previous = queryClient.getQueryData<Chantier>(['chantier', chantierId])
 
       // Optimistically update status
       if (previous) {
@@ -224,7 +229,7 @@ export function useChantierDetail({
             newStatut = 'ferme'
             break
         }
-        queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], {
+        queryClient.setQueryData<Chantier>(['chantier', chantierId], {
           ...previous,
           statut: newStatut,
         })
@@ -235,7 +240,7 @@ export function useChantierDetail({
     onError: (error, _vars, context) => {
       // Rollback on error
       if (context?.previous) {
-        queryClient.setQueryData(['chantier-detail', chantierId], context.previous)
+        queryClient.setQueryData(['chantier', chantierId], context.previous)
       }
       logger.error('Error changing statut', error, { context: 'useChantierDetail' })
       addToast({ message: 'Erreur lors du changement de statut', type: 'error' })
@@ -245,7 +250,9 @@ export function useChantierDetail({
     },
     onSettled: () => {
       // Invalidate to refetch authoritative data
-      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+      queryClient.invalidateQueries({ queryKey: ['chantier', chantierId] })
+      // Invalidate list to reflect status changes
+      queryClient.invalidateQueries({ queryKey: ['chantiers'] })
     },
   })
 
@@ -266,10 +273,10 @@ export function useChantierDetail({
     },
     onMutate: async ({ userId, type }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['chantier-detail', chantierId] })
+      await queryClient.cancelQueries({ queryKey: ['chantier', chantierId] })
 
       // Snapshot previous data
-      const previous = queryClient.getQueryData<Chantier>(['chantier-detail', chantierId])
+      const previous = queryClient.getQueryData<Chantier>(['chantier', chantierId])
 
       // Optimistically add user (simplified - real user data comes from server)
       if (previous) {
@@ -291,7 +298,7 @@ export function useChantierDetail({
           updated.ouvriers = [...(previous.ouvriers || []), newUser]
         }
 
-        queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], updated)
+        queryClient.setQueryData<Chantier>(['chantier', chantierId], updated)
       }
 
       return { previous }
@@ -299,7 +306,7 @@ export function useChantierDetail({
     onError: (error, _vars, context) => {
       // Rollback on error
       if (context?.previous) {
-        queryClient.setQueryData(['chantier-detail', chantierId], context.previous)
+        queryClient.setQueryData(['chantier', chantierId], context.previous)
       }
       logger.error('Error adding user', error, { context: 'useChantierDetail' })
       addToast({ message: "Erreur lors de l'ajout", type: 'error' })
@@ -310,7 +317,7 @@ export function useChantierDetail({
     },
     onSettled: () => {
       // Invalidate to refetch authoritative data
-      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+      queryClient.invalidateQueries({ queryKey: ['chantier', chantierId] })
     },
   })
 
@@ -332,13 +339,13 @@ export function useChantierDetail({
     },
     onSuccess: () => {
       // Invalidate to refetch authoritative data
-      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+      queryClient.invalidateQueries({ queryKey: ['chantier', chantierId] })
     },
     onError: (error) => {
       logger.error('Error removing user', error, { context: 'useChantierDetail' })
       addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
       // Refetch to restore proper state
-      queryClient.invalidateQueries({ queryKey: ['chantier-detail', chantierId] })
+      queryClient.invalidateQueries({ queryKey: ['chantier', chantierId] })
     },
   })
 
@@ -372,13 +379,13 @@ export function useChantierDetail({
         ? (chantier.ouvriers || []).filter((u) => u.id !== userId)
         : chantier.ouvriers,
     }
-    queryClient.setQueryData<Chantier>(['chantier-detail', chantierId], updatedChantier)
+    queryClient.setQueryData<Chantier>(['chantier', chantierId], updatedChantier)
 
     showUndoToast(
       `${removedUser.prenom} ${removedUser.nom} retire`,
       () => {
         // Undo: restore previous data
-        queryClient.setQueryData(['chantier-detail', chantierId], previousChantier)
+        queryClient.setQueryData(['chantier', chantierId], previousChantier)
         addToast({ message: 'Retrait annule', type: 'success', duration: 3000 })
       },
       async () => {

@@ -11,7 +11,7 @@ import { useCallback, useRef, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather } from '../hooks'
+import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather, useDocumentTitle } from '../hooks'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -24,7 +24,9 @@ import {
   DashboardPostCard,
   WeatherBulletinPost,
   DevisPipelineCard,
+  AlertesFinancieresCard,
   PostSkeleton,
+  WeeklyProgressCard,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { weatherNotificationService } from '../services/weatherNotifications'
@@ -38,6 +40,8 @@ import {
   ImagePlus,
   Camera,
   X,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import type { TargetType, User } from '../types'
 import { usersService } from '../services/users'
@@ -46,6 +50,9 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { addToast } = useToast()
+
+  // Document title
+  useDocumentTitle('Tableau de bord')
 
   // Hook pour le pointage (clock-in/out)
   const clock = useClockCard()
@@ -58,6 +65,18 @@ export default function DashboardPage() {
   useEffect(() => {
     usersService.list({ size: 100 }).then((res) => setAllUsers(res.items)).catch(() => {})
   }, [])
+
+  // Progressive disclosure pour mobile (5.2.3)
+  // État pour savoir si les cartes secondaires sont dépliées sur mobile
+  const [isSecondaryCardsExpanded, setIsSecondaryCardsExpanded] = useState(() => {
+    const saved = localStorage.getItem('hub_dashboard_secondary_cards_expanded')
+    return saved === 'true'
+  })
+
+  // Persister l'état dans localStorage
+  useEffect(() => {
+    localStorage.setItem('hub_dashboard_secondary_cards_expanded', String(isSecondaryCardsExpanded))
+  }, [isSecondaryCardsExpanded])
 
   // Hook pour le planning du jour (affectations réelles de l'utilisateur)
   const todayPlanning = useTodayPlanning()
@@ -126,6 +145,13 @@ export default function DashboardPage() {
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
   const canViewDevisPipeline = user?.role === 'admin' || user?.role === 'conducteur'
+
+  // Verifier si la gamification est activee
+  const [gamificationEnabled, setGamificationEnabled] = useState(true)
+  useEffect(() => {
+    const enabled = localStorage.getItem('hub_gamification_enabled')
+    setGamificationEnabled(enabled !== 'false')
+  }, [])
 
   // Fusionner les posts avec le bulletin météo pour un tri unifié
   const feedItemsWithWeather = useMemo(() => {
@@ -291,8 +317,16 @@ export default function DashboardPage() {
                 onCall={handleCall}
               />
 
-              {/* Actualites Section */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200" data-tour="dashboard-feed">
+              {/* Actualites Section - replié par défaut sur mobile */}
+              <div
+                className={`
+                  bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200
+                  transition-all duration-300 ease-in-out
+                  lg:block
+                  ${isSecondaryCardsExpanded ? 'block' : 'hidden'}
+                `}
+                data-tour="dashboard-feed"
+              >
                 <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
                   <MessageCircle className="w-5 h-5 text-blue-600" />
                   Actualites
@@ -497,7 +531,14 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-4">
+              {gamificationEnabled && (
+                <WeeklyProgressCard
+                  hoursWorked={weeklyStats.hoursWorkedDecimal}
+                  weeklyGoal={35}
+                />
+              )}
               {canViewDevisPipeline && <DevisPipelineCard />}
+              {canViewDevisPipeline && <AlertesFinancieresCard />}
               <DocumentsCard />
               <TeamCard members={currentTeamMembers} chantierName={currentSlot?.siteName} />
             </div>

@@ -113,6 +113,10 @@ export const uploadService = {
   /**
    * Compresse une image côté client avant upload (FEED-19).
    * Réduit à max 1920px et qualité 85%.
+   *
+   * TODO Performance: Le backend devrait également générer des thumbnails WebP
+   * à différentes tailles (thumbnail, medium, large) pour optimiser le chargement.
+   * Cela permettrait d'utiliser des srcset responsive et de réduire la bande passante.
    */
   async compressImage(file: File, maxSizeMB: number = 2): Promise<File> {
     return new Promise((resolve, reject) => {

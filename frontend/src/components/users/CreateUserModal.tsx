@@ -67,6 +67,8 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>
           )}
 
+          <p className="text-sm text-gray-500"><span className="text-red-500">*</span> Champs obligatoires</p>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -76,6 +78,7 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
                 ref={firstInputRef}
                 type="text"
                 required
+                aria-required="true"
                 value={formData.prenom}
                 onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
                 className="input"
@@ -90,6 +93,7 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
               <input
                 type="text"
                 required
+                aria-required="true"
                 value={formData.nom}
                 onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                 className="input"
@@ -105,6 +109,7 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
             <input
               type="email"
               required
+              aria-required="true"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="input"
@@ -119,6 +124,7 @@ export function CreateUserModal({ onClose, onSubmit }: CreateUserModalProps) {
             <input
               type="password"
               required
+              aria-required="true"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="input"

@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { loginSchema, validateForm } from '../schemas'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function LoginPage() {
+  useDocumentTitle('Connexion')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
