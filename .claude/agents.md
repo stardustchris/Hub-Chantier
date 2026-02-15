@@ -2,7 +2,20 @@
 
 > Ce fichier definit quand Claude doit utiliser des sous-agents specialises.
 > L'utilisateur n'a pas a s'en occuper - c'est automatique.
-> Source: https://github.com/VoltAgent/awesome-claude-code-subagents
+
+---
+
+## REGLES CRITIQUES (rappel — voir aussi CLAUDE.md)
+
+### Sous-agents background INTERDITS
+- **JAMAIS** de `run_in_background: true` — les agents background plantent systematiquement (confirme x3)
+- Validations = Grep/Read directs dans le contexte principal
+- Agents foreground synchrones OK si necessaire
+
+### Source des agents d'implementation
+Les agents d'implementation doivent etre choisis depuis le catalogue officiel :
+**https://github.com/VoltAgent/awesome-claude-code-subagents/tree/main** (127+ agents, 10 categories)
+Toujours privilegier un agent du catalogue plutot qu'un agent generique.
 
 ---
 
