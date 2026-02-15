@@ -8,7 +8,22 @@
 
 **Sessions**:
 
-**Session 2026-02-15** — UX Sprint: 5 améliorations + Architecture refactoring
+**Session 2026-02-15 (2/2)** — Optimisation des images frontend (Performance)
+- **Objectif**: Optimiser toutes les balises `<img>` pour améliorer les Core Web Vitals et réduire la bande passante
+- **Modifications (4 fichiers)**:
+  - Layout.tsx: 3 logos optimisés (picture + WebP fallback, loading eager/lazy, decoding async, aspect-square)
+  - ImageUpload.tsx: Photos profil/chantier (lazy loading, aspect-square)
+  - MiniMap.tsx: Cartes OSM statiques (decoding async, aspect-[2/1])
+  - upload.ts: Documentation TODO pour génération thumbnails WebP backend
+- **Stratégie de chargement**: eager pour logos above-the-fold (desktop/mobile header), lazy pour sidebar mobile et images dynamiques
+- **Format WebP**: picture element avec fallback PNG automatique, économie attendue ~70% (154KB → ~45KB pour le logo)
+- **Aspect ratios**: aspect-square (logos 1:1), aspect-[2/1] (cartes 400x200) pour prévenir CLS
+- **Scripts**: generate-webp.sh pour conversion automatique (cwebp ou ImageMagick)
+- **Impact attendu**: Amélioration CLS (aspect-ratio), LCP (lazy loading), réduction bande passante 30-50%
+- **Documentation**: OPTIMISATION-IMAGES.md (guide utilisateur), tasks/optimisation-images.md (détails techniques)
+- Verdict : ✅ **IMAGES OPTIMISÉES - WEBP READY**
+
+**Session 2026-02-15 (1/2)** — UX Sprint: 5 améliorations + Architecture refactoring
 - **Objectif**: Implémenter 5 items UX prioritaires + corriger 4 items de dette technique architecture
 - **Architecture refactoring**:
   - FermerChantierUseCase (Application layer, plus de dépendance Controller)
