@@ -202,7 +202,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="w-16 p-2 text-sm text-gray-500 bg-gray-50 border-b border-r border-gray-200">
+                <th className="w-16 p-2 text-sm text-gray-600 bg-gray-50 border-b border-r border-gray-200">
                   Heure
                 </th>
                 {JOURS_SEMAINE.map((_, dayIndex) => {
@@ -222,7 +222,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
             <tbody>
               {HEURES.map((heure) => (
                 <tr key={heure}>
-                  <td className="p-2 text-sm text-gray-500 text-center border-r border-b border-gray-200 bg-gray-50">
+                  <td className="p-2 text-sm text-gray-600 text-center border-r border-b border-gray-200 bg-gray-50">
                     {heure}
                   </td>
                   {JOURS_SEMAINE.map((_, dayIndex) => {

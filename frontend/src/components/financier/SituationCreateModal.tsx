@@ -239,7 +239,7 @@ export default function SituationCreateModal({
                 <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
             ) : lots.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+              <div className="text-center py-8 text-gray-600 bg-gray-50 rounded-lg">
                 Aucun lot budgetaire disponible
               </div>
             ) : (

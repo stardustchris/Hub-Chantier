@@ -48,7 +48,7 @@ export function ChampEditor({
         <span className="flex-1 font-medium text-sm">
           {champ.label || `Champ ${index + 1}`}
         </span>
-        <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+        <span className="text-xs text-gray-600 bg-gray-200 px-2 py-0.5 rounded">
           {TYPES_CHAMPS[champ.type_champ]?.label || champ.type_champ}
         </span>
         {champ.obligatoire && (

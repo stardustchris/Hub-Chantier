@@ -241,7 +241,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
               <span className="text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">Partielle</span>
             )}
             {kpi.marge_statut === 'en_attente' && (
-              <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">En attente</span>
+              <span className="text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">En attente</span>
             )}
             {!kpi.marge_statut && (
               <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Estimée (budget)</span>
