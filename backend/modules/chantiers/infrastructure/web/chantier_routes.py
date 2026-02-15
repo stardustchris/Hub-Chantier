@@ -3,7 +3,6 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field
 from typing import Optional, List
 from sqlalchemy.orm import Session
 
@@ -17,9 +16,22 @@ from ...application.use_cases import (
     ChantierActifError,
     TransitionNonAutoriseeError,
     PrerequisReceptionNonRemplisError,  # GAP-CHT-001
+    FermerChantierUseCase,
+    PrerequisClotureNonRemplisError,
+    FermetureForceeNonAutoriseeError,
 )
 from ...domain.events.chantier_created import ChantierCreatedEvent
-from .dependencies import get_chantier_controller, get_chantier_repository, get_user_repository
+from .dependencies import get_chantier_controller, get_chantier_repository, get_user_repository, get_fermer_chantier_use_case
+from .chantier_presenter import transform_chantier_response, get_user_summary
+from .chantier_schemas import (
+    CoordonneesGPSResponse, ContactResponse, ContactRequest,
+    ContactChantierResponse, ContactChantierCreate, ContactChantierUpdate,
+    PhaseChantierResponse, PhaseChantierCreate, PhaseChantierUpdate,
+    CreateChantierRequest, UpdateChantierRequest,
+    ChangeStatutRequest, AssignResponsableRequest,
+    UserPublicSummary, UserSummary,
+    ChantierResponse, ChantierListResponse, DeleteResponse,
+)
 from shared.infrastructure.web import (
     get_current_user_id,
     require_conducteur_or_admin,
@@ -33,355 +45,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chantiers", tags=["chantiers"])
 
 
-# =============================================================================
-# Pydantic models for request/response validation
-# Selon CDC Section 4 - Gestion des Chantiers (CHT-01 à CHT-20)
-# =============================================================================
-
-
-class CoordonneesGPSResponse(BaseModel):
-    """Coordonnées GPS d'un chantier."""
-
-    latitude: float
-    longitude: float
-
-
-class ContactResponse(BaseModel):
-    """Contact sur place d'un chantier."""
-
-    nom: str
-    profession: Optional[str] = None
-    telephone: Optional[str] = None
-
-
-class ContactRequest(BaseModel):
-    """Contact pour création/mise à jour."""
-
-    nom: str
-    profession: Optional[str] = None
-    telephone: Optional[str] = None
-
-
-class ContactChantierResponse(BaseModel):
-    """Contact complet d'un chantier avec profession."""
-
-    id: int
-    nom: str
-    telephone: str
-    profession: Optional[str] = None
-
-
-class ContactChantierCreate(BaseModel):
-    """Requête de création d'un contact chantier."""
-
-    nom: str
-    telephone: str
-    profession: Optional[str] = None
-
-
-class ContactChantierUpdate(BaseModel):
-    """Requête de mise à jour d'un contact chantier."""
-
-    nom: Optional[str] = None
-    telephone: Optional[str] = None
-    profession: Optional[str] = None
-
-
-class PhaseChantierResponse(BaseModel):
-    """Phase/étape d'un chantier."""
-
-    id: int
-    nom: str
-    description: Optional[str] = None
-    ordre: int
-    date_debut: Optional[str] = None
-    date_fin: Optional[str] = None
-
-
-class PhaseChantierCreate(BaseModel):
-    """Requête de création d'une phase de chantier."""
-
-    nom: str
-    description: Optional[str] = None
-    ordre: Optional[int] = 1
-    date_debut: Optional[str] = None
-    date_fin: Optional[str] = None
-
-
-class PhaseChantierUpdate(BaseModel):
-    """Requête de mise à jour d'une phase de chantier."""
-
-    nom: Optional[str] = None
-    description: Optional[str] = None
-    ordre: Optional[int] = None
-    date_debut: Optional[str] = None
-    date_fin: Optional[str] = None
-
-
-class CreateChantierRequest(BaseModel):
-    """Requête de création de chantier."""
-
-    nom: str
-    adresse: str
-    code: Optional[str] = None  # Auto-généré si non fourni (CHT-19)
-    couleur: Optional[str] = None  # CHT-02
-    latitude: Optional[float] = None  # CHT-04
-    longitude: Optional[float] = None  # CHT-04
-    photo_couverture: Optional[str] = None  # CHT-01
-    contact_nom: Optional[str] = None  # CHT-07 (legacy single contact)
-    contact_telephone: Optional[str] = None  # CHT-07 (legacy single contact)
-    contacts: Optional[List[ContactRequest]] = None  # CHT-07 (multiple contacts)
-    heures_estimees: Optional[float] = None  # CHT-18
-    date_debut_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
-    date_fin_prevue: Optional[str] = None  # CHT-20 (ISO format) - renommé pour frontend
-    description: Optional[str] = None
-    # DEV-TVA: Contexte TVA
-    type_travaux: Optional[str] = None  # "renovation", "renovation_energetique", "construction_neuve"
-    batiment_plus_2ans: Optional[bool] = None
-    usage_habitation: Optional[bool] = None
-
-
-class UpdateChantierRequest(BaseModel):
-    """Requête de mise à jour de chantier."""
-
-    nom: Optional[str] = None
-    adresse: Optional[str] = None
-    couleur: Optional[str] = None
-    statut: Optional[str] = None  # Pour changement direct de statut
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    photo_couverture: Optional[str] = None
-    contact_nom: Optional[str] = None  # Legacy
-    contact_telephone: Optional[str] = None  # Legacy
-    contacts: Optional[List[ContactRequest]] = None  # Multiple contacts
-    heures_estimees: Optional[float] = None
-    date_debut_prevue: Optional[str] = None  # Renommé pour frontend
-    date_fin_prevue: Optional[str] = None  # Renommé pour frontend
-    description: Optional[str] = None
-    maitre_ouvrage: Optional[str] = None
-    # DEV-TVA: Contexte TVA
-    type_travaux: Optional[str] = None
-    batiment_plus_2ans: Optional[bool] = None
-    usage_habitation: Optional[bool] = None
-
-
-class ChangeStatutRequest(BaseModel):
-    """Requête de changement de statut."""
-
-    statut: str  # "ouvert", "en_cours", "receptionne", "ferme"
-
-
-class AssignResponsableRequest(BaseModel):
-    """Requête d'assignation de responsable."""
-
-    user_id: int
-
-
-class UserPublicSummary(BaseModel):
-    """
-    Résumé public d'un utilisateur (sans données sensibles RGPD).
-
-    Utilisé pour l'affichage des conducteurs/chefs dans les chantiers.
-    Le téléphone est inclus UNIQUEMENT pour les chefs de chantier (besoin opérationnel).
-    """
-
-    id: str
-    nom: str
-    prenom: str
-    role: str
-    type_utilisateur: str
-    metier: Optional[str] = None
-    couleur: Optional[str] = None
-    telephone: Optional[str] = None  # Inclus uniquement pour les chefs de chantier
-    is_active: bool
-
-
-# Alias pour compatibilité (ne pas utiliser pour nouvelles features)
-UserSummary = UserPublicSummary
-
-
-class ChantierResponse(BaseModel):
-    """Réponse chantier complète selon CDC - format frontend."""
-
-    id: str = Field(
-        ...,
-        description="Identifiant unique du chantier",
-        example="42"
-    )
-    code: str = Field(
-        ...,
-        description="Code unique du chantier (auto-généré si non fourni)",
-        min_length=3,
-        max_length=50,
-        example="CHT-2026-001"
-    )
-    nom: str = Field(
-        ...,
-        description="Nom du chantier",
-        min_length=3,
-        max_length=255,
-        example="Villa Lyon 3ème - Construction neuve"
-    )
-    adresse: str = Field(
-        ...,
-        description="Adresse complète du chantier",
-        example="45 Avenue Lacassagne, 69003 Lyon"
-    )
-    statut: str = Field(
-        ...,
-        description="Statut actuel du chantier",
-        pattern="^(ouvert|en_cours|receptionne|ferme)$",
-        example="en_cours"
-    )
-    couleur: Optional[str] = Field(
-        None,
-        description="Couleur d'identification (hex)",
-        pattern="^#[0-9A-Fa-f]{6}$",
-        example="#3B82F6"
-    )
-    latitude: Optional[float] = Field(
-        None,
-        description="Latitude GPS du chantier",
-        ge=-90,
-        le=90,
-        example=45.7578
-    )
-    longitude: Optional[float] = Field(
-        None,
-        description="Longitude GPS du chantier",
-        ge=-180,
-        le=180,
-        example=4.8320
-    )
-    contact_nom: Optional[str] = Field(
-        None,
-        description="Nom du contact principal (legacy field)",
-        example="Jean Dupont"
-    )
-    contact_telephone: Optional[str] = Field(
-        None,
-        description="Téléphone du contact principal (legacy field)",
-        example="06 12 34 56 78"
-    )
-    contacts: List[ContactResponse] = Field(
-        default_factory=list,
-        description="Liste des contacts sur place"
-    )
-    phases: List[PhaseChantierResponse] = Field(
-        default_factory=list,
-        description="Phases/étapes du chantier"
-    )
-    maitre_ouvrage: Optional[str] = Field(
-        None,
-        description="Nom du maître d'ouvrage",
-        max_length=255,
-        example="OPAC Savoie"
-    )
-    heures_estimees: Optional[float] = Field(
-        None,
-        description="Nombre d'heures estimées pour le chantier",
-        ge=0,
-        example=320.5
-    )
-    date_debut_prevue: Optional[str] = Field(
-        None,
-        description="Date de début prévue (format ISO 8601)",
-        example="2026-01-15"
-    )
-    date_fin_prevue: Optional[str] = Field(
-        None,
-        description="Date de fin prévue (format ISO 8601)",
-        example="2026-02-28"
-    )
-    description: Optional[str] = Field(
-        None,
-        description="Description détaillée du chantier",
-        example="Construction d'une villa individuelle de 150m² avec garage et piscine"
-    )
-    conducteurs: List[UserPublicSummary] = Field(
-        default_factory=list,
-        description="Conducteurs de travaux assignés (sans données sensibles)"
-    )
-    chefs: List[UserPublicSummary] = Field(
-        default_factory=list,
-        description="Chefs de chantier assignés (sans données sensibles)"
-    )
-    ouvriers: List[UserPublicSummary] = Field(
-        default_factory=list,
-        description="Ouvriers, intérimaires et sous-traitants assignés"
-    )
-    created_at: str = Field(
-        ...,
-        description="Date de création de la fiche chantier (ISO 8601)",
-        example="2026-01-10T08:30:00Z"
-    )
-    updated_at: Optional[str] = Field(
-        None,
-        description="Date de dernière modification (ISO 8601)",
-        example="2026-01-28T14:22:00Z"
-    )
-    # DEV-TVA: Contexte TVA pour pre-remplissage
-    type_travaux: Optional[str] = Field(
-        None,
-        description="Type de travaux: renovation, renovation_energetique, construction_neuve"
-    )
-    batiment_plus_2ans: Optional[bool] = Field(
-        None,
-        description="Batiment acheve depuis plus de 2 ans"
-    )
-    usage_habitation: Optional[bool] = Field(
-        None,
-        description="Immeuble affecte a l'habitation"
-    )
-
-    class Config:
-        from_attributes = True
-        schema_extra = {
-            "example": {
-                "id": "42",
-                "code": "CHT-2026-001",
-                "nom": "Villa Lyon 3ème - Construction neuve",
-                "adresse": "45 Avenue Lacassagne, 69003 Lyon",
-                "statut": "en_cours",
-                "couleur": "#3B82F6",
-                "latitude": 45.7578,
-                "longitude": 4.8320,
-                "contact_nom": "Jean Dupont",
-                "contact_telephone": "06 12 34 56 78",
-                "contacts": [
-                    {"nom": "Jean Dupont", "profession": "Architecte", "telephone": "06 12 34 56 78"}
-                ],
-                "phases": [],
-                "heures_estimees": 320.5,
-                "date_debut_prevue": "2026-01-15",
-                "date_fin_prevue": "2026-02-28",
-                "description": "Construction d'une villa individuelle de 150m² avec garage et piscine",
-                "conducteurs": [
-                    {"id": "5", "nom": "Martin", "prenom": "Sophie", "role": "conducteur", "type_utilisateur": "salarie", "metier": "Conducteur de travaux", "couleur": "#10B981", "is_active": True}
-                ],
-                "chefs": [],
-                "ouvriers": [],
-                "created_at": "2026-01-10T08:30:00Z",
-                "updated_at": "2026-01-28T14:22:00Z"
-            }
-        }
-
-
-class ChantierListResponse(BaseModel):
-    """Réponse liste chantiers paginée (CHT-14) - format frontend."""
-
-    items: List[ChantierResponse]
-    total: int
-    page: int
-    size: int
-    pages: int
-
-
-class DeleteResponse(BaseModel):
-    """Réponse de suppression."""
-
-    deleted: bool
-    id: int
 
 
 # =============================================================================
@@ -461,7 +124,7 @@ async def create_chantier(
             }
         ))
 
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except CodeChantierAlreadyExistsError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -516,7 +179,7 @@ def list_chantiers(
     chantiers_data = result.get("chantiers", [])
 
     return ChantierListResponse(
-        items=[_transform_chantier_response(c, controller, user_repo, chantier_repo) for c in chantiers_data],
+        items=[transform_chantier_response(c, controller, user_repo, chantier_repo) for c in chantiers_data],
         total=total,
         page=page,
         size=size,
@@ -535,7 +198,7 @@ def get_chantier(
     """Récupère un chantier par son ID."""
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo, chantier_repo)
+        return transform_chantier_response(result, controller, user_repo, chantier_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -567,7 +230,7 @@ def get_chantier_by_code(
     """
     try:
         result = controller.get_by_code(code)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -634,7 +297,7 @@ def update_chantier(
             batiment_plus_2ans=request.batiment_plus_2ans,
             usage_habitation=request.usage_habitation,
         )
-        response = _transform_chantier_response(result, controller, user_repo)
+        response = transform_chantier_response(result, controller, user_repo)
         return response
     except ChantierNotFoundError as e:
         raise HTTPException(
@@ -746,7 +409,7 @@ def change_statut(
     """
     try:
         result = controller.change_statut(chantier_id, request.statut)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except PrerequisReceptionNonRemplisError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -785,7 +448,7 @@ def demarrer_chantier(
     """Passe le chantier en statut 'En cours'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.demarrer(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -809,7 +472,7 @@ def receptionner_chantier(
     """Passe le chantier en statut 'Réceptionné'. RBAC: conducteur ou admin requis."""
     try:
         result = controller.receptionner(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -826,8 +489,7 @@ def receptionner_chantier(
 def fermer_chantier(
     chantier_id: int,
     force: bool = Query(False, description="Forcer la fermeture sans verification des pre-requis"),
-    db: Session = Depends(get_db),
-    controller: ChantierController = Depends(get_chantier_controller),
+    use_case: FermerChantierUseCase = Depends(get_fermer_chantier_use_case),
     user_repo: "UserRepository" = Depends(get_user_repository),
     current_user_id: int = Depends(get_current_user_id),
     _role: str = Depends(require_conducteur_or_admin),  # RBAC
@@ -845,8 +507,7 @@ def fermer_chantier(
     Args:
         chantier_id: ID du chantier a fermer.
         force: Si True, ignore les verifications de pre-requis.
-        db: Session base de donnees.
-        controller: Controller des chantiers.
+        use_case: Use case de fermeture.
         user_repo: Repository utilisateurs.
         current_user_id: ID de l'utilisateur connecte.
 
@@ -856,57 +517,32 @@ def fermer_chantier(
     Raises:
         HTTPException 404: Chantier non trouve.
         HTTPException 400: Transition non autorisee.
+        HTTPException 403: Force non autorise (non-admin).
         HTTPException 409: Pre-requis de cloture non remplis.
     """
-    # Finding #1: Restreindre force=True au role admin
-    if force and _role != "admin":
+    try:
+        result = use_case.execute(
+            chantier_id=chantier_id,
+            force=force,
+            role=_role,
+            user_id=current_user_id,
+        )
+        return transform_chantier_response(result, use_case.controller, user_repo)
+    except FermetureForceeNonAutoriseeError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Seul un administrateur peut forcer la fermeture d'un chantier",
+            detail=e.message,
         )
-
-    # Finding #4: Log quand force est utilise
-    if force:
-        logger.warning(
-            "Fermeture forcee du chantier",
-            extra={
-                "event": "chantier.fermeture_forcee",
-                "chantier_id": chantier_id,
-                "user_id": current_user_id,
+    except PrerequisClotureNonRemplisError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "prerequis_cloture_non_remplis",
+                "message": e.message,
+                "blocages": e.blocages,
+                "avertissements": e.avertissements,
             },
         )
-
-    # Verification des pre-requis financiers (mode degrade si indisponible)
-    avertissements: List[str] = []
-
-    if not force:
-        cloture_check = _get_cloture_check_port(db)
-        if cloture_check is not None:
-            check_result = cloture_check.verifier_prerequis_cloture(chantier_id)
-            if not check_result.peut_fermer:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail={
-                        "error": "prerequis_cloture_non_remplis",
-                        "message": "Impossible de fermer le chantier : pre-requis non remplis",
-                        "blocages": check_result.blocages,
-                        "avertissements": check_result.avertissements,
-                    },
-                )
-            avertissements = check_result.avertissements
-
-    try:
-        result = controller.fermer(chantier_id)
-        response = _transform_chantier_response(result, controller, user_repo)
-        # Inclure les avertissements dans les headers si presents
-        if avertissements:
-            # Note: les avertissements sont aussi loggues cote serveur
-            logger.info(
-                "Chantier %d ferme avec avertissements: %s",
-                chantier_id,
-                avertissements,
-            )
-        return response
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -950,7 +586,7 @@ def assigner_conducteur(
     """
     try:
         result = controller.assigner_conducteur(chantier_id, request.user_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -970,7 +606,7 @@ def retirer_conducteur(
     """Retire un conducteur du chantier. RBAC: conducteur ou admin requis."""
     try:
         result = controller.retirer_conducteur(chantier_id, user_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1004,7 +640,7 @@ def assigner_chef_chantier(
     """
     try:
         result = controller.assigner_chef_chantier(chantier_id, request.user_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1024,7 +660,7 @@ def retirer_chef_chantier(
     """Retire un chef de chantier. RBAC: conducteur ou admin requis."""
     try:
         result = controller.retirer_chef_chantier(chantier_id, user_id)
-        return _transform_chantier_response(result, controller, user_repo)
+        return transform_chantier_response(result, controller, user_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1055,7 +691,7 @@ def assigner_ouvrier(
 
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo, chantier_repo)
+        return transform_chantier_response(result, controller, user_repo, chantier_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
@@ -1075,7 +711,7 @@ def retirer_ouvrier(
 
     try:
         result = controller.get_by_id(chantier_id)
-        return _transform_chantier_response(result, controller, user_repo, chantier_repo)
+        return transform_chantier_response(result, controller, user_repo, chantier_repo)
     except ChantierNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
@@ -1245,183 +881,3 @@ def delete_phase(
             detail=f"Phase {phase_id} non trouvée pour le chantier {chantier_id}",
         )
     return {"deleted": True, "id": phase_id}
-
-
-# =============================================================================
-# Helpers
-# =============================================================================
-
-
-def _get_cloture_check_port(
-    db: Session,
-) -> Optional["ChantierClotureCheckPort"]:
-    """Instancie le port de verification des pre-requis de cloture.
-
-    Utilise le Service Registry pour recuperer les repositories financiers
-    sans import direct, avec graceful degradation si le module financier
-    n'est pas disponible.
-
-    Args:
-        db: Session base de donnees.
-
-    Returns:
-        ChantierClotureCheckPort ou None si les dependances sont indisponibles.
-    """
-    try:
-        from modules.financier.infrastructure.persistence import (
-            SQLAlchemyAchatRepository,
-            SQLAlchemySituationRepository,
-            SQLAlchemyAvenantRepository,
-            SQLAlchemyBudgetRepository,
-        )
-        from shared.infrastructure.adapters import ChantierClotureCheckAdapter
-
-        return ChantierClotureCheckAdapter(
-            achat_repo=SQLAlchemyAchatRepository(db),
-            situation_repo=SQLAlchemySituationRepository(db),
-            avenant_repo=SQLAlchemyAvenantRepository(db),
-            budget_repo=SQLAlchemyBudgetRepository(db),
-        )
-    except ImportError as e:
-        logger.warning(
-            "Module financier non disponible pour la verification de cloture: %s", e
-        )
-        return None
-    except Exception as e:
-        logger.warning(
-            "Erreur lors de l'initialisation du port de cloture: %s", e
-        )
-        return None
-
-
-def _get_user_summary(user_id: int, user_repo: "UserRepository", include_telephone: bool = False) -> Optional[UserPublicSummary]:
-    """
-    Récupère les infos publiques d'un utilisateur pour l'inclusion dans un chantier.
-
-    RGPD: Le téléphone est inclus UNIQUEMENT si include_telephone=True (chefs de chantier).
-    Besoin opérationnel légitime: permettre aux ouvriers d'appeler leur chef sur chantier.
-
-    Args:
-        user_id: ID de l'utilisateur à récupérer.
-        user_repo: Repository pour accéder aux utilisateurs.
-        include_telephone: Si True, inclut le numéro de téléphone (pour chefs uniquement).
-
-    Returns:
-        UserPublicSummary avec les données publiques, ou None si non trouvé.
-    """
-    try:
-        user = user_repo.find_by_id(user_id)
-        if user:
-            return UserPublicSummary(
-                id=str(user.id),
-                nom=user.nom,
-                prenom=user.prenom,
-                role=user.role.value,
-                type_utilisateur=user.type_utilisateur.value,
-                metier=user.metier,
-                couleur=str(user.couleur) if user.couleur else None,
-                telephone=user.telephone if include_telephone else None,
-                is_active=user.is_active,
-            )
-        return None
-    except (AttributeError, ValueError, TypeError):
-        # Erreurs de conversion de types ou attributs manquants
-        return None
-
-
-def _transform_chantier_response(
-    chantier_dict: dict,
-    controller: ChantierController,
-    user_repo: Optional["UserRepository"] = None,
-    chantier_repo=None,
-) -> ChantierResponse:
-    """
-    Transforme un dictionnaire chantier du controller en ChantierResponse.
-
-    Convertit les IDs des conducteurs/chefs/ouvriers en objets User complets.
-    """
-    # Récupérer les coordonnées GPS
-    coords = chantier_dict.get("coordonnees_gps") or {}
-    latitude = coords.get("latitude") if coords else None
-    longitude = coords.get("longitude") if coords else None
-
-    # Récupérer le contact legacy (premier contact)
-    contact = chantier_dict.get("contact") or {}
-    contact_nom = contact.get("nom") if contact else None
-    contact_telephone = contact.get("telephone") if contact else None
-
-    # Récupérer les contacts multiples
-    contacts_data = chantier_dict.get("contacts", [])
-    contacts = [
-        ContactResponse(
-            nom=c.get("nom", ""),
-            profession=c.get("profession"),
-            telephone=c.get("telephone"),
-        )
-        for c in contacts_data
-    ] if contacts_data else []
-
-    # Si pas de contacts mais contact legacy, créer un contact
-    if not contacts and contact_nom:
-        contacts = [ContactResponse(
-            nom=contact_nom,
-            profession=None,
-            telephone=contact_telephone,
-        )]
-
-    # Récupérer les IDs des conducteurs et chefs
-    conducteur_ids = chantier_dict.get("conducteur_ids", [])
-    chef_chantier_ids = chantier_dict.get("chef_chantier_ids", [])
-
-    # Récupérer les IDs des ouvriers via le repository
-    ouvrier_ids = []
-    if chantier_repo:
-        ouvrier_ids = chantier_repo.list_ouvrier_ids(chantier_dict.get("id"))
-
-    # Récupérer les objets User complets si le repo est disponible
-    conducteurs = []
-    chefs = []
-    ouvriers = []
-
-    if user_repo:
-        for uid in conducteur_ids:
-            user_summary = _get_user_summary(uid, user_repo)
-            if user_summary:
-                conducteurs.append(user_summary)
-
-        for uid in chef_chantier_ids:
-            user_summary = _get_user_summary(uid, user_repo, include_telephone=True)
-            if user_summary:
-                chefs.append(user_summary)
-
-        for uid in ouvrier_ids:
-            user_summary = _get_user_summary(uid, user_repo)
-            if user_summary:
-                ouvriers.append(user_summary)
-
-    return ChantierResponse(
-        id=str(chantier_dict.get("id", "")),
-        code=chantier_dict.get("code", ""),
-        nom=chantier_dict.get("nom", ""),
-        adresse=chantier_dict.get("adresse", ""),
-        statut=chantier_dict.get("statut", "ouvert"),
-        couleur=chantier_dict.get("couleur"),
-        latitude=latitude,
-        longitude=longitude,
-        contact_nom=contact_nom,
-        contact_telephone=contact_telephone,
-        contacts=contacts,
-        maitre_ouvrage=chantier_dict.get("maitre_ouvrage"),
-        heures_estimees=chantier_dict.get("heures_estimees"),
-        date_debut_prevue=chantier_dict.get("date_debut"),
-        date_fin_prevue=chantier_dict.get("date_fin"),
-        description=chantier_dict.get("description"),
-        conducteurs=conducteurs,
-        chefs=chefs,
-        ouvriers=ouvriers,
-        created_at=chantier_dict.get("created_at", ""),
-        updated_at=chantier_dict.get("updated_at"),
-        type_travaux=chantier_dict.get("type_travaux"),
-        batiment_plus_2ans=chantier_dict.get("batiment_plus_2ans"),
-        usage_habitation=chantier_dict.get("usage_habitation"),
-    )
