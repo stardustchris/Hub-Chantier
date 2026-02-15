@@ -38,7 +38,7 @@
 ### Code source
 
 - **Backend** : 16 modules, 35+ entites, 50+ value objects, 150+ use cases, 40+ repositories
-- **Frontend** : 12 pages, 28 hooks, 23 services, 80+ composants, 3 contextes
+- **Frontend** : 12 pages, 30 hooks, 23 services, 90+ composants, 4 contextes (+ OnboardingContext)
 - **Architecture** : Clean Architecture 4 layers (Domain > Application > Adapters > Infrastructure)
 
 ### Tests
@@ -60,6 +60,8 @@
 
 | Feature | Description | Session |
 |---------|-------------|---------|
+| **UX Sprint: 5 items** | Optimistic updates, batch validation FdH, design tokens, onboarding, contraste WCAG | 15 fev |
+| **Architecture refactoring** | FermerChantierUseCase, Presenter pattern, schemas extraction, pipeline OpenAPI→TS | 15 fev |
 | **FIN-CFG: Audit ConfigurationEntreprise** | Cache TTL 300s, alerte revalidation 180j (bandeau jaune), 35 tests (13 unit + 22 integration), fix devis hardcoded coefficients | 11 fev |
 | **FIN-CFG: Page Parametres Entreprise** | Configuration admin coefficients financiers (FG 19%, CP 1.45, HS1 1.25, HS2 1.50, couts fixes 600k). Clean Architecture complet + page frontend. | 11 fev |
 | **DEV-TVA: Ventilation TVA multi-taux** | Ventilation par taux (5.5/10/20%), selecteur par ligne, pre-remplissage intelligent, mention legale | 5 fev |
@@ -245,14 +247,17 @@ Fichiers icones dans `frontend/public/` :
 
 ## Derniere mise a jour
 
-Session 2026-02-11 (2/2) - Audit ConfigurationEntreprise: Cache + Alertes + Tests + Nettoyage
-- **Cache**: TTL 300s dans repository (time.monotonic, invalidation sur save)
-- **Alerte 180j**: stale_warning backend + bandeau jaune frontend
-- **Tests**: 13 unit + 22 integration (config DB → dashboard/PnL/MO/fallback)
-- **Fix devis**: injection config_repository, coefficient lu depuis BDD au lieu de hardcode
-- **Validation**: architect PASS, code-reviewer APPROVED, security PASS (0 CRITICAL/HIGH)
-- **Commits**: 18587b1, 942824f, 6e7bc18
-- Verdict : ✅ **PHASES 0-3 CONFIGURATION ENTREPRISE COMPLET**
+Session 2026-02-15 - UX Sprint: 5 améliorations + correctifs validation agents
+- **Optimistic updates**: Mutations TanStack Query v5 (7 mutations, onMutate/onError/onSettled) dans useChantierDetail + useReservationModal
+- **Batch validation FdH**: Hook useMultiSelect générique + BatchActionsBar fixe bottom + intégration TimesheetGrid avec checkboxes
+- **Design tokens**: Système tokens centralisé (theme/tokens.ts), 6 palettes sémantiques, migration Button/Badge/Card/EmptyState/Skeleton
+- **Onboarding interactif**: OnboardingProvider + OnboardingTooltip avec tours guidés par rôle (compagnon, chef, admin/conducteur)
+- **Contraste WCAG 2.1 AA**: text-gray-400 → text-gray-600 (ratio 7.1:1 AAA)
+- **Architecture refactoring**: FermerChantierUseCase (Clean Architecture), Presenter pattern, schemas extraction, pipeline OpenAPI → TypeScript
+- **Correctifs validation agents**: useCallback deps (.mutate), type guards safe (pas de `as` cast), resize/scroll listener tooltip, prefers-reduced-motion, dialog role + aria-modal
+- **Validation**: architect-reviewer PASS 10/10, code-reviewer APPROVED, security-auditor PASS, accessibility-tester corrigé
+- **Commits**: ab5da6f, c8d3010, 719ee4f, 93a2349, 29d32e9, 5ae7922, 252f4cf, a030c31
+- Verdict : ✅ **5 AMÉLIORATIONS UX VALIDÉES + ARCHITECTURE REFACTORÉE**
 
 Session 2026-02-11 (1/2) - FIN-CFG: Page Parametres Entreprise (Admin Only)
 - **Objectif**: Rendre les coefficients financiers configurables par l'admin

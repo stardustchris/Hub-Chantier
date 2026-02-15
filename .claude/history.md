@@ -8,6 +8,28 @@
 
 **Sessions**:
 
+**Session 2026-02-15** — UX Sprint: 5 améliorations + Architecture refactoring
+- **Objectif**: Implémenter 5 items UX prioritaires + corriger 4 items de dette technique architecture
+- **Architecture refactoring**:
+  - FermerChantierUseCase (Application layer, plus de dépendance Controller)
+  - Presenter pattern: extraction transform_chantier_response + get_user_summary
+  - Schemas extraction: 17 Pydantic schemas → chantier_schemas.py (fix circular import)
+  - Pipeline OpenAPI → TypeScript (openapi-typescript + script generate-api-types.sh)
+- **UX Items (5 agents parallèles)**:
+  - Optimistic updates: 7 mutations TanStack Query v5 (useChantierDetail + useReservationModal)
+  - Batch validation FdH: useMultiSelect + BatchActionsBar + TimesheetGrid intégration
+  - Design tokens: theme/tokens.ts (6 palettes), migration Button/Badge/Card/EmptyState/Skeleton
+  - Onboarding interactif: OnboardingProvider + OnboardingTooltip + tours par rôle + Layout intégration
+  - Contraste WCAG 2.1 AA: text-gray-600 (ratio 7.1:1 AAA)
+- **Correctifs post-validation (4 agents)**:
+  - useCallback deps: mutation.mutate (pas mutation entière)
+  - Type guards safe: getApiErrorMessage() au lieu de `as` cast
+  - OnboardingTooltip: resize/scroll listener + dialog role + touch target 44px
+  - BatchActionsBar: prefers-reduced-motion sur animation
+- **Validation**: architect 10/10 PASS, code-reviewer APPROVED, security PASS, accessibility corrigé
+- **Commits**: ab5da6f, c8d3010, 719ee4f, 93a2349, 29d32e9, 5ae7922, 252f4cf, a030c31
+- Verdict : ✅ **5 UX + ARCHITECTURE REFACTORÉE**
+
 **Session 2026-02-11 (2/2)** — Audit ConfigurationEntreprise: Cache + Alertes + Tests + Nettoyage
 - **Objectif**: Finaliser les phases 0.3, 2.2-2.4, 3.1-3.3 du plan ConfigurationEntreprise
 - **Phase 0.3**: 13 tests unitaires entity + use cases (validation, defaults, edge cases)
@@ -105,5 +127,5 @@ Chaque fichier mensuel contient:
 
 ---
 
-**Derniere mise a jour**: 11 fevrier 2026
+**Derniere mise a jour**: 15 fevrier 2026
 **Archive courante**: Fevrier 2026 (inline) + 2026-01.md (4304 lignes, ~58k tokens)
