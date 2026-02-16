@@ -40,7 +40,7 @@ export default function DevisListPageEnhanced() {
 
     // Pagination
     page,
-    pageSize,
+    pageSize: _pageSize,
     totalPages,
     setPage,
   } = useDevisFilters()

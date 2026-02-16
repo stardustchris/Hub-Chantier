@@ -10,7 +10,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts'
 import type { PieLabelRenderProps } from 'recharts'

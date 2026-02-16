@@ -74,7 +74,16 @@ export default function ConversionChantierPanel({
       setConverting(true)
       setError(null)
       const result = await devisService.convertirEnChantier(devisId)
-      setConversionResult(result)
+      setConversionResult({
+        devis_id: result.devis_id,
+        numero: result.devis_numero,
+        client: '',
+        budget: result.montant_total_ht,
+        lots: [],
+        retenue_garantie_pct: 0,
+        date_conversion: new Date().toISOString(),
+        chantier_id: result.chantier_id,
+      })
       setShowConfirmModal(false)
       // Recharger les infos pour afficher l'etat "deja converti"
       await loadConversionInfo()

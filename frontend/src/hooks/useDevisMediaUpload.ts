@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from 'react'
-import { uploadDocument, deleteDocument } from '../services/documents'
+
 import { devisService } from '../services/devis'
 import type { PieceJointeDevis } from '../types'
 import { logger } from '../services/logger'

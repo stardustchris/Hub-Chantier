@@ -10,11 +10,11 @@ import api from '../services/api';
 import type { ApiError } from '../types/api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
-export function ResetPasswordPage(): JSX.Element {
+export function ResetPasswordPage(): React.ReactElement {
   useDocumentTitle('Réinitialiser le mot de passe');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
 
   const [token, setToken] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -26,12 +26,13 @@ export function ResetPasswordPage(): JSX.Element {
     // Récupérer le token depuis l'URL
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
-      showToast('Lien invalide. Veuillez demander un nouveau lien de réinitialisation.', 'error');
+      addToast({ message: 'Lien invalide. Veuillez demander un nouveau lien de réinitialisation.', type: 'error' });
       navigate('/forgot-password');
       return;
     }
     setToken(tokenParam);
-  }, [searchParams, navigate, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, navigate]);
 
   const validatePassword = (pwd: string): string | null => {
     if (pwd.length < 8) {
@@ -81,14 +82,14 @@ export function ResetPasswordPage(): JSX.Element {
         new_password: password,
       });
 
-      showToast('Mot de passe réinitialisé avec succès !', 'success');
+      addToast({ message: 'Mot de passe réinitialisé avec succès !', type: 'success' });
       navigate('/login');
     } catch (err) {
       const error = err as ApiError;
       if (error.response?.status === 400) {
-        showToast('Le lien de réinitialisation est invalide ou expiré', 'error');
+        addToast({ message: 'Le lien de réinitialisation est invalide ou expiré', type: 'error' });
       } else {
-        showToast('Une erreur est survenue. Veuillez réessayer.', 'error');
+        addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
       }
     } finally {
       setIsLoading(false);
@@ -269,3 +270,4 @@ export function ResetPasswordPage(): JSX.Element {
     </div>
   );
 }
+export default ResetPasswordPage

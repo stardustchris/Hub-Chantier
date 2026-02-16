@@ -72,7 +72,7 @@ export default function TodayPlanningCard({
   slots = [],
   isLoading = false,
   onNavigate,
-  onCall,
+  onCall: _onCall,
   onChantierClick,
 }: TodayPlanningCardProps) {
   const navigate = useNavigate()

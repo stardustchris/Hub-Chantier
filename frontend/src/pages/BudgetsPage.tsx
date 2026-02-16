@@ -151,7 +151,7 @@ export default function BudgetsPage() {
   const totalRealise = budgetChantiers.reduce((sum, bc) => sum + (bc.kpi?.montant_realise || 0), 0)
 
   return (
-    <Layout title="Budgets">
+    <Layout>
       <div className="space-y-6">
         {/* En-tête avec statistiques globales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

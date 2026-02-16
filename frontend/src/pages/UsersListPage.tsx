@@ -21,7 +21,7 @@ import { ROLES } from '../types'
 
 export default function UsersListPage() {
   const { user: currentUser } = useAuth()
-  const { showToast } = useToast()
+  const { addToast } = useToast()
   const isAdmin = currentUser?.role === 'admin'
 
   // Document title
@@ -97,27 +97,29 @@ export default function UsersListPage() {
     try {
       await usersService.create(data)
       setShowCreateModal(false)
-      showToast('Utilisateur créé avec succès', 'success')
+      addToast({ message: 'Utilisateur créé avec succès', type: 'success' })
       reload()
       loadRoleStats()
     } catch (error) {
       logger.error('Error creating user', error, { context: 'UsersListPage' })
       throw error
     }
-  }, [reload, showToast, loadRoleStats])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reload, loadRoleStats])
 
   const handleInviteUser = useCallback(async (data: { email: string; nom: string; prenom: string; role: string }) => {
     try {
       await authService.inviteUser(data)
       setShowInviteModal(false)
-      showToast(`Invitation envoyée à ${data.email}`, 'success')
+      addToast({ message: `Invitation envoyée à ${data.email}`, type: 'success' })
       reload()
       loadRoleStats()
     } catch (error) {
       logger.error('Error inviting user', error, { context: 'UsersListPage', showToast: true })
       throw error
     }
-  }, [reload, showToast, loadRoleStats])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reload, loadRoleStats])
 
   const handleToggleActive = useCallback(async (user: User) => {
     try {

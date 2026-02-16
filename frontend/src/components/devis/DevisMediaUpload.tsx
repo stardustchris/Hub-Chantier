@@ -259,10 +259,10 @@ function MediaThumbnail({
 
       {/* Info */}
       <div className="space-y-1">
-        <p className="text-sm font-medium text-gray-900 truncate" title={piece.nom_fichier}>
+        <p className="text-sm font-medium text-gray-900 truncate" title={piece.nom_fichier ?? undefined}>
           {piece.nom_fichier}
         </p>
-        <p className="text-xs text-gray-500">{formatFileSize(piece.taille_octets)}</p>
+        <p className="text-xs text-gray-500">{formatFileSize(piece.taille_octets ?? 0)}</p>
       </div>
 
       {/* Actions */}

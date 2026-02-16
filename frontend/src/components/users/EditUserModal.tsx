@@ -8,7 +8,6 @@ import { X, Loader2, Euro } from 'lucide-react'
 import type { User, UserUpdate, UserRole, Metier } from '../../types'
 import { ROLES, METIERS, USER_COLORS } from '../../types'
 import { useAuth } from '../../contexts/AuthContext'
-import { MetierMultiSelect } from './MetierMultiSelect'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface EditUserModalProps {
@@ -28,7 +27,7 @@ export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
     role: user.role,
     type_utilisateur: user.type_utilisateur,
     telephone: user.telephone,
-    metiers: user.metiers || [],
+    metier: user.metier,
     taux_horaire: user.taux_horaire,
     code_utilisateur: user.code_utilisateur,
     couleur: user.couleur,
@@ -127,12 +126,20 @@ export function EditUserModal({ user, onClose, onSubmit }: EditUserModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Métiers (jusqu'à 5)
+              Métier
             </label>
-            <MetierMultiSelect
-              value={formData.metiers || []}
-              onChange={(metiers) => setFormData({ ...formData, metiers })}
-            />
+            <select
+              value={formData.metier || ''}
+              onChange={(e) => setFormData({ ...formData, metier: e.target.value as Metier })}
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option value="">Sélectionner un métier</option>
+              {Object.entries(METIERS).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

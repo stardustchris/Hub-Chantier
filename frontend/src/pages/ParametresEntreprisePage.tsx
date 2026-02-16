@@ -39,10 +39,10 @@ interface ConfigurationUpdateResponse extends ConfigurationEntreprise {
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-export function ParametresEntreprisePage(): JSX.Element {
+export function ParametresEntreprisePage(): React.ReactElement {
   useDocumentTitle('Paramètres entreprise');
   const { user } = useAuth();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
   const isAdmin = user?.role === 'admin';
 
   const [config, setConfig] = useState<ConfigurationEntreprise | null>(null);
@@ -84,17 +84,18 @@ export function ParametresEntreprisePage(): JSX.Element {
       setSeuilAlerteBudgetCritique(data.seuil_alerte_budget_critique_pct);
       setNotes(data.notes || '');
       if (data.is_default) {
-        showToast(
-          `Aucune configuration enregistree pour ${CURRENT_YEAR}. Valeurs par defaut affichees.`,
-          'info'
-        );
+        addToast({
+          message: `Aucune configuration enregistree pour ${CURRENT_YEAR}. Valeurs par defaut affichees.`,
+          type: 'info'
+        });
       }
     } catch {
-      showToast('Erreur lors du chargement de la configuration', 'error');
+      addToast({ message: 'Erreur lors du chargement de la configuration', type: 'error' });
     } finally {
       setIsLoading(false);
     }
-  }, [showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isAdmin) {
@@ -129,27 +130,27 @@ export function ParametresEntreprisePage(): JSX.Element {
       setConfig(response.data);
       // EDGE-001: notifier si creation d'une nouvelle config
       if (response.data.created) {
-        showToast(`Configuration creee pour l'annee ${CURRENT_YEAR}`, 'success');
+        addToast({ message: `Configuration creee pour l'annee ${CURRENT_YEAR}`, type: 'success' });
       } else {
-        showToast('Configuration sauvegardee avec succes', 'success');
+        addToast({ message: 'Configuration sauvegardee avec succes', type: 'success' });
       }
       // VAL-002 + EDGE-002: afficher les warnings
       if (response.data.warnings && response.data.warnings.length > 0) {
         for (const w of response.data.warnings) {
-          showToast(w, 'warning');
+          addToast({ message: w, type: 'warning' });
         }
       }
     } catch (err) {
       const error = err as ApiError;
       if (error.response?.status === 422) {
-        showToast(
-          error.response?.data?.detail || 'Valeurs invalides',
-          'error'
-        );
+        addToast({
+          message: error.response?.data?.detail || 'Valeurs invalides',
+          type: 'error'
+        });
       } else if (error.response?.status === 403) {
-        showToast('Acces reserve aux administrateurs', 'error');
+        addToast({ message: 'Acces reserve aux administrateurs', type: 'error' });
       } else {
-        showToast('Erreur lors de la sauvegarde', 'error');
+        addToast({ message: 'Erreur lors de la sauvegarde', type: 'error' });
       }
     } finally {
       setIsSaving(false);

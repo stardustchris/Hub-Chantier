@@ -19,6 +19,16 @@ interface LogOptions {
   showToast?: boolean
   /** Metadata additionnelle */
   metadata?: Record<string, unknown>
+  /** ID du devis pour le contexte */
+  devisId?: number
+  /** ID de la piece jointe pour le contexte */
+  pieceId?: number
+  /** Visibilite (pour les pieces jointes) */
+  visible?: boolean
+  /** Nouveau statut (pour les transitions de statut) */
+  newStatut?: string
+  /** Nombre de fichiers (pour les uploads) */
+  fileCount?: number
 }
 
 interface LogEntry {

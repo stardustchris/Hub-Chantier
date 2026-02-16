@@ -9,7 +9,7 @@ export interface TooltipProps {
   /** Texte à afficher dans le tooltip */
   content: string
   /** Élément déclencheur (doit accepter des props event handlers) */
-  children: ReactElement
+  children: ReactElement<Record<string, unknown>>
   /** Position du tooltip par rapport à l'élément */
   position?: 'top' | 'bottom' | 'left' | 'right'
   /** Délai avant affichage au hover (ms) */
@@ -27,9 +27,9 @@ const Tooltip = ({
 }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false)
   const [coords, setCoords] = useState({ top: 0, left: 0 })
-  const hoverTimeoutRef = useRef<number>()
-  const longPressTimeoutRef = useRef<number>()
-  const touchStartTimeRef = useRef<number>()
+  const hoverTimeoutRef = useRef<number | undefined>(undefined)
+  const longPressTimeoutRef = useRef<number | undefined>(undefined)
+  const touchStartTimeRef = useRef<number | undefined>(undefined)
   const triggerRef = useRef<HTMLElement>(null)
   const tooltipId = useRef(`tooltip-${Math.random().toString(36).substr(2, 9)}`)
 
@@ -82,7 +82,7 @@ const Tooltip = ({
     }, hoverDelay)
   }
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (_e: React.MouseEvent<HTMLElement>) => {
     clearTimeout(hoverTimeoutRef.current)
     setIsVisible(false)
   }
@@ -98,7 +98,7 @@ const Tooltip = ({
     }, longPressDelay)
   }
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (_e: React.TouchEvent<HTMLElement>) => {
     clearTimeout(longPressTimeoutRef.current)
     const touchDuration = Date.now() - (touchStartTimeRef.current || 0)
 
@@ -108,7 +108,7 @@ const Tooltip = ({
     }
   }
 
-  const handleTouchMove = () => {
+  const handleTouchMove = (_e: React.TouchEvent<HTMLElement>) => {
     // Annuler le long-press si l'utilisateur déplace son doigt
     clearTimeout(longPressTimeoutRef.current)
   }
@@ -147,30 +147,42 @@ const Tooltip = ({
   }
 
   // Cloner l'enfant avec les event handlers et ref
-  const enhancedChild = cloneElement(children, {
+  const childProps = children.props as Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const enhancedChild = cloneElement(children as ReactElement<any>, {
     ref: triggerRef,
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
       handleMouseEnter(e)
-      children.props.onMouseEnter?.(e)
+      if (typeof childProps.onMouseEnter === 'function') {
+        (childProps.onMouseEnter as (e: React.MouseEvent<HTMLElement>) => void)(e)
+      }
     },
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
-      handleMouseLeave()
-      children.props.onMouseLeave?.(e)
+      handleMouseLeave(e)
+      if (typeof childProps.onMouseLeave === 'function') {
+        (childProps.onMouseLeave as (e: React.MouseEvent<HTMLElement>) => void)(e)
+      }
     },
     onTouchStart: (e: React.TouchEvent<HTMLElement>) => {
       handleTouchStart(e)
-      children.props.onTouchStart?.(e)
+      if (typeof childProps.onTouchStart === 'function') {
+        (childProps.onTouchStart as (e: React.TouchEvent<HTMLElement>) => void)(e)
+      }
     },
     onTouchEnd: (e: React.TouchEvent<HTMLElement>) => {
-      handleTouchEnd()
-      children.props.onTouchEnd?.(e)
+      handleTouchEnd(e)
+      if (typeof childProps.onTouchEnd === 'function') {
+        (childProps.onTouchEnd as (e: React.TouchEvent<HTMLElement>) => void)(e)
+      }
     },
     onTouchMove: (e: React.TouchEvent<HTMLElement>) => {
-      handleTouchMove()
-      children.props.onTouchMove?.(e)
+      handleTouchMove(e)
+      if (typeof childProps.onTouchMove === 'function') {
+        (childProps.onTouchMove as (e: React.TouchEvent<HTMLElement>) => void)(e)
+      }
     },
     'aria-describedby': isVisible ? tooltipId.current : undefined,
-  } as React.HTMLAttributes<HTMLElement>)
+  })
 
   return (
     <>

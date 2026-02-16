@@ -10,10 +10,10 @@ import api from '../services/api';
 import type { ApiError } from '../types/api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
-export function SecuritySettingsPage(): JSX.Element {
+export function SecuritySettingsPage(): React.ReactElement {
   useDocumentTitle('Sécurité');
   const { user } = useAuth();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
 
   const [oldPassword, setOldPassword] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
@@ -85,7 +85,7 @@ export function SecuritySettingsPage(): JSX.Element {
         new_password: newPassword,
       });
 
-      showToast('Mot de passe modifié avec succès !', 'success');
+      addToast({ message: 'Mot de passe modifié avec succès !', type: 'success' });
 
       // Réinitialiser le formulaire
       setOldPassword('');
@@ -96,7 +96,7 @@ export function SecuritySettingsPage(): JSX.Element {
       if (error.response?.status === 400) {
         setErrors({ oldPassword: 'L\'ancien mot de passe est incorrect' });
       } else {
-        showToast('Une erreur est survenue. Veuillez réessayer.', 'error');
+        addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
       }
     } finally {
       setIsChangingPassword(false);
@@ -381,3 +381,4 @@ export function SecuritySettingsPage(): JSX.Element {
     </div>
   );
 }
+export default SecuritySettingsPage
