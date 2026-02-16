@@ -176,11 +176,8 @@ const getWednesdayDate = () => {
   wednesday.setDate(monday.getDate() + 2)
   return formatDate(wednesday)
 }
-const getThursdayDate = () => {
-  const thursday = new Date(monday)
-  thursday.setDate(monday.getDate() + 3)
-  return formatDate(thursday)
-}
+// getThursdayDate disponible si besoin pour demo
+// const getThursdayDate = () => { ... }
 const getFridayDate = () => {
   const friday = new Date(monday)
   friday.setDate(monday.getDate() + 4)

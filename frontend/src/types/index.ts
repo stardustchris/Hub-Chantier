@@ -784,7 +784,7 @@ export const JOURS_SEMAINE_ARRAY = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vend
 
 // ===== FORMULAIRES =====
 export type TypeChamp = 'texte' | 'texte_long' | 'nombre' | 'date' | 'heure' | 'date_heure' | 'select' | 'checkbox' | 'radio' | 'multi_select' | 'auto_date' | 'auto_heure' | 'auto_localisation' | 'auto_intervenant' | 'photo' | 'photo_multiple' | 'signature' | 'titre_section' | 'separateur'
-export type CategorieFormulaire = 'intervention' | 'reception' | 'securite' | 'incident' | 'approvisionnement' | 'administratif' | 'gros_oeuvre' | 'autre'
+export type CategorieFormulaire = 'intervention' | 'reception' | 'securite' | 'incident' | 'approvisionnement' | 'administratif' | 'gros_oeuvre' | 'suivi_chantier' | 'autre'
 export type StatutFormulaire = 'brouillon' | 'soumis' | 'valide'
 
 // Structure d'un champ de template (FOR-01)
@@ -848,6 +848,7 @@ export interface PhotoFormulaire {
 
 // Champ rempli dans un formulaire
 export interface ChampRempli {
+  champ_id?: number
   nom: string
   type_champ: TypeChamp
   valeur?: string | number | boolean | string[]
@@ -937,6 +938,7 @@ export const CATEGORIES_FORMULAIRES: Record<CategorieFormulaire, { label: string
   approvisionnement: { label: 'Approvisionnement', color: '#9B59B6', description: 'Commande materiel, Bon de livraison, Reception materiaux' },
   administratif: { label: 'Administratif', color: '#607D8B', description: 'Demande de conges, CERFA, Attestation diverse' },
   gros_oeuvre: { label: 'Gros Oeuvre', color: '#795548', description: 'Rapport journalier, Bon de betonnage, Controle ferraillage' },
+  suivi_chantier: { label: 'Suivi Chantier', color: '#00BCD4', description: 'Rapport journalier, Suivi avancement, Compte rendu' },
   autre: { label: 'Autre', color: '#95A5A6', description: 'Formulaires divers' },
 }
 

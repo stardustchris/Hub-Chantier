@@ -42,8 +42,6 @@ import {
   ImagePlus,
   Camera,
   X,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react'
 import type { TargetType, User } from '../types'
 import { usersService } from '../services/users'
@@ -70,7 +68,7 @@ export default function DashboardPage() {
 
   // Progressive disclosure pour mobile (5.2.3)
   // État pour savoir si les cartes secondaires sont dépliées sur mobile
-  const [isSecondaryCardsExpanded, setIsSecondaryCardsExpanded] = useState(() => {
+  const [isSecondaryCardsExpanded, _setIsSecondaryCardsExpanded] = useState(() => {
     const saved = localStorage.getItem('hub_dashboard_secondary_cards_expanded')
     return saved === 'true'
   })

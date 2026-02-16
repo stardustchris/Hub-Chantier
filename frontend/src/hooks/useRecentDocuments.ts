@@ -33,64 +33,6 @@ interface UseRecentDocumentsReturn {
   refreshDocuments: () => Promise<void>
 }
 
-/** Documents de démonstration avec vrais PDFs */
-const DEMO_DOCUMENTS: RecentDocument[] = [
-  {
-    id: 'demo-1',
-    name: 'Consignes de securite 2026.pdf',
-    siteName: 'General',
-    type: 'pdf',
-    chantierId: 1,
-    documentId: 1,
-    demoUrl: '/demo-documents/consignes-securite-2026.pdf',
-  },
-  {
-    id: 'demo-2',
-    name: 'Planning semaine 5.pdf',
-    siteName: 'Villa Moderne Duplex',
-    type: 'pdf',
-    chantierId: 4,
-    documentId: 2,
-    demoUrl: '/demo-documents/planning-semaine-5.pdf',
-  },
-  {
-    id: 'demo-3',
-    name: 'Checklist qualite beton.pdf',
-    siteName: 'Villa Moderne Duplex',
-    type: 'pdf',
-    chantierId: 4,
-    documentId: 3,
-    demoUrl: '/demo-documents/checklist-qualite-beton.pdf',
-  },
-  {
-    id: 'demo-4',
-    name: 'Fiche technique grue.pdf',
-    siteName: 'Residence Les Jardins',
-    type: 'pdf',
-    chantierId: 1,
-    documentId: 4,
-    demoUrl: '/demo-documents/fiche-technique-grue.pdf',
-  },
-  {
-    id: 'demo-5',
-    name: 'Compte-rendu reunion.pdf',
-    siteName: 'Ecole Jean Jaures',
-    type: 'pdf',
-    chantierId: 3,
-    documentId: 5,
-    demoUrl: '/demo-documents/compte-rendu-reunion-chantier.pdf',
-  },
-  {
-    id: 'demo-6',
-    name: 'Bon commande materiaux.pdf',
-    siteName: 'Villa Moderne Duplex',
-    type: 'pdf',
-    chantierId: 4,
-    documentId: 6,
-    demoUrl: '/demo-documents/bon-commande-materiaux.pdf',
-  },
-]
-
 /** Nombre de documents affichés initialement */
 const INITIAL_DISPLAY_COUNT = 4
 /** Nombre de documents ajoutés à chaque "voir plus" */

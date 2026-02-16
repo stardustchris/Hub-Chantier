@@ -18,7 +18,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { devisService } from '../../services/devis'
-import type { Article, ArticleCreate } from '../../types'
+import type { Article, ArticleCreate, ArticleUpdate } from '../../types'
 import ArticleModal from './ArticleModal'
 import { formatEUR } from '../../utils/format'
 
@@ -108,7 +108,7 @@ export default function ArticleLibraryPanel({
     return () => clearTimeout(debounceRef.current)
   }, [search, categorie, loadArticles])
 
-  const handleCreateArticle = async (data: ArticleCreate) => {
+  const handleCreateArticle = async (data: ArticleCreate | ArticleUpdate) => {
     await devisService.createArticle(data as ArticleCreate)
     setShowCreateModal(false)
     loadArticles(search, categorie)

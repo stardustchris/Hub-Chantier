@@ -112,7 +112,7 @@ export default function UserDetailPage() {
   }
 
   const roleInfo = ROLES[user.role as UserRole]
-  const metierInfos = (user.metiers || []).map(m => METIERS[m as Metier]).filter(Boolean)
+  const metierInfo = user.metier ? METIERS[user.metier as Metier] : null
 
   return (
     <Layout>
@@ -198,15 +198,14 @@ export default function UserDetailPage() {
                         {roleInfo.label}
                       </span>
                     )}
-                    {metierInfos.map((metierInfo, idx) => (
+                    {metierInfo && (
                       <span
-                        key={idx}
                         className="text-sm px-3 py-1 rounded-full"
                         style={{ backgroundColor: metierInfo.color + '20', color: metierInfo.color }}
                       >
                         {metierInfo.label}
                       </span>
-                    ))}
+                    )}
                     <span
                       className={`text-sm px-3 py-1 rounded-full ${
                         user.is_active

@@ -31,7 +31,6 @@ import type {
   SignatureCreate,
   VerificationSignature,
   ConversionInfo,
-  ConversionDevis,
   RelancesHistorique,
   ConfigRelances,
   ConvertirDevisResult,

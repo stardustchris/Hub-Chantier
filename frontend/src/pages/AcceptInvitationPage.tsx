@@ -10,11 +10,11 @@ import api from '../services/api';
 import type { ApiError, InvitationInfo } from '../types/api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
-export function AcceptInvitationPage(): JSX.Element {
+export function AcceptInvitationPage(): React.ReactElement {
   useDocumentTitle('Accepter l\'invitation');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
 
   const [token, setToken] = useState<string>('');
   const [invitationInfo, setInvitationInfo] = useState<InvitationInfo | null>(null);
@@ -28,7 +28,7 @@ export function AcceptInvitationPage(): JSX.Element {
     // Récupérer le token depuis l'URL
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
-      showToast('Lien d\'invitation invalide.', 'error');
+      addToast({ message: 'Lien d\'invitation invalide.', type: 'error' });
       navigate('/login');
       return;
     }
@@ -36,7 +36,8 @@ export function AcceptInvitationPage(): JSX.Element {
 
     // Récupérer les informations de l'invitation
     fetchInvitationInfo(tokenParam);
-  }, [searchParams, navigate, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, navigate]);
 
   const fetchInvitationInfo = async (invitationToken: string) => {
     setIsLoadingInfo(true);
@@ -46,10 +47,10 @@ export function AcceptInvitationPage(): JSX.Element {
     } catch (err) {
       const error = err as ApiError;
       if (error.response?.status === 404 || error.response?.status === 400) {
-        showToast('Cette invitation est invalide ou a expiré.', 'error');
+        addToast({ message: 'Cette invitation est invalide ou a expiré.', type: 'error' });
         navigate('/login');
       } else {
-        showToast('Impossible de charger l\'invitation.', 'error');
+        addToast({ message: 'Impossible de charger l\'invitation.', type: 'error' });
       }
     } finally {
       setIsLoadingInfo(false);
@@ -104,16 +105,16 @@ export function AcceptInvitationPage(): JSX.Element {
         password,
       });
 
-      showToast('Compte créé avec succès ! Bienvenue à Hub Chantier.', 'success');
+      addToast({ message: 'Compte créé avec succès ! Bienvenue à Hub Chantier.', type: 'success' });
       navigate('/login');
     } catch (err) {
       const error = err as ApiError;
       if (error.response?.status === 400) {
-        showToast('L\'invitation est invalide ou a expiré', 'error');
+        addToast({ message: 'L\'invitation est invalide ou a expiré', type: 'error' });
       } else if (error.response?.status === 409) {
-        showToast('Cette invitation a déjà été acceptée', 'error');
+        addToast({ message: 'Cette invitation a déjà été acceptée', type: 'error' });
       } else {
-        showToast('Une erreur est survenue. Veuillez réessayer.', 'error');
+        addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
       }
     } finally {
       setIsLoading(false);
@@ -163,7 +164,15 @@ export function AcceptInvitationPage(): JSX.Element {
   }
 
   if (!invitationInfo) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <p className="text-center text-gray-600">Invitation introuvable.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -314,3 +323,4 @@ export function AcceptInvitationPage(): JSX.Element {
     </div>
   );
 }
+export default AcceptInvitationPage

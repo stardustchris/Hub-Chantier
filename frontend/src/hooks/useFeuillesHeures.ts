@@ -294,8 +294,8 @@ export function useFeuillesHeures() {
   const selectablePointages = useMemo(() => {
     const pointages: Pointage[] = []
     if (viewTab === 'compagnons') {
-      vueCompagnons.forEach((vue) => {
-        vue.chantiers.forEach((chantier) => {
+      vueCompagnons?.forEach((vue) => {
+        vue.chantiers?.forEach((chantier) => {
           Object.values(chantier.pointages_par_jour).forEach((pointagesJour) => {
             pointagesJour.forEach((p) => {
               if (p.statut === 'soumis') {

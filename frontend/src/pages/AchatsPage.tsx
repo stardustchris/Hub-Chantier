@@ -11,7 +11,7 @@ import AchatModal from '../components/financier/AchatModal'
 import { financierService } from '../services/financier'
 import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
-import type { Achat, Chantier, Fournisseur, LotBudgetaire, StatutAchat } from '../types'
+import type { Achat, Chantier, Fournisseur, LotBudgetaire } from '../types'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   ShoppingCart,
@@ -96,7 +96,13 @@ export default function AchatsPage() {
         financierService.getBudgetByChantier(chantierId).catch(() => null),
       ])
       setFournisseurs(fournData.items || fournData)
-      setLots(budgetData?.lots || [])
+      // Fetch lots separately if budget exists
+      if (budgetData) {
+        const lotsData = await financierService.listLots(budgetData.id)
+        setLots(lotsData || [])
+      } else {
+        setLots([])
+      }
       setSelectedChantierId(chantierId)
       setShowChantierPicker(false)
       setShowModal(true)
@@ -131,7 +137,7 @@ export default function AchatsPage() {
   const validees = achats.filter((a) => ['valide', 'commande', 'livre', 'facture'].includes(a.statut)).length
 
   return (
-    <Layout title="Achats & Bons de commande">
+    <Layout>
       <div className="space-y-6">
         {/* Statistiques globales */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

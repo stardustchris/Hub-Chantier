@@ -7,13 +7,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { authService } from '../services/auth';
-import type { ApiError } from '../types/api';
+
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
-export function ForgotPasswordPage(): JSX.Element {
+export function ForgotPasswordPage(): React.ReactElement {
   useDocumentTitle('Mot de passe oublié');
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
 
   const [email, setEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,7 @@ export function ForgotPasswordPage(): JSX.Element {
     e.preventDefault();
 
     if (!email) {
-      showToast('Veuillez saisir votre adresse email', 'error');
+      addToast({ message: 'Veuillez saisir votre adresse email', type: 'error' });
       return;
     }
 
@@ -32,13 +32,12 @@ export function ForgotPasswordPage(): JSX.Element {
     try {
       await authService.requestPasswordReset(email);
       setEmailSent(true);
-      showToast('Email de réinitialisation envoyé !', 'success');
-    } catch (err) {
-      const error = err as ApiError;
+      addToast({ message: 'Email de réinitialisation envoyé !', type: 'success' });
+    } catch (_err) {
       // Pour des raisons de sécurité, on affiche toujours le même message
       // même si l'email n'existe pas dans la base
       setEmailSent(true);
-      showToast('Si cet email existe, vous recevrez un lien de réinitialisation', 'info');
+      addToast({ message: 'Si cet email existe, vous recevrez un lien de réinitialisation', type: 'info' });
     } finally {
       setIsLoading(false);
     }

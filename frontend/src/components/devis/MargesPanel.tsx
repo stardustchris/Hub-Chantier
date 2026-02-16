@@ -60,7 +60,7 @@ export default function MargesPanel({ devis }: MargesPanelProps) {
   const ventilationTVA: VentilationTVA[] = devis.ventilation_tva?.length
     ? devis.ventilation_tva
     : [{ taux: Number(devis.taux_tva_defaut), base_ht: totalHT, montant_tva: totalHT * (Number(devis.taux_tva_defaut) / 100) }]
-  const montantTVA = ventilationTVA.reduce((sum, v) => sum + Number(v.montant_tva), 0)
+  // montantTVA calculé via ventilationTVA si besoin
   const retenueGarantiePct = Number(devis.retenue_garantie_pct ?? 0)
   const montantRetenue = devis.montant_retenue_garantie != null
     ? Number(devis.montant_retenue_garantie)

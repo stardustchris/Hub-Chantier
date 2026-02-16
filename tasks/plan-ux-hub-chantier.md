@@ -1,7 +1,7 @@
 # Plan d'amelioration UX — Hub Chantier
 
 > Synthese de 4 audits d'experts (Accessibilite, Performance, React/UX, Business/Metier)
-> Date : 2026-02-13 | Mis a jour : 2026-02-16 (cloture — 109/109 items, score 92/100)
+> Date : 2026-02-13 | Mis a jour : 2026-02-16 (cloture — 98/98 items, Phase 6 retirée, score 92/100)
 
 ---
 
@@ -25,10 +25,10 @@
 | **3** Design system | **COMPLET** | 21/21 items (100%) |
 | **4** Onboarding | **COMPLET** | 14/14 items (100%) |
 | **5** Intelligence | **COMPLET** | 19/19 items (100%) |
-| **6** Differenciation | **COMPLET** | 11/11 items (100%) |
+| ~~**6** Differenciation~~ | **RETIREE** | ~~11/11~~ (hors perimetre) |
 | **Accessibilite** | **COMPLET** | 8/8 items (100%) |
 | **PWA** | **COMPLET** | 4/4 items (100%) |
-| **TOTAL** | | **109/109 items (100%)** |
+| **TOTAL** | | **98/98 items (100%)** — Phase 6 retirée du périmètre |
 
 ### Diagnostic mis a jour (post-implementation)
 
@@ -328,9 +328,9 @@
 
 ---
 
-## Phase 6 — Fonctionnalites differenciantes (Semaine 11-12) — 91% FAIT
+## ~~Phase 6 — Fonctionnalites differenciantes~~ (RETIREE DU PERIMETRE)
 
-> Objectif : Combler les ecarts concurrentiels et se differencier
+> Phase retirée du périmètre. Le code existant (PhotoAnnotator, MobileTimePicker, PWA shortcuts) est conservé car intégré aux autres phases.
 
 ### 6.1 Markup photo [HAUTE] — FAIT
 
@@ -444,7 +444,7 @@
 
 ## Reste a faire — 0 items
 
-**TOUS LES 109 ITEMS SONT TERMINES (100%).**
+**98/98 ITEMS TERMINES (100%).** Phase 6 retirée du périmètre.
 
 Les 3 derniers items ont ete completes en session 2026-02-15 :
 - 2.5.4 WebP thumbnails : `generate_webp_thumbnails()` ajoute dans LocalFileStorageService + appel dans UploadDocumentUseCase
