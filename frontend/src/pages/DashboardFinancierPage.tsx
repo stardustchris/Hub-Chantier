@@ -6,27 +6,14 @@
  * via financierService.getConsolidation().
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy } from 'react'
 import Layout from '../components/Layout'
 import { chantiersService } from '../services/chantiers'
 import { financierService } from '../services/financier'
 import { logger } from '../services/logger'
 import { formatEUR, formatPct } from '../utils/format'
-import ChartTooltip from '../components/financier/ChartTooltip'
-import type { VueConsolidee, ChantierFinancierSummary, AnalyseIAConsolidee } from '../types'
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts'
+import type { VueConsolidee, ChantierFinancierSummary } from '../types'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Loader2,
   AlertCircle,
@@ -41,6 +28,11 @@ import {
   Sparkles,
   Wallet,
 } from 'lucide-react'
+
+// Lazy-load Recharts components (Performance 2.2.5)
+const StatutPieChart = lazy(() => import('../components/financier/StatutPieChart'))
+const BudgetBarChart = lazy(() => import('../components/financier/BudgetBarChart'))
+const MargesBarChart = lazy(() => import('../components/financier/MargesBarChart'))
 
 type SortField = 'nom_chantier' | 'montant_revise_ht' | 'pct_engage' | 'pct_realise' | 'marge_estimee_pct' | 'reste_a_depenser'
 type SortDirection = 'asc' | 'desc'
@@ -154,6 +146,7 @@ interface AnalyseIADisplay {
 }
 
 export default function DashboardFinancierPage() {
+  useDocumentTitle('Finances')
   const [data, setData] = useState<VueConsolidee | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -296,8 +289,9 @@ export default function DashboardFinancierPage() {
   }, [data])
 
   // Custom label pour le camembert
-  const renderPieLabel = ({ name, percent }: { name: string; percent: number }) => {
-    if (percent < 0.05) return null
+  const renderPieLabel = (props: any) => {
+    const { name, percent } = props
+    if (!name || !percent || percent < 0.05) return null
     return `${name} (${(percent * 100).toFixed(0)}%)`
   }
 
@@ -632,37 +626,9 @@ export default function DashboardFinancierPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                   <h3 className="text-sm font-semibold text-gray-700 mb-3">Repartition par statut</h3>
                   {statutPieData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={statutPieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={90}
-                          paddingAngle={3}
-                          dataKey="value"
-                          label={renderPieLabel}
-                          labelLine={false}
-                        >
-                          {statutPieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          content={({ active, payload }) => (
-                            <ChartTooltip
-                              active={active}
-                              payload={payload?.map((p) => ({
-                                name: String(p.name),
-                                value: Number(p.value),
-                                color: String(p.payload?.color || p.payload?.fill || '#374151'),
-                              }))}
-                            />
-                          )}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <Suspense fallback={<div className="h-[250px] bg-gray-50 rounded-lg animate-pulse flex items-center justify-center"><span className="text-sm text-gray-500">Chargement...</span></div>}>
+                      <StatutPieChart data={statutPieData} renderLabel={renderPieLabel} />
+                    </Suspense>
                   ) : (
                     <div className="flex items-center justify-center h-[250px] text-gray-600 text-sm">
                       Aucune donnee
@@ -674,21 +640,9 @@ export default function DashboardFinancierPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:col-span-2">
                   <h3 className="text-sm font-semibold text-gray-700 mb-3">Budget / Engagé / Déboursé par chantier</h3>
                   {budgetBarData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={budgetBarData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                        <Tooltip
-                          formatter={(value: number, name: string) => [formatEUR(value), name]}
-                          contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                        />
-                        <Legend wrapperStyle={{ fontSize: '12px' }} />
-                        <Bar dataKey="Budget" fill={CHART_COLORS.budget} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Engagé" fill={CHART_COLORS.engage} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Déboursé" fill={CHART_COLORS.realise} radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <Suspense fallback={<div className="h-[250px] bg-gray-50 rounded-lg animate-pulse flex items-center justify-center"><span className="text-sm text-gray-500">Chargement...</span></div>}>
+                      <BudgetBarChart data={budgetBarData} chartColors={CHART_COLORS} />
+                    </Suspense>
                   ) : (
                     <div className="flex items-center justify-center h-[250px] text-gray-600 text-sm">
                       Aucune donnee
@@ -702,22 +656,9 @@ export default function DashboardFinancierPage() {
             {margesBarData.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4" role="region" aria-label="Graphique des marges">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Marges estimees par chantier</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={margesBarData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
-                    <Tooltip
-                      formatter={(value: number) => [`${value.toFixed(1)}%`, 'Marge']}
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                    />
-                    <Bar dataKey="marge" radius={[0, 4, 4, 0]}>
-                      {margesBarData.map((entry, index) => (
-                        <Cell key={`marge-${index}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<div className="h-[250px] bg-gray-50 rounded-lg animate-pulse flex items-center justify-center"><span className="text-sm text-gray-500">Chargement...</span></div>}>
+                  <MargesBarChart data={margesBarData} />
+                </Suspense>
               </div>
             )}
 

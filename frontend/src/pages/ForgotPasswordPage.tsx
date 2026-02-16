@@ -8,8 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { authService } from '../services/auth';
 import type { ApiError } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function ForgotPasswordPage(): JSX.Element {
+  useDocumentTitle('Mot de passe oublié');
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -123,9 +125,10 @@ export function ForgotPasswordPage(): JSX.Element {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Adresse email
+                Adresse email <span className="text-red-500">*</span>
               </label>
               <div className="mt-1">
                 <input
@@ -134,6 +137,7 @@ export function ForgotPasswordPage(): JSX.Element {
                   type="email"
                   autoComplete="email"
                   required
+                  aria-required="true"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"

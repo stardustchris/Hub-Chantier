@@ -178,6 +178,8 @@ export const RessourceModal: React.FC<RessourceModalProps> = ({
             </div>
           )}
 
+          <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
+
           {/* Nom */}
           <div>
             <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-2">
@@ -191,6 +193,7 @@ export const RessourceModal: React.FC<RessourceModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Ex: Grue mobile 50T"
               required
+              aria-required="true"
               disabled={loading}
             />
           </div>
@@ -208,6 +211,7 @@ export const RessourceModal: React.FC<RessourceModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
               placeholder="Ex: GRUE01"
               required
+              aria-required="true"
               disabled={loading}
               maxLength={20}
             />
@@ -227,6 +231,7 @@ export const RessourceModal: React.FC<RessourceModalProps> = ({
               onChange={(e) => handleChange('categorie', e.target.value as CategorieRessource)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
+              aria-required="true"
               disabled={loading}
             >
               {Object.entries(CATEGORIES_RESSOURCES).map(([key, value]) => (

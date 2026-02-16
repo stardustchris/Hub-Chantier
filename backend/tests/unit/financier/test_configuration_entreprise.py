@@ -43,6 +43,12 @@ class TestConfigurationEntrepriseEntity:
         assert config.coeff_charges_patronales == Decimal("1.45")
         assert config.coeff_heures_sup == Decimal("1.25")
         assert config.coeff_heures_sup_2 == Decimal("1.50")
+        assert config.coeff_productivite == Decimal("1.0")
+        assert config.coeff_charges_ouvrier is None
+        assert config.coeff_charges_etam is None
+        assert config.coeff_charges_cadre is None
+        assert config.seuil_alerte_budget_pct == Decimal("80")
+        assert config.seuil_alerte_budget_critique_pct == Decimal("95")
         assert config.id is None
         assert config.notes is None
         assert config.updated_at is None
@@ -133,6 +139,86 @@ class TestConfigurationEntrepriseEntity:
         with pytest.raises(ValueError, match="heures sup 2"):
             ConfigurationEntreprise(coeff_heures_sup_2=Decimal("0.8"))
 
+    # --- Validation coeff productivite (Phase 4) ---
+
+    def test_configuration_coeff_productivite_trop_bas(self):
+        """Test: coeff_productivite < 0.5 leve ValueError."""
+        with pytest.raises(ValueError, match="productivite"):
+            ConfigurationEntreprise(coeff_productivite=Decimal("0.49"))
+
+    def test_configuration_coeff_productivite_trop_haut(self):
+        """Test: coeff_productivite > 2.0 leve ValueError."""
+        with pytest.raises(ValueError, match="productivite"):
+            ConfigurationEntreprise(coeff_productivite=Decimal("2.01"))
+
+    def test_configuration_coeff_productivite_bornes_ok(self):
+        """Test: coeff_productivite entre 0.5 et 2.0 est accepte."""
+        config = ConfigurationEntreprise(coeff_productivite=Decimal("0.5"))
+        assert config.coeff_productivite == Decimal("0.5")
+        config2 = ConfigurationEntreprise(coeff_productivite=Decimal("2.0"))
+        assert config2.coeff_productivite == Decimal("2.0")
+
+    # --- Validation charges par categorie (Phase 4) ---
+
+    def test_configuration_coeff_charges_ouvrier_inf_1(self):
+        """Test: coeff_charges_ouvrier < 1 leve ValueError."""
+        with pytest.raises(ValueError, match="ouvrier"):
+            ConfigurationEntreprise(coeff_charges_ouvrier=Decimal("0.9"))
+
+    def test_configuration_coeff_charges_etam_inf_1(self):
+        """Test: coeff_charges_etam < 1 leve ValueError."""
+        with pytest.raises(ValueError, match="ETAM"):
+            ConfigurationEntreprise(coeff_charges_etam=Decimal("0.5"))
+
+    def test_configuration_coeff_charges_cadre_inf_1(self):
+        """Test: coeff_charges_cadre < 1 leve ValueError."""
+        with pytest.raises(ValueError, match="cadre"):
+            ConfigurationEntreprise(coeff_charges_cadre=Decimal("0.8"))
+
+    def test_configuration_charges_categorie_none_ok(self):
+        """Test: charges par categorie None est accepte (fallback global)."""
+        config = ConfigurationEntreprise()
+        assert config.coeff_charges_ouvrier is None
+        assert config.coeff_charges_etam is None
+        assert config.coeff_charges_cadre is None
+
+    # --- Validation seuils alertes (Phase 4) ---
+
+    def test_configuration_seuil_alerte_negatif(self):
+        """Test: seuil_alerte_budget_pct < 0 leve ValueError."""
+        with pytest.raises(ValueError, match="seuil alerte budget"):
+            ConfigurationEntreprise(seuil_alerte_budget_pct=Decimal("-1"))
+
+    def test_configuration_seuil_alerte_superieur_100(self):
+        """Test: seuil_alerte_budget_pct > 100 leve ValueError."""
+        with pytest.raises(ValueError, match="seuil alerte budget"):
+            ConfigurationEntreprise(seuil_alerte_budget_pct=Decimal("101"))
+
+    def test_configuration_seuil_critique_inferieur_alerte(self):
+        """Test: seuil critique <= seuil alerte leve ValueError."""
+        with pytest.raises(ValueError, match="inferieur au seuil critique"):
+            ConfigurationEntreprise(
+                seuil_alerte_budget_pct=Decimal("90"),
+                seuil_alerte_budget_critique_pct=Decimal("80"),
+            )
+
+    def test_configuration_seuils_egaux_invalide(self):
+        """Test: seuils egaux leve ValueError."""
+        with pytest.raises(ValueError, match="inferieur au seuil critique"):
+            ConfigurationEntreprise(
+                seuil_alerte_budget_pct=Decimal("80"),
+                seuil_alerte_budget_critique_pct=Decimal("80"),
+            )
+
+    def test_configuration_seuils_valides_ok(self):
+        """Test: seuils corrects acceptes."""
+        config = ConfigurationEntreprise(
+            seuil_alerte_budget_pct=Decimal("70"),
+            seuil_alerte_budget_critique_pct=Decimal("90"),
+        )
+        assert config.seuil_alerte_budget_pct == Decimal("70")
+        assert config.seuil_alerte_budget_critique_pct == Decimal("90")
+
     # --- to_dict ---
 
     def test_configuration_to_dict(self):
@@ -161,6 +247,12 @@ class TestConfigurationEntrepriseEntity:
             "coeff_charges_patronales": "1.50",
             "coeff_heures_sup": "1.25",
             "coeff_heures_sup_2": "1.50",
+            "coeff_productivite": "1.0",
+            "coeff_charges_ouvrier": None,
+            "coeff_charges_etam": None,
+            "coeff_charges_cadre": None,
+            "seuil_alerte_budget_pct": "80",
+            "seuil_alerte_budget_critique_pct": "95",
             "notes": "Config annuelle",
             "updated_at": "2026-01-15T10:30:00",
             "updated_by": 7,
@@ -175,8 +267,14 @@ class TestConfigurationEntrepriseEntity:
         assert result["notes"] is None
         assert result["updated_at"] is None
         assert result["updated_by"] is None
+        assert result["coeff_charges_ouvrier"] is None
+        assert result["coeff_charges_etam"] is None
+        assert result["coeff_charges_cadre"] is None
         # Les Decimal sont bien serialises en string
         assert result["couts_fixes_annuels"] == "600000"
+        assert result["coeff_productivite"] == "1.0"
+        assert result["seuil_alerte_budget_pct"] == "80"
+        assert result["seuil_alerte_budget_critique_pct"] == "95"
 
 
 # ============================================================
@@ -238,6 +336,9 @@ class TestGetConfigurationEntrepriseUseCase:
         assert result.coeff_charges_patronales == Decimal("1.45")
         assert result.coeff_heures_sup == Decimal("1.25")
         assert result.coeff_heures_sup_2 == Decimal("1.50")
+        assert result.coeff_productivite == Decimal("1.0")
+        assert result.seuil_alerte_budget_pct == Decimal("80")
+        assert result.seuil_alerte_budget_critique_pct == Decimal("95")
         assert result.notes is None
         assert result.updated_at is None
         assert result.updated_by is None

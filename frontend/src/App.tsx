@@ -1,15 +1,21 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
+import { DemoProvider, useDemo } from './contexts/DemoContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ToastContainer from './components/Toast'
 import LoggerToastBridge from './components/LoggerToastBridge'
 import ProtectedRoute from './components/ProtectedRoute'
 import OfflineIndicator from './components/OfflineIndicator'
 import { GDPRBanner } from './components/common/GDPRBanner'
+import CommandPalette from './components/common/CommandPalette'
+import KeyboardShortcutsHelp from './components/common/KeyboardShortcutsHelp'
+import { useRouteChangeReset } from './hooks/useRouteChangeReset'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { AlertCircle } from 'lucide-react'
 
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -51,13 +57,55 @@ function PageLoader() {
   )
 }
 
+// Wrapper component to use route change reset hook
+function RouteChangeHandler() {
+  useRouteChangeReset()
+  return null
+}
+
+// Bandeau mode démo
+function DemoBanner() {
+  const { isDemoMode, disableDemoMode } = useDemo()
+
+  if (!isDemoMode) return null
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[9997] bg-yellow-500 text-yellow-900 py-2 px-4 shadow-lg">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="font-medium text-sm">
+            Mode démonstration — Les données ne sont pas sauvegardées
+          </span>
+        </div>
+        <button
+          onClick={disableDemoMode}
+          className="px-3 py-1 bg-yellow-700 hover:bg-yellow-800 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+        >
+          Quitter
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function App() {
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
+
+  // Hook pour les raccourcis clavier globaux
+  useKeyboardShortcuts({
+    onShowHelp: () => setShowShortcutsHelp(true),
+  })
+
   return (
     <ErrorBoundary>
     <BrowserRouter>
+      <RouteChangeHandler />
       <AuthProvider>
+        <DemoProvider>
         <ToastProvider>
         <QueryClientProvider client={queryClient}>
+        <DemoBanner />
         <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
@@ -277,8 +325,14 @@ function App() {
         <ToastContainer />
         <GDPRBanner />
         <OfflineIndicator />
+        <CommandPalette />
+        <KeyboardShortcutsHelp
+          isOpen={showShortcutsHelp}
+          onClose={() => setShowShortcutsHelp(false)}
+        />
         </QueryClientProvider>
         </ToastProvider>
+        </DemoProvider>
       </AuthProvider>
     </BrowserRouter>
     </ErrorBoundary>

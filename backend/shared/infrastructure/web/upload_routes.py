@@ -70,6 +70,10 @@ class UploadResponse(BaseModel):
 
     url: str
     thumbnail_url: Optional[str] = None
+    # WebP responsive variants (P2-5)
+    webp_thumbnail_url: Optional[str] = None
+    webp_medium_url: Optional[str] = None
+    webp_large_url: Optional[str] = None
 
 
 class MultiUploadResponse(BaseModel):
@@ -107,7 +111,10 @@ async def upload_profile_photo(
             filename=file.filename or "photo.jpg",
             user_id=current_user_id,
         )
-        return UploadResponse(url=url)
+        # P2-5: Generate WebP responsive variants
+        prefix = url.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+        webp_urls = file_service.generate_webp_variants(content, prefix)
+        return UploadResponse(url=url, **webp_urls)
     except FileUploadError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -151,7 +158,10 @@ async def upload_post_media(
                 filename=file.filename or "photo.jpg",
                 post_id=post_id,
             )
-            results.append(UploadResponse(url=url, thumbnail_url=thumbnail_url))
+            # P2-5: Generate WebP responsive variants
+            prefix = url.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+            webp_urls = file_service.generate_webp_variants(content, prefix)
+            results.append(UploadResponse(url=url, thumbnail_url=thumbnail_url, **webp_urls))
         except FileUploadError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -187,7 +197,10 @@ async def upload_chantier_photo(
             filename=file.filename or "photo.jpg",
             chantier_id=chantier_id,
         )
-        return UploadResponse(url=url)
+        # P2-5: Generate WebP responsive variants
+        prefix = url.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+        webp_urls = file_service.generate_webp_variants(content, prefix)
+        return UploadResponse(url=url, **webp_urls)
     except FileUploadError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -212,7 +225,7 @@ async def get_uploaded_file(category: str, filename: str):
     Returns:
         Le fichier.
     """
-    allowed_categories = {"profiles", "posts", "chantiers", "thumbnails"}
+    allowed_categories = {"profiles", "posts", "chantiers", "thumbnails", "webp"}
     if category not in allowed_categories:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

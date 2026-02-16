@@ -12,6 +12,8 @@ import MiniMap from '../components/MiniMap'
 import { TaskList } from '../components/taches'
 import { EditChantierModal, AddUserModal, ChantierEquipeTab, MesInterventions, ChantierLogistiqueSection } from '../components/chantiers'
 import BudgetTab from '../components/financier/BudgetTab'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { Breadcrumb } from '../components/ui/Breadcrumb'
 import {
   ArrowLeft,
   MapPin,
@@ -61,6 +63,9 @@ export default function ChantierDetailPage() {
   const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
   const canEdit = isAdmin || isConducteur
+
+  // Document title
+  useDocumentTitle(chantier?.nom || 'Chantier')
 
   // Fusionner les ouvriers directement assignés avec ceux des affectations planning
   const allOuvriers = useMemo(() => {
@@ -345,6 +350,17 @@ export default function ChantierDetailPage() {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto">
+        {/* Breadcrumb */}
+        {chantier && (
+          <Breadcrumb
+            items={[
+              { label: 'Accueil', href: '/' },
+              { label: 'Chantiers', href: '/chantiers' },
+              { label: chantier.nom },
+            ]}
+          />
+        )}
+
         {/* Back button + Navigation */}
         <div className="flex items-center justify-between mb-4">
           <button

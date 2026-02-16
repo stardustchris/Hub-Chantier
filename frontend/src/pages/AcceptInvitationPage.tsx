@@ -8,8 +8,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import api from '../services/api';
 import type { ApiError, InvitationInfo } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function AcceptInvitationPage(): JSX.Element {
+  useDocumentTitle('Accepter l\'invitation');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -201,10 +203,11 @@ export function AcceptInvitationPage(): JSX.Element {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
             {/* Mot de passe */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Créer votre mot de passe
+                Créer votre mot de passe <span className="text-red-500">*</span>
               </label>
               <div className="mt-1">
                 <input
@@ -213,6 +216,7 @@ export function AcceptInvitationPage(): JSX.Element {
                   type="password"
                   autoComplete="new-password"
                   required
+                  aria-required="true"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className={`appearance-none block w-full px-3 py-2 border ${
@@ -250,7 +254,7 @@ export function AcceptInvitationPage(): JSX.Element {
             {/* Confirmation */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmer le mot de passe
+                Confirmer le mot de passe <span className="text-red-500">*</span>
               </label>
               <div className="mt-1">
                 <input
@@ -259,6 +263,7 @@ export function AcceptInvitationPage(): JSX.Element {
                   type="password"
                   autoComplete="new-password"
                   required
+                  aria-required="true"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`appearance-none block w-full px-3 py-2 border ${

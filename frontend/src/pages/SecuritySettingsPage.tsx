@@ -8,8 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import api from '../services/api';
 import type { ApiError } from '../types/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function SecuritySettingsPage(): JSX.Element {
+  useDocumentTitle('Sécurité');
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -140,10 +142,11 @@ export function SecuritySettingsPage(): JSX.Element {
               </h4>
 
               <form onSubmit={handleChangePassword} className="space-y-4">
+                <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
                 {/* Ancien mot de passe */}
                 <div>
                   <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">
-                    Ancien mot de passe
+                    Ancien mot de passe <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-1">
                     <input
@@ -152,6 +155,7 @@ export function SecuritySettingsPage(): JSX.Element {
                       id="oldPassword"
                       autoComplete="current-password"
                       required
+                      aria-required="true"
                       value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
                       className={`appearance-none block w-full px-3 py-2 border ${
@@ -167,7 +171,7 @@ export function SecuritySettingsPage(): JSX.Element {
                 {/* Nouveau mot de passe */}
                 <div>
                   <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                    Nouveau mot de passe
+                    Nouveau mot de passe <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-1">
                     <input
@@ -176,6 +180,7 @@ export function SecuritySettingsPage(): JSX.Element {
                       id="newPassword"
                       autoComplete="new-password"
                       required
+                      aria-required="true"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       className={`appearance-none block w-full px-3 py-2 border ${
@@ -213,7 +218,7 @@ export function SecuritySettingsPage(): JSX.Element {
                 {/* Confirmation */}
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirmer le nouveau mot de passe
+                    Confirmer le nouveau mot de passe <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-1">
                     <input
@@ -222,6 +227,7 @@ export function SecuritySettingsPage(): JSX.Element {
                       id="confirmPassword"
                       autoComplete="new-password"
                       required
+                      aria-required="true"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className={`appearance-none block w-full px-3 py-2 border ${

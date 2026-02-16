@@ -137,6 +137,7 @@ class CreateDevisUseCase:
             taux_marge_materiel=dto.taux_marge_materiel,
             taux_marge_deplacement=dto.taux_marge_deplacement,
             coefficient_frais_generaux=dto.coefficient_frais_generaux,
+            coefficient_productivite=dto.coefficient_productivite,
             retenue_garantie_pct=dto.retenue_garantie_pct,
             notes=dto.notes,
             # Generateur de devis - champs complementaires
@@ -148,6 +149,7 @@ class CreateDevisUseCase:
             duree_estimee_jours=dto.duree_estimee_jours,
             notes_bas_page=dto.notes_bas_page,
             nom_interne=dto.nom_interne,
+            commentaire=dto.commentaire,
             commercial_id=dto.commercial_id,
             conducteur_id=dto.conducteur_id,
             created_at=datetime.utcnow(),
@@ -215,10 +217,10 @@ class UpdateDevisUseCase:
             "taux_tva_defaut", "taux_marge_global", "taux_marge_moe",
             "taux_marge_materiaux", "taux_marge_sous_traitance",
             "taux_marge_materiel", "taux_marge_deplacement",
-            "coefficient_frais_generaux", "retenue_garantie_pct",
+            "coefficient_frais_generaux", "coefficient_productivite", "retenue_garantie_pct",
             "notes", "acompte_pct", "echeance", "moyens_paiement",
             "date_visite", "date_debut_travaux", "duree_estimee_jours",
-            "notes_bas_page", "nom_interne", "commercial_id", "conducteur_id",
+            "notes_bas_page", "nom_interne", "commentaire", "commercial_id", "conducteur_id",
         ]
 
         for champ in champs_a_verifier:

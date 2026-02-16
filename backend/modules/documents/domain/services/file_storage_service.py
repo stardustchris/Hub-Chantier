@@ -1,7 +1,7 @@
 """Interface FileStorageService - Service de stockage de fichiers."""
 
 from abc import ABC, abstractmethod
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Dict, Optional
 
 
 class FileStorageService(ABC):
@@ -163,3 +163,15 @@ class FileStorageService(ABC):
             Tuple (contenu, mime_type) ou None si fichier trop gros ou non trouvé.
         """
         pass
+
+    def generate_webp_thumbnails(self, chemin_stockage: str) -> Dict[str, str]:
+        """Génère des thumbnails WebP pour un document image (2.5.4).
+
+        Args:
+            chemin_stockage: Chemin relatif du fichier source.
+
+        Returns:
+            Dict avec clés webp_thumbnail, webp_medium, webp_large.
+            Dict vide si non supporté ou pas une image.
+        """
+        return {}

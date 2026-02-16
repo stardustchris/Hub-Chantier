@@ -4,6 +4,7 @@ import { useListPage } from '../hooks/useListPage'
 import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import { ChantierCard, CreateChantierModal, TempContact, TempPhase } from '../components/chantiers'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Building2,
   Plus,
@@ -18,6 +19,9 @@ import { CHANTIER_STATUTS } from '../types'
 // est maintenant fait côté backend via le paramètre exclude_special=true
 
 export default function ChantiersListPage() {
+  // Document title
+  useDocumentTitle('Chantiers')
+
   // Use the reusable list hook for pagination, search, and loading
   const {
     items: chantiers,

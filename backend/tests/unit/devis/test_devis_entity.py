@@ -30,7 +30,7 @@ class TestDevisCreation:
         assert devis.montant_total_ht == Decimal("0")
         assert devis.montant_total_ttc == Decimal("0")
         assert devis.taux_marge_global == Decimal("15")
-        assert devis.coefficient_frais_generaux == Decimal("12")
+        assert devis.coefficient_frais_generaux == Decimal("19")
         assert devis.taux_tva_defaut == Decimal("20")
         assert devis.retenue_garantie_pct == Decimal("0")
 

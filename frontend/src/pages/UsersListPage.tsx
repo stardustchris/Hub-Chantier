@@ -7,6 +7,7 @@ import { logger } from '../services/logger'
 import { useToast } from '../contexts/ToastContext'
 import Layout from '../components/Layout'
 import { UserCard, CreateUserModal, InviteUserModal } from '../components/users'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Users,
   Plus,
@@ -22,6 +23,9 @@ export default function UsersListPage() {
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
   const isAdmin = currentUser?.role === 'admin'
+
+  // Document title
+  useDocumentTitle('Utilisateurs')
 
   // Use the reusable list hook for pagination, search, and loading
   const {

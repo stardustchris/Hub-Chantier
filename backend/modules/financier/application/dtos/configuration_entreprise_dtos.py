@@ -17,6 +17,12 @@ class ConfigurationEntrepriseDTO:
     coeff_charges_patronales: Decimal
     coeff_heures_sup: Decimal
     coeff_heures_sup_2: Decimal
+    coeff_productivite: Decimal
+    coeff_charges_ouvrier: Optional[Decimal]
+    coeff_charges_etam: Optional[Decimal]
+    coeff_charges_cadre: Optional[Decimal]
+    seuil_alerte_budget_pct: Decimal
+    seuil_alerte_budget_critique_pct: Decimal
     notes: Optional[str]
     updated_at: Optional[datetime]
     updated_by: Optional[int]
@@ -31,4 +37,10 @@ class ConfigurationEntrepriseUpdateDTO:
     coeff_charges_patronales: Optional[Decimal] = None
     coeff_heures_sup: Optional[Decimal] = None
     coeff_heures_sup_2: Optional[Decimal] = None
+    coeff_productivite: Optional[Decimal] = None
+    coeff_charges_ouvrier: Optional[Decimal] = None
+    coeff_charges_etam: Optional[Decimal] = None
+    coeff_charges_cadre: Optional[Decimal] = None
+    seuil_alerte_budget_pct: Optional[Decimal] = None
+    seuil_alerte_budget_critique_pct: Optional[Decimal] = None
     notes: Optional[str] = None

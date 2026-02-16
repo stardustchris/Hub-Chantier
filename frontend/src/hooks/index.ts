@@ -54,3 +54,14 @@ export type { DevisFilters, UseDevisFiltersReturn } from './useDevisFilters'
 
 export { useDevisMediaUpload } from './useDevisMediaUpload'
 export type { UseDevisMediaUploadOptions, UseDevisMediaUploadReturn } from './useDevisMediaUpload'
+
+export { useDocumentTitle } from './useDocumentTitle'
+export { useRouteChangeReset } from './useRouteChangeReset'
+
+export { useKeyboardShortcuts } from './useKeyboardShortcuts'
+export type { UseKeyboardShortcutsOptions, UseKeyboardShortcutsReturn } from './useKeyboardShortcuts'
+
+export { usePointageStreak } from './usePointageStreak'
+export type { UsePointageStreakReturn } from './usePointageStreak'
+
+export { useProgressiveHint } from './useProgressiveHint'

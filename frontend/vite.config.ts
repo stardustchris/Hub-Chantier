@@ -1,11 +1,25 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+// Performance 2.2.4 - Bundle analyzer
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    // Performance 2.2.4 - Bundle visualization
+    // Run: ANALYZE=true npm run build → opens dist/stats.html
+    ...(process.env.ANALYZE
+      ? [
+          visualizer({
+            open: true,
+            filename: 'dist/stats.html',
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
@@ -46,15 +60,65 @@ export default defineConfig({
             urlPattern: /\/api\/(auth|pointages|users|feuilles-heures)\/.*/i,
             handler: 'NetworkOnly',
           },
-          // Autres endpoints API : cache court (1h) avec NetworkFirst
+          // P.1 - CacheFirst pour assets immuables (uploads)
+          // Photos profil, posts, chantiers → cache 30 jours
+          {
+            urlPattern: /\/api\/uploads\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'uploads-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 jours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // P.1 - CacheFirst pour documents immuables (GED)
+          // Documents, dossiers → cache 30 jours
+          {
+            urlPattern: /\/api\/documents\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'documents-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 jours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // P.2 - Cache court pour données temps réel
+          // Planning, dashboard → StaleWhileRevalidate 5min
+          {
+            urlPattern: /\/api\/(planning|dashboard)\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-realtime-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 5 * 60, // 5 minutes
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // P.3 - NetworkFirst avec timeout pour autres API
+          // Fallback cache après 3s de timeout réseau
           {
             urlPattern: /^https:\/\/api\..*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60, // 1 hour (réduit de 24h)
+                maxAgeSeconds: 24 * 60 * 60, // 24h
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -66,9 +130,10 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60, // 1 hour (réduit de 24h)
+                maxAgeSeconds: 24 * 60 * 60, // 24h
               },
               cacheableResponse: {
                 statuses: [0, 200],

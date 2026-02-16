@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -26,13 +26,19 @@ import {
   PieChart,
   RefreshCw,
   HelpCircle,
+  Search,
+  Flame,
 } from 'lucide-react'
 import { ROLES } from '../types'
 import type { UserRole } from '../types'
 import { useNotifications } from '../hooks/useNotifications'
+import { useServerEvents } from '../hooks/useServerEvents'
 import NotificationDropdown from './notifications/NotificationDropdown'
 import FloatingActionButton from './common/FloatingActionButton'
 import OnboardingProvider, { useOnboarding } from './onboarding/OnboardingProvider'
+import { useCommandPalette } from '../hooks/useCommandPalette'
+import PageHelp from './common/PageHelp'
+import Tooltip from './ui/Tooltip'
 
 interface LayoutProps {
   children: ReactNode
@@ -227,11 +233,33 @@ function LayoutContent({ children }: LayoutProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
 
+  // Gamification toggle (CDC Section 5.4.4)
+  const [gamificationEnabled, setGamificationEnabled] = useState(true)
+
+  // Charger l'etat de la gamification depuis localStorage
+  useEffect(() => {
+    const enabled = localStorage.getItem('hub_gamification_enabled')
+    setGamificationEnabled(enabled !== 'false')
+  }, [])
+
+  // Basculer la gamification
+  const toggleGamification = () => {
+    const newValue = !gamificationEnabled
+    setGamificationEnabled(newValue)
+    localStorage.setItem('hub_gamification_enabled', String(newValue))
+  }
+
   // Notifications depuis l'API
   const { unreadCount } = useNotifications()
 
+  // SSE temps réel (invalide les caches TanStack Query à chaque événement)
+  useServerEvents()
+
   // Onboarding
   const { startTour } = useOnboarding()
+
+  // Command Palette
+  const { open: openCommandPalette } = useCommandPalette()
 
   const roleInfo = user?.role ? ROLES[user.role as UserRole] : null
 
@@ -261,7 +289,16 @@ function LayoutContent({ children }: LayoutProps) {
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <div className="flex items-center gap-3">
-            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-16 h-16 object-contain" />
+            <picture>
+              <source srcSet="/logo.webp?v=2" type="image/webp" />
+              <img
+                src="/logo.png?v=2"
+                alt="Hub Chantier"
+                className="w-16 h-16 object-contain aspect-square"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <span className="text-xl font-bold text-primary-600">Hub Chantier</span>
           </div>
           <button
@@ -282,7 +319,16 @@ function LayoutContent({ children }: LayoutProps) {
         <div className="flex flex-col flex-grow bg-white border-r">
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b">
-            <img src="/logo.png?v=2" alt="Hub Chantier" className="w-16 h-16 object-contain" />
+            <picture>
+              <source srcSet="/logo.webp?v=2" type="image/webp" />
+              <img
+                src="/logo.png?v=2"
+                alt="Hub Chantier"
+                className="w-16 h-16 object-contain aspect-square"
+                loading="eager"
+                decoding="async"
+              />
+            </picture>
             <span className="ml-3 text-xl font-bold text-primary-600">Hub Chantier</span>
           </div>
 
@@ -325,13 +371,15 @@ function LayoutContent({ children }: LayoutProps) {
         <header className="sticky top-0 z-30 bg-white border-b">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             {/* Mobile menu button */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100"
-              aria-label="Ouvrir le menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
+            <Tooltip content="Ouvrir le menu">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100"
+                aria-label="Ouvrir le menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            </Tooltip>
 
             {/* Page title - hidden on mobile */}
             <div className="hidden lg:block">
@@ -342,25 +390,65 @@ function LayoutContent({ children }: LayoutProps) {
 
             {/* Mobile logo */}
             <div className="lg:hidden flex items-center gap-3">
-              <img src="/logo.png?v=2" alt="Hub Chantier" className="w-16 h-16 object-contain" />
+              <picture>
+                <source srcSet="/logo.webp?v=2" type="image/webp" />
+                <img
+                  src="/logo.png?v=2"
+                  alt="Hub Chantier"
+                  className="w-16 h-16 object-contain aspect-square"
+                  loading="eager"
+                  decoding="async"
+                />
+              </picture>
               <span className="text-lg font-bold text-primary-600">Hub Chantier</span>
             </div>
 
             {/* Right side */}
             <div className="flex items-center gap-2">
+              {/* Search Button */}
+              <Tooltip content="Rechercher dans l'application (Cmd+K)">
+                <button
+                  onClick={openCommandPalette}
+                  className="hidden sm:flex items-center gap-2 min-h-[44px] px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-600 border border-gray-200"
+                  aria-label="Rechercher"
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="text-sm">Rechercher</span>
+                  <kbd className="hidden lg:block px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded">
+                    ⌘K
+                  </kbd>
+                </button>
+              </Tooltip>
+
+              {/* Search Icon (mobile only) */}
+              <Tooltip content="Rechercher">
+                <button
+                  onClick={openCommandPalette}
+                  className="sm:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100"
+                  aria-label="Rechercher"
+                >
+                  <Search className="w-5 h-5 text-gray-600" />
+                </button>
+              </Tooltip>
+
+              {/* Help Button */}
+              <PageHelp />
+
               {/* Notifications */}
               <div className="relative">
-                <button
-                  onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 relative"
-                  aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
-                  aria-expanded={notificationsOpen}
-                >
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                  )}
-                </button>
+                <Tooltip content={unreadCount > 0 ? `${unreadCount} notifications non lues` : 'Notifications'}>
+                  <button
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 relative"
+                    aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
+                    aria-expanded={notificationsOpen}
+                  >
+                    <Bell className="w-5 h-5 text-gray-600" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    )}
+                  </button>
+                </Tooltip>
 
                 <NotificationDropdown
                   isOpen={notificationsOpen}
@@ -370,21 +458,23 @@ function LayoutContent({ children }: LayoutProps) {
 
               {/* User menu */}
               <div className="relative">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 min-h-[44px] px-2 rounded-lg hover:bg-gray-100"
-                  aria-label="Menu utilisateur"
-                  aria-expanded={userMenuOpen}
-                >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-                    style={{ backgroundColor: user?.couleur || '#3498DB' }}
+                <Tooltip content="Profil et paramètres">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 min-h-[44px] px-2 rounded-lg hover:bg-gray-100"
+                    aria-label="Menu utilisateur"
+                    aria-expanded={userMenuOpen}
                   >
-                    {user?.prenom?.[0]}
-                    {user?.nom?.[0]}
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-600 hidden sm:block" />
-                </button>
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+                      style={{ backgroundColor: user?.couleur || '#3498DB' }}
+                    >
+                      {user?.prenom?.[0]}
+                      {user?.nom?.[0]}
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-600 hidden sm:block" />
+                  </button>
+                </Tooltip>
 
                 {userMenuOpen && (
                   <>
@@ -418,6 +508,24 @@ function LayoutContent({ children }: LayoutProps) {
                           <Settings className="w-4 h-4" />
                           Securite
                         </Link>
+                        <button
+                          onClick={toggleGamification}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Flame className="w-4 h-4" />
+                          <span className="flex-1 text-left">Gamification</span>
+                          <div
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              gamificationEnabled ? 'bg-green-500' : 'bg-gray-300'
+                            }`}
+                          >
+                            <div
+                              className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
+                                gamificationEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                              } mt-0.5`}
+                            />
+                          </div>
+                        </button>
                         <button
                           onClick={() => {
                             setUserMenuOpen(false)

@@ -299,9 +299,10 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom du chantier
+              Nom du chantier <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -309,6 +310,7 @@ export default function EditChantierModal({ chantier, onClose, onSubmit }: EditC
               onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
               className="input"
               required
+              aria-required="true"
             />
           </div>
 

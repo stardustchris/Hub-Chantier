@@ -11,7 +11,7 @@ import { useCallback, useRef, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather } from '../hooks'
+import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather, useDocumentTitle } from '../hooks'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -24,13 +24,17 @@ import {
   DashboardPostCard,
   WeatherBulletinPost,
   DevisPipelineCard,
+  AlertesFinancieresCard,
   PostSkeleton,
+  WeeklyProgressCard,
+  TeamLeaderboardCard,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { weatherNotificationService } from '../services/weatherNotifications'
 import { consentService } from '../services/consent'
 import { openNavigationApp } from '../utils/navigation'
 import MentionInput from '../components/common/MentionInput'
+import ProgressiveHintBanner from '../components/common/ProgressiveHintBanner'
 import {
   MessageCircle,
   AlertTriangle,
@@ -38,6 +42,8 @@ import {
   ImagePlus,
   Camera,
   X,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import type { TargetType, User } from '../types'
 import { usersService } from '../services/users'
@@ -46,6 +52,9 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { addToast } = useToast()
+
+  // Document title
+  useDocumentTitle('Tableau de bord')
 
   // Hook pour le pointage (clock-in/out)
   const clock = useClockCard()
@@ -58,6 +67,18 @@ export default function DashboardPage() {
   useEffect(() => {
     usersService.list({ size: 100 }).then((res) => setAllUsers(res.items)).catch(() => {})
   }, [])
+
+  // Progressive disclosure pour mobile (5.2.3)
+  // État pour savoir si les cartes secondaires sont dépliées sur mobile
+  const [isSecondaryCardsExpanded, setIsSecondaryCardsExpanded] = useState(() => {
+    const saved = localStorage.getItem('hub_dashboard_secondary_cards_expanded')
+    return saved === 'true'
+  })
+
+  // Persister l'état dans localStorage
+  useEffect(() => {
+    localStorage.setItem('hub_dashboard_secondary_cards_expanded', String(isSecondaryCardsExpanded))
+  }, [isSecondaryCardsExpanded])
 
   // Hook pour le planning du jour (affectations réelles de l'utilisateur)
   const todayPlanning = useTodayPlanning()
@@ -126,6 +147,41 @@ export default function DashboardPage() {
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
   const canViewDevisPipeline = user?.role === 'admin' || user?.role === 'conducteur'
+
+  // Keyboard shortcut: Space to clock in/out (4.4.4)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle Space key
+      if (e.key !== ' ') return
+
+      // Skip if user is typing in an input field or focused on a button
+      const target = e.target as HTMLElement
+      const tagName = target?.tagName?.toLowerCase()
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select' || tagName === 'button') {
+        return
+      }
+
+      // Prevent default space behavior (page scroll)
+      e.preventDefault()
+
+      // Trigger appropriate clock action based on state
+      if (clock.isClockedIn && !clock.hasClockedOut) {
+        clock.handleClockOut()
+      } else if (!clock.isClockedIn || clock.hasClockedOut) {
+        clock.handleClockIn()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [clock.isClockedIn, clock.hasClockedOut, clock.handleClockIn, clock.handleClockOut])
+
+  // Verifier si la gamification est activee
+  const [gamificationEnabled, setGamificationEnabled] = useState(true)
+  useEffect(() => {
+    const enabled = localStorage.getItem('hub_gamification_enabled')
+    setGamificationEnabled(enabled !== 'false')
+  }, [])
 
   // Fusionner les posts avec le bulletin météo pour un tri unifié
   const feedItemsWithWeather = useMemo(() => {
@@ -245,6 +301,12 @@ export default function DashboardPage() {
     <Layout>
       <div className="min-h-screen bg-gray-100">
         <div className="p-4 space-y-4">
+          {/* Progressive hint banner */}
+          <ProgressiveHintBanner
+            pageId="/"
+            message="Astuce : Consultez la carte météo pour planifier vos chantiers. Le fil d'actualités vous permet de partager des infos rapidement avec l'équipe."
+          />
+
           {/* Top Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div data-tour="clock-card">
@@ -291,8 +353,16 @@ export default function DashboardPage() {
                 onCall={handleCall}
               />
 
-              {/* Actualites Section */}
-              <div className="bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200" data-tour="dashboard-feed">
+              {/* Actualites Section - replié par défaut sur mobile */}
+              <div
+                className={`
+                  bg-white rounded-2xl p-5 shadow-lg border-2 border-gray-200
+                  transition-all duration-300 ease-in-out
+                  lg:block
+                  ${isSecondaryCardsExpanded ? 'block' : 'hidden'}
+                `}
+                data-tour="dashboard-feed"
+              >
                 <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
                   <MessageCircle className="w-5 h-5 text-blue-600" />
                   Actualites
@@ -497,7 +567,26 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-4">
+              {gamificationEnabled && (
+                <WeeklyProgressCard
+                  hoursWorked={weeklyStats.hoursWorkedDecimal}
+                  weeklyGoal={35}
+                />
+              )}
+              {gamificationEnabled && (user?.role === 'chef_chantier' || user?.role === 'conducteur' || user?.role === 'admin') && (
+                <TeamLeaderboardCard
+                  members={[
+                    { id: '1', name: 'Jean Martin', hoursLogged: 38.5, hoursPlanned: 35 },
+                    { id: '2', name: 'Sophie Dubois', hoursLogged: 34.2, hoursPlanned: 35 },
+                    { id: '3', name: 'Marc Lefebvre', hoursLogged: 32.8, hoursPlanned: 35 },
+                    { id: '4', name: 'Claire Bernard', hoursLogged: 28.5, hoursPlanned: 35 },
+                    { id: '5', name: 'Luc Petit', hoursLogged: 24.0, hoursPlanned: 35 },
+                    { id: '6', name: 'Emma Robert', hoursLogged: 22.5, hoursPlanned: 35 },
+                  ]}
+                />
+              )}
               {canViewDevisPipeline && <DevisPipelineCard />}
+              {canViewDevisPipeline && <AlertesFinancieresCard />}
               <DocumentsCard />
               <TeamCard members={currentTeamMembers} chantierName={currentSlot?.siteName} />
             </div>

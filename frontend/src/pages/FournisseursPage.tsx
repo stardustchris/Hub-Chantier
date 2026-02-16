@@ -4,8 +4,10 @@
 
 import Layout from '../components/Layout'
 import FournisseursList from '../components/financier/FournisseursList'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function FournisseursPage() {
+  useDocumentTitle('Fournisseurs')
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">

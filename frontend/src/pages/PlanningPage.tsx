@@ -1,14 +1,48 @@
+import { useEffect } from 'react'
+import { addWeeks, subWeeks } from 'date-fns'
 import Layout from '../components/Layout'
 import { PlanningGrid, PlanningChantierGrid, WeekNavigation, AffectationModal } from '../components/planning'
 import { PlanningToolbar, PlanningFiltersPanel } from '../components/planning/PlanningToolbar'
 import { usePlanning } from '../hooks/usePlanning'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import ProgressiveHintBanner from '../components/common/ProgressiveHintBanner'
 
 export default function PlanningPage() {
+  useDocumentTitle('Planning')
   const planning = usePlanning()
+
+  // Keyboard shortcut: Arrow keys for week navigation (4.4.3)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input field
+      const target = e.target as HTMLElement
+      const tagName = target?.tagName?.toLowerCase()
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+        return
+      }
+
+      // Handle arrow keys for week navigation
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        planning.setCurrentDate(subWeeks(planning.currentDate, 1))
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        planning.setCurrentDate(addWeeks(planning.currentDate, 1))
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [planning.currentDate, planning.setCurrentDate])
 
   return (
     <Layout>
       <div className="space-y-4">
+        <ProgressiveHintBanner
+          pageId="/planning"
+          message="Astuce : Glissez-déposez les affectations pour les créer ou les déplacer rapidement entre les jours et les compagnons."
+        />
+
         <PlanningToolbar
           canEdit={planning.canEdit}
           viewTab={planning.viewTab}

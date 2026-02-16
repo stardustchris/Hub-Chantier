@@ -84,6 +84,7 @@ def _make_devis_detail_dto(**kwargs) -> DevisDetailDTO:
         "taux_marge_materiel": None,
         "taux_marge_deplacement": None,
         "coefficient_frais_generaux": "0.12",
+        "coefficient_productivite": None,
         "retenue_garantie_pct": "0",
         "montant_retenue_garantie": "0.00",
         "montant_net_a_payer": "2700.00",

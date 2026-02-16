@@ -2,8 +2,10 @@ import Layout from '../components/Layout'
 import { DossierTree, DocumentList, FileUploadZone, DossierModal, DocumentPreviewModal } from '../components/documents'
 import { useDocuments, documentsApi } from '../hooks/useDocuments'
 import { FolderOpen, Search, Loader2, FileText, ChevronDown, RefreshCw } from 'lucide-react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function DocumentsPage() {
+  useDocumentTitle('Documents')
   const docs = useDocuments()
 
   return (

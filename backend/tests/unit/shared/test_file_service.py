@@ -188,6 +188,124 @@ class TestCreateThumbnail:
         assert abs(original_ratio - thumb_ratio) < 0.1
 
 
+class TestGenerateWebpVariants:
+    """Tests de generation de variantes WebP (P2-5)."""
+
+    @pytest.fixture
+    def service(self, tmp_path):
+        return FileService(upload_dir=str(tmp_path))
+
+    @pytest.fixture
+    def large_image_bytes(self):
+        """Cree une grande image (1600x1200)."""
+        img = Image.new("RGB", (1600, 1200), color="blue")
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG")
+        return buffer.getvalue()
+
+    @pytest.fixture
+    def small_image_bytes(self):
+        """Cree une petite image (200x150)."""
+        img = Image.new("RGB", (200, 150), color="red")
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG")
+        return buffer.getvalue()
+
+    def test_generates_three_variants(self, service, large_image_bytes):
+        """Test que 3 variantes WebP sont generees."""
+        urls = service.generate_webp_variants(large_image_bytes, "test_img")
+
+        assert "webp_thumbnail_url" in urls
+        assert "webp_medium_url" in urls
+        assert "webp_large_url" in urls
+
+    def test_urls_point_to_webp_directory(self, service, large_image_bytes):
+        """Test que les URLs pointent vers /uploads/webp/."""
+        urls = service.generate_webp_variants(large_image_bytes, "test_img")
+
+        for url in urls.values():
+            assert url.startswith("/uploads/webp/")
+            assert url.endswith(".webp")
+
+    def test_files_created_on_disk(self, service, large_image_bytes, tmp_path):
+        """Test que les fichiers sont crees sur disque."""
+        service.generate_webp_variants(large_image_bytes, "test_img")
+
+        webp_dir = tmp_path / "webp"
+        assert (webp_dir / "test_img_thumbnail.webp").exists()
+        assert (webp_dir / "test_img_medium.webp").exists()
+        assert (webp_dir / "test_img_large.webp").exists()
+
+    def test_thumbnail_respects_max_dimension(self, service, large_image_bytes, tmp_path):
+        """Test que le thumbnail ne depasse pas 300px."""
+        service.generate_webp_variants(large_image_bytes, "test_img")
+
+        thumb_path = tmp_path / "webp" / "test_img_thumbnail.webp"
+        img = Image.open(thumb_path)
+        assert max(img.size) <= 300
+
+    def test_medium_respects_max_dimension(self, service, large_image_bytes, tmp_path):
+        """Test que le medium ne depasse pas 800px."""
+        service.generate_webp_variants(large_image_bytes, "test_img")
+
+        medium_path = tmp_path / "webp" / "test_img_medium.webp"
+        img = Image.open(medium_path)
+        assert max(img.size) <= 800
+
+    def test_large_respects_max_dimension(self, service, large_image_bytes, tmp_path):
+        """Test que le large ne depasse pas 1200px."""
+        service.generate_webp_variants(large_image_bytes, "test_img")
+
+        large_path = tmp_path / "webp" / "test_img_large.webp"
+        img = Image.open(large_path)
+        assert max(img.size) <= 1200
+
+    def test_small_image_not_upscaled(self, service, small_image_bytes, tmp_path):
+        """Test qu'une petite image n'est pas agrandie."""
+        service.generate_webp_variants(small_image_bytes, "small_img")
+
+        # Toutes les variantes doivent garder la taille originale (200x150)
+        for size_name in ["thumbnail", "medium", "large"]:
+            path = tmp_path / "webp" / f"small_img_{size_name}.webp"
+            img = Image.open(path)
+            assert img.size == (200, 150)
+
+    def test_preserves_aspect_ratio(self, service, large_image_bytes, tmp_path):
+        """Test que le ratio 4:3 est preserve."""
+        service.generate_webp_variants(large_image_bytes, "ratio_img")
+
+        thumb_path = tmp_path / "webp" / "ratio_img_thumbnail.webp"
+        img = Image.open(thumb_path)
+        ratio = img.size[0] / img.size[1]
+        assert abs(ratio - (4 / 3)) < 0.05
+
+    def test_rgba_image_converted(self, service, tmp_path):
+        """Test conversion RGBA vers RGB pour WebP."""
+        img = Image.new("RGBA", (400, 300), color=(255, 0, 0, 128))
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+
+        urls = service.generate_webp_variants(buffer.getvalue(), "rgba_img")
+        assert len(urls) == 3
+
+        # Verifier que les fichiers sont des WebP valides
+        for size_name in ["thumbnail", "medium", "large"]:
+            path = tmp_path / "webp" / f"rgba_img_{size_name}.webp"
+            opened = Image.open(path)
+            assert opened.format == "WEBP"
+
+    def test_webp_files_smaller_than_jpeg(self, service, large_image_bytes, tmp_path):
+        """Test que les WebP sont plus petits que le JPEG source."""
+        service.generate_webp_variants(large_image_bytes, "size_img")
+
+        jpeg_size = len(large_image_bytes)
+        large_path = tmp_path / "webp" / "size_img_large.webp"
+        webp_size = large_path.stat().st_size
+
+        # WebP doit etre plus petit que le JPEG original
+        assert webp_size < jpeg_size
+
+
 class TestUploadProfilePhoto:
     """Tests d'upload de photo de profil."""
 

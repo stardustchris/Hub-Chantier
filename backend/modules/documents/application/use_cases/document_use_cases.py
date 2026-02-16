@@ -157,6 +157,9 @@ class UploadDocumentUseCase:
             file_content, nom, chantier_id, dossier_id
         )
 
+        # 2.5.4: Generer thumbnails WebP pour les images
+        self._file_storage.generate_webp_thumbnails(chemin_stockage)
+
         # Créer l'entité document
         document = Document(
             chantier_id=chantier_id,

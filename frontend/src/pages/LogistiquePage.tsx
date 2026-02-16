@@ -12,8 +12,10 @@ import { RessourceList, RessourceModal, ReservationCalendar, ReservationModal } 
 import Layout from '../components/Layout'
 import { listRessources } from '../services/logistique'
 import type { Ressource } from '../types/logistique'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const LogistiquePage: React.FC = () => {
+  useDocumentTitle('Logistique')
   const {
     isAdmin,
     canValidate,

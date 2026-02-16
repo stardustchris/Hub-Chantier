@@ -170,12 +170,26 @@ export const DashboardPostCard = memo(function DashboardPostCard({
           {post.medias && post.medias.length > 0 && (
             <div className="grid grid-cols-2 gap-2 mb-3">
               {post.medias.map((media) => (
-                <img
-                  key={media.id}
-                  src={media.url}
-                  alt=""
-                  className="rounded-xl w-full h-48 object-cover"
-                />
+                <picture key={media.id}>
+                  {media.webp_medium_url && (
+                    <source
+                      type="image/webp"
+                      srcSet={[
+                        media.webp_thumbnail_url && `${media.webp_thumbnail_url} 300w`,
+                        media.webp_medium_url && `${media.webp_medium_url} 800w`,
+                        media.webp_large_url && `${media.webp_large_url} 1200w`,
+                      ].filter(Boolean).join(', ')}
+                      sizes="(max-width: 640px) 300px, 800px"
+                    />
+                  )}
+                  <img
+                    src={media.url}
+                    alt=""
+                    className="rounded-xl w-full h-48 object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
               ))}
             </div>
           )}

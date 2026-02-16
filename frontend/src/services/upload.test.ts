@@ -197,6 +197,22 @@ describe('uploadService', () => {
       const result = await uploadService.uploadChantierPhoto('c1', file)
       expect(result.thumbnail_url).toBe('/uploads/thumb.jpg')
     })
+
+    it('retourne les variantes WebP si presentes (P2-5)', async () => {
+      vi.mocked(api.post).mockResolvedValue({
+        data: {
+          url: '/uploads/chantier.jpg',
+          webp_thumbnail_url: '/uploads/webp/chantier_thumbnail.webp',
+          webp_medium_url: '/uploads/webp/chantier_medium.webp',
+          webp_large_url: '/uploads/webp/chantier_large.webp',
+        },
+      })
+      const file = new File(['content'], 'chantier.jpg', { type: 'image/jpeg' })
+      const result = await uploadService.uploadChantierPhoto('c1', file)
+      expect(result.webp_thumbnail_url).toBe('/uploads/webp/chantier_thumbnail.webp')
+      expect(result.webp_medium_url).toBe('/uploads/webp/chantier_medium.webp')
+      expect(result.webp_large_url).toBe('/uploads/webp/chantier_large.webp')
+    })
   })
 
   // ===== BOUNDARY VALIDATION =====

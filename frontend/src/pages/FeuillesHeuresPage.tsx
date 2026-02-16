@@ -1,16 +1,44 @@
 import { useState, useEffect } from 'react'
+import { addWeeks, subWeeks } from 'date-fns'
 import { Filter, Users, Building2, Settings } from 'lucide-react'
 import Layout from '../components/Layout'
-import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig, BatchActionsBar } from '../components/pointages'
+import { TimesheetWeekNavigation, TimesheetGrid, TimesheetChantierGrid, PointageModal, PayrollMacrosConfig, BatchActionsBar, ValidationDashboard } from '../components/pointages'
 import type { PayrollConfig } from '../components/pointages'
 import { useFeuillesHeures } from '../hooks/useFeuillesHeures'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import ProgressiveHintBanner from '../components/common/ProgressiveHintBanner'
 
 export default function FeuillesHeuresPage() {
+  useDocumentTitle('Feuilles d\'heures')
   const fh = useFeuillesHeures()
   const { user } = useAuth()
   const [showMacrosConfig, setShowMacrosConfig] = useState(false)
   const [payrollConfig, setPayrollConfig] = useState<PayrollConfig | undefined>()
+
+  // Keyboard shortcut: Arrow keys for week navigation (4.4.3)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input field
+      const target = e.target as HTMLElement
+      const tagName = target?.tagName?.toLowerCase()
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+        return
+      }
+
+      // Handle arrow keys for week navigation
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        fh.setCurrentDate(subWeeks(fh.currentDate, 1))
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        fh.setCurrentDate(addWeeks(fh.currentDate, 1))
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [fh.currentDate, fh.setCurrentDate])
 
   const handleSaveMacros = (config: PayrollConfig) => {
     setPayrollConfig(config)
@@ -32,6 +60,14 @@ export default function FeuillesHeuresPage() {
   return (
     <Layout>
       <div className={`space-y-4 ${fh.isValidateur && fh.viewTab === 'compagnons' && fh.multiSelect.count > 0 ? 'pb-24' : ''}`}>
+        {/* Progressive hint banner */}
+        {fh.isValidateur && fh.viewTab === 'compagnons' && (
+          <ProgressiveHintBanner
+            pageId="/feuilles-heures-validation"
+            message="Astuce : Sélectionnez plusieurs pointages en attente pour les valider ou rejeter en lot. Cela vous fera gagner un temps précieux !"
+          />
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -186,6 +222,14 @@ export default function FeuillesHeuresPage() {
           onExport={fh.handleExport}
           isExporting={fh.isExporting}
         />
+
+        {/* Tableau de bord de validation - visible uniquement pour les validateurs sur l'onglet compagnons */}
+        {fh.isValidateur && fh.viewTab === 'compagnons' && !fh.loading && (
+          <ValidationDashboard
+            vueCompagnons={fh.vueCompagnons}
+            selectablePointagesCount={fh.selectablePointages.length}
+          />
+        )}
 
         {/* Erreur */}
         {fh.error && <div className="bg-red-50 text-red-700 p-4 rounded-lg">{fh.error}</div>}

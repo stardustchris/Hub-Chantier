@@ -15,6 +15,7 @@ import { logger } from '../services/logger'
 interface WorkStats {
   // Semaine en cours
   hoursWorked: string
+  hoursWorkedDecimal: number
   hoursProgress: number
   // Mois en cours
   joursTravailesMois: number
@@ -102,6 +103,7 @@ export function useWeeklyStats(): WorkStats {
   const { user } = useAuth()
   const [stats, setStats] = useState<WorkStats>({
     hoursWorked: '0h00',
+    hoursWorkedDecimal: 0,
     hoursProgress: 0,
     joursTravailesMois: 0,
     joursTotalMois: getJoursOuvresMois(),
@@ -136,6 +138,7 @@ export function useWeeklyStats(): WorkStats {
       }
 
       const hoursWorked = formatHours(totalMinutes)
+      const hoursWorkedDecimal = totalMinutes / 60
       const hoursProgress = Math.min(100, Math.round((totalMinutes / (WEEKLY_HOURS_TARGET * 60)) * 100))
 
       // 2. Jours travaillés ce mois (dates uniques hors congés)
@@ -201,6 +204,7 @@ export function useWeeklyStats(): WorkStats {
 
       setStats({
         hoursWorked,
+        hoursWorkedDecimal,
         hoursProgress,
         joursTravailesMois,
         joursTotalMois: getJoursOuvresMois(),

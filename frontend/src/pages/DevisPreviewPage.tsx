@@ -9,6 +9,7 @@ import { devisService } from '../services/devis'
 import { formatEUR } from '../utils/format'
 import type { DevisDetail, LotDevis, LigneDevis } from '../types'
 import { Loader2, Printer } from 'lucide-react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const formatDate = (d: string | null | undefined) => {
   if (!d) return '-'
@@ -20,6 +21,9 @@ export default function DevisPreviewPage() {
   const { id } = useParams<{ id: string }>()
   const [devis, setDevis] = useState<DevisDetail | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Document title
+  useDocumentTitle(devis ? `Aperçu - Devis ${devis.numero}` : 'Aperçu devis')
 
   useEffect(() => {
     const load = async () => {

@@ -91,6 +91,8 @@ export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>
             )}
 
+            <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -100,6 +102,7 @@ export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
                   ref={firstInputRef}
                   type="text"
                   required
+                  aria-required="true"
                   value={formData.prenom}
                   onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
                   className="input"
@@ -114,6 +117,7 @@ export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
                 <input
                   type="text"
                   required
+                  aria-required="true"
                   value={formData.nom}
                   onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                   className="input"
@@ -130,6 +134,7 @@ export function InviteUserModal({ onClose, onSubmit }: InviteUserModalProps) {
               <input
                 type="email"
                 required
+                aria-required="true"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="input"

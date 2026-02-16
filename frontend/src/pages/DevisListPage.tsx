@@ -12,6 +12,7 @@ import { devisService } from '../services/devis'
 import type { Devis, DevisCreate, DevisUpdate, StatutDevis } from '../types'
 import { STATUT_DEVIS_CONFIG } from '../types'
 import { formatEUR } from '../utils/format'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Loader2,
   AlertCircle,
@@ -33,6 +34,7 @@ type SortDirection = 'asc' | 'desc'
 const ALL_STATUTS = Object.keys(STATUT_DEVIS_CONFIG) as StatutDevis[]
 
 export default function DevisListPage() {
+  useDocumentTitle('Devis')
   const navigate = useNavigate()
   const [devisList, setDevisList] = useState<Devis[]>([])
   const [total, setTotal] = useState(0)

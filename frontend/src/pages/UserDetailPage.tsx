@@ -7,6 +7,8 @@ import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import ImageUpload from '../components/ImageUpload'
 import { EditUserModal } from '../components/users'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { Breadcrumb } from '../components/ui/Breadcrumb'
 import {
   ArrowLeft,
   Phone,
@@ -35,6 +37,9 @@ export default function UserDetailPage() {
 
   const isAdmin = currentUser?.role === 'admin'
   const isSelf = currentUser?.id === id
+
+  // Document title
+  useDocumentTitle(user ? `${user.prenom} ${user.nom}` : 'Utilisateur')
 
   useEffect(() => {
     if (id) {
@@ -112,6 +117,17 @@ export default function UserDetailPage() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
+        {/* Breadcrumb */}
+        {user && (
+          <Breadcrumb
+            items={[
+              { label: 'Accueil', href: '/' },
+              { label: 'Utilisateurs', href: '/utilisateurs' },
+              { label: `${user.prenom} ${user.nom}` },
+            ]}
+          />
+        )}
+
         {/* Back button + Navigation (USR-09) */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -156,7 +172,7 @@ export default function UserDetailPage() {
                 style={{ backgroundColor: user.couleur || '#3498DB' }}
               >
                 {user.photo_profil ? (
-                  <img src={user.photo_profil} alt={`${user.prenom} ${user.nom}`} className="w-full h-full object-cover" />
+                  <img src={user.photo_profil} alt={`${user.prenom} ${user.nom}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <>
                     {user.prenom?.[0]}

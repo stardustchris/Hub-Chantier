@@ -21,6 +21,8 @@ import ConversionChantierPanel from '../components/devis/ConversionChantierPanel
 import RelancesPanel from '../components/devis/RelancesPanel'
 import { devisService } from '../services/devis'
 import { formatEUR } from '../utils/format'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { Breadcrumb } from '../components/ui/Breadcrumb'
 import type {
   DevisDetail,
   DevisCreate,
@@ -70,6 +72,9 @@ export default function DevisDetailPage() {
 
   const devisId = Number(id)
   const isEditable = devis?.statut === 'brouillon'
+
+  // Document title
+  useDocumentTitle(devis ? `Devis ${devis.numero}` : 'Devis')
 
   const loadDevis = useCallback(async () => {
     if (!devisId || isNaN(devisId)) return
@@ -192,6 +197,17 @@ export default function DevisDetailPage() {
   return (
     <Layout>
       <div className="space-y-6" role="main" aria-label="Detail du devis">
+        {/* Breadcrumb */}
+        {devis && (
+          <Breadcrumb
+            items={[
+              { label: 'Accueil', href: '/' },
+              { label: 'Devis', href: '/devis' },
+              { label: devis.numero },
+            ]}
+          />
+        )}
+
         {/* Bouton retour */}
         <button
           onClick={() => navigate('/devis')}

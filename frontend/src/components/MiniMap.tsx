@@ -59,8 +59,9 @@ export function MiniMapStatic({
       <img
         src={staticUrl}
         alt={locationName}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover aspect-[2/1]"
         loading="lazy"
+        decoding="async"
         onError={(e) => {
           // Fallback: afficher placeholder
           const target = e.target as HTMLImageElement

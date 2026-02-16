@@ -10,6 +10,7 @@ import { devisService } from '../services/devis'
 import { formatEUR } from '../utils/format'
 import type { Article, ArticleCreate, ArticleUpdate } from '../types'
 import { TYPE_DEBOURSE_LABELS } from '../types'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Loader2,
   AlertCircle,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 
 export default function ArticlesPage() {
+  useDocumentTitle('Articles')
   const [articles, setArticles] = useState<Article[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)

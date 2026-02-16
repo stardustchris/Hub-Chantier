@@ -4,9 +4,11 @@ import io
 import logging
 import shutil
 import zipfile
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Dict, Optional
 from pathlib import Path
 import uuid
+
+from PIL import Image
 
 from ...domain.services import FileStorageService
 
@@ -179,6 +181,62 @@ class LocalFileStorageService(FileStorageService):
         if safe_ext:
             return f"{safe_name}.{safe_ext}"
         return safe_name
+
+    # Extensions images supportées pour la génération WebP
+    IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+    WEBP_SIZES = {"thumbnail": 300, "medium": 800, "large": 1200}
+
+    def generate_webp_thumbnails(self, chemin_stockage: str) -> Dict[str, str]:
+        """Génère des thumbnails WebP pour un document image (2.5.4).
+
+        Crée 3 variantes : thumbnail (300px), medium (800px), large (1200px).
+
+        Args:
+            chemin_stockage: Chemin relatif du fichier source.
+
+        Returns:
+            Dict avec clés webp_thumbnail, webp_medium, webp_large (chemins relatifs).
+            Dict vide si le fichier n'est pas une image ou en cas d'erreur.
+        """
+        file_path = self._validate_path(chemin_stockage)
+        if not file_path or not file_path.exists():
+            return {}
+
+        ext = file_path.suffix.lower()
+        if ext not in self.IMAGE_EXTENSIONS:
+            return {}
+
+        try:
+            img = Image.open(file_path)
+            if img.mode in ("RGBA", "P"):
+                background = Image.new("RGB", img.size, (255, 255, 255))
+                if img.mode == "P":
+                    img = img.convert("RGBA")
+                background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
+                img = background
+
+            # Répertoire webp à côté du fichier source
+            webp_dir = file_path.parent / "webp"
+            webp_dir.mkdir(parents=True, exist_ok=True)
+
+            stem = file_path.stem
+            urls = {}
+            for size_name, max_dim in self.WEBP_SIZES.items():
+                resized = img.copy()
+                if max(resized.size) > max_dim:
+                    resized.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
+                webp_filename = f"{stem}_{size_name}.webp"
+                webp_path = webp_dir / webp_filename
+                resized.save(webp_path, format="WEBP", quality=85, method=4)
+
+                # Chemin relatif depuis base_path
+                urls[f"webp_{size_name}"] = str(webp_path.relative_to(self._base_path))
+
+            return urls
+        except Exception as e:
+            logger.warning(f"Erreur generation WebP pour {chemin_stockage}: {e}")
+            return {}
 
     def get_full_path(self, chemin_stockage: str) -> Optional[Path]:
         """Retourne le chemin complet d'un fichier (validé contre path traversal)."""

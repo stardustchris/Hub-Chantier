@@ -242,6 +242,9 @@ export interface PostMedia {
   url: string
   type: 'image' | 'video'
   thumbnail_url?: string
+  webp_thumbnail_url?: string
+  webp_medium_url?: string
+  webp_large_url?: string
 }
 
 export interface PostComment {
@@ -1710,6 +1713,7 @@ export interface DevisCreate {
   taux_marge_materiel?: number
   taux_marge_deplacement?: number
   coefficient_frais_generaux?: number
+  coefficient_productivite?: number
   retenue_garantie_pct?: number
   notes?: string
   commercial_id?: number
@@ -1722,6 +1726,7 @@ export interface DevisCreate {
   duree_estimee_jours?: number | null
   notes_bas_page?: string | null
   nom_interne?: string | null
+  commentaire?: string
 }
 
 export interface DevisUpdate {
@@ -1740,6 +1745,7 @@ export interface DevisUpdate {
   taux_marge_materiel?: number
   taux_marge_deplacement?: number
   coefficient_frais_generaux?: number
+  coefficient_productivite?: number
   retenue_garantie_pct?: number
   notes?: string
   conditions_generales?: string
@@ -1753,6 +1759,7 @@ export interface DevisUpdate {
   duree_estimee_jours?: number | null
   notes_bas_page?: string | null
   nom_interne?: string | null
+  commentaire?: string
 }
 
 // DEV-TVA: Ventilation TVA par taux (art. 242 nonies A CGI)
@@ -1781,6 +1788,7 @@ export interface DevisDetail {
   taux_marge_materiel?: number
   taux_marge_deplacement?: number
   coefficient_frais_generaux: number
+  coefficient_productivite?: number | null
   retenue_garantie_pct: number
   montant_retenue_garantie?: number
   montant_net_a_payer?: number
@@ -1815,6 +1823,7 @@ export interface DevisDetail {
   duree_estimee_jours?: number | null
   notes_bas_page?: string | null
   nom_interne?: string | null
+  commentaire?: string | null
 }
 
 // Lots de devis (matches backend LotDevisDTO)

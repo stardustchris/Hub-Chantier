@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isWeekend, addDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { ChevronDown, ChevronRight, Copy, Phone } from 'lucide-react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Affectation, User, PlanningCategory } from '../../types'
 import { PLANNING_CATEGORIES } from '../../types'
 import AffectationBlock from './AffectationBlock'
@@ -100,6 +101,7 @@ export default function PlanningGrid({
   const [resizeState, setResizeState] = useState<ResizeState | null>(null)
   const [resizePreview, setResizePreview] = useState<ResizePreview>({ datesToAdd: [], datesToRemove: [] })
   const gridRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // PLN-05/PLN-06: Jours selon le mode de vue (semaine ou mois)
   const days = useMemo(() => {
@@ -442,6 +444,53 @@ export default function PlanningGrid({
   // Mode mois = affichage compact
   const isMonthView = viewMode === 'mois'
 
+  // Type pour les lignes virtualisées (soit header de groupe, soit utilisateur)
+  type VirtualRow =
+    | { type: 'category-header'; category: PlanningCategory; users: User[]; categoryInfo: typeof PLANNING_CATEGORIES[PlanningCategory] }
+    | { type: 'user'; user: User; category: PlanningCategory }
+
+  // Construire le tableau plat de lignes pour la virtualisation (seulement en mode mois)
+  const virtualRows = useMemo((): VirtualRow[] => {
+    if (!isMonthView) return []
+
+    const rows: VirtualRow[] = []
+
+    sortedCategories.forEach(([category, users]) => {
+      const categoryInfo = PLANNING_CATEGORIES[category as PlanningCategory] || { label: category, color: '#607D8B', order: 99 }
+
+      // Ajouter le header de catégorie
+      rows.push({
+        type: 'category-header',
+        category: category as PlanningCategory,
+        users,
+        categoryInfo,
+      })
+
+      // Si le groupe est étendu, ajouter les utilisateurs
+      const isExpanded = expandedMetiers.includes(category)
+      if (isExpanded) {
+        users.forEach(user => {
+          rows.push({
+            type: 'user',
+            user,
+            category: category as PlanningCategory,
+          })
+        })
+      }
+    })
+
+    return rows
+  }, [sortedCategories, expandedMetiers, isMonthView])
+
+  // Virtualizer pour les lignes (seulement en mode mois)
+  const rowVirtualizer = useVirtualizer({
+    count: virtualRows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 60, // Hauteur estimée par ligne (60px)
+    overscan: 5, // Pré-rendre 5 lignes avant/après pour le scroll fluide
+    enabled: isMonthView, // Activer seulement en mode mois
+  })
+
   return (
     <div ref={gridRef} className={`bg-white rounded-lg shadow overflow-hidden ${isMonthView ? 'overflow-x-auto' : ''} ${resizeState ? 'select-none' : ''}`}>
       {/* Header - Jours */}
@@ -467,161 +516,355 @@ export default function PlanningGrid({
       </div>
 
       {/* Corps - Groupes par catégorie */}
-      <div className="divide-y">
-        {sortedCategories.map(([category, users]) => {
-          const categoryInfo = PLANNING_CATEGORIES[category as PlanningCategory] || { label: category, color: '#607D8B' }
-          const isExpanded = expandedMetiers.includes(category)
+      {/* Mode mois: virtualisation activée */}
+      {isMonthView ? (
+        <div
+          ref={scrollContainerRef}
+          className="divide-y max-h-[70vh] overflow-y-auto"
+          style={{ overflowX: 'auto' }}
+        >
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map(virtualRow => {
+              const rowData = virtualRows[virtualRow.index]
 
-          return (
-            <div key={category}>
-              {/* Header du groupe (catégorie) */}
-              <button
-                onClick={() => onToggleMetier(category)}
-                className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors" style={gridStyle}
-              >
-                <div className="px-4 py-2 flex items-center gap-2 border-r">
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-500" />
-                  )}
-                  <span
-                    className="px-2 py-0.5 rounded text-xs font-medium text-white"
-                    style={{ backgroundColor: categoryInfo.color }}
+              if (rowData.type === 'category-header') {
+                const isExpanded = expandedMetiers.includes(rowData.category)
+
+                return (
+                  <div
+                    key={`category-${rowData.category}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
                   >
-                    {categoryInfo.label}
-                  </span>
-                  <span className="text-sm text-gray-500">({users.length})</span>
-                </div>
-                {/* Colonnes vides pour aligner */}
-                {days.map(day => (
-                  <div key={day.toISOString()} className="border-r last:border-r-0" />
-                ))}
-              </button>
-
-              {/* Utilisateurs du groupe */}
-              {isExpanded && users.map(user => (
-                <div
-                  key={user.id}
-                  className="group/row grid hover:bg-gray-50 transition-colors" style={gridStyle}
-                >
-                  {/* Colonne utilisateur */}
-                  <div className="px-4 py-3 flex items-center gap-3 border-r">
-                    {/* Avatar */}
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                      style={{ backgroundColor: user.couleur || '#3498DB' }}
+                    <button
+                      onClick={() => onToggleMetier(rowData.category)}
+                      className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors min-w-max"
+                      style={gridStyle}
                     >
-                      {user.prenom?.[0]}{user.nom?.[0]}
-                    </div>
-
-                    {/* Nom */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">
-                        {user.prenom} {user.nom}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onDuplicate(user.id)
-                        }}
-                        className="p-1 rounded hover:bg-gray-200"
-                        title="Dupliquer la semaine"
-                      >
-                        <Copy className="w-4 h-4 text-gray-500" />
-                      </button>
-                      {user.telephone && (
-                        <a
-                          href={`tel:${user.telephone}`}
-                          onClick={e => e.stopPropagation()}
-                          className="p-1 rounded hover:bg-gray-200"
-                          title="Appeler"
+                      <div className="px-4 py-2 flex items-center gap-2 border-r">
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-gray-500" />
+                        )}
+                        <span
+                          className="px-2 py-0.5 rounded text-xs font-medium text-white"
+                          style={{ backgroundColor: rowData.categoryInfo.color }}
                         >
-                          <Phone className="w-4 h-4 text-gray-500" />
-                        </a>
-                      )}
-                    </div>
+                          {rowData.categoryInfo.label}
+                        </span>
+                        <span className="text-sm text-gray-500">({rowData.users.length})</span>
+                      </div>
+                      {/* Colonnes vides pour aligner */}
+                      {days.map(day => (
+                        <div key={day.toISOString()} className="border-r last:border-r-0" />
+                      ))}
+                    </button>
                   </div>
+                )
+              } else {
+                // Type: user
+                const user = rowData.user
 
-                  {/* Cellules des jours */}
-                  {days.map(day => {
-                    const cellAffectations = getAffectationsForCell(user.id, day)
-                    const hasAffectations = cellAffectations.length > 0
-                    const cellKey = `${user.id}-${format(day, 'yyyy-MM-dd')}`
-                    const isDragOver = dragOverCell === cellKey
-                    const dateStr = format(day, 'yyyy-MM-dd')
-                    // Vérifier si cette cellule est dans la preview du resize (même utilisateur)
-                    const isUserMatch = resizeState && String(resizeState.affectation.utilisateur_id) === String(user.id)
-                    const isAddPreview = isUserMatch && resizePreview.datesToAdd.includes(dateStr)
-                    const isRemovePreview = isUserMatch && resizePreview.datesToRemove.includes(dateStr)
-                    // Couleur de la preview = couleur du chantier (ajout) ou rouge (suppression)
-                    const previewColor = isAddPreview
-                      ? (resizeState?.affectation.chantier_couleur || '#3498DB')
-                      : isRemovePreview
-                        ? '#EF4444' // Rouge pour suppression
-                        : undefined
+                return (
+                  <div
+                    key={`user-${user.id}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="group/row grid hover:bg-gray-50 transition-colors min-w-max" style={gridStyle}>
+                      {/* Colonne utilisateur */}
+                      <div className="px-4 py-3 flex items-center gap-3 border-r">
+                        {/* Avatar */}
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                          style={{ backgroundColor: user.couleur || '#3498DB' }}
+                        >
+                          {user.prenom?.[0]}{user.nom?.[0]}
+                        </div>
 
-                    return (
-                      <div
-                        key={day.toISOString()}
-                        data-cell-day={dateStr}
-                        tabIndex={0}
-                        role="gridcell"
-                        aria-label={`${user.prenom} ${user.nom}, ${format(day, 'EEEE d MMMM', { locale: fr })}`}
-                        onClick={() => !hasAffectations && !resizeState && onCellClick(user.id, day)}
-                        onDoubleClick={() => !resizeState && onCellClick(user.id, day)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            onCellClick(user.id, day)
-                          }
-                        }}
-                        onDragOver={(e) => handleDragOver(e, cellKey)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, user.id, day)}
-                        className={`p-1 border-r last:border-r-0 min-h-[60px] overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
-                          isToday(day) ? 'bg-primary-50/50' : ''
-                        } ${
-                          isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
-                        } ${
-                          !hasAffectations && !isAddPreview ? 'cursor-pointer hover:bg-gray-100' : ''
-                        }`}
-                        style={previewColor ? {
-                          backgroundColor: `${previewColor}50`,
-                        } : undefined}
-                      >
-                        <div className="space-y-1 w-full">
-                          {cellAffectations.map(aff => (
-                            <AffectationBlock
-                              key={aff.id}
-                              affectation={aff}
-                              onClick={() => onAffectationClick(aff)}
-                              onDelete={() => onAffectationDelete(aff)}
-                              compact={cellAffectations.length > 1}
-                              draggable={!!onAffectationMove}
-                              onDragStart={(e) => handleDragStart(e, aff)}
-                              onDragEnd={handleDragEnd}
-                              resizable={!!onAffectationResize || !!onAffectationsDelete}
-                              onResizeStart={(direction, e) => handleResizeStart(aff, direction, e)}
-                              isResizing={resizeState?.affectation.id === aff.id}
-                              proportionalHeight={true}
-                              cellHeight={60}
-                            />
-                          ))}
+                        {/* Nom */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
+                            {user.prenom} {user.nom}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDuplicate(user.id)
+                            }}
+                            className="p-1 rounded hover:bg-gray-200"
+                            title="Dupliquer la semaine"
+                          >
+                            <Copy className="w-4 h-4 text-gray-500" />
+                          </button>
+                          {user.telephone && (
+                            <a
+                              href={`tel:${user.telephone}`}
+                              onClick={e => e.stopPropagation()}
+                              className="p-1 rounded hover:bg-gray-200"
+                              title="Appeler"
+                            >
+                              <Phone className="w-4 h-4 text-gray-500" />
+                            </a>
+                          )}
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
-          )
-        })}
-      </div>
+
+                      {/* Cellules des jours */}
+                      {days.map(day => {
+                        const cellAffectations = getAffectationsForCell(user.id, day)
+                        const hasAffectations = cellAffectations.length > 0
+                        const cellKey = `${user.id}-${format(day, 'yyyy-MM-dd')}`
+                        const isDragOver = dragOverCell === cellKey
+                        const dateStr = format(day, 'yyyy-MM-dd')
+                        // Vérifier si cette cellule est dans la preview du resize (même utilisateur)
+                        const isUserMatch = resizeState && String(resizeState.affectation.utilisateur_id) === String(user.id)
+                        const isAddPreview = isUserMatch && resizePreview.datesToAdd.includes(dateStr)
+                        const isRemovePreview = isUserMatch && resizePreview.datesToRemove.includes(dateStr)
+                        // Couleur de la preview = couleur du chantier (ajout) ou rouge (suppression)
+                        const previewColor = isAddPreview
+                          ? (resizeState?.affectation.chantier_couleur || '#3498DB')
+                          : isRemovePreview
+                            ? '#EF4444' // Rouge pour suppression
+                            : undefined
+
+                        return (
+                          <div
+                            key={day.toISOString()}
+                            data-cell-day={dateStr}
+                            tabIndex={0}
+                            role="gridcell"
+                            aria-label={`${user.prenom} ${user.nom}, ${format(day, 'EEEE d MMMM', { locale: fr })}`}
+                            onClick={() => !hasAffectations && !resizeState && onCellClick(user.id, day)}
+                            onDoubleClick={() => !resizeState && onCellClick(user.id, day)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                onCellClick(user.id, day)
+                              }
+                            }}
+                            onDragOver={(e) => handleDragOver(e, cellKey)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, user.id, day)}
+                            className={`p-1 border-r last:border-r-0 min-h-[60px] overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
+                              isToday(day) ? 'bg-primary-50/50' : ''
+                            } ${
+                              isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
+                            } ${
+                              !hasAffectations && !isAddPreview ? 'cursor-pointer hover:bg-gray-100' : ''
+                            }`}
+                            style={previewColor ? {
+                              backgroundColor: `${previewColor}50`,
+                            } : undefined}
+                          >
+                            <div className="space-y-1 w-full">
+                              {cellAffectations.map(aff => (
+                                <AffectationBlock
+                                  key={aff.id}
+                                  affectation={aff}
+                                  onClick={() => onAffectationClick(aff)}
+                                  onDelete={() => onAffectationDelete(aff)}
+                                  compact={cellAffectations.length > 1}
+                                  draggable={!!onAffectationMove}
+                                  onDragStart={(e) => handleDragStart(e, aff)}
+                                  onDragEnd={handleDragEnd}
+                                  resizable={!!onAffectationResize || !!onAffectationsDelete}
+                                  onResizeStart={(direction, e) => handleResizeStart(aff, direction, e)}
+                                  isResizing={resizeState?.affectation.id === aff.id}
+                                  proportionalHeight={true}
+                                  cellHeight={60}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              }
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Mode semaine: affichage normal sans virtualisation */
+        <div className="divide-y">
+          {sortedCategories.map(([category, users]) => {
+            const categoryInfo = PLANNING_CATEGORIES[category as PlanningCategory] || { label: category, color: '#607D8B' }
+            const isExpanded = expandedMetiers.includes(category)
+
+            return (
+              <div key={category}>
+                {/* Header du groupe (catégorie) */}
+                <button
+                  onClick={() => onToggleMetier(category)}
+                  className="w-full grid bg-gray-50 hover:bg-gray-100 transition-colors" style={gridStyle}
+                >
+                  <div className="px-4 py-2 flex items-center gap-2 border-r">
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                    <span
+                      className="px-2 py-0.5 rounded text-xs font-medium text-white"
+                      style={{ backgroundColor: categoryInfo.color }}
+                    >
+                      {categoryInfo.label}
+                    </span>
+                    <span className="text-sm text-gray-500">({users.length})</span>
+                  </div>
+                  {/* Colonnes vides pour aligner */}
+                  {days.map(day => (
+                    <div key={day.toISOString()} className="border-r last:border-r-0" />
+                  ))}
+                </button>
+
+                {/* Utilisateurs du groupe */}
+                {isExpanded && users.map(user => (
+                  <div
+                    key={user.id}
+                    className="group/row grid hover:bg-gray-50 transition-colors" style={gridStyle}
+                  >
+                    {/* Colonne utilisateur */}
+                    <div className="px-4 py-3 flex items-center gap-3 border-r">
+                      {/* Avatar */}
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                        style={{ backgroundColor: user.couleur || '#3498DB' }}
+                      >
+                        {user.prenom?.[0]}{user.nom?.[0]}
+                      </div>
+
+                      {/* Nom */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {user.prenom} {user.nom}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDuplicate(user.id)
+                          }}
+                          className="p-1 rounded hover:bg-gray-200"
+                          title="Dupliquer la semaine"
+                        >
+                          <Copy className="w-4 h-4 text-gray-500" />
+                        </button>
+                        {user.telephone && (
+                          <a
+                            href={`tel:${user.telephone}`}
+                            onClick={e => e.stopPropagation()}
+                            className="p-1 rounded hover:bg-gray-200"
+                            title="Appeler"
+                          >
+                            <Phone className="w-4 h-4 text-gray-500" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cellules des jours */}
+                    {days.map(day => {
+                      const cellAffectations = getAffectationsForCell(user.id, day)
+                      const hasAffectations = cellAffectations.length > 0
+                      const cellKey = `${user.id}-${format(day, 'yyyy-MM-dd')}`
+                      const isDragOver = dragOverCell === cellKey
+                      const dateStr = format(day, 'yyyy-MM-dd')
+                      // Vérifier si cette cellule est dans la preview du resize (même utilisateur)
+                      const isUserMatch = resizeState && String(resizeState.affectation.utilisateur_id) === String(user.id)
+                      const isAddPreview = isUserMatch && resizePreview.datesToAdd.includes(dateStr)
+                      const isRemovePreview = isUserMatch && resizePreview.datesToRemove.includes(dateStr)
+                      // Couleur de la preview = couleur du chantier (ajout) ou rouge (suppression)
+                      const previewColor = isAddPreview
+                        ? (resizeState?.affectation.chantier_couleur || '#3498DB')
+                        : isRemovePreview
+                          ? '#EF4444' // Rouge pour suppression
+                          : undefined
+
+                      return (
+                        <div
+                          key={day.toISOString()}
+                          data-cell-day={dateStr}
+                          tabIndex={0}
+                          role="gridcell"
+                          aria-label={`${user.prenom} ${user.nom}, ${format(day, 'EEEE d MMMM', { locale: fr })}`}
+                          onClick={() => !hasAffectations && !resizeState && onCellClick(user.id, day)}
+                          onDoubleClick={() => !resizeState && onCellClick(user.id, day)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              onCellClick(user.id, day)
+                            }
+                          }}
+                          onDragOver={(e) => handleDragOver(e, cellKey)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, user.id, day)}
+                          className={`p-1 border-r last:border-r-0 min-h-[60px] overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
+                            isToday(day) ? 'bg-primary-50/50' : ''
+                          } ${
+                            isDragOver ? 'bg-blue-100 ring-2 ring-inset ring-blue-400' : ''
+                          } ${
+                            !hasAffectations && !isAddPreview ? 'cursor-pointer hover:bg-gray-100' : ''
+                          }`}
+                          style={previewColor ? {
+                            backgroundColor: `${previewColor}50`,
+                          } : undefined}
+                        >
+                          <div className="space-y-1 w-full">
+                            {cellAffectations.map(aff => (
+                              <AffectationBlock
+                                key={aff.id}
+                                affectation={aff}
+                                onClick={() => onAffectationClick(aff)}
+                                onDelete={() => onAffectationDelete(aff)}
+                                compact={cellAffectations.length > 1}
+                                draggable={!!onAffectationMove}
+                                onDragStart={(e) => handleDragStart(e, aff)}
+                                onDragEnd={handleDragEnd}
+                                resizable={!!onAffectationResize || !!onAffectationsDelete}
+                                onResizeStart={(direction, e) => handleResizeStart(aff, direction, e)}
+                                isResizing={resizeState?.affectation.id === aff.id}
+                                proportionalHeight={true}
+                                cellHeight={60}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Message si aucun utilisateur */}
       {utilisateurs.length === 0 && (

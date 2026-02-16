@@ -190,7 +190,10 @@ DEV-01 a DEV-07, DEV-09, DEV-10, DEV-12, DEV-13, DEV-15, DEV-17, DEV-18, DEV-19,
 - Page dediee interventions (actuellement backend only pour le frontend)
 - Couverture tests frontend > 50% (actuellement ~29%)
 - Mode offline complet (PWA)
-- 17 TODO/FIXME restants dans le code (surtout export RGPD — sources de donnees manquantes)
+- 16 TODO/FIXME restants dans le code (surtout export RGPD — sources de donnees manquantes)
+- SSE (Server-Sent Events) pour notifications temps reel (evaluation: GO, 12h dev)
+- Badging API + Push Notifications ameliorees (alternative widgets PWA)
+- srcset responsive images frontend (backend WebP variants prets)
 
 ## Infrastructure disponible
 
@@ -247,7 +250,7 @@ Fichiers icones dans `frontend/public/` :
 
 ## Derniere mise a jour
 
-Session 2026-02-15 - UX Sprint: 5 améliorations + correctifs validation agents
+Session 2026-02-15 - Finalisation UX: WebP backend, evaluations techniques, bundle analyzer
 - **Optimistic updates**: Mutations TanStack Query v5 (7 mutations, onMutate/onError/onSettled) dans useChantierDetail + useReservationModal
 - **Batch validation FdH**: Hook useMultiSelect générique + BatchActionsBar fixe bottom + intégration TimesheetGrid avec checkboxes
 - **Design tokens**: Système tokens centralisé (theme/tokens.ts), 6 palettes sémantiques, migration Button/Badge/Card/EmptyState/Skeleton

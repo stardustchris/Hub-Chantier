@@ -1,0 +1,66 @@
+{
+  "name": "Hub Chantier - Greg Construction",
+  "short_name": "Hub Chantier",
+  "description": "Application de gestion de chantiers pour Greg Construction",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pointer",
+      "short_name": "Pointer",
+      "description": "Clock in/out",
+      "url": "/?action=clock",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Planning",
+      "short_name": "Planning",
+      "description": "Voir le planning",
+      "url": "/planning",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Feuilles d'heures",
+      "short_name": "Heures",
+      "description": "Saisir les heures",
+      "url": "/feuilles-heures",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [],
+  "lang": "fr",
+  "dir": "ltr"
+}

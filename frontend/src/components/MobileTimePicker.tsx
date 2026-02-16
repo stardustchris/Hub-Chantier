@@ -190,6 +190,8 @@ function MobileTimePicker({
   const handleConfirm = useCallback(() => {
     const newValue = `${hours[tempHour]}:${minutes[Math.floor(tempMinute / step)]}`
     onChange(newValue)
+    // Sauvegarder la dernière heure saisie (6.3.2)
+    localStorage.setItem('hub_last_time_entry', newValue)
     setIsOpen(false)
   }, [tempHour, tempMinute, hours, minutes, step, onChange])
 
@@ -345,6 +347,27 @@ function MobileTimePicker({
               >
                 Maintenant
               </button>
+              {/* Bouton "Dernière" si une dernière heure existe (6.3.2) */}
+              {(() => {
+                const lastTime = localStorage.getItem('hub_last_time_entry')
+                if (lastTime) {
+                  const [lastH, lastM] = lastTime.split(':').map(Number)
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTempHour(lastH)
+                        setTempMinute(lastM)
+                      }}
+                      className="px-3 py-2 text-sm font-medium text-primary-700 bg-primary-50 border border-primary-300 rounded-lg hover:bg-primary-100"
+                      title="Dernière heure saisie"
+                    >
+                      {lastTime}
+                    </button>
+                  )
+                }
+                return null
+              })()}
               <button
                 type="button"
                 onClick={() => {

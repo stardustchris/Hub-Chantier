@@ -84,6 +84,9 @@ class TestUploadResponseModels:
 
         assert response.url == "/uploads/test.jpg"
         assert response.thumbnail_url is None
+        assert response.webp_thumbnail_url is None
+        assert response.webp_medium_url is None
+        assert response.webp_large_url is None
 
     def test_upload_response_with_thumbnail(self):
         """Test UploadResponse avec thumbnail."""
@@ -93,6 +96,19 @@ class TestUploadResponseModels:
         )
 
         assert response.thumbnail_url == "/uploads/thumb_test.jpg"
+
+    def test_upload_response_with_webp_variants(self):
+        """Test UploadResponse avec variantes WebP (P2-5)."""
+        response = UploadResponse(
+            url="/uploads/test.jpg",
+            webp_thumbnail_url="/uploads/webp/test_thumbnail.webp",
+            webp_medium_url="/uploads/webp/test_medium.webp",
+            webp_large_url="/uploads/webp/test_large.webp",
+        )
+
+        assert response.webp_thumbnail_url == "/uploads/webp/test_thumbnail.webp"
+        assert response.webp_medium_url == "/uploads/webp/test_medium.webp"
+        assert response.webp_large_url == "/uploads/webp/test_large.webp"
 
     def test_multi_upload_response(self):
         """Test MultiUploadResponse."""
@@ -118,6 +134,11 @@ class TestUploadRoutesWithApp:
             "/uploads/thumbnails/thumb_test.jpg"
         )
         service.upload_chantier_photo.return_value = "/uploads/chantiers/test.jpg"
+        service.generate_webp_variants.return_value = {
+            "webp_thumbnail_url": "/uploads/webp/test_thumbnail.webp",
+            "webp_medium_url": "/uploads/webp/test_medium.webp",
+            "webp_large_url": "/uploads/webp/test_large.webp",
+        }
         return service
 
     @pytest.fixture
@@ -152,7 +173,12 @@ class TestUploadRoutesWithApp:
         response = client.post("/uploads/profile", files=files)
 
         assert response.status_code == 200
-        assert response.json()["url"] == "/uploads/profiles/test.jpg"
+        data = response.json()
+        assert data["url"] == "/uploads/profiles/test.jpg"
+        # P2-5: WebP variants returned
+        assert data["webp_thumbnail_url"] == "/uploads/webp/test_thumbnail.webp"
+        assert data["webp_medium_url"] == "/uploads/webp/test_medium.webp"
+        assert data["webp_large_url"] == "/uploads/webp/test_large.webp"
 
     def test_upload_profile_photo_error(self, client, mock_file_service):
         """Test erreur upload photo de profil."""

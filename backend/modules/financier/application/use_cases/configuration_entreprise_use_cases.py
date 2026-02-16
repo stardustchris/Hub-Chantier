@@ -37,6 +37,12 @@ def _build_dto(config: ConfigurationEntreprise) -> ConfigurationEntrepriseDTO:
         coeff_charges_patronales=config.coeff_charges_patronales,
         coeff_heures_sup=config.coeff_heures_sup,
         coeff_heures_sup_2=config.coeff_heures_sup_2,
+        coeff_productivite=config.coeff_productivite,
+        coeff_charges_ouvrier=config.coeff_charges_ouvrier,
+        coeff_charges_etam=config.coeff_charges_etam,
+        coeff_charges_cadre=config.coeff_charges_cadre,
+        seuil_alerte_budget_pct=config.seuil_alerte_budget_pct,
+        seuil_alerte_budget_critique_pct=config.seuil_alerte_budget_critique_pct,
         notes=config.notes,
         updated_at=config.updated_at,
         updated_by=config.updated_by,
@@ -133,6 +139,18 @@ class UpdateConfigurationEntrepriseUseCase:
             config.coeff_heures_sup = dto.coeff_heures_sup
         if dto.coeff_heures_sup_2 is not None:
             config.coeff_heures_sup_2 = dto.coeff_heures_sup_2
+        if dto.coeff_productivite is not None:
+            config.coeff_productivite = dto.coeff_productivite
+        if dto.coeff_charges_ouvrier is not None:
+            config.coeff_charges_ouvrier = dto.coeff_charges_ouvrier
+        if dto.coeff_charges_etam is not None:
+            config.coeff_charges_etam = dto.coeff_charges_etam
+        if dto.coeff_charges_cadre is not None:
+            config.coeff_charges_cadre = dto.coeff_charges_cadre
+        if dto.seuil_alerte_budget_pct is not None:
+            config.seuil_alerte_budget_pct = dto.seuil_alerte_budget_pct
+        if dto.seuil_alerte_budget_critique_pct is not None:
+            config.seuil_alerte_budget_critique_pct = dto.seuil_alerte_budget_critique_pct
         if dto.notes is not None:
             config.notes = dto.notes
 

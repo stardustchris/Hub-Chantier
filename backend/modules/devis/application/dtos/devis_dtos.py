@@ -71,6 +71,7 @@ class DevisCreateDTO:
     taux_marge_materiel: Optional[Decimal] = None
     taux_marge_deplacement: Optional[Decimal] = None
     coefficient_frais_generaux: Decimal = COEFF_FRAIS_GENERAUX  # Defaut = config entreprise (SSOT)
+    coefficient_productivite: Optional[Decimal] = None
     retenue_garantie_pct: Decimal = Decimal("0")
     notes: Optional[str] = None
     acompte_pct: Decimal = Decimal("30")
@@ -81,6 +82,7 @@ class DevisCreateDTO:
     duree_estimee_jours: Optional[int] = None
     notes_bas_page: Optional[str] = None
     nom_interne: Optional[str] = None
+    commentaire: Optional[str] = None
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -112,6 +114,7 @@ class DevisUpdateDTO:
     taux_marge_materiel: Optional[Decimal] = None
     taux_marge_deplacement: Optional[Decimal] = None
     coefficient_frais_generaux: Optional[Decimal] = None
+    coefficient_productivite: Optional[Decimal] = None
     retenue_garantie_pct: Optional[Decimal] = None
     notes: Optional[str] = None
     acompte_pct: Optional[Decimal] = None
@@ -122,6 +125,7 @@ class DevisUpdateDTO:
     duree_estimee_jours: Optional[int] = None
     notes_bas_page: Optional[str] = None
     nom_interne: Optional[str] = None
+    commentaire: Optional[str] = None
     commercial_id: Optional[int] = None
     conducteur_id: Optional[int] = None
 
@@ -232,6 +236,7 @@ class DevisDetailDTO:
     taux_marge_materiel: Optional[str]
     taux_marge_deplacement: Optional[str]
     coefficient_frais_generaux: str
+    coefficient_productivite: Optional[str]
     retenue_garantie_pct: str
     montant_retenue_garantie: str
     montant_net_a_payer: str
@@ -254,6 +259,7 @@ class DevisDetailDTO:
     duree_estimee_jours: Optional[int] = None
     notes_bas_page: Optional[str] = None
     nom_interne: Optional[str] = None
+    commentaire: Optional[str] = None
     # DEV-08: Versioning
     type_version: str = "originale"
     numero_version: int = 1
@@ -292,6 +298,7 @@ class DevisDetailDTO:
             taux_marge_materiel=str(devis.taux_marge_materiel) if devis.taux_marge_materiel is not None else None,
             taux_marge_deplacement=str(devis.taux_marge_deplacement) if devis.taux_marge_deplacement is not None else None,
             coefficient_frais_generaux=str(devis.coefficient_frais_generaux),
+            coefficient_productivite=str(devis.coefficient_productivite) if devis.coefficient_productivite is not None else None,
             retenue_garantie_pct=str(devis.retenue_garantie_pct),
             montant_retenue_garantie=str(devis.montant_retenue_garantie),
             montant_net_a_payer=str(devis.montant_net_a_payer),
@@ -313,6 +320,7 @@ class DevisDetailDTO:
             duree_estimee_jours=devis.duree_estimee_jours,
             notes_bas_page=devis.notes_bas_page,
             nom_interne=devis.nom_interne,
+            commentaire=devis.commentaire,
             lots=lots or [],
             # DEV-08: Versioning
             type_version=devis.type_version.value,
@@ -344,6 +352,7 @@ class DevisDetailDTO:
             "taux_marge_materiel": self.taux_marge_materiel,
             "taux_marge_deplacement": self.taux_marge_deplacement,
             "coefficient_frais_generaux": self.coefficient_frais_generaux,
+            "coefficient_productivite": self.coefficient_productivite,
             "retenue_garantie_pct": self.retenue_garantie_pct,
             "montant_retenue_garantie": self.montant_retenue_garantie,
             "montant_net_a_payer": self.montant_net_a_payer,
@@ -365,6 +374,7 @@ class DevisDetailDTO:
             "duree_estimee_jours": self.duree_estimee_jours,
             "notes_bas_page": self.notes_bas_page,
             "nom_interne": self.nom_interne,
+            "commentaire": self.commentaire,
             "lots": [l.to_dict() for l in self.lots],
             "type_version": self.type_version,
             "numero_version": self.numero_version,
