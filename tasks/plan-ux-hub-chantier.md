@@ -1,7 +1,7 @@
 # Plan d'amelioration UX — Hub Chantier
 
 > Synthese de 4 audits d'experts (Accessibilite, Performance, React/UX, Business/Metier)
-> Date : 2026-02-13 | Mis a jour : 2026-02-15 (session 2)
+> Date : 2026-02-13 | Mis a jour : 2026-02-16 (cloture — 109/109 items, score 92/100)
 
 ---
 
