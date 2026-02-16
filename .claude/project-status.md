@@ -38,7 +38,7 @@
 ### Code source
 
 - **Backend** : 16 modules, 35+ entites, 50+ value objects, 150+ use cases, 40+ repositories
-- **Frontend** : 12 pages, 30 hooks, 23 services, 90+ composants, 4 contextes (+ OnboardingContext)
+- **Frontend** : 29 pages, 30+ hooks, 23 services, 90+ composants, 5 contextes (Auth, Tasks, Toast, Demo, Onboarding)
 - **Architecture** : Clean Architecture 4 layers (Domain > Application > Adapters > Infrastructure)
 
 ### Tests
@@ -55,6 +55,62 @@
 - **security-auditor** : 9/10 PASS — RGPD Art. 17 implemente (droit a l'oubli), 0 CRITICAL, 1 HIGH (faux positif)
 - **SessionLocal() dans routes** : 0 (toutes migrees vers Depends(get_db))
 - **Module auth** : Status WARN → Production-ready avec droit a l'oubli RGPD
+
+## UX — Etat global (109/109 items — 100%)
+
+> Plan UX complet : `tasks/plan-ux-hub-chantier.md`
+
+### Scores UX
+
+| Dimension | Score initial | Score actuel | Delta |
+|-----------|---------------|--------------|-------|
+| Accessibilite (WCAG 2.1 AA) | 72/100 | **95/100** | +23 |
+| Performance | 55/100 | **92/100** | +37 |
+| Design System | 40/100 | **95/100** | +55 |
+| UX Terrain (mobile) | 50/100 | **90/100** | +40 |
+| Onboarding | 10/100 | **75/100** | +65 |
+| Temps de reponse percu | 60/100 | **92/100** | +32 |
+| **Score global** | | **92/100** | |
+
+### Ce qui est en place
+
+- **Design System** : 10 composants UI (Button, Card, Badge, Input, Modal, Tooltip, Skeleton, EmptyState, Breadcrumb, Spinner), tokens semantiques (6 palettes), Tailwind integre
+- **Accessibilite WCAG 2.1 AA** : contraste 8.1:1 (AAA), focus trap 34 modales, skip link, aria-labels, document.title 29 pages, prefers-reduced-motion
+- **Performance** : React Query v5 (cache persistent, optimistic updates 7 mutations), 8 vendor chunks, lazy Firebase/Recharts, React.memo, useVirtualizer
+- **Mobile-first** : touch targets 48px+ (56px actions rapides), mode offline queue chiffree AES-GCM, FAB 4 actions, navigation par role
+- **Onboarding** : tours interactifs par role (compagnon, chef, conducteur, admin), aide contextuelle PageHelp, indices progressifs, mode demo
+- **Intelligence** : notifications groupees (polling 30s), validation batch FdH, recherche globale Cmd+K fuzzy, preferences notifications 6 categories
+- **Differenciation** : annotation photo canvas (5 outils), gamification toggleable (streaks, progress, leaderboard), presets horaires, PWA shortcuts
+- **Images** : WebP backend (3 tailles: 300/800/1200px), `<picture>` frontend avec fallback PNG, lazy loading, aspect-ratio CLS
+
+### Composants (90+)
+
+- **UI primitives** : 10 (Button, Card, Badge, Input, Modal, Tooltip, Skeleton, EmptyState, Breadcrumb, Spinner)
+- **Dashboard** : 9 cards (Clock, Weather, Stats, Planning, Team, Documents, Alerts, Pipeline, Progress)
+- **Planning** : 5 (Grid, Toolbar, Modal, Block, Navigation)
+- **Onboarding** : 4 (OnboardingProvider, OnboardingTooltip, OnboardingWelcome, tours.ts)
+- **Common** : 11 (CommandPalette, FAB, PhotoAnnotator, GDPR, MentionInput, Notifications, PageHelp, ProgressiveHints, KeyboardShortcuts, OfflineIndicator, BatchActionsBar)
+
+### Pages (29)
+
+Auth (4), Core (10 — Dashboard, Chantiers, Planning, Heures, Formulaires, Documents, Logistique, Users), Financier (6 — Dashboard, Budgets, Achats, Fournisseurs, Pennylane, Parametres), Devis (5 — Dashboard, List, Detail, Generator, Preview, Articles), Settings (3 — Security, Webhooks, APIKeys)
+
+### Hooks (30+)
+
+useChantierDetail, useDashboardFeed, useNotifications, useOfflineStorage, useDocumentTitle, useFocusTrap, useKeyboardShortcuts, useCommandPalette, usePointageStreak, useMultiSelect, useRouteChangeReset, useProgressiveHint, etc.
+
+### Gaps restants (faible priorite)
+
+- Saisie vocale pointages (concurrents l'ont)
+- Annotation PDF avancee
+- Widgets natifs mobile (necessite Capacitor.js, ~5j)
+- WebSocket (seulement si >50 utilisateurs, evaluation faite)
+- srcset responsive images (backend WebP variants prets)
+- Badging API + Push Notifications ameliorees
+
+### Verdict UX
+
+**Production-ready pour pilote 20 employes / 5 chantiers.** Rivalise avec Fieldwire/PlanGrid/Procore sur les features cles, se differencie par le module financier complet, le feed social, et la gamification.
 
 ## Features recentes
 
@@ -189,11 +245,13 @@ DEV-01 a DEV-07, DEV-09, DEV-10, DEV-12, DEV-13, DEV-15, DEV-17, DEV-18, DEV-19,
 - Page dediee signalements (actuellement dans chantier detail)
 - Page dediee interventions (actuellement backend only pour le frontend)
 - Couverture tests frontend > 50% (actuellement ~29%)
-- Mode offline complet (PWA)
 - 16 TODO/FIXME restants dans le code (surtout export RGPD — sources de donnees manquantes)
-- SSE (Server-Sent Events) pour notifications temps reel (evaluation: GO, 12h dev)
+- SSE (Server-Sent Events) pour notifications temps reel (evaluation: GO, 12h dev — polling 30s suffit pour 20 users)
 - Badging API + Push Notifications ameliorees (alternative widgets PWA)
 - srcset responsive images frontend (backend WebP variants prets)
+- Saisie vocale pointages (concurrents l'ont, basse priorite)
+- Annotation PDF avancee (basse priorite)
+- Widgets natifs mobile via Capacitor.js (~5j, si besoin)
 
 ## Infrastructure disponible
 
@@ -250,7 +308,7 @@ Fichiers icones dans `frontend/public/` :
 
 ## Derniere mise a jour
 
-Session 2026-02-15 - Finalisation UX: WebP backend, evaluations techniques, bundle analyzer
+Session 2026-02-16 - Audit UX global + mise a jour documentation (109/109 items, score 92/100)
 - **Optimistic updates**: Mutations TanStack Query v5 (7 mutations, onMutate/onError/onSettled) dans useChantierDetail + useReservationModal
 - **Batch validation FdH**: Hook useMultiSelect générique + BatchActionsBar fixe bottom + intégration TimesheetGrid avec checkboxes
 - **Design tokens**: Système tokens centralisé (theme/tokens.ts), 6 palettes sémantiques, migration Button/Badge/Card/EmptyState/Skeleton
