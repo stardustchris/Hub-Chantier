@@ -8,6 +8,40 @@ import { renderHook, act } from '@testing-library/react'
 import { useReservationModal } from './useReservationModal'
 import type { Ressource, Reservation } from '../types/logistique'
 
+// Mock TanStack Query (hook uses useMutation + useQueryClient)
+const mockQueryClient = {
+  invalidateQueries: vi.fn(),
+  cancelQueries: vi.fn().mockResolvedValue(undefined),
+  getQueryData: vi.fn(),
+  getQueriesData: vi.fn().mockReturnValue([]),
+  setQueriesData: vi.fn(),
+  setQueryData: vi.fn(),
+}
+
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => mockQueryClient,
+  useMutation: ({ mutationFn, onSuccess, onError, onMutate, onSettled }: any) => {
+    const mutate = async (...args: any[]) => {
+      try {
+        const context = onMutate ? await onMutate(...args) : undefined
+        const result = await mutationFn(...args)
+        onSuccess?.(result, args[0], context)
+        onSettled?.(result, null, args[0], context)
+        return result
+      } catch (err) {
+        onError?.(err, args[0], undefined)
+        onSettled?.(undefined, err, args[0], undefined)
+        throw err
+      }
+    }
+    return {
+      mutate: (...args: any[]) => { mutate(...args).catch(() => {}) },
+      mutateAsync: mutate,
+      isPending: false,
+    }
+  },
+}))
+
 // Mocks
 vi.mock('../services/logistique', () => ({
   createReservation: vi.fn(),

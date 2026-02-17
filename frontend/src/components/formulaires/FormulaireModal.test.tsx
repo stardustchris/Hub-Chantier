@@ -16,6 +16,12 @@ import userEvent from '@testing-library/user-event'
 import FormulaireModal from './FormulaireModal'
 import type { TemplateFormulaire, FormulaireRempli, ChampRempli } from '../../types'
 
+// Mock useFocusTrap to prevent auto-focus stealing during userEvent.type()
+vi.mock('../../hooks/useFocusTrap', () => ({
+  useFocusTrap: () => ({ current: null }),
+  default: () => ({ current: null }),
+}))
+
 // Mock FieldRenderer
 vi.mock('./FieldRenderer', () => ({
   default: ({ champ, value, onChange, error }: {

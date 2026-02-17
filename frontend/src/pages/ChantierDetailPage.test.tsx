@@ -34,6 +34,18 @@ vi.mock('../services/chantiers', () => ({
     changeStatut: vi.fn(),
     addUser: vi.fn(),
     removeUser: vi.fn(),
+    listContacts: vi.fn(),
+    demarrer: vi.fn(),
+    receptionner: vi.fn(),
+    fermer: vi.fn(),
+    addConducteur: vi.fn(),
+    addChef: vi.fn(),
+    addOuvrier: vi.fn(),
+    removeConducteur: vi.fn(),
+    removeChef: vi.fn(),
+    removeOuvrier: vi.fn(),
+    getGoogleMapsUrl: vi.fn(() => ''),
+    getWazeUrl: vi.fn(() => ''),
   },
 }))
 
@@ -109,6 +121,10 @@ vi.mock('../components/chantiers', () => ({
   ChantierLogistiqueSection: () => <div data-testid="logistique-section">Logistique</div>,
 }))
 
+vi.mock('../components/financier/BudgetTab', () => ({
+  default: () => <div data-testid="budget-tab">Budget</div>,
+}))
+
 const renderPage = (chantierId = '1') => {
   return render(
     <MemoryRouter initialEntries={[`/chantiers/${chantierId}`]}>
@@ -126,6 +142,7 @@ describe('ChantierDetailPage', () => {
     vi.mocked(chantiersService.getById).mockResolvedValue(mockChantier as any)
     vi.mocked(chantiersService.getNavigationIds).mockResolvedValue({ prevId: null, nextId: '2' })
     vi.mocked(chantiersService.delete).mockResolvedValue(undefined)
+    vi.mocked(chantiersService.listContacts).mockResolvedValue([])
     vi.mocked(usersService.list).mockResolvedValue({ items: [], total: 0, page: 1, size: 50, pages: 1 })
     vi.mocked(planningService.getByChantier).mockResolvedValue([])
   })
@@ -143,7 +160,8 @@ describe('ChantierDetailPage', () => {
     it('affiche le nom du chantier', async () => {
       renderPage()
       await waitFor(() => {
-        expect(screen.getByText('Chantier Test')).toBeInTheDocument()
+        // Name appears in both breadcrumb and h1 - use h1 heading for specificity
+        expect(screen.getByRole('heading', { name: 'Chantier Test' })).toBeInTheDocument()
       })
     })
 

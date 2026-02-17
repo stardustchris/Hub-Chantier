@@ -14,6 +14,12 @@ import userEvent from '@testing-library/user-event'
 import { DossierModal, DocumentEditModal } from './DocumentModal'
 import type { Dossier, Document } from '../../types/documents'
 
+// Mock useFocusTrap to prevent auto-focus stealing during userEvent.type()
+vi.mock('../../hooks/useFocusTrap', () => ({
+  useFocusTrap: () => ({ current: null }),
+  default: () => ({ current: null }),
+}))
+
 const createMockDossier = (overrides: Partial<Dossier> = {}): Dossier => ({
   id: 1,
   chantier_id: 1,

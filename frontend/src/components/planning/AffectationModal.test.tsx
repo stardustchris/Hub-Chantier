@@ -518,14 +518,13 @@ describe('AffectationModal', () => {
       expect(screen.getByPlaceholderText("Commentaire visible uniquement par l'affecté")).toBeInTheDocument()
     })
 
-    it('permet de saisir une note', async () => {
-      const user = userEvent.setup()
+    it('permet de saisir une note', () => {
       render(<AffectationModal {...defaultProps} />)
 
       const noteInput = screen.getByPlaceholderText("Commentaire visible uniquement par l'affecté")
-      await user.type(noteInput, 'Ceci est ma note')
+      fireEvent.change(noteInput, { target: { value: 'Ceci est ma note' } })
 
-      expect(screen.getByDisplayValue('Ceci est ma note')).toBeInTheDocument()
+      expect(noteInput).toHaveValue('Ceci est ma note')
     })
 
     it('a une limite de 500 caractères', () => {

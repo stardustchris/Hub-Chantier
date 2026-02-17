@@ -55,6 +55,21 @@ const mockUseFeuillesHeures = {
   selectedUserId: null,
   selectedChantierId: null,
   isValidateur: false,
+  multiSelect: {
+    selectedIds: [] as string[],
+    count: 0,
+    toggleItem: vi.fn(),
+    deselectAll: vi.fn(),
+    selectAll: vi.fn(),
+  },
+  batchSuccess: '',
+  selectablePointages: [],
+  heuresPrevuesParChantier: {},
+  handleSelectAll: vi.fn(),
+  handleBatchValidate: vi.fn(),
+  handleBatchReject: vi.fn(),
+  isBatchValidating: false,
+  isBatchRejecting: false,
 }
 
 vi.mock('../hooks/useFeuillesHeures', () => ({
@@ -90,6 +105,17 @@ vi.mock('../components/pointages', () => ({
   PayrollMacrosConfig: ({ isOpen }: { isOpen: boolean }) => (
     isOpen ? <div data-testid="macros-modal">Macros Modal</div> : null
   ),
+  BatchActionsBar: ({ selectedCount }: { selectedCount: number }) => (
+    <div data-testid="batch-actions-bar">{selectedCount} selected</div>
+  ),
+  ValidationDashboard: () => (
+    <div data-testid="validation-dashboard">Validation Dashboard</div>
+  ),
+}))
+
+// Mock ProgressiveHintBanner
+vi.mock('../components/common/ProgressiveHintBanner', () => ({
+  default: () => <div data-testid="hint-banner">Hint</div>,
 }))
 
 const renderPage = () => {
@@ -111,6 +137,16 @@ describe('FeuillesHeuresPage', () => {
       loading: false,
       error: '',
       modalOpen: false,
+      batchSuccess: '',
+      isValidateur: false,
+      multiSelect: {
+        selectedIds: [],
+        count: 0,
+        toggleItem: vi.fn(),
+        deselectAll: vi.fn(),
+        selectAll: vi.fn(),
+      },
+      selectablePointages: [],
     })
   })
 

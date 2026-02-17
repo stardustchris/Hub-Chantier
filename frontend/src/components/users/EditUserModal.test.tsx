@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { EditUserModal } from './EditUserModal'
 import type { User } from '../../types'
@@ -120,7 +120,7 @@ describe('EditUserModal', () => {
 
       // Le composant tente d'accéder à user.metiers qui n'existe pas dans le type
       // On vérifie juste que le composant se rend sans crash
-      expect(screen.getByText('Métiers (jusqu\'à 5)')).toBeInTheDocument()
+      expect(screen.getByText('Métier')).toBeInTheDocument()
     })
 
     it('affiche le téléphone initial si défini', () => {
@@ -157,24 +157,20 @@ describe('EditUserModal', () => {
   })
 
   describe('Modification des champs', () => {
-    it('permet de modifier le prénom', async () => {
-      const user = userEvent.setup()
+    it('permet de modifier le prénom', () => {
       render(<EditUserModal {...defaultProps} />)
 
       const prenomInput = screen.getAllByRole('textbox')[0]
-      await user.clear(prenomInput)
-      await user.type(prenomInput, 'Pierre')
+      fireEvent.change(prenomInput, { target: { value: 'Pierre' } })
 
       expect(prenomInput).toHaveValue('Pierre')
     })
 
-    it('permet de modifier le nom', async () => {
-      const user = userEvent.setup()
+    it('permet de modifier le nom', () => {
       render(<EditUserModal {...defaultProps} />)
 
       const nomInput = screen.getAllByRole('textbox')[1]
-      await user.clear(nomInput)
-      await user.type(nomInput, 'Martin')
+      fireEvent.change(nomInput, { target: { value: 'Martin' } })
 
       expect(nomInput).toHaveValue('Martin')
     })
@@ -202,8 +198,8 @@ describe('EditUserModal', () => {
     it('affiche le sélecteur de métiers', () => {
       render(<EditUserModal {...defaultProps} />)
 
-      // Vérifie que le label du champ métiers est présent
-      expect(screen.getByText('Métiers (jusqu\'à 5)')).toBeInTheDocument()
+      // Vérifie que le label du champ métier est présent
+      expect(screen.getByText('Métier')).toBeInTheDocument()
     })
   })
 
@@ -259,15 +255,14 @@ describe('EditUserModal', () => {
       expect(screen.getByDisplayValue('0611223344')).toBeInTheDocument()
     })
 
-    it('permet de modifier le contact d\'urgence', async () => {
-      const user = userEvent.setup()
+    it('permet de modifier le contact d\'urgence', () => {
       render(<EditUserModal {...defaultProps} />)
 
       // Find the contact urgence inputs (last two text inputs)
       const textInputs = screen.getAllByRole('textbox')
       const contactNomInput = textInputs[textInputs.length - 2]
 
-      await user.type(contactNomInput, 'Contact Test')
+      fireEvent.change(contactNomInput, { target: { value: 'Contact Test' } })
       expect(contactNomInput).toHaveValue('Contact Test')
     })
   })
@@ -278,8 +273,7 @@ describe('EditUserModal', () => {
       render(<EditUserModal {...defaultProps} />)
 
       const prenomInput = screen.getAllByRole('textbox')[0]
-      await user.clear(prenomInput)
-      await user.type(prenomInput, 'Pierre')
+      fireEvent.change(prenomInput, { target: { value: 'Pierre' } })
 
       await user.click(screen.getByText('Enregistrer'))
 
@@ -436,8 +430,7 @@ describe('EditUserModal', () => {
       render(<EditUserModal {...defaultProps} user={createMockUser({ taux_horaire: 25.5 })} />)
 
       const tauxInput = screen.getByPlaceholderText('Ex: 25.50')
-      await user.clear(tauxInput)
-      await user.type(tauxInput, '35.75')
+      fireEvent.change(tauxInput, { target: { value: '35.75' } })
       await user.click(screen.getByText('Enregistrer'))
 
       await waitFor(() => {
@@ -473,8 +466,7 @@ describe('EditUserModal', () => {
       })
     })
 
-    it('accepte des valeurs décimales pour le taux_horaire', async () => {
-      const user = userEvent.setup()
+    it('accepte des valeurs décimales pour le taux_horaire', () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAdminUser,
         login: vi.fn(),
@@ -485,8 +477,7 @@ describe('EditUserModal', () => {
       render(<EditUserModal {...defaultProps} user={createMockUser()} />)
 
       const tauxInput = screen.getByPlaceholderText('Ex: 25.50')
-      await user.clear(tauxInput)
-      await user.type(tauxInput, '28.756')
+      fireEvent.change(tauxInput, { target: { value: '28.756' } })
 
       expect(tauxInput).toHaveValue(28.756)
     })

@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useChantierDetail } from './useChantierDetail'
 import { chantiersService } from '../services/chantiers'
 import { usersService } from '../services/users'
@@ -76,9 +77,18 @@ const mockUsers = [
   createMockUser({ id: 'u4', nom: 'Petit', prenom: 'Marie', role: 'conducteur' }),
 ]
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <MemoryRouter>{children}</MemoryRouter>
-)
+const wrapper = ({ children }: { children: ReactNode }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+  return (
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </MemoryRouter>
+  )
+}
 
 describe('useChantierDetail', () => {
   beforeEach(() => {
@@ -209,6 +219,8 @@ describe('useChantierDetail', () => {
     it('met a jour le chantier', async () => {
       const updatedChantier = { ...mockChantier, nom: 'Updated Name' }
       vi.mocked(chantiersService.update).mockResolvedValue(updatedChantier as never)
+      // After invalidateQueries, getById is called again — return updated data
+      vi.mocked(chantiersService.getById).mockResolvedValue(updatedChantier as never)
 
       const { result } = renderHook(
         () => useChantierDetail({ chantierId: '1' }),
@@ -223,7 +235,9 @@ describe('useChantierDetail', () => {
         await result.current.handleUpdateChantier({ nom: 'Updated Name' })
       })
 
-      expect(result.current.chantier?.nom).toBe('Updated Name')
+      await waitFor(() => {
+        expect(result.current.chantier?.nom).toBe('Updated Name')
+      })
       expect(mockAddToast).toHaveBeenCalledWith({
         message: 'Chantier mis a jour',
         type: 'success',
@@ -257,6 +271,8 @@ describe('useChantierDetail', () => {
     it('demarre le chantier', async () => {
       const startedChantier = { ...mockChantier, statut: 'en_cours' }
       vi.mocked(chantiersService.demarrer).mockResolvedValue(startedChantier as never)
+      // After invalidateQueries, getById is called again — return started data
+      vi.mocked(chantiersService.getById).mockResolvedValue(startedChantier as never)
 
       const { result } = renderHook(
         () => useChantierDetail({ chantierId: '1' }),
@@ -271,7 +287,9 @@ describe('useChantierDetail', () => {
         await result.current.handleChangeStatut('demarrer')
       })
 
-      expect(result.current.chantier?.statut).toBe('en_cours')
+      await waitFor(() => {
+        expect(result.current.chantier?.statut).toBe('en_cours')
+      })
       expect(mockAddToast).toHaveBeenCalledWith({
         message: 'Statut mis a jour',
         type: 'success',
@@ -392,10 +410,12 @@ describe('useChantierDetail', () => {
         result.current.handleRemoveUser('u1', 'conducteur')
       })
 
-      // Verifie que l'utilisateur est retire de la liste localement
-      expect(result.current.chantier?.conducteurs).not.toContainEqual(
-        expect.objectContaining({ id: 'u1' })
-      )
+      // Verifie que l'utilisateur est retire de la liste localement (optimistic update via setQueryData)
+      await waitFor(() => {
+        expect(result.current.chantier?.conducteurs).not.toContainEqual(
+          expect.objectContaining({ id: 'u1' })
+        )
+      })
 
       // Verifie que showUndoToast a ete appele
       expect(mockShowUndoToast).toHaveBeenCalled()

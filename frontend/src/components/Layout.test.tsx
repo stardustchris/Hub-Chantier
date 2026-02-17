@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './Layout'
 import type { User } from '../types'
 
@@ -34,6 +35,21 @@ vi.mock('../contexts/AuthContext', () => ({
   }),
 }))
 
+// Mock useServerEvents (uses EventSource not available in jsdom)
+vi.mock('../hooks/useServerEvents', () => ({
+  useServerEvents: () => {},
+}))
+
+// Mock DemoContext (OnboardingProvider inside Layout uses useDemo)
+vi.mock('../contexts/DemoContext', () => ({
+  useDemo: () => ({
+    isDemoMode: false,
+    enableDemoMode: vi.fn(),
+    disableDemoMode: vi.fn(),
+    demoData: {},
+  }),
+}))
+
 // Mock useNotifications pour les tests de notifications
 vi.mock('../hooks/useNotifications', () => ({
   useNotifications: () => ({
@@ -47,20 +63,38 @@ vi.mock('../hooks/useNotifications', () => ({
         created_at: new Date().toISOString(),
       },
     ],
+    groupedNotifications: [
+      {
+        notification: {
+          id: '1',
+          type: 'chantier_assignment',
+          title: 'Nouvelle affectation',
+          message: 'Nouvelle affectation sur le chantier Villa Duplex',
+          is_read: false,
+          created_at: new Date().toISOString(),
+        },
+      },
+    ],
     unreadCount: 1,
     loading: false,
     markAsRead: vi.fn(),
     markAllAsRead: vi.fn(),
     fetchNotifications: vi.fn(),
+    toggleGroupExpansion: vi.fn(),
   }),
 }))
 
 const renderWithRouter = (initialRoute = '/') => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Layout>
-        <div data-testid="page-content">Contenu de la page</div>
-      </Layout>
+      <QueryClientProvider client={queryClient}>
+        <Layout>
+          <div data-testid="page-content">Contenu de la page</div>
+        </Layout>
+      </QueryClientProvider>
     </MemoryRouter>
   )
 }

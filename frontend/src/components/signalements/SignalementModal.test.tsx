@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignalementModal from './SignalementModal'
 import { createMockSignalement } from '../../fixtures'
@@ -23,6 +23,22 @@ const mockUpdateSignalement = vi.fn()
 vi.mock('../../services/signalements', () => ({
   createSignalement: (...args: unknown[]) => mockCreateSignalement(...args),
   updateSignalement: (...args: unknown[]) => mockUpdateSignalement(...args),
+}))
+
+vi.mock('../formulaires/PhotoCapture', () => ({
+  default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <input
+      type="text"
+      data-testid="photo-capture"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="photo-capture"
+    />
+  ),
+}))
+
+vi.mock('../common/PhotoAnnotator', () => ({
+  default: () => null,
 }))
 
 
@@ -116,7 +132,7 @@ describe('SignalementModal', () => {
       expect(screen.getByLabelText('Assigner à')).toBeInTheDocument()
       expect(screen.getByLabelText('Date de résolution souhaitée')).toBeInTheDocument()
       expect(screen.getByLabelText('Localisation')).toBeInTheDocument()
-      expect(screen.getByLabelText('URL de la photo')).toBeInTheDocument()
+      expect(screen.getByText('Photo')).toBeInTheDocument()
     })
 
     it('affiche les utilisateurs dans le selecteur', () => {
@@ -136,22 +152,20 @@ describe('SignalementModal', () => {
   })
 
   describe('Saisie des champs', () => {
-    it('permet de saisir le titre', async () => {
-      const user = userEvent.setup()
+    it('permet de saisir le titre', () => {
       render(<SignalementModal {...defaultProps} />)
 
       const titreInput = screen.getByPlaceholderText('Titre du signalement')
-      await user.type(titreInput, 'Nouveau titre')
+      fireEvent.change(titreInput, { target: { value: 'Nouveau titre' } })
 
       expect(titreInput).toHaveValue('Nouveau titre')
     })
 
-    it('permet de saisir la description', async () => {
-      const user = userEvent.setup()
+    it('permet de saisir la description', () => {
       render(<SignalementModal {...defaultProps} />)
 
       const descriptionInput = screen.getByPlaceholderText('Décrivez le problème en détail...')
-      await user.type(descriptionInput, 'Nouvelle description')
+      fireEvent.change(descriptionInput, { target: { value: 'Nouvelle description' } })
 
       expect(descriptionInput).toHaveValue('Nouvelle description')
     })
@@ -166,12 +180,11 @@ describe('SignalementModal', () => {
       expect(prioriteSelect).toHaveValue('critique')
     })
 
-    it('permet de saisir la localisation', async () => {
-      const user = userEvent.setup()
+    it('permet de saisir la localisation', () => {
       render(<SignalementModal {...defaultProps} />)
 
       const localisationInput = screen.getByPlaceholderText('Ex: Étage 2, Salle B...')
-      await user.type(localisationInput, 'Bureau 101')
+      fireEvent.change(localisationInput, { target: { value: 'Bureau 101' } })
 
       expect(localisationInput).toHaveValue('Bureau 101')
     })
@@ -182,8 +195,8 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} />)
 
-      await user.type(screen.getByPlaceholderText('Titre du signalement'), 'Mon signalement')
-      await user.type(screen.getByPlaceholderText('Décrivez le problème en détail...'), 'Description detaillee')
+      fireEvent.change(screen.getByPlaceholderText('Titre du signalement'), { target: { value: 'Mon signalement' } })
+      fireEvent.change(screen.getByPlaceholderText('Décrivez le problème en détail...'), { target: { value: 'Description detaillee' } })
       await user.selectOptions(screen.getByLabelText('Priorité'), 'haute')
       await user.selectOptions(screen.getByLabelText('Assigner à'), '2')
 
@@ -209,8 +222,8 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} />)
 
-      await user.type(screen.getByPlaceholderText('Titre du signalement'), 'Titre')
-      await user.type(screen.getByPlaceholderText('Décrivez le problème en détail...'), 'Description')
+      fireEvent.change(screen.getByPlaceholderText('Titre du signalement'), { target: { value: 'Titre' } })
+      fireEvent.change(screen.getByPlaceholderText('Décrivez le problème en détail...'), { target: { value: 'Description' } })
 
       await user.click(screen.getByText('Créer'))
 
@@ -227,8 +240,7 @@ describe('SignalementModal', () => {
       render(<SignalementModal {...defaultProps} signalement={createMockSignalement()} />)
 
       const titreInput = screen.getByDisplayValue('Signalement Test')
-      await user.clear(titreInput)
-      await user.type(titreInput, 'Titre modifie')
+      fireEvent.change(titreInput, { target: { value: 'Titre modifie' } })
 
       await user.click(screen.getByText('Modifier'))
 
@@ -250,8 +262,8 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} />)
 
-      await user.type(screen.getByPlaceholderText('Titre du signalement'), 'Titre')
-      await user.type(screen.getByPlaceholderText('Décrivez le problème en détail...'), 'Description')
+      fireEvent.change(screen.getByPlaceholderText('Titre du signalement'), { target: { value: 'Titre' } })
+      fireEvent.change(screen.getByPlaceholderText('Décrivez le problème en détail...'), { target: { value: 'Description' } })
 
       await user.click(screen.getByText('Créer'))
 
@@ -266,8 +278,8 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} />)
 
-      await user.type(screen.getByPlaceholderText('Titre du signalement'), 'Titre')
-      await user.type(screen.getByPlaceholderText('Décrivez le problème en détail...'), 'Description')
+      fireEvent.change(screen.getByPlaceholderText('Titre du signalement'), { target: { value: 'Titre' } })
+      fireEvent.change(screen.getByPlaceholderText('Décrivez le problème en détail...'), { target: { value: 'Description' } })
 
       await user.click(screen.getByText('Créer'))
 
@@ -284,8 +296,8 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} />)
 
-      await user.type(screen.getByPlaceholderText('Titre du signalement'), 'Titre')
-      await user.type(screen.getByPlaceholderText('Décrivez le problème en détail...'), 'Description')
+      fireEvent.change(screen.getByPlaceholderText('Titre du signalement'), { target: { value: 'Titre' } })
+      fireEvent.change(screen.getByPlaceholderText('Décrivez le problème en détail...'), { target: { value: 'Description' } })
 
       await user.click(screen.getByText('Créer'))
 
@@ -300,8 +312,8 @@ describe('SignalementModal', () => {
       const user = userEvent.setup()
       render(<SignalementModal {...defaultProps} />)
 
-      await user.type(screen.getByPlaceholderText('Titre du signalement'), 'Titre')
-      await user.type(screen.getByPlaceholderText('Décrivez le problème en détail...'), 'Description')
+      fireEvent.change(screen.getByPlaceholderText('Titre du signalement'), { target: { value: 'Titre' } })
+      fireEvent.change(screen.getByPlaceholderText('Décrivez le problème en détail...'), { target: { value: 'Description' } })
 
       await user.click(screen.getByText('Créer'))
 

@@ -19,6 +19,12 @@ import EditChantierModal from './EditChantierModal'
 import type { Chantier } from '../../types'
 import { ToastProvider } from '../../contexts/ToastContext'
 
+// Mock useFocusTrap to prevent auto-focus stealing during userEvent.type()
+vi.mock('../../hooks/useFocusTrap', () => ({
+  useFocusTrap: () => ({ current: null }),
+  default: () => ({ current: null }),
+}))
+
 // Mock geocoding service
 vi.mock('../../services/geocoding', () => ({
   geocodeAddress: vi.fn().mockResolvedValue({

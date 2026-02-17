@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CreateWebhookModal from './CreateWebhookModal'
 import type { CreateWebhookResponse } from '../../services/webhooks'
@@ -117,9 +117,9 @@ describe('CreateWebhookModal', () => {
     const user = userEvent.setup()
     render(<CreateWebhookModal {...defaultProps} />)
 
-    // Act
+    // Act - use fireEvent.change to avoid useFocusTrap focus interference
     const customInput = screen.getByPlaceholderText('Pattern personnalisé...')
-    await user.type(customInput, 'custom.event')
+    fireEvent.change(customInput, { target: { value: 'custom.event' } })
     await user.click(screen.getByText('Ajouter'))
 
     // Assert

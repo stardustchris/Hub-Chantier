@@ -103,6 +103,40 @@ vi.mock('./contexts/ToastContext', () => ({
   }),
 }))
 
+// Mock DemoContext (DemoProvider wraps children, useDemo for DemoBanner)
+vi.mock('./contexts/DemoContext', () => ({
+  DemoProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useDemo: () => ({
+    isDemoMode: false,
+    enableDemoMode: vi.fn(),
+    disableDemoMode: vi.fn(),
+    demoData: {},
+  }),
+}))
+
+// Mock useKeyboardShortcuts (uses useNavigate, called before BrowserRouter in App)
+vi.mock('./hooks/useKeyboardShortcuts', () => ({
+  useKeyboardShortcuts: () => ({}),
+}))
+
+// Mock useRouteChangeReset
+vi.mock('./hooks/useRouteChangeReset', () => ({
+  useRouteChangeReset: () => {},
+}))
+
+// Mock new components added to App
+vi.mock('./components/common/CommandPalette', () => ({
+  default: () => null,
+}))
+
+vi.mock('./components/common/GDPRBanner', () => ({
+  GDPRBanner: () => null,
+}))
+
+vi.mock('./components/common/KeyboardShortcutsHelp', () => ({
+  default: () => null,
+}))
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()

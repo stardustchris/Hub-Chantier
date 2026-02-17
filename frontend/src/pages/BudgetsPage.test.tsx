@@ -31,9 +31,8 @@ vi.mock('../services/logger', () => ({
 
 // Mock Layout component
 vi.mock('../components/Layout', () => ({
-  default: ({ children, title }: { children: React.ReactNode; title: string }) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="layout">
-      <h1>{title}</h1>
       {children}
     </div>
   ),
@@ -115,7 +114,8 @@ describe('BudgetsPage', () => {
     it('affiche le titre "Budgets"', async () => {
       renderBudgetsPage()
       await waitFor(() => {
-        expect(screen.getByText('Budgets')).toBeInTheDocument()
+        // The page title is set via useDocumentTitle; the visible page shows stats
+        expect(screen.getByText('Budget Prévisionnel')).toBeInTheDocument()
       })
     })
 
