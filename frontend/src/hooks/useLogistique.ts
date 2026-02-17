@@ -30,6 +30,11 @@ interface UseLogistiqueReturn {
   chantiers: Chantier[]
   reservationsEnAttente: Reservation[]
 
+  // All ressources (for planning tab selector)
+  allRessources: Ressource[]
+  loadingRessources: boolean
+  loadAllRessources: () => Promise<void>
+
   // Resource selection
   selectedRessource: Ressource | null
   setSelectedRessource: (ressource: Ressource | null) => void
@@ -78,6 +83,10 @@ export function useLogistique(): UseLogistiqueReturn {
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [reservationsEnAttente, setReservationsEnAttente] = useState<Reservation[]>([])
 
+  // All ressources (for planning tab resource selector)
+  const [allRessources, setAllRessources] = useState<Ressource[]>([])
+  const [loadingRessources, setLoadingRessources] = useState(false)
+
   // Selection state
   const [selectedRessource, setSelectedRessource] = useState<Ressource | null>(null)
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
@@ -115,6 +124,19 @@ export function useLogistique(): UseLogistiqueReturn {
       setReservationsEnAttente(data?.items || [])
     } catch (err) {
       logger.error('Erreur chargement reservations en attente', err, { context: 'useLogistique' })
+    }
+  }, [])
+
+  // Load all ressources (for planning tab resource selector)
+  const loadAllRessources = useCallback(async () => {
+    setLoadingRessources(true)
+    try {
+      const data = await listRessources({ limit: 1000 })
+      setAllRessources(data?.items || [])
+    } catch (err) {
+      logger.error('Erreur chargement ressources', err, { context: 'useLogistique' })
+    } finally {
+      setLoadingRessources(false)
     }
   }, [])
 
@@ -204,6 +226,11 @@ export function useLogistique(): UseLogistiqueReturn {
     // Data
     chantiers,
     reservationsEnAttente,
+
+    // All ressources
+    allRessources,
+    loadingRessources,
+    loadAllRessources,
 
     // Selection
     selectedRessource,

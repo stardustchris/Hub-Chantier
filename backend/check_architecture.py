@@ -30,14 +30,39 @@ ALLOWED_DOMAIN_IMPORTS = {
     'abc', 'uuid', 'dataclasses', 'decimal', 're'
 }
 
+def _is_inside_type_checking(node: ast.AST, tree: ast.Module) -> bool:
+    """Vérifie si un noeud est à l'intérieur d'un bloc 'if TYPE_CHECKING:'."""
+    for top_node in ast.walk(tree):
+        if isinstance(top_node, ast.If):
+            # Vérifie 'if TYPE_CHECKING:' ou 'if typing.TYPE_CHECKING:'
+            test = top_node.test
+            is_type_checking = False
+            if isinstance(test, ast.Name) and test.id == 'TYPE_CHECKING':
+                is_type_checking = True
+            elif isinstance(test, ast.Attribute) and test.attr == 'TYPE_CHECKING':
+                is_type_checking = True
+
+            if is_type_checking:
+                # Vérifie si le noeud import est dans le body de ce if
+                for child in ast.walk(top_node):
+                    if child is node:
+                        return True
+    return False
+
+
 def extract_imports(file_path: str) -> List[Tuple[int, str, str]]:
-    """Extrait tous les imports d'un fichier Python."""
+    """Extrait tous les imports d'un fichier Python (hors TYPE_CHECKING)."""
     imports = []
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             tree = ast.parse(f.read(), filename=file_path)
 
         for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                # Ignorer les imports dans les blocs TYPE_CHECKING
+                if _is_inside_type_checking(node, tree):
+                    continue
+
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imports.append((node.lineno, alias.name, f"import {alias.name}"))

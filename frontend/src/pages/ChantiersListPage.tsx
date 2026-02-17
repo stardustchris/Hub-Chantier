@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
-import { chantiersService } from '../services/chantiers'
+import { useState, useCallback } from 'react'
 import { useListPage } from '../hooks/useListPage'
+import { useCreateChantier } from '../hooks/useCreateChantier'
 import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import { ChantierCard, CreateChantierModal, TempContact, TempPhase } from '../components/chantiers'
@@ -22,6 +22,14 @@ export default function ChantiersListPage() {
   // Document title
   useDocumentTitle('Chantiers')
 
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const {
+    allChantiers,
+    fetchChantiers,
+    handleCreateChantier,
+  } = useCreateChantier()
+
   // Use the reusable list hook for pagination, search, and loading
   const {
     items: chantiers,
@@ -36,70 +44,27 @@ export default function ChantiersListPage() {
     clearFilters,
     reload,
   } = useListPage<Chantier>({
-    fetchItems: (params) => chantiersService.list({
-      page: params.page,
-      size: params.size,
-      search: params.search,
-      statut: params.statut as ChantierStatut | undefined,
-    }),
+    fetchItems: fetchChantiers,
     pageSize: 12,
   })
 
-  // Separate state for all chantiers (used for stat counters)
-  const [allChantiers, setAllChantiers] = useState<Chantier[]>([])
-  const [showCreateModal, setShowCreateModal] = useState(false)
-
   const statutFilter = (filters.statut as ChantierStatut | undefined) || ''
 
-  // Load all chantiers for counters (backend already excludes special chantiers)
-  const loadAllChantiers = useCallback(async () => {
-    try {
-      const response = await chantiersService.list({ size: 500 })
-      setAllChantiers(response.items)
-    } catch (error) {
-      logger.error('Error loading all chantiers', error, { context: 'ChantiersListPage' })
-    }
-  }, [])
-
-  // Load all chantiers on mount
-  useEffect(() => {
-    loadAllChantiers()
-  }, [loadAllChantiers])
-
-  const handleCreateChantier = useCallback(async (
+  const handleCreate = useCallback(async (
     data: ChantierCreate,
     contacts: TempContact[],
     phases: TempPhase[]
   ) => {
-    // Create the chantier
-    const chantier = await chantiersService.create(data)
-
-    // Create contacts (ignore empty ones)
-    for (const contact of contacts) {
-      if (contact.nom && contact.telephone) {
-        await chantiersService.addContact(chantier.id, {
-          nom: contact.nom,
-          telephone: contact.telephone,
-          profession: contact.profession || undefined,
-        })
-      }
+    try {
+      await handleCreateChantier(data, contacts, phases, async () => {
+        setShowCreateModal(false)
+        await reload()
+      })
+    } catch (error) {
+      logger.error('Error creating chantier', error, { context: 'ChantiersListPage' })
+      throw error
     }
-
-    // Create phases (ignore empty ones)
-    for (const phase of phases) {
-      if (phase.nom) {
-        await chantiersService.addPhase(chantier.id, {
-          nom: phase.nom,
-          date_debut: phase.date_debut || undefined,
-          date_fin: phase.date_fin || undefined,
-        })
-      }
-    }
-
-    setShowCreateModal(false)
-    await loadAllChantiers()
-    await reload()
-  }, [loadAllChantiers, reload])
+  }, [handleCreateChantier, reload])
 
   const handleSetStatutFilter = useCallback((statut: ChantierStatut | '') => {
     setFilter('statut', statut || undefined)
@@ -271,7 +236,7 @@ export default function ChantiersListPage() {
         {showCreateModal && (
           <CreateChantierModal
             onClose={() => setShowCreateModal(false)}
-            onSubmit={handleCreateChantier}
+            onSubmit={handleCreate}
             usedColors={chantiers.map(c => c.couleur).filter(Boolean) as string[]}
           />
         )}

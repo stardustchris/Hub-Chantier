@@ -17,10 +17,13 @@ class TestInviteUserUseCase:
     def setup_method(self):
         """Configuration avant chaque test."""
         self.mock_user_repo = Mock(spec=UserRepository)
-        self.use_case = InviteUserUseCase(user_repository=self.mock_user_repo)
+        self.mock_email_service = Mock()
+        self.use_case = InviteUserUseCase(
+            user_repository=self.mock_user_repo,
+            email_service=self.mock_email_service,
+        )
 
-    @patch('modules.auth.application.use_cases.invite_user.email_service')
-    def test_invite_user_success(self, mock_email_service):
+    def test_invite_user_success(self):
         """Test: invitation réussie d'un nouvel utilisateur."""
         self.mock_user_repo.exists_by_email.return_value = False
         self.mock_user_repo.exists_by_code.return_value = False
@@ -55,7 +58,7 @@ class TestInviteUserUseCase:
 
         self.mock_user_repo.exists_by_email.assert_called_once()
         self.mock_user_repo.save.assert_called_once()
-        mock_email_service.send_invitation_email.assert_called_once()
+        self.mock_email_service.send_invitation_email.assert_called_once()
 
     def test_invite_user_email_already_exists(self):
         """Test: échec si l'email existe déjà."""

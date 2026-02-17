@@ -8,9 +8,10 @@ from pathlib import Path
 import os
 
 from ..infrastructure.config import settings
+from ..application.ports.email_service import EmailServicePort
 
 
-class EmailService:
+class EmailService(EmailServicePort):
     """
     Service pour envoyer des emails.
 

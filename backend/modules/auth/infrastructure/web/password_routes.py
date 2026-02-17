@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from shared.infrastructure.database import get_db
 from shared.infrastructure.password_hasher import PasswordHasher
+from shared.infrastructure.email_service import email_service
 from ...application.use_cases.request_password_reset import RequestPasswordResetUseCase
 from ...application.use_cases.reset_password import ResetPasswordUseCase
 from ...application.use_cases.change_password import ChangePasswordUseCase
@@ -92,7 +93,7 @@ def get_request_password_reset_use_case(
 ) -> RequestPasswordResetUseCase:
     """Factory pour RequestPasswordResetUseCase."""
     user_repository = SQLAlchemyUserRepository(db)
-    return RequestPasswordResetUseCase(user_repository)
+    return RequestPasswordResetUseCase(user_repository, email_service)
 
 
 def get_reset_password_use_case(
@@ -118,7 +119,7 @@ def get_invite_user_use_case(
 ) -> InviteUserUseCase:
     """Factory pour InviteUserUseCase."""
     user_repository = SQLAlchemyUserRepository(db)
-    return InviteUserUseCase(user_repository)
+    return InviteUserUseCase(user_repository, email_service)
 
 
 def get_accept_invitation_use_case(

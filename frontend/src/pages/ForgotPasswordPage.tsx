@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
-import { authService } from '../services/auth';
+import { useForgotPassword } from '../hooks/useForgotPassword';
 
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
@@ -16,8 +16,8 @@ export function ForgotPasswordPage(): React.ReactElement {
   const { addToast } = useToast();
 
   const [email, setEmail] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+
+  const { isLoading, emailSent, requestPasswordReset, resetEmailSent } = useForgotPassword();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,19 +27,12 @@ export function ForgotPasswordPage(): React.ReactElement {
       return;
     }
 
-    setIsLoading(true);
+    const { wasSuccess } = await requestPasswordReset(email);
 
-    try {
-      await authService.requestPasswordReset(email);
-      setEmailSent(true);
+    if (wasSuccess) {
       addToast({ message: 'Email de réinitialisation envoyé !', type: 'success' });
-    } catch (_err) {
-      // Pour des raisons de sécurité, on affiche toujours le même message
-      // même si l'email n'existe pas dans la base
-      setEmailSent(true);
+    } else {
       addToast({ message: 'Si cet email existe, vous recevrez un lien de réinitialisation', type: 'info' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -96,7 +89,7 @@ export function ForgotPasswordPage(): React.ReactElement {
 
               <button
                 onClick={() => {
-                  setEmailSent(false);
+                  resetEmailSent();
                   setEmail('');
                 }}
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"

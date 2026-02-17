@@ -7,10 +7,8 @@
 import React, { useState, useEffect } from 'react'
 import { Truck, Calendar, Clock, AlertCircle } from 'lucide-react'
 import { useLogistique } from '../hooks'
-import { logger } from '../services/logger'
 import { RessourceList, RessourceModal, ReservationCalendar, ReservationModal } from '../components/logistique'
 import Layout from '../components/Layout'
-import { listRessources } from '../services/logistique'
 import type { Ressource } from '../types/logistique'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
@@ -23,6 +21,9 @@ const LogistiquePage: React.FC = () => {
     setActiveTab,
     chantiers,
     reservationsEnAttente,
+    allRessources,
+    loadingRessources,
+    loadAllRessources,
     selectedRessource,
     setSelectedRessource,
     showModal,
@@ -37,33 +38,17 @@ const LogistiquePage: React.FC = () => {
     tabs,
   } = useLogistique()
 
-  // Liste des ressources pour le sélecteur
-  const [allRessources, setAllRessources] = useState<Ressource[]>([])
-  const [loadingRessources, setLoadingRessources] = useState(false)
   const [viewAllResources, setViewAllResources] = useState(true)
 
   // State pour le modal de ressource
   const [showRessourceModal, setShowRessourceModal] = useState(false)
   const [editingRessource, setEditingRessource] = useState<Ressource | undefined>(undefined)
 
-  // Charger toutes les ressources
-  const loadAllRessources = async () => {
-    setLoadingRessources(true)
-    try {
-      const data = await listRessources({ limit: 1000 })
-      setAllRessources(data?.items || [])
-    } catch (error) {
-      logger.error('Erreur chargement ressources', error, { context: 'LogistiquePage' })
-    } finally {
-      setLoadingRessources(false)
-    }
-  }
-
   useEffect(() => {
     if (activeTab === 'planning' || activeTab === 'ressources') {
       loadAllRessources()
     }
-  }, [activeTab])
+  }, [activeTab, loadAllRessources])
 
   // Handlers pour le modal de ressource
   const handleCreateRessource = () => {

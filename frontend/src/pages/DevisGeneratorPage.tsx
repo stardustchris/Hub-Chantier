@@ -3,7 +3,7 @@
  * Remplace DevisDetailPage (conservee sur /devis/:id/legacy)
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import GeneratorHeader from '../components/devis/generator/GeneratorHeader'
@@ -18,8 +18,7 @@ import RecapitulatifSidebar from '../components/devis/generator/RecapitulatifSid
 import OptionsInternesSidebar from '../components/devis/generator/OptionsInternesSidebar'
 import BatiprixSidebar from '../components/devis/generator/BatiprixSidebar'
 import ActionsRapidesSidebar from '../components/devis/generator/ActionsRapidesSidebar'
-import { devisService } from '../services/devis'
-import type { DevisDetail } from '../types'
+import { useDevisDetail } from '../hooks/useDevisDetail'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { Breadcrumb } from '../components/ui/Breadcrumb'
@@ -27,31 +26,27 @@ import { Breadcrumb } from '../components/ui/Breadcrumb'
 export default function DevisGeneratorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [devis, setDevis] = useState<DevisDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const recalcTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const devisId = Number(id)
+  const {
+    devis,
+    loading,
+    error,
+    loadDevis,
+    soumettre,
+    valider,
+    retournerBrouillon,
+    accepter,
+    refuser,
+    marquerPerdu,
+    calculerTotaux,
+  } = useDevisDetail(devisId)
+
   const isEditable = devis?.statut === 'brouillon'
 
   // Document title
   useDocumentTitle(devis ? `Devis ${devis.numero}` : 'Devis')
-
-  const loadDevis = useCallback(async () => {
-    if (!devisId || isNaN(devisId)) return
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await devisService.getDevis(devisId)
-      setDevis(data)
-    } catch (error) {
-      console.error('Erreur lors du chargement du devis:', error)
-      setError('Erreur lors du chargement du devis')
-    } finally {
-      setLoading(false)
-    }
-  }, [devisId])
 
   useEffect(() => {
     loadDevis()
@@ -61,26 +56,22 @@ export default function DevisGeneratorPage() {
   const recalcAndReload = useCallback(() => {
     clearTimeout(recalcTimer.current)
     recalcTimer.current = setTimeout(async () => {
-      try {
-        await devisService.calculerTotaux(devisId)
-      } catch (error) {
-        console.error('Erreur lors du recalcul des totaux du devis:', error)
-      }
+      await calculerTotaux()
       loadDevis()
     }, 500)
-  }, [devisId, loadDevis])
+  }, [calculerTotaux, loadDevis])
 
   useEffect(() => {
     return () => clearTimeout(recalcTimer.current)
   }, [])
 
   // Workflow handlers
-  const handleSoumettre = async () => { await devisService.soumettreDevis(devisId); await loadDevis() }
-  const handleValider = async () => { await devisService.validerDevis(devisId); await loadDevis() }
-  const handleRetournerBrouillon = async () => { await devisService.retournerBrouillon(devisId); await loadDevis() }
-  const handleAccepter = async () => { await devisService.accepterDevis(devisId); await loadDevis() }
-  const handleRefuser = async (motif?: string) => { if (motif) { await devisService.refuserDevis(devisId, motif); await loadDevis() } }
-  const handlePerdu = async (motif?: string) => { if (motif) { await devisService.marquerPerdu(devisId, motif); await loadDevis() } }
+  const handleSoumettre = async () => { await soumettre() }
+  const handleValider = async () => { await valider() }
+  const handleRetournerBrouillon = async () => { await retournerBrouillon() }
+  const handleAccepter = async () => { await accepter() }
+  const handleRefuser = async (motif?: string) => { if (motif) { await refuser(motif) } }
+  const handlePerdu = async (motif?: string) => { if (motif) { await marquerPerdu(motif) } }
 
 
 

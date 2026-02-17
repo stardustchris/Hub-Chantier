@@ -3,7 +3,7 @@
 from ...domain.repositories.user_repository import UserRepository
 from ...domain.value_objects import PasswordHash
 from ...domain.exceptions import InvalidInvitationTokenError, WeakPasswordError
-from shared.infrastructure.password_hasher import PasswordHasher
+from ...domain.services.password_service import PasswordService
 
 
 class AcceptInvitationUseCase:
@@ -16,7 +16,7 @@ class AcceptInvitationUseCase:
     def __init__(
         self,
         user_repository: UserRepository,
-        password_hasher: PasswordHasher,
+        password_hasher: PasswordService,
     ) -> None:
         """
         Initialise le use case.

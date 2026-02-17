@@ -18,9 +18,13 @@ class TestInviteUserWithTauxHoraire:
         """Configuration avant chaque test."""
         # Mock
         self.mock_user_repo = Mock(spec=UserRepository)
+        self.mock_email_service = Mock()
 
         # Use case à tester
-        self.use_case = InviteUserUseCase(user_repository=self.mock_user_repo)
+        self.use_case = InviteUserUseCase(
+            user_repository=self.mock_user_repo,
+            email_service=self.mock_email_service,
+        )
 
         # Configurer les mocks par défaut
         self.mock_user_repo.exists_by_email.return_value = False

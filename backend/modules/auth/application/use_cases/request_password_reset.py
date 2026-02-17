@@ -6,7 +6,7 @@ from typing import Optional
 
 from ...domain.repositories.user_repository import UserRepository
 from ...domain.exceptions import UserNotFoundError
-from shared.infrastructure.email_service import email_service
+from shared.application.ports.email_service import EmailServicePort
 
 
 class RequestPasswordResetUseCase:
@@ -16,14 +16,20 @@ class RequestPasswordResetUseCase:
     Génère un token de réinitialisation et envoie un email.
     """
 
-    def __init__(self, user_repository: UserRepository) -> None:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        email_service: EmailServicePort,
+    ) -> None:
         """
         Initialise le use case.
 
         Args:
             user_repository: Repository des utilisateurs.
+            email_service: Service d'envoi d'emails.
         """
         self.user_repository = user_repository
+        self.email_service = email_service
 
     def execute(self, email: str) -> bool:
         """
@@ -62,7 +68,7 @@ class RequestPasswordResetUseCase:
         self.user_repository.save(user)
 
         # Envoyer l'email de réinitialisation
-        email_sent = email_service.send_password_reset_email(
+        email_sent = self.email_service.send_password_reset_email(
             to=user.email.value,
             token=token,
             user_name=user.nom_complet,

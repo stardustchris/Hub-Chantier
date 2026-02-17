@@ -6,8 +6,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import api from '../services/api';
-import type { ApiError } from '../types/api';
+import { useSecuritySettings } from '../hooks/useSecuritySettings';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function SecuritySettingsPage(): React.ReactElement {
@@ -18,7 +17,7 @@ export function SecuritySettingsPage(): React.ReactElement {
   const [oldPassword, setOldPassword] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const { isChangingPassword, changePassword } = useSecuritySettings();
   const [errors, setErrors] = useState<{
     oldPassword?: string;
     newPassword?: string;
@@ -76,30 +75,20 @@ export function SecuritySettingsPage(): React.ReactElement {
       return;
     }
 
-    setIsChangingPassword(true);
     setErrors({});
 
-    try {
-      await api.post('/auth/change-password', {
-        old_password: oldPassword,
-        new_password: newPassword,
-      });
+    const result = await changePassword(oldPassword, newPassword);
 
+    if (result.success) {
       addToast({ message: 'Mot de passe modifié avec succès !', type: 'success' });
-
       // Réinitialiser le formulaire
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err) {
-      const error = err as ApiError;
-      if (error.response?.status === 400) {
-        setErrors({ oldPassword: 'L\'ancien mot de passe est incorrect' });
-      } else {
-        addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
-      }
-    } finally {
-      setIsChangingPassword(false);
+    } else if (result.isWrongOldPassword) {
+      setErrors({ oldPassword: 'L\'ancien mot de passe est incorrect' });
+    } else {
+      addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
     }
   };
 

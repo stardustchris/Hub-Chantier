@@ -421,9 +421,10 @@ def request_password_reset(
     """
     from ...application.use_cases.request_password_reset import RequestPasswordResetUseCase
     from ...infrastructure.persistence import SQLAlchemyUserRepository
+    from shared.infrastructure.email_service import email_service
 
     user_repository = SQLAlchemyUserRepository(db)
-    use_case = RequestPasswordResetUseCase(user_repository)
+    use_case = RequestPasswordResetUseCase(user_repository, email_service)
 
     # Toujours retourner succès pour éviter l'énumération
     use_case.execute(email=request_body.email)
@@ -570,6 +571,7 @@ def invite_user(
     from ...application.use_cases.invite_user import InviteUserUseCase
     from ...domain.value_objects import Role, TypeUtilisateur
     from ...infrastructure.persistence import SQLAlchemyUserRepository
+    from shared.infrastructure.email_service import email_service
 
     user_repository = SQLAlchemyUserRepository(db)
 
@@ -577,7 +579,7 @@ def invite_user(
     inviter = user_repository.find_by_id(current_user_id)
     inviter_name = inviter.nom_complet if inviter else "L'équipe Hub Chantier"
 
-    use_case = InviteUserUseCase(user_repository)
+    use_case = InviteUserUseCase(user_repository, email_service)
 
     try:
         # Convertir le rôle string en enum

@@ -5,13 +5,11 @@
  * Connecté à l'API GET /api/financier/achats.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Layout from '../components/Layout'
 import AchatModal from '../components/financier/AchatModal'
-import { financierService } from '../services/financier'
-import { chantiersService } from '../services/chantiers'
 import { logger } from '../services/logger'
-import type { Achat, Chantier, Fournisseur, LotBudgetaire } from '../types'
+import { useAchats } from '../hooks/useAchats'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   ShoppingCart,
@@ -44,72 +42,31 @@ function formatMontant(montant: number) {
 
 export default function AchatsPage() {
   useDocumentTitle('Achats')
-  const [achats, setAchats] = useState<Achat[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [statutFilter, setStatutFilter] = useState<string>('tous')
 
-  // Modal state
+  // Modal state (UI concern - stays in page)
   const [showModal, setShowModal] = useState(false)
   const [selectedChantierId, setSelectedChantierId] = useState<number | null>(null)
-  const [chantiers, setChantiers] = useState<Chantier[]>([])
-  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([])
-  const [lots, setLots] = useState<LotBudgetaire[]>([])
   const [showChantierPicker, setShowChantierPicker] = useState(false)
 
-  const loadAchats = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const params: { statut?: string } = {}
-      if (statutFilter !== 'tous') params.statut = statutFilter
-      const data = await financierService.listAchats(params)
-      setAchats(data.items)
-    } catch (err) {
-      logger.error('Erreur chargement achats', err, { context: 'AchatsPage' })
-      setError('Erreur lors du chargement des achats')
-    } finally {
-      setLoading(false)
-    }
-  }, [statutFilter])
-
-  const loadChantiers = useCallback(async () => {
-    try {
-      const data = await chantiersService.list({ size: 100 })
-      setChantiers(data.items.filter((c) => c.statut !== 'ferme'))
-    } catch (err) {
-      logger.error('Erreur chargement chantiers', err, { context: 'AchatsPage' })
-    }
-  }, [])
-
-  useEffect(() => {
-    loadAchats()
-    loadChantiers()
-  }, [loadAchats, loadChantiers])
+  const { achats, loading, error, chantiers, fournisseurs, lots, loadAchats, loadModalData } =
+    useAchats(statutFilter)
 
   // Charger fournisseurs + lots quand un chantier est sélectionné
-  const handleOpenModal = useCallback(async (chantierId: number) => {
-    try {
-      const [fournData, budgetData] = await Promise.all([
-        financierService.listFournisseurs(),
-        financierService.getBudgetByChantier(chantierId).catch(() => null),
-      ])
-      setFournisseurs(fournData.items || fournData)
-      // Fetch lots separately if budget exists
-      if (budgetData) {
-        const lotsData = await financierService.listLots(budgetData.id)
-        setLots(lotsData || [])
-      } else {
-        setLots([])
+  const handleOpenModal = useCallback(
+    async (chantierId: number) => {
+      try {
+        await loadModalData(chantierId)
+        setSelectedChantierId(chantierId)
+        setShowChantierPicker(false)
+        setShowModal(true)
+      } catch (err) {
+        logger.error('Erreur ouverture modal achat', err, { context: 'AchatsPage' })
       }
-      setSelectedChantierId(chantierId)
-      setShowChantierPicker(false)
-      setShowModal(true)
-    } catch (err) {
-      logger.error('Erreur chargement données modal', err, { context: 'AchatsPage' })
-    }
-  }, [])
+    },
+    [loadModalData]
+  )
 
   const handleNewClick = useCallback(() => {
     if (chantiers.length === 1) {

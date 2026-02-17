@@ -9,7 +9,7 @@ from ...domain.repositories.user_repository import UserRepository
 from ...domain.entities import User
 from ...domain.value_objects import Email, PasswordHash, Role, TypeUtilisateur
 from ...domain.exceptions import EmailAlreadyExistsError, CodeAlreadyExistsError
-from shared.infrastructure.email_service import email_service
+from shared.application.ports.email_service import EmailServicePort
 
 
 class InviteUserUseCase:
@@ -19,14 +19,20 @@ class InviteUserUseCase:
     Crée un compte pré-rempli avec un token d'invitation et envoie un email.
     """
 
-    def __init__(self, user_repository: UserRepository) -> None:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        email_service: EmailServicePort,
+    ) -> None:
         """
         Initialise le use case.
 
         Args:
             user_repository: Repository des utilisateurs.
+            email_service: Service d'envoi d'emails.
         """
         self.user_repository = user_repository
+        self.email_service = email_service
 
     def execute(
         self,
@@ -100,7 +106,7 @@ class InviteUserUseCase:
         saved_user = self.user_repository.save(user)
 
         # Envoyer l'email d'invitation
-        email_service.send_invitation_email(
+        self.email_service.send_invitation_email(
             to=email,
             token=invitation_token,
             user_name=user.nom_complet,

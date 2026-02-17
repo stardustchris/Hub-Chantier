@@ -9,7 +9,7 @@ from ...domain.exceptions import (
     UserNotFoundError,
     WeakPasswordError,
 )
-from shared.infrastructure.password_hasher import PasswordHasher
+from ...domain.services.password_service import PasswordService
 
 
 class ResetPasswordUseCase:
@@ -22,7 +22,7 @@ class ResetPasswordUseCase:
     def __init__(
         self,
         user_repository: UserRepository,
-        password_hasher: PasswordHasher,
+        password_hasher: PasswordService,
     ) -> None:
         """
         Initialise le use case.

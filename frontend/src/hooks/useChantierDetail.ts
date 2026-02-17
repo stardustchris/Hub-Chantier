@@ -6,6 +6,8 @@
  * - Mise a jour et suppression
  * - Changement de statut (avec optimistic updates)
  * - Gestion de l'equipe (conducteurs/chefs) (avec optimistic updates)
+ * - Chargement des contacts et affectations planning
+ * - URLs de navigation GPS (Google Maps, Waze)
  *
  * Migration TanStack Query v5 avec optimistic updates pour UI instantanée
  */
@@ -15,9 +17,10 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { chantiersService, NavigationIds } from '../services/chantiers'
 import { usersService } from '../services/users'
+import { planningService } from '../services/planning'
 import { useToast } from '../contexts/ToastContext'
 import { logger } from '../services/logger'
-import type { Chantier, ChantierUpdate, User } from '../types'
+import type { Chantier, ChantierUpdate, User, Affectation, ContactChantier } from '../types'
 
 interface UseChantierDetailOptions {
   chantierId: string
@@ -28,6 +31,8 @@ interface UseChantierDetailReturn {
   chantier: Chantier | null
   navIds: NavigationIds
   availableUsers: User[]
+  contacts: ContactChantier[]
+  planningAffectations: Affectation[]
   isLoading: boolean
 
   // Modal states
@@ -44,6 +49,10 @@ interface UseChantierDetailReturn {
   handleAddUser: (userId: string) => Promise<void>
   handleRemoveUser: (userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => void
   reload: () => Promise<void>
+
+  // URL utilities (pure functions, no API calls)
+  getGoogleMapsUrl: (latitude: number, longitude: number) => string
+  getWazeUrl: (latitude: number, longitude: number) => string
 }
 
 export function useChantierDetail({
@@ -56,6 +65,8 @@ export function useChantierDetail({
   // Local state (non-query related)
   const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [contacts, setContacts] = useState<ContactChantier[]>([])
+  const [planningAffectations, setPlanningAffectations] = useState<Affectation[]>([])
 
   // Modal states
   const [showEditModal, setShowEditModal] = useState(false)
@@ -92,6 +103,35 @@ export function useChantierDetail({
     }
   }, [chantierId])
 
+  // Load contacts for the chantier
+  const loadContacts = useCallback(async () => {
+    try {
+      const contactsData = await chantiersService.listContacts(chantierId)
+      setContacts(contactsData)
+    } catch (error) {
+      logger.error('Error loading contacts', error, { context: 'useChantierDetail' })
+    }
+  }, [chantierId])
+
+  // Load planning affectations (30 days back and forward)
+  const loadPlanningAffectations = useCallback(async () => {
+    try {
+      const today = new Date()
+      const startDate = new Date()
+      startDate.setDate(today.getDate() - 30)
+      const endDate = new Date()
+      endDate.setDate(today.getDate() + 30)
+
+      const dateDebut = startDate.toISOString().split('T')[0]
+      const dateFin = endDate.toISOString().split('T')[0]
+
+      const affectations = await planningService.getByChantier(chantierId, dateDebut, dateFin)
+      setPlanningAffectations(affectations)
+    } catch (error) {
+      logger.error('Error loading planning users', error, { context: 'useChantierDetail' })
+    }
+  }, [chantierId])
+
   // Load available users for team management
   const loadAvailableUsers = useCallback(async (role: 'conducteur' | 'chef' | 'ouvrier') => {
     try {
@@ -116,12 +156,14 @@ export function useChantierDetail({
     }
   }, [chantier, addToast])
 
-  // Initial load navigation
+  // Initial load navigation, contacts, and planning
   useEffect(() => {
     if (chantierId) {
       loadNavigation()
+      loadContacts()
+      loadPlanningAffectations()
     }
-  }, [chantierId, loadNavigation])
+  }, [chantierId, loadNavigation, loadContacts, loadPlanningAffectations])
 
   // TanStack Query Mutation: Update chantier (optimistic update)
   const updateChantierMutation = useMutation({
@@ -411,13 +453,16 @@ export function useChantierDetail({
   const reload = useCallback(async () => {
     await refetchChantier()
     await loadNavigation()
-  }, [refetchChantier, loadNavigation])
+    await loadContacts()
+  }, [refetchChantier, loadNavigation, loadContacts])
 
   return {
     // Data
     chantier,
     navIds,
     availableUsers,
+    contacts,
+    planningAffectations,
     isLoading,
 
     // Modal states
@@ -434,6 +479,10 @@ export function useChantierDetail({
     handleAddUser,
     handleRemoveUser,
     reload,
+
+    // URL utilities
+    getGoogleMapsUrl: chantiersService.getGoogleMapsUrl,
+    getWazeUrl: chantiersService.getWazeUrl,
   }
 }
 

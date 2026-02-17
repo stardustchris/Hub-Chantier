@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { useClockCard, useDashboardFeed, useTodayPlanning, useWeeklyStats, useTodayTeam, useWeather, useDocumentTitle } from '../hooks'
+import { useWeatherNotifications } from '../hooks/useWeatherNotifications'
+import { useAllUsers } from '../hooks/useAllUsers'
 import Layout from '../components/Layout'
 import {
   ClockCard,
@@ -30,8 +32,6 @@ import {
   TeamLeaderboardCard,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
-import { weatherNotificationService } from '../services/weatherNotifications'
-import { consentService } from '../services/consent'
 import { openNavigationApp } from '../utils/navigation'
 import MentionInput from '../components/common/MentionInput'
 import ProgressiveHintBanner from '../components/common/ProgressiveHintBanner'
@@ -43,8 +43,7 @@ import {
   Camera,
   X,
 } from 'lucide-react'
-import type { TargetType, User } from '../types'
-import { usersService } from '../services/users'
+import type { TargetType } from '../types'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -61,10 +60,7 @@ export default function DashboardPage() {
   const feed = useDashboardFeed()
 
   // Charger tous les utilisateurs pour le matching des mentions @
-  const [allUsers, setAllUsers] = useState<User[]>([])
-  useEffect(() => {
-    usersService.list({ size: 100 }).then((res) => setAllUsers(res.items)).catch(() => {})
-  }, [])
+  const { users: allUsers } = useAllUsers()
 
   // Progressive disclosure pour mobile (5.2.3)
   // État pour savoir si les cartes secondaires sont dépliées sur mobile
@@ -98,33 +94,8 @@ export default function DashboardPage() {
   // Hook pour la météo réelle avec alertes
   const { weather, alert: weatherAlert } = useWeather()
 
-  // Demander la permission pour les notifications (uniquement si consentement donné)
-  useEffect(() => {
-    const requestNotifications = async () => {
-      // Vérifier le consentement utilisateur RGPD avant de demander la permission
-      const hasConsent = await consentService.hasConsent('notifications')
-
-      if (hasConsent && weatherNotificationService.areNotificationsSupported()) {
-        weatherNotificationService.requestNotificationPermission()
-      }
-    }
-
-    requestNotifications()
-  }, [])
-
-  // Envoyer une notification si alerte météo (uniquement si consentement donné)
-  useEffect(() => {
-    const sendAlert = async () => {
-      // Vérifier le consentement avant d'envoyer une notification
-      const hasConsent = await consentService.hasConsent('notifications')
-
-      if (weatherAlert && hasConsent) {
-        weatherNotificationService.sendWeatherAlertNotification(weatherAlert)
-      }
-    }
-
-    sendAlert()
-  }, [weatherAlert])
+  // Notifications météo push (respect consentement RGPD)
+  useWeatherNotifications({ weatherAlert: weatherAlert ?? null })
 
   // Déterminer le slot en cours ou le prochain (synchro équipe avec planning)
   const currentSlot = useMemo(() => {
