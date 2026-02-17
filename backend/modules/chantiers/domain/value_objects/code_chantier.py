@@ -37,7 +37,7 @@ class CodeChantier:
         normalized = self.value.upper().strip()
 
         # Accepter les codes spéciaux ou le pattern standard
-        if normalized not in self.CODES_SPECIAUX and not re.match(self.PATTERN, self.value):
+        if normalized not in self.CODES_SPECIAUX and not re.match(self.PATTERN, normalized):
             raise ValueError(
                 f"Format de code chantier invalide: {self.value}. "
                 f"Format attendu: Une lettre suivie de 3 chiffres (ex: A001, B023), "

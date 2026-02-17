@@ -33,6 +33,7 @@ class TestAffectationPresenter:
             utilisateur_id=10,
             chantier_id=20,
             date="2026-01-24",
+            heures_prevues=8.0,
             heure_debut="08:00",
             heure_fin="17:00",
             type_affectation="unique",
@@ -122,6 +123,7 @@ class TestAffectationPresenter:
                 utilisateur_id=10 + i,
                 chantier_id=20,
                 date="2026-01-24",
+                heures_prevues=8.0,
                 heure_debut="08:00",
                 heure_fin="17:00",
                 type_affectation="unique",
@@ -157,6 +159,7 @@ class TestAffectationPresenter:
                 utilisateur_id=10,  # Meme utilisateur
                 chantier_id=20,  # Meme chantier
                 date="2026-01-24",
+                heures_prevues=8.0,
                 heure_debut="08:00",
                 heure_fin="17:00",
                 type_affectation="unique",

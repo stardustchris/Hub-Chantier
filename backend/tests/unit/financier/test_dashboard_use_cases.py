@@ -121,7 +121,7 @@ class TestGetDashboardFinancierUseCase:
         # P1-3: Fallback mode -> marge_estimee=None, consommation_budgetaire_pct rempli
         assert result.kpi.marge_estimee is None
         assert result.kpi.consommation_budgetaire_pct == "63.64"
-        assert result.kpi.reste_a_depenser == "350000"
+        assert result.kpi.reste_a_depenser == "350000.00"
         assert result.kpi.pct_reste == "63.64"  # (350000/550000)*100
         assert len(result.derniers_achats) == 1
         assert len(result.repartition_par_lot) == 1
@@ -155,7 +155,7 @@ class TestGetDashboardFinancierUseCase:
 
         assert result.kpi.pct_engage == "80.00"
         assert result.kpi.pct_realise == "50.00"
-        assert result.kpi.reste_a_depenser == "20000"  # 100000 - 80000
+        assert result.kpi.reste_a_depenser == "20000.00"  # 100000 - 80000
         assert result.kpi.pct_reste == "20.00"  # (20000/100000)*100
         # P1-3: Fallback mode -> consommation_budgetaire_pct en %
         assert result.kpi.marge_estimee is None
@@ -183,7 +183,7 @@ class TestGetDashboardFinancierUseCase:
         # quantize(Decimal("0.01")) formate toujours avec 2 decimales
         assert result.kpi.pct_engage == "0.00"
         assert result.kpi.pct_realise == "0.00"
-        assert result.kpi.reste_a_depenser == "0"  # 0 - 0
+        assert result.kpi.reste_a_depenser == "0.00"  # 0 - 0
         assert result.kpi.pct_reste == "0.00"  # division par zero evitee
         # P1-3: Fallback mode -> consommation_budgetaire_pct
         assert result.kpi.marge_estimee is None
@@ -239,16 +239,16 @@ class TestGetDashboardFinancierUseCase:
         assert len(result.repartition_par_lot) == 2
         go = result.repartition_par_lot[0]
         assert go.code_lot == "GO-01"
-        assert go.total_prevu_ht == "200000"
+        assert go.total_prevu_ht == "200000.00"
         assert go.engage == "100000"
         assert go.realise == "50000"
-        assert go.ecart == "100000"  # 200000 - 100000
+        assert go.ecart == "100000.00"  # 200000 - 100000
 
         sec = result.repartition_par_lot[1]
         assert sec.code_lot == "SEC-01"
-        assert sec.total_prevu_ht == "50000"
+        assert sec.total_prevu_ht == "50000.00"
         assert sec.engage == "50000"
-        assert sec.ecart == "0"  # 50000 - 50000
+        assert sec.ecart == "0.00"  # 50000 - 50000
 
     def test_dashboard_reste_a_depenser_negatif(self):
         """Test: reste_a_depenser negatif quand total_engage > montant_revise."""
@@ -270,7 +270,7 @@ class TestGetDashboardFinancierUseCase:
         result = self.use_case.execute(chantier_id=100)
 
         # reste_a_depenser = 100000 - 150000 = -50000
-        assert result.kpi.reste_a_depenser == "-50000"
+        assert result.kpi.reste_a_depenser == "-50000.00"
         # pct_reste = (-50000 / 100000) * 100 = -50.00
         assert result.kpi.pct_reste == "-50.00"
         # P1-3: Fallback mode -> consommation_budgetaire_pct (negative = depassement)
@@ -296,7 +296,7 @@ class TestGetDashboardFinancierUseCase:
 
         result = self.use_case.execute(chantier_id=100)
 
-        assert result.kpi.reste_a_depenser == "0"
+        assert result.kpi.reste_a_depenser == "0.00"
         assert result.kpi.pct_reste == "0.00"
         # P1-3: Fallback mode -> consommation_budgetaire_pct
         assert result.kpi.marge_estimee is None
@@ -378,7 +378,7 @@ class TestGetDashboardFinancierUseCase:
         # Verifie que ce n'est PAS en EUR (200000) mais bien en %
         assert result.kpi.consommation_budgetaire_pct != "200000"
         assert result.kpi.montant_revise_ht == "500000"
-        assert result.kpi.reste_a_depenser == "200000"
+        assert result.kpi.reste_a_depenser == "200000.00"
 
     def test_dashboard_marge_estimee_haute_precision(self):
         """Test: marge_estimee arrondie a 2 decimales."""
@@ -467,7 +467,7 @@ class TestGetDashboardFinancierUseCase:
         result = self.use_case.execute(chantier_id=100)
 
         assert len(result.repartition_par_lot) == 1
-        assert result.repartition_par_lot[0].ecart == "-50000"  # 100000 - 150000
+        assert result.repartition_par_lot[0].ecart == "-50000.00"  # 100000 - 150000
 
 
 class TestGetDashboardFinancierUseCaseWithSituations:
@@ -517,8 +517,9 @@ class TestGetDashboardFinancierUseCaseWithSituations:
             chantier_id=100,
             budget_id=1,
             numero="SIT-001",
-            montant_cumule_ht=Decimal("150000"),
+            montant_cumule_precedent_ht=Decimal("0"),
             montant_periode_ht=Decimal("150000"),
+            montant_cumule_ht=Decimal("150000"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_derniere_situation.return_value = situation
@@ -528,9 +529,11 @@ class TestGetDashboardFinancierUseCaseWithSituations:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # Cout revient = realise (100k) + MO (20k) = 120k
-        # Marge = (150k - 120k) / 150k * 100 = 20%
-        assert result.kpi.marge_estimee == "20.00"
+        # Debourse sec = realise (100k) + MO (20k) = 120k
+        # Quote-part FG = 120k * 19% = 22800
+        # Cout revient = 120k + 22800 = 142800
+        # Marge = (150k - 142800) / 150k * 100 = 4.80%
+        assert result.kpi.marge_estimee == "4.80"
 
     def test_marge_btp_chantier_deficitaire(self):
         """Test: marge negative quand cout revient > prix vente."""
@@ -555,8 +558,9 @@ class TestGetDashboardFinancierUseCaseWithSituations:
             chantier_id=100,
             budget_id=1,
             numero="SIT-001",
-            montant_cumule_ht=Decimal("400000"),
+            montant_cumule_precedent_ht=Decimal("0"),
             montant_periode_ht=Decimal("400000"),
+            montant_cumule_ht=Decimal("400000"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_derniere_situation.return_value = situation
@@ -566,9 +570,11 @@ class TestGetDashboardFinancierUseCaseWithSituations:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # Cout revient = 350k + 60k = 410k
-        # Marge = (400k - 410k) / 400k * 100 = -2.5%
-        assert result.kpi.marge_estimee == "-2.50"
+        # Debourse sec = 350k + 60k = 410k
+        # Quote-part FG = 410k * 19% = 77900
+        # Cout revient = 410k + 77900 = 487900
+        # Marge = (400k - 487900) / 400k * 100 = -21.98%
+        assert result.kpi.marge_estimee == "-21.98"
 
     def test_marge_btp_marge_10_pourcent(self):
         """Test: marge cible 10% typique BTP."""
@@ -593,8 +599,9 @@ class TestGetDashboardFinancierUseCaseWithSituations:
             chantier_id=100,
             budget_id=1,
             numero="SIT-001",
-            montant_cumule_ht=Decimal("127500"),
+            montant_cumule_precedent_ht=Decimal("0"),
             montant_periode_ht=Decimal("127500"),
+            montant_cumule_ht=Decimal("127500"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_derniere_situation.return_value = situation
@@ -606,8 +613,11 @@ class TestGetDashboardFinancierUseCaseWithSituations:
 
         result = self.use_case.execute(chantier_id=100)
 
-        # Marge = (127500 - 114750) / 127500 * 100 = 10%
-        assert result.kpi.marge_estimee == "10.00"
+        # Debourse sec = 95k + 19750 = 114750
+        # Quote-part FG = 114750 * 19% = 21802.50
+        # Cout revient = 114750 + 21802.50 = 136552.50
+        # Marge = (127500 - 136552.50) / 127500 * 100 = -7.10%
+        assert result.kpi.marge_estimee == "-7.10"
 
     def test_fallback_sans_situation(self):
         """Test: fallback vers ancienne formule si pas de situation."""
@@ -660,8 +670,9 @@ class TestGetDashboardFinancierUseCaseWithSituations:
             chantier_id=100,
             budget_id=1,
             numero="SIT-001",
-            montant_cumule_ht=Decimal("0"),
+            montant_cumule_precedent_ht=Decimal("0"),
             montant_periode_ht=Decimal("0"),
+            montant_cumule_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_derniere_situation.return_value = situation

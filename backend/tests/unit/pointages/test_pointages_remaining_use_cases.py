@@ -41,7 +41,7 @@ class TestCreateVariablePaieUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
         )
         self.pointage_repo.find_by_id.return_value = pointage
 
@@ -56,7 +56,7 @@ class TestCreateVariablePaieUseCase:
             pointage_id=1,
             type_variable="panier_repas",
             valeur=15.5,
-            date_application=date(2026, 1, 20),
+            date_application=date(2026, 2, 15),
             commentaire="Panier repas",
         )
 
@@ -75,7 +75,7 @@ class TestCreateVariablePaieUseCase:
             pointage_id=999,
             type_variable="panier",
             valeur=15.5,
-            date_application=date(2026, 1, 20),
+            date_application=date(2026, 2, 15),
         )
 
         with pytest.raises(ValueError, match="non trouvé"):
@@ -87,7 +87,7 @@ class TestCreateVariablePaieUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
         )
         self.pointage_repo.find_by_id.return_value = pointage
 
@@ -101,7 +101,7 @@ class TestCreateVariablePaieUseCase:
             pointage_id=1,
             type_variable="indemnite_transport",
             valeur=25.0,
-            date_application=date(2026, 1, 20),
+            date_application=date(2026, 2, 15),
         )
 
         result = self.use_case.execute(dto)
@@ -123,7 +123,7 @@ class TestGetPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
         )
         self.pointage_repo.find_by_id.return_value = pointage
@@ -148,7 +148,7 @@ class TestGetPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             signature_utilisateur="sig_hash_123",
         )
         self.pointage_repo.find_by_id.return_value = pointage
@@ -179,7 +179,7 @@ class TestGetVueSemaineUseCase:
         pointage.chantier_couleur = "#FF5733"
         pointage.utilisateur_id = 1
         pointage.utilisateur_nom = "Jean DUPONT"
-        pointage.date_pointage = date(2026, 1, 20)
+        pointage.date_pointage = date(2026, 2, 15)
         pointage.heures_normales = Duree(8, 0)
         pointage.heures_supplementaires = Duree(0, 0)
         pointage.total_heures = total_heures
@@ -220,7 +220,7 @@ class TestGetVueSemaineUseCase:
         pointage.chantier_id = 10
         pointage.chantier_nom = "Chantier A"
         pointage.chantier_couleur = "#FF5733"
-        pointage.date_pointage = date(2026, 1, 20)
+        pointage.date_pointage = date(2026, 2, 15)
         pointage.total_heures = total_heures
 
         self.pointage_repo.search.return_value = ([pointage], 1)
@@ -346,7 +346,7 @@ class TestSubmitPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.BROUILLON,
         )
         self.pointage_repo.find_by_id.return_value = pointage
@@ -370,7 +370,7 @@ class TestSubmitPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.SOUMIS,
         )
         self.pointage_repo.find_by_id.return_value = pointage
@@ -406,7 +406,7 @@ class TestSubmitPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.BROUILLON,
         )
         self.pointage_repo.find_by_id.return_value = pointage

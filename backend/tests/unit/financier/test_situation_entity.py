@@ -22,6 +22,8 @@ class TestSituationTravaux:
             "numero": "SIT-2026-01",
             "periode_debut": date(2026, 1, 1),
             "periode_fin": date(2026, 1, 31),
+            "montant_cumule_precedent_ht": Decimal("0"),
+            "montant_periode_ht": Decimal("100000"),
             "montant_cumule_ht": Decimal("100000"),
             "retenue_garantie_pct": Decimal("5.00"),
             "taux_tva": Decimal("20.00"),

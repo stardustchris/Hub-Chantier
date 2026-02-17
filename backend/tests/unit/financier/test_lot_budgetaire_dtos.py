@@ -49,10 +49,10 @@ class TestLotBudgetaireDTO:
         assert dto.unite_label == "Mètre carré"
         assert dto.quantite_prevue == "100"
         assert dto.prix_unitaire_ht == "50"
-        assert dto.total_prevu_ht == "5000"
+        assert dto.total_prevu_ht == "5000.00"
         assert dto.engage == "3000"
         assert dto.realise == "2000"
-        assert dto.ecart == "2000"  # 5000 - 3000
+        assert dto.ecart == "2000.00"  # 5000 - 3000
         assert dto.est_en_phase_devis is False
         assert dto.created_at == lot.created_at
         assert dto.created_by == 5
@@ -130,7 +130,7 @@ class TestLotBudgetaireDTO:
         assert dto.debourse_divers is None
         assert dto.debourse_sec_total == "1500"  # 1000 + 500
         # prix_vente_calcule_ht = 1500 * 1.20 = 1800
-        assert dto.prix_vente_calcule_ht == "1800.0"
+        assert dto.prix_vente_calcule_ht == "1800.00"
 
     def test_from_entity_zero_engage_and_realise_by_default(self):
         """Test: from_entity avec engage et realise à zéro par défaut."""

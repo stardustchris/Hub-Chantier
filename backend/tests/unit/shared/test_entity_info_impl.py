@@ -51,6 +51,7 @@ class TestGetUserInfo:
         mock_user.nom = "Dupont"
         mock_user.couleur = "#FF0000"
         mock_user.metier = "Macon"
+        mock_user.metiers = ["Macon"]
         mock_user.role = "compagnon"
         mock_user.type_utilisateur = "salarie"
         mock_query.first.return_value = mock_user

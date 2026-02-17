@@ -40,7 +40,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),  # Mois en cours
+            date_pointage=date(2026, 2, 15),  # Mois en cours
             heures_normales=Duree(8, 0),
             statut=StatutPointage.REJETE,
             validateur_id=4,
@@ -115,7 +115,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             statut=StatutPointage.BROUILLON,  # Pas REJETÉ
         )
@@ -134,7 +134,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             statut=StatutPointage.SOUMIS,
         )
@@ -151,7 +151,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             statut=StatutPointage.VALIDE,
         )
@@ -171,7 +171,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             statut=StatutPointage.REJETE,
             signature_utilisateur="signature_hash_abc123",
@@ -197,7 +197,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             heures_supplementaires=Duree(1, 30),
             statut=StatutPointage.REJETE,
@@ -214,7 +214,7 @@ class TestCorrectPointageUseCase:
         assert result.id == 1
         assert result.utilisateur_id == 7
         assert result.chantier_id == 10
-        assert result.date_pointage == date(2026, 1, 20)
+        assert result.date_pointage == date(2026, 2, 15)
         assert result.heures_normales == "08:00"
         assert result.heures_supplementaires == "01:30"
         assert result.statut == StatutPointage.BROUILLON.value
@@ -231,7 +231,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(7, 30),
             heures_supplementaires=Duree(0, 30),
             statut=StatutPointage.REJETE,
@@ -284,7 +284,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             statut=StatutPointage.REJETE,
         )
@@ -304,7 +304,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(7, 30),  # 7.5h
             heures_supplementaires=Duree(1, 30),  # 1.5h
             statut=StatutPointage.REJETE,
@@ -326,7 +326,7 @@ class TestCorrectPointageUseCase:
             id=1,
             utilisateur_id=7,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
             statut=StatutPointage.REJETE,
         )

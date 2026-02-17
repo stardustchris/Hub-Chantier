@@ -50,6 +50,8 @@ class TestCreateFactureFromSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="validee",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("100000"),
             montant_cumule_ht=Decimal("100000"),
             taux_tva=Decimal("20.00"),
             retenue_garantie_pct=Decimal("5.00"),
@@ -87,6 +89,8 @@ class TestCreateFactureFromSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="emise",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("100000"),
             montant_cumule_ht=Decimal("100000"),
             created_at=datetime.utcnow(),
         )
@@ -103,6 +107,8 @@ class TestCreateFactureFromSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="brouillon",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("100000"),
             montant_cumule_ht=Decimal("100000"),
             created_at=datetime.utcnow(),
         )
@@ -282,6 +288,8 @@ class TestMarquerPayeeFactureUseCase:
             budget_id=1,
             numero="SIT-2026-01",
             statut="validee",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_facture_repo.find_by_id.return_value = facture

@@ -279,6 +279,7 @@ class TestChantierController:
             responsable_id=30,
             actifs_uniquement=True,
             search="Test",
+            exclude_codes=None,
         )
 
     # ==================== Tests update() ====================

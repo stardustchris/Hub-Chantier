@@ -29,11 +29,21 @@ class TestFindById:
         mock_model.photo_profil = None
         mock_model.code_utilisateur = "JD001"
         mock_model.telephone = None
-        mock_model.metier = None
+        mock_model.metiers = None
+        mock_model.taux_horaire = None
         mock_model.contact_urgence_nom = None
         mock_model.contact_urgence_tel = None
         mock_model.created_at = datetime.now()
         mock_model.updated_at = datetime.now()
+        mock_model.password_reset_token = None
+        mock_model.password_reset_expires_at = None
+        mock_model.invitation_token = None
+        mock_model.invitation_expires_at = None
+        mock_model.email_verified_at = None
+        mock_model.email_verification_token = None
+        mock_model.failed_login_attempts = 0
+        mock_model.last_failed_login_at = None
+        mock_model.locked_until = None
 
         mock_query = Mock()
         mock_session.query.return_value = mock_query
@@ -80,11 +90,21 @@ class TestFindByEmail:
         mock_model.photo_profil = None
         mock_model.code_utilisateur = None
         mock_model.telephone = None
-        mock_model.metier = None
+        mock_model.metiers = None
+        mock_model.taux_horaire = None
         mock_model.contact_urgence_nom = None
         mock_model.contact_urgence_tel = None
         mock_model.created_at = datetime.now()
         mock_model.updated_at = datetime.now()
+        mock_model.password_reset_token = None
+        mock_model.password_reset_expires_at = None
+        mock_model.invitation_token = None
+        mock_model.invitation_expires_at = None
+        mock_model.email_verified_at = None
+        mock_model.email_verification_token = None
+        mock_model.failed_login_attempts = 0
+        mock_model.last_failed_login_at = None
+        mock_model.locked_until = None
 
         mock_query = Mock()
         mock_session.query.return_value = mock_query
@@ -117,11 +137,21 @@ class TestFindByCode:
         mock_model.photo_profil = None
         mock_model.code_utilisateur = "JD001"
         mock_model.telephone = None
-        mock_model.metier = None
+        mock_model.metiers = None
+        mock_model.taux_horaire = None
         mock_model.contact_urgence_nom = None
         mock_model.contact_urgence_tel = None
         mock_model.created_at = datetime.now()
         mock_model.updated_at = datetime.now()
+        mock_model.password_reset_token = None
+        mock_model.password_reset_expires_at = None
+        mock_model.invitation_token = None
+        mock_model.invitation_expires_at = None
+        mock_model.email_verified_at = None
+        mock_model.email_verification_token = None
+        mock_model.failed_login_attempts = 0
+        mock_model.last_failed_login_at = None
+        mock_model.locked_until = None
 
         mock_query = Mock()
         mock_session.query.return_value = mock_query
@@ -171,11 +201,21 @@ class TestSave:
         mock_user.photo_profil = None
         mock_user.code_utilisateur = None
         mock_user.telephone = None
-        mock_user.metier = None
+        mock_user.metiers = None
+        mock_user.taux_horaire = None
         mock_user.contact_urgence_nom = None
         mock_user.contact_urgence_tel = None
         mock_user.created_at = datetime.now()
         mock_user.updated_at = datetime.now()
+        mock_user.password_reset_token = None
+        mock_user.password_reset_expires_at = None
+        mock_user.invitation_token = None
+        mock_user.invitation_expires_at = None
+        mock_user.email_verified_at = None
+        mock_user.email_verification_token = None
+        mock_user.failed_login_attempts = 0
+        mock_user.last_failed_login_at = None
+        mock_user.locked_until = None
 
         # Mock le modèle retourné après save
         mock_model = Mock()
@@ -191,11 +231,21 @@ class TestSave:
         mock_model.photo_profil = None
         mock_model.code_utilisateur = None
         mock_model.telephone = None
-        mock_model.metier = None
+        mock_model.metiers = None
+        mock_model.taux_horaire = None
         mock_model.contact_urgence_nom = None
         mock_model.contact_urgence_tel = None
         mock_model.created_at = datetime.now()
         mock_model.updated_at = datetime.now()
+        mock_model.password_reset_token = None
+        mock_model.password_reset_expires_at = None
+        mock_model.invitation_token = None
+        mock_model.invitation_expires_at = None
+        mock_model.email_verified_at = None
+        mock_model.email_verification_token = None
+        mock_model.failed_login_attempts = 0
+        mock_model.last_failed_login_at = None
+        mock_model.locked_until = None
 
         def refresh_side_effect(m):
             m.id = 1

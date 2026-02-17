@@ -101,7 +101,7 @@ class TestRegisterWithTauxHoraire:
         assert saved_user.taux_horaire is None
 
     def test_register_with_zero_taux_horaire(self):
-        """Test: inscription avec taux_horaire à zéro."""
+        """Test: inscription avec taux_horaire zéro lève ValueError (SMIC)."""
         # Arrange
         dto = RegisterDTO(
             email="test@example.com",
@@ -111,19 +111,15 @@ class TestRegisterWithTauxHoraire:
             taux_horaire=Decimal("0.00"),
         )
 
-        # Mock du user sauvegardé
         def save_user(user):
             user.id = 1
             return user
 
         self.mock_user_repo.save.side_effect = save_user
 
-        # Act
-        result = self.use_case.execute(dto)
-
-        # Assert
-        assert result is not None
-        assert result.user.taux_horaire == Decimal("0.00")
+        # Act & Assert
+        with pytest.raises(ValueError, match="SMIC"):
+            self.use_case.execute(dto)
 
     def test_register_with_high_taux_horaire(self):
         """Test: inscription avec taux_horaire élevé."""
@@ -151,7 +147,7 @@ class TestRegisterWithTauxHoraire:
         assert result.user.taux_horaire == Decimal("150.00")
 
     def test_register_with_precise_taux_horaire(self):
-        """Test: inscription avec taux_horaire haute précision."""
+        """Test: inscription avec taux_horaire haute précision lève ValueError."""
         # Arrange
         dto = RegisterDTO(
             email="test@example.com",
@@ -161,19 +157,15 @@ class TestRegisterWithTauxHoraire:
             taux_horaire=Decimal("35.7538"),
         )
 
-        # Mock du user sauvegardé
         def save_user(user):
             user.id = 1
             return user
 
         self.mock_user_repo.save.side_effect = save_user
 
-        # Act
-        result = self.use_case.execute(dto)
-
-        # Assert
-        assert result is not None
-        assert result.user.taux_horaire == Decimal("35.7538")
+        # Act & Assert
+        with pytest.raises(ValueError, match="décimales"):
+            self.use_case.execute(dto)
 
     def test_register_with_all_fields_including_taux_horaire(self):
         """Test: inscription avec tous les champs y compris taux_horaire."""

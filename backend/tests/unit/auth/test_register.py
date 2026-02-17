@@ -85,7 +85,7 @@ class TestRegisterUseCase:
             prenom="Marie",
             type_utilisateur="employe",
             telephone="+33612345678",
-            metier="Maçon",
+            metiers=["Maçon"],
             code_utilisateur="MAR001",
             couleur="#E74C3C",  # Rouge
         )
@@ -98,7 +98,7 @@ class TestRegisterUseCase:
         assert result.user.role == "compagnon"  # Forced server-side
         assert result.user.type_utilisateur == "employe"
         assert result.user.telephone == "+33612345678"
-        assert result.user.metier == "Maçon"
+        assert result.user.metiers == ["Maçon"]
         assert result.user.code_utilisateur == "MAR001"
         assert result.user.couleur == "#E74C3C"
 

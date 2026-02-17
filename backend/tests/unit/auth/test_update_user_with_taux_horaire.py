@@ -79,7 +79,7 @@ class TestUpdateUserWithTauxHoraire:
         assert existing_user.taux_horaire == Decimal("25.50")
 
     def test_update_user_remove_taux_horaire(self):
-        """Test: suppression du taux_horaire (mise à None)."""
+        """Test: passer taux_horaire=None ne change pas la valeur (None = don't update)."""
         # Arrange
         existing_user = User(
             id=1,
@@ -99,9 +99,9 @@ class TestUpdateUserWithTauxHoraire:
         # Act
         result = self.use_case.execute(user_id=1, dto=dto)
 
-        # Assert
-        assert result.taux_horaire is None
-        assert existing_user.taux_horaire is None
+        # Assert - None means "don't update", value stays unchanged
+        assert result.taux_horaire == Decimal("30.00")
+        assert existing_user.taux_horaire == Decimal("30.00")
 
     def test_update_user_without_taux_horaire_keeps_existing(self):
         """Test: ne pas passer taux_horaire conserve la valeur existante."""
@@ -161,7 +161,7 @@ class TestUpdateUserWithTauxHoraire:
         assert result.taux_horaire == Decimal("45.00")
 
     def test_update_user_zero_taux_horaire(self):
-        """Test: mise à jour avec taux_horaire à zéro."""
+        """Test: mise à jour avec taux_horaire zéro lève ValueError (SMIC)."""
         # Arrange
         existing_user = User(
             id=1,
@@ -178,14 +178,12 @@ class TestUpdateUserWithTauxHoraire:
 
         dto = UpdateUserDTO(taux_horaire=Decimal("0.00"))
 
-        # Act
-        result = self.use_case.execute(user_id=1, dto=dto)
-
-        # Assert
-        assert result.taux_horaire == Decimal("0.00")
+        # Act & Assert
+        with pytest.raises(ValueError, match="SMIC"):
+            self.use_case.execute(user_id=1, dto=dto)
 
     def test_update_user_high_precision_taux_horaire(self):
-        """Test: mise à jour avec taux_horaire haute précision."""
+        """Test: mise à jour avec taux_horaire haute précision lève ValueError."""
         # Arrange
         existing_user = User(
             id=1,
@@ -202,11 +200,9 @@ class TestUpdateUserWithTauxHoraire:
 
         dto = UpdateUserDTO(taux_horaire=Decimal("37.8945"))
 
-        # Act
-        result = self.use_case.execute(user_id=1, dto=dto)
-
-        # Assert
-        assert result.taux_horaire == Decimal("37.8945")
+        # Act & Assert
+        with pytest.raises(ValueError, match="décimales"):
+            self.use_case.execute(user_id=1, dto=dto)
 
     def test_update_user_taux_horaire_not_found(self):
         """Test: échec si utilisateur non trouvé."""

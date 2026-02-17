@@ -61,6 +61,7 @@ class AffectationDTO:
     utilisateur_nom: Optional[str] = None
     utilisateur_couleur: Optional[str] = None
     utilisateur_metier: Optional[str] = None
+    utilisateur_metiers: Optional[List[str]] = None
     utilisateur_role: Optional[str] = None
     utilisateur_type: Optional[str] = None
     chantier_nom: Optional[str] = None
@@ -72,6 +73,7 @@ class AffectationDTO:
         utilisateur_nom: Optional[str] = None,
         utilisateur_couleur: Optional[str] = None,
         utilisateur_metier: Optional[str] = None,
+        utilisateur_metiers: Optional[List[str]] = None,
         utilisateur_role: Optional[str] = None,
         utilisateur_type: Optional[str] = None,
         chantier_nom: Optional[str] = None,
@@ -120,6 +122,7 @@ class AffectationDTO:
             utilisateur_nom=utilisateur_nom,
             utilisateur_couleur=utilisateur_couleur,
             utilisateur_metier=utilisateur_metier,
+            utilisateur_metiers=utilisateur_metiers,
             utilisateur_role=utilisateur_role,
             utilisateur_type=utilisateur_type,
             chantier_nom=chantier_nom,

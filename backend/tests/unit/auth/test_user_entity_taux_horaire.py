@@ -41,34 +41,30 @@ class TestUserEntityTauxHoraire:
         assert user.taux_horaire is None
 
     def test_user_creation_with_zero_taux_horaire(self):
-        """Test: création d'un User avec taux_horaire à zéro."""
-        # Arrange & Act
-        user = User(
-            email=Email("test@example.com"),
-            password_hash=PasswordHash("$2b$12$hashed"),
-            nom="DUPONT",
-            prenom="Jean",
-            role=Role.COMPAGNON,
-            taux_horaire=Decimal("0.00"),
-        )
-
-        # Assert
-        assert user.taux_horaire == Decimal("0.00")
+        """Test: création d'un User avec taux_horaire zéro lève ValueError (SMIC)."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="SMIC"):
+            User(
+                email=Email("test@example.com"),
+                password_hash=PasswordHash("$2b$12$hashed"),
+                nom="DUPONT",
+                prenom="Jean",
+                role=Role.COMPAGNON,
+                taux_horaire=Decimal("0.00"),
+            )
 
     def test_user_creation_with_high_precision_taux_horaire(self):
-        """Test: création d'un User avec taux_horaire haute précision."""
-        # Arrange & Act
-        user = User(
-            email=Email("test@example.com"),
-            password_hash=PasswordHash("$2b$12$hashed"),
-            nom="DUPONT",
-            prenom="Jean",
-            role=Role.COMPAGNON,
-            taux_horaire=Decimal("45.123456"),
-        )
-
-        # Assert
-        assert user.taux_horaire == Decimal("45.123456")
+        """Test: création d'un User avec taux_horaire haute précision lève ValueError."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="décimales"):
+            User(
+                email=Email("test@example.com"),
+                password_hash=PasswordHash("$2b$12$hashed"),
+                nom="DUPONT",
+                prenom="Jean",
+                role=Role.COMPAGNON,
+                taux_horaire=Decimal("45.123456"),
+            )
 
     def test_update_profile_with_taux_horaire(self):
         """Test: mise à jour du taux_horaire via update_profile."""
@@ -91,7 +87,7 @@ class TestUserEntityTauxHoraire:
         assert user.updated_at > old_updated_at
 
     def test_update_profile_with_none_taux_horaire(self):
-        """Test: suppression du taux_horaire via update_profile (None)."""
+        """Test: passer None pour taux_horaire ne change pas la valeur existante."""
         # Arrange
         user = User(
             email=Email("test@example.com"),
@@ -105,8 +101,8 @@ class TestUserEntityTauxHoraire:
         # Act
         user.update_profile(taux_horaire=None)
 
-        # Assert
-        assert user.taux_horaire is None
+        # Assert - None means "don't update", value stays unchanged
+        assert user.taux_horaire == Decimal("20.00")
 
     def test_update_profile_without_taux_horaire_keeps_existing(self):
         """Test: ne pas passer taux_horaire conserve la valeur existante."""

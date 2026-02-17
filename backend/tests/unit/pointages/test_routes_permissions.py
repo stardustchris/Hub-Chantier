@@ -57,6 +57,7 @@ class TestValidatePointagePermissions:
         current_user_role = "chef_chantier"
         event_bus = MagicMock()
         controller = MagicMock()
+        db = MagicMock()
 
         # Mock du résultat du controller
         controller.validate_pointage.return_value = {
@@ -75,6 +76,12 @@ class TestValidatePointagePermissions:
 
         event_bus.publish = mock_publish
 
+        # Mock _get_chef_chantier_ids (uses fetchall(), not scalars().all())
+        db.execute.return_value.fetchall.return_value = [(1,)]
+
+        # Mock controller.get_pointage (called first to get chantier_id)
+        controller.get_pointage.return_value = {"id": pointage_id, "chantier_id": 1, "utilisateur_id": 7}
+
         # Act
         import asyncio
 
@@ -85,6 +92,7 @@ class TestValidatePointagePermissions:
                 current_user_role=current_user_role,
                 event_bus=event_bus,
                 controller=controller,
+                db=db,
             )
         )
 
@@ -102,6 +110,7 @@ class TestValidatePointagePermissions:
         current_user_role = "conducteur"
         event_bus = MagicMock()
         controller = MagicMock()
+        db = MagicMock()
 
         controller.validate_pointage.return_value = {
             "id": pointage_id,
@@ -128,6 +137,7 @@ class TestValidatePointagePermissions:
                 current_user_role=current_user_role,
                 event_bus=event_bus,
                 controller=controller,
+                db=db,
             )
         )
 
@@ -143,6 +153,7 @@ class TestValidatePointagePermissions:
         current_user_role = "admin"
         event_bus = MagicMock()
         controller = MagicMock()
+        db = MagicMock()
 
         controller.validate_pointage.return_value = {
             "id": pointage_id,
@@ -169,6 +180,7 @@ class TestValidatePointagePermissions:
                 current_user_role=current_user_role,
                 event_bus=event_bus,
                 controller=controller,
+                db=db,
             )
         )
 
@@ -218,6 +230,7 @@ class TestRejectPointagePermissions:
         validateur_id = 4
         current_user_role = "chef_chantier"
         controller = MagicMock()
+        db = MagicMock()
 
         from modules.pointages.infrastructure.web.routes import (
             RejectPointageRequest,
@@ -231,6 +244,12 @@ class TestRejectPointagePermissions:
             "motif_rejet": "Heures incorrectes",
         }
 
+        # Mock _get_chef_chantier_ids (uses fetchall(), not scalars().all())
+        db.execute.return_value.fetchall.return_value = [(1,)]
+
+        # Mock controller.get_pointage (called first to get chantier_id)
+        controller.get_pointage.return_value = {"id": pointage_id, "chantier_id": 1}
+
         # Act
         result = reject_pointage(
             pointage_id=pointage_id,
@@ -238,6 +257,7 @@ class TestRejectPointagePermissions:
             validateur_id=validateur_id,
             current_user_role=current_user_role,
             controller=controller,
+            db=db,
         )
 
         # Assert

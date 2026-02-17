@@ -51,6 +51,12 @@ class TestBulkValidateSecurityP2_001:
         validateur_id = 4
         current_user_role = "chef_chantier"
         controller = MagicMock()
+        db = MagicMock()
+        # _get_chef_chantier_ids uses fetchall(), not scalars().all()
+        db.execute.return_value.fetchall.return_value = [(1,), (2,), (3,)]
+
+        # controller.get_pointage is called for each pointage_id to check chantier
+        controller.get_pointage.return_value = {"chantier_id": 1}
 
         controller.bulk_validate_pointages.return_value = {
             "success_count": 3,
@@ -68,6 +74,7 @@ class TestBulkValidateSecurityP2_001:
             validateur_id=validateur_id,
             current_user_role=current_user_role,
             controller=controller,
+            db=db,
         )
 
         # Assert
@@ -81,6 +88,7 @@ class TestBulkValidateSecurityP2_001:
         validateur_id = 3
         current_user_role = "conducteur"
         controller = MagicMock()
+        db = MagicMock()
 
         controller.bulk_validate_pointages.return_value = {
             "success_count": 2,
@@ -94,6 +102,7 @@ class TestBulkValidateSecurityP2_001:
             validateur_id=validateur_id,
             current_user_role=current_user_role,
             controller=controller,
+            db=db,
         )
 
         # Assert
@@ -107,6 +116,7 @@ class TestBulkValidateSecurityP2_001:
         validateur_id = 1
         current_user_role = "admin"
         controller = MagicMock()
+        db = MagicMock()
 
         controller.bulk_validate_pointages.return_value = {
             "success_count": 1,
@@ -120,6 +130,7 @@ class TestBulkValidateSecurityP2_001:
             validateur_id=validateur_id,
             current_user_role=current_user_role,
             controller=controller,
+            db=db,
         )
 
         # Assert

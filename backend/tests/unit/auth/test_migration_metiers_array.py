@@ -5,7 +5,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from modules.auth.infrastructure.persistence import Base, UserModel
+from modules.auth.infrastructure.persistence import UserModel
+from shared.infrastructure.database_base import Base
 
 
 class TestMigrationMetiersArray:
@@ -19,7 +20,8 @@ class TestMigrationMetiersArray:
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
-        Base.metadata.create_all(bind=engine)
+        # Only create the users table, not all models (avoids JSONB/FK issues with SQLite)
+        UserModel.__table__.create(bind=engine, checkfirst=True)
         Session = sessionmaker(bind=engine)
         session = Session()
 

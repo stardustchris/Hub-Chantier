@@ -54,42 +54,32 @@ class TestUserDTOTauxHoraire:
         assert dto.taux_horaire is None
 
     def test_user_dto_from_entity_zero_taux_horaire(self):
-        """Test: conversion User -> UserDTO avec taux_horaire à zéro."""
-        # Arrange
-        user = User(
-            id=1,
-            email=Email("test@example.com"),
-            password_hash=PasswordHash("$2b$12$hashed"),
-            nom="DUPONT",
-            prenom="Jean",
-            role=Role.COMPAGNON,
-            taux_horaire=Decimal("0.00"),
-        )
-
-        # Act
-        dto = UserDTO.from_entity(user)
-
-        # Assert
-        assert dto.taux_horaire == Decimal("0.00")
+        """Test: création User avec taux_horaire zéro lève ValueError (SMIC)."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="SMIC"):
+            User(
+                id=1,
+                email=Email("test@example.com"),
+                password_hash=PasswordHash("$2b$12$hashed"),
+                nom="DUPONT",
+                prenom="Jean",
+                role=Role.COMPAGNON,
+                taux_horaire=Decimal("0.00"),
+            )
 
     def test_user_dto_from_entity_high_precision_taux_horaire(self):
-        """Test: conversion User -> UserDTO avec taux_horaire haute précision."""
-        # Arrange
-        user = User(
-            id=1,
-            email=Email("test@example.com"),
-            password_hash=PasswordHash("$2b$12$hashed"),
-            nom="DUPONT",
-            prenom="Jean",
-            role=Role.COMPAGNON,
-            taux_horaire=Decimal("45.123456"),
-        )
-
-        # Act
-        dto = UserDTO.from_entity(user)
-
-        # Assert
-        assert dto.taux_horaire == Decimal("45.123456")
+        """Test: création User avec taux_horaire haute précision lève ValueError."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="décimales"):
+            User(
+                id=1,
+                email=Email("test@example.com"),
+                password_hash=PasswordHash("$2b$12$hashed"),
+                nom="DUPONT",
+                prenom="Jean",
+                role=Role.COMPAGNON,
+                taux_horaire=Decimal("45.123456"),
+            )
 
     def test_user_dto_from_entity_all_fields_with_taux_horaire(self):
         """Test: conversion User -> UserDTO avec tous les champs."""

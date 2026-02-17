@@ -41,7 +41,7 @@ class TestCreatePointageUseCase:
         dto = CreatePointageDTO(
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales="08:00",
             heures_supplementaires="01:30",
         )
@@ -75,7 +75,7 @@ class TestCreatePointageUseCase:
         dto = CreatePointageDTO(
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales="08:00",
         )
 
@@ -91,7 +91,7 @@ class TestCreatePointageUseCase:
         dto = CreatePointageDTO(
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales="invalid",
         )
 
@@ -116,7 +116,7 @@ class TestUpdatePointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             heures_normales=Duree(8, 0),
         )
         self.pointage_repo.find_by_id.return_value = existing
@@ -147,7 +147,7 @@ class TestUpdatePointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.VALIDE,
         )
         self.pointage_repo.find_by_id.return_value = existing
@@ -194,7 +194,7 @@ class TestSignPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
         )
         self.pointage_repo.find_by_id.return_value = existing
         self.pointage_repo.save.return_value = existing
@@ -212,7 +212,7 @@ class TestSignPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
         )
         self.pointage_repo.find_by_id.return_value = existing
 
@@ -257,7 +257,7 @@ class TestValidatePointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.SOUMIS,
         )
         self.pointage_repo.find_by_id.return_value = existing
@@ -276,7 +276,7 @@ class TestValidatePointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.BROUILLON,
         )
         self.pointage_repo.find_by_id.return_value = existing
@@ -323,7 +323,7 @@ class TestRejectPointageUseCase:
             id=1,
             utilisateur_id=1,
             chantier_id=10,
-            date_pointage=date(2026, 1, 20),
+            date_pointage=date(2026, 2, 15),
             statut=StatutPointage.SOUMIS,
         )
         self.pointage_repo.find_by_id.return_value = existing

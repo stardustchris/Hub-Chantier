@@ -78,9 +78,11 @@ class GetPlanningUseCase:
 
         # Filtrer par metier si demande
         if filters.has_metier_filter:
+            filter_set = set(filters.metiers)
             dtos = [
                 dto for dto in dtos
-                if dto.utilisateur_metier in filters.metiers
+                if (dto.utilisateur_metiers and set(dto.utilisateur_metiers) & filter_set)
+                or (dto.utilisateur_metier and dto.utilisateur_metier in filter_set)
             ]
 
         return dtos
@@ -196,11 +198,13 @@ class GetPlanningUseCase:
             )
 
             # Creer le DTO enrichi
+            user_metiers = user_info.get("metiers")
             dto = AffectationDTO.from_entity(
                 affectation,
                 utilisateur_nom=user_info.get("nom"),
                 utilisateur_couleur=user_info.get("couleur"),
                 utilisateur_metier=user_info.get("metier"),
+                utilisateur_metiers=user_metiers if isinstance(user_metiers, list) else None,
                 utilisateur_role=user_info.get("role"),
                 utilisateur_type=user_info.get("type_utilisateur"),
                 chantier_nom=chantier_info.get("nom"),
