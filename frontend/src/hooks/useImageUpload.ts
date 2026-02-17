@@ -25,7 +25,7 @@ interface UseImageUploadOptions {
 
 interface UseImageUploadReturn {
   /** Ref à attacher à l'input[type=file] */
-  inputRef: React.RefObject<HTMLInputElement>
+  inputRef: React.RefObject<HTMLInputElement | null>
   /** Upload en cours */
   isUploading: boolean
   /** Message d'erreur ou null */

@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import DevisForm from '../components/devis/DevisForm'
-import { useDevisList } from '../hooks/useDevisList'
-import type { Devis, DevisCreate, DevisUpdate, StatutDevis } from '../types'
+import { useDevisList, type UseDevisListParams } from '../hooks/useDevisList'
+import type { DevisCreate, DevisUpdate, StatutDevis } from '../types'
 import { STATUT_DEVIS_CONFIG } from '../types'
 import { formatEUR } from '../utils/format'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -56,21 +56,20 @@ export default function DevisListPage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
 
   const fetchDevis = useCallback(async () => {
-    const params: Record<string, unknown> = {
+    const params: UseDevisListParams = {
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
       sort_by: sortBy,
       sort_direction: sortDirection,
+      ...(search ? { search } : {}),
+      ...(selectedStatuts.length === 1 ? { statut: selectedStatuts[0] } : {}),
+      ...(dateDebut ? { date_debut: dateDebut } : {}),
+      ...(dateFin ? { date_fin: dateFin } : {}),
+      ...(montantMin ? { montant_min: Number(montantMin) } : {}),
+      ...(montantMax ? { montant_max: Number(montantMax) } : {}),
     }
 
-    if (search) params.search = search
-    if (selectedStatuts.length === 1) params.statut = selectedStatuts[0]
-    if (dateDebut) params.date_debut = dateDebut
-    if (dateFin) params.date_fin = dateFin
-    if (montantMin) params.montant_min = Number(montantMin)
-    if (montantMax) params.montant_max = Number(montantMax)
-
-    await loadDevis(params as Parameters<typeof loadDevis>[0])
+    await loadDevis(params)
   }, [page, sortBy, sortDirection, search, selectedStatuts, dateDebut, dateFin, montantMin, montantMax, loadDevis])
 
   useEffect(() => {
