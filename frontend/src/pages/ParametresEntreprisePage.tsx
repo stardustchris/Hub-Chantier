@@ -4,40 +4,11 @@
  * Permet de modifier les coefficients financiers de l'entreprise.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import api from '../services/api';
-import type { ApiError } from '../types/api';
+import { useParametresEntreprise } from '../hooks/useParametresEntreprise';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-
-interface ConfigurationEntreprise {
-  id: number;
-  couts_fixes_annuels: string;
-  annee: number;
-  coeff_frais_generaux: string;
-  coeff_charges_patronales: string;
-  coeff_heures_sup: string;
-  coeff_heures_sup_2: string;
-  coeff_productivite: string;
-  coeff_charges_ouvrier: string | null;
-  coeff_charges_etam: string | null;
-  coeff_charges_cadre: string | null;
-  seuil_alerte_budget_pct: string;
-  seuil_alerte_budget_critique_pct: string;
-  notes: string | null;
-  updated_at: string | null;
-  updated_by: number | null;
-  is_default?: boolean;
-  stale_warning?: string | null;
-}
-
-interface ConfigurationUpdateResponse extends ConfigurationEntreprise {
-  created?: boolean;
-  warnings?: string[];
-}
-
-const CURRENT_YEAR = new Date().getFullYear();
 
 export function ParametresEntreprisePage(): React.ReactElement {
   useDocumentTitle('Paramètres entreprise');
@@ -45,9 +16,13 @@ export function ParametresEntreprisePage(): React.ReactElement {
   const { addToast } = useToast();
   const isAdmin = user?.role === 'admin';
 
-  const [config, setConfig] = useState<ConfigurationEntreprise | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const {
+    config,
+    isLoading,
+    isSaving,
+    currentYear: CURRENT_YEAR,
+    saveConfig,
+  } = useParametresEntreprise();
 
   // Champs du formulaire
   const [coutsFixesAnnuels, setCoutsFixesAnnuels] = useState('');
@@ -63,97 +38,73 @@ export function ParametresEntreprisePage(): React.ReactElement {
   const [seuilAlerteBudgetCritique, setSeuilAlerteBudgetCritique] = useState('');
   const [notes, setNotes] = useState('');
 
-  const loadConfig = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await api.get<ConfigurationEntreprise>(
-        `/api/financier/configuration/${CURRENT_YEAR}`
-      );
-      const data = response.data;
-      setConfig(data);
-      setCoutsFixesAnnuels(data.couts_fixes_annuels);
-      setCoeffFraisGeneraux(data.coeff_frais_generaux);
-      setCoeffChargesPatronales(data.coeff_charges_patronales);
-      setCoeffHeuresSup(data.coeff_heures_sup);
-      setCoeffHeuresSup2(data.coeff_heures_sup_2);
-      setCoeffProductivite(data.coeff_productivite);
-      setCoeffChargesOuvrier(data.coeff_charges_ouvrier || '');
-      setCoeffChargesEtam(data.coeff_charges_etam || '');
-      setCoeffChargesCadre(data.coeff_charges_cadre || '');
-      setSeuilAlerteBudget(data.seuil_alerte_budget_pct);
-      setSeuilAlerteBudgetCritique(data.seuil_alerte_budget_critique_pct);
-      setNotes(data.notes || '');
-      if (data.is_default) {
+  // Synchroniser les champs du formulaire quand la config est chargee
+  useEffect(() => {
+    if (config) {
+      setCoutsFixesAnnuels(config.couts_fixes_annuels);
+      setCoeffFraisGeneraux(config.coeff_frais_generaux);
+      setCoeffChargesPatronales(config.coeff_charges_patronales);
+      setCoeffHeuresSup(config.coeff_heures_sup);
+      setCoeffHeuresSup2(config.coeff_heures_sup_2);
+      setCoeffProductivite(config.coeff_productivite);
+      setCoeffChargesOuvrier(config.coeff_charges_ouvrier || '');
+      setCoeffChargesEtam(config.coeff_charges_etam || '');
+      setCoeffChargesCadre(config.coeff_charges_cadre || '');
+      setSeuilAlerteBudget(config.seuil_alerte_budget_pct);
+      setSeuilAlerteBudgetCritique(config.seuil_alerte_budget_critique_pct);
+      setNotes(config.notes || '');
+      if (config.is_default) {
         addToast({
           message: `Aucune configuration enregistree pour ${CURRENT_YEAR}. Valeurs par defaut affichees.`,
           type: 'info'
         });
       }
-    } catch {
-      addToast({ message: 'Erreur lors du chargement de la configuration', type: 'error' });
-    } finally {
-      setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadConfig();
-    }
-  }, [isAdmin, loadConfig]);
+  }, [config]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isAdmin) return;
 
-    setIsSaving(true);
-    try {
-      const response = await api.put<ConfigurationUpdateResponse>(
-        `/api/financier/configuration/${CURRENT_YEAR}`,
-        {
-          couts_fixes_annuels: parseFloat(coutsFixesAnnuels),
-          coeff_frais_generaux: parseFloat(coeffFraisGeneraux),
-          coeff_charges_patronales: parseFloat(coeffChargesPatronales),
-          coeff_heures_sup: parseFloat(coeffHeuresSup),
-          coeff_heures_sup_2: parseFloat(coeffHeuresSup2),
-          coeff_productivite: parseFloat(coeffProductivite),
-          coeff_charges_ouvrier: coeffChargesOuvrier ? parseFloat(coeffChargesOuvrier) : null,
-          coeff_charges_etam: coeffChargesEtam ? parseFloat(coeffChargesEtam) : null,
-          coeff_charges_cadre: coeffChargesCadre ? parseFloat(coeffChargesCadre) : null,
-          seuil_alerte_budget_pct: parseFloat(seuilAlerteBudget),
-          seuil_alerte_budget_critique_pct: parseFloat(seuilAlerteBudgetCritique),
-          notes: notes || null,
-        }
-      );
-      setConfig(response.data);
+    const result = await saveConfig({
+      coutsFixesAnnuels,
+      coeffFraisGeneraux,
+      coeffChargesPatronales,
+      coeffHeuresSup,
+      coeffHeuresSup2,
+      coeffProductivite,
+      coeffChargesOuvrier,
+      coeffChargesEtam,
+      coeffChargesCadre,
+      seuilAlerteBudget,
+      seuilAlerteBudgetCritique,
+      notes,
+    });
+
+    if (result.success && result.data) {
       // EDGE-001: notifier si creation d'une nouvelle config
-      if (response.data.created) {
+      if (result.data.created) {
         addToast({ message: `Configuration creee pour l'annee ${CURRENT_YEAR}`, type: 'success' });
       } else {
         addToast({ message: 'Configuration sauvegardee avec succes', type: 'success' });
       }
       // VAL-002 + EDGE-002: afficher les warnings
-      if (response.data.warnings && response.data.warnings.length > 0) {
-        for (const w of response.data.warnings) {
+      if (result.data.warnings && result.data.warnings.length > 0) {
+        for (const w of result.data.warnings) {
           addToast({ message: w, type: 'warning' });
         }
       }
-    } catch (err) {
-      const error = err as ApiError;
-      if (error.response?.status === 422) {
-        addToast({
-          message: error.response?.data?.detail || 'Valeurs invalides',
-          type: 'error'
-        });
-      } else if (error.response?.status === 403) {
-        addToast({ message: 'Acces reserve aux administrateurs', type: 'error' });
-      } else {
-        addToast({ message: 'Erreur lors de la sauvegarde', type: 'error' });
-      }
-    } finally {
-      setIsSaving(false);
+    } else if (result.errorStatus === 422) {
+      addToast({
+        message: result.errorDetail || 'Valeurs invalides',
+        type: 'error'
+      });
+    } else if (result.errorStatus === 403) {
+      addToast({ message: 'Acces reserve aux administrateurs', type: 'error' });
+    } else if (!result.success) {
+      addToast({ message: 'Erreur lors de la sauvegarde', type: 'error' });
     }
   };
 

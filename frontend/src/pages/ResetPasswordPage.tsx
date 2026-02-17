@@ -6,8 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
-import api from '../services/api';
-import type { ApiError } from '../types/api';
+import { useResetPassword } from '../hooks/useResetPassword';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function ResetPasswordPage(): React.ReactElement {
@@ -19,8 +18,9 @@ export function ResetPasswordPage(): React.ReactElement {
   const [token, setToken] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
+
+  const { isLoading, resetPassword } = useResetPassword();
 
   useEffect(() => {
     // Récupérer le token depuis l'URL
@@ -73,26 +73,17 @@ export function ResetPasswordPage(): React.ReactElement {
       return;
     }
 
-    setIsLoading(true);
     setErrors({});
 
-    try {
-      await api.post('/auth/reset-password', {
-        token,
-        new_password: password,
-      });
+    const result = await resetPassword(token, password);
 
+    if (result.success) {
       addToast({ message: 'Mot de passe réinitialisé avec succès !', type: 'success' });
       navigate('/login');
-    } catch (err) {
-      const error = err as ApiError;
-      if (error.response?.status === 400) {
-        addToast({ message: 'Le lien de réinitialisation est invalide ou expiré', type: 'error' });
-      } else {
-        addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
-      }
-    } finally {
-      setIsLoading(false);
+    } else if (result.errorStatus === 400) {
+      addToast({ message: 'Le lien de réinitialisation est invalide ou expiré', type: 'error' });
+    } else {
+      addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
     }
   };
 

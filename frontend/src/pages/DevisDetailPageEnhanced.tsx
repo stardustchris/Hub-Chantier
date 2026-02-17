@@ -6,24 +6,21 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
 import Layout from '../components/Layout'
 import DevisMediaUpload from '../components/devis/DevisMediaUpload'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import { useDevisMediaUpload } from '../hooks/useDevisMediaUpload'
-import { devisService } from '../services/devis'
+import { useDevisDetail } from '../hooks/useDevisDetail'
 import { formatEUR } from '../utils/format'
-import type { DevisDetail } from '../types'
 
 export default function DevisDetailPageEnhanced() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [devis, setDevis] = useState<DevisDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const devisId = id ? Number(id) : 0
+  const { devis, loading, error, loadDevis } = useDevisDetail(devisId)
 
   const {
     pieces,
@@ -42,24 +39,9 @@ export default function DevisDetailPageEnhanced() {
   })
 
   useEffect(() => {
-    const loadDevis = async () => {
-      if (!devisId) return
-
-      try {
-        setLoading(true)
-        setError(null)
-        const data = await devisService.getDevis(devisId)
-        setDevis(data)
-        await reloadPieces()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur de chargement')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadDevis()
-  }, [devisId, reloadPieces])
+    if (!devisId) return
+    loadDevis().then(() => reloadPieces())
+  }, [devisId, loadDevis, reloadPieces])
 
   if (loading) {
     return (

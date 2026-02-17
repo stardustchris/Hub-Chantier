@@ -1,13 +1,12 @@
 /**
- * Page d'acceptation d'invitation.
- * Permet à un utilisateur invité de créer son compte et définir son mot de passe.
+ * Page d'acceptation d'une invitation.
+ * Permet à un utilisateur invité de définir son mot de passe et activer son compte.
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
-import api from '../services/api';
-import type { ApiError, InvitationInfo } from '../types/api';
+import { useAcceptInvitation } from '../hooks/useAcceptInvitation';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function AcceptInvitationPage(): React.ReactElement {
@@ -17,75 +16,54 @@ export function AcceptInvitationPage(): React.ReactElement {
   const { addToast } = useToast();
 
   const [token, setToken] = useState<string>('');
-  const [invitationInfo, setInvitationInfo] = useState<InvitationInfo | null>(null);
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingInfo, setIsLoadingInfo] = useState(true);
-  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
+  const [errors, setErrors] = useState<{ password?: string; confirm?: string; token?: string }>({});
+
+  const {
+    invitationInfo,
+    isLoadingInfo,
+    isLoading,
+    fetchInvitationInfo,
+    acceptInvitation,
+  } = useAcceptInvitation();
 
   useEffect(() => {
-    // Récupérer le token depuis l'URL
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
-      addToast({ message: 'Lien d\'invitation invalide.', type: 'error' });
+      addToast({ message: 'Lien d\'invitation invalide ou expiré', type: 'error' });
       navigate('/login');
       return;
     }
     setToken(tokenParam);
 
-    // Récupérer les informations de l'invitation
-    fetchInvitationInfo(tokenParam);
+    fetchInvitationInfo(tokenParam).then(result => {
+      if (!result.success) {
+        if (result.errorStatus === 404 || result.errorStatus === 400) {
+          setErrors({ token: 'Ce lien d\'invitation est invalide ou expiré' });
+        } else {
+          addToast({ message: 'Erreur lors du chargement de l\'invitation', type: 'error' });
+        }
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, navigate]);
 
-  const fetchInvitationInfo = async (invitationToken: string) => {
-    setIsLoadingInfo(true);
-    try {
-      const response = await api.get(`/auth/invitation/${invitationToken}`);
-      setInvitationInfo(response.data);
-    } catch (err) {
-      const error = err as ApiError;
-      if (error.response?.status === 404 || error.response?.status === 400) {
-        addToast({ message: 'Cette invitation est invalide ou a expiré.', type: 'error' });
-        navigate('/login');
-      } else {
-        addToast({ message: 'Impossible de charger l\'invitation.', type: 'error' });
-      }
-    } finally {
-      setIsLoadingInfo(false);
-    }
-  };
-
   const validatePassword = (pwd: string): string | null => {
-    if (pwd.length < 8) {
-      return 'Le mot de passe doit contenir au moins 8 caractères';
-    }
-    if (!/[A-Z]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins une majuscule';
-    }
-    if (!/[a-z]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins une minuscule';
-    }
-    if (!/[0-9]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins un chiffre';
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins un caractère spécial';
-    }
+    if (pwd.length < 8) return 'Le mot de passe doit contenir au moins 8 caractères';
+    if (!/[A-Z]/.test(pwd)) return 'Le mot de passe doit contenir au moins une majuscule';
+    if (!/[a-z]/.test(pwd)) return 'Le mot de passe doit contenir au moins une minuscule';
+    if (!/[0-9]/.test(pwd)) return 'Le mot de passe doit contenir au moins un chiffre';
     return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     const newErrors: { password?: string; confirm?: string } = {};
 
     const passwordError = validatePassword(password);
-    if (passwordError) {
-      newErrors.password = passwordError;
-    }
+    if (passwordError) newErrors.password = passwordError;
 
     if (password !== confirmPassword) {
       newErrors.confirm = 'Les mots de passe ne correspondent pas';
@@ -96,79 +74,48 @@ export function AcceptInvitationPage(): React.ReactElement {
       return;
     }
 
-    setIsLoading(true);
     setErrors({});
 
-    try {
-      await api.post('/auth/accept-invitation', {
-        token,
-        password,
-      });
+    const result = await acceptInvitation(token, password);
 
-      addToast({ message: 'Compte créé avec succès ! Bienvenue à Hub Chantier.', type: 'success' });
+    if (result.success) {
+      addToast({ message: 'Compte activé avec succès ! Vous pouvez maintenant vous connecter.', type: 'success' });
       navigate('/login');
-    } catch (err) {
-      const error = err as ApiError;
-      if (error.response?.status === 400) {
-        addToast({ message: 'L\'invitation est invalide ou a expiré', type: 'error' });
-      } else if (error.response?.status === 409) {
-        addToast({ message: 'Cette invitation a déjà été acceptée', type: 'error' });
-      } else {
-        addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
-      }
-    } finally {
-      setIsLoading(false);
+    } else if (result.errorStatus === 400 || result.errorStatus === 404) {
+      addToast({ message: 'Ce lien d\'invitation est invalide ou expiré', type: 'error' });
+    } else {
+      addToast({ message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error' });
     }
   };
 
-  const getRoleLabel = (role: string): string => {
-    const labels: { [key: string]: string } = {
-      admin: 'Administrateur',
-      chef_chantier: 'Chef de Chantier',
-      employe: 'Employé',
-    };
-    return labels[role] || role;
-  };
-
-  const getPasswordStrength = (pwd: string): { strength: number; label: string; color: string } => {
-    if (pwd.length === 0) return { strength: 0, label: '', color: '' };
-
-    let strength = 0;
-    if (pwd.length >= 8) strength += 1;
-    if (pwd.length >= 12) strength += 1;
-    if (/[A-Z]/.test(pwd)) strength += 1;
-    if (/[a-z]/.test(pwd)) strength += 1;
-    if (/[0-9]/.test(pwd)) strength += 1;
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) strength += 1;
-
-    if (strength <= 2) return { strength: 1, label: 'Faible', color: 'bg-red-500' };
-    if (strength <= 4) return { strength: 2, label: 'Moyen', color: 'bg-yellow-500' };
-    return { strength: 3, label: 'Fort', color: 'bg-green-500' };
-  };
-
-  const passwordStrength = getPasswordStrength(password);
-
+  // Loading state
   if (isLoadingInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <div className="flex justify-center items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            </div>
-            <p className="mt-4 text-center text-gray-600">Chargement de votre invitation...</p>
-          </div>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Vérification de l'invitation...</p>
         </div>
       </div>
     );
   }
 
-  if (!invitationInfo) {
+  // Error state (invalid token)
+  if (errors.token) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <p className="text-center text-gray-600">Invitation introuvable.</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-red-800">Lien invalide</h3>
+              <p className="mt-2 text-sm text-red-700">{errors.token}</p>
+            </div>
+            <button
+              onClick={() => navigate('/login')}
+              className="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Aller à la connexion
+            </button>
           </div>
         </div>
       </div>
@@ -179,44 +126,34 @@ export function AcceptInvitationPage(): React.ReactElement {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Bienvenue à Hub Chantier !
+          Bienvenue !
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Vous avez été invité à rejoindre la plateforme
-        </p>
+        {invitationInfo && (
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Bonjour <strong>{invitationInfo.prenom} {invitationInfo.nom}</strong>,
+            créez votre mot de passe pour activer votre compte.
+          </p>
+        )}
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* Informations de l'invitation */}
-          <div className="mb-6 p-4 bg-primary-50 rounded-md">
-            <h3 className="text-sm font-medium text-primary-800 mb-2">Vos informations</h3>
-            <dl className="space-y-1">
-              <div>
-                <dt className="text-xs text-primary-600">Email</dt>
-                <dd className="text-sm font-medium text-primary-900">{invitationInfo.email}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-primary-600">Nom</dt>
-                <dd className="text-sm font-medium text-primary-900">
-                  {invitationInfo.prenom} {invitationInfo.nom}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-primary-600">Rôle</dt>
-                <dd className="text-sm font-medium text-primary-900">
-                  {getRoleLabel(invitationInfo.role)}
-                </dd>
-              </div>
-            </dl>
-          </div>
+          {invitationInfo && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-700">
+                <strong>Email :</strong> {invitationInfo.email}
+              </p>
+              <p className="text-sm text-blue-700 mt-1">
+                <strong>Rôle :</strong> {invitationInfo.role}
+              </p>
+            </div>
+          )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <p className="text-sm text-gray-500">Les champs marques <span className="text-red-500">*</span> sont obligatoires</p>
-            {/* Mot de passe */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Créer votre mot de passe <span className="text-red-500">*</span>
+                Mot de passe <span className="text-red-500">*</span>
               </label>
               <div className="mt-1">
                 <input
@@ -231,36 +168,14 @@ export function AcceptInvitationPage(): React.ReactElement {
                   className={`appearance-none block w-full px-3 py-2 border ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
+                  placeholder="Minimum 8 caractères"
                 />
               </div>
               {errors.password && (
                 <p className="mt-2 text-sm text-red-600">{errors.password}</p>
               )}
-
-              {/* Indicateur de force */}
-              {password && (
-                <div className="mt-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-600">Force du mot de passe :</span>
-                    <span className={`text-xs font-medium ${
-                      passwordStrength.strength === 1 ? 'text-red-600' :
-                      passwordStrength.strength === 2 ? 'text-yellow-600' :
-                      'text-green-600'
-                    }`}>
-                      {passwordStrength.label}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color}`}
-                      style={{ width: `${(passwordStrength.strength / 3) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Confirmation */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirmer le mot de passe <span className="text-red-500">*</span>
@@ -285,36 +200,13 @@ export function AcceptInvitationPage(): React.ReactElement {
               )}
             </div>
 
-            {/* Exigences */}
-            <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-xs font-medium text-gray-700 mb-2">Exigences du mot de passe :</p>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li className={password.length >= 8 ? 'text-green-600' : ''}>
-                  • Au moins 8 caractères
-                </li>
-                <li className={/[A-Z]/.test(password) ? 'text-green-600' : ''}>
-                  • Une majuscule
-                </li>
-                <li className={/[a-z]/.test(password) ? 'text-green-600' : ''}>
-                  • Une minuscule
-                </li>
-                <li className={/[0-9]/.test(password) ? 'text-green-600' : ''}>
-                  • Un chiffre
-                </li>
-                <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'text-green-600' : ''}>
-                  • Un caractère spécial
-                </li>
-              </ul>
-            </div>
-
-            {/* Bouton */}
             <div>
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Création du compte...' : 'Créer mon compte'}
+                {isLoading ? 'Activation...' : 'Activer mon compte'}
               </button>
             </div>
           </form>
@@ -323,4 +215,5 @@ export function AcceptInvitationPage(): React.ReactElement {
     </div>
   );
 }
-export default AcceptInvitationPage
+
+export default AcceptInvitationPage;

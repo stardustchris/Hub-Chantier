@@ -5,40 +5,44 @@ Permet à un utilisateur d'exporter toutes ses données personnelles
 conformément au RGPD Article 20.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from datetime import datetime, date, timedelta
 
 from ...domain.repositories import UserRepository
 
 logger = logging.getLogger(__name__)
 
-# Interfaces des repositories externes (Clean Architecture: on importe les ABC)
-from modules.pointages.domain.repositories import (
-    PointageRepository,
-    FeuilleHeuresRepository,
-)
-from modules.planning.domain.repositories import AffectationRepository
-from modules.dashboard.domain.repositories import (
-    PostRepository,
-    CommentRepository,
-    LikeRepository,
-)
-from modules.documents.domain.repositories import (
-    DocumentRepository,
-    AutorisationRepository,
-)
-from modules.formulaires.domain.repositories import FormulaireRempliRepository
-from modules.signalements.domain.repositories import (
-    SignalementRepository,
-    ReponseRepository,
-)
-from modules.interventions.domain.repositories import (
-    InterventionRepository,
-    AffectationInterventionRepository,
-    InterventionMessageRepository,
-)
-from modules.shared.domain.repositories import AuditRepository
+if TYPE_CHECKING:
+    # Interfaces des repositories externes - import uniquement pour le typage.
+    # Les instances concrètes sont injectées via le constructeur (Clean Architecture).
+    from modules.pointages.domain.repositories import (
+        PointageRepository,
+        FeuilleHeuresRepository,
+    )
+    from modules.planning.domain.repositories import AffectationRepository
+    from modules.dashboard.domain.repositories import (
+        PostRepository,
+        CommentRepository,
+        LikeRepository,
+    )
+    from modules.documents.domain.repositories import (
+        DocumentRepository,
+        AutorisationRepository,
+    )
+    from modules.formulaires.domain.repositories import FormulaireRempliRepository
+    from modules.signalements.domain.repositories import (
+        SignalementRepository,
+        ReponseRepository,
+    )
+    from modules.interventions.domain.repositories import (
+        InterventionRepository,
+        AffectationInterventionRepository,
+        InterventionMessageRepository,
+    )
+    from modules.shared.domain.repositories import AuditRepository
 
 
 class ExportUserDataUseCase:

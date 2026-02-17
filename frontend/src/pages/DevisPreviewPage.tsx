@@ -3,11 +3,11 @@
  * Ouverte dans un nouvel onglet via le bouton "Apercu PDF"
  */
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { devisService } from '../services/devis'
+import { useDevisDetail } from '../hooks/useDevisDetail'
 import { formatEUR } from '../utils/format'
-import type { DevisDetail, LotDevis, LigneDevis } from '../types'
+import type { LotDevis, LigneDevis } from '../types'
 import { Loader2, Printer } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
@@ -19,25 +19,15 @@ const formatDate = (d: string | null | undefined) => {
 
 export default function DevisPreviewPage() {
   const { id } = useParams<{ id: string }>()
-  const [devis, setDevis] = useState<DevisDetail | null>(null)
-  const [loading, setLoading] = useState(true)
+  const devisId = Number(id)
+  const { devis, loading, loadDevis } = useDevisDetail(devisId)
 
   // Document title
   useDocumentTitle(devis ? `Aperçu - Devis ${devis.numero}` : 'Aperçu devis')
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await devisService.getDevis(Number(id))
-        setDevis(data)
-      } catch (error) {
-        console.error('Erreur lors du chargement du devis pour aperçu PDF:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [id])
+    loadDevis()
+  }, [loadDevis])
 
   if (loading) {
     return (

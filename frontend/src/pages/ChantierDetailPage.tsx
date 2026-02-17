@@ -1,11 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { chantiersService, NavigationIds } from '../services/chantiers'
-import { usersService } from '../services/users'
-import { planningService } from '../services/planning'
 import { useAuth } from '../contexts/AuthContext'
-import { useToast } from '../contexts/ToastContext'
-import { logger } from '../services/logger'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import MiniMap from '../components/MiniMap'
@@ -13,6 +8,7 @@ import { TaskList } from '../components/taches'
 import { EditChantierModal, AddUserModal, ChantierEquipeTab, MesInterventions, ChantierLogistiqueSection } from '../components/chantiers'
 import BudgetTab from '../components/financier/BudgetTab'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useChantierDetail } from '../hooks/useChantierDetail'
 import { Breadcrumb } from '../components/ui/Breadcrumb'
 import {
   ArrowLeft,
@@ -34,7 +30,7 @@ import {
   DollarSign,
 } from 'lucide-react'
 import { formatDateFull } from '../utils/dates'
-import type { Chantier, ChantierUpdate, User, Affectation, ContactChantier } from '../types'
+import type { User } from '../types'
 import { CHANTIER_STATUTS } from '../types'
 
 type TabType = 'infos' | 'taches' | 'equipe' | 'budget'
@@ -43,13 +39,7 @@ export default function ChantierDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user: currentUser } = useAuth()
-  const { showUndoToast, addToast } = useToast()
-  const [chantier, setChantier] = useState<Chantier | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showAddUserModal, setShowAddUserModal] = useState<'conducteur' | 'chef' | 'ouvrier' | null>(null)
-  const [availableUsers, setAvailableUsers] = useState<User[]>([])
-  const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
+
   // Tab state - lire depuis l'URL au démarrage
   const getInitialTab = (): TabType => {
     const params = new URLSearchParams(window.location.search)
@@ -57,8 +47,28 @@ export default function ChantierDetailPage() {
     return (tab && ['infos', 'documents', 'taches', 'planning', 'budget'].includes(tab)) ? tab : 'infos'
   }
   const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
-  const [planningAffectations, setPlanningAffectations] = useState<Affectation[]>([])
-  const [contacts, setContacts] = useState<ContactChantier[]>([])
+
+  const {
+    chantier,
+    navIds,
+    availableUsers,
+    contacts,
+    planningAffectations,
+    isLoading,
+    showEditModal,
+    showAddUserModal,
+    setShowEditModal,
+    openAddUserModal,
+    closeAddUserModal,
+    handleUpdateChantier,
+    handleDeleteChantier,
+    handleChangeStatut,
+    handleAddUser,
+    handleRemoveUser,
+    reload,
+    getGoogleMapsUrl,
+    getWazeUrl,
+  } = useChantierDetail({ chantierId: id! })
 
   const isAdmin = currentUser?.role === 'admin'
   const isConducteur = currentUser?.role === 'conducteur'
@@ -66,6 +76,15 @@ export default function ChantierDetailPage() {
 
   // Document title
   useDocumentTitle(chantier?.nom || 'Chantier')
+
+  // Synchroniser l'onglet actif avec l'URL
+  const handleSetActiveTab = (tab: TabType) => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', tab)
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }
 
   // Fusionner les ouvriers directement assignés avec ceux des affectations planning
   const allOuvriers = useMemo(() => {
@@ -109,231 +128,6 @@ export default function ChantierDetailPage() {
       ...Array.from(planningUsersMap.values()) as User[],
     ]
   }, [chantier, planningAffectations])
-
-  useEffect(() => {
-    if (id) {
-      loadChantier()
-      loadNavigation()
-      loadPlanningUsers()
-    }
-  }, [id])
-
-  // Synchroniser l'onglet actif avec l'URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    params.set('tab', activeTab)
-    const newUrl = `${window.location.pathname}?${params.toString()}`
-    window.history.replaceState({}, '', newUrl)
-  }, [activeTab])
-
-  const loadNavigation = async () => {
-    try {
-      const ids = await chantiersService.getNavigationIds(id!)
-      setNavIds(ids)
-    } catch (error) {
-      logger.error('Error loading navigation', error, { context: 'ChantierDetailPage' })
-    }
-  }
-
-  const loadPlanningUsers = async () => {
-    try {
-      // Charger les affectations des 30 derniers jours + 30 prochains jours
-      const today = new Date()
-      const startDate = new Date()
-      startDate.setDate(today.getDate() - 30)
-      const endDate = new Date()
-      endDate.setDate(today.getDate() + 30)
-
-      const dateDebut = startDate.toISOString().split('T')[0]
-      const dateFin = endDate.toISOString().split('T')[0]
-
-      const affectations = await planningService.getByChantier(id!, dateDebut, dateFin)
-      setPlanningAffectations(affectations)
-    } catch (error) {
-      logger.error('Error loading planning users', error, { context: 'ChantierDetailPage' })
-    }
-  }
-
-  const loadChantier = async () => {
-    try {
-      setIsLoading(true)
-      const data = await chantiersService.getById(id!)
-      setChantier(data)
-
-      // Charger les contacts depuis l'API dédiée
-      try {
-        const contactsData = await chantiersService.listContacts(id!)
-        setContacts(contactsData)
-      } catch (error) {
-        logger.error('Error loading contacts', error, { context: 'ChantierDetailPage' })
-      }
-    } catch (error) {
-      logger.error('Error loading chantier', error, { context: 'ChantierDetailPage' })
-      addToast({ message: 'Erreur lors du chargement du chantier', type: 'error' })
-      navigate('/chantiers')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const loadAvailableUsers = async (role: 'conducteur' | 'chef' | 'ouvrier') => {
-    try {
-      // Pour les ouvriers, on charge tous les utilisateurs actifs (intérimaires, sous-traitants, ouvriers)
-      const roleFilter = role === 'conducteur' ? 'conducteur' : role === 'chef' ? 'chef_chantier' : 'ouvrier'
-      const response = await usersService.list({
-        size: 100,
-        role: roleFilter,
-        is_active: true,
-      })
-      let existingIds: string[] = []
-      if (role === 'conducteur') {
-        existingIds = chantier?.conducteurs.map((u) => u.id) || []
-      } else if (role === 'chef') {
-        existingIds = chantier?.chefs.map((u) => u.id) || []
-      } else {
-        existingIds = chantier?.ouvriers?.map((u) => u.id) || []
-      }
-      setAvailableUsers(response.items.filter((u) => !existingIds.includes(u.id)))
-    } catch (error) {
-      logger.error('Error loading users', error, { context: 'ChantierDetailPage' })
-      addToast({ message: 'Erreur lors du chargement des utilisateurs', type: 'error' })
-    }
-  }
-
-  const handleUpdateChantier = async (data: ChantierUpdate) => {
-    try {
-      const updated = await chantiersService.update(id!, data)
-      setChantier(updated)
-      // NE PAS fermer le modal ici - le modal se fermera lui-même après avoir synchronisé les contacts et phases
-      // setShowEditModal(false)
-      addToast({ message: 'Chantier mis a jour', type: 'success' })
-    } catch (error) {
-      logger.error('Error updating chantier', error, { context: 'ChantierDetailPage' })
-      addToast({ message: 'Erreur lors de la mise a jour', type: 'error' })
-      // Relancer l'exception pour que le modal sache qu'il y a eu une erreur
-      throw error
-    }
-  }
-
-  const handleDeleteChantier = () => {
-    if (!chantier) return
-
-    const chantierName = chantier.nom
-    navigate('/chantiers')
-
-    showUndoToast(
-      `Chantier "${chantierName}" supprime`,
-      () => {
-        navigate(`/chantiers/${id}`)
-        addToast({ message: 'Suppression annulee', type: 'success', duration: 3000 })
-      },
-      async () => {
-        try {
-          await chantiersService.delete(id!)
-        } catch (error) {
-          logger.error('Error deleting chantier', error, { context: 'ChantierDetailPage' })
-          addToast({ message: 'Erreur lors de la suppression', type: 'error', duration: 5000 })
-        }
-      },
-      5000
-    )
-  }
-
-  const handleChangeStatut = async (action: 'demarrer' | 'receptionner' | 'fermer') => {
-    try {
-      let updated: Chantier
-      switch (action) {
-        case 'demarrer':
-          updated = await chantiersService.demarrer(id!)
-          break
-        case 'receptionner':
-          updated = await chantiersService.receptionner(id!)
-          break
-        case 'fermer':
-          updated = await chantiersService.fermer(id!)
-          break
-      }
-      setChantier(updated)
-      addToast({ message: 'Statut mis a jour', type: 'success' })
-    } catch (error) {
-      logger.error('Error changing statut', error, { context: 'ChantierDetailPage' })
-      addToast({ message: 'Erreur lors du changement de statut', type: 'error' })
-    }
-  }
-
-  const handleAddUser = async (userId: string) => {
-    if (!showAddUserModal) return
-
-    try {
-      let updated: Chantier
-      if (showAddUserModal === 'conducteur') {
-        updated = await chantiersService.addConducteur(id!, userId)
-      } else if (showAddUserModal === 'chef') {
-        updated = await chantiersService.addChef(id!, userId)
-      } else {
-        updated = await chantiersService.addOuvrier(id!, userId)
-      }
-      setChantier(updated)
-      setShowAddUserModal(null)
-      addToast({ message: 'Utilisateur ajoute', type: 'success' })
-    } catch (error) {
-      logger.error('Error adding user', error, { context: 'ChantierDetailPage' })
-      addToast({ message: "Erreur lors de l'ajout", type: 'error' })
-    }
-  }
-
-  const handleRemoveUser = (userId: string, type: 'conducteur' | 'chef' | 'ouvrier') => {
-    if (!chantier) return
-
-    let userList: User[]
-    if (type === 'conducteur') {
-      userList = chantier.conducteurs
-    } else if (type === 'chef') {
-      userList = chantier.chefs
-    } else {
-      userList = chantier.ouvriers || []
-    }
-    const removedUser = userList.find((u) => u.id === userId)
-    if (!removedUser) return
-
-    const updatedChantier = {
-      ...chantier,
-      conducteurs: type === 'conducteur'
-        ? chantier.conducteurs.filter((u) => u.id !== userId)
-        : chantier.conducteurs,
-      chefs: type === 'chef'
-        ? chantier.chefs.filter((u) => u.id !== userId)
-        : chantier.chefs,
-      ouvriers: type === 'ouvrier'
-        ? (chantier.ouvriers || []).filter((u) => u.id !== userId)
-        : chantier.ouvriers,
-    }
-    setChantier(updatedChantier)
-
-    showUndoToast(
-      `${removedUser.prenom} ${removedUser.nom} retire`,
-      () => {
-        setChantier(chantier)
-        addToast({ message: 'Retrait annule', type: 'success', duration: 3000 })
-      },
-      async () => {
-        try {
-          if (type === 'conducteur') {
-            await chantiersService.removeConducteur(id!, userId)
-          } else if (type === 'chef') {
-            await chantiersService.removeChef(id!, userId)
-          } else {
-            await chantiersService.removeOuvrier(id!, userId)
-          }
-        } catch (error) {
-          logger.error('Error removing user', error, { context: 'ChantierDetailPage' })
-          setChantier(chantier)
-          addToast({ message: 'Erreur lors du retrait', type: 'error', duration: 5000 })
-        }
-      },
-      5000
-    )
-  }
 
   if (isLoading || !chantier) {
     return (
@@ -468,7 +262,7 @@ export default function ChantierDetailPage() {
         {/* Onglets */}
         <div className="flex border-b mb-6 overflow-x-auto" role="tablist">
           <button
-            onClick={() => setActiveTab('infos')}
+            onClick={() => handleSetActiveTab('infos')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
               activeTab === 'infos'
                 ? 'border-primary-600 text-primary-600'
@@ -481,7 +275,7 @@ export default function ChantierDetailPage() {
             Informations
           </button>
           <button
-            onClick={() => setActiveTab('taches')}
+            onClick={() => handleSetActiveTab('taches')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
               activeTab === 'taches'
                 ? 'border-primary-600 text-primary-600'
@@ -494,7 +288,7 @@ export default function ChantierDetailPage() {
             Taches
           </button>
           <button
-            onClick={() => setActiveTab('equipe')}
+            onClick={() => handleSetActiveTab('equipe')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
               activeTab === 'equipe'
                 ? 'border-primary-600 text-primary-600'
@@ -508,7 +302,7 @@ export default function ChantierDetailPage() {
           </button>
           {currentUser?.role !== 'compagnon' && (
             <button
-              onClick={() => setActiveTab('budget')}
+              onClick={() => handleSetActiveTab('budget')}
               className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'budget'
                   ? 'border-primary-600 text-primary-600'
@@ -535,8 +329,7 @@ export default function ChantierDetailPage() {
             ouvriers={allOuvriers}
             canEdit={canEdit}
             onAddUser={(type) => {
-              loadAvailableUsers(type)
-              setShowAddUserModal(type)
+              openAddUserModal(type)
             }}
             onRemoveUser={handleRemoveUser}
           />
@@ -647,7 +440,7 @@ export default function ChantierDetailPage() {
                   />
                   <div className="flex gap-2 mt-3">
                     <a
-                      href={chantiersService.getGoogleMapsUrl(chantier.latitude, chantier.longitude)}
+                      href={getGoogleMapsUrl(chantier.latitude, chantier.longitude)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 btn btn-primary flex items-center justify-center gap-2 text-sm"
@@ -656,7 +449,7 @@ export default function ChantierDetailPage() {
                       Google Maps
                     </a>
                     <a
-                      href={chantiersService.getWazeUrl(chantier.latitude, chantier.longitude)}
+                      href={getWazeUrl(chantier.latitude, chantier.longitude)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 btn btn-outline flex items-center justify-center gap-2 text-sm"
@@ -678,7 +471,7 @@ export default function ChantierDetailPage() {
             onClose={() => {
               setShowEditModal(false)
               // Recharger le chantier et les contacts après fermeture du modal
-              loadChantier()
+              reload()
             }}
             onSubmit={handleUpdateChantier}
           />
@@ -689,7 +482,7 @@ export default function ChantierDetailPage() {
           <AddUserModal
             type={showAddUserModal}
             users={availableUsers}
-            onClose={() => setShowAddUserModal(null)}
+            onClose={closeAddUserModal}
             onSelect={handleAddUser}
           />
         )}

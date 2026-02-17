@@ -3,12 +3,12 @@
  * Module Devis (Module 20) - DEV-17
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import DevisKanban from '../components/devis/DevisKanban'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
-import { devisService } from '../services/devis'
+import { useDevisDashboard } from '../hooks/useDevisDashboard'
 import { formatEUR } from '../utils/format'
 import type { DashboardDevis, DevisRecent } from '../types'
 import { Suspense, lazy } from 'react'
@@ -32,22 +32,7 @@ const ConversionFunnelChart = lazy(() => import('../components/devis/ConversionF
 export default function DevisDashboardPage() {
   useDocumentTitle('Dashboard devis')
   const navigate = useNavigate()
-  const [data, setData] = useState<DashboardDevis | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadDashboard = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const dashboard = await devisService.getDashboard()
-      setData(dashboard)
-    } catch {
-      setError('Erreur lors du chargement du dashboard devis')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const { data, loading, error, loadDashboard } = useDevisDashboard()
 
   useEffect(() => {
     loadDashboard()

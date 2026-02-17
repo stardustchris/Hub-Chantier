@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
 import DevisForm from '../components/devis/DevisForm'
-import { devisService } from '../services/devis'
+import { useDevisList } from '../hooks/useDevisList'
 import type { Devis, DevisCreate, DevisUpdate, StatutDevis } from '../types'
 import { STATUT_DEVIS_CONFIG } from '../types'
 import { formatEUR } from '../utils/format'
@@ -36,10 +36,7 @@ const ALL_STATUTS = Object.keys(STATUT_DEVIS_CONFIG) as StatutDevis[]
 export default function DevisListPage() {
   useDocumentTitle('Devis')
   const navigate = useNavigate()
-  const [devisList, setDevisList] = useState<Devis[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { devisList, total, loading, error, loadDevis, createDevis } = useDevisList()
 
   // Recherche et filtres
   const [search, setSearch] = useState('')
@@ -58,38 +55,27 @@ export default function DevisListPage() {
   // Modal creation
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  const loadDevis = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const params: Record<string, unknown> = {
-        limit: PAGE_SIZE,
-        offset: page * PAGE_SIZE,
-        sort_by: sortBy,
-        sort_direction: sortDirection,
-      }
-
-      if (search) params.search = search
-      if (selectedStatuts.length === 1) params.statut = selectedStatuts[0]
-      if (dateDebut) params.date_debut = dateDebut
-      if (dateFin) params.date_fin = dateFin
-      if (montantMin) params.montant_min = Number(montantMin)
-      if (montantMax) params.montant_max = Number(montantMax)
-
-      const result = await devisService.listDevis(params as Parameters<typeof devisService.listDevis>[0])
-      setDevisList(result.items)
-      setTotal(result.total)
-    } catch {
-      setError('Erreur lors du chargement des devis')
-    } finally {
-      setLoading(false)
+  const fetchDevis = useCallback(async () => {
+    const params: Record<string, unknown> = {
+      limit: PAGE_SIZE,
+      offset: page * PAGE_SIZE,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
     }
-  }, [page, sortBy, sortDirection, search, selectedStatuts, dateDebut, dateFin, montantMin, montantMax])
+
+    if (search) params.search = search
+    if (selectedStatuts.length === 1) params.statut = selectedStatuts[0]
+    if (dateDebut) params.date_debut = dateDebut
+    if (dateFin) params.date_fin = dateFin
+    if (montantMin) params.montant_min = Number(montantMin)
+    if (montantMax) params.montant_max = Number(montantMax)
+
+    await loadDevis(params as Parameters<typeof loadDevis>[0])
+  }, [page, sortBy, sortDirection, search, selectedStatuts, dateDebut, dateFin, montantMin, montantMax, loadDevis])
 
   useEffect(() => {
-    loadDevis()
-  }, [loadDevis])
+    fetchDevis()
+  }, [fetchDevis])
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -103,7 +89,7 @@ export default function DevisListPage() {
 
   const handleSearch = () => {
     setPage(0)
-    loadDevis()
+    fetchDevis()
   }
 
   const toggleStatut = (statut: StatutDevis) => {
@@ -124,7 +110,7 @@ export default function DevisListPage() {
   }
 
   const handleCreateDevis = async (data: DevisCreate | DevisUpdate) => {
-    const created = await devisService.createDevis(data as DevisCreate)
+    const created = await createDevis(data as DevisCreate)
     setShowCreateForm(false)
     navigate(`/devis/${created.id}`)
   }
@@ -293,7 +279,7 @@ export default function DevisListPage() {
             <AlertCircle className="flex-shrink-0 mt-0.5" size={18} />
             <div>
               <p>{error}</p>
-              <button onClick={loadDevis} className="text-sm underline mt-1">Reessayer</button>
+              <button onClick={fetchDevis} className="text-sm underline mt-1">Reessayer</button>
             </div>
           </div>
         )}

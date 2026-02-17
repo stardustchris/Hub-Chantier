@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react'
+import { useRef } from 'react'
 import { Camera, Loader2, AlertCircle } from 'lucide-react'
-import { uploadService } from '../services/upload'
-import { logger } from '../services/logger'
+import { useImageUpload, useImageCompress } from '../hooks/useImageUpload'
 
 interface ImageUploadProps {
   /** URL de l'image actuelle */
@@ -33,62 +32,16 @@ export default function ImageUpload({
   size = 'default',
   placeholder,
 }: ImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const { inputRef, isUploading, error, previewUrl, handleClick, handleFileChange } = useImageUpload({
+    type,
+    entityId,
+    onUpload,
+  })
 
   const sizeClasses = {
     small: 'w-16 h-16',
     default: 'w-24 h-24',
     large: 'w-32 h-32',
-  }
-
-  const handleClick = () => {
-    inputRef.current?.click()
-  }
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validation basique
-    if (!file.type.startsWith('image/')) {
-      setError('Veuillez sélectionner une image')
-      return
-    }
-
-    // Preview local
-    const localUrl = URL.createObjectURL(file)
-    setPreviewUrl(localUrl)
-    setError(null)
-    setIsUploading(true)
-
-    try {
-      // Compresser l'image (FEED-19)
-      const compressedFile = await uploadService.compressImage(file)
-
-      // Upload selon le type
-      let result
-      if (type === 'profile') {
-        result = await uploadService.uploadProfilePhoto(compressedFile)
-      } else {
-        result = await uploadService.uploadChantierPhoto(entityId, compressedFile)
-      }
-
-      onUpload(result.url)
-      setPreviewUrl(null)
-    } catch (err) {
-      setError("Erreur lors de l'upload")
-      setPreviewUrl(null)
-      logger.error('Upload error', err, { context: 'ImageUpload' })
-    } finally {
-      setIsUploading(false)
-      // Reset input
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
-    }
   }
 
   const displayImage = previewUrl || currentImage
@@ -175,6 +128,7 @@ export function MultiImageUpload({
   disabled = false,
 }: MultiImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const { compressImage } = useImageCompress()
 
   const handleClick = () => {
     inputRef.current?.click()
@@ -189,7 +143,7 @@ export function MultiImageUpload({
 
     // Compresser toutes les images
     const compressedFiles = await Promise.all(
-      validFiles.map((f) => uploadService.compressImage(f))
+      validFiles.map((f) => compressImage(f))
     )
 
     onFilesSelected(compressedFiles)

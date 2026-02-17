@@ -6,13 +6,11 @@
  * via financierService.getConsolidation().
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy } from 'react'
+import React, { useState, useCallback, useMemo, useRef, Suspense, lazy } from 'react'
 import Layout from '../components/Layout'
-import { chantiersService } from '../services/chantiers'
-import { financierService } from '../services/financier'
-import { logger } from '../services/logger'
 import { formatEUR, formatPct } from '../utils/format'
-import type { VueConsolidee, ChantierFinancierSummary } from '../types'
+import type { ChantierFinancierSummary } from '../types'
+import { useDashboardFinancier } from '../hooks/useDashboardFinancier'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
   Loader2,
@@ -134,97 +132,12 @@ const CHART_COLORS = {
   realise: '#475569',
 }
 
-// Type local pour adapter l'interface de l'API à l'affichage
-interface AnalyseIADisplay {
-  synthese: string
-  alertes_prioritaires: string[]
-  recommandations: string[]
-  source: 'gemini-3-flash' | 'regles'
-  ai_available: boolean
-  tendance?: 'hausse' | 'stable' | 'baisse'
-  score_sante?: number
-}
-
 export default function DashboardFinancierPage() {
   useDocumentTitle('Finances')
-  const [data, setData] = useState<VueConsolidee | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('nom_chantier')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [analyseIA, setAnalyseIA] = useState<AnalyseIADisplay | null>(null)
-  const [loadingIA, setLoadingIA] = useState(false)
 
-  // Charge l'analyse IA depuis Gemini 3 Flash (ou fallback règles)
-  const loadAnalyseIA = useCallback(async (chantierIds: number[]) => {
-    try {
-      setLoadingIA(true)
-      const analyse = await financierService.getAnalyseIAConsolidee(chantierIds)
-      // Adapter la réponse API à l'interface d'affichage
-      setAnalyseIA({
-        synthese: analyse.synthese,
-        alertes_prioritaires: analyse.alertes,
-        recommandations: analyse.recommandations,
-        source: analyse.source,
-        ai_available: analyse.ai_available,
-        tendance: analyse.tendance,
-        score_sante: analyse.score_sante,
-      })
-    } catch (err) {
-      logger.error('Erreur chargement analyse IA Gemini 3 Flash', err, { context: 'DashboardFinancierPage' })
-      // En cas d'erreur, pas d'analyse IA
-      setAnalyseIA(null)
-    } finally {
-      setLoadingIA(false)
-    }
-  }, [])
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Charger la liste des chantiers pour obtenir les IDs
-      const chantiersResponse = await chantiersService.list({ size: 100 })
-      const chantierIds = chantiersResponse.items.map((c) => Number(c.id))
-
-      if (chantierIds.length === 0) {
-        setData({
-          kpi_globaux: {
-            total_budget_revise: 0,
-            total_engage: 0,
-            total_realise: 0,
-            total_reste_a_depenser: 0,
-            marge_moyenne_pct: 0,
-            nb_chantiers: 0,
-            nb_chantiers_ok: 0,
-            nb_chantiers_attention: 0,
-            nb_chantiers_depassement: 0,
-          },
-          chantiers: [],
-          top_rentables: [],
-          top_derives: [],
-        })
-        setAnalyseIA(null)
-        return
-      }
-
-      const consolidation = await financierService.getConsolidation(chantierIds)
-      setData(consolidation)
-
-      // Charger l'analyse IA depuis Gemini 3 Flash en parallèle
-      loadAnalyseIA(chantierIds)
-    } catch (err) {
-      setError('Erreur lors du chargement des donnees financieres')
-      logger.error('Erreur chargement consolidation', err, { context: 'DashboardFinancierPage' })
-    } finally {
-      setLoading(false)
-    }
-  }, [loadAnalyseIA])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  const { data, loading, error, analyseIA, loadingIA, loadData } = useDashboardFinancier()
 
   const handleSort = useCallback((field: SortField) => {
     setSortField((prev) => {

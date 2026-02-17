@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { usersService, NavigationIds } from '../services/users'
 import { useAuth } from '../contexts/AuthContext'
-import { logger } from '../services/logger'
+import { useUserDetail } from '../hooks/useUserDetail'
 import Layout from '../components/Layout'
 import NavigationPrevNext from '../components/NavigationPrevNext'
 import ImageUpload from '../components/ImageUpload'
@@ -23,17 +22,23 @@ import {
   Hash,
 } from 'lucide-react'
 import { formatDateFull } from '../utils/dates'
-import type { User, UserUpdate, UserRole, Metier } from '../types'
+import type { UserUpdate, UserRole, Metier } from '../types'
 import { ROLES, METIERS } from '../types'
 
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user: currentUser } = useAuth()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [navIds, setNavIds] = useState<NavigationIds>({ prevId: null, nextId: null })
+
+  const {
+    user,
+    isLoading,
+    navIds,
+    handlePhotoUpload,
+    handleUpdateUser,
+    handleToggleActive,
+  } = useUserDetail(id!)
 
   const isAdmin = currentUser?.role === 'admin'
   const isSelf = currentUser?.id === id
@@ -41,64 +46,9 @@ export default function UserDetailPage() {
   // Document title
   useDocumentTitle(user ? `${user.prenom} ${user.nom}` : 'Utilisateur')
 
-  useEffect(() => {
-    if (id) {
-      loadUser()
-      loadNavigation()
-    }
-  }, [id])
-
-  const loadUser = async () => {
-    try {
-      setIsLoading(true)
-      const data = await usersService.getById(id!)
-      setUser(data)
-    } catch (error) {
-      logger.error('Error loading user', error, { context: 'UserDetailPage' })
-      navigate('/utilisateurs')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const loadNavigation = async () => {
-    const ids = await usersService.getNavigationIds(id!)
-    setNavIds(ids)
-  }
-
-  const handlePhotoUpload = async (url: string) => {
-    try {
-      const updated = await usersService.update(id!, { photo_profil: url } as UserUpdate)
-      setUser(updated)
-    } catch (error) {
-      logger.error('Erreur lors de la mise a jour de la photo', error, { context: 'UserDetailPage', showToast: true })
-    }
-  }
-
-  const handleUpdateUser = async (data: UserUpdate) => {
-    try {
-      const updated = await usersService.update(id!, data)
-      setUser(updated)
-      setShowEditModal(false)
-    } catch (error) {
-      logger.error('Erreur lors de la mise a jour', error, { context: 'UserDetailPage', showToast: true })
-    }
-  }
-
-  const handleToggleActive = async () => {
-    if (!user) return
-
-    try {
-      let updated: User
-      if (user.is_active) {
-        updated = await usersService.deactivate(id!)
-      } else {
-        updated = await usersService.activate(id!)
-      }
-      setUser(updated)
-    } catch (error) {
-      logger.error('Erreur lors du changement de statut', error, { context: 'UserDetailPage', showToast: true })
-    }
+  const handleUpdate = async (data: UserUpdate) => {
+    await handleUpdateUser(data)
+    setShowEditModal(false)
   }
 
   if (isLoading || !user) {
@@ -354,7 +304,7 @@ export default function UserDetailPage() {
           <EditUserModal
             user={user}
             onClose={() => setShowEditModal(false)}
-            onSubmit={handleUpdateUser}
+            onSubmit={handleUpdate}
           />
         )}
       </div>

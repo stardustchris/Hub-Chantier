@@ -3,7 +3,7 @@
  * Module Devis (Module 20) - DEV-03 / DEV-05 / DEV-15
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
@@ -19,12 +19,11 @@ import OptionsPresentationPanel from '../components/devis/OptionsPresentationPan
 import SignaturePanel from '../components/devis/SignaturePanel'
 import ConversionChantierPanel from '../components/devis/ConversionChantierPanel'
 import RelancesPanel from '../components/devis/RelancesPanel'
-import { devisService } from '../services/devis'
+import { useDevisDetail } from '../hooks/useDevisDetail'
 import { formatEUR } from '../utils/format'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { Breadcrumb } from '../components/ui/Breadcrumb'
 import type {
-  DevisDetail,
   DevisCreate,
   DevisUpdate,
   LotDevisCreate,
@@ -58,9 +57,31 @@ import {
 export default function DevisDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [devis, setDevis] = useState<DevisDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+
+  const devisId = Number(id)
+  const {
+    devis,
+    loading,
+    error,
+    loadDevis,
+    recalculerEtRecharger,
+    updateDevis,
+    soumettre,
+    valider,
+    retournerBrouillon,
+    accepter,
+    refuser,
+    marquerPerdu,
+    createLot,
+    updateLot,
+    deleteLot,
+    createLigne,
+    updateLigne,
+    deleteLigne,
+    creerRevision,
+    convertirEnChantier,
+  } = useDevisDetail(devisId)
+
   const [showEditForm, setShowEditForm] = useState(false)
   const [journalOpen, setJournalOpen] = useState(false)
   const [showConvertModal, setShowConvertModal] = useState(false)
@@ -70,59 +91,25 @@ export default function DevisDetailPage() {
   const [notifyClient, setNotifyClient] = useState(false)
   const [notifyTeam, setNotifyTeam] = useState(true)
 
-  const devisId = Number(id)
   const isEditable = devis?.statut === 'brouillon'
 
   // Document title
   useDocumentTitle(devis ? `Devis ${devis.numero}` : 'Devis')
-
-  const loadDevis = useCallback(async () => {
-    if (!devisId || isNaN(devisId)) return
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await devisService.getDevis(devisId)
-      setDevis(data)
-    } catch (error) {
-      console.error('Erreur lors du chargement du devis:', error)
-      setError('Erreur lors du chargement du devis')
-    } finally {
-      setLoading(false)
-    }
-  }, [devisId])
 
   useEffect(() => {
     loadDevis()
   }, [loadDevis])
 
   // Workflow actions
-  const handleSoumettre = async () => {
-    await devisService.soumettreDevis(devisId)
-    await loadDevis()
-  }
-  const handleValider = async () => {
-    await devisService.validerDevis(devisId)
-    await loadDevis()
-  }
-  const handleRetournerBrouillon = async () => {
-    await devisService.retournerBrouillon(devisId)
-    await loadDevis()
-  }
-  const handleAccepter = async () => {
-    await devisService.accepterDevis(devisId)
-    await loadDevis()
-  }
+  const handleSoumettre = async () => { await soumettre() }
+  const handleValider = async () => { await valider() }
+  const handleRetournerBrouillon = async () => { await retournerBrouillon() }
+  const handleAccepter = async () => { await accepter() }
   const handleRefuser = async (motif?: string) => {
-    if (motif) {
-      await devisService.refuserDevis(devisId, motif)
-      await loadDevis()
-    }
+    if (motif) { await refuser(motif) }
   }
   const handlePerdu = async (motif?: string) => {
-    if (motif) {
-      await devisService.marquerPerdu(devisId, motif)
-      await loadDevis()
-    }
+    if (motif) { await marquerPerdu(motif) }
   }
 
   // Conversion devis -> chantier (DEV-16)
@@ -130,13 +117,12 @@ export default function DevisDetailPage() {
     try {
       setConvertLoading(true)
       setConvertError(null)
-      const result = await devisService.convertirEnChantier(devisId, {
+      const result = await convertirEnChantier({
         notify_client: notifyClient,
         notify_team: notifyTeam,
       })
       setConvertResult(result)
       setShowConvertModal(false)
-      await loadDevis()
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { detail?: string; message?: string; error?: string } } }
       const message = axiosError.response?.data?.detail
@@ -148,49 +134,38 @@ export default function DevisDetailPage() {
     }
   }
 
-  // Recalculer les totaux et recharger le devis
-  const recalculerEtRecharger = async () => {
-    try {
-      await devisService.calculerTotaux(devisId)
-    } catch (error) {
-      console.error('Erreur lors du recalcul des totaux du devis:', error)
-      // Le recalcul peut echouer si le devis n'a pas de lignes, on continue
-    }
-    await loadDevis()
-  }
-
   // Edition devis
   const handleUpdateDevis = async (data: DevisCreate | DevisUpdate) => {
-    await devisService.updateDevis(devisId, data as DevisUpdate)
+    await updateDevis(data)
     setShowEditForm(false)
     await recalculerEtRecharger()
   }
 
   // CRUD lots
   const handleCreateLot = async (data: LotDevisCreate) => {
-    await devisService.createLot(data)
+    await createLot(data)
     await recalculerEtRecharger()
   }
   const handleUpdateLot = async (lotId: number, data: LotDevisUpdate) => {
-    await devisService.updateLot(lotId, data)
+    await updateLot(lotId, data)
     await recalculerEtRecharger()
   }
   const handleDeleteLot = async (lotId: number) => {
-    await devisService.deleteLot(lotId)
+    await deleteLot(lotId)
     await recalculerEtRecharger()
   }
 
   // CRUD lignes
   const handleCreateLigne = async (data: LigneDevisCreate) => {
-    await devisService.createLigne(data)
+    await createLigne(data)
     await recalculerEtRecharger()
   }
   const handleUpdateLigne = async (ligneId: number, data: LigneDevisUpdate) => {
-    await devisService.updateLigne(ligneId, data)
+    await updateLigne(ligneId, data)
     await recalculerEtRecharger()
   }
   const handleDeleteLigne = async (ligneId: number) => {
-    await devisService.deleteLigne(ligneId)
+    await deleteLigne(ligneId)
     await recalculerEtRecharger()
   }
 
@@ -312,8 +287,8 @@ export default function DevisDetailPage() {
                         </button>
                         <button
                           onClick={async () => {
-                            const nouveau = await devisService.creerRevision(devisId)
-                            navigate(`/devis/${nouveau.id}`)
+                            const nouveau = await creerRevision()
+                            if (nouveau) navigate(`/devis/${nouveau.id}`)
                           }}
                           className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
                         >

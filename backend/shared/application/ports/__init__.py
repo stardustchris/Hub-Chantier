@@ -22,6 +22,7 @@ from .chantier_cloture_check_port import (
     ChantierClotureCheckPort,
     ClotureCheckResult,
 )
+from .email_service import EmailServicePort
 
 __all__ = [
     "EntityInfoService",
@@ -38,4 +39,5 @@ __all__ = [
     "ChantierInfoDTO",
     "ChantierClotureCheckPort",
     "ClotureCheckResult",
+    "EmailServicePort",
 ]

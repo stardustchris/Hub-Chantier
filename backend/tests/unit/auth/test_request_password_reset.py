@@ -16,10 +16,13 @@ class TestRequestPasswordResetUseCase:
     def setup_method(self):
         """Configuration avant chaque test."""
         self.mock_user_repo = Mock(spec=UserRepository)
-        self.use_case = RequestPasswordResetUseCase(user_repository=self.mock_user_repo)
+        self.mock_email_service = Mock()
+        self.use_case = RequestPasswordResetUseCase(
+            user_repository=self.mock_user_repo,
+            email_service=self.mock_email_service,
+        )
 
-    @patch('modules.auth.application.use_cases.request_password_reset.email_service')
-    def test_request_password_reset_success(self, mock_email_service):
+    def test_request_password_reset_success(self):
         """Test: demande de réinitialisation réussie."""
         user = User(
             id=1,
@@ -34,7 +37,7 @@ class TestRequestPasswordResetUseCase:
         )
 
         self.mock_user_repo.find_by_email.return_value = user
-        mock_email_service.send_password_reset_email.return_value = True
+        self.mock_email_service.send_password_reset_email.return_value = True
 
         # Act
         result = self.use_case.execute(email="user@example.com")
@@ -42,10 +45,9 @@ class TestRequestPasswordResetUseCase:
         # Assert
         assert result is True
         self.mock_user_repo.save.assert_called_once()
-        mock_email_service.send_password_reset_email.assert_called_once()
+        self.mock_email_service.send_password_reset_email.assert_called_once()
 
-    @patch('modules.auth.application.use_cases.request_password_reset.email_service')
-    def test_request_password_reset_user_not_found_returns_true(self, mock_email_service):
+    def test_request_password_reset_user_not_found_returns_true(self):
         """Test: retourne True même si utilisateur non trouvé (anti-énumération)."""
         self.mock_user_repo.find_by_email.return_value = None
 
@@ -53,4 +55,4 @@ class TestRequestPasswordResetUseCase:
 
         assert result is True
         self.mock_user_repo.save.assert_not_called()
-        mock_email_service.send_password_reset_email.assert_not_called()
+        self.mock_email_service.send_password_reset_email.assert_not_called()
