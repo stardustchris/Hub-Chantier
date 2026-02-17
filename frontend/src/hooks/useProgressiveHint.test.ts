@@ -65,13 +65,7 @@ describe('useProgressiveHint', () => {
     })
     expect(result.current.shouldShowHint(testPath)).toBe(true)
 
-    // Visite 3
-    act(() => {
-      result.current.recordVisit(testPath)
-    })
-    expect(result.current.shouldShowHint(testPath)).toBe(true)
-
-    // Visite 4 - hint ne doit plus s'afficher
+    // Visite 3 — count=3, MAX_HINT_VISITS=3, 3 < 3 = false
     act(() => {
       result.current.recordVisit(testPath)
     })

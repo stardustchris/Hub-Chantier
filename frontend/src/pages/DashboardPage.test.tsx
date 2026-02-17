@@ -186,6 +186,9 @@ vi.mock('../components/dashboard', () => ({
   TeamCard: () => <div data-testid="team-card">TeamCard</div>,
   DocumentsCard: () => <div data-testid="documents-card">DocumentsCard</div>,
   DevisPipelineCard: () => <div data-testid="devis-pipeline-card">DevisPipelineCard</div>,
+  AlertesFinancieresCard: () => <div data-testid="alertes-financieres">AlertesFinancieres</div>,
+  WeeklyProgressCard: () => <div data-testid="weekly-progress">WeeklyProgress</div>,
+  TeamLeaderboardCard: () => <div data-testid="team-leaderboard">TeamLeaderboard</div>,
   DashboardPostCard: ({ post, onLike, onDelete }: any) => (
     <div data-testid={`post-${post.id}`}>
       <span>{post.contenu}</span>
@@ -195,6 +198,42 @@ vi.mock('../components/dashboard', () => ({
   ),
   WeatherBulletinPost: () => null,
   PostSkeleton: () => <div data-testid="post-skeleton">Loading...</div>,
+}))
+
+vi.mock('../components/dashboard/PhotoCaptureModal', () => ({
+  default: () => null,
+}))
+
+vi.mock('../components/common/ProgressiveHintBanner', () => ({
+  default: () => null,
+}))
+
+vi.mock('../utils/navigation', () => ({
+  openNavigationApp: vi.fn(),
+}))
+
+vi.mock('../contexts/DemoContext', () => ({
+  useDemo: () => ({
+    isDemoMode: false,
+    enableDemoMode: vi.fn(),
+    disableDemoMode: vi.fn(),
+    demoData: {},
+  }),
+}))
+
+vi.mock('../hooks/useProgressiveHint', () => ({
+  useProgressiveHint: () => ({
+    shouldShowHint: () => false,
+    recordVisit: vi.fn(),
+    getVisitCount: () => 0,
+    resetVisits: vi.fn(),
+  }),
+  default: () => ({
+    shouldShowHint: () => false,
+    recordVisit: vi.fn(),
+    getVisitCount: () => 0,
+    resetVisits: vi.fn(),
+  }),
 }))
 
 import { dashboardService } from '../services/dashboard'

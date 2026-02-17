@@ -16,6 +16,12 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CreateChantierModal } from './CreateChantierModal'
 
+// Mock useFocusTrap to prevent auto-focus stealing during userEvent.type()
+vi.mock('../../hooks/useFocusTrap', () => ({
+  useFocusTrap: () => ({ current: null }),
+  default: () => ({ current: null }),
+}))
+
 describe('CreateChantierModal', () => {
   const mockOnClose = vi.fn()
   const mockOnSubmit = vi.fn()

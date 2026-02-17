@@ -82,16 +82,18 @@ describe('NotificationPreferences', () => {
     const saveButton = screen.getByText('Enregistrer')
     fireEvent.click(saveButton)
 
-    // Vérifier que localStorage a été mis à jour
+    // Vérifier que localStorage.setItem a été appelé et que onClose a été appelé
     await waitFor(() => {
-      const saved = localStorage.getItem('hub_notification_preferences')
-      expect(saved).toBeTruthy()
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        'hub_notification_preferences',
+        expect.any(String)
+      )
       expect(onClose).toHaveBeenCalledTimes(1)
     })
   })
 
   it('charge les préférences depuis localStorage si elles existent', () => {
-    // Préparer des préférences dans localStorage
+    // Préparer des préférences dans localStorage (via mock)
     const customPrefs = {
       mentions: { push: false, inApp: false, email: false },
       validations_fdh: { push: true, inApp: true, email: true },
@@ -100,7 +102,7 @@ describe('NotificationPreferences', () => {
       pointages: { push: false, inApp: true, email: false },
       documents: { push: true, inApp: true, email: false },
     }
-    localStorage.setItem('hub_notification_preferences', JSON.stringify(customPrefs))
+    vi.mocked(localStorage.getItem).mockReturnValueOnce(JSON.stringify(customPrefs))
 
     const loaded = loadNotificationPreferences()
 

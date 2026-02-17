@@ -15,7 +15,7 @@ vi.mock('../../hooks/useNotifications', () => ({
         id: '1',
         type: 'comment_added',
         title: 'Nouveau commentaire',
-        body: 'Jean a commenté votre post',
+        message: 'Jean a commenté votre post',
         is_read: false,
         created_at: new Date().toISOString(),
       },
@@ -23,15 +23,38 @@ vi.mock('../../hooks/useNotifications', () => ({
         id: '2',
         type: 'mention',
         title: 'Mention',
-        body: 'Vous avez été mentionné',
+        message: 'Vous avez été mentionné',
         is_read: true,
         created_at: new Date().toISOString(),
+      },
+    ],
+    groupedNotifications: [
+      {
+        notification: {
+          id: '1',
+          type: 'comment_added',
+          title: 'Nouveau commentaire',
+          message: 'Jean a commenté votre post',
+          is_read: false,
+          created_at: new Date().toISOString(),
+        },
+      },
+      {
+        notification: {
+          id: '2',
+          type: 'mention',
+          title: 'Mention',
+          message: 'Vous avez été mentionné',
+          is_read: true,
+          created_at: new Date().toISOString(),
+        },
       },
     ],
     unreadCount: 1,
     loading: false,
     markAsRead: vi.fn(),
     markAllAsRead: vi.fn(),
+    toggleGroupExpanded: vi.fn(),
   }),
 }))
 

@@ -30,6 +30,7 @@ describe('CommandPalette', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useCommandPalette).mockReturnValue(defaultHookReturn)
+    HTMLElement.prototype.scrollIntoView = vi.fn()
   })
 
   it('should not render when closed', () => {

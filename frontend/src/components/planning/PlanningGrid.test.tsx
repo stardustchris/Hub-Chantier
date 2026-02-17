@@ -450,7 +450,7 @@ describe('PlanningGrid', () => {
   describe('Vue mois', () => {
     it('affiche plus de jours en vue mois', () => {
       const users = [createMockUser()]
-      render(
+      const { container } = render(
         <PlanningGrid
           {...defaultProps}
           utilisateurs={users}
@@ -460,9 +460,13 @@ describe('PlanningGrid', () => {
       )
 
       // En janvier 2024, il y a 31 jours
-      // Vérifie qu'on a plus de 7 jours affichés
-      const cells = screen.getAllByRole('gridcell')
-      expect(cells.length).toBeGreaterThan(7)
+      // En vue mois le header affiche toutes les colonnes de jours
+      // (les cellules gridcell ne sont pas rendues car le virtualizer est actif)
+      // On vérifie qu'on a plus de 7 colonnes dans le header de la grille
+      const headerGrid = container.querySelector('.grid.border-b')
+      const headerCols = headerGrid?.children ?? []
+      // -1 pour la colonne "Utilisateurs"
+      expect(headerCols.length - 1).toBeGreaterThan(7)
     })
 
     it('affiche le format compact pour les jours en vue mois', () => {

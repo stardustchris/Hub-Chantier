@@ -19,6 +19,19 @@ vi.mock('../../hooks/useProgressiveHint', () => ({
   }),
 }))
 
+// NOTE: vi.mock calls are hoisted to module-level by Vitest.
+// The vi.mock for react-router-dom inside the last test would affect all tests.
+// Instead, we mock at module level with a default path of '/', and use
+// a mutable variable to allow overriding per test.
+let mockPathname = '/'
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useLocation: () => ({ pathname: mockPathname }),
+  }
+})
+
 const renderWithRouter = (component: React.ReactElement) => {
   return render(<BrowserRouter>{component}</BrowserRouter>)
 }
@@ -26,10 +39,12 @@ const renderWithRouter = (component: React.ReactElement) => {
 describe('PageHelp', () => {
   beforeEach(() => {
     localStorage.clear()
+    mockPathname = '/'
   })
 
   afterEach(() => {
     localStorage.clear()
+    mockPathname = '/'
   })
 
   it('should render help button', () => {
@@ -174,14 +189,8 @@ describe('PageHelp', () => {
   it('should show fallback content for unknown routes', async () => {
     const user = userEvent.setup()
 
-    // Mock useLocation pour retourner une route inconnue
-    vi.mock('react-router-dom', async () => {
-      const actual = await vi.importActual('react-router-dom')
-      return {
-        ...actual,
-        useLocation: () => ({ pathname: '/unknown-route' }),
-      }
-    })
+    // Override the mocked pathname for this specific test
+    mockPathname = '/unknown-route'
 
     renderWithRouter(<PageHelp />)
 

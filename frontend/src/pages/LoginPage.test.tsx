@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import LoginPage from './LoginPage'
@@ -49,8 +49,8 @@ describe('LoginPage', () => {
 
     expect(screen.getByText('Hub Chantier')).toBeInTheDocument()
     expect(screen.getByText('Greg Constructions')).toBeInTheDocument()
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Mot de passe')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Email/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Mot de passe/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument()
   })
 
@@ -63,7 +63,7 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderLoginPage()
 
-    const emailInput = screen.getByLabelText('Email')
+    const emailInput = screen.getByLabelText(/Email/)
     await user.type(emailInput, 'test@example.com')
 
     expect(emailInput).toHaveValue('test@example.com')
@@ -73,7 +73,7 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderLoginPage()
 
-    const passwordInput = screen.getByLabelText('Mot de passe')
+    const passwordInput = screen.getByLabelText(/Mot de passe/)
     await user.type(passwordInput, 'mypassword')
 
     expect(passwordInput).toHaveValue('mypassword')
@@ -84,8 +84,9 @@ describe('LoginPage', () => {
     renderLoginPage()
 
     // Soumettre sans email (seulement mot de passe)
-    await user.type(screen.getByLabelText('Mot de passe'), 'password123')
-    await user.click(screen.getByRole('button', { name: 'Se connecter' }))
+    await user.type(screen.getByLabelText(/Mot de passe/), 'password123')
+    // Use fireEvent.submit to bypass HTML5 native constraint validation
+    fireEvent.submit(screen.getByRole('button', { name: 'Se connecter' }).closest('form')!)
 
     // Zod doit afficher une erreur de validation pour l'email
     await waitFor(() => {
@@ -100,8 +101,9 @@ describe('LoginPage', () => {
     renderLoginPage()
 
     // Soumettre sans mot de passe (seulement email)
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.click(screen.getByRole('button', { name: 'Se connecter' }))
+    await user.type(screen.getByLabelText(/Email/), 'test@example.com')
+    // Use fireEvent.submit to bypass HTML5 native constraint validation
+    fireEvent.submit(screen.getByRole('button', { name: 'Se connecter' }).closest('form')!)
 
     // Zod doit afficher une erreur de validation pour le mot de passe
     await waitFor(() => {
@@ -113,12 +115,12 @@ describe('LoginPage', () => {
 
   it('should have email input type', () => {
     renderLoginPage()
-    expect(screen.getByLabelText('Email')).toHaveAttribute('type', 'email')
+    expect(screen.getByLabelText(/Email/)).toHaveAttribute('type', 'email')
   })
 
   it('should have password input type', () => {
     renderLoginPage()
-    expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('type', 'password')
+    expect(screen.getByLabelText(/Mot de passe/)).toHaveAttribute('type', 'password')
   })
 
   it('should call login on form submit', async () => {
@@ -127,8 +129,8 @@ describe('LoginPage', () => {
 
     renderLoginPage()
 
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Mot de passe'), 'password123')
+    await user.type(screen.getByLabelText(/Email/), 'test@example.com')
+    await user.type(screen.getByLabelText(/Mot de passe/), 'password123')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123')
@@ -140,8 +142,8 @@ describe('LoginPage', () => {
 
     renderLoginPage()
 
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Mot de passe'), 'password123')
+    await user.type(screen.getByLabelText(/Email/), 'test@example.com')
+    await user.type(screen.getByLabelText(/Mot de passe/), 'password123')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     // Wait for the async login to complete
@@ -158,8 +160,8 @@ describe('LoginPage', () => {
 
     renderLoginPage()
 
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Mot de passe'), 'wrongpassword')
+    await user.type(screen.getByLabelText(/Email/), 'test@example.com')
+    await user.type(screen.getByLabelText(/Mot de passe/), 'wrongpassword')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     await waitFor(() => {
@@ -173,8 +175,8 @@ describe('LoginPage', () => {
 
     renderLoginPage()
 
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Mot de passe'), 'password')
+    await user.type(screen.getByLabelText(/Email/), 'test@example.com')
+    await user.type(screen.getByLabelText(/Mot de passe/), 'password')
     await user.click(screen.getByRole('button', { name: 'Se connecter' }))
 
     await waitFor(() => {

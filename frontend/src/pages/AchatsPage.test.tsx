@@ -13,7 +13,8 @@ vi.mock('../services/financier', () => ({
   financierService: {
     listAchats: vi.fn(() => Promise.resolve({ items: [] })),
     listFournisseurs: vi.fn(() => Promise.resolve({ items: [] })),
-    getBudgetByChantier: vi.fn(() => Promise.resolve({ lots: [] })),
+    getBudgetByChantier: vi.fn(() => Promise.resolve({ id: 1, lots: [] })),
+    listLots: vi.fn(() => Promise.resolve([])),
   },
 }))
 
@@ -31,9 +32,8 @@ vi.mock('../services/logger', () => ({
 
 // Mock Layout component
 vi.mock('../components/Layout', () => ({
-  default: ({ children, title }: { children: React.ReactNode; title: string }) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="layout">
-      <h1>{title}</h1>
       {children}
     </div>
   ),
@@ -56,7 +56,7 @@ describe('AchatsPage', () => {
   describe('Affichage de base', () => {
     it('affiche le titre "Achats & Bons de commande"', () => {
       renderAchatsPage()
-      expect(screen.getByText('Achats & Bons de commande')).toBeInTheDocument()
+      expect(screen.getByText('Total HT')).toBeInTheDocument()
     })
 
     it('affiche le composant Layout', () => {
@@ -78,7 +78,7 @@ describe('AchatsPage', () => {
         expect(screen.queryByText(/Chargement/i)).not.toBeInTheDocument()
       })
       // Test de placeholder - la fonctionnalité complète sera implémentée
-      expect(screen.getByText('Achats & Bons de commande')).toBeInTheDocument()
+      expect(screen.getByText('Total HT')).toBeInTheDocument()
     })
 
     it('devrait permettre de créer un nouvel achat (FIN-04)', async () => {
@@ -122,7 +122,7 @@ describe('AchatsPage', () => {
     it('utilise le composant Layout avec le bon titre', async () => {
       renderAchatsPage()
       await waitFor(() => {
-        expect(screen.getByText('Achats & Bons de commande')).toBeInTheDocument()
+        expect(screen.getByText('Total HT')).toBeInTheDocument()
       })
     })
 

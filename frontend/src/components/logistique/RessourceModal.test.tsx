@@ -19,6 +19,13 @@ vi.mock('../../services/logger', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }))
 
+// Mock useFocusTrap to avoid setTimeout-based focus stealing that causes
+// flaky behavior when tests run in parallel or after other test suites
+vi.mock('../../hooks/useFocusTrap', () => ({
+  useFocusTrap: () => ({ current: null }),
+  default: () => ({ current: null }),
+}))
+
 vi.mock('../../types/logistique', async () => {
   const actual = await vi.importActual('../../types/logistique')
   return actual

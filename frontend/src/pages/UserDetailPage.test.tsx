@@ -58,12 +58,10 @@ vi.mock('../components/ImageUpload', () => ({
 }))
 
 vi.mock('../components/users', () => ({
-  EditUserModal: ({ isOpen, onSave }: { isOpen: boolean; onSave: (data: unknown) => void }) => (
-    isOpen ? (
-      <div data-testid="edit-modal">
-        <button onClick={() => onSave({ nom: 'Updated' })} data-testid="save-user">Save</button>
-      </div>
-    ) : null
+  EditUserModal: ({ user: _user, onSubmit }: { user: unknown; isOpen?: boolean; onSubmit: (data: unknown) => void; onClose: () => void }) => (
+    <div data-testid="edit-modal">
+      <button onClick={() => onSubmit({ nom: 'Updated' })} data-testid="save-user">Save</button>
+    </div>
   ),
 }))
 
@@ -127,7 +125,8 @@ describe('UserDetailPage', () => {
     it('affiche les informations de l utilisateur', async () => {
       renderPage()
       await waitFor(() => {
-        expect(screen.getByText('Jean Dupont')).toBeInTheDocument()
+        // Name appears in both breadcrumb and h1 - use h1 heading for specificity
+        expect(screen.getByRole('heading', { name: 'Jean Dupont' })).toBeInTheDocument()
       })
     })
 

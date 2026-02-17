@@ -29,6 +29,7 @@ vi.mock('../contexts/AuthContext', () => ({
 // Mock useToast
 vi.mock('../contexts/ToastContext', () => ({
   useToast: () => ({
+    addToast: ({ message, type }: { message: string; type: string }) => mockShowToast(message, type),
     showToast: mockShowToast,
   }),
 }))
@@ -77,9 +78,9 @@ describe('SecuritySettingsPage', () => {
   it('should validate password matching', async () => {
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
-    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
+    const oldPasswordInput = screen.getByLabelText(/Ancien mot de passe/)
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/)
+    const confirmPasswordInput = screen.getByLabelText(/Confirmer le nouveau mot de passe/)
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -96,9 +97,9 @@ describe('SecuritySettingsPage', () => {
   it('should validate password strength', async () => {
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
-    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
+    const oldPasswordInput = screen.getByLabelText(/Ancien mot de passe/)
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/)
+    const confirmPasswordInput = screen.getByLabelText(/Confirmer le nouveau mot de passe/)
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'weak' } })
@@ -115,7 +116,7 @@ describe('SecuritySettingsPage', () => {
   it('should display password strength indicator', () => {
     renderWithContext()
 
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/)
 
     // Mot de passe faible (8 caractères, seulement minuscules = strength 2)
     fireEvent.change(newPasswordInput, { target: { value: 'weakpass' } })
@@ -134,9 +135,9 @@ describe('SecuritySettingsPage', () => {
     mockApiPost.mockResolvedValue({ data: {} })
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
-    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
+    const oldPasswordInput = screen.getByLabelText(/Ancien mot de passe/)
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/)
+    const confirmPasswordInput = screen.getByLabelText(/Confirmer le nouveau mot de passe/)
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -166,9 +167,9 @@ describe('SecuritySettingsPage', () => {
 
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
-    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
+    const oldPasswordInput = screen.getByLabelText(/Ancien mot de passe/)
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/)
+    const confirmPasswordInput = screen.getByLabelText(/Confirmer le nouveau mot de passe/)
 
     fireEvent.change(oldPasswordInput, { target: { value: 'WrongPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -186,9 +187,9 @@ describe('SecuritySettingsPage', () => {
     mockApiPost.mockResolvedValue({ data: {} })
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe') as HTMLInputElement
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe') as HTMLInputElement
-    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe') as HTMLInputElement
+    const oldPasswordInput = screen.getByLabelText(/Ancien mot de passe/) as HTMLInputElement
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/) as HTMLInputElement
+    const confirmPasswordInput = screen.getByLabelText(/Confirmer le nouveau mot de passe/) as HTMLInputElement
 
     fireEvent.change(oldPasswordInput, { target: { value: 'OldPassword123!' } })
     fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } })
@@ -216,9 +217,9 @@ describe('SecuritySettingsPage', () => {
   it('should prevent same old and new password', async () => {
     renderWithContext()
 
-    const oldPasswordInput = screen.getByLabelText('Ancien mot de passe')
-    const newPasswordInput = screen.getByLabelText('Nouveau mot de passe')
-    const confirmPasswordInput = screen.getByLabelText('Confirmer le nouveau mot de passe')
+    const oldPasswordInput = screen.getByLabelText(/Ancien mot de passe/)
+    const newPasswordInput = screen.getByLabelText(/^Nouveau mot de passe/)
+    const confirmPasswordInput = screen.getByLabelText(/Confirmer le nouveau mot de passe/)
 
     const samePassword = 'SamePassword123!'
     fireEvent.change(oldPasswordInput, { target: { value: samePassword } })
