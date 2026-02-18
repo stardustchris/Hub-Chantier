@@ -165,6 +165,8 @@ class TestSoumettreSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut=statut,
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
 
@@ -221,6 +223,8 @@ class TestValiderSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="en_validation",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("100000"),
             montant_cumule_ht=Decimal("100000"),
             created_at=datetime.utcnow(),
         )
@@ -250,6 +254,8 @@ class TestValiderSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="brouillon",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation
@@ -282,6 +288,8 @@ class TestMarquerValideeClientUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="emise",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("100000"),
             montant_cumule_ht=Decimal("100000"),
             created_at=datetime.utcnow(),
         )
@@ -310,6 +318,8 @@ class TestMarquerValideeClientUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="brouillon",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation
@@ -342,6 +352,8 @@ class TestUpdateSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="brouillon",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         ligne = LigneSituation(
@@ -388,6 +400,8 @@ class TestUpdateSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="en_validation",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation
@@ -420,6 +434,8 @@ class TestDeleteSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="brouillon",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation
@@ -445,6 +461,8 @@ class TestDeleteSituationUseCase:
             budget_id=10,
             numero="SIT-2026-01",
             statut="emise",
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=Decimal("0"),
             created_at=datetime.utcnow(),
         )
         self.mock_situation_repo.find_by_id.return_value = situation

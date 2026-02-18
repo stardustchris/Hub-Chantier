@@ -189,11 +189,11 @@ class TestGetEncryptionService:
 class TestEncryptedStringType:
     """Tests du type SQLAlchemy EncryptedString."""
 
-    def test_init_doubles_length(self):
-        """Test que l'init double la longueur pour le chiffrement."""
+    def test_init_quadruples_length(self):
+        """Test que l'init quadruple la longueur pour le chiffrement AES-256 + base64."""
         es = EncryptedString(length=100)
-        # Le impl doit avoir une longueur doublee
-        assert es.impl.length == 200
+        # AES-256 + base64 augmente la taille ~4x
+        assert es.impl.length == 400
 
     def test_process_bind_param_encrypts(self):
         """Test que process_bind_param chiffre."""

@@ -117,7 +117,7 @@ class TestFindByConducteurOptimization:
     def test_should_return_chantiers_for_conducteur(self, repository, mock_session):
         """Test: retourne les chantiers du conducteur."""
         # Arrange
-        chantier_model = create_chantier_model(1, "CHT-0001", "Chantier 1", [42], [])
+        chantier_model = create_chantier_model(1, "A001", "Chantier 1", [42], [])
 
         mock_query = MagicMock()
         mock_session.query.return_value = mock_query
@@ -208,7 +208,7 @@ class TestFindByChefChantierOptimization:
     def test_should_return_chantiers_for_chef(self, repository, mock_session):
         """Test: retourne les chantiers du chef."""
         # Arrange
-        chantier_model = create_chantier_model(2, "CHT-0002", "Chantier 2", [], [99])
+        chantier_model = create_chantier_model(2, "A002", "Chantier 2", [], [99])
 
         mock_query = MagicMock()
         mock_session.query.return_value = mock_query
@@ -259,8 +259,8 @@ class TestFindByResponsableOptimization:
     ):
         """Test: retourne chantiers où user est conducteur OU chef."""
         # Arrange
-        chantier1 = create_chantier_model(1, "CHT-0001", "Chantier 1", [7], [])
-        chantier2 = create_chantier_model(2, "CHT-0002", "Chantier 2", [], [7])
+        chantier1 = create_chantier_model(1, "A001", "Chantier 1", [7], [])
+        chantier2 = create_chantier_model(2, "A002", "Chantier 2", [], [7])
 
         mock_query = MagicMock()
         mock_session.query.return_value = mock_query

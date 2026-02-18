@@ -111,7 +111,7 @@ class TestHandleChantierStatutChangedFerme:
         mock_session.close.assert_called_once()
 
     @patch('modules.planning.infrastructure.event_handlers.SessionLocal')
-    @patch('modules.planning.infrastructure.event_handlers.persistence.SQLAlchemyAffectationRepository')
+    @patch('modules.planning.infrastructure.persistence.SQLAlchemyAffectationRepository')
     def test_should_handle_no_future_affectations_gracefully(
         self,
         mock_repo_class,
@@ -233,7 +233,7 @@ class TestHandleChantierStatutChangedEdgeCases:
         mock_session_local.assert_not_called()
 
     @patch('modules.planning.infrastructure.event_handlers.SessionLocal')
-    @patch('modules.planning.infrastructure.event_handlers.persistence.SQLAlchemyAffectationRepository')
+    @patch('modules.planning.infrastructure.persistence.SQLAlchemyAffectationRepository')
     @patch('modules.planning.infrastructure.event_handlers.logger')
     def test_should_rollback_on_error(
         self,
@@ -265,7 +265,7 @@ class TestHandleChantierStatutChangedEdgeCases:
         mock_logger.error.assert_called_once()
 
     @patch('modules.planning.infrastructure.event_handlers.SessionLocal')
-    @patch('modules.planning.infrastructure.event_handlers.persistence.SQLAlchemyAffectationRepository')
+    @patch('modules.planning.infrastructure.persistence.SQLAlchemyAffectationRepository')
     def test_should_handle_event_with_getattr_fallback(
         self,
         mock_repo_class,
@@ -300,7 +300,7 @@ class TestHandleChantierStatutChangedLogging:
     """Tests: Logging des opérations."""
 
     @patch('modules.planning.infrastructure.event_handlers.SessionLocal')
-    @patch('modules.planning.infrastructure.event_handlers.persistence.SQLAlchemyAffectationRepository')
+    @patch('modules.planning.infrastructure.persistence.SQLAlchemyAffectationRepository')
     @patch('modules.planning.infrastructure.event_handlers.logger')
     def test_should_log_info_when_deleting_affectations(
         self,
@@ -341,7 +341,7 @@ class TestHandleChantierStatutChangedLogging:
         assert found_count_log
 
     @patch('modules.planning.infrastructure.event_handlers.SessionLocal')
-    @patch('modules.planning.infrastructure.event_handlers.persistence.SQLAlchemyAffectationRepository')
+    @patch('modules.planning.infrastructure.persistence.SQLAlchemyAffectationRepository')
     @patch('modules.planning.infrastructure.event_handlers.logger')
     def test_should_log_debug_when_no_affectations(
         self,

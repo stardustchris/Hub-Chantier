@@ -440,7 +440,7 @@ class TestLotBudgetaire:
         assert d["code_lot"] == "LOT001"
         assert d["libelle"] == "Gros oeuvre"
         assert d["unite"] == "m2"
-        assert d["total_prevu_ht"] == "5000"
+        assert d["total_prevu_ht"] == "5000.00"
 
 
 # ============================================================
@@ -673,7 +673,7 @@ class TestAchat:
         d = achat.to_dict()
         assert d["id"] == 1
         assert d["chantier_id"] == 100
-        assert d["total_ht"] == "1000"
+        assert d["total_ht"] == "1000.00"
         assert d["montant_tva"] == "200.00"
         assert d["total_ttc"] == "1200.00"
         assert d["statut"] == "demande"

@@ -837,7 +837,7 @@ class TestDownloadDocumentUseCase:
             chemin_stockage="/s/test.pdf", taille=1024, mime_type="application/pdf", uploaded_by=1,
         )
         mock_document_repo.find_by_id.return_value = document
-        mock_file_storage.get_url.return_value = "https://storage.example.com/test.pdf"
+        mock_file_storage.get.return_value = "https://storage.example.com/test.pdf"
 
         use_case = DownloadDocumentUseCase(
             document_repository=mock_document_repo,

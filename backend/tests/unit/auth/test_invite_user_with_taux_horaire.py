@@ -95,21 +95,19 @@ class TestInviteUserWithTauxHoraire:
         assert user.taux_horaire is None
 
     def test_invite_user_with_taux_horaire_zero(self):
-        """Test: invitation avec taux_horaire à zéro."""
+        """Test: invitation avec taux_horaire à zéro lève ValueError (SMIC)."""
         # Arrange
         self.mock_user_repo.save.side_effect = self._create_saved_user
 
-        # Act
-        user = self.use_case.execute(
-            email="stagiaire@example.com",
-            nom="Stagiaire",
-            prenom="Test",
-            role=Role.COMPAGNON,
-            taux_horaire=Decimal("0.00"),
-        )
-
-        # Assert
-        assert user.taux_horaire == Decimal("0.00")
+        # Act & Assert - 0.00 est inférieur au SMIC (11.00 EUR/h)
+        with pytest.raises(ValueError, match="SMIC"):
+            self.use_case.execute(
+                email="stagiaire@example.com",
+                nom="Stagiaire",
+                prenom="Test",
+                role=Role.COMPAGNON,
+                taux_horaire=Decimal("0.00"),
+            )
 
     def test_invite_user_with_taux_horaire_and_metiers(self):
         """Test: invitation avec taux_horaire et métiers."""
@@ -132,21 +130,19 @@ class TestInviteUserWithTauxHoraire:
         assert user.taux_horaire == Decimal("30.00")
 
     def test_invite_user_with_taux_horaire_high_precision(self):
-        """Test: invitation avec taux_horaire haute précision."""
+        """Test: invitation avec taux_horaire > 2 décimales lève ValueError."""
         # Arrange
         self.mock_user_repo.save.side_effect = self._create_saved_user
 
-        # Act
-        user = self.use_case.execute(
-            email="precise@example.com",
-            nom="Precise",
-            prenom="Test",
-            role=Role.COMPAGNON,
-            taux_horaire=Decimal("28.756"),
-        )
-
-        # Assert
-        assert user.taux_horaire == Decimal("28.756")
+        # Act & Assert - Plus de 2 décimales non autorisé
+        with pytest.raises(ValueError, match="décimales"):
+            self.use_case.execute(
+                email="precise@example.com",
+                nom="Precise",
+                prenom="Test",
+                role=Role.COMPAGNON,
+                taux_horaire=Decimal("28.756"),
+            )
 
     def test_invite_user_email_already_exists(self):
         """Test: échec si email déjà utilisé."""

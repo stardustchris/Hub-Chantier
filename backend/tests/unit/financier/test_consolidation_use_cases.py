@@ -885,6 +885,8 @@ class TestConsolidationMargeBTP:
             numero=f"SIT-2026-{chantier_id:02d}",
             periode_debut=datetime(2026, 1, 1).date(),
             periode_fin=datetime(2026, 1, 31).date(),
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=montant_cumule,
             montant_cumule_ht=montant_cumule,
             statut="facturee",
         )
@@ -1167,6 +1169,8 @@ class TestConsolidationAvecMateriel:
             numero=f"SIT-2026-{chantier_id:02d}",
             periode_debut=datetime(2026, 1, 1).date(),
             periode_fin=datetime(2026, 1, 31).date(),
+            montant_cumule_precedent_ht=Decimal("0"),
+            montant_periode_ht=montant_cumule,
             montant_cumule_ht=montant_cumule,
             statut="facturee",
         )
@@ -1410,9 +1414,10 @@ class TestConsolidationAvecMateriel:
         assert result.chantiers[0].fiabilite_marge == 100
 
     def test_consolidation_fiabilite_marge_partielle(self):
-        """Test C1: fiabilite sans MO.
+        """Test C1: fiabilite sans MO ni materiel reel.
 
-        Score: 30 (situation) + 0 (MO=0) + 25 (materiel>=0) + 20 (FG toujours) = 75
+        Score: 30 (situation) + 0 (MO=0) + 0 (materiel=0) + 20 (FG toujours) = 50
+        La condition est cout > 0 (strict), pas >= 0.
         """
         # Arrange
         budget = self._make_budget(1, Decimal("200000"))
@@ -1426,7 +1431,7 @@ class TestConsolidationAvecMateriel:
             if statuts == STATUTS_ENGAGES
             else Decimal("50000")
         )
-        # MO = 0, materiel = 0 -> pas de points MO (25 absents)
+        # MO = 0, materiel = 0 -> condition > 0 not met for either
         self.mock_cout_mo_repo.calculer_cout_chantier.return_value = Decimal("0")
         self.mock_cout_materiel_repo.calculer_cout_chantier.return_value = Decimal("0")
         self.mock_alerte_repo.find_non_acquittees.return_value = []
@@ -1434,8 +1439,8 @@ class TestConsolidationAvecMateriel:
         # Act - FG toujours appliques (coefficient unique)
         result = self.use_case.execute(user_accessible_chantier_ids=[1])
 
-        # Assert - 30 (situation) + 0 (MO=0) + 25 (materiel ok, >=0) + 20 (FG) = 75
-        assert result.chantiers[0].fiabilite_marge == 75
+        # Assert - 30 (situation) + 0 (MO=0) + 0 (materiel=0) + 20 (FG) = 50
+        assert result.chantiers[0].fiabilite_marge == 50
 
     def test_consolidation_nb_chantiers_marge_en_attente_with_error(self):
         """Test A3: nb_chantiers_marge_en_attente compte les chantiers avec marge partielle.

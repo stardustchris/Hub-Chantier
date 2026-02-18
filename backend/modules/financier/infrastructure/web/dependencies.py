@@ -139,6 +139,13 @@ from ..persistence import (
 # =============================================================================
 
 
+def get_configuration_entreprise_repository(
+    db: Session = Depends(get_db),
+) -> ConfigurationEntrepriseRepository:
+    """Retourne le repository ConfigurationEntreprise."""
+    return SQLAlchemyConfigurationEntrepriseRepository(db)
+
+
 def get_event_bus() -> EventBus:
     """Retourne l'EventBus avec logging pour audit trail (H8)."""
     return FinancierEventBus(CoreEventBus)
@@ -1107,18 +1114,6 @@ def get_bilan_cloture_use_case(
         cout_materiel_repository=cout_materiel_repository,
         config_repository=config_repo,
     )
-
-
-# =============================================================================
-# Repositories - Configuration Entreprise
-# =============================================================================
-
-
-def get_configuration_entreprise_repository(
-    db: Session = Depends(get_db),
-) -> ConfigurationEntrepriseRepository:
-    """Retourne le repository ConfigurationEntreprise."""
-    return SQLAlchemyConfigurationEntrepriseRepository(db)
 
 
 # =============================================================================

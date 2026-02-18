@@ -526,7 +526,7 @@ class TestLesCedresDashboard:
         assert result.kpi.total_realise == str(F.TOTAL_REALISE_COMPLET)
         # Reste a depenser inclut MO + materiel (negatif = depassement)
         reste = F.BUDGET_PREVISIONNEL - F.TOTAL_ENGAGE - F.COUT_MO - F.COUT_MATERIEL
-        assert result.kpi.reste_a_depenser == str(reste)
+        assert result.kpi.reste_a_depenser == str(reste.quantize(Decimal("0.01")))
 
     def test_total_realise_inclut_mo_et_materiel(self):
         """Le total realise du dashboard = achats factures + MO + materiel.

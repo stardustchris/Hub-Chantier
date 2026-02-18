@@ -194,6 +194,7 @@ class TestCoutEmploye:
             prenom="Jean",
             heures_validees=Decimal("40"),
             taux_horaire=Decimal("25.50"),
+            taux_horaire_charge=Decimal("32.50"),
             cout_total=Decimal("1020"),
         )
         assert cout.user_id == 1
@@ -211,6 +212,7 @@ class TestCoutEmploye:
             prenom="Jean",
             heures_validees=Decimal("40"),
             taux_horaire=Decimal("25.50"),
+            taux_horaire_charge=Decimal("32.50"),
             cout_total=Decimal("1020"),
         )
         with pytest.raises(AttributeError):
@@ -224,6 +226,7 @@ class TestCoutEmploye:
             prenom="Jean",
             heures_validees=Decimal("40"),
             taux_horaire=Decimal("25.50"),
+            taux_horaire_charge=Decimal("32.50"),
             cout_total=Decimal("1020"),
         )
         cout2 = CoutEmploye(
@@ -232,6 +235,7 @@ class TestCoutEmploye:
             prenom="Jean",
             heures_validees=Decimal("40"),
             taux_horaire=Decimal("25.50"),
+            taux_horaire_charge=Decimal("32.50"),
             cout_total=Decimal("1020"),
         )
         assert cout1 == cout2
