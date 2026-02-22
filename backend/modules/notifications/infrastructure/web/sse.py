@@ -111,6 +111,10 @@ async def _event_stream(
     queue = sse_manager.connect(user_id)
 
     try:
+        # Handshake immédiat pour ouvrir la connexion côté EventSource sans
+        # attendre le premier événement métier ou le keepalive (30s).
+        yield ": connected\n\n"
+
         while True:
             # Vérifie si le client est toujours connecté
             if await request.is_disconnected():

@@ -47,15 +47,15 @@ const DEFINITIONS: Record<string, { titre: string; definition: string }> = {
   },
   realise: {
     titre: 'Déboursé',
-    definition: 'Montants réellement payés. Factures fournisseurs réglées.',
+    definition: 'Coûts réellement engagés : achats fournisseurs facturés + main-d\'œuvre interne pointée + matériel propre utilisé.',
   },
   reste: {
     titre: 'Reste à Dépenser',
-    definition: 'Budget - Engagé = ce qu\'on peut encore commander sans dépasser le budget.',
+    definition: 'Budget révisé − Engagé fournisseurs − MO interne − Matériel. Ce qu\'il reste à consommer avant dépassement.',
   },
   marge: {
     titre: 'Marge',
-    definition: '(Prix de Vente - Coût de Revient) / Prix de Vente × 100. Marge commerciale standard BTP.',
+    definition: '(CA HT facturé − Coût de revient) / CA HT × 100. Coût de revient = Achats + MO interne + Matériel + Frais généraux (19%).',
   },
 }
 
@@ -402,108 +402,98 @@ export default function DashboardFinancierPage() {
 
             {/* KPI globaux */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" role="region" aria-label="Indicateurs cles">
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DefinitionTooltip term="budget">
-                      <p className="text-sm text-gray-600">Budget Total</p>
-                    </DefinitionTooltip>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatEUR(data.kpi_globaux.total_budget_revise)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Euro className="w-6 h-6 text-blue-600" />
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Euro className="w-4 h-4 text-blue-600" />
                   </div>
                 </div>
+                <DefinitionTooltip term="budget">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Budget Total</p>
+                </DefinitionTooltip>
+                <p className="text-lg font-bold text-gray-900 mt-1 leading-tight tabular-nums">
+                  {formatEUR(data.kpi_globaux.total_budget_revise)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
+                </p>
               </div>
 
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DefinitionTooltip term="engage">
-                      <p className="text-sm text-gray-600">Engagé Total</p>
-                    </DefinitionTooltip>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatEUR(data.kpi_globaux.total_engage)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatPct(data.kpi_globaux.total_budget_revise > 0
-                        ? (Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100
-                        : 0)} du budget
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-orange-600" />
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-orange-600" />
                   </div>
                 </div>
+                <DefinitionTooltip term="engage">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Engagé Total</p>
+                </DefinitionTooltip>
+                <p className="text-lg font-bold text-gray-900 mt-1 leading-tight tabular-nums">
+                  {formatEUR(data.kpi_globaux.total_engage)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {formatPct(data.kpi_globaux.total_budget_revise > 0
+                    ? (Number(data.kpi_globaux.total_engage) / Number(data.kpi_globaux.total_budget_revise)) * 100
+                    : 0)} du budget
+                </p>
               </div>
 
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DefinitionTooltip term="realise">
-                      <p className="text-sm text-gray-600">Déboursé Total</p>
-                    </DefinitionTooltip>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatEUR(data.kpi_globaux.total_realise)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatPct(data.kpi_globaux.total_budget_revise > 0
-                        ? (Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100
-                        : 0)} du budget
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-slate-600" />
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-slate-600" />
                   </div>
                 </div>
+                <DefinitionTooltip term="realise">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Déboursé Total</p>
+                </DefinitionTooltip>
+                <p className="text-lg font-bold text-gray-900 mt-1 leading-tight tabular-nums">
+                  {formatEUR(data.kpi_globaux.total_realise)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {formatPct(data.kpi_globaux.total_budget_revise > 0
+                    ? (Number(data.kpi_globaux.total_realise) / Number(data.kpi_globaux.total_budget_revise)) * 100
+                    : 0)} du budget
+                </p>
               </div>
 
               {/* Nouvelle carte Reste à Dépenser */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 shadow-sm border border-green-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DefinitionTooltip term="reste">
-                      <p className="text-sm text-green-700 font-medium">Reste à Dépenser</p>
-                    </DefinitionTooltip>
-                    <p className="text-2xl font-bold text-green-800 mt-1">
-                      {formatEUR(data.kpi_globaux.total_reste_a_depenser)}
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">
-                      {formatPct(data.kpi_globaux.total_budget_revise > 0
-                        ? (Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100
-                        : 0)} disponible
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Wallet className="w-6 h-6 text-green-600" />
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 shadow-sm border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Wallet className="w-4 h-4 text-green-600" />
                   </div>
                 </div>
+                <DefinitionTooltip term="reste">
+                  <p className="text-xs text-green-600 uppercase tracking-wide font-medium">Reste à Dépenser</p>
+                </DefinitionTooltip>
+                <p className="text-lg font-bold text-green-800 mt-1 leading-tight tabular-nums">
+                  {formatEUR(data.kpi_globaux.total_reste_a_depenser)}
+                </p>
+                <p className="text-xs text-green-500 mt-1">
+                  {formatPct(data.kpi_globaux.total_budget_revise > 0
+                    ? (Number(data.kpi_globaux.total_reste_a_depenser) / Number(data.kpi_globaux.total_budget_revise)) * 100
+                    : 0)} disponible
+                </p>
               </div>
 
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DefinitionTooltip term="marge">
-                      <p className="text-sm text-gray-600">Marge Moyenne</p>
-                    </DefinitionTooltip>
-                    <p className={`text-2xl font-bold mt-1 ${
-                      data.kpi_globaux.marge_moyenne_pct === null || data.kpi_globaux.marge_moyenne_pct === undefined ? 'text-gray-500' : Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
-                    }`}>
-                      {formatPct(data.kpi_globaux.marge_moyenne_pct)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Sur {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <TrendingDown className="w-6 h-6 text-purple-600" />
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <TrendingDown className="w-4 h-4 text-purple-600" />
                   </div>
                 </div>
+                <DefinitionTooltip term="marge">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Marge Moyenne</p>
+                </DefinitionTooltip>
+                <p className={`text-xl font-bold mt-1 leading-tight ${
+                  data.kpi_globaux.marge_moyenne_pct === null || data.kpi_globaux.marge_moyenne_pct === undefined ? 'text-gray-500' : Number(data.kpi_globaux.marge_moyenne_pct) >= 0 ? 'text-blue-600' : 'text-red-600'
+                }`}>
+                  {formatPct(data.kpi_globaux.marge_moyenne_pct)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Sur {data.kpi_globaux.nb_chantiers} chantier{data.kpi_globaux.nb_chantiers > 1 ? 's' : ''}
+                </p>
               </div>
             </div>
 
@@ -656,7 +646,7 @@ export default function DashboardFinancierPage() {
                                 <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">Calculée</span>
                               )}
                               {chantier.marge_statut === 'estimee_budgetaire' && (
-                                <span className="text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full" title="Ceci n'est pas une marge commerciale. C'est le ratio (Budget - Engagé) / Budget.">
+                                <span className="text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full" title="Pas de CA facturé sur ce chantier. Estimation = (Budget − Engagé − MO − Matériel) / Budget. Ne pas confondre avec la marge commerciale BTP.">
                                   Budget
                                 </span>
                               )}

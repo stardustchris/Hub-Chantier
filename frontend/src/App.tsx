@@ -63,6 +63,12 @@ function RouteChangeHandler() {
   return null
 }
 
+// Wrapper pour les raccourcis clavier (doit être dans <BrowserRouter> — react-router-dom v7)
+function KeyboardShortcutsHandler({ onShowHelp }: { onShowHelp: () => void }) {
+  useKeyboardShortcuts({ onShowHelp })
+  return null
+}
+
 // Bandeau mode démo
 function DemoBanner() {
   const { isDemoMode, disableDemoMode } = useDemo()
@@ -92,15 +98,11 @@ function DemoBanner() {
 function App() {
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
 
-  // Hook pour les raccourcis clavier globaux
-  useKeyboardShortcuts({
-    onShowHelp: () => setShowShortcutsHelp(true),
-  })
-
   return (
     <ErrorBoundary>
     <BrowserRouter>
       <RouteChangeHandler />
+      <KeyboardShortcutsHandler onShowHelp={() => setShowShortcutsHelp(true)} />
       <AuthProvider>
         <DemoProvider>
         <ToastProvider>

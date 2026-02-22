@@ -20,7 +20,7 @@ import sqlalchemy as sa
 
 # revision identifiers
 revision = "20260211_0004"
-down_revision = "20260211_0003"
+down_revision = "nullable_fournisseur_date"
 branch_labels = None
 depends_on = None
 

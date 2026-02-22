@@ -2,9 +2,11 @@ import axios from 'axios'
 import { emitSessionExpired } from './authEvents'
 import { getCsrfToken, requiresCsrf, CSRF_HEADER, fetchCsrfToken } from './csrf'
 
-// En dev, Vite proxy les requêtes /api vers le backend
-// En prod, VITE_API_URL doit être configuré dans l'environnement
-const baseURL = import.meta.env.VITE_API_URL || ''
+// En dev, on force un baseURL relatif pour passer par le proxy Vite (/api)
+// et éviter les problèmes localhost vs 127.0.0.1 (cookies/CORS).
+// En prod, VITE_API_URL peut être défini pour pointer vers l'API.
+const configuredApiUrl = import.meta.env.VITE_API_URL || ''
+const baseURL = import.meta.env.DEV ? '' : configuredApiUrl
 
 // Avertissement si VITE_API_URL n'est pas défini en production
 if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {

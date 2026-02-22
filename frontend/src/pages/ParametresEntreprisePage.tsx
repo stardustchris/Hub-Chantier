@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useParametresEntreprise } from '../hooks/useParametresEntreprise';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import Layout from '../components/Layout';
+import { Breadcrumb } from '../components/ui/Breadcrumb';
 
 export function ParametresEntreprisePage(): React.ReactElement {
   useDocumentTitle('Paramètres entreprise');
@@ -110,29 +112,35 @@ export function ParametresEntreprisePage(): React.ReactElement {
 
   if (!isAdmin) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-sm text-red-800">
-            Cette page est reservee aux administrateurs.
-          </p>
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <p className="text-sm text-red-800">
+              Cette page est reservee aux administrateurs.
+            </p>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
+    <Layout>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="md:grid md:grid-cols-3 md:gap-6">
+      <Breadcrumb items={[{ label: 'Accueil', href: '/' }, { label: 'Paramètres entreprise' }]} />
+      <div className="mt-6 md:grid md:grid-cols-3 md:gap-6">
         <div className="md:col-span-1">
           <div className="px-4 sm:px-0">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
@@ -558,6 +566,7 @@ export function ParametresEntreprisePage(): React.ReactElement {
         </div>
       </div>
     </div>
+    </Layout>
   );
 }
 

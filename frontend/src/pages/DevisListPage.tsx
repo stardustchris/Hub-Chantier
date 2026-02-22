@@ -3,13 +3,12 @@
  * Module Devis (Module 20) - DEV-03
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import DevisStatusBadge from '../components/devis/DevisStatusBadge'
-import DevisForm from '../components/devis/DevisForm'
 import { useDevisList, type UseDevisListParams } from '../hooks/useDevisList'
-import type { DevisCreate, DevisUpdate, StatutDevis } from '../types'
+import type { DevisCreate, StatutDevis } from '../types'
 import { STATUT_DEVIS_CONFIG } from '../types'
 import { formatEUR } from '../utils/format'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -24,6 +23,7 @@ import {
   ChevronRight,
   X,
   FileText,
+  ArrowRight,
 } from 'lucide-react'
 
 const PAGE_SIZE = 20
@@ -52,8 +52,12 @@ export default function DevisListPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [page, setPage] = useState(0)
 
-  // Modal creation
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  // Mini-dialog création rapide
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [newObjet, setNewObjet] = useState('')
+  const [newClientNom, setNewClientNom] = useState('')
+  const [creating, setCreating] = useState(false)
+  const objetInputRef = useRef<HTMLInputElement>(null)
 
   const fetchDevis = useCallback(async () => {
     const params: UseDevisListParams = {
@@ -108,10 +112,24 @@ export default function DevisListPage() {
     setPage(0)
   }
 
-  const handleCreateDevis = async (data: DevisCreate | DevisUpdate) => {
-    const created = await createDevis(data as DevisCreate)
-    setShowCreateForm(false)
-    navigate(`/devis/${created.id}`)
+  const openCreateDialog = () => {
+    setNewObjet('')
+    setNewClientNom('')
+    setShowCreateDialog(true)
+    setTimeout(() => objetInputRef.current?.focus(), 50)
+  }
+
+  const handleCreateDevis = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newObjet.trim() || !newClientNom.trim()) return
+    setCreating(true)
+    try {
+      const created = await createDevis({ objet: newObjet.trim(), client_nom: newClientNom.trim() } as DevisCreate)
+      setShowCreateDialog(false)
+      navigate(`/devis/${created.id}`)
+    } finally {
+      setCreating(false)
+    }
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
@@ -136,7 +154,7 @@ export default function DevisListPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">Devis</h1>
           <button
-            onClick={() => setShowCreateForm(true)}
+            onClick={openCreateDialog}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -365,12 +383,64 @@ export default function DevisListPage() {
           </div>
         )}
 
-        {/* Modal creation */}
-        {showCreateForm && (
-          <DevisForm
-            onSubmit={handleCreateDevis}
-            onCancel={() => setShowCreateForm(false)}
-          />
+        {/* Mini-dialog création rapide */}
+        {showCreateDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">Nouveau devis</h2>
+              <p className="text-sm text-gray-500 mb-5">Les autres informations se remplissent dans le générateur.</p>
+              <form onSubmit={handleCreateDevis} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Objet du devis <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    ref={objetInputRef}
+                    type="text"
+                    value={newObjet}
+                    onChange={(e) => setNewObjet(e.target.value)}
+                    placeholder="Ex : Rénovation maison individuelle"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom du client <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newClientNom}
+                    onChange={(e) => setNewClientNom(e.target.value)}
+                    placeholder="Ex : M. et Mme Dupont"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateDialog(false)}
+                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating || !newObjet.trim() || !newClientNom.trim()}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  >
+                    {creating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-4 h-4" />
+                    )}
+                    Créer et ouvrir
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     </Layout>

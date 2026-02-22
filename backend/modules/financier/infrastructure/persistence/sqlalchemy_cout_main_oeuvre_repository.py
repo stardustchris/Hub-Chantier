@@ -99,11 +99,11 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                     p.utilisateur_id,
                     date_trunc('week', p.date_pointage) as semaine,
                     (SUM(p.heures_normales_minutes) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric)
+                        * COALESCE(u.taux_horaire, 0) * CAST(:coeff_charges AS numeric))
                     + (LEAST(SUM(p.heures_supplementaires_minutes), 480) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_1::numeric)
+                        * COALESCE(u.taux_horaire, 0) * CAST(:coeff_charges AS numeric) * CAST(:coeff_hs_1 AS numeric))
                     + (GREATEST(SUM(p.heures_supplementaires_minutes) - 480, 0) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_2::numeric)
+                        * COALESCE(u.taux_horaire, 0) * CAST(:coeff_charges AS numeric) * CAST(:coeff_hs_2 AS numeric))
                     as week_cost
                 FROM pointages p
                 JOIN users u ON p.utilisateur_id = u.id
@@ -176,11 +176,11 @@ class SQLAlchemyCoutMainOeuvreRepository(CoutMainOeuvreRepository):
                     SUM(p.heures_normales_minutes) as week_normales_min,
                     SUM(p.heures_supplementaires_minutes) as week_sup_min,
                     (SUM(p.heures_normales_minutes) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric)
+                        * COALESCE(u.taux_horaire, 0) * CAST(:coeff_charges AS numeric))
                     + (LEAST(SUM(p.heures_supplementaires_minutes), 480) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_1::numeric)
+                        * COALESCE(u.taux_horaire, 0) * CAST(:coeff_charges AS numeric) * CAST(:coeff_hs_1 AS numeric))
                     + (GREATEST(SUM(p.heures_supplementaires_minutes) - 480, 0) / 60::numeric
-                        * COALESCE(u.taux_horaire, 0) * :coeff_charges::numeric * :coeff_hs_2::numeric)
+                        * COALESCE(u.taux_horaire, 0) * CAST(:coeff_charges AS numeric) * CAST(:coeff_hs_2 AS numeric))
                     as week_cost
                 FROM pointages p
                 JOIN users u ON p.utilisateur_id = u.id

@@ -232,7 +232,7 @@ export default function BudgetDashboard({ chantierId, budget, onDashboardLoaded 
               <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Calculée (CA réel)</span>
             )}
             {kpi.marge_statut === 'estimee_budgetaire' && (
-              <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1" title="Ceci n'est pas une marge commerciale. C'est le ratio (Budget - Engagé) / Budget.">
+              <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1" title="Pas de CA facturé sur ce chantier. Estimation = (Budget − Engagé − MO − Matériel) / Budget. Ne pas confondre avec la marge commerciale BTP.">
                 Estimation budgétaire
                 <AlertTriangle className="w-3 h-3" />
               </span>

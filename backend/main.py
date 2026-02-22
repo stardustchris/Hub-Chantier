@@ -254,8 +254,8 @@ app.include_router(devis_router, prefix="/api")
 app.include_router(devis_articles_router, prefix="/api")
 # app.include_router(planning_charge_router, prefix="/api")
 app.include_router(interventions_router, prefix="/api")
-app.include_router(notifications_router, prefix="/api")
 app.include_router(notifications_sse_router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
 app.include_router(webhooks_router, prefix="/api/v1")
 
 # Futurs modules à ajouter:

@@ -20,12 +20,45 @@ interface BudgetBarChartProps {
   }
 }
 
-export default function BudgetBarChart({ data, chartColors }: BudgetBarChartProps) {
+const MAX_LABEL = 12
+
+// Tronque un nom trop long pour éviter le débordement sur le graphique
+function truncate(name: string) {
+  return name.length > MAX_LABEL ? name.slice(0, MAX_LABEL) + '…' : name
+}
+
+// Tick personnalisé avec label vertical pour éviter le clipping SVG
+function CustomTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={4}
+        textAnchor="end"
+        fill="#6b7280"
+        fontSize={10}
+        transform="rotate(-45)"
+      >
+        {payload?.value}
+      </text>
+    </g>
+  )
+}
+
+export default function BudgetBarChart({ data, chartColors }: BudgetBarChartProps) {
+  const truncatedData = data.map(d => ({ ...d, name: truncate(d.name) }))
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={truncatedData} margin={{ top: 5, right: 20, left: 10, bottom: 80 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} />
+        <XAxis
+          dataKey="name"
+          tick={<CustomTick />}
+          interval={0}
+          height={90}
+        />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
         <Tooltip
           formatter={(value) => [formatEUR(Number(value))]}
@@ -39,3 +72,4 @@ export default function BudgetBarChart({ data, chartColors }: BudgetBarChartProp
     </ResponsiveContainer>
   )
 }
+

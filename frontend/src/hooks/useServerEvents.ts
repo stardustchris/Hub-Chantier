@@ -42,6 +42,7 @@ export function useServerEvents(): UseServerEventsReturn {
   const [isConnected, setIsConnected] = useState(false)
   const [eventsReceived, setEventsReceived] = useState(0)
   const reconnectAttempts = useRef(0)
+  const sseDisabledRef = useRef(false)
 
   const handleEvent = useCallback(
     (event: MessageEvent) => {
@@ -71,7 +72,38 @@ export function useServerEvents(): UseServerEventsReturn {
     // Ne pas se connecter si offline
     if (!navigator.onLine) return
 
+    const isSSEEndpointAvailable = async (): Promise<boolean> => {
+      // Les tests unitaires mockent EventSource et ne doivent pas dépendre du backend réel.
+      if (import.meta.env.MODE === 'test') return true
+
+      try {
+        // En dev, on inspecte le schéma OpenAPI pour éviter de déclencher
+        // des requêtes /stream en 405 visibles dans la console navigateur.
+        const response = await fetch('/openapi.json', {
+          method: 'GET',
+          cache: 'no-store',
+        })
+
+        // En prod, /openapi.json peut être désactivé: dans ce cas, ne pas bloquer SSE.
+        if (!response.ok) return true
+
+        const schema = (await response.json()) as { paths?: Record<string, unknown> }
+        const hasSSEPath = Boolean(schema.paths?.['/api/notifications/stream'])
+        if (!hasSSEPath) {
+          logger.warn('SSE endpoint absent du backend actif, désactivation du temps réel')
+          return false
+        }
+        return true
+      } catch (err) {
+        logger.warn('SSE probe OpenAPI échoué, désactivation du temps réel', {
+          error: err instanceof Error ? err.message : 'unknown',
+        })
+        return false
+      }
+    }
+
     const connect = () => {
+      if (sseDisabledRef.current) return
       const es = new EventSource('/api/notifications/stream')
       eventSourceRef.current = es
 
@@ -102,10 +134,21 @@ export function useServerEvents(): UseServerEventsReturn {
       }
     }
 
-    connect()
+    let cancelled = false
+    void (async () => {
+      const available = await isSSEEndpointAvailable()
+      if (!available) {
+        sseDisabledRef.current = true
+        return
+      }
+      if (!cancelled) {
+        connect()
+      }
+    })()
 
     // Écouter online/offline
     const handleOnline = () => {
+      if (sseDisabledRef.current) return
       if (!eventSourceRef.current || eventSourceRef.current.readyState === EventSource.CLOSED) {
         reconnectAttempts.current = 0
         connect()
@@ -121,6 +164,7 @@ export function useServerEvents(): UseServerEventsReturn {
     window.addEventListener('offline', handleOffline)
 
     return () => {
+      cancelled = true
       eventSourceRef.current?.close()
       eventSourceRef.current = null
       window.removeEventListener('online', handleOnline)

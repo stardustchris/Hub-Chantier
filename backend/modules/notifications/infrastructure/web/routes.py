@@ -79,7 +79,7 @@ async def mark_notifications_as_read(
     return {"marked_count": count}
 
 
-@router.patch("/{notification_id}/read")
+@router.patch("/{notification_id:int}/read")
 async def mark_notification_as_read(
     notification_id: int,
     current_user_id: int = Depends(get_current_user_id),
@@ -95,7 +95,7 @@ async def mark_notification_as_read(
     return {"success": True}
 
 
-@router.delete("/{notification_id}")
+@router.delete("/{notification_id:int}")
 async def delete_notification(
     notification_id: int,
     current_user_id: int = Depends(get_current_user_id),

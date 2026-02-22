@@ -122,6 +122,7 @@ export default function DevisGeneratorPage() {
         onAccepter={handleAccepter}
         onRefuser={handleRefuser}
         onPerdu={handlePerdu}
+        onSaved={recalcAndReload}
       />
 
       <div className="max-w-7xl mx-auto px-6 py-6">
