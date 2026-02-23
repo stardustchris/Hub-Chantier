@@ -15,7 +15,7 @@ print("\n📝 1. CONNEXION")
 print("-" * 40)
 response = requests.post(
     f"{BASE_URL}/api/auth/login",
-    data={"username": "admin@hubchantier.fr", "password": "Password123!"}
+    data={"username": "admin@greg-construction.fr", "password": "Password123!"}
 )
 
 if response.status_code != 200:

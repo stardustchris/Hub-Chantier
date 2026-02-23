@@ -52,17 +52,8 @@ export default function OnboardingProvider({ children }: OnboardingProviderProps
     const completed = localStorage.getItem(storageKey) === 'true'
     setIsComplete(completed)
 
-    // Auto-start si pas encore complété et première connexion
-    if (!completed && user) {
-      const hasSeenWelcome = localStorage.getItem('hub-onboarding-welcome-shown')
-      if (!hasSeenWelcome) {
-        localStorage.setItem('hub-onboarding-welcome-shown', 'true')
-        // Délai pour laisser le temps à la page de charger
-        setTimeout(() => {
-          setShowWelcome(true)
-        }, 1000)
-      }
-    }
+    // Onboarding désactivé en auto-start.
+    // L'utilisateur peut le relancer manuellement via resetTour() si besoin.
   }, [role, user])
 
   const startTour = useCallback(() => {

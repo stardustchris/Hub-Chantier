@@ -88,7 +88,7 @@ def hash_password(password: str) -> str:
 USERS_DATA = [
     # Admin - pas de taux horaire (personnel administratif)
     {
-        "email": "admin@example.com",
+        "email": "admin@greg-construction.fr",
         "password": "Admin123!",
         "nom": "ADMIN",
         "prenom": "Super",
@@ -101,7 +101,7 @@ USERS_DATA = [
         "taux_horaire": None,
     },
     {
-        "email": "dupont.admin@example.com",
+        "email": "dupont.admin@greg-construction.fr",
         "password": "Test123!",
         "nom": "DUPONT",
         "prenom": "Marie",
@@ -115,7 +115,7 @@ USERS_DATA = [
     },
     # Chefs de chantier et d'équipe - 50-55 EUR/h (cout entreprise avec charges)
     {
-        "email": "martin.chef@example.com",
+        "email": "martin.chef@greg-construction.fr",
         "password": "Test123!",
         "nom": "MARTIN",
         "prenom": "Jean",
@@ -128,7 +128,7 @@ USERS_DATA = [
         "taux_horaire": 55.00,  # Chef de chantier senior
     },
     {
-        "email": "bernard.chef@example.com",
+        "email": "bernard.chef@greg-construction.fr",
         "password": "Test123!",
         "nom": "BERNARD",
         "prenom": "Pierre",
@@ -141,7 +141,7 @@ USERS_DATA = [
         "taux_horaire": 50.00,  # Chef d'equipe
     },
     {
-        "email": "thomas.chef@example.com",
+        "email": "thomas.chef@greg-construction.fr",
         "password": "Test123!",
         "nom": "THOMAS",
         "prenom": "Luc",
@@ -154,7 +154,7 @@ USERS_DATA = [
         "taux_horaire": 50.00,  # Chef d'equipe
     },
     {
-        "email": "petit.chef@example.com",
+        "email": "petit.chef@greg-construction.fr",
         "password": "Test123!",
         "nom": "PETIT",
         "prenom": "Marc",
@@ -168,7 +168,7 @@ USERS_DATA = [
     },
     # Compagnons - Macons qualifies 38-42 EUR/h
     {
-        "email": "robert.macon@example.com",
+        "email": "robert.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "ROBERT",
         "prenom": "Paul",
@@ -181,7 +181,7 @@ USERS_DATA = [
         "taux_horaire": 42.00,  # Macon qualifie senior
     },
     {
-        "email": "richard.macon@example.com",
+        "email": "richard.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "RICHARD",
         "prenom": "Andre",
@@ -194,7 +194,7 @@ USERS_DATA = [
         "taux_horaire": 44.00,  # Coffreur specialise
     },
     {
-        "email": "durand.macon@example.com",
+        "email": "durand.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "DURAND",
         "prenom": "Francois",
@@ -207,7 +207,7 @@ USERS_DATA = [
         "taux_horaire": 40.00,  # Macon qualifie
     },
     {
-        "email": "dubois.macon@example.com",
+        "email": "dubois.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "DUBOIS",
         "prenom": "Michel",
@@ -220,7 +220,7 @@ USERS_DATA = [
         "taux_horaire": 40.00,  # Macon qualifie
     },
     {
-        "email": "moreau.macon@example.com",
+        "email": "moreau.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "MOREAU",
         "prenom": "Alain",
@@ -233,7 +233,7 @@ USERS_DATA = [
         "taux_horaire": 38.00,  # Macon
     },
     {
-        "email": "laurent.macon@example.com",
+        "email": "laurent.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "LAURENT",
         "prenom": "Bruno",
@@ -246,7 +246,7 @@ USERS_DATA = [
         "taux_horaire": 38.00,  # Macon
     },
     {
-        "email": "simon.macon@example.com",
+        "email": "simon.macon@greg-construction.fr",
         "password": "Test123!",
         "nom": "SIMON",
         "prenom": "David",
@@ -260,7 +260,7 @@ USERS_DATA = [
     },
     # Compagnons - Ouvriers 28-32 EUR/h
     {
-        "email": "michel.ouvrier@example.com",
+        "email": "michel.ouvrier@greg-construction.fr",
         "password": "Test123!",
         "nom": "MICHEL",
         "prenom": "Eric",
@@ -273,7 +273,7 @@ USERS_DATA = [
         "taux_horaire": 32.00,  # Ouvrier qualifie
     },
     {
-        "email": "leroy.ouvrier@example.com",
+        "email": "leroy.ouvrier@greg-construction.fr",
         "password": "Test123!",
         "nom": "LEROY",
         "prenom": "Olivier",
@@ -286,7 +286,7 @@ USERS_DATA = [
         "taux_horaire": 30.00,  # Ouvrier
     },
     {
-        "email": "lefebvre.ouvrier@example.com",
+        "email": "lefebvre.ouvrier@greg-construction.fr",
         "password": "Test123!",
         "nom": "LEFEBVRE",
         "prenom": "Vincent",
@@ -299,7 +299,7 @@ USERS_DATA = [
         "taux_horaire": 30.00,  # Ouvrier
     },
     {
-        "email": "garnier.ouvrier@example.com",
+        "email": "garnier.ouvrier@greg-construction.fr",
         "password": "Test123!",
         "nom": "GARNIER",
         "prenom": "Sebastien",
@@ -312,7 +312,7 @@ USERS_DATA = [
         "taux_horaire": 28.00,  # Ouvrier debutant
     },
     {
-        "email": "roux.ouvrier@example.com",
+        "email": "roux.ouvrier@greg-construction.fr",
         "password": "Test123!",
         "nom": "ROUX",
         "prenom": "Laurent",
@@ -326,7 +326,7 @@ USERS_DATA = [
     },
     # Grutier - specialiste 45 EUR/h
     {
-        "email": "blanc.grutier@example.com",
+        "email": "blanc.grutier@greg-construction.fr",
         "password": "Test123!",
         "nom": "BLANC",
         "prenom": "Nicolas",
@@ -625,12 +625,12 @@ def seed_chantiers(db: Session, user_ids: dict) -> dict:
     # Recuperer les IDs des conducteurs et chefs
     # Note: Ces utilisateurs n'existent pas dans USERS_DATA, donc conducteur_ids et chef_ids seront vides
     conducteur_ids = [
-        user_ids.get("admin@example.com"),  # Utiliser l'admin par défaut
-        user_ids.get("dupont.admin@example.com"),
+        user_ids.get("admin@greg-construction.fr"),  # Utiliser l'admin par défaut
+        user_ids.get("dupont.admin@greg-construction.fr"),
     ]
     chef_ids = [
-        user_ids.get("martin.chef@example.com"),
-        user_ids.get("bernard.chef@example.com"),
+        user_ids.get("martin.chef@greg-construction.fr"),
+        user_ids.get("bernard.chef@greg-construction.fr"),
     ]
 
     # D'abord creer les chantiers speciaux (conges, formations, etc.)
@@ -710,23 +710,23 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
     # Affectations pour les chantiers en cours - Distribution réaliste des compagnons
     affectations_data = [
         # TRIALP (DÉRIVE CRITIQUE) - 6 compagnons + grutier
-        ("robert.macon@example.com", "2025-11-TRIALP"),
-        ("richard.macon@example.com", "2025-11-TRIALP"),
-        ("durand.macon@example.com", "2025-11-TRIALP"),
-        ("dubois.macon@example.com", "2025-11-TRIALP"),
-        ("moreau.macon@example.com", "2025-11-TRIALP"),
-        ("laurent.macon@example.com", "2025-11-TRIALP"),
-        ("blanc.grutier@example.com", "2025-11-TRIALP"),
+        ("robert.macon@greg-construction.fr", "2025-11-TRIALP"),
+        ("richard.macon@greg-construction.fr", "2025-11-TRIALP"),
+        ("durand.macon@greg-construction.fr", "2025-11-TRIALP"),
+        ("dubois.macon@greg-construction.fr", "2025-11-TRIALP"),
+        ("moreau.macon@greg-construction.fr", "2025-11-TRIALP"),
+        ("laurent.macon@greg-construction.fr", "2025-11-TRIALP"),
+        ("blanc.grutier@greg-construction.fr", "2025-11-TRIALP"),
 
         # 20 logements Tour (DÉRIVE LÉGÈRE) - 4 compagnons
-        ("simon.macon@example.com", "2025-07-TOUR-LOGEMENTS"),
-        ("michel.ouvrier@example.com", "2025-07-TOUR-LOGEMENTS"),
-        ("leroy.ouvrier@example.com", "2025-07-TOUR-LOGEMENTS"),
-        ("lefebvre.ouvrier@example.com", "2025-07-TOUR-LOGEMENTS"),
+        ("simon.macon@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("michel.ouvrier@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("leroy.ouvrier@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
+        ("lefebvre.ouvrier@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),
 
         # Tournon Commercial (SAIN) - 2 compagnons (démarrage)
-        ("garnier.ouvrier@example.com", "2025-03-TOURNON-COMMERCIAL"),
-        ("roux.ouvrier@example.com", "2025-03-TOURNON-COMMERCIAL"),
+        ("garnier.ouvrier@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),
+        ("roux.ouvrier@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),
 
         # Chignin Agricole (TRÈS RENTABLE) - équipe réduite efficace
         # (pas d'affectation cette semaine - chantier bien avancé)
@@ -735,14 +735,14 @@ def seed_affectations(db: Session, user_ids: dict, chantier_ids: dict):
         # (équipe réduite, quasi terminé)
 
         # Chefs de chantier assignés
-        ("martin.chef@example.com", "2025-11-TRIALP"),  # Chef sur TRIALP (critique)
-        ("bernard.chef@example.com", "2025-07-TOUR-LOGEMENTS"),  # Chef sur Tour
-        ("thomas.chef@example.com", "2025-03-TOURNON-COMMERCIAL"),  # Chef sur Tournon
-        ("petit.chef@example.com", "2025-04-CHIGNIN-AGRICOLE"),  # Chef sur Chignin
+        ("martin.chef@greg-construction.fr", "2025-11-TRIALP"),  # Chef sur TRIALP (critique)
+        ("bernard.chef@greg-construction.fr", "2025-07-TOUR-LOGEMENTS"),  # Chef sur Tour
+        ("thomas.chef@greg-construction.fr", "2025-03-TOURNON-COMMERCIAL"),  # Chef sur Tournon
+        ("petit.chef@greg-construction.fr", "2025-04-CHIGNIN-AGRICOLE"),  # Chef sur Chignin
     ]
 
     # Admin qui cree les affectations
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     created_count = 0
 
@@ -835,7 +835,7 @@ def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
     - CHIGNIN : ~15,400 EUR (385h x 40 EUR/h moyen)
     """
     print("\n=== Creation des pointages valides (cout MO) ===")
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     # Configuration des pointages par chantier
     # Les heures sont distribuees sur plusieurs semaines passees
@@ -847,9 +847,9 @@ def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
             "chantier_code": "2025-03-TOURNON-COMMERCIAL",
             "semaines": 4,  # 4 semaines de travail
             "equipe": [
-                ("garnier.ouvrier@example.com", 35),  # 35h/sem ouvrier 1
-                ("roux.ouvrier@example.com", 35),     # 35h/sem ouvrier 2
-                ("thomas.chef@example.com", 20),      # 20h/sem chef (partiel)
+                ("garnier.ouvrier@greg-construction.fr", 35),  # 35h/sem ouvrier 1
+                ("roux.ouvrier@greg-construction.fr", 35),     # 35h/sem ouvrier 2
+                ("thomas.chef@greg-construction.fr", 20),      # 20h/sem chef (partiel)
             ],
         },
         # TOUR-LOGEMENTS (derive legere) - 1,812h total, marge 6%
@@ -858,12 +858,12 @@ def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
             "chantier_code": "2025-07-TOUR-LOGEMENTS",
             "semaines": 8,
             "equipe": [
-                ("simon.macon@example.com", 38),
-                ("michel.ouvrier@example.com", 38),
-                ("leroy.ouvrier@example.com", 38),
-                ("lefebvre.ouvrier@example.com", 38),
-                ("dubois.macon@example.com", 35),
-                ("bernard.chef@example.com", 25),
+                ("simon.macon@greg-construction.fr", 38),
+                ("michel.ouvrier@greg-construction.fr", 38),
+                ("leroy.ouvrier@greg-construction.fr", 38),
+                ("lefebvre.ouvrier@greg-construction.fr", 38),
+                ("dubois.macon@greg-construction.fr", 35),
+                ("bernard.chef@greg-construction.fr", 25),
             ],
         },
         # TRIALP (derive critique) - 780h total, marge 2%
@@ -872,11 +872,11 @@ def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
             "chantier_code": "2025-11-TRIALP",
             "semaines": 4,
             "equipe": [
-                ("robert.macon@example.com", 42),     # Heures sup
-                ("richard.macon@example.com", 42),
-                ("durand.macon@example.com", 38),
-                ("moreau.macon@example.com", 38),
-                ("martin.chef@example.com", 25),
+                ("robert.macon@greg-construction.fr", 42),     # Heures sup
+                ("richard.macon@greg-construction.fr", 42),
+                ("durand.macon@greg-construction.fr", 38),
+                ("moreau.macon@greg-construction.fr", 38),
+                ("martin.chef@greg-construction.fr", 25),
             ],
         },
         # GYMNASE (perte) - 965h total, marge -4%
@@ -885,10 +885,10 @@ def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
             "chantier_code": "2025-02-EPIERRE-GYMNASE",
             "semaines": 6,
             "equipe": [
-                ("laurent.macon@example.com", 40),
-                ("dubois.macon@example.com", 40),
-                ("garnier.ouvrier@example.com", 38),
-                ("petit.chef@example.com", 22),
+                ("laurent.macon@greg-construction.fr", 40),
+                ("dubois.macon@greg-construction.fr", 40),
+                ("garnier.ouvrier@greg-construction.fr", 38),
+                ("petit.chef@greg-construction.fr", 22),
             ],
         },
         # CHIGNIN (rentable) - 385h total, marge 14%
@@ -897,10 +897,10 @@ def seed_pointages_valides(db: Session, user_ids: dict, chantier_ids: dict):
             "chantier_code": "2025-04-CHIGNIN-AGRICOLE",
             "semaines": 3,
             "equipe": [
-                ("moreau.macon@example.com", 40),
-                ("laurent.macon@example.com", 40),
-                ("roux.ouvrier@example.com", 35),
-                ("petit.chef@example.com", 15),
+                ("moreau.macon@greg-construction.fr", 40),
+                ("laurent.macon@greg-construction.fr", 40),
+                ("roux.ouvrier@greg-construction.fr", 35),
+                ("petit.chef@greg-construction.fr", 15),
             ],
         },
     ]
@@ -1093,7 +1093,7 @@ def seed_templates_formulaires(db: Session, user_ids: dict) -> dict:
     """Cree les templates de formulaire. Retourne un dict nom -> template_id."""
     print("\n=== Creation des templates de formulaire ===")
     template_ids = {}
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     for tpl_data in TEMPLATES_FORMULAIRES_DATA:
         existing = db.query(TemplateFormulaireModel).filter(
@@ -1156,7 +1156,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Rapport journalier de chantier",
             "chantier": "2025-11-TRIALP",  # Chantier réel existant
-            "user": "bernard.chef@example.com",
+            "user": "bernard.chef@greg-construction.fr",
             "statut": "valide",
             "jours_avant": 3,
             "champs": [
@@ -1176,7 +1176,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Rapport journalier de chantier",
             "chantier": "2025-11-TRIALP",
-            "user": "bernard.chef@example.com",
+            "user": "bernard.chef@greg-construction.fr",
             "statut": "soumis",
             "jours_avant": 1,
             "champs": [
@@ -1196,7 +1196,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Rapport journalier de chantier",
             "chantier": "2025-07-TOUR-LOGEMENTS",
-            "user": "martin.chef@example.com",
+            "user": "martin.chef@greg-construction.fr",
             "statut": "valide",
             "jours_avant": 2,
             "champs": [
@@ -1218,7 +1218,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Inspection securite hebdomadaire",
             "chantier": "2025-11-TRIALP",
-            "user": "admin@example.com",
+            "user": "admin@greg-construction.fr",
             "statut": "valide",
             "jours_avant": 5,
             "champs": [
@@ -1234,7 +1234,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Inspection securite hebdomadaire",
             "chantier": "2025-07-TOUR-LOGEMENTS",
-            "user": "dupont.admin@example.com",
+            "user": "dupont.admin@greg-construction.fr",
             "statut": "soumis",
             "jours_avant": 2,
             "champs": [
@@ -1251,7 +1251,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Declaration d'incident",
             "chantier": "2025-06-RAVOIRE-LOGEMENTS",
-            "user": "thomas.chef@example.com",
+            "user": "thomas.chef@greg-construction.fr",
             "statut": "valide",
             "jours_avant": 10,
             "champs": [
@@ -1273,7 +1273,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Bon de livraison materiaux",
             "chantier": "2025-11-TRIALP",
-            "user": "bernard.chef@example.com",
+            "user": "bernard.chef@greg-construction.fr",
             "statut": "valide",
             "jours_avant": 4,
             "champs": [
@@ -1289,7 +1289,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Bon de livraison materiaux",
             "chantier": "2025-07-TOUR-LOGEMENTS",
-            "user": "martin.chef@example.com",
+            "user": "martin.chef@greg-construction.fr",
             "statut": "soumis",
             "jours_avant": 1,
             "champs": [
@@ -1306,7 +1306,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Controle beton - eprouvettes",
             "chantier": "2025-11-TRIALP",
-            "user": "bernard.chef@example.com",
+            "user": "bernard.chef@greg-construction.fr",
             "statut": "valide",
             "jours_avant": 7,
             "champs": [
@@ -1323,7 +1323,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
         {
             "template": "Rapport journalier de chantier",
             "chantier": "2025-06-RAVOIRE-LOGEMENTS",
-            "user": "thomas.chef@example.com",
+            "user": "thomas.chef@greg-construction.fr",
             "statut": "brouillon",
             "jours_avant": 0,
             "champs": [
@@ -1359,7 +1359,7 @@ def seed_formulaires_remplis(db: Session, user_ids: dict, chantier_ids: dict, te
 
         statut = form_data["statut"]
         soumis_at = datetime.now() - timedelta(days=jours_avant) if statut in ("soumis", "valide") else None
-        valide_by = user_ids.get("admin@example.com") if statut == "valide" else None
+        valide_by = user_ids.get("admin@greg-construction.fr") if statut == "valide" else None
         valide_at = datetime.now() - timedelta(days=max(0, jours_avant - 1)) if statut == "valide" else None
 
         formulaire = FormulaireRempliModel(
@@ -1467,7 +1467,7 @@ def seed_fournisseurs(db: Session, user_ids: dict) -> dict:
     """Cree les fournisseurs de demo. Retourne un dict raison_sociale -> fournisseur_id."""
     print("\n=== Creation des fournisseurs ===")
     fournisseur_ids = {}
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     for fournisseur_data in FOURNISSEURS_DATA:
         existing = db.query(FournisseurModel).filter(
@@ -1513,7 +1513,7 @@ def seed_budgets_financiers(db: Session, user_ids: dict, chantier_ids: dict) -> 
     """
     print("\n=== Creation des budgets financiers avec scénarios de dérive ===")
     budget_ids = {}
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     # Structure: (code, montant_initial, montant_avenants, seuil_alerte, notes)
     # Les avenants reflètent les problèmes rencontrés
@@ -1585,7 +1585,7 @@ def seed_lots_budgetaires(db: Session, user_ids: dict, budget_ids: dict) -> dict
     """
     print("\n=== Creation des lots budgetaires (prix marché 2025-2026) ===")
     lot_ids = {}
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     # Structure: chantier_code -> [(code_lot, libelle, quantite, prix_unitaire)]
     # Prix unitaires = déboursé + marge cible selon scénario
@@ -1718,8 +1718,8 @@ def seed_achats(db: Session, user_ids: dict, chantier_ids: dict, fournisseur_ids
     - "valide" = engagé (validé, non commandé)
     """
     print("\n=== Creation des achats avec scénarios de dérive ===")
-    admin_id = user_ids.get("admin@example.com") or 1
-    chef_id = user_ids.get("martin.chef@example.com") or admin_id
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
+    chef_id = user_ids.get("martin.chef@greg-construction.fr") or admin_id
 
     # Recuperer les IDs fournisseurs
     fournisseur_negoce = fournisseur_ids.get("Négoce Matériaux Pro")
@@ -2121,7 +2121,7 @@ def seed_situations_factures(db: Session, user_ids: dict, chantier_ids: dict, bu
     - CHIGNIN (rentable) : 55% avancement, marge 14%
     """
     print("\n=== Creation des situations et factures ===")
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
     today = date.today()
     created_situations = 0
     created_factures = 0
@@ -2291,7 +2291,7 @@ def seed_ressources_logistique(db: Session, user_ids: dict) -> dict:
     """
     print("\n=== Creation des ressources logistique ===")
     ressource_ids = {}
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     ressources_data = [
         # Engins de levage
@@ -2370,10 +2370,10 @@ def seed_reservations_logistique(db: Session, user_ids: dict, chantier_ids: dict
     Inclut des conflits pour tester la validation.
     """
     print("\n=== Creation des réservations logistique ===")
-    admin_id = user_ids.get("admin@example.com") or 1
-    chef_trialp = user_ids.get("martin.chef@example.com") or admin_id
-    chef_tour = user_ids.get("bernard.chef@example.com") or admin_id
-    chef_tournon = user_ids.get("thomas.chef@example.com") or admin_id
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
+    chef_trialp = user_ids.get("martin.chef@greg-construction.fr") or admin_id
+    chef_tour = user_ids.get("bernard.chef@greg-construction.fr") or admin_id
+    chef_tournon = user_ids.get("thomas.chef@greg-construction.fr") or admin_id
 
     today = date.today()
     created_count = 0
@@ -2502,7 +2502,7 @@ def seed_articles_devis(db: Session, user_ids: dict) -> dict:
     """
     print("\n=== Creation des articles devis (bibliothèque prix) ===")
     article_ids = {}
-    admin_id = user_ids.get("admin@example.com") or 1
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
 
     articles_data = [
         # === MAIN D'ŒUVRE (taux horaires facturés) ===
@@ -2641,8 +2641,8 @@ def seed_devis(db: Session, user_ids: dict, chantier_ids: dict, article_ids: dic
     - DEV-2026-005: Brouillon, extension particulier
     """
     print("\n=== Creation des devis complets ===")
-    admin_id = user_ids.get("admin@example.com") or 1
-    conducteur_id = user_ids.get("dupont.admin@example.com") or admin_id
+    admin_id = user_ids.get("admin@greg-construction.fr") or 1
+    conducteur_id = user_ids.get("dupont.admin@greg-construction.fr") or admin_id
 
     today = date.today()
 
@@ -2896,10 +2896,10 @@ def main():
         print("=" * 60)
         print("\nComptes de test disponibles:")
         print("-" * 40)
-        print("Admin:      admin@example.com / Admin123!")
-        print("Admin:      dupont.admin@example.com / Test123!")
-        print("Chef:       martin.chef@example.com / Test123!")
-        print("Compagnon:  robert.macon@example.com / Test123!")
+        print("Admin:      admin@greg-construction.fr / Admin123!")
+        print("Admin:      dupont.admin@greg-construction.fr / Test123!")
+        print("Chef:       martin.chef@greg-construction.fr / Test123!")
+        print("Compagnon:  robert.macon@greg-construction.fr / Test123!")
         print("-" * 40)
 
     except Exception as e:

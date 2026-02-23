@@ -26,7 +26,7 @@ try:
         admin = UserModel(
             nom="Admin",
             prenom="Super",
-            email="admin@hubchantier.fr",
+            email="admin@greg-construction.fr",
             password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyVK/U7rvQe.",  # password: admin123
             role="admin",
             telephone="+33601020304",
@@ -34,13 +34,13 @@ try:
             created_at=datetime.now(),
         )
         session.add(admin)
-        print("  ✓ Utilisateur admin créé (admin@hubchantier.fr / admin123)")
+        print("  ✓ Utilisateur admin créé (admin@greg-construction.fr / admin123)")
 
         # Créer un conducteur
         conducteur = UserModel(
             nom="Dupont",
             prenom="Jean",
-            email="conducteur@hubchantier.fr",
+            email="conducteur@greg-construction.fr",
             password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyVK/U7rvQe.",  # password: admin123
             role="conducteur",
             telephone="+33601020305",
@@ -48,7 +48,7 @@ try:
             created_at=datetime.now(),
         )
         session.add(conducteur)
-        print("  ✓ Utilisateur conducteur créé (conducteur@hubchantier.fr / admin123)")
+        print("  ✓ Utilisateur conducteur créé (conducteur@greg-construction.fr / admin123)")
 
         session.commit()
 
@@ -82,8 +82,8 @@ try:
 
     print("\n✅ Base de données initialisée avec succès !")
     print("\n🔐 Credentials:")
-    print("   Admin: admin@hubchantier.fr / admin123")
-    print("   Conducteur: conducteur@hubchantier.fr / admin123")
+    print("   Admin: admin@greg-construction.fr / admin123")
+    print("   Conducteur: conducteur@greg-construction.fr / admin123")
 
 except Exception as e:
     print(f"\n❌ Erreur: {e}")

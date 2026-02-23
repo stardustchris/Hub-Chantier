@@ -166,38 +166,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Split vendor chunks for better caching
-          if (id.includes('node_modules')) {
-            if (id.includes('react-dom')) {
-              return 'vendor-react-dom'
-            }
-            if (id.includes('react-router')) {
-              return 'vendor-router'
-            }
-            if (id.includes('react')) {
-              return 'vendor-react'
-            }
-            if (id.includes('date-fns')) {
-              return 'vendor-date-fns'
-            }
-            if (id.includes('axios')) {
-              return 'vendor-axios'
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons'
-            }
-            if (id.includes('firebase')) {
-              return 'vendor-firebase'
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-charts'
-            }
-            if (id.includes('@tanstack/react-query')) {
-              return 'vendor-query'
-            }
-          }
-        },
+        // Let Vite handle chunking automatically.
+        // Manual chunks caused initialization order bugs
+        // (lucide-react Activity export mixed into React chunk).
       },
     },
     // Optimize chunk size
