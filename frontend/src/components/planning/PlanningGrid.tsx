@@ -137,29 +137,17 @@ export default function PlanningGrid({
 
   const handleDrop = useCallback((e: React.DragEvent, userId: string, date: Date) => {
     e.preventDefault()
-
-    // Utiliser dragOverCell si disponible (cellule en surbrillance), sinon fallback sur les params
-    let targetUserId = userId
-    let targetDate = date
-
-    if (dragOverCell) {
-      // dragOverCell format: "userId_date"
-      const [cellUserId, cellDateStr] = dragOverCell.split('_')
-      targetUserId = cellUserId
-      targetDate = new Date(cellDateStr)
-    }
-
     setDragOverCell(null)
 
     if (draggedAffectation && onAffectationMove) {
-      const newDate = format(targetDate, 'yyyy-MM-dd')
+      const newDate = format(date, 'yyyy-MM-dd')
       // Only move if date or user changed
-      if (draggedAffectation.date !== newDate || String(draggedAffectation.utilisateur_id) !== targetUserId) {
-        onAffectationMove(draggedAffectation.id, newDate, targetUserId)
+      if (draggedAffectation.date !== newDate || String(draggedAffectation.utilisateur_id) !== userId) {
+        onAffectationMove(draggedAffectation.id, newDate, userId)
       }
     }
     setDraggedAffectation(null)
-  }, [draggedAffectation, dragOverCell, onAffectationMove])
+  }, [draggedAffectation, onAffectationMove])
 
   const handleDragEnd = useCallback(() => {
     setDraggedAffectation(null)
