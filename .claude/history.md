@@ -8,6 +8,17 @@
 
 **Sessions**:
 
+**Session 2026-02-27** — Vérification environnement Docker
+- **Objectif**: Validation de l'environnement Docker local
+- **Conteneurs vérifiés** (Docker Desktop) :
+  | Service | Image | Port | Statut |
+  |---------|-------|------|--------|
+  | frontend | hub-chantier-fronter (nginx 1.29.5 / Alpine 15.2.0) | 80:80 | ✅ running |
+  | api | hub-chantier-api | 8000:8000 | ✅ running |
+  | adminer | adminer:latest | 8080:8080 | ✅ running |
+  | db | postgres:16-alpine | 5432:5432 | ✅ running |
+- Verdict: **Environnement Docker opérationnel** — 4/4 services up
+
 **Session 2026-02-16** — Audit UX global + mise a jour documentation
 - **Objectif**: Etat des lieux complet UX et mise a jour de la documentation projet
 - **Audit UX**: Recherche exhaustive de l'etat UX (109/109 items completes, score global 92/100)
@@ -169,5 +180,5 @@ Chaque fichier mensuel contient:
 
 ---
 
-**Derniere mise a jour**: 16 fevrier 2026
+**Derniere mise a jour**: 27 fevrier 2026
 **Archive courante**: Fevrier 2026 (inline) + 2026-01.md (4304 lignes, ~58k tokens)
