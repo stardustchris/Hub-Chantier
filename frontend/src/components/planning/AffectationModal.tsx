@@ -127,7 +127,11 @@ export default function AffectationModal({
       }
       onClose()
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue'
+      // Extraire le detail métier du backend (axios error.response.data.detail)
+      const axiosError = err as { response?: { data?: { detail?: string } } }
+      const errorMessage =
+        axiosError.response?.data?.detail ??
+        (err instanceof Error ? err.message : 'Une erreur est survenue')
       setError(errorMessage)
     } finally {
       setLoading(false)

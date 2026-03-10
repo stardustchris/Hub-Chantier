@@ -29,6 +29,8 @@ from ...application.use_cases import (
     AffectationNotFoundError,
     InvalidDateRangeError,
     NoAffectationsToDuplicateError,
+    ChantierInactifError,
+    UtilisateurInactifError,
 )
 from ...domain.events.affectation_created import AffectationCreatedEvent
 from .dependencies import get_planning_controller, get_entity_info
@@ -109,6 +111,11 @@ async def create_affectation(
 
         return result
     except AffectationConflictError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message,
+        )
+    except (ChantierInactifError, UtilisateurInactifError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=e.message,

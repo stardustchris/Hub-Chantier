@@ -13,6 +13,8 @@ from .exceptions import (
     AffectationNotFoundError,
     InvalidDateRangeError,
     NoAffectationsToDuplicateError,
+    ChantierInactifError,
+    UtilisateurInactifError,
 )
 from .charge import (
     CreateBesoinUseCase,
@@ -48,6 +50,8 @@ __all__ = [
     "AffectationNotFoundError",
     "InvalidDateRangeError",
     "NoAffectationsToDuplicateError",
+    "ChantierInactifError",
+    "UtilisateurInactifError",
     # Exceptions - Charge
     "BesoinNotFoundError",
     "BesoinAlreadyExistsError",
