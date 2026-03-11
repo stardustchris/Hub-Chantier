@@ -23,9 +23,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      id-token: write
     steps:
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
-        with:
-          use_oauth: true
-          allowed_tools: "Bash,Read,Write,Edit,Glob,Grep,WebFetch"
