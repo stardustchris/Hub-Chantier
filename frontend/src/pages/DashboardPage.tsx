@@ -113,6 +113,7 @@ export default function DashboardPage() {
     return todayTeam.getTeamForChantier(currentSlot.chantierId)
   }, [currentSlot, todayTeam])
 
+  const isCompagnon = user?.role === 'compagnon'
   const isDirectionOrConducteur = user?.role === 'admin' || user?.role === 'conducteur'
   const canEditTime = user?.role === 'admin' || user?.role === 'conducteur' || user?.role === 'chef_chantier'
   const canViewDevisPipeline = user?.role === 'admin' || user?.role === 'conducteur'
@@ -305,11 +306,13 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <QuickActions
-            onActionClick={handleQuickAction}
-            tasksBadge={weeklyStats.tasksTotal > 0 ? `${weeklyStats.tasksCompleted}/${weeklyStats.tasksTotal}` : undefined}
-          />
+          {/* Quick Actions - masqué pour les compagnons (menu suffit) */}
+          {!isCompagnon && (
+            <QuickActions
+              onActionClick={handleQuickAction}
+              tasksBadge={weeklyStats.tasksTotal > 0 ? `${weeklyStats.tasksCompleted}/${weeklyStats.tasksTotal}` : undefined}
+            />
+          )}
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -536,7 +539,7 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-4">
-              {gamificationEnabled && (
+              {gamificationEnabled && !isCompagnon && (
                 <WeeklyProgressCard
                   hoursWorked={weeklyStats.hoursWorkedDecimal}
                   weeklyGoal={35}

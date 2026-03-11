@@ -128,7 +128,7 @@ function App() {
           <Route
             path="/chantiers"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <ChantiersListPage />
               </ProtectedRoute>
             }
@@ -136,7 +136,7 @@ function App() {
           <Route
             path="/chantiers/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <ChantierDetailPage />
               </ProtectedRoute>
             }
@@ -144,7 +144,7 @@ function App() {
           <Route
             path="/utilisateurs"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur']}>
                 <UsersListPage />
               </ProtectedRoute>
             }
@@ -152,7 +152,7 @@ function App() {
           <Route
             path="/utilisateurs/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur']}>
                 <UserDetailPage />
               </ProtectedRoute>
             }
@@ -160,7 +160,7 @@ function App() {
           <Route
             path="/api-keys"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <APIKeysPage />
               </ProtectedRoute>
             }
@@ -168,7 +168,7 @@ function App() {
           <Route
             path="/webhooks"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <WebhooksPage />
               </ProtectedRoute>
             }
@@ -192,7 +192,7 @@ function App() {
           <Route
             path="/formulaires"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <FormulairesPage />
               </ProtectedRoute>
             }
@@ -208,7 +208,7 @@ function App() {
           <Route
             path="/logistique"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <LogistiquePage />
               </ProtectedRoute>
             }
@@ -216,7 +216,7 @@ function App() {
           <Route
             path="/fournisseurs"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <FournisseursPage />
               </ProtectedRoute>
             }
@@ -224,7 +224,7 @@ function App() {
           <Route
             path="/budgets"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <BudgetsPage />
               </ProtectedRoute>
             }
@@ -232,7 +232,7 @@ function App() {
           <Route
             path="/achats"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <AchatsPage />
               </ProtectedRoute>
             }
@@ -240,7 +240,7 @@ function App() {
           <Route
             path="/finances"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <DashboardFinancierPage />
               </ProtectedRoute>
             }
@@ -248,7 +248,7 @@ function App() {
           <Route
             path="/security"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <SecuritySettingsPage />
               </ProtectedRoute>
             }
@@ -256,7 +256,7 @@ function App() {
           <Route
             path="/devis/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <DevisDashboardPage />
               </ProtectedRoute>
             }
@@ -264,7 +264,7 @@ function App() {
           <Route
             path="/devis/articles"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <ArticlesPage />
               </ProtectedRoute>
             }
@@ -272,7 +272,7 @@ function App() {
           <Route
             path="/devis/:id/preview"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <DevisPreviewPage />
               </ProtectedRoute>
             }
@@ -280,7 +280,7 @@ function App() {
           <Route
             path="/devis/:id/legacy"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <DevisDetailPage />
               </ProtectedRoute>
             }
@@ -288,7 +288,7 @@ function App() {
           <Route
             path="/devis/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <DevisGeneratorPage />
               </ProtectedRoute>
             }
@@ -296,7 +296,7 @@ function App() {
           <Route
             path="/devis"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur', 'chef_chantier']}>
                 <DevisListPage />
               </ProtectedRoute>
             }
@@ -304,7 +304,7 @@ function App() {
           <Route
             path="/financier/pennylane"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'conducteur']}>
                 <PennylaneIntegrationPage />
               </ProtectedRoute>
             }
@@ -313,7 +313,7 @@ function App() {
           <Route
             path="/parametres-entreprise"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <ParametresEntreprisePage />
               </ProtectedRoute>
             }

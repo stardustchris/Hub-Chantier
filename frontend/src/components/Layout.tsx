@@ -56,7 +56,7 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Tableau de bord', href: '/', icon: Home, tourId: 'nav-dashboard' },
-  { name: 'Chantiers', href: '/chantiers', icon: Building2, tourId: 'nav-chantiers' },
+  { name: 'Chantiers', href: '/chantiers', icon: Building2, roles: ['admin', 'conducteur', 'chef_chantier'], tourId: 'nav-chantiers' },
   { name: 'Utilisateurs', href: '/utilisateurs', icon: Users, roles: ['admin', 'conducteur'], tourId: 'nav-utilisateurs' },
   { name: 'Planning', href: '/planning', icon: Calendar, tourId: 'nav-planning' },
   { name: 'Feuilles d\'heures', href: '/feuilles-heures', icon: Clock, tourId: 'nav-feuilles-heures' },
@@ -106,6 +106,12 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
     // Si un role est defini, verifier que l'utilisateur a ce role
     if (!userRole) return false
     return item.roles.includes(userRole)
+  }
+
+  // Labels adaptés pour les compagnons (langage simplifié)
+  const getDisplayName = (item: NavItem): string => {
+    if (userRole === 'compagnon' && item.name === "Feuilles d'heures") return 'Ma présence'
+    return item.name
   }
   // Determine which groups are active based on current path
   const getGroupPaths = (item: NavItem): string[] => {
@@ -157,7 +163,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
+                  <span className="font-medium">{getDisplayName(item)}</span>
                 </Link>
                 <button
                   onClick={() => toggleGroup(item.name)}
@@ -213,7 +219,7 @@ function NavLinks({ currentPath, onItemClick, userRole }: NavLinksProps) {
             }`}
           >
             <item.icon className="w-5 h-5" />
-            <span className="font-medium">{item.name}</span>
+            <span className="font-medium">{getDisplayName(item)}</span>
             {item.disabled && (
               <span className="ml-auto text-xs bg-gray-200 px-2 py-0.5 rounded">
                 Bientot
