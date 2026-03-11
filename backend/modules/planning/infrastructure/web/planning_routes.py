@@ -349,7 +349,7 @@ def update_affectation_note(
         HTTPException 404: Affectation non trouvee.
     """
     # Les Admin et Conducteur ont acces total
-    if current_user_role not in ("admin", "conducteur", "chef"):
+    if current_user_role not in ("admin", "conducteur", "chef_chantier"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Seuls les admin, conducteur et chef de chantier peuvent modifier les notes",
@@ -357,7 +357,7 @@ def update_affectation_note(
 
     try:
         # Si c'est un Chef, verifier qu'il est responsable du chantier
-        if current_user_role == "chef":
+        if current_user_role == "chef_chantier":
             # Recuperer l'affectation pour connaitre le chantier_id
             from datetime import timedelta
             today = date.today()

@@ -1,12 +1,15 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import type { UserRole } from '../types'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
+  /** Si défini, seuls ces rôles peuvent accéder à la route. Sinon, tous les utilisateurs authentifiés. */
+  allowedRoles?: UserRole[]
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user } = useAuth()
 
   if (isLoading) {
     return (
@@ -18,6 +21,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
+  }
+
+  // Vérification du rôle si des restrictions sont définies
+  if (allowedRoles && user?.role && !allowedRoles.includes(user.role as UserRole)) {
+    return <Navigate to="/" replace />
   }
 
   return <>{children}</>
