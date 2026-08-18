@@ -188,7 +188,6 @@ vi.mock('../components/dashboard', () => ({
   DevisPipelineCard: () => <div data-testid="devis-pipeline-card">DevisPipelineCard</div>,
   AlertesFinancieresCard: () => <div data-testid="alertes-financieres">AlertesFinancieres</div>,
   WeeklyProgressCard: () => <div data-testid="weekly-progress">WeeklyProgress</div>,
-  TeamLeaderboardCard: () => <div data-testid="team-leaderboard">TeamLeaderboard</div>,
   DashboardPostCard: ({ post, onLike, onDelete }: any) => (
     <div data-testid={`post-${post.id}`}>
       <span>{post.contenu}</span>

@@ -29,7 +29,6 @@ import {
   AlertesFinancieresCard,
   PostSkeleton,
   WeeklyProgressCard,
-  TeamLeaderboardCard,
 } from '../components/dashboard'
 import PhotoCaptureModal from '../components/dashboard/PhotoCaptureModal'
 import { openNavigationApp } from '../utils/navigation'
@@ -543,18 +542,6 @@ export default function DashboardPage() {
                 <WeeklyProgressCard
                   hoursWorked={weeklyStats.hoursWorkedDecimal}
                   weeklyGoal={35}
-                />
-              )}
-              {gamificationEnabled && (user?.role === 'chef_chantier' || user?.role === 'conducteur' || user?.role === 'admin') && (
-                <TeamLeaderboardCard
-                  members={[
-                    { id: '1', name: 'Jean Martin', hoursLogged: 38.5, hoursPlanned: 35 },
-                    { id: '2', name: 'Sophie Dubois', hoursLogged: 34.2, hoursPlanned: 35 },
-                    { id: '3', name: 'Marc Lefebvre', hoursLogged: 32.8, hoursPlanned: 35 },
-                    { id: '4', name: 'Claire Bernard', hoursLogged: 28.5, hoursPlanned: 35 },
-                    { id: '5', name: 'Luc Petit', hoursLogged: 24.0, hoursPlanned: 35 },
-                    { id: '6', name: 'Emma Robert', hoursLogged: 22.5, hoursPlanned: 35 },
-                  ]}
                 />
               )}
               {canViewDevisPipeline && <DevisPipelineCard />}

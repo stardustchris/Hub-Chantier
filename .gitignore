@@ -83,6 +83,8 @@ Thumbs.db
 
 # Claude Code - validation reports and internal docs
 .claude/reports/
+# Worktrees temporaires : copies du depot, a ne jamais versionner
+.claude/worktrees/
 **/CLAUDE.md
 
 # Database backups

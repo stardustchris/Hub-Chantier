@@ -11,10 +11,21 @@ from modules.pointages.domain.entities import Pointage
 from modules.pointages.domain.value_objects import StatutPointage, Duree
 from modules.pointages.domain.repositories import PointageRepository
 from modules.pointages.application.ports import NullEventBus
+from modules.pointages.domain.value_objects import periode_paie
+
+from tests.time_helpers import freeze_today
+
+# Les scenarios datent les pointages de fevrier 2026 ("mois en cours") : la
+# date du jour est figee pour que la periode de paie reste ouverte dans le temps.
+AUJOURD_HUI_FIGE = date(2026, 2, 15)
 
 
 class TestCorrectPointageUseCase:
     """Tests pour le use case de correction de pointage rejeté."""
+
+    @pytest.fixture(autouse=True)
+    def _figer_la_date(self, monkeypatch):
+        freeze_today(monkeypatch, periode_paie, AUJOURD_HUI_FIGE)
 
     def setup_method(self):
         """Configuration avant chaque test."""
