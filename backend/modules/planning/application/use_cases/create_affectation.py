@@ -202,11 +202,11 @@ class CreateAffectationUseCase:
                 # Une seule affectation: evenement simple
                 event = AffectationCreatedEvent(
                     affectation_id=affectations[0].id,
-                    user_id=affectations[0].utilisateur_id,
+                    utilisateur_id=affectations[0].utilisateur_id,
                     chantier_id=affectations[0].chantier_id,
-                    date_affectation=affectations[0].date,
+                    date=affectations[0].date,
+                    created_by=created_by,
                     heures_prevues=affectations[0].heures_prevues,
-                    metadata={"created_by": created_by},
                 )
                 self.event_bus.publish(event)
             else:

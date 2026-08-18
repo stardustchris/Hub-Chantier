@@ -28,9 +28,15 @@ class SecurityAuditorAgent(BaseAgent):
         'credit_card': r'["\']?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}["\']?',
     }
 
+    # Ces motifs ciblent la CONSTRUCTION de SQL par concatenation ou formatage.
+    # Un '%' ou un '+' present dans la VALEUR d'un parametre bindé n'est pas une
+    # injection : execute(query, {"search": f"%{terme}%"}) est sûr, le SQL etant
+    # fige et la valeur transmise separement au driver.
     SQL_INJECTION_PATTERNS = [
-        r'execute\([^)]*%[^)]*\)',  # execute("SELECT * FROM users WHERE id=%s" % id)
-        r'execute\([^)]*\+[^)]*\)',  # execute("SELECT * FROM users WHERE id=" + id)
+        # execute("SELECT ... WHERE id=%s" % id) : operateur % applique a une chaine
+        r'execute\([^)]*["\']\s*%\s*[\w(\[]',
+        # execute("SELECT ... WHERE id=" + id) : concatenation sur une chaine
+        r'execute\([^)]*["\']\s*\+\s*[\w(\[]',
         r'f"SELECT.*\{.*\}"',  # f"SELECT * FROM users WHERE id={user_id}"
         r"f'SELECT.*\{.*\}'",
     ]
