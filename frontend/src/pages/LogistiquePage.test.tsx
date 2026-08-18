@@ -23,11 +23,17 @@ const mockUseLogistique = {
   setActiveTab: vi.fn(),
   chantiers: [],
   reservationsEnAttente: [] as Reservation[],
+  // Ressources du selecteur de l'onglet planning
+  allRessources: [],
+  loadingRessources: false,
+  loadAllRessources: vi.fn(),
   selectedRessource: null as { id: number; nom: string; code: string } | null,
   setSelectedRessource: vi.fn(),
   showModal: false,
+  setShowModal: vi.fn(),
   modalInitialData: { date: '', heureDebut: '', heureFin: '' },
   selectedReservation: null,
+  setSelectedReservation: vi.fn(),
   handleSelectRessource: vi.fn(),
   handleCreateReservation: vi.fn(),
   handleSelectReservation: vi.fn(),
@@ -185,7 +191,9 @@ describe('LogistiquePage', () => {
 
     it('affiche message si aucune ressource disponible', () => {
       render(<LogistiquePage />)
-      expect(screen.getByText(/Aucune ressource disponible/)).toBeInTheDocument()
+      // Le message apparait a deux endroits : sous le selecteur de ressource
+      // et dans la zone de planning restee vide.
+      expect(screen.getAllByText(/Aucune ressource disponible/).length).toBeGreaterThan(0)
     })
   })
 

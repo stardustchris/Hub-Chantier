@@ -14,6 +14,19 @@ from modules.pointages.application.dtos.bulk_validate_dtos import (
 from modules.pointages.domain.entities.pointage import Pointage
 from modules.pointages.domain.value_objects import Duree, StatutPointage
 
+from modules.pointages.domain.value_objects import periode_paie
+
+from tests.time_helpers import freeze_today
+
+# Les scenarios datent les pointages de fevrier 2026 ("mois en cours") : la date
+# du jour est figee pour que la periode de paie reste ouverte dans le temps.
+AUJOURD_HUI_FIGE = date(2026, 2, 15)
+
+
+@pytest.fixture(autouse=True)
+def _figer_la_date(monkeypatch):
+    freeze_today(monkeypatch, periode_paie, AUJOURD_HUI_FIGE)
+
 
 class TestBulkValidatePointagesUseCase:
     """Tests pour le use case de validation par lot."""

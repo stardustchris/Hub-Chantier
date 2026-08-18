@@ -22,6 +22,7 @@ from modules.financier.domain.value_objects.statuts_financiers import (
     STATUTS_ENGAGES,
     STATUTS_REALISES,
 )
+from modules.financier.application.use_cases import suggestions_use_cases
 from modules.financier.application.use_cases.suggestions_use_cases import (
     GetSuggestionsFinancieresUseCase,
 )
@@ -29,9 +30,20 @@ from modules.financier.application.use_cases.budget_use_cases import (
     BudgetNotFoundError,
 )
 
+from tests.time_helpers import freeze_today
+
+# Les scenarios de ce fichier partent d'un budget cree en janvier 2026 et
+# raisonnent sur deux mois ecoules : la date du jour est figee a fin fevrier
+# 2026 pour que le burn rate attendu reste valable dans le temps.
+AUJOURD_HUI_FIGE = date(2026, 2, 28)
+
 
 class TestGetSuggestionsFinancieresUseCase:
     """Tests pour le use case de suggestions financieres."""
+
+    @pytest.fixture(autouse=True)
+    def _figer_la_date(self, monkeypatch):
+        freeze_today(monkeypatch, suggestions_use_cases, AUJOURD_HUI_FIGE)
 
     def setup_method(self):
         """Configuration avant chaque test."""

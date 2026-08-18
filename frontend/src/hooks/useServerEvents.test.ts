@@ -117,8 +117,15 @@ describe('useServerEvents', () => {
     vi.unstubAllGlobals()
   })
 
-  it('se connecte au stream SSE', () => {
+  it('se connecte au stream SSE', async () => {
     renderHook(() => useServerEvents())
+
+    // La connexion est etablie apres une verification asynchrone : il faut
+    // laisser les promesses se resoudre avant d'observer l'EventSource.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10)
+    })
+
     expect(mockEventSourceInstance).not.toBeNull()
     expect(mockEventSourceInstance!.url).toBe('/api/notifications/stream')
   })
@@ -131,8 +138,10 @@ describe('useServerEvents', () => {
   it('passe isConnected=true après onopen', async () => {
     const { result } = renderHook(() => useServerEvents())
 
+    // advanceTimersByTimeAsync laisse la connexion asynchrone s'etablir avant
+    // de declencher le timer qui simule l'ouverture du flux.
     await act(async () => {
-      vi.advanceTimersByTime(10)
+      await vi.advanceTimersByTimeAsync(10)
     })
 
     expect(result.current.isConnected).toBe(true)
@@ -260,7 +269,7 @@ describe('useServerEvents', () => {
     const { result } = renderHook(() => useServerEvents())
 
     await act(async () => {
-      vi.advanceTimersByTime(10)
+      await vi.advanceTimersByTimeAsync(10)
     })
 
     expect(result.current.isConnected).toBe(true)
