@@ -6,7 +6,7 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useDevisDetail } from '../hooks/useDevisDetail'
-import { formatEUR } from '../utils/format'
+import { formatEUR, formatEcheance } from '../utils/format'
 import type { LotDevis, LigneDevis } from '../types'
 import { Loader2, Printer } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -160,12 +160,7 @@ export default function DevisPreviewPage() {
         {/* Conditions */}
         <div className="border-t border-gray-200 pt-4 mb-6 text-xs text-gray-600 space-y-2">
           {devis.echeance && (
-            <p><span className="font-medium text-gray-700">Echeance :</span> {
-              devis.echeance === 'reception' ? 'Paiement a reception' :
-              devis.echeance === '30_jours_fin_mois' ? '30 jours fin de mois' :
-              devis.echeance === '45_jours_fin_mois' ? '45 jours fin de mois' :
-              devis.echeance === '60_jours' ? '60 jours' : devis.echeance
-            }</p>
+            <p><span className="font-medium text-gray-700">Echeance :</span> {formatEcheance(devis.echeance)}</p>
           )}
           {acomptePct > 0 && (
             <p><span className="font-medium text-gray-700">Acompte :</span> {acomptePct}% a la commande, soit {formatEUR(acompteAmount)}</p>

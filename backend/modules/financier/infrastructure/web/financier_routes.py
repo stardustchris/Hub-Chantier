@@ -1315,6 +1315,12 @@ async def get_analyse_ia_consolidee(
         return _generate_fallback_analysis(consolidated_dict)
 
 
+# Seuil de marge (%) en dessous duquel la sante financiere est degradee,
+# meme si les budgets sont tenus. Un chantier peut respecter son budget
+# tout en degageant une marge insuffisante.
+MARGE_SEUIL_OK = 10.0
+
+
 def _generate_fallback_analysis(consolidated_dict: dict) -> dict:
     """Genere une analyse algorithmique de fallback si Gemini non disponible."""
     kpi = consolidated_dict.get("kpi_globaux", {})
@@ -1323,6 +1329,10 @@ def _generate_fallback_analysis(consolidated_dict: dict) -> dict:
     nb_attention = kpi.get("nb_chantiers_attention", 0)
     nb_depassement = kpi.get("nb_chantiers_depassement", 0)
     marge_moyenne = float(kpi.get("marge_moyenne_pct", "0"))
+
+    # Les compteurs OK/attention/depassement ne mesurent que la consommation
+    # du budget : la marge doit etre evaluee separement.
+    marge_insuffisante = marge_moyenne < MARGE_SEUIL_OK
 
     # Synthese
     if nb_depassement > 0:
@@ -1333,7 +1343,12 @@ def _generate_fallback_analysis(consolidated_dict: dict) -> dict:
     elif nb_attention > 0:
         synthese = (
             f"{nb_chantiers} chantiers suivis dont {nb_attention} a surveiller. "
-            f"Situation globale sous controle. Marge moyenne: {marge_moyenne:.1f}%."
+            f"Budgets sous controle. Marge moyenne: {marge_moyenne:.1f}%."
+        )
+    elif marge_insuffisante:
+        synthese = (
+            f"{nb_chantiers} chantiers suivis. Les budgets sont tenus, mais la marge "
+            f"moyenne reste sous le seuil de {MARGE_SEUIL_OK:.0f}%: {marge_moyenne:.1f}%."
         )
     else:
         synthese = (
@@ -1347,7 +1362,7 @@ def _generate_fallback_analysis(consolidated_dict: dict) -> dict:
         alertes.append(f"{nb_depassement} chantier(s) en depassement budgetaire")
     if nb_attention > 0:
         alertes.append(f"{nb_attention} chantier(s) approchent du seuil d'alerte (>80%)")
-    if marge_moyenne < 10:
+    if marge_insuffisante:
         alertes.append(f"Marge moyenne faible ({marge_moyenne:.1f}%)")
 
     # Recommandations
@@ -1361,16 +1376,21 @@ def _generate_fallback_analysis(consolidated_dict: dict) -> dict:
     if not recommandations:
         recommandations.append("Maintenir le suivi actuel, situation saine")
 
-    # Score de sante
+    # Score de sante : part des chantiers dans le budget, plafonnee quand la
+    # marge ne suit pas (budget tenu a perte = sante degradee, pas 100%).
     if nb_chantiers > 0:
         score = int((nb_ok / nb_chantiers) * 100)
     else:
         score = 100
+    if marge_moyenne < 0:
+        score = min(score, 40)
+    elif marge_insuffisante:
+        score = min(score, 70)
 
     # Tendance
-    if nb_depassement > nb_chantiers * 0.2:
+    if nb_depassement > nb_chantiers * 0.2 or marge_moyenne < 0:
         tendance = "baisse"
-    elif nb_ok > nb_chantiers * 0.8:
+    elif nb_ok > nb_chantiers * 0.8 and not marge_insuffisante:
         tendance = "hausse"
     else:
         tendance = "stable"

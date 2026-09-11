@@ -62,6 +62,7 @@ from modules.financier.application.use_cases.pnl_use_cases import (
 from modules.financier.application.use_cases.bilan_cloture_use_cases import (
     GetBilanClotureUseCase,
 )
+from modules.financier.application.use_cases import suggestions_use_cases
 from modules.financier.application.use_cases.suggestions_use_cases import (
     GetSuggestionsFinancieresUseCase,
 )
@@ -80,6 +81,8 @@ from shared.domain.calcul_financier import (
     calculer_tva,
     COEFF_FRAIS_GENERAUX,
 )
+
+from tests.time_helpers import freeze_today
 
 
 # ===========================================================================
@@ -861,7 +864,17 @@ class TestLesCedresSuggestionsBurnRate:
     Note: le code actuel utilise duree_prevue_mois=12 par defaut
     (pas les 10 mois prevus pour Les Cedres). Le burn rate compare
     le rythme de depense au budget moyen mensuel sur 12 mois.
+
+    Le scenario se place a M+6 du demarrage (budget cree le 01/05/2025) :
+    la date du jour est figee en novembre 2025 pour que le budget moyen
+    mensuel reste calcule sur 12 mois quelle que soit la date d'execution.
     """
+
+    AUJOURD_HUI_FIGE = date(2025, 11, 15)
+
+    @pytest.fixture(autouse=True)
+    def _figer_la_date(self, monkeypatch):
+        freeze_today(monkeypatch, suggestions_use_cases, self.AUJOURD_HUI_FIGE)
 
     def _make_suggestions_uc(self):
         """Cree le use case suggestions avec mocks Les Cedres."""
@@ -934,9 +947,9 @@ class TestLesCedresSuggestionsBurnRate:
         # Le budget moyen est fixe : 1 080 000 / 12 = 90 000 EUR/mois
         assert indicateurs.budget_moyen_mensuel == "90000.00"
 
-        # Le burn rate depend du nombre de mois ecoules
-        # Calcul dynamique pour que le test passe quelle que soit la date
-        today = date.today()
+        # Le burn rate depend du nombre de mois ecoules depuis le debut,
+        # calcule sur la meme date figee que le use case.
+        today = self.AUJOURD_HUI_FIGE
         debut = budget.created_at.date()
         nb_mois = max(
             1,

@@ -53,7 +53,7 @@ class TestSignalementNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_signalement_created(event)
         )
 
@@ -82,7 +82,7 @@ class TestSignalementNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_signalement_escaladed(event)
         )
 
@@ -107,7 +107,7 @@ class TestSignalementNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_signalement_escaladed(event)
         )
 
@@ -133,7 +133,7 @@ class TestFeedNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_post_published(event)
         )
 
@@ -157,7 +157,7 @@ class TestFeedNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_post_published(event)
         )
 
@@ -185,7 +185,7 @@ class TestFeedNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_post_published(event)
         )
 
@@ -214,7 +214,7 @@ class TestPlanningNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_affectation_created(event)
         )
 
@@ -239,7 +239,7 @@ class TestPlanningNotificationHandler:
             },
         )
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             handler.handle_affectation_created(event)
         )
 

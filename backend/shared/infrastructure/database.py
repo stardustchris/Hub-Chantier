@@ -124,8 +124,43 @@ def init_db() -> None:
     # Crée toutes les tables en une seule fois avec la Base partagée
     Base.metadata.create_all(bind=engine)
 
+    # Ajout des colonnes apparues apres la creation des tables (si necessaire)
+    _add_missing_version_columns()
+
     # Migration des donnees JSON vers tables de jointure (si necessaire)
     _migrate_chantier_responsables()
+
+
+def _add_missing_version_columns() -> None:
+    """
+    Ajoute les colonnes 'version' (verrou optimiste) aux tables creees avant
+    leur introduction.
+
+    create_all() ne cree que les tables absentes : il n'ajoute jamais une
+    colonne a une table qui existe deja. Sur une base anterieure a l'ajout du
+    champ, les ecrans budget et situations de travaux echouent donc avec
+    "column budgets.version does not exist".
+
+    Idempotent (ADD COLUMN IF NOT EXISTS) et limite a PostgreSQL, seul moteur
+    utilise en execution reelle.
+    """
+    if engine.dialect.name != "postgresql":
+        return
+
+    from sqlalchemy import text
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(
+                "ALTER TABLE budgets "
+                "ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"
+            ))
+            conn.execute(text(
+                "ALTER TABLE situations_travaux "
+                "ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1"
+            ))
+    except Exception as e:
+        print(f"Erreur ajout colonnes version: {e}")
 
 
 def _migrate_chantier_responsables() -> None:

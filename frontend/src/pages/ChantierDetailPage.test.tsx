@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ChantierDetailPage from './ChantierDetailPage'
 
 // Mock chantier data
@@ -126,12 +127,19 @@ vi.mock('../components/financier/BudgetTab', () => ({
 }))
 
 const renderPage = (chantierId = '1') => {
+  // La page consomme react-query : chaque rendu recoit son propre client
+  // pour que les tests restent isoles les uns des autres.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
   return render(
     <MemoryRouter initialEntries={[`/chantiers/${chantierId}`]}>
-      <Routes>
-        <Route path="/chantiers/:id" element={<ChantierDetailPage />} />
-        <Route path="/chantiers" element={<div data-testid="chantiers-list">Chantiers List</div>} />
-      </Routes>
+      <QueryClientProvider client={queryClient}>
+        <Routes>
+          <Route path="/chantiers/:id" element={<ChantierDetailPage />} />
+          <Route path="/chantiers" element={<div data-testid="chantiers-list">Chantiers List</div>} />
+        </Routes>
+      </QueryClientProvider>
     </MemoryRouter>
   )
 }

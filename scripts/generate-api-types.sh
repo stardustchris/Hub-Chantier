@@ -40,7 +40,9 @@ log_error() {
 log_info "Vérification de l'environnement..."
 
 # 1. Vérifier que l'API est accessible
-if ! curl -s -f "${API_URL}/api/health" > /dev/null 2>&1; then
+# Note: en direct sur le port 8000 la route est /health ; le préfixe /api
+# n'existe que derrière le reverse proxy nginx (port 80).
+if ! curl -s -f "${API_URL}/health" > /dev/null 2>&1; then
     log_error "L'API n'est pas accessible à ${API_URL}"
     log_error "Vérifiez que Docker Compose est démarré:"
     echo ""

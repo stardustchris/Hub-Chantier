@@ -34,7 +34,11 @@ class WebhookCreate(BaseModel):
     """Modèle pour créer un webhook."""
 
     url: HttpUrl = Field(..., description="URL destination du webhook (HTTPS uniquement)")
-    events: List[str] = Field(..., description="Patterns d'événements (ex: ['chantier.*', 'heures.validated'])")
+    events: List[str] = Field(
+        ...,
+        min_length=1,
+        description="Patterns d'événements (ex: ['chantier.*', 'heures.validated'])",
+    )
     description: Optional[str] = Field(None, description="Description du webhook")
 
     @field_validator('url')

@@ -65,7 +65,7 @@ class TestSSEManagerSend:
 
     def test_send_to_user(self, sse_manager):
         queue = sse_manager.connect(user_id=1)
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager.send_to_user(1, "notification.created", {"id": 42})
         )
         event = queue.get_nowait()
@@ -74,14 +74,14 @@ class TestSSEManagerSend:
 
     def test_send_to_nonexistent_user(self, sse_manager):
         """Envoyer à un user non connecté ne plante pas."""
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager.send_to_user(999, "test", {"x": 1})
         )
 
     def test_send_to_multiple_tabs(self, sse_manager):
         q1 = sse_manager.connect(user_id=1)
         q2 = sse_manager.connect(user_id=1)
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager.send_to_user(1, "test", {"val": 1})
         )
         assert q1.get_nowait()["event"] == "test"
@@ -90,7 +90,7 @@ class TestSSEManagerSend:
     def test_broadcast_to_all_users(self, sse_manager):
         q1 = sse_manager.connect(user_id=1)
         q2 = sse_manager.connect(user_id=2)
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager.broadcast("system.alert", {"msg": "hello"})
         )
         assert q1.get_nowait()["event"] == "system.alert"
@@ -102,7 +102,7 @@ class TestSSEManagerSend:
         for i in range(100):
             queue.put_nowait({"event": "fill", "data": {"i": i}})
         # L'envoi suivant ne doit pas lever d'exception
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager.send_to_user(1, "overflow", {"x": 1})
         )
 
@@ -120,7 +120,7 @@ class TestSSEManagerDomainEvents:
             aggregate_id="42",
             data={"user_id": 1, "title": "Test"},
         )
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager._handle_domain_event(event)
         )
 
@@ -137,7 +137,7 @@ class TestSSEManagerDomainEvents:
             aggregate_id="99",
             data={"nom": "Test"},
         )
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager._handle_domain_event(event)
         )
 
@@ -153,7 +153,7 @@ class TestSSEManagerDomainEvents:
             aggregate_id="10",
             data={"target_user_id": 5, "tache": "Coffrage"},
         )
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager._handle_domain_event(event)
         )
 
@@ -169,7 +169,7 @@ class TestSSEManagerDomainEvents:
             aggregate_id="7",
             data={"user_id": 1},
         )
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             sse_manager._handle_domain_event(event)
         )
 

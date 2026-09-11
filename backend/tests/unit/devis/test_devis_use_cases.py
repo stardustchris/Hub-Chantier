@@ -5,7 +5,7 @@ Couche Application - devis_use_cases.py
 """
 
 import pytest
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import Mock, patch, ANY
 
@@ -107,7 +107,9 @@ class TestCreateDevisUseCase:
             client_adresse="123 Rue de la Paix",
             client_email="contact@client.fr",
             client_telephone="0601020304",
-            date_validite=date(2026, 6, 30),
+            # Validite relative a aujourd'hui : le devis est cree a la date du
+            # jour, une date figee finirait par devenir anterieure a sa creation.
+            date_validite=date.today() + timedelta(days=180),
             taux_marge_global=Decimal("20"),
             taux_marge_moe=Decimal("25"),
             coefficient_frais_generaux=Decimal("10"),

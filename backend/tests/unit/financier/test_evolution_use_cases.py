@@ -19,6 +19,7 @@ from modules.financier.domain.repositories import (
     AchatRepository,
 )
 from modules.financier.domain.value_objects import StatutAchat
+from modules.financier.application.use_cases import evolution_use_cases
 from modules.financier.application.use_cases.evolution_use_cases import (
     GetEvolutionFinanciereUseCase,
 )
@@ -26,9 +27,20 @@ from modules.financier.application.use_cases.budget_use_cases import (
     BudgetNotFoundError,
 )
 
+from tests.time_helpers import freeze_today
+
+# Les scenarios de ce fichier decrivent des achats de janvier et fevrier 2026 :
+# la date du jour est figee a fin fevrier 2026 pour que les plages de mois
+# attendues restent valables quelle que soit la date d'execution.
+AUJOURD_HUI_FIGE = date(2026, 2, 28)
+
 
 class TestGetEvolutionFinanciereUseCase:
     """Tests pour le use case d'évolution financière mensuelle."""
+
+    @pytest.fixture(autouse=True)
+    def _figer_la_date(self, monkeypatch):
+        freeze_today(monkeypatch, evolution_use_cases, AUJOURD_HUI_FIGE)
 
     def setup_method(self):
         """Configuration avant chaque test."""
