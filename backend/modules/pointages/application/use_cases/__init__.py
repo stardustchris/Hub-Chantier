@@ -21,6 +21,7 @@ from .compare_equipes import CompareEquipesUseCase
 from .bulk_validate_pointages import BulkValidatePointagesUseCase
 from .generate_monthly_recap import GenerateMonthlyRecapUseCase
 from .lock_monthly_period import LockMonthlyPeriodUseCase
+from .synchroniser_heures_paie import SynchroniserHeuresPaieUseCase, RapportSynchronisation
 
 __all__ = [
     # Pointage CRUD
@@ -51,4 +52,7 @@ __all__ = [
     "BulkValidatePointagesUseCase",  # GAP-FDH-004
     "GenerateMonthlyRecapUseCase",   # GAP-FDH-008
     "LockMonthlyPeriodUseCase",      # GAP-FDH-009
+    # Paie externe (Costructor)
+    "SynchroniserHeuresPaieUseCase",
+    "RapportSynchronisation",
 ]

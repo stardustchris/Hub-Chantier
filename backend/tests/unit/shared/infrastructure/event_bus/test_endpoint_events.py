@@ -13,7 +13,7 @@ from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import date, datetime
 from io import BytesIO
 
-from fastapi import UploadFile
+from fastapi import BackgroundTasks, UploadFile
 
 
 # ===== Tests for Planning Routes =====
@@ -172,6 +172,7 @@ async def test_validate_pointage_publishes_event():
 
     result = await validate_pointage(
         pointage_id=100,
+        background_tasks=BackgroundTasks(),
         validateur_id=1,
         current_user_role="admin",
         event_bus=mock_event_bus,
@@ -208,6 +209,7 @@ async def test_validate_pointage_event_data_correct():
     mock_db = MagicMock()
     await validate_pointage(
         pointage_id=200,
+        background_tasks=BackgroundTasks(),
         validateur_id=1,
         current_user_role="admin",
         event_bus=mock_event_bus,

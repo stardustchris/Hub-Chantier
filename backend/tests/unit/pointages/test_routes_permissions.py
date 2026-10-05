@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import date
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from unittest.mock import Mock, MagicMock
 
 from modules.pointages.infrastructure.web.routes import (
@@ -33,6 +33,7 @@ class TestValidatePointagePermissions:
 
             asyncio.run(
                 validate_pointage(
+                    background_tasks=BackgroundTasks(),
                     pointage_id=pointage_id,
                     validateur_id=validateur_id,
                     current_user_role=current_user_role,
@@ -87,6 +88,7 @@ class TestValidatePointagePermissions:
 
         result = asyncio.run(
             validate_pointage(
+                background_tasks=BackgroundTasks(),
                 pointage_id=pointage_id,
                 validateur_id=validateur_id,
                 current_user_role=current_user_role,
@@ -132,6 +134,7 @@ class TestValidatePointagePermissions:
 
         result = asyncio.run(
             validate_pointage(
+                background_tasks=BackgroundTasks(),
                 pointage_id=pointage_id,
                 validateur_id=validateur_id,
                 current_user_role=current_user_role,
@@ -175,6 +178,7 @@ class TestValidatePointagePermissions:
 
         result = asyncio.run(
             validate_pointage(
+                background_tasks=BackgroundTasks(),
                 pointage_id=pointage_id,
                 validateur_id=validateur_id,
                 current_user_role=current_user_role,

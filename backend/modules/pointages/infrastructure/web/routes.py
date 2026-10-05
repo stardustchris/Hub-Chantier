@@ -5,7 +5,7 @@ from typing import Optional, List
 import re
 
 from dateutil.relativedelta import relativedelta
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
 
@@ -23,6 +23,7 @@ from ..persistence import (
     SQLAlchemyVariablePaieRepository,
 )
 from ..event_bus_impl import get_event_bus
+from ..paie_externe.synchronisation import planifier_synchronisation
 from ...adapters.controllers import PointageController
 from ...domain.events.heures_validated import HeuresValidatedEvent
 from ...domain.services.permission_service import PointagePermissionService
@@ -228,6 +229,7 @@ def get_controller(db: Session = Depends(get_db)) -> PointageController:
 @router.post("", status_code=201)
 def create_pointage(
     request: CreatePointageRequest,
+    background_tasks: BackgroundTasks,
     current_user_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
@@ -262,7 +264,7 @@ def create_pointage(
         )
 
     try:
-        return controller.create_pointage(
+        result = controller.create_pointage(
             utilisateur_id=request.utilisateur_id,
             chantier_id=request.chantier_id,
             date_pointage=request.date_pointage,
@@ -275,6 +277,11 @@ def create_pointage(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    # Un pointage cree par un admin est valide d'emblee : il part aussi en paie
+    if isinstance(result, dict) and result.get("statut") == "valide":
+        planifier_synchronisation(background_tasks, [result.get("id")])
+    return result
 
 
 @router.get("")
@@ -611,6 +618,7 @@ def sign_pointage(
 @router.post("/{pointage_id}/submit")
 def submit_pointage(
     pointage_id: int,
+    background_tasks: BackgroundTasks,
     current_user_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     event_bus=Depends(get_event_bus),
@@ -642,6 +650,9 @@ def submit_pointage(
                 }
             ))
 
+            # Envoi vers la paie externe, apres la reponse (sans bloquer la validation)
+            planifier_synchronisation(background_tasks, [pointage_id])
+
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -650,6 +661,7 @@ def submit_pointage(
 @router.post("/{pointage_id}/validate")
 async def validate_pointage(
     pointage_id: int,
+    background_tasks: BackgroundTasks,
     validateur_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     event_bus = Depends(get_event_bus),
@@ -693,6 +705,9 @@ async def validate_pointage(
                 'pointage_id': pointage_id,
             }
         ))
+
+        # Envoi vers la paie externe, apres la reponse (sans bloquer la validation)
+        planifier_synchronisation(background_tasks, [pointage_id])
 
         return result
     except ValueError as e:
@@ -762,6 +777,7 @@ class BulkValidateRequest(BaseModel):
 @router.post("/bulk-validate")
 def bulk_validate_pointages(
     request: BulkValidateRequest,
+    background_tasks: BackgroundTasks,
     validateur_id: int = Depends(get_current_user_id),
     current_user_role: str = Depends(get_current_user_role),
     controller: PointageController = Depends(get_controller),
@@ -806,9 +822,13 @@ def bulk_validate_pointages(
                 )
 
     try:
-        return controller.bulk_validate_pointages(request.pointage_ids, validateur_id)
+        result = controller.bulk_validate_pointages(request.pointage_ids, validateur_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    # Envoi vers la paie externe des seuls pointages effectivement valides
+    planifier_synchronisation(background_tasks, result.get("validated", []))
+    return result
 
 
 @router.get("/recap/{utilisateur_id}/{year}/{month}")

@@ -151,3 +151,44 @@ class MacroPaieModel(Base):
     created_by = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
+class SynchronisationPaieModel(Base):
+    """Suivi de l'envoi d'un pointage vers une paie externe (Costructor).
+
+    Un seul suivi par pointage : il memorise les saisies creees chez le
+    systeme externe, qui ne protege pas lui-meme contre les doublons.
+    """
+
+    __tablename__ = "synchronisations_paie"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pointage_id = Column(
+        Integer, ForeignKey("pointages.id", ondelete="CASCADE"),
+        nullable=False, unique=True, index=True,
+    )
+    systeme = Column(String(30), nullable=False, default="costructor")
+    statut = Column(String(20), nullable=False, index=True)
+    saisies_externes = Column(Text, nullable=False, default="[]")  # JSON : identifiants externes
+    message = Column(Text, nullable=True)
+    tentatives = Column(Integer, nullable=False, default=0)
+    derniere_tentative = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.now)
+    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
+class CorrespondancePaieExterneModel(Base):
+    """Identifiant d'un compagnon ou d'un chantier dans une paie externe."""
+
+    __tablename__ = "correspondances_paie_externe"
+    __table_args__ = (
+        UniqueConstraint("systeme", "type_entite", "entite_id", name="uq_correspondance_entite"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    systeme = Column(String(30), nullable=False, default="costructor")
+    type_entite = Column(String(20), nullable=False)  # "utilisateur" | "chantier"
+    entite_id = Column(Integer, nullable=False)
+    identifiant_externe = Column(String(100), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.now)
+    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)

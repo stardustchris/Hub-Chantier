@@ -3,7 +3,7 @@
 import pytest
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from unittest.mock import Mock, MagicMock, patch
 
 from modules.pointages.infrastructure.web.routes import (
@@ -34,6 +34,7 @@ class TestBulkValidateSecurityP2_001:
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             bulk_validate_pointages(
+                background_tasks=BackgroundTasks(),
                 request=request,
                 validateur_id=validateur_id,
                 current_user_role=current_user_role,
@@ -70,6 +71,7 @@ class TestBulkValidateSecurityP2_001:
 
         # Act
         result = bulk_validate_pointages(
+            background_tasks=BackgroundTasks(),
             request=request,
             validateur_id=validateur_id,
             current_user_role=current_user_role,
@@ -98,6 +100,7 @@ class TestBulkValidateSecurityP2_001:
 
         # Act
         result = bulk_validate_pointages(
+            background_tasks=BackgroundTasks(),
             request=request,
             validateur_id=validateur_id,
             current_user_role=current_user_role,
@@ -126,6 +129,7 @@ class TestBulkValidateSecurityP2_001:
 
         # Act
         result = bulk_validate_pointages(
+            background_tasks=BackgroundTasks(),
             request=request,
             validateur_id=validateur_id,
             current_user_role=current_user_role,
