@@ -6,7 +6,7 @@ uvicorn[standard]>=0.27.0
 python-multipart>=0.0.6  # Required for form data (login)
 
 # Database
-sqlalchemy>=2.0.0
+sqlalchemy>=2.0.0,<2.1  # 2.1 bascule le pilote par defaut sur psycopg (v3), non installe
 psycopg2-binary>=2.9.0  # PostgreSQL adapter
 
 # Auth

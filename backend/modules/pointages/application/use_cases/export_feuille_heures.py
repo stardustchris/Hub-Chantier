@@ -5,8 +5,12 @@ import io
 from datetime import date, timedelta
 from typing import Optional, List
 
+from shared.application.ports.entity_info_service import EntityInfoService
+
 from ...domain.repositories import PointageRepository, FeuilleHeuresRepository
 from ...domain.events import FeuilleHeuresExportedEvent
+from ...domain.value_objects import StatutPointage
+from ..services import enrichir_pointages
 from ..dtos import (
     ExportFeuilleHeuresDTO,
     ExportResultDTO,
@@ -35,6 +39,7 @@ class ExportFeuilleHeuresUseCase:
         feuille_repo: FeuilleHeuresRepository,
         pointage_repo: PointageRepository,
         event_bus: Optional[EventBus] = None,
+        entity_info_service: Optional[EntityInfoService] = None,
     ):
         """
         Initialise le use case.
@@ -43,10 +48,14 @@ class ExportFeuilleHeuresUseCase:
             feuille_repo: Repository des feuilles d'heures.
             pointage_repo: Repository des pointages.
             event_bus: Bus d'événements (optionnel).
+            entity_info_service: Service fournissant les noms d'utilisateurs
+                et de chantiers (optionnel). Sans lui, les colonnes de noms
+                du fichier exporte restent vides.
         """
         self.feuille_repo = feuille_repo
         self.pointage_repo = pointage_repo
         self.event_bus = event_bus or NullEventBus()
+        self.entity_info_service = entity_info_service
 
     def execute(
         self, dto: ExportFeuilleHeuresDTO, exported_by: int
@@ -62,10 +71,12 @@ class ExportFeuilleHeuresUseCase:
             Le résultat de l'export.
         """
         try:
-            # Récupère les pointages pour la période
+            # Récupère les pointages VALIDÉS de la période : l'export alimente
+            # la paie, les brouillons, soumis et rejetés n'y ont pas leur place.
             pointages, total = self.pointage_repo.search(
                 date_debut=dto.date_debut,
                 date_fin=dto.date_fin,
+                statut=StatutPointage.VALIDE,
                 skip=0,
                 limit=100000,  # Pas de limite pour l'export
             )
@@ -82,12 +93,19 @@ class ExportFeuilleHeuresUseCase:
                 return ExportResultDTO(
                     success=False,
                     format_export=dto.format_export.value,
-                    error_message="Aucune donnée à exporter pour les critères sélectionnés",
+                    error_message="Aucune heure validée à exporter pour les critères sélectionnés",
                 )
+
+            # Renseigne les noms d'utilisateurs et de chantiers : le depot ne
+            # remonte que les identifiants, inexploitables pour la paie.
+            # Place apres les filtres pour n'interroger que le perimetre exporte.
+            enrichir_pointages(pointages, self.entity_info_service)
 
             # Génère l'export selon le format
             if dto.format_export == FormatExport.CSV:
                 return self._export_csv(pointages, dto, exported_by)
+            elif dto.format_export == FormatExport.XLSX:
+                return self._export_xlsx(pointages, dto, exported_by)
             elif dto.format_export == FormatExport.ERP:
                 return self._export_erp(pointages, dto, exported_by)
             else:
@@ -156,6 +174,163 @@ class ExportFeuilleHeuresUseCase:
         return ExportResultDTO(
             success=True,
             format_export=FormatExport.CSV.value,
+            filename=filename,
+            file_content=content,
+            records_count=len(pointages),
+        )
+
+    @staticmethod
+    def _heures_decimal(duree) -> float:
+        """
+        Convertit une duree en nombre d'heures decimal.
+
+        Le classeur recoit des nombres et non du texte "08:30", pour que les
+        heures restent sommables dans Excel.
+
+        Args:
+            duree: Duree du domaine, ou None.
+
+        Returns:
+            Le nombre d'heures en decimal (0.0 si duree absente).
+        """
+        if duree is None:
+            return 0.0
+        decimal = getattr(duree, "decimal", None)
+        if decimal is not None:
+            return round(float(decimal), 2)
+        # Filet de securite si la duree n'expose pas .decimal (mock, DTO brut)
+        try:
+            return round(float(duree), 2)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _export_xlsx(
+        self, pointages: List, dto: ExportFeuilleHeuresDTO, exported_by: int
+    ) -> ExportResultDTO:
+        """
+        Genere un export Excel (FDH-03).
+
+        Reprend les colonnes de l'export CSV, avec une mise en forme
+        exploitable directement par l'assistante de direction : en-tetes
+        figees, filtre automatique, heures en decimal et ligne de totaux.
+
+        Args:
+            pointages: Les pointages a exporter.
+            dto: Les criteres d'export.
+            exported_by: ID de l'utilisateur qui exporte.
+
+        Returns:
+            Le resultat de l'export avec le classeur en binaire.
+        """
+        # Import local : openpyxl n'est charge que lors d'un export Excel.
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+        from openpyxl.utils import get_column_letter
+
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Feuilles d'heures"
+
+        headers = [
+            "Date",
+            "Utilisateur ID",
+            "Utilisateur",
+            "Chantier ID",
+            "Chantier",
+            "Heures Normales",
+            "Heures Sup",
+            "Total",
+            "Statut",
+        ]
+        if dto.inclure_signatures:
+            headers.extend(["Signé", "Date Signature"])
+
+        sheet.append(headers)
+
+        # Colonnes d'heures (1-indexe) : utilisees pour le format et les totaux
+        colonnes_heures = (6, 7, 8)
+
+        for pointage in pointages:
+            row = [
+                pointage.date_pointage,
+                pointage.utilisateur_id,
+                pointage.utilisateur_nom or "",
+                pointage.chantier_id,
+                pointage.chantier_nom or "",
+                self._heures_decimal(pointage.heures_normales),
+                self._heures_decimal(pointage.heures_supplementaires),
+                self._heures_decimal(pointage.total_heures),
+                pointage.statut.value,
+            ]
+            if dto.inclure_signatures:
+                row.extend([
+                    "Oui" if pointage.signature_utilisateur else "Non",
+                    pointage.signature_date if pointage.signature_date else "",
+                ])
+            sheet.append(row)
+
+        # Mise en forme de l'en-tete
+        entete_fond = PatternFill("solid", fgColor="1F3A5F")
+        entete_police = Font(bold=True, color="FFFFFF")
+        bordure_bas = Border(bottom=Side(style="thin", color="BFBFBF"))
+        for cellule in sheet[1]:
+            cellule.fill = entete_fond
+            cellule.font = entete_police
+            cellule.alignment = Alignment(horizontal="center", vertical="center")
+            cellule.border = bordure_bas
+        sheet.row_dimensions[1].height = 22
+
+        nb_lignes = len(pointages)
+        derniere_ligne_donnees = nb_lignes + 1
+
+        # Formats des colonnes de donnees
+        colonne_date_signature = len(headers) if dto.inclure_signatures else None
+        for ligne in sheet.iter_rows(
+            min_row=2, max_row=derniere_ligne_donnees, max_col=len(headers)
+        ):
+            for cellule in ligne:
+                if cellule.column == 1:
+                    cellule.number_format = "DD/MM/YYYY"
+                elif cellule.column in colonnes_heures:
+                    cellule.number_format = "0.00"
+                elif cellule.column == colonne_date_signature:
+                    cellule.number_format = "DD/MM/YYYY HH:MM"
+
+        # Ligne de totaux : somme Excel, donc recalculee si l'assistante filtre
+        if nb_lignes > 0:
+            ligne_total = derniere_ligne_donnees + 1
+            sheet.cell(row=ligne_total, column=1, value="TOTAL")
+            for colonne in colonnes_heures:
+                lettre = get_column_letter(colonne)
+                cellule = sheet.cell(row=ligne_total, column=colonne)
+                cellule.value = f"=SUM({lettre}2:{lettre}{derniere_ligne_donnees})"
+                cellule.number_format = "0.00"
+            for cellule in sheet[ligne_total]:
+                cellule.font = Font(bold=True)
+
+        # Filtre automatique et en-tete figee
+        sheet.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{derniere_ligne_donnees}"
+        sheet.freeze_panes = "A2"
+
+        # Largeur des colonnes ajustee au contenu
+        for index, entete in enumerate(headers, start=1):
+            largeur_max = len(entete)
+            for cellule in sheet[get_column_letter(index)][1:derniere_ligne_donnees]:
+                if cellule.value is not None:
+                    largeur_max = max(largeur_max, len(str(cellule.value)))
+            sheet.column_dimensions[get_column_letter(index)].width = min(largeur_max + 3, 40)
+
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        content = buffer.getvalue()
+        filename = f"feuilles_heures_{dto.date_debut}_{dto.date_fin}.xlsx"
+
+        # Publie l'événement
+        self._publish_export_event(pointages[0], dto, exported_by)
+
+        return ExportResultDTO(
+            success=True,
+            format_export=FormatExport.XLSX.value,
             filename=filename,
             file_content=content,
             records_count=len(pointages),
