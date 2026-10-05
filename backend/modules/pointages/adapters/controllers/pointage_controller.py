@@ -102,7 +102,9 @@ class PointageController:
         self._create_variable_uc = CreateVariablePaieUseCase(
             variable_repo, pointage_repo, event_bus
         )
-        self._export_uc = ExportFeuilleHeuresUseCase(feuille_repo, pointage_repo, event_bus)
+        self._export_uc = ExportFeuilleHeuresUseCase(
+            feuille_repo, pointage_repo, event_bus, entity_info_service
+        )
         self._jauge_uc = GetJaugeAvancementUseCase(pointage_repo)
         self._bulk_validate_uc = BulkValidatePointagesUseCase(pointage_repo, event_bus)
         self._monthly_recap_uc = GenerateMonthlyRecapUseCase(pointage_repo, variable_repo)

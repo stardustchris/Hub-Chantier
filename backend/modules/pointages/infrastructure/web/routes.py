@@ -422,7 +422,14 @@ def export_feuilles_heures(
 
     # Retourne le fichier si content disponible
     if result.get("file_content"):
-        media_type = "text/csv" if request.format_export == "csv" else "application/octet-stream"
+        # Type MIME par format : un classeur servi en octet-stream n'est pas
+        # reconnu comme Excel par le navigateur ni par le poste de l'utilisateur.
+        media_types = {
+            "csv": "text/csv",
+            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "erp": "text/plain",
+        }
+        media_type = media_types.get(request.format_export, "application/octet-stream")
         return Response(
             content=result["file_content"],
             media_type=media_type,

@@ -431,6 +431,164 @@ class TestExportFeuilleHeuresUseCase:
         assert result.records_count == 1
         assert result.file_content is not None
 
+    def _make_pointage(
+        self,
+        date_pointage=date(2026, 1, 20),
+        utilisateur_id=1,
+        utilisateur_nom="Jean DUPONT",
+        chantier_id=10,
+        chantier_nom="Chantier A",
+        heures_normales=Duree(8, 0),
+        heures_supplementaires=Duree(1, 30),
+        total_heures=Duree(9, 30),
+        statut=StatutPointage.VALIDE,
+    ):
+        """Construit un pointage mocke pour les tests d'export."""
+        pointage = Mock()
+        pointage.date_pointage = date_pointage
+        pointage.utilisateur_id = utilisateur_id
+        pointage.utilisateur_nom = utilisateur_nom
+        pointage.chantier_id = chantier_id
+        pointage.chantier_nom = chantier_nom
+        pointage.heures_normales = heures_normales
+        pointage.heures_supplementaires = heures_supplementaires
+        pointage.total_heures = total_heures
+        pointage.statut = statut
+        pointage.signature_utilisateur = None
+        pointage.signature_date = None
+        return pointage
+
+    def _export_xlsx_sheet(self, pointages, inclure_signatures=False):
+        """Lance un export XLSX et renvoie (resultat, feuille chargee)."""
+        import io
+
+        from openpyxl import load_workbook
+
+        self.pointage_repo.search.return_value = (pointages, len(pointages))
+        self.feuille_repo.find_by_utilisateur_and_semaine.return_value = Mock(id=1)
+
+        dto = ExportFeuilleHeuresDTO(
+            date_debut=date(2026, 1, 20),
+            date_fin=date(2026, 1, 24),
+            format_export=FormatExport.XLSX,
+            inclure_signatures=inclure_signatures,
+        )
+        result = self.use_case.execute(dto, exported_by=1)
+        sheet = load_workbook(io.BytesIO(result.file_content)).active
+        return result, sheet
+
+    def test_export_xlsx_success(self):
+        """Test export XLSX reussi : classeur valide et nomme."""
+        result, sheet = self._export_xlsx_sheet([self._make_pointage()])
+
+        assert result.success is True
+        assert result.format_export == "xlsx"
+        assert result.records_count == 1
+        assert result.filename.endswith(".xlsx")
+        assert sheet.title == "Feuilles d'heures"
+
+    def test_export_xlsx_heures_en_decimal_sommables(self):
+        """Les heures sont des nombres, pas du texte, pour rester sommables."""
+        _, sheet = self._export_xlsx_sheet([self._make_pointage()])
+
+        # Colonnes 6, 7, 8 : heures normales, sup et total
+        assert sheet.cell(row=2, column=6).value == 8.0
+        assert sheet.cell(row=2, column=7).value == 1.5  # 1h30 -> 1.5
+        assert sheet.cell(row=2, column=8).value == 9.5
+        for colonne in (6, 7, 8):
+            valeur = sheet.cell(row=2, column=colonne).value
+            assert isinstance(valeur, (int, float)), "les heures doivent etre numeriques"
+            assert sheet.cell(row=2, column=colonne).number_format == "0.00"
+
+    def test_export_xlsx_ligne_de_totaux(self):
+        """Une ligne TOTAL somme les colonnes d'heures via une formule Excel."""
+        pointages = [self._make_pointage(), self._make_pointage()]
+        _, sheet = self._export_xlsx_sheet(pointages)
+
+        ligne_total = len(pointages) + 2
+        assert sheet.cell(row=ligne_total, column=1).value == "TOTAL"
+        assert sheet.cell(row=ligne_total, column=6).value == "=SUM(F2:F3)"
+        assert sheet.cell(row=ligne_total, column=8).value == "=SUM(H2:H3)"
+
+    def test_export_xlsx_mise_en_forme(self):
+        """En-tete figee et filtre automatique limite aux lignes de donnees."""
+        pointages = [self._make_pointage(), self._make_pointage()]
+        _, sheet = self._export_xlsx_sheet(pointages)
+
+        assert sheet.freeze_panes == "A2"
+        # Le filtre ne doit pas englober la ligne TOTAL
+        assert sheet.auto_filter.ref == "A1:I3"
+        assert sheet.cell(row=1, column=1).font.bold is True
+
+    def test_export_xlsx_avec_signatures(self):
+        """Les colonnes de signature sont ajoutees quand elles sont demandees."""
+        _, sheet = self._export_xlsx_sheet(
+            [self._make_pointage()], inclure_signatures=True
+        )
+
+        entetes = [cellule.value for cellule in sheet[1]]
+        assert entetes[-2:] == ["Signé", "Date Signature"]
+        assert sheet.cell(row=2, column=10).value == "Non"
+
+    def test_export_xlsx_renseigne_les_noms(self):
+        """Les colonnes Utilisateur et Chantier portent les vrais libelles."""
+        from modules.pointages.application.use_cases.export_feuille_heures import (
+            ExportFeuilleHeuresUseCase,
+        )
+
+        # Le depot ne remonte que les identifiants : les noms restent vides.
+        pointage = self._make_pointage(utilisateur_nom=None, chantier_nom=None)
+
+        entity_info = Mock()
+        entity_info.get_user_info.return_value = Mock(nom="Jean MARTIN")
+        entity_info.get_chantier_info.return_value = Mock(nom="Bâtiment commercial")
+
+        self.use_case = ExportFeuilleHeuresUseCase(
+            self.feuille_repo, self.pointage_repo, self.event_bus, entity_info
+        )
+        _, sheet = self._export_xlsx_sheet([pointage])
+
+        assert sheet.cell(row=2, column=3).value == "Jean MARTIN"
+        assert sheet.cell(row=2, column=5).value == "Bâtiment commercial"
+
+    def test_export_xlsx_un_seul_appel_par_entite_distincte(self):
+        """Les identifiants sont dedoublonnes : pas d'appel par ligne."""
+        from modules.pointages.application.use_cases.export_feuille_heures import (
+            ExportFeuilleHeuresUseCase,
+        )
+
+        # 5 pointages, mais seulement 2 utilisateurs et 1 chantier distincts
+        pointages = [
+            self._make_pointage(utilisateur_id=1, chantier_id=10),
+            self._make_pointage(utilisateur_id=1, chantier_id=10),
+            self._make_pointage(utilisateur_id=1, chantier_id=10),
+            self._make_pointage(utilisateur_id=2, chantier_id=10),
+            self._make_pointage(utilisateur_id=2, chantier_id=10),
+        ]
+
+        entity_info = Mock()
+        entity_info.get_user_info.return_value = Mock(nom="Compagnon")
+        entity_info.get_chantier_info.return_value = Mock(nom="Chantier")
+
+        self.use_case = ExportFeuilleHeuresUseCase(
+            self.feuille_repo, self.pointage_repo, self.event_bus, entity_info
+        )
+        self._export_xlsx_sheet(pointages)
+
+        assert entity_info.get_user_info.call_count == 2
+        assert entity_info.get_chantier_info.call_count == 1
+
+    def test_export_sans_entity_info_service(self):
+        """Sans service d'infos, l'export reste fonctionnel (noms vides)."""
+        result, sheet = self._export_xlsx_sheet(
+            [self._make_pointage(utilisateur_nom=None, chantier_nom=None)]
+        )
+
+        assert result.success is True
+        # openpyxl relit une chaine vide comme une cellule vide
+        assert not sheet.cell(row=2, column=3).value
+        assert sheet.cell(row=2, column=2).value == 1  # l'ID reste present
+
     def test_export_empty_data(self):
         """Test export sans données."""
         self.pointage_repo.search.return_value = ([], 0)
