@@ -9,6 +9,7 @@ from shared.application.ports.entity_info_service import EntityInfoService
 
 from ...domain.repositories import PointageRepository, FeuilleHeuresRepository
 from ...domain.events import FeuilleHeuresExportedEvent
+from ...domain.value_objects import StatutPointage
 from ..services import enrichir_pointages
 from ..dtos import (
     ExportFeuilleHeuresDTO,
@@ -70,10 +71,12 @@ class ExportFeuilleHeuresUseCase:
             Le résultat de l'export.
         """
         try:
-            # Récupère les pointages pour la période
+            # Récupère les pointages VALIDÉS de la période : l'export alimente
+            # la paie, les brouillons, soumis et rejetés n'y ont pas leur place.
             pointages, total = self.pointage_repo.search(
                 date_debut=dto.date_debut,
                 date_fin=dto.date_fin,
+                statut=StatutPointage.VALIDE,
                 skip=0,
                 limit=100000,  # Pas de limite pour l'export
             )
@@ -90,7 +93,7 @@ class ExportFeuilleHeuresUseCase:
                 return ExportResultDTO(
                     success=False,
                     format_export=dto.format_export.value,
-                    error_message="Aucune donnée à exporter pour les critères sélectionnés",
+                    error_message="Aucune heure validée à exporter pour les critères sélectionnés",
                 )
 
             # Renseigne les noms d'utilisateurs et de chantiers : le depot ne

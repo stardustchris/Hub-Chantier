@@ -578,6 +578,13 @@ class TestExportFeuilleHeuresUseCase:
         assert entity_info.get_user_info.call_count == 2
         assert entity_info.get_chantier_info.call_count == 1
 
+    def test_export_ne_retient_que_les_heures_validees(self):
+        """L'export alimente la paie : seuls les pointages VALIDÉS sont demandés."""
+        self._export_xlsx_sheet([self._make_pointage()])
+
+        kwargs = self.pointage_repo.search.call_args.kwargs
+        assert kwargs["statut"] == StatutPointage.VALIDE
+
     def test_export_sans_entity_info_service(self):
         """Sans service d'infos, l'export reste fonctionnel (noms vides)."""
         result, sheet = self._export_xlsx_sheet(
@@ -602,7 +609,7 @@ class TestExportFeuilleHeuresUseCase:
         result = self.use_case.execute(dto, exported_by=1)
 
         assert result.success is False
-        assert "Aucune donnée" in result.error_message
+        assert "Aucune heure validée" in result.error_message
 
     def test_export_with_filters(self):
         """Test export avec filtres utilisateurs et chantiers."""
