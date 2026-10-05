@@ -87,7 +87,8 @@ def init_db() -> None:
         ChantierModel, ContactChantierModel, PhaseChantierModel
     )
     from modules.pointages.infrastructure.persistence import (  # noqa: F401
-        PointageModel, FeuilleHeuresModel, VariablePaieModel
+        PointageModel, FeuilleHeuresModel, VariablePaieModel,
+        SynchronisationPaieModel, CorrespondancePaieExterneModel,
     )
     from modules.taches.infrastructure.persistence import (  # noqa: F401
         TacheModel, TemplateModeleModel, SousTacheModeleModel, FeuilleTacheModel

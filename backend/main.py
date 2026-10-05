@@ -34,7 +34,7 @@ from modules.dashboard.infrastructure.web import dashboard_router
 from modules.taches.infrastructure.web import router as taches_router
 from modules.planning.infrastructure.web import router as planning_router
 from modules.pointages.infrastructure.web import router as pointages_router
-from modules.pointages.infrastructure.web import macro_paie_router
+from modules.pointages.infrastructure.web import macro_paie_router, paie_externe_router
 from modules.formulaires.infrastructure.web import router as formulaires_router
 from modules.formulaires.infrastructure.web import templates_router as templates_formulaires_router
 from modules.signalements.infrastructure.web import router as signalements_router
@@ -244,6 +244,7 @@ app.include_router(taches_router, prefix="/api")
 app.include_router(planning_router, prefix="/api")
 app.include_router(pointages_router, prefix="/api")
 app.include_router(macro_paie_router, prefix="/api")
+app.include_router(paie_externe_router, prefix="/api")
 app.include_router(formulaires_router, prefix="/api")
 app.include_router(templates_formulaires_router, prefix="/api")
 app.include_router(signalements_router, prefix="/api")

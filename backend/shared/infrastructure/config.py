@@ -42,6 +42,15 @@ class Settings:
     # Encryption (RGPD Art. 32)
     ENCRYPTION_KEY: str = "dev-encryption-key-change-in-production-32ch"
 
+    # Paie externe Costructor : envoi des heures validees (desactive par defaut)
+    COSTRUCTOR_SYNC_ENABLED: bool = False
+    COSTRUCTOR_API_KEY: str = ""
+    COSTRUCTOR_API_URL: str = "https://api.costructor.co/external/v1"
+    # Horaires de reference pour reconstituer les creneaux envoyes
+    PAIE_HEURE_DEBUT: str = "08:00"
+    PAIE_PAUSE_DEBUT: str = "12:00"
+    PAIE_PAUSE_FIN: str = "13:00"
+
     def __post_init__(self):
         """Charge les variables d'environnement."""
         self.APP_NAME = os.getenv("APP_NAME", self.APP_NAME)
@@ -68,6 +77,16 @@ class Settings:
 
         # Encryption key (must be 32 bytes for AES-256)
         self.ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", self.ENCRYPTION_KEY)
+
+        # Paie externe Costructor
+        self.COSTRUCTOR_SYNC_ENABLED = (
+            os.getenv("COSTRUCTOR_SYNC_ENABLED", "false").lower() == "true"
+        )
+        self.COSTRUCTOR_API_KEY = os.getenv("COSTRUCTOR_API_KEY", self.COSTRUCTOR_API_KEY)
+        self.COSTRUCTOR_API_URL = os.getenv("COSTRUCTOR_API_URL", self.COSTRUCTOR_API_URL)
+        self.PAIE_HEURE_DEBUT = os.getenv("PAIE_HEURE_DEBUT", self.PAIE_HEURE_DEBUT)
+        self.PAIE_PAUSE_DEBUT = os.getenv("PAIE_PAUSE_DEBUT", self.PAIE_PAUSE_DEBUT)
+        self.PAIE_PAUSE_FIN = os.getenv("PAIE_PAUSE_FIN", self.PAIE_PAUSE_FIN)
 
         # Validation sécurité en production (P0 - CRITIQUE)
         self._validate_production_security()

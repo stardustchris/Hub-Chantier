@@ -45,6 +45,12 @@ services:
       - COOKIE_SECURE=false
       - COOKIE_SAMESITE=lax
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Envoi des heures validees vers Costructor (cle a definir dans .env, jamais ici)
+      - COSTRUCTOR_SYNC_ENABLED=${COSTRUCTOR_SYNC_ENABLED:-false}
+      - COSTRUCTOR_API_KEY=${COSTRUCTOR_API_KEY:-}
+      - PAIE_HEURE_DEBUT=${PAIE_HEURE_DEBUT:-08:00}
+      - PAIE_PAUSE_DEBUT=${PAIE_PAUSE_DEBUT:-12:00}
+      - PAIE_PAUSE_FIN=${PAIE_PAUSE_FIN:-13:00}
     volumes:
       - uploads_data:/app/uploads
     ports:
